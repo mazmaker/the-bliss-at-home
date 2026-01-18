@@ -1,0 +1,33 @@
+{
+  "name": "the-bliss-at-home",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Massage/Spa/Nail services booking platform - Supabase-First Architecture",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:admin": "pnpm --filter @bliss/admin dev",
+    "dev:customer": "pnpm --filter @bliss/customer dev",
+    "dev:hotel": "pnpm --filter @bliss/hotel dev",
+    "dev:staff": "pnpm --filter @bliss/staff dev",
+    "dev:server": "pnpm --filter @bliss/server dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "prettier": "^3.2.4",
+    "turbo": "^1.11.3",
+    "typescript": "^5.3.3",
+    "husky": "^8.0.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.14.0"
+}
