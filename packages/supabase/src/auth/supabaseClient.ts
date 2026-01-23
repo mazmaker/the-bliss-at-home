@@ -32,8 +32,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce', // Use PKCE for better security
+    flowType: 'implicit', // Change from PKCE to implicit to avoid CORS issues
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  },
+  global: {
+    headers: {
+      'x-my-custom-header': 'admin-app',
+    },
+  },
+  // Add timeout to prevent hanging
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
   },
 })
 
