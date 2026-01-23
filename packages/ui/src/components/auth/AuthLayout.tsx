@@ -71,7 +71,7 @@ export function AuthLayout({
             <img
               src={appLogo}
               alt={appTitle}
-              className="h-12 w-auto mx-auto mb-4"
+              className="h-16 w-auto mx-auto mb-4"
             />
           )}
           <h2 className="text-3xl font-extrabold text-gray-900">

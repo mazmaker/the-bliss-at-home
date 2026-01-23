@@ -5,10 +5,11 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FaGoogle, FaFacebook } from 'react-icons/fa'
 import Button from '../Button'
 import Input from '../Input'
 import Loader from '../Loader'
-import { useAuth, type LoginCredentials } from '@bliss/supabase/auth'
+import { useAuth, type LoginCredentials, type UserRole } from '@bliss/supabase/auth'
 
 export interface LoginFormProps {
   /**
@@ -17,6 +18,11 @@ export interface LoginFormProps {
   appTitle: string
   appLogo?: string
   primaryColor?: string
+
+  /**
+   * Expected user role for login validation
+   */
+  expectedRole?: UserRole
 
   /**
    * Additional actions (e.g., "Register", "Forgot Password")
@@ -35,21 +41,30 @@ export interface LoginFormProps {
    * Show remember me checkbox
    */
   showRememberMe?: boolean
+
+  /**
+   * Show social login buttons
+   */
+  showSocialLogin?: boolean
+  onSocialLogin?: (provider: 'google' | 'facebook') => void
 }
 
 export function LoginForm({
   appTitle,
   appLogo,
   primaryColor = '#6366f1',
+  expectedRole,
   showRegister = false,
   showForgotPassword = true,
   onRegisterClick,
   onForgotPasswordClick,
   redirectTo,
   showRememberMe = true,
+  showSocialLogin = true,
+  onSocialLogin,
 }: LoginFormProps) {
   const navigate = useNavigate()
-  const { login, isLoading, error, clearError } = useAuth()
+  const { login, isLoading, error, clearError } = useAuth(expectedRole)
 
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
@@ -110,16 +125,24 @@ export function LoginForm({
     setValidationErrors(prev => ({ ...prev, [field]: undefined }))
   }
 
+  const handleSocialLogin = (provider: 'google' | 'facebook') => {
+    if (onSocialLogin) {
+      onSocialLogin(provider)
+    }
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
       {/* App Header */}
-      <div className="text-center mb-8">
-        {appLogo && (
-          <img src={appLogo} alt={appTitle} className="h-16 mx-auto mb-4" />
-        )}
-        <h1 className="text-2xl font-bold text-gray-900">{appTitle}</h1>
-        <p className="text-gray-600 mt-2">Sign in to your account</p>
-      </div>
+      {appTitle && (
+        <div className="text-center mb-8">
+          {appLogo && (
+            <img src={appLogo} alt={appTitle} className="h-16 mx-auto mb-4" />
+          )}
+          <h1 className="text-2xl font-bold text-gray-900">{appTitle}</h1>
+          <p className="text-gray-600 mt-2">Sign in to your account</p>
+        </div>
+      )}
 
       {/* Error Alert */}
       {error && (
@@ -129,6 +152,45 @@ export function LoginForm({
         >
           <p className="text-sm text-red-800">{error}</p>
         </div>
+      )}
+
+      {/* Social Login Buttons */}
+      {showSocialLogin && (
+        <>
+          <div className="space-y-3 mb-6">
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('google')}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-stone-200 rounded-xl font-medium text-stone-700 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              <FaGoogle className="w-5 h-5 text-red-500" />
+              Continue with Google
+            </button>
+
+            {/* Facebook Login - Temporarily disabled due to Development mode limitations */}
+            {/* Uncomment when app is in Production mode */}
+            {/* <button
+              type="button"
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-stone-200 rounded-xl font-medium text-stone-700 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              <FaFacebook className="w-5 h-5" style={{ color: '#1877F2' }} />
+              Continue with Facebook
+            </button> */}
+          </div>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-stone-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-stone-500">Or continue with email</span>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Login Form */}

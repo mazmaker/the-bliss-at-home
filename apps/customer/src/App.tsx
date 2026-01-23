@@ -9,18 +9,44 @@ import BookingHistory from './pages/BookingHistory'
 import BookingDetails from './pages/BookingDetails'
 import Profile from './pages/Profile'
 import ColorPalette from './pages/ColorPalette'
-import { CustomerLoginPage } from './pages/auth'
+import Register from './pages/Register'
+import { CustomerLoginPage, AuthCallback } from './pages/auth'
 
 function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
       <Routes>
-        {/* Public routes */}
+        {/* Public routes - Login only */}
         <Route path="/login" element={<CustomerLoginPageWrapper />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/services" element={<ServiceCatalog />} />
-        <Route path="/services/:slug" element={<ServiceDetails />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/design-system" element={<ColorPalette />} />
+
+        {/* Protected routes - All customer pages require login */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <HomePageWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/services"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <ServiceCatalogWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/services/:slug"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <ServiceDetailsWrapper />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
@@ -82,6 +108,33 @@ function App() {
 // Wrapper components to include Header
 function CustomerLoginPageWrapper() {
   return <CustomerLoginPage />
+}
+
+function HomePageWrapper() {
+  return (
+    <>
+      <Header />
+      <HomePage />
+    </>
+  )
+}
+
+function ServiceCatalogWrapper() {
+  return (
+    <>
+      <Header />
+      <ServiceCatalog />
+    </>
+  )
+}
+
+function ServiceDetailsWrapper() {
+  return (
+    <>
+      <Header />
+      <ServiceDetails />
+    </>
+  )
 }
 
 function BookingWizardWrapper() {
