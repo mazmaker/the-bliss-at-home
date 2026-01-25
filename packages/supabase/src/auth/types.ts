@@ -47,6 +47,14 @@ export interface RegisterCredentials {
   role: UserRole
 }
 
+// LINE Login credentials
+export interface LineLoginCredentials {
+  lineUserId: string
+  displayName: string
+  pictureUrl?: string
+  accessToken?: string
+}
+
 // Auth response
 export interface AuthResponse {
   profile: Profile

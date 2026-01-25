@@ -1,10 +1,118 @@
-import { useState } from 'react'
-import { Bell, Lock, Globe, LogOut, Info, ChevronRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Bell, Lock, Globe, LogOut, Info, ChevronRight, Volume2, VolumeX, Check } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@bliss/supabase/auth'
+import { liffService } from '@bliss/supabase/auth'
+import { isSoundEnabled, setSoundEnabled, NotificationSounds } from '../utils/soundNotification'
+
+// Settings storage keys
+const STORAGE_KEYS = {
+  NOTIFICATIONS: 'staff_notifications_enabled',
+  EMAIL_ALERTS: 'staff_email_alerts',
+  SMS_ALERTS: 'staff_sms_alerts',
+  LANGUAGE: 'staff_language',
+}
+
+// Helper functions for localStorage
+const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
+  const stored = localStorage.getItem(key)
+  if (stored === null) return defaultValue
+  return stored === 'true'
+}
+
+const setStoredBoolean = (key: string, value: boolean): void => {
+  localStorage.setItem(key, String(value))
+}
+
+const getStoredLanguage = (): 'th' | 'en' => {
+  const stored = localStorage.getItem(STORAGE_KEYS.LANGUAGE)
+  return (stored === 'en' ? 'en' : 'th') as 'th' | 'en'
+}
+
+const setStoredLanguage = (lang: 'th' | 'en'): void => {
+  localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang)
+}
 
 function StaffSettings() {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [notifications, setNotifications] = useState(true)
+  const [soundEnabled, setSoundEnabledState] = useState(true)
   const [emailAlerts, setEmailAlerts] = useState(true)
   const [smsAlerts, setSmsAlerts] = useState(false)
+  const [language, setLanguage] = useState<'th' | 'en'>('th')
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false)
+
+  // Load all settings on mount
+  useEffect(() => {
+    setSoundEnabledState(isSoundEnabled())
+    setNotifications(getStoredBoolean(STORAGE_KEYS.NOTIFICATIONS, true))
+    setEmailAlerts(getStoredBoolean(STORAGE_KEYS.EMAIL_ALERTS, true))
+    setSmsAlerts(getStoredBoolean(STORAGE_KEYS.SMS_ALERTS, false))
+    setLanguage(getStoredLanguage())
+  }, [])
+
+  const handleSoundToggle = (enabled: boolean) => {
+    setSoundEnabledState(enabled)
+    setSoundEnabled(enabled)
+    // Play test sound when enabling
+    if (enabled) {
+      NotificationSounds.notification()
+    }
+    showSaved()
+  }
+
+  const handleNotificationsToggle = (enabled: boolean) => {
+    setNotifications(enabled)
+    setStoredBoolean(STORAGE_KEYS.NOTIFICATIONS, enabled)
+    showSaved()
+  }
+
+  const handleEmailAlertsToggle = (enabled: boolean) => {
+    setEmailAlerts(enabled)
+    setStoredBoolean(STORAGE_KEYS.EMAIL_ALERTS, enabled)
+    showSaved()
+  }
+
+  const handleSmsAlertsToggle = (enabled: boolean) => {
+    setSmsAlerts(enabled)
+    setStoredBoolean(STORAGE_KEYS.SMS_ALERTS, enabled)
+    showSaved()
+  }
+
+  const handleLanguageChange = (lang: 'th' | 'en') => {
+    setLanguage(lang)
+    setStoredLanguage(lang)
+    showSaved()
+    // Note: Full i18n implementation would require a context/provider
+    // For now, this saves the preference
+  }
+
+  const showSaved = () => {
+    setShowSaveSuccess(true)
+    setTimeout(() => setShowSaveSuccess(false), 2000)
+  }
+
+  const handleLogout = async () => {
+    setShowLogoutConfirm(false)
+
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Supabase logout error:', error)
+    }
+
+    try {
+      if (liffService.isInitialized()) {
+        liffService.logout()
+      }
+    } catch (error) {
+      console.error('LIFF logout error:', error)
+    }
+
+    navigate('/staff/login', { replace: true })
+  }
 
   const settings = [
     {
@@ -16,45 +124,78 @@ function StaffSettings() {
         {
           label: 'เปิดการแจ้งเตือน',
           value: notifications,
-          onChange: setNotifications,
+          onChange: handleNotificationsToggle,
         },
         {
           label: 'แจ้งเตือนทางอีเมล',
           value: emailAlerts,
-          onChange: setEmailAlerts,
+          onChange: handleEmailAlertsToggle,
         },
         {
           label: 'แจ้งเตือนทาง SMS',
           value: smsAlerts,
-          onChange: setSmsAlerts,
+          onChange: handleSmsAlertsToggle,
         },
       ],
     },
     {
-      icon: Globe,
-      title: 'ภาษา',
-      titleEn: 'Language',
-      description: 'เลือกภาษาที่ต้องการ',
-      items: [],
-    },
-    {
-      icon: Lock,
-      title: 'ความปลอดภัย',
-      titleEn: 'Security',
-      description: 'เปลี่ยนรหัสผ่าน',
-      items: [],
-    },
-    {
-      icon: Info,
-      title: 'เกี่ยวกับ',
-      titleEn: 'About',
-      description: 'ข้อมูลแอปพลิเคชัน',
-      items: [],
+      icon: Volume2,
+      title: 'เสียงแจ้งเตือน',
+      titleEn: 'Sound Notifications',
+      description: 'เปิด/ปิดเสียงเมื่อมีงานใหม่หรือเปลี่ยนสถานะ',
+      items: [
+        {
+          label: 'เปิดเสียงแจ้งเตือน',
+          value: soundEnabled,
+          onChange: handleSoundToggle,
+        },
+      ],
     },
   ]
 
   return (
     <div className="space-y-4">
+      {/* Save Success Toast */}
+      {showSaveSuccess && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full shadow-lg">
+            <Check className="w-4 h-4" />
+            <span className="text-sm font-medium">บันทึกแล้ว</span>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <LogOut className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">ออกจากระบบ</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                คุณต้องการออกจากระบบใช่หรือไม่?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition"
+                >
+                  ออกจากระบบ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-stone-900">ตั้งค่า</h1>
@@ -76,7 +217,6 @@ function StaffSettings() {
                     <h3 className="font-semibold text-stone-900">{setting.title}</h3>
                     <p className="text-xs text-stone-500">{setting.titleEn}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-stone-400" />
                 </div>
                 <p className="text-sm text-stone-600">{setting.description}</p>
 
@@ -113,45 +253,50 @@ function StaffSettings() {
 
       {/* Language Selector */}
       <div className="bg-white rounded-xl shadow p-4">
-        <h3 className="font-semibold text-stone-900 mb-3">ภาษา / Language</h3>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
+            <Globe className="w-5 h-5 text-stone-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-stone-900">ภาษา</h3>
+            <p className="text-xs text-stone-500">Language</p>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
-          <button className="p-3 bg-amber-700 text-white rounded-xl font-medium">
+          <button
+            onClick={() => handleLanguageChange('th')}
+            className={`p-3 rounded-xl font-medium transition ${
+              language === 'th'
+                ? 'bg-amber-700 text-white'
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
             ไทย
           </button>
-          <button className="p-3 bg-stone-100 text-stone-700 rounded-xl font-medium">
+          <button
+            onClick={() => handleLanguageChange('en')}
+            className={`p-3 rounded-xl font-medium transition ${
+              language === 'en'
+                ? 'bg-amber-700 text-white'
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
             English
-          </button>
-        </div>
-      </div>
-
-      {/* Password Change */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <h3 className="font-semibold text-stone-900 mb-3">เปลี่ยนรหัสผ่าน</h3>
-        <div className="space-y-3">
-          <input
-            type="password"
-            placeholder="รหัสผ่านปัจจุบัน"
-            className="w-full px-4 py-3 bg-stone-100 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
-          />
-          <input
-            type="password"
-            placeholder="รหัสผ่านใหม่"
-            className="w-full px-4 py-3 bg-stone-100 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
-          />
-          <input
-            type="password"
-            placeholder="ยืนยันรหัสผ่านใหม่"
-            className="w-full px-4 py-3 bg-stone-100 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
-          />
-          <button className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium">
-            บันทึกรหัสผ่าน
           </button>
         </div>
       </div>
 
       {/* App Info */}
       <div className="bg-white rounded-xl shadow p-4">
-        <h3 className="font-semibold text-stone-900 mb-3">เกี่ยวกับแอป</h3>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
+            <Info className="w-5 h-5 text-stone-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-stone-900">เกี่ยวกับแอป</h3>
+            <p className="text-xs text-stone-500">About</p>
+          </div>
+        </div>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-stone-500">เวอร์ชัน</span>
@@ -165,7 +310,10 @@ function StaffSettings() {
       </div>
 
       {/* Logout Button */}
-      <button className="w-full flex items-center justify-center gap-2 p-4 bg-white rounded-xl shadow text-red-600 font-medium hover:bg-red-50 transition">
+      <button
+        onClick={() => setShowLogoutConfirm(true)}
+        className="w-full flex items-center justify-center gap-2 p-4 bg-white rounded-xl shadow text-red-600 font-medium hover:bg-red-50 transition"
+      >
         <LogOut className="w-5 h-5" />
         ออกจากระบบ
       </button>

@@ -26,19 +26,29 @@ export function useAuth(expectedRole?: UserRole) {
 
     async function loadUser() {
       try {
-        const profile = await authService.getCurrentProfile()
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise<null>((_, reject) => {
+          setTimeout(() => reject(new Error('Auth timeout')), 10000)
+        })
+
+        const profile = await Promise.race([
+          authService.getCurrentProfile(),
+          timeoutPromise,
+        ])
 
         if (!mounted) return
 
         // Validate role if expectedRole is provided
         if (expectedRole && profile && profile.role !== expectedRole) {
-          await authService.logout()
+          // Set state FIRST to stop loading immediately
           setState({
             user: null,
             isLoading: false,
             error: 'Invalid role for this application',
             isAuthenticated: false,
           })
+          // Logout in background (don't await)
+          authService.logout().catch(() => {})
           return
         }
 
@@ -50,28 +60,55 @@ export function useAuth(expectedRole?: UserRole) {
         })
       } catch (error) {
         if (!mounted) return
+        console.error('Auth loadUser error:', error)
+
+        // Set state FIRST to stop loading immediately
         setState({
           user: null,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Failed to load user',
+          error: null, // Don't show timeout error to user, just redirect to login
           isAuthenticated: false,
         })
+
+        // If timeout occurred, clear any stale session in the background (don't await)
+        if (error instanceof Error && error.message === 'Auth timeout') {
+          authService.logout().catch(() => {
+            // Ignore logout errors
+          })
+        }
       }
     }
 
     loadUser()
 
-    // Listen for auth changes
+    // Listen for auth changes (with timeout protection)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      // Skip INITIAL_SESSION event - loadUser() handles initial load
+      if (event === 'INITIAL_SESSION') {
+        return
+      }
+
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const profile = await authService.getCurrentProfile()
-        if (mounted) {
-          setState({
-            user: profile,
-            isLoading: false,
-            error: null,
-            isAuthenticated: !!profile,
+        try {
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise<null>((_, reject) => {
+            setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
           })
+          const profile = await Promise.race([
+            authService.getCurrentProfile(),
+            timeoutPromise,
+          ])
+          if (mounted) {
+            setState({
+              user: profile,
+              isLoading: false,
+              error: null,
+              isAuthenticated: !!profile,
+            })
+          }
+        } catch (error) {
+          console.error('Auth state change error:', error)
+          // Don't change state on error - keep current user state
         }
       } else if (event === 'SIGNED_OUT') {
         if (mounted) {
@@ -160,12 +197,26 @@ export function useAuth(expectedRole?: UserRole) {
     setState(prev => ({ ...prev, error: null }))
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const profile = await authService.getCurrentProfile()
+      setState(prev => ({
+        ...prev,
+        user: profile,
+        isAuthenticated: !!profile,
+      }))
+    } catch (error) {
+      console.error('Failed to refresh user:', error)
+    }
+  }, [])
+
   return {
     ...state,
     login,
     register,
     logout,
     clearError,
+    refreshUser,
   }
 }
 

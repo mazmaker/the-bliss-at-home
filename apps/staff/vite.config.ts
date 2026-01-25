@@ -16,6 +16,11 @@ export default defineConfig({
   server: {
     port: 3004,
     strictPort: true,
+    allowedHosts: [
+      'localhost',
+      '.trycloudflare.com', // Allow all Cloudflare Tunnel subdomains
+      '.theblissathome.com', // Production domain
+    ],
   },
   build: {
     outDir: 'dist',

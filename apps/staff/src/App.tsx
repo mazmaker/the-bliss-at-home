@@ -3,11 +3,12 @@ import { ProtectedRoute } from '@bliss/ui'
 import { useAuth } from '@bliss/supabase/auth'
 import StaffLayout from './layouts/StaffLayout'
 import StaffDashboard from './pages/StaffDashboard'
+import StaffSchedule from './pages/StaffSchedule'
 import StaffHistory from './pages/StaffHistory'
 import StaffEarnings from './pages/StaffEarnings'
 import StaffProfile from './pages/StaffProfile'
 import StaffSettings from './pages/StaffSettings'
-import { StaffLoginPage } from './pages/auth'
+import { StaffLoginPage, StaffAuthCallback } from './pages/auth'
 
 function App() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -34,6 +35,9 @@ function App() {
         }
       />
 
+      {/* LIFF Callback route */}
+      <Route path="/staff/auth/callback" element={<StaffAuthCallback />} />
+
       {/* Protected staff routes - require STAFF role */}
       <Route
         path="/staff"
@@ -45,6 +49,7 @@ function App() {
       >
         <Route index element={<StaffDashboard />} />
         <Route path="jobs" element={<StaffDashboard />} />
+        <Route path="schedule" element={<StaffSchedule />} />
         <Route path="history" element={<StaffHistory />} />
         <Route path="earnings" element={<StaffEarnings />} />
         <Route path="profile" element={<StaffProfile />} />
