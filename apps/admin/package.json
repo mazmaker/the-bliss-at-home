@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "create-admin": "tsx src/scripts/createAdminUser.ts"
+    "create-admin": "tsx src/scripts/createAdminUser.ts",
+    "update-admin": "tsx src/scripts/updateAdminProfile.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.17.0",
