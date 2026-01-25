@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Input, Loader } from '@bliss/ui'
+import { Eye, EyeOff } from 'lucide-react'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { USE_MOCK_AUTH } from '../lib/mockAuth'
 import type { LoginCredentials } from '@bliss/supabase/auth'
@@ -33,6 +34,8 @@ export function AdminLoginForm({
     email?: string
     password?: string
   }>({})
+
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateForm = (): boolean => {
     const errors: typeof validationErrors = {}
@@ -136,15 +139,31 @@ export function AdminLoginForm({
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               รหัสผ่าน
             </label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="กรุณากรอกรหัสผ่าน"
-              value={credentials.password}
-              onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-              error={validationErrors.password}
-              disabled={isLoading}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="กรุณากรอกรหัสผ่าน"
+                value={credentials.password}
+                onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                error={validationErrors.password}
+                disabled={isLoading}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-indigo-500 rounded-sm"
+                tabIndex={-1}
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Remember Me */}
