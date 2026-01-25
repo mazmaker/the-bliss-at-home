@@ -54,3 +54,6 @@ supabase/logs/
 .cache/
 .parcel-cache/
 .temp/
+
+# Project credentials (NEVER commit these)
+docs/SUPABASE_CREDENTIALS.md
