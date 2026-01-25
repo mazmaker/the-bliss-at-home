@@ -37,7 +37,67 @@ async function updateAdminProfile() {
   try {
     console.log('🔄 Updating admin profile...')
 
-    // Check if profile exists
+    // First check if profile exists by email
+    const { data: profileByEmail, error: emailCheckError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', adminProfile.email)
+      .single()
+
+    if (emailCheckError && emailCheckError.code !== 'PGRST116') {
+      throw emailCheckError
+    }
+
+    if (profileByEmail && profileByEmail.id !== adminUserId) {
+      // Email exists but for different user - need to update that user's profile
+      console.log('⚠️  Email exists for different user ID. Updating existing profile...')
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          ...adminProfile,
+          id: adminUserId, // Update ID to match auth user
+        })
+        .eq('email', adminProfile.email)
+
+      if (updateError) {
+        // If can't update ID, just update the existing profile
+        const { error: updateError2 } = await supabase
+          .from('profiles')
+          .update({
+            role: adminProfile.role,
+            full_name: adminProfile.full_name,
+            phone: adminProfile.phone,
+            status: adminProfile.status,
+          })
+          .eq('email', adminProfile.email)
+
+        if (updateError2) throw updateError2
+      }
+
+      console.log('✅ Admin profile updated successfully!')
+
+      // Get updated profile
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', adminProfile.email)
+        .single()
+
+      if (updatedProfile) {
+        console.log('\n📊 Admin Profile Details:')
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.log('ID:', updatedProfile.id)
+        console.log('Email:', updatedProfile.email)
+        console.log('Role:', updatedProfile.role)
+        console.log('Name:', updatedProfile.full_name)
+        console.log('Phone:', updatedProfile.phone)
+        console.log('Status:', updatedProfile.status)
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━')
+      }
+      return
+    }
+
+    // Check if profile exists by ID
     const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
       .select('*')
