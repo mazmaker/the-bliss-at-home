@@ -8,8 +8,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create Supabase client with stable session handling
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false, // Disable to prevent issues with opening new tabs
+    storageKey: 'bliss-admin-auth',
+    storage: window.localStorage,
+    flowType: 'pkce',
+    debug: true, // Enable auth debugging
+    refreshInterval: 30 * 60 * 1000, // Refresh every 30 minutes instead of 1 hour
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'bliss-admin'
+    }
+  },
+  realtime: {
+    // Reduce realtime connection overhead
+    params: {
+      eventsPerSecond: 2
+    }
+  }
+})
 
 // For Mock Auth mode, we'll bypass RLS by creating a special client
 // that simulates admin access without actually needing real authentication

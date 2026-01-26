@@ -14,6 +14,12 @@ import {
   type Profile,
   type LoginCredentials,
 } from '../lib/supabaseAuth'
+import {
+  setupActivityMonitoring,
+  startSessionMonitoring,
+  stopSessionMonitoring,
+  refreshSession
+} from '../utils/sessionManager'
 
 interface AuthState {
   user: Profile | null
@@ -26,6 +32,9 @@ interface AuthState {
  * Admin Auth Hook - switches between Mock and Real auth
  */
 export function useAdminAuth() {
+  // Quick check for existing session in localStorage
+  const hasLocalSession = !!window.localStorage.getItem('bliss-admin-auth')
+
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isLoading: true,
@@ -36,7 +45,6 @@ export function useAdminAuth() {
   // Initialize auth state
   useEffect(() => {
     let mounted = true
-    let initTimeout: NodeJS.Timeout
 
     async function initializeAuth() {
       console.log('🔍 Initializing auth...', { USE_MOCK_AUTH })
@@ -58,47 +66,78 @@ export function useAdminAuth() {
           // Real Supabase authentication
           console.log('🔐 Checking Supabase session...')
 
-          // Add timeout to prevent infinite loading
-          const timeoutPromise = new Promise((_, reject) => {
-            initTimeout = setTimeout(() => {
-              reject(new Error('Auth initialization timeout (5s)'))
-            }, 5000)
+          // First try to get session from localStorage
+          if (hasLocalSession) {
+            try {
+              // Quick check if session is valid
+              const { user, profile } = await getCurrentUserWithProfile()
+
+              if (user && profile) {
+                console.log('✅ Auth restored from local session')
+                setAuthState({
+                  user: profile,
+                  isLoading: false,
+                  error: null,
+                  isAuthenticated: true,
+                })
+                return
+              }
+            } catch (quickCheckError) {
+              console.log('Local session invalid, checking with server...')
+            }
+          }
+
+          // Direct call without timeout - let getCurrentUserWithProfile handle it
+          console.log('🔍 Getting current user and profile...')
+
+          const { user, profile } = await getCurrentUserWithProfile()
+
+          if (!mounted) return
+
+          console.log('✅ Auth initialized:', {
+            user: user?.email,
+            userId: user?.id,
+            profile: !!profile,
+            profileEmail: profile?.email,
+            profileRole: profile?.role
           })
 
-          const authPromise = getCurrentUserWithProfile()
-
-          try {
-            const { user, profile } = await Promise.race([
-              authPromise,
-              timeoutPromise
-            ]) as Awaited<typeof authPromise>
-
-            clearTimeout(initTimeout)
-
-            if (!mounted) return
-
-            console.log('✅ Auth initialized:', { user: user?.email, profile: !!profile })
-
-            setAuthState({
-              user: profile,
-              isLoading: false,
-              error: null,
-              isAuthenticated: !!user && !!profile,
-            })
-          } catch (timeoutError) {
-            clearTimeout(initTimeout)
-            throw timeoutError
+          // Save successful auth to localStorage
+          if (user && profile) {
+            window.localStorage.setItem('bliss-admin-auth', JSON.stringify({
+              userId: user.id,
+              email: user.email,
+              timestamp: Date.now()
+            }))
           }
+
+          setAuthState({
+            user: profile,
+            isLoading: false,
+            error: null,
+            isAuthenticated: !!user && !!profile,
+          })
         }
       } catch (error) {
         if (!mounted) return
 
         console.error('❌ Auth initialization error:', error)
 
+        let errorMessage = 'Failed to initialize auth'
+        if (error instanceof Error) {
+          if (error.message.includes('timeout')) {
+            errorMessage = 'Connection timeout - Please check your internet connection and refresh the page'
+          } else if (error.message.includes('Network')) {
+            errorMessage = 'Network error - Please check your connection'
+          } else {
+            errorMessage = error.message
+          }
+        }
+
         setAuthState({
           user: null,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Failed to initialize auth',
+          error: errorMessage,
           isAuthenticated: false,
         })
       }
@@ -113,24 +152,53 @@ export function useAdminAuth() {
       authListener = onAuthStateChange(async (event, session) => {
         if (!mounted) return
 
+        console.log('🔄 Auth state change:', event, {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userEmail: session?.user?.email,
+          expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'N/A'
+        })
+
         try {
-          if (session?.user) {
-            const { profile } = await getCurrentUserWithProfile()
-            setAuthState({
-              user: profile,
-              isLoading: false,
-              error: null,
-              isAuthenticated: !!profile,
-            })
-          } else {
+          if (event === 'SIGNED_OUT' || !session) {
+            console.log('👋 User signed out or no session')
             setAuthState({
               user: null,
               isLoading: false,
               error: null,
               isAuthenticated: false,
             })
+            return
+          }
+
+          if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 Token refreshed successfully')
+          }
+
+          if (session?.user) {
+            console.log('✅ Session exists, getting profile...')
+            const { profile } = await getCurrentUserWithProfile()
+
+            if (profile) {
+              console.log('✅ Profile found:', profile.email)
+              setAuthState({
+                user: profile,
+                isLoading: false,
+                error: null,
+                isAuthenticated: true,
+              })
+            } else {
+              console.log('❌ No profile found for user')
+              setAuthState({
+                user: null,
+                isLoading: false,
+                error: 'No profile found',
+                isAuthenticated: false,
+              })
+            }
           }
         } catch (error) {
+          console.error('❌ Auth state change error:', error)
           setAuthState({
             user: null,
             isLoading: false,
@@ -141,14 +209,23 @@ export function useAdminAuth() {
       })
     }
 
+    // Setup session monitoring for Real Supabase Auth
+    let cleanupActivityMonitoring: (() => void) | null = null
+
+    if (!USE_MOCK_AUTH) {
+      cleanupActivityMonitoring = setupActivityMonitoring()
+      startSessionMonitoring()
+    }
+
     return () => {
       mounted = false
-      if (initTimeout) {
-        clearTimeout(initTimeout)
-      }
       if (authListener) {
         authListener.data.subscription.unsubscribe()
       }
+      if (cleanupActivityMonitoring) {
+        cleanupActivityMonitoring()
+      }
+      stopSessionMonitoring()
     }
   }, [])
 
@@ -235,10 +312,30 @@ export function useAdminAuth() {
     setAuthState(prev => ({ ...prev, error: null }))
   }, [])
 
+  // Manual session refresh for debugging
+  const manualRefreshSession = useCallback(async () => {
+    if (USE_MOCK_AUTH) {
+      console.log('❌ Manual refresh not available in mock mode')
+      return
+    }
+
+    try {
+      console.log('🔄 Manual session refresh initiated...')
+      await refreshSession()
+    } catch (error) {
+      console.error('❌ Manual session refresh failed:', error)
+      setAuthState(prev => ({
+        ...prev,
+        error: 'Session refresh failed'
+      }))
+    }
+  }, [])
+
   return {
     ...authState,
     login,
     logout,
     clearError,
+    refreshSession: manualRefreshSession,
   }
 }

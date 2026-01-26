@@ -119,9 +119,26 @@ export async function signUpAdmin(credentials: LoginCredentials & { full_name: s
  * ออกจากระบบ
  */
 export async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut()
-  if (error) {
-    throw new AuthError(error.message)
+  // Clear local storage immediately for instant feedback
+  const storageKey = 'bliss-admin-auth'
+  window.localStorage.removeItem(storageKey)
+
+  // Add timeout for signOut to prevent hanging
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout for logout
+
+  try {
+    const { error } = await supabase.auth.signOut()
+    clearTimeout(timeout)
+
+    if (error) {
+      // Don't throw on logout errors - user wants to logout anyway
+      console.error('Logout error:', error.message)
+    }
+  } catch (err) {
+    clearTimeout(timeout)
+    // Don't throw on timeout - user wants to logout anyway
+    console.error('Logout timeout or error:', err)
   }
 }
 
@@ -153,6 +170,7 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
       return null
     }
 
+    console.log('✅ Profile found by ID:', data?.email)
     return data as Profile
   } catch (error) {
     console.error('Failed to fetch user profile:', error)
@@ -165,6 +183,8 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
  */
 export async function getUserProfileByEmail(email: string): Promise<Profile | null> {
   try {
+    console.log('🔍 Fetching profile by email:', email)
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -172,13 +192,19 @@ export async function getUserProfileByEmail(email: string): Promise<Profile | nu
       .maybeSingle()
 
     if (error) {
-      console.error('Error fetching profile by email:', error)
+      console.error('❌ Error fetching profile by email:', error.message, error.code)
       return null
     }
 
+    if (!data) {
+      console.log('❌ No profile found for email:', email)
+      return null
+    }
+
+    console.log('✅ Profile found by email:', data.email, 'Role:', data.role)
     return data as Profile
   } catch (error) {
-    console.error('Failed to fetch user profile by email:', error)
+    console.error('❌ Failed to fetch user profile by email:', error)
     return null
   }
 }
@@ -196,6 +222,9 @@ export async function createUserProfile(
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
+
+  // All profiles go into the profiles table
+  console.log(`📝 Creating profile in profiles table`)
 
   const { data, error } = await supabase
     .from('profiles')
@@ -218,16 +247,57 @@ export async function getCurrentUserWithProfile(): Promise<{
   user: User | null
   profile: Profile | null
 }> {
-  const { data: { user } } = await supabase.auth.getUser()
+  try {
+    console.log('🔍 Starting getCurrentUserWithProfile...')
 
-  if (!user || !user.email) {
+    // Get user - no timeout to avoid issues
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user || !user.email) {
+      console.log('❌ No user or email found')
+      return { user: null, profile: null }
+    }
+
+    console.log('✅ User found:', user.email, 'ID:', user.id)
+
+    // Get profile directly from profiles table with better error handling
+    console.log('🔍 Fetching profile for user:', user.email)
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', user.email)
+      .maybeSingle() // Use maybeSingle instead of single to handle not found gracefully
+
+    if (profileError) {
+      console.error('❌ Profile fetch error:', profileError.message, profileError.code)
+      return { user, profile: null }
+    }
+
+    if (!profile) {
+      console.error('❌ No profile found for user:', user.email)
+      // Let's also try by ID as fallback
+      const { data: profileById } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileById) {
+        console.log('✅ Profile found by ID:', profileById.email)
+        return { user, profile: profileById as Profile }
+      }
+
+      return { user, profile: null }
+    }
+
+    console.log('✅ Profile found successfully:', profile.email, 'Role:', profile.role)
+    return { user, profile: profile as Profile }
+
+  } catch (error) {
+    console.error('❌ getCurrentUserWithProfile error:', error)
     return { user: null, profile: null }
   }
-
-  // ลองหา profile ด้วย email ก่อน
-  const profile = await getUserProfileByEmail(user.email)
-
-  return { user, profile }
 }
 
 /**

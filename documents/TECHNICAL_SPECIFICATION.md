@@ -1777,7 +1777,7 @@ services:
     depends_on:
       - api
   
-  # Provider App
+  # Staff App
   provider:
     build:
       context: .

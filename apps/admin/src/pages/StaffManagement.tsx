@@ -415,7 +415,7 @@ function StaffManagement() {
             <div className="text-sm text-stone-600 space-y-2">
               <p>• พนักงานสมัครผ่าน LINE LIFF → ข้อมูลเข้าสู่ระบบอัตโนมัติ</p>
               <p>• แอดมินอนุมัติ/ปฏิเสธ → ส่งแจ้งเตือนทาง LINE ทันที</p>
-              <p>• พนักงานที่ได้รับอนุมัติ → สามารถเข้าใช้ Provider App ได้</p>
+              <p>• พนักงานที่ได้รับอนุมัติ → สามารถเข้าใช้ Staff App ได้</p>
               <p>• ระบบ One-time Approval → อนุมัติเพียงครั้งเดียวต่อ LINE User ID</p>
             </div>
           </div>

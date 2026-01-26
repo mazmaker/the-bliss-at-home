@@ -40,13 +40,14 @@ function AdminLayout() {
     e.stopPropagation()
 
     try {
+      // Navigate immediately for instant feedback
+      navigate('/admin/login', { replace: true })
+      // Then clean up auth state
       await logout()
-      // Add small delay to ensure state is updated
-      setTimeout(() => {
-        navigate('/admin/login', { replace: true })
-      }, 100)
     } catch (error) {
       console.error("Logout failed", error)
+      // Still navigate even if logout fails
+      navigate('/admin/login', { replace: true })
     }
   }
 

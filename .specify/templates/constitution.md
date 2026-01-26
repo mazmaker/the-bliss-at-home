@@ -186,7 +186,7 @@ the-bliss-at-home/
 │   │       └── pages/
 │   ├── customer/           # Port 3002
 │   ├── hotel/              # Port 3003
-│   ├── provider/           # Port 3004 (LINE LIFF)
+│   ├── staff/             # Port 3004 (LINE LIFF)
 │   └── server/             # Port 3000
 │       └── src/
 │           ├── routes/              # API routes
@@ -1164,7 +1164,7 @@ pnpm dev:server       # Server only
 3001  Admin App
 3002  Customer App
 3003  Hotel App
-3004  Provider App (LINE LIFF)
+3004  Staff App (LINE LIFF)
 5432  Supabase PostgreSQL (local)
 ```
 

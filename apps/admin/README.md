@@ -36,7 +36,11 @@ Set in `.env.local`:
 VITE_USE_MOCK_AUTH=false
 ```
 
-Create admin user first: See [Creating Admin User](../../docs/CREATE_ADMIN_USER.md)
+Login with:
+- Email: `admin2@theblissathome.com`
+- Password: `AdminBliss2026!`
+
+Note: Original admin@theblissathome.com has authentication issues. Use admin2 instead.
 
 ## 📁 Project Structure
 

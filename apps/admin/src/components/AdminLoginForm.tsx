@@ -139,30 +139,34 @@ export function AdminLoginForm({
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               รหัสผ่าน
             </label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="กรุณากรอกรหัสผ่าน"
-                value={credentials.password}
-                onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                error={validationErrors.password}
-                disabled={isLoading}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-indigo-500 rounded-sm"
-                tabIndex={-1}
-                disabled={isLoading}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
+            <div className="w-full">
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="กรุณากรอกรหัสผ่าน"
+                  value={credentials.password}
+                  onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                  disabled={isLoading}
+                  className="w-full px-4 py-3 pr-12 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 border-stone-300 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-100 disabled:cursor-not-allowed"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  tabIndex={-1}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {validationErrors.password && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+              )}
             </div>
           </div>
 

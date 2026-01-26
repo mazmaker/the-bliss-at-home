@@ -17,10 +17,32 @@ export async function mockAuthLogin(credentials: LoginCredentials): Promise<Auth
     throw new Error('Invalid email or password')
   }
 
+  // Find matching user based on email
+  const userProfile = credentials.email === 'admin2@theblissathome.com'
+    ? {
+        id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeef',
+        email: 'admin2@theblissathome.com',
+        role: 'ADMIN' as const,
+        full_name: 'ผู้ดูแลระบบ 2',
+        phone: '0812345679',
+        avatar_url: null,
+        status: 'ACTIVE' as const,
+        language: 'th',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    : MOCK_ADMIN_USER
+
   return {
-    user: MOCK_SESSION.user as any, // Supabase User type
-    session: MOCK_SESSION as any, // Supabase Session type
-    profile: MOCK_ADMIN_USER as Profile
+    user: {
+      ...MOCK_SESSION.user,
+      email: credentials.email
+    } as any, // Supabase User type
+    session: {
+      ...MOCK_SESSION,
+      user: { ...MOCK_SESSION.user, email: credentials.email }
+    } as any, // Supabase Session type
+    profile: userProfile as Profile
   }
 }
 

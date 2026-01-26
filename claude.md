@@ -28,7 +28,7 @@ Build **The Bliss at Home** - a massage/spa/nail services booking platform using
 - **Supabase-First Architecture** (PostgreSQL + Auth + Storage + Realtime)
 - **Node.js Supplementary Server** (Omise, LINE, Maps, complex algorithms)
 - **Monorepo Structure** (pnpm + Turborepo)
-- **4 Applications**: Admin (3001), Customer (3002), Hotel (3003), Provider LINE LIFF (3004)
+- **4 Applications**: Admin (3001), Customer (3002), Hotel (3003), Staff LINE LIFF (3004)
 
 ### Core Principles
 
@@ -46,7 +46,7 @@ the-bliss-at-home/
 │   ├── admin/        # Port 3001 - Admin dashboard
 │   ├── customer/     # Port 3002 - Customer booking
 │   ├── hotel/        # Port 3003 - Hotel staff
-│   ├── provider/     # Port 3004 - LINE LIFF for providers
+│   ├── staff/       # Port 3004 - LINE LIFF for staff
 │   └── server/       # Port 3000 - Node.js supplementary
 ├── packages/
 │   ├── supabase/     # Shared Supabase code
@@ -329,7 +329,7 @@ Hotel App (3003):
 - Clear billing display
 - Invoice access prominent
 
-Provider App (3004):
+Staff App (3004):
 - Mobile-only (LINE LIFF)
 - Large buttons for easy tapping
 - Clear status indicators
@@ -907,7 +907,7 @@ If deployment fails:
 3001  Admin App
 3002  Customer App
 3003  Hotel App
-3004  Provider App (LINE LIFF)
+3004  Staff App (LINE LIFF)
 5432  Supabase PostgreSQL (local)
 ```
 

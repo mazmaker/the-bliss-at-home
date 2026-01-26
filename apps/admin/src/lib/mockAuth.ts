@@ -5,10 +5,10 @@
 
 export const MOCK_ADMIN_USER = {
   id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', // Use consistent UUID
-  email: 'admin@theblissathome.com',
+  email: 'admin2@theblissathome.com',
   role: 'ADMIN' as const,
-  full_name: 'ผู้ดูแลระบบ',
-  phone: '0812345678',
+  full_name: 'ผู้ดูแลระบบ 2',
+  phone: '0812345679',
   avatar_url: null,
   status: 'ACTIVE' as const,
   language: 'th',
@@ -16,16 +16,24 @@ export const MOCK_ADMIN_USER = {
   updated_at: new Date().toISOString(),
 }
 
-export const MOCK_CREDENTIALS = {
-  email: 'admin@theblissathome.com',
-  password: 'admin123456'
-}
+export const MOCK_CREDENTIALS = [
+  {
+    email: 'admin@theblissathome.com',
+    password: 'admin123456'
+  },
+  {
+    email: 'admin2@theblissathome.com',
+    password: 'AdminBliss2026!'
+  }
+]
 
 /**
  * Mock login function for testing
  */
 export function mockLogin(email: string, password: string): boolean {
-  return email === MOCK_CREDENTIALS.email && password === MOCK_CREDENTIALS.password
+  return MOCK_CREDENTIALS.some(cred =>
+    cred.email === email && cred.password === password
+  )
 }
 
 /**

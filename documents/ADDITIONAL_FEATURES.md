@@ -4,7 +4,7 @@
 
 ---
 
-## 🎵 Provider App - Sound/Music Features
+## 🎵 Staff App - Sound/Music Features
 
 ### เสียงเพลงเมื่อเริ่ม/จบบริการ
 
@@ -140,7 +140,7 @@ export const JobDetails = ({ job }) => {
 ### Overview
 ปุ่ม SOS สำหรับสถานการณ์ฉุกเฉิน มีใน 2 แอพ:
 1. **Customer App** - สำหรับลูกค้าขอความช่วยเหลือฉุกเฉิน
-2. **Provider App** - สำหรับหมอนวดขอความช่วยเหลือฉุกเฉิน
+2. **Staff App** - สำหรับหมอนวดขอความช่วยเหลือฉุกเฉิน
 
 ### Technical Implementation
 
@@ -525,7 +525,7 @@ export const useSOSAlert = () => {
 }
 ```
 
-#### 3. Provider App - SOS Button
+#### 3. Staff App - SOS Button
 
 ```typescript
 // apps/provider/src/components/SOSButton.tsx
@@ -668,7 +668,7 @@ await smsService.send({
 - Always visible on booking detail page
 - Hidden on other pages unless there's an active booking
 
-**Provider App:**
+**Staff App:**
 - Fixed position: Bottom right corner
 - Always visible when there's an active job
 - Prominent on job details page
