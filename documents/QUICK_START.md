@@ -179,7 +179,7 @@ pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu
 pnpm add date-fns recharts lucide-react
 ```
 
-### 7. Setup Provider App (LINE LIFF)
+### 7. Setup Staff App (LINE LIFF)
 
 ```bash
 cd apps/provider
@@ -276,7 +276,7 @@ SENDGRID_FROM_EMAIL=noreply@theblissathome.com
 ADMIN_URL=http://localhost:3001
 CUSTOMER_URL=http://localhost:3002
 HOTEL_URL=http://localhost:3003
-PROVIDER_URL=http://localhost:3004
+STAFF_URL=http://localhost:3004
 ```
 
 ### 10. Database Setup

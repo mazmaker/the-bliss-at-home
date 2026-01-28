@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   Plus,
   Search,
@@ -9,16 +8,21 @@ import {
   X,
   UserCheck,
   UserX,
-  MapPin,
   Star,
   Phone,
-  Mail,
-  Calendar,
   Clock,
   Sparkles,
   Hand,
   Flower2,
+  QrCode,
+  MessageCircle,
+  ExternalLink,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
+import { useStaff, useStaffStats, useUpdateStaffStatus } from '../hooks/useStaff'
+import { Staff } from '../services/staffService'
+import AddStaffModal from '../components/AddStaffModal'
 
 const skills = [
   { id: 'all', name: 'ทั้งหมด', icon: Filter },
@@ -27,109 +31,100 @@ const skills = [
   { id: 'spa', name: 'สปา', icon: Flower2 },
 ]
 
-const staffList = [
-  {
-    id: 'STF001',
-    name: 'สมหญิง นวดเก่ง',
-    phone: '081-234-5678',
-    email: 'somying@email.com',
-    skills: ['massage'],
-    rating: 4.8,
-    reviews: 156,
-    experience: 5,
-    status: 'active',
-    completedJobs: 1250,
-    earnings: 450000,
-    joinDate: '2023-01-15',
-  },
-  {
-    id: 'STF002',
-    name: 'ดอกไม้ ทำเล็บเก่ง',
-    phone: '082-345-6789',
-    email: 'dokmai@email.com',
-    skills: ['nail'],
-    rating: 4.9,
-    reviews: 203,
-    experience: 3,
-    status: 'active',
-    completedJobs: 890,
-    earnings: 320000,
-    joinDate: '2023-06-20',
-  },
-  {
-    id: 'STF003',
-    name: 'แก้ว สปาชำนาญ',
-    phone: '083-456-7890',
-    email: 'kaew@email.com',
-    skills: ['spa', 'massage'],
-    rating: 4.7,
-    reviews: 89,
-    experience: 7,
-    status: 'active',
-    completedJobs: 670,
-    earnings: 520000,
-    joinDate: '2022-03-10',
-  },
-  {
-    id: 'STF004',
-    name: 'มานี มีตา',
-    phone: '084-567-8901',
-    email: 'manee@email.com',
-    skills: ['nail', 'spa'],
-    rating: 4.6,
-    reviews: 67,
-    experience: 2,
-    status: 'inactive',
-    completedJobs: 234,
-    earnings: 89000,
-    joinDate: '2024-01-05',
-  },
-  {
-    id: 'STF005',
-    name: 'ประยุทธ์ นวดแข็ง',
-    phone: '085-678-9012',
-    email: 'prayut@email.com',
-    skills: ['massage'],
-    rating: 4.5,
-    reviews: 45,
-    experience: 4,
-    status: 'pending',
-    completedJobs: 0,
-    earnings: 0,
-    joinDate: '2025-12-20',
-  },
-]
-
-function Staff() {
+function StaffPage() {
   const [selectedSkill, setSelectedSkill] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'suspended'>('all')
+  const [showAddModal, setShowAddModal] = useState(false)
 
-  const filteredStaff = staffList.filter((staff) => {
-    const matchesSkill = selectedSkill === 'all' || staff.skills.includes(selectedSkill as any)
-    const matchesSearch =
-      searchQuery === '' ||
-      staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      staff.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || staff.status === statusFilter
-    return matchesSkill && matchesSearch && matchesStatus
+  // Real data from database
+  const {
+    data: staffData,
+    isLoading: staffLoading,
+    error: staffError,
+    refetch: refetchStaff,
+  } = useStaff({
+    status: statusFilter,
+    search: searchQuery,
   })
 
-  const getStatusBadge = (status: string) => {
+  const {
+    data: statsData,
+    isLoading: statsLoading,
+  } = useStaffStats()
+
+  const updateStatusMutation = useUpdateStaffStatus()
+
+  // Handle status updates
+  const handleStatusUpdate = async (id: string, status: Staff['status']) => {
+    try {
+      await updateStatusMutation.mutateAsync({ id, status })
+    } catch (error) {
+      console.error('Failed to update status:', error)
+    }
+  }
+
+  // Filter staff by skills
+  const filteredStaff = staffData?.filter((staff) => {
+    const hasSkill = selectedSkill === 'all' || staff.skills?.some(skill =>
+      skill.skill?.name_en?.toLowerCase() === selectedSkill ||
+      skill.skill?.name_th?.includes(selectedSkill)
+    )
+    return hasSkill
+  }) || []
+
+  const getStatusBadge = (status: Staff['status']) => {
     const badges = {
       active: 'bg-green-100 text-green-700',
       inactive: 'bg-stone-100 text-stone-600',
       pending: 'bg-yellow-100 text-yellow-700',
+      suspended: 'bg-red-100 text-red-700',
     }
     const labels = {
       active: 'ใช้งานอยู่',
       inactive: 'ไม่ใช้งาน',
       pending: 'รออนุมัติ',
+      suspended: 'ระงับการใช้งาน',
     }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badges[status as keyof typeof badges]}`}>
-        {labels[status as keyof typeof labels]}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badges[status]}`}>
+        {labels[status]}
       </span>
+    )
+  }
+
+  const formatSkillName = (skill: any) => {
+    return skill.skill?.name_th || skill.skill?.name_en || 'Unknown'
+  }
+
+  // Loading state
+  if (staffLoading || statsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-amber-600" />
+          <p className="text-stone-600">กำลังโหลดข้อมูลพนักงาน...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (staffError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-stone-900 mb-2">เกิดข้อผิดพลาด</h3>
+          <p className="text-stone-600 mb-4">ไม่สามารถโหลดข้อมูลพนักงานได้</p>
+          <button
+            onClick={() => refetchStaff()}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+          >
+            ลองใหม่อีกครั้ง
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -139,9 +134,19 @@ function Staff() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-stone-900">จัดการพนักงาน</h1>
-          <p className="text-stone-500">Staff Management</p>
+          <div className="flex items-center gap-2">
+            <p className="text-stone-500">Staff Management</p>
+            {import.meta.env.VITE_USE_MOCK_AUTH === 'true' && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                🧪 Mock Data Mode
+              </span>
+            )}
+          </div>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+        >
           <Plus className="w-5 h-5" />
           เพิ่มพนักงานใหม่
         </button>
@@ -156,7 +161,7 @@ function Staff() {
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">
-                {staffList.filter((s) => s.status === 'active').length}
+                {statsData?.active || 0}
               </p>
               <p className="text-xs text-stone-500">พนักงานทำงาน</p>
             </div>
@@ -169,7 +174,7 @@ function Staff() {
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">
-                {staffList.filter((s) => s.status === 'pending').length}
+                {statsData?.pending || 0}
               </p>
               <p className="text-xs text-stone-500">รออนุมัติ</p>
             </div>
@@ -182,7 +187,7 @@ function Staff() {
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">
-                {staffList.filter((s) => s.status === 'inactive').length}
+                {(statsData?.inactive || 0) + (statsData?.suspended || 0)}
               </p>
               <p className="text-xs text-stone-500">ไม่ใช้งาน</p>
             </div>
@@ -194,7 +199,9 @@ function Staff() {
               <Star className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">4.7</p>
+              <p className="text-2xl font-bold text-stone-900">
+                {statsData?.averageRating?.toFixed(1) || '0.0'}
+              </p>
               <p className="text-xs text-stone-500">คะแนนเฉลี่ย</p>
             </div>
           </div>
@@ -209,7 +216,7 @@ function Staff() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
             <input
               type="text"
-              placeholder="ค้นหาชื่อ, อีเมล..."
+              placeholder="ค้นหาชื่อ, โทรศัพท์..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
@@ -245,8 +252,9 @@ function Staff() {
           >
             <option value="all">สถานะทั้งหมด</option>
             <option value="active">ใช้งานอยู่</option>
-            <option value="inactive">ไม่ใช้งาน</option>
             <option value="pending">รออนุมัติ</option>
+            <option value="inactive">ไม่ใช้งาน</option>
+            <option value="suspended">ระงับการใช้งาน</option>
           </select>
         </div>
       </div>
@@ -264,7 +272,6 @@ function Staff() {
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ทักษะ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ประสบการณ์</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เรตติ้ง</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">งานที่เสร็จ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้รวม</th>
@@ -273,72 +280,125 @@ function Staff() {
               </tr>
             </thead>
             <tbody>
-              {filteredStaff.map((staff) => (
-                <tr key={staff.id} className="border-b border-stone-100 hover:bg-stone-50">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
-                        {staff.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-stone-900">{staff.name}</p>
-                        <div className="flex items-center gap-2 text-xs text-stone-500">
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {staff.phone}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex flex-wrap gap-1">
-                      {staff.skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-stone-600">{staff.experience} ปี</td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      <span className="text-sm font-medium text-stone-700">{staff.rating}</span>
-                      <span className="text-xs text-stone-400">({staff.reviews})</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm font-medium text-stone-900">{staff.completedJobs}</td>
-                  <td className="py-3 px-4 text-sm font-medium text-amber-700">฿{staff.earnings.toLocaleString()}</td>
-                  <td className="py-3 px-4">{getStatusBadge(staff.status)}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-stone-100 rounded-lg transition" title="ดูรายละเอียด">
-                        <Eye className="w-4 h-4 text-stone-600" />
-                      </button>
-                      {staff.status === 'pending' && (
-                        <>
-                          <button className="p-2 hover:bg-green-100 rounded-lg transition" title="อนุมัติ">
-                            <Check className="w-4 h-4 text-green-600" />
-                          </button>
-                          <button className="p-2 hover:bg-red-100 rounded-lg transition" title="ปฏิเสธ">
-                            <X className="w-4 h-4 text-red-600" />
-                          </button>
-                        </>
-                      )}
-                    </div>
+              {filteredStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-stone-500">
+                    ไม่พบข้อมูลพนักงาน
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredStaff.map((staff) => (
+                  <tr key={staff.id} className="border-b border-stone-100 hover:bg-stone-50">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+                          {staff.name_th.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-stone-900">{staff.name_th}</p>
+                          <div className="flex items-center gap-2 text-xs text-stone-500">
+                            <span className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {staff.phone}
+                            </span>
+                            {staff.profile?.email && (
+                              <span>• {staff.profile.email}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        {staff.skills?.length ? (
+                          staff.skills.map((skill) => (
+                            <span
+                              key={skill.id}
+                              className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"
+                            >
+                              {formatSkillName(skill)}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-stone-400">ไม่ระบุ</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        <span className="text-sm font-medium text-stone-700">
+                          {staff.rating.toFixed(1)}
+                        </span>
+                        <span className="text-xs text-stone-400">
+                          ({staff.total_reviews})
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm font-medium text-stone-900">
+                      {staff.total_jobs}
+                    </td>
+                    <td className="py-3 px-4 text-sm font-medium text-amber-700">
+                      ฿{staff.total_earnings.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4">{getStatusBadge(staff.status)}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="p-2 hover:bg-stone-100 rounded-lg transition"
+                          title="ดูรายละเอียด"
+                        >
+                          <Eye className="w-4 h-4 text-stone-600" />
+                        </button>
+
+                        {staff.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusUpdate(staff.id, 'active')}
+                              disabled={updateStatusMutation.isPending}
+                              className="p-2 hover:bg-green-100 rounded-lg transition"
+                              title="อนุมัติ"
+                            >
+                              <Check className="w-4 h-4 text-green-600" />
+                            </button>
+                            <button
+                              onClick={() => handleStatusUpdate(staff.id, 'inactive')}
+                              disabled={updateStatusMutation.isPending}
+                              className="p-2 hover:bg-red-100 rounded-lg transition"
+                              title="ปฏิเสธ"
+                            >
+                              <X className="w-4 h-4 text-red-600" />
+                            </button>
+                          </>
+                        )}
+
+                        {staff.status === 'active' && (
+                          <button
+                            onClick={() => handleStatusUpdate(staff.id, 'inactive')}
+                            disabled={updateStatusMutation.isPending}
+                            className="p-2 hover:bg-red-100 rounded-lg transition"
+                            title="ระงับการใช้งาน"
+                          >
+                            <UserX className="w-4 h-4 text-red-600" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Add Staff Modal */}
+      <AddStaffModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+      />
     </div>
   )
 }
 
-export default Staff
+export default StaffPage

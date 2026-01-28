@@ -150,7 +150,7 @@ the-bliss-at-home/
 
 **Tech Stack:** React + TypeScript + Vite + TanStack Query + Zustand + Tailwind CSS
 
-### 4. 💆 Provider App (LINE LIFF)
+### 4. 💆 Staff App (LINE LIFF)
 **Purpose:** รับงานและจัดการงานสำหรับหมอนวด
 
 **Key Features:**
@@ -251,7 +251,7 @@ pnpm dev:api
 - Admin: http://localhost:3001
 - Customer: http://localhost:3002
 - Hotel: http://localhost:3003
-- Provider: http://localhost:3004
+- Staff: http://localhost:3004
 - API: http://localhost:3000
 
 ---
@@ -525,7 +525,7 @@ This project is proprietary software. All rights reserved.
 ✅ **Real-time Updates** with WebSocket
 ✅ **Multi-language Support** (TH/EN/CN)
 ✅ **Payment Integration** (Omise)
-✅ **LINE LIFF** for Provider App
+✅ **LINE LIFF** for Staff App
 ✅ **Google Maps** Integration
 ✅ **Comprehensive Admin Panel**
 ✅ **Mobile-First Design**

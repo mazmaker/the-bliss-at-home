@@ -126,7 +126,7 @@ pnpm --filter @bliss/supabase gen:types
 | Admin | 3001 |
 | Customer | 3002 |
 | Hotel | 3003 |
-| Provider | 3004 |
+| Staff | 3004 |
 
 ## Available Scripts
 

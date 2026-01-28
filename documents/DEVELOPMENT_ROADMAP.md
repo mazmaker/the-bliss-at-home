@@ -10,7 +10,7 @@
 - Admin App (React + TypeScript + Vite)
 - Customer App (React + TypeScript + Vite)
 - Hotel App (React + TypeScript + Vite)
-- Provider App (React + TypeScript + Vite + LINE LIFF)
+- Staff App (React + TypeScript + Vite + LINE LIFF)
 
 **Backend:** Node.js + Express + TypeScript + PostgreSQL + Redis
 
@@ -71,7 +71,7 @@
 
 ### Week 3: Wireframe (Provider & Admin)
 
-**Day 1-2: Provider App Wireframes (LINE LIFF)**
+**Day 1-2: Staff App Wireframes (LINE LIFF)**
 - [ ] Jobs Feed
 - [ ] Job Details
 - [ ] Accept/Decline Job Flow
@@ -118,7 +118,7 @@
 **Day 2-3: High-Fidelity Mockups**
 - [ ] Customer App (All Pages)
 - [ ] Hotel App (All Pages)
-- [ ] Provider App (All Pages)
+- [ ] Staff App (All Pages)
 - [ ] Admin App (Main Pages)
 
 **Day 4: Interactive Prototype**
