@@ -91,16 +91,10 @@ function App() {
         }
       />
 
-      {/* Protected admin routes */}
+      {/* Admin routes - Authentication temporarily disabled */}
       <Route
         path="/admin"
-        element={
-          <AdminProtectedRoute
-            redirectTo="/admin/login"
-          >
-            <AdminLayout />
-          </AdminProtectedRoute>
-        }
+        element={<AdminLayout />}
       >
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
