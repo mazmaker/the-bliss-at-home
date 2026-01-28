@@ -1,22 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, Star, Clock, List, Sparkles, Hand, Flower2 } from 'lucide-react'
-
-// Mock data - will be replaced with real Supabase data
-const mockServices = [
-  { id: 1, name: 'Thai Massage (2 hours)', price: 800, category: 'massage', rating: 4.8, reviews: 120, duration: 120, slug: 'thai-massage-2hr', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80' },
-  { id: 2, name: 'Oil Massage (2 hours)', price: 1000, category: 'massage', rating: 4.9, reviews: 85, duration: 120, slug: 'oil-massage-2hr', image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80' },
-  { id: 3, name: 'Foot Massage (1 hour)', price: 400, category: 'massage', rating: 4.7, reviews: 200, duration: 60, slug: 'foot-massage-1hr', image: 'https://images.unsplash.com/photo-1519824145371-296894a0daa9?w=800&q=80' },
-  { id: 4, name: 'Herbal Compress (2 hours)', price: 1200, category: 'massage', rating: 4.8, reviews: 45, duration: 120, slug: 'herbal-compress-2hr', image: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=800&q=80' },
-  { id: 5, name: 'Gel Manicure', price: 450, category: 'nail', rating: 4.7, reviews: 90, duration: 60, slug: 'gel-manicure', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80' },
-  { id: 6, name: 'Gel Pedicure', price: 550, category: 'nail', rating: 4.8, reviews: 75, duration: 75, slug: 'gel-pedicure', image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059e98b?w=800&q=80' },
-  { id: 7, name: 'Classic Manicure', price: 300, category: 'nail', rating: 4.6, reviews: 110, duration: 45, slug: 'classic-manicure', image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=800&q=80' },
-  { id: 8, name: 'Nail Art Design', price: 600, category: 'nail', rating: 4.9, reviews: 35, duration: 90, slug: 'nail-art', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80' },
-  { id: 9, name: 'Luxury Spa Package', price: 2500, category: 'spa', rating: 5.0, reviews: 25, duration: 150, slug: 'luxury-spa-package', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80' },
-  { id: 10, name: 'Facial Treatment', price: 1200, category: 'spa', rating: 4.8, reviews: 60, duration: 90, slug: 'facial-treatment', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80' },
-  { id: 11, name: 'Body Scrub', price: 800, category: 'spa', rating: 4.7, reviews: 40, duration: 60, slug: 'body-scrub', image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&q=80' },
-  { id: 12, name: 'Aromatherapy Massage', price: 1500, category: 'massage', rating: 4.9, reviews: 55, duration: 120, slug: 'aromatherapy-massage', image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80' },
-]
+import { useServices } from '@bliss/supabase/hooks/useServices'
 
 const categories = [
   { id: 'all', name: 'All', icon: List },
@@ -45,31 +30,50 @@ function ServiceCatalog() {
   const [sortBy, setSortBy] = useState('popular')
   const [searchQuery, setSearchQuery] = useState('')
 
+  const { data: services, isLoading, error } = useServices()
+
   useEffect(() => {
     const category = searchParams.get('category')
     if (category) setSelectedCategory(category)
   }, [searchParams])
 
-  // Filter and sort services
-  let filteredServices = mockServices.filter(service => {
-    const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory
-    const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  // Transform services to match expected format
+  const transformedServices = useMemo(() => {
+    return services?.map(service => ({
+      id: service.id,
+      name: service.name_en || service.name_th,
+      price: Number(service.base_price || 0),
+      category: service.category,
+      rating: 4.5, // Default rating since we don't have rating field yet
+      reviews: 0, // Default reviews since we don't have reviews field yet
+      duration: service.duration || 60,
+      slug: service.slug,
+      image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+    })) || []
+  }, [services])
 
-  // Sort
-  filteredServices = [...filteredServices].sort((a, b) => {
-    switch (sortBy) {
-      case 'price-low':
-        return a.price - b.price
-      case 'price-high':
-        return b.price - a.price
-      case 'rating':
-        return b.rating - a.rating
-      default:
-        return b.reviews - a.reviews // popular
-    }
-  })
+  // Filter and sort services
+  const filteredServices = useMemo(() => {
+    let filtered = transformedServices.filter(service => {
+      const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory
+      const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesCategory && matchesSearch
+    })
+
+    // Sort
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.price - b.price
+        case 'price-high':
+          return b.price - a.price
+        case 'rating':
+          return b.rating - a.rating
+        default:
+          return b.reviews - a.reviews // popular
+      }
+    })
+  }, [transformedServices, selectedCategory, searchQuery, sortBy])
 
   return (
     <div className="min-h-screen py-8">
@@ -132,13 +136,30 @@ function ServiceCatalog() {
           </div>
         </div>
 
-        {/* Results */}
-        <div className="mb-4 text-stone-600 font-light">
-          {filteredServices.length} services found
-        </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+            <p className="text-stone-600 mt-4">Loading services...</p>
+          </div>
+        )}
 
-        {/* Services Grid */}
-        {filteredServices.length > 0 ? (
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-600">Failed to load services. Please try again.</p>
+          </div>
+        )}
+
+        {/* Results */}
+        {!isLoading && !error && (
+          <>
+            <div className="mb-4 text-stone-600 font-light">
+              {filteredServices.length} services found
+            </div>
+
+            {/* Services Grid */}
+            {filteredServices.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredServices.map((service) => (
               <Link
@@ -191,6 +212,8 @@ function ServiceCatalog() {
               Clear Filters
             </button>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

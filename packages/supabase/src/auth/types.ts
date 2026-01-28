@@ -116,7 +116,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
 export class AuthError extends Error {
   constructor(
     message: string,
-    public code?: 'INVALID_CREDENTIALS' | 'INVALID_ROLE' | 'ACCOUNT_DISABLED' | 'UNKNOWN'
+    public code?: 'INVALID_CREDENTIALS' | 'INVALID_ROLE' | 'ACCOUNT_DISABLED' | 'OAUTH_ERROR' | 'UNKNOWN'
   ) {
     super(message)
     this.name = 'AuthError'

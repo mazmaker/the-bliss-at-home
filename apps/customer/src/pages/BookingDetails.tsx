@@ -1,88 +1,96 @@
+import { useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle } from 'lucide-react'
-
-// Service image mapping
-const serviceImages: Record<string, string> = {
-  'Thai Massage (2 hours)': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
-  'Oil Massage (2 hours)': 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80',
-  'Gel Manicure': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80',
-  'Luxury Spa Package': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80',
-  'Gel Pedicure': 'https://images.unsplash.com/photo-1519014816548-bf5fe059e98b?w=800&q=80',
-}
-
-// Mock booking data
-const mockBookingDetails: Record<string, any> = {
-  'BK20260114001': {
-    id: 'BK20260114001',
-    serviceName: 'Thai Massage (2 hours)',
-    serviceSlug: 'thai-massage-2hr',
-    date: '2026-01-20',
-    time: '14:00',
-    status: 'confirmed',
-    price: 800,
-    duration: 2,
-    addOns: [
-      { name: 'Aromatherapy Oil', price: 100 }
-    ],
-    address: {
-      name: 'สมชาย ใจดี',
-      phone: '081-234-5678',
-      address: '123/45 หมู่บ้านสุขสันต์',
-      district: 'เขตพระโขนง',
-      subdistrict: 'แขวงบางนาใต้',
-      province: 'กรุงเทพมหานคร',
-      zipcode: '10260',
-    },
-    notes: 'ประตูหอพักใช้รหัส 1234',
-    provider: {
-      name: 'คุณแนท',
-      rating: 4.9,
-      reviews: 156,
-    },
-    payment: {
-      method: 'credit_card',
-      status: 'paid',
-    },
-    createdAt: '2026-01-14',
-  },
-  'BK20260110002': {
-    id: 'BK20260110002',
-    serviceName: 'Gel Manicure',
-    serviceSlug: 'gel-manicure',
-    date: '2026-01-10',
-    time: '10:30',
-    status: 'completed',
-    price: 450,
-    duration: 1,
-    addOns: [],
-    address: {
-      name: 'สมชาย ใจดี',
-      phone: '081-234-5678',
-      address: '123/45 หมู่บ้านสุขสันต์',
-      district: 'เขตพระโขนง',
-      subdistrict: 'แขวงบางนาใต้',
-      province: 'กรุงเทพมหานคร',
-      zipcode: '10260',
-    },
-    notes: '',
-    provider: {
-      name: 'คุณมด',
-      rating: 4.8,
-      reviews: 89,
-    },
-    payment: {
-      method: 'cash',
-      status: 'paid',
-    },
-    createdAt: '2026-01-08',
-  },
-}
+import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 
 function BookingDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const booking = id ? mockBookingDetails[id] : null
+  // Fetch booking data from Supabase
+  const { data: bookingData, isLoading, error } = useBookingByNumber(id)
+
+  // Transform booking data to match UI format
+  const booking = useMemo(() => {
+    if (!bookingData) return null
+
+    return {
+      id: bookingData.booking_number,
+      serviceName: bookingData.service?.name_en || bookingData.service?.name_th || 'Unknown Service',
+      serviceSlug: bookingData.service?.slug || '',
+      date: new Date(bookingData.booking_date).toISOString().split('T')[0],
+      time: new Date(bookingData.booking_date).toTimeString().slice(0, 5),
+      status: bookingData.status,
+      price: Number(bookingData.service_price),
+      duration: bookingData.duration_minutes / 60,
+      addOns: bookingData.addons?.map((a) => ({
+        name: a.addon?.name_en || a.addon?.name_th || 'Add-on',
+        price: Number(a.total_price),
+      })) || [],
+      address: {
+        name: bookingData.recipient_name,
+        phone: bookingData.recipient_phone,
+        address: bookingData.address_line,
+        district: bookingData.district || '',
+        subdistrict: bookingData.subdistrict || '',
+        province: bookingData.province || '',
+        zipcode: bookingData.zipcode || '',
+      },
+      notes: bookingData.notes || '',
+      provider: bookingData.staff
+        ? {
+            name: `${bookingData.staff.first_name || ''} ${bookingData.staff.last_name || ''}`.trim(),
+            rating: 4.8, // TODO: Calculate from reviews
+            reviews: 0, // TODO: Count from reviews
+          }
+        : {
+            name: 'Staff TBA',
+            rating: 0,
+            reviews: 0,
+          },
+      payment: {
+        method: bookingData.payment_method || 'cash',
+        status: bookingData.payment_status || 'pending',
+      },
+      createdAt: new Date(bookingData.created_at).toISOString().split('T')[0],
+      image: bookingData.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+    }
+  }, [bookingData])
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+            <p className="text-stone-600 mt-4">Loading booking details...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">Error Loading Booking</h2>
+            <p className="text-stone-600 mb-6">{error.message}</p>
+            <Link
+              to="/bookings"
+              className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+            >
+              Back to Booking History
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!booking) {
     return (
@@ -190,7 +198,7 @@ function BookingDetails() {
 
               <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl">
                 <div className="w-20 h-20 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
-                  <img src={serviceImages[booking.serviceName] || serviceImages['Thai Massage (2 hours)']} alt={booking.serviceName} className="w-full h-full object-cover" />
+                  <img src={booking.image} alt={booking.serviceName} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg text-stone-900 mb-1">{booking.serviceName}</h3>

@@ -1,75 +1,182 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { User, Bell, Lock, Globe, MapPin, CreditCard, Banknote, Plus, LogOut } from 'lucide-react'
+import { User, Bell, Lock, Globe, MapPin, CreditCard, Banknote, Plus, LogOut, FileText, Building2 } from 'lucide-react'
+import { useCurrentCustomer, useUpdateCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { useAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress, useSetDefaultAddress } from '@bliss/supabase/hooks/useAddresses'
+import { usePaymentMethods, useAddPaymentMethod, useDeletePaymentMethod, useSetDefaultPaymentMethod } from '@bliss/supabase/hooks/usePaymentMethods'
+import { useTaxInformation, useUpsertTaxInformation } from '@bliss/supabase/hooks/useTaxInformation'
 
 function Profile() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'payment'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'payment' | 'tax'>('profile')
 
-  // Mock user data
-  const [user, setUser] = useState({
-    firstName: 'สมชาย',
-    lastName: 'ใจดี',
-    email: 'somchai@example.com',
-    phone: '081-234-5678',
-    birthDate: '1990-01-15',
+  // Fetch real data from Supabase
+  const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
+  const { data: addresses = [], isLoading: addressesLoading } = useAddresses(customer?.id)
+  const { data: paymentMethods = [], isLoading: paymentLoading } = usePaymentMethods(customer?.id)
+  const { data: taxInformation, isLoading: taxLoading } = useTaxInformation(customer?.id)
+
+  // Mutations
+  const updateCustomer = useUpdateCustomer()
+  const createAddress = useCreateAddress()
+  const updateAddress = useUpdateAddress()
+  const deleteAddress = useDeleteAddress()
+  const setDefaultAddress = useSetDefaultAddress()
+  const addPaymentMethod = useAddPaymentMethod()
+  const deletePaymentMethod = useDeletePaymentMethod()
+  const setDefaultPaymentMethod = useSetDefaultPaymentMethod()
+  const upsertTaxInfo = useUpsertTaxInformation()
+
+  // Local form state
+  const [profileForm, setProfileForm] = useState({
+    first_name: '',
+    last_name: '',
+    phone: '',
+    birth_date: '',
   })
 
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      label: 'บ้าน',
-      name: 'สมชาย ใจดี',
-      phone: '081-234-5678',
-      address: '123/45 หมู่บ้านสุขสันต์',
-      district: 'เขตพระโขนง',
-      subdistrict: 'แขวงบางนาใต้',
-      province: 'กรุงเทพมหานคร',
-      zipcode: '10260',
-      isDefault: true,
-    },
-  ])
+  const [taxForm, setTaxForm] = useState({
+    tax_type: 'individual' as 'individual' | 'company',
+    tax_id: '',
+    company_name: '',
+    branch_code: '',
+    address_line: '',
+    district: '',
+    subdistrict: '',
+    province: '',
+    zipcode: '',
+  })
 
-  const [paymentMethods, setPaymentMethods] = useState([
-    {
-      id: 1,
-      type: 'credit_card',
-      name: 'Visa •••• 4242',
-      isDefault: true,
-    },
-  ])
+  // Initialize forms when data loads
+  useState(() => {
+    if (customer) {
+      setProfileForm({
+        first_name: customer.first_name || '',
+        last_name: customer.last_name || '',
+        phone: customer.phone || '',
+        birth_date: customer.birth_date || '',
+      })
+    }
+  })
 
-  const handleProfileSave = () => {
-    // Mock save
-    alert('Profile saved successfully')
-  }
+  useState(() => {
+    if (taxInformation) {
+      setTaxForm({
+        tax_type: taxInformation.tax_type as 'individual' | 'company',
+        tax_id: taxInformation.tax_id || '',
+        company_name: taxInformation.company_name || '',
+        branch_code: taxInformation.branch_code || '',
+        address_line: taxInformation.address_line || '',
+        district: taxInformation.district || '',
+        subdistrict: taxInformation.subdistrict || '',
+        province: taxInformation.province || '',
+        zipcode: taxInformation.zipcode || '',
+      })
+    }
+  })
 
-  const handleAddAddress = () => {
-    // Mock add address
-    alert('Add new address')
-  }
-
-  const handleEditAddress = (id: number) => {
-    // Mock edit address
-    alert(`Edit address ID: ${id}`)
-  }
-
-  const handleDeleteAddress = (id: number) => {
-    // Mock delete address
-    if (confirm('Confirm to delete this address?')) {
-      setAddresses(addresses.filter(a => a.id !== id))
+  const handleProfileSave = async () => {
+    if (!customer) return
+    try {
+      await updateCustomer.mutateAsync({
+        customerId: customer.id,
+        updates: profileForm,
+      })
+      alert('Profile updated successfully')
+    } catch (error) {
+      console.error('Update profile error:', error)
+      alert('Failed to update profile')
     }
   }
 
-  const handleSetDefaultAddress = (id: number) => {
-    setAddresses(addresses.map(a => ({
-      ...a,
-      isDefault: a.id === id
-    })))
+  const handleAddAddress = () => {
+    // This would open a modal/form - for now just alert
+    alert('Add address functionality - would open a form modal')
+  }
+
+  const handleEditAddress = (id: string) => {
+    // This would open a modal/form with pre-filled data
+    alert(`Edit address ${id} - would open a form modal`)
+  }
+
+  const handleDeleteAddress = async (id: string) => {
+    if (!customer) return
+    if (confirm('Confirm to delete this address?')) {
+      try {
+        await deleteAddress.mutateAsync({ addressId: id, customerId: customer.id })
+        alert('Address deleted successfully')
+      } catch (error) {
+        console.error('Delete address error:', error)
+        alert('Failed to delete address')
+      }
+    }
+  }
+
+  const handleSetDefaultAddress = async (id: string) => {
+    if (!customer) return
+    try {
+      await setDefaultAddress.mutateAsync({ addressId: id, customerId: customer.id })
+    } catch (error) {
+      console.error('Set default address error:', error)
+      alert('Failed to set default address')
+    }
   }
 
   const handleAddPaymentMethod = () => {
-    // Mock add payment method
-    alert('Add new payment method')
+    // This would integrate with Omise.js - for now just alert
+    alert('Add payment method - would integrate with Omise.js')
+  }
+
+  const handleDeletePaymentMethod = async (id: string) => {
+    if (!customer) return
+    if (confirm('Confirm to delete this payment method?')) {
+      try {
+        await deletePaymentMethod.mutateAsync({ paymentMethodId: id, customerId: customer.id })
+        alert('Payment method deleted successfully')
+      } catch (error) {
+        console.error('Delete payment method error:', error)
+        alert('Failed to delete payment method')
+      }
+    }
+  }
+
+  const handleSaveTaxInfo = async () => {
+    if (!customer) return
+    try {
+      await upsertTaxInfo.mutateAsync({
+        customer_id: customer.id,
+        ...taxForm,
+      })
+      alert('Tax information saved successfully')
+    } catch (error) {
+      console.error('Save tax info error:', error)
+      alert('Failed to save tax information')
+    }
+  }
+
+  // Loading state
+  if (customerLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+          <p className="text-stone-600 mt-4">Loading profile...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Not logged in
+  if (!customer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-stone-600 text-lg">Please log in to view your profile</p>
+          <Link to="/login" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -88,9 +195,8 @@ function Profile() {
                 <User className="w-10 h-10 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">{user.firstName} {user.lastName}</h2>
-                <p className="text-white/80">{user.email}</p>
-                <p className="text-white/80 text-sm">{user.phone}</p>
+                <h2 className="text-xl font-bold">{customer.first_name} {customer.last_name}</h2>
+                <p className="text-white/80">{customer.phone}</p>
               </div>
             </div>
           </div>
@@ -128,6 +234,16 @@ function Profile() {
               >
                 Payment Methods
               </button>
+              <button
+                onClick={() => setActiveTab('tax')}
+                className={`flex-1 py-4 text-center font-medium transition ${
+                  activeTab === 'tax'
+                    ? 'text-amber-700 border-b-2 border-amber-700'
+                    : 'text-stone-500 hover:text-stone-700'
+                }`}
+              >
+                Tax Invoice
+              </button>
             </div>
           </div>
 
@@ -145,8 +261,8 @@ function Profile() {
                       </label>
                       <input
                         type="text"
-                        value={user.firstName}
-                        onChange={(e) => setUser({ ...user, firstName: e.target.value })}
+                        value={profileForm.first_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -156,19 +272,8 @@ function Profile() {
                       </label>
                       <input
                         type="text"
-                        value={user.lastName}
-                        onChange={(e) => setUser({ ...user, lastName: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value={user.email}
-                        onChange={(e) => setUser({ ...user, email: e.target.value })}
+                        value={profileForm.last_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -178,8 +283,8 @@ function Profile() {
                       </label>
                       <input
                         type="tel"
-                        value={user.phone}
-                        onChange={(e) => setUser({ ...user, phone: e.target.value })}
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -189,8 +294,8 @@ function Profile() {
                       </label>
                       <input
                         type="date"
-                        value={user.birthDate}
-                        onChange={(e) => setUser({ ...user, birthDate: e.target.value })}
+                        value={profileForm.birth_date}
+                        onChange={(e) => setProfileForm({ ...profileForm, birth_date: e.target.value })}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -258,23 +363,27 @@ function Profile() {
                   </button>
                 </div>
 
-                {addresses.length > 0 ? (
+                {addressesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto"></div>
+                  </div>
+                ) : addresses.length > 0 ? (
                   <div className="space-y-4">
                     {addresses.map((address) => (
                       <div
                         key={address.id}
                         className={`border-2 rounded-xl p-4 ${
-                          address.isDefault ? 'border-amber-500 bg-stone-50' : 'border-stone-200'
+                          address.is_default ? 'border-amber-500 bg-stone-50' : 'border-stone-200'
                         }`}
                       >
-                        {address.isDefault && (
+                        {address.is_default && (
                           <span className="inline-block px-2 py-1 bg-amber-700 text-white text-xs rounded-full mb-2">
                             Default
                           </span>
                         )}
-                        <h4 className="font-semibold text-stone-900 mb-2">{address.name}</h4>
-                        <p className="text-stone-600 text-sm mb-1">{address.phone}</p>
-                        <p className="text-stone-600 text-sm">{address.address}</p>
+                        <h4 className="font-semibold text-stone-900 mb-2">{address.label} - {address.recipient_name}</h4>
+                        <p className="text-stone-600 text-sm mb-1">{address.recipient_phone}</p>
+                        <p className="text-stone-600 text-sm">{address.address_line}</p>
                         <p className="text-stone-600 text-sm">
                           {address.subdistrict} {address.district}
                         </p>
@@ -289,7 +398,7 @@ function Profile() {
                             Edit
                           </button>
                           <span className="text-stone-300">|</span>
-                          {!address.isDefault && (
+                          {!address.is_default && (
                             <>
                               <button
                                 onClick={() => handleSetDefaultAddress(address.id)}
@@ -340,28 +449,41 @@ function Profile() {
                   </button>
                 </div>
 
-                {paymentMethods.length > 0 ? (
+                {paymentLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto"></div>
+                  </div>
+                ) : paymentMethods.length > 0 ? (
                   <div className="space-y-4">
                     {paymentMethods.map((method) => (
                       <div
                         key={method.id}
                         className={`border-2 rounded-xl p-4 ${
-                          method.isDefault ? 'border-amber-500 bg-stone-50' : 'border-stone-200'
+                          method.is_default ? 'border-amber-500 bg-stone-50' : 'border-stone-200'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <CreditCard className="w-8 h-8 text-stone-600" />
                             <div>
-                              <h4 className="font-semibold text-stone-900">{method.name}</h4>
-                              {method.isDefault && (
+                              <h4 className="font-semibold text-stone-900">
+                                {method.card_brand} •••• {method.card_last_digits}
+                              </h4>
+                              <p className="text-sm text-stone-500">{method.cardholder_name}</p>
+                              <p className="text-xs text-stone-400">
+                                Expires {method.card_expiry_month}/{method.card_expiry_year}
+                              </p>
+                              {method.is_default && (
                                 <span className="inline-block px-2 py-1 bg-amber-700 text-white text-xs rounded-full mt-1">
                                   Default
                                 </span>
                               )}
                             </div>
                           </div>
-                          <button className="text-red-600 hover:text-red-800 font-medium text-sm">
+                          <button
+                            onClick={() => handleDeletePaymentMethod(method.id)}
+                            className="text-red-600 hover:text-red-800 font-medium text-sm"
+                          >
                             Delete
                           </button>
                         </div>
@@ -392,6 +514,197 @@ function Profile() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Tax Invoice Tab */}
+            {activeTab === 'tax' && (
+              <div className="space-y-6">
+                {taxLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto"></div>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลสำหรับออกใบกำกับภาษี</h3>
+                    <p className="text-sm text-stone-600 mb-6">
+                      กรอกข้อมูลเพื่อใช้สำหรับออกใบกำกับภาษี/ใบเสร็จรับเงิน
+                    </p>
+
+                    {/* Tax Type Selection */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-stone-700 mb-3">
+                        ประเภท <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setTaxForm({ ...taxForm, tax_type: 'individual' })}
+                          className={`p-4 border-2 rounded-xl transition ${
+                            taxForm.tax_type === 'individual'
+                              ? 'border-amber-500 bg-amber-50'
+                              : 'border-stone-200 hover:border-amber-300'
+                          }`}
+                        >
+                          <User className="w-8 h-8 mx-auto mb-2 text-stone-600" />
+                          <p className="font-medium text-stone-900">บุคคลธรรมดา</p>
+                          <p className="text-xs text-stone-500 mt-1">Individual</p>
+                        </button>
+                        <button
+                          onClick={() => setTaxForm({ ...taxForm, tax_type: 'company' })}
+                          className={`p-4 border-2 rounded-xl transition ${
+                            taxForm.tax_type === 'company'
+                              ? 'border-amber-500 bg-amber-50'
+                              : 'border-stone-200 hover:border-amber-300'
+                          }`}
+                        >
+                          <Building2 className="w-8 h-8 mx-auto mb-2 text-stone-600" />
+                          <p className="font-medium text-stone-900">นิติบุคคล</p>
+                          <p className="text-xs text-stone-500 mt-1">Company</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Tax ID */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        {taxForm.tax_type === 'individual' ? 'เลขประจำตัวประชาชน' : 'เลขประจำตัวผู้เสียภาษี'}{' '}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={taxForm.tax_id}
+                        onChange={(e) => setTaxForm({ ...taxForm, tax_id: e.target.value })}
+                        placeholder={taxForm.tax_type === 'individual' ? '1-2345-67890-12-3' : '0-1234-56789-01-2'}
+                        maxLength={13}
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Company Name (only for company type) */}
+                    {taxForm.tax_type === 'company' && (
+                      <>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                            ชื่อบริษัท <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={taxForm.company_name}
+                            onChange={(e) => setTaxForm({ ...taxForm, company_name: e.target.value })}
+                            placeholder="บริษัท ABC จำกัด"
+                            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                            สาขา
+                          </label>
+                          <input
+                            type="text"
+                            value={taxForm.branch_code}
+                            onChange={(e) => setTaxForm({ ...taxForm, branch_code: e.target.value })}
+                            placeholder="สำนักงานใหญ่ หรือ 00001"
+                            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                  {/* Tax Address */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      ที่อยู่สำหรับออกใบกำกับภาษี <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={taxForm.address_line}
+                      onChange={(e) => setTaxForm({ ...taxForm, address_line: e.target.value })}
+                      placeholder="เลขที่, หมู่บ้าน, ซอย, ถนน"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        แขวง/ตำบล
+                      </label>
+                      <input
+                        type="text"
+                        value={taxForm.subdistrict}
+                        onChange={(e) => setTaxForm({ ...taxForm, subdistrict: e.target.value })}
+                        placeholder="แขวง/ตำบล"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        เขต/อำเภอ
+                      </label>
+                      <input
+                        type="text"
+                        value={taxForm.district}
+                        onChange={(e) => setTaxForm({ ...taxForm, district: e.target.value })}
+                        placeholder="เขต/อำเภอ"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        จังหวัด <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={taxForm.province}
+                        onChange={(e) => setTaxForm({ ...taxForm, province: e.target.value })}
+                        placeholder="จังหวัด"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        รหัสไปรษณีย์
+                      </label>
+                      <input
+                        type="text"
+                        value={taxForm.zipcode}
+                        onChange={(e) => setTaxForm({ ...taxForm, zipcode: e.target.value })}
+                        placeholder="10100"
+                        maxLength={5}
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleSaveTaxInfo}
+                      className="bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+                    >
+                      บันทึกข้อมูล
+                    </button>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">หมายเหตุ:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>ข้อมูลนี้จะใช้สำหรับออกใบกำกับภาษี/ใบเสร็จรับเงิน</li>
+                          <li>กรุณากรอกข้อมูลให้ถูกต้องและครบถ้วน</li>
+                          <li>สามารถแก้ไขข้อมูลได้ตลอดเวลา</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                )}
               </div>
             )}
           </div>
