@@ -25,6 +25,9 @@ export function createSupabaseClient(config: ClientConfig): SupabaseClient<Datab
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: 'pkce', // Recommended for SPAs
+      storage: window?.localStorage,
+      storageKey: 'sb-rbdvlfriqjnwpxmmgisf-auth-token', // Unique storage key per project
+      debug: false, // Disable debug logs in production
     },
   })
 }
@@ -44,8 +47,15 @@ export function createSupabaseAdminClient(config: { url: string; serviceRoleKey:
 
 /**
  * Get browser client (for Vite apps)
+ * Implements singleton pattern to avoid multiple client instances
  */
+let browserClientInstance: SupabaseClient<Database> | null = null
+
 export function getBrowserClient(): SupabaseClient<Database> {
+  if (browserClientInstance) {
+    return browserClientInstance
+  }
+
   const url = import.meta.env.VITE_SUPABASE_URL
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -53,5 +63,7 @@ export function getBrowserClient(): SupabaseClient<Database> {
     throw new Error('Missing Supabase environment variables')
   }
 
-  return createSupabaseClient({ url, anonKey })
+  console.log('🔌 Creating new Supabase browser client instance')
+  browserClientInstance = createSupabaseClient({ url, anonKey })
+  return browserClientInstance
 }

@@ -1,58 +1,11 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react'
-
-// Mock service data
-const mockServices: Record<string, any> = {
-  'thai-massage-2hr': {
-    name: 'Thai Massage (2 hours)',
-    price: 800,
-    duration: 2,
-    category: 'massage',
-    description: 'นวดไทยแบบดั้งเดิม ช่วยผ่อนคลายกล้ามเนื้อและเสริมสร้างความยืดหยุ่น',
-    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80'
-  },
-  'oil-massage-2hr': {
-    name: 'Oil Massage (2 hours)',
-    price: 1000,
-    duration: 2,
-    category: 'massage',
-    description: 'นวดน้ำมันอโรม่า ช่วยผ่อนคลายและบำรุงผิว',
-    image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80'
-  },
-  'gel-manicure': {
-    name: 'Gel Manicure',
-    price: 450,
-    duration: 1,
-    category: 'nail',
-    description: 'ทำเล็บเจล สีสดสวยงาม ทนทานนาน',
-    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80'
-  },
-  'luxury-spa': {
-    name: 'Luxury Spa Package',
-    price: 2500,
-    duration: 3,
-    category: 'spa',
-    description: 'แพ็กเกจสปาหรู ครบครันด้วยบริการระดับพรีเมียม',
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80'
-  },
-  'gel-pedicure': {
-    name: 'Gel Pedicure',
-    price: 550,
-    duration: 1.5,
-    category: 'nail',
-    description: 'ทำเล็บเจลเท้า สวยงามและดูแลเป็นอย่างดี',
-    image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059e98b?w=800&q=80'
-  },
-}
-
-// Mock add-ons data
-const mockAddOns = [
-  { id: 1, name: 'Aromatherapy Oil', price: 100 },
-  { id: 2, name: 'Hot Herbal Compress', price: 150 },
-  { id: 3, name: 'Face Massage', price: 200 },
-  { id: 4, name: 'Foot Scrub', price: 120 },
-]
+import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
+import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { useCreateBooking } from '@bliss/supabase/hooks/useBookings'
+import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
+import PaymentForm from '../components/PaymentForm'
 
 type Step = 1 | 2 | 3 | 4 | 5
 
@@ -61,8 +14,14 @@ function BookingWizard() {
   const navigate = useNavigate()
 
   const serviceSlug = searchParams.get('service') || 'thai-massage-2hr'
-  const addOnsParam = searchParams.get('addons')?.split(',').map(Number) || []
+  const addOnsParam = searchParams.get('addons')?.split(',').filter(Boolean) || []
   const qtyParam = Number(searchParams.get('qty')) || 1
+
+  // Fetch data from Supabase
+  const { data: serviceData, isLoading: serviceLoading } = useServiceBySlug(serviceSlug)
+  const { data: customer } = useCurrentCustomer()
+  const { data: addresses } = useAddresses(customer?.id)
+  const createBooking = useCreateBooking()
 
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const [selectedDate, setSelectedDate] = useState('')
@@ -77,11 +36,32 @@ function BookingWizard() {
     zipcode: '',
   })
   const [notes, setNotes] = useState('')
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
+  const [createdBookingNumber, setCreatedBookingNumber] = useState<string | null>(null)
 
-  const service = mockServices[serviceSlug] || mockServices['thai-massage-2hr']
-  const selectedAddOns = mockAddOns.filter(a => addOnsParam.includes(a.id))
-  const addOnPrice = selectedAddOns.reduce((sum, a) => sum + a.price, 0)
-  const totalPrice = (service.price + addOnPrice) * qtyParam
+  // Transform service data
+  const service = useMemo(() => {
+    if (!serviceData) return null
+    return {
+      id: serviceData.id,
+      name: serviceData.name_en || serviceData.name_th,
+      price: Number(serviceData.base_price || 0),
+      duration: (serviceData.duration || 60) / 60, // Convert to hours
+      category: serviceData.category,
+      description: serviceData.description_th || serviceData.description_en || '',
+      image: serviceData.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      addons: serviceData.addons || [],
+    }
+  }, [serviceData])
+
+  // Selected add-ons
+  const selectedAddOns = useMemo(() => {
+    if (!service?.addons) return []
+    return service.addons.filter((addon) => addOnsParam.includes(addon.id))
+  }, [service?.addons, addOnsParam])
+
+  const addOnPrice = selectedAddOns.reduce((sum, a) => sum + Number(a.price), 0)
+  const totalPrice = service ? (service.price + addOnPrice) * qtyParam : 0
 
   // Mock available dates (next 7 days)
   const availableDates = Array.from({ length: 7 }, (_, i) => {
@@ -117,9 +97,92 @@ function BookingWizard() {
     }
   }
 
-  const handleCompleteBooking = () => {
-    // Mock booking completion
-    navigate('/bookings?success=true')
+  const handleCompleteBooking = async () => {
+    if (!service || !customer) {
+      alert('Please log in to complete booking')
+      return
+    }
+
+    try {
+      // Combine address fields into single string
+      const fullAddress = [
+        address.name ? `${address.name} (${address.phone})` : '',
+        address.address,
+        address.subdistrict,
+        address.district,
+        address.province,
+        address.zipcode,
+      ].filter(Boolean).join(', ')
+
+      // Create booking with real data matching schema
+      const bookingData = {
+        customer_id: customer.id,
+        service_id: service.id,
+        booking_date: selectedDate, // DATE format: YYYY-MM-DD
+        booking_time: selectedTime, // TIME format: HH:MM
+        duration: service.duration * 60, // minutes
+        base_price: service.price,
+        final_price: totalPrice,
+        customer_notes: notes || null,
+        address: fullAddress || null,
+      }
+
+      // Prepare add-ons data
+      const addonsData = selectedAddOns.map((addon) => ({
+        addon_id: addon.id,
+        quantity: 1,
+        price_per_unit: Number(addon.price),
+        total_price: Number(addon.price),
+      }))
+
+      const result = await createBooking.mutateAsync({
+        booking: bookingData,
+        addons: addonsData.length > 0 ? addonsData : undefined,
+      })
+
+      // Store booking ID and number
+      setCreatedBookingId(result.id)
+      setCreatedBookingNumber(result.booking_number)
+
+      // Go to Payment step
+      setCurrentStep(5)
+    } catch (error: any) {
+      console.error('Booking error:', error)
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        full: error,
+      })
+      alert(`Failed to create booking: ${error?.message || 'Please try again.'}`)
+    }
+  }
+
+  // Loading state
+  if (serviceLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+          <p className="text-stone-600 mt-4">Loading service...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Service not found
+  if (!service) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-stone-600 text-lg">Service not found</p>
+          <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+            ← Back to Services
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -472,94 +535,58 @@ function BookingWizard() {
           )}
 
           {/* Step 5: Payment */}
-          {currentStep === 5 && (
+          {currentStep === 5 && customer && createdBookingId && (
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">Payment</h2>
 
-              <div className="mb-6">
-                <div className="p-4 bg-stone-50 rounded-xl mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-stone-900">Net Amount</span>
-                    <span className="text-2xl font-bold text-amber-700">฿{totalPrice}</span>
-                  </div>
-                </div>
-
-                <h3 className="font-medium text-stone-900 mb-3">Select Payment Method</h3>
-
-                <div className="space-y-3">
-                  <label className="flex items-center gap-4 p-4 border-2 border-amber-500 bg-stone-50 rounded-xl cursor-pointer">
-                    <input
-                      type="radio"
-                      name="payment"
-                      defaultChecked
-                      className="w-5 h-5 text-amber-700"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-stone-900">Credit/Debit Card</div>
-                      <div className="text-sm text-stone-500">Visa, Mastercard, JCB</div>
-                    </div>
-                    <CreditCard className="w-8 h-8 text-amber-700" />
-                  </label>
-
-                  <label className="flex items-center gap-4 p-4 border-2 border-stone-200 hover:border-amber-300 rounded-xl cursor-pointer">
-                    <input type="radio" name="payment" className="w-5 h-5 text-amber-700" />
-                    <div className="flex-1">
-                      <div className="font-medium text-stone-900">Bank Transfer</div>
-                      <div className="text-sm text-stone-500">KBANK, KTB, SCB</div>
-                    </div>
-                    <Building2 className="w-8 h-8 text-stone-600" />
-                  </label>
-
-                  <label className="flex items-center gap-4 p-4 border-2 border-stone-200 hover:border-amber-300 rounded-xl cursor-pointer">
-                    <input type="radio" name="payment" className="w-5 h-5 text-amber-700" />
-                    <div className="flex-1">
-                      <div className="font-medium text-stone-900">Cash</div>
-                      <div className="text-sm text-stone-500">Pay cash to staff after service</div>
-                    </div>
-                    <Banknote className="w-8 h-8 text-stone-600" />
-                  </label>
-                </div>
-              </div>
-
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                Booking will be confirmed only after payment is completed
-              </div>
+              <PaymentForm
+                amount={totalPrice}
+                bookingId={createdBookingId}
+                customerId={customer.id}
+                onSuccess={() => {
+                  navigate(`/bookings?success=true`)
+                }}
+                onError={(error) => {
+                  alert(`Payment failed: ${error}`)
+                }}
+              />
             </div>
           )}
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={handleBack}
-            className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition flex items-center gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </button>
+        {currentStep < 5 && (
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={handleBack}
+              className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition flex items-center gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
 
-          {currentStep < 5 ? (
-            <button
-              onClick={handleNext}
-              disabled={
-                (currentStep === 2 && (!selectedDate || !selectedTime)) ||
-                (currentStep === 3 && (!address.name || !address.phone || !address.address || !address.province))
-              }
-              className="px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              onClick={handleCompleteBooking}
-              className="px-8 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              Confirm Booking
-            </button>
-          )}
-        </div>
+            {currentStep < 4 ? (
+              <button
+                onClick={handleNext}
+                disabled={
+                  (currentStep === 2 && (!selectedDate || !selectedTime)) ||
+                  (currentStep === 3 && (!address.name || !address.phone || !address.address || !address.province))
+                }
+                className="px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={handleCompleteBooking}
+                className="px-8 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Confirm Booking
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

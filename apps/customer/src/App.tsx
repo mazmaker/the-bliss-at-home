@@ -10,6 +10,9 @@ import BookingDetails from './pages/BookingDetails'
 import Profile from './pages/Profile'
 import ColorPalette from './pages/ColorPalette'
 import Register from './pages/Register'
+import PaymentConfirmation from './pages/PaymentConfirmation'
+import TransactionHistory from './pages/TransactionHistory'
+import OTPVerification from './pages/OTPVerification'
 import { CustomerLoginPage, AuthCallback } from './pages/auth'
 
 function App() {
@@ -78,6 +81,30 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
               <ProfileWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/verify-otp"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <OTPVerificationWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/confirmation"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <PaymentConfirmationWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <TransactionHistoryWrapper />
             </ProtectedRoute>
           }
         />
@@ -169,6 +196,33 @@ function ProfileWrapper() {
     <>
       <Header />
       <Profile />
+    </>
+  )
+}
+
+function OTPVerificationWrapper() {
+  return (
+    <>
+      <Header />
+      <OTPVerification />
+    </>
+  )
+}
+
+function PaymentConfirmationWrapper() {
+  return (
+    <>
+      <Header />
+      <PaymentConfirmation />
+    </>
+  )
+}
+
+function TransactionHistoryWrapper() {
+  return (
+    <>
+      <Header />
+      <TransactionHistory />
     </>
   )
 }

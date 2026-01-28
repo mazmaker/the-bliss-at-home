@@ -1,35 +1,42 @@
-import { Link } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ClipboardList, Calendar, Clock } from 'lucide-react'
-
-// Service image mapping
-const serviceImages: Record<string, string> = {
-  'Thai Massage (2 hours)': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
-  'Oil Massage (2 hours)': 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80',
-  'Gel Manicure': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80',
-  'Luxury Spa Package': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80',
-  'Gel Pedicure': 'https://images.unsplash.com/photo-1519014816548-bf5fe059e98b?w=800&q=80',
-}
+import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { useCustomerBookings } from '@bliss/supabase/hooks/useBookings'
 
 function BookingHistory() {
-  // Mock booking data
-  const mockBookings = [
-    {
-      id: 'BK20260114001',
-      serviceName: 'Thai Massage (2 hours)',
-      date: '2026-01-20',
-      time: '14:00',
-      status: 'confirmed',
-      price: 800,
-    },
-    {
-      id: 'BK20260110002',
-      serviceName: 'Gel Manicure',
-      date: '2026-01-10',
-      time: '10:30',
-      status: 'completed',
-      price: 450,
-    },
-  ]
+  const [searchParams, setSearchParams] = useSearchParams()
+  const statusFilter = searchParams.get('status') || 'all'
+
+  const { data: customer } = useCurrentCustomer()
+  const { data: bookingsData, isLoading, error } = useCustomerBookings(customer?.id)
+
+  // Transform and filter bookings
+  const bookings = useMemo(() => {
+    if (!bookingsData) return []
+
+    let filtered = bookingsData.map((booking) => ({
+      id: booking.id,
+      bookingNumber: booking.booking_number,
+      serviceName: booking.service?.name_en || booking.service?.name_th || 'Unknown Service',
+      date: booking.booking_date, // Already in YYYY-MM-DD format
+      time: booking.booking_time || '00:00', // Already in HH:MM format
+      status: booking.status,
+      price: Number(booking.final_price || 0),
+      image: booking.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+    }))
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'upcoming') {
+        filtered = filtered.filter(b => ['confirmed', 'pending'].includes(b.status) && new Date(b.date) >= new Date())
+      } else {
+        filtered = filtered.filter(b => b.status === statusFilter)
+      }
+    }
+
+    return filtered
+  }, [bookingsData, statusFilter])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -61,43 +68,97 @@ function BookingHistory() {
     }
   }
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+          <p className="text-stone-600 mt-4">Loading bookings...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Not logged in
+  if (!customer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-stone-600 text-lg">Please log in to view bookings</p>
+          <Link to="/login" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <h1 className="text-3xl font-bold text-stone-900 mb-8">Booking History</h1>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8">
-          <button className="px-6 py-2 bg-amber-700 text-white rounded-full font-medium">
+        <div className="flex gap-2 mb-8 overflow-x-auto">
+          <button
+            onClick={() => setSearchParams(statusFilter === 'all' ? {} : {})}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap ${
+              statusFilter === 'all' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
             All
           </button>
-          <button className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full font-medium hover:bg-stone-200">
+          <button
+            onClick={() => setSearchParams({ status: 'upcoming' })}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap ${
+              statusFilter === 'upcoming' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
             Upcoming
           </button>
-          <button className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full font-medium hover:bg-stone-200">
+          <button
+            onClick={() => setSearchParams({ status: 'completed' })}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap ${
+              statusFilter === 'completed' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
             Completed
           </button>
-          <button className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full font-medium hover:bg-stone-200">
+          <button
+            onClick={() => setSearchParams({ status: 'cancelled' })}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap ${
+              statusFilter === 'cancelled' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
             Cancelled
           </button>
         </div>
 
+        {/* Error state */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-600">Failed to load bookings. Please try again.</p>
+          </div>
+        )}
+
         {/* Bookings List */}
-        {mockBookings.length > 0 ? (
+        {!error && bookings.length > 0 ? (
           <div className="space-y-4">
-            {mockBookings.map((booking) => (
+            {bookings.map((booking) => (
               <Link
                 key={booking.id}
-                to={`/bookings/${booking.id}`}
+                to={`/bookings/${booking.bookingNumber}`}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition p-6 block"
               >
                 <div className="flex items-center gap-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
-                    <img src={serviceImages[booking.serviceName] || serviceImages['Thai Massage (2 hours)']} alt={booking.serviceName} className="w-full h-full object-cover" />
+                    <img src={booking.image} alt={booking.serviceName} className="w-full h-full object-cover" />
                   </div>
 
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg text-stone-900 mb-1">{booking.serviceName}</h3>
+                    <p className="text-sm text-stone-500 mb-1">Booking #{booking.bookingNumber}</p>
                     <div className="flex items-center gap-4 text-sm text-stone-600">
                       <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {booking.date}</span>
                       <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</span>
@@ -108,13 +169,13 @@ function BookingHistory() {
                     <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                       {getStatusText(booking.status)}
                     </span>
-                    <p className="text-lg font-bold text-amber-700 mt-2">฿{booking.price}</p>
+                    <p className="text-lg font-bold text-amber-700 mt-2">฿{booking.price.toLocaleString()}</p>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
-        ) : (
+        ) : !error && (
           <div className="text-center py-12">
             <ClipboardList className="w-16 h-16 text-stone-400 mx-auto" />
             <p className="text-stone-500 mt-4 mb-4">No bookings yet</p>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
 import type { Profile } from '@bliss/supabase/auth'
+import SOSButton from './SOSButton'
 
 function Header() {
   const location = useLocation()
@@ -109,6 +110,9 @@ function Header() {
           <div className="hidden md:flex items-center gap-3">
             {!isLoading && profile ? (
               <>
+                {/* SOS Button */}
+                <SOSButton />
+
                 {/* User Menu Dropdown */}
                 <div className="relative user-menu-container">
                   <button
@@ -196,6 +200,14 @@ function Header() {
                   <span>{item.label}</span>
                 </Link>
               ))}
+
+              {/* SOS Button - Mobile */}
+              {!isLoading && profile && (
+                <div className="px-3">
+                  <SOSButton className="w-full" />
+                </div>
+              )}
+
               <div className="border-t border-stone-200 pt-3 mt-3">
                 {!isLoading && profile ? (
                   <>

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Star, Clock, ChevronLeft, Plus, Minus, Heart, Sparkles, Search, Hand, Flower2 } from 'lucide-react'
+import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -9,84 +10,67 @@ const categoryIcons: Record<string, React.ComponentType<{className?: string}>> =
   spa: Flower2,
 }
 
-// Mock service data
-const mockServiceDetails: Record<string, any> = {
-  'thai-massage-2hr': {
-    id: 1,
-    name: 'Thai Massage (2 hours)',
-    nameTh: 'นวดไทย 2 ชั่วโมง',
-    price: 800,
-    category: 'massage',
-    rating: 4.8,
-    reviews: 120,
-    duration: 120,
-    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&q=80',
-    description: 'Traditional Thai massage helps relieve muscle tension, improves blood circulation, and refreshes tired bodies',
-    benefits: ['Relieves tension', 'Improves circulation', 'Restores energy'],
-    addOns: [
-      { id: 1, name: 'Herbal Ball', price: 100, description: 'Traditional herbal compress' },
-      { id: 2, name: 'Aromatherapy Oil', price: 150, description: 'Essential oil blend' },
-      { id: 3, name: 'Extra 30 min', price: 200, description: 'Extend session by 30 minutes' },
-    ]
-  },
-  'oil-massage-2hr': {
-    id: 2,
-    name: 'Oil Massage (2 hours)',
-    nameTh: 'นวดน้ำมัน 2 ชั่วโมง',
-    price: 1000,
-    category: 'massage',
-    rating: 4.9,
-    reviews: 85,
-    duration: 120,
-    image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=1200&q=80',
-    description: 'Aromatic oil massage that relaxes muscles and nourishes skin for a softer, supple feel',
-    benefits: ['Softens skin', 'Deep relaxation', 'Aromatic therapy'],
-    addOns: [
-      { id: 1, name: 'Herbal Ball', price: 100, description: 'Traditional herbal compress' },
-      { id: 2, name: 'Extra 30 min', price: 200, description: 'Extend session by 30 minutes' },
-    ]
-  },
-  'gel-manicure': {
-    id: 3,
-    name: 'Gel Manicure',
-    nameTh: 'เจลนาิเคียร์',
-    price: 450,
-    category: 'nail',
-    rating: 4.7,
-    reviews: 90,
-    duration: 60,
-    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1200&q=80',
-    description: 'Premium gel manicure with long-lasting polish for beautiful, durable nails',
-    benefits: ['Beautiful nails', 'Long-lasting', 'Hand care included'],
-    addOns: [
-      { id: 1, name: 'Nail Art', price: 100, description: 'Custom nail design' },
-      { id: 2, name: 'Paraffin Treatment', price: 150, description: 'Paraffin wax treatment' },
-    ]
-  },
-  'luxury-spa-package': {
-    id: 4,
-    name: 'Luxury Spa Package',
-    nameTh: 'แพ็คเกจสปา',
-    price: 2500,
-    category: 'spa',
-    rating: 5.0,
-    reviews: 25,
-    duration: 150,
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&q=80',
-    description: 'Complete 2.5-hour luxury spa experience including body massage, facial treatment, and sauna',
-    benefits: ['Full relaxation', 'Skin rejuvenation', 'Complete wellness'],
-    addOns: []
-  }
-}
-
 function ServiceDetails() {
   const { slug } = useParams()
-  const [selectedAddOns, setSelectedAddOns] = useState<number[]>([])
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [quantity, setQuantity] = useState(1)
 
-  const service = mockServiceDetails[slug || '']
+  const { data: serviceData, isLoading, error } = useServiceBySlug(slug)
+
+  // Transform service data to match expected format
+  const service = useMemo(() => {
+    if (!serviceData) return null
+
+    return {
+      id: serviceData.id,
+      name: serviceData.name_en || serviceData.name_th,
+      nameTh: serviceData.name_th,
+      price: Number(serviceData.base_price || 0),
+      category: serviceData.category,
+      rating: 4.5, // Default rating
+      reviews: 0, // Default reviews
+      duration: serviceData.duration || 60,
+      image: serviceData.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&q=80',
+      description: serviceData.description_en || serviceData.description_th || '',
+      benefits: [], // Parse from description or separate field
+      addOns: serviceData.addons?.map(addon => ({
+        id: addon.id,
+        name: addon.name_en || addon.name_th,
+        price: Number(addon.price || 0),
+        description: addon.description_en || addon.description_th || '',
+      })) || [],
+    }
+  }, [serviceData])
+
   const IconComponent = service ? categoryIcons[service.category] || Sparkles : Sparkles
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+          <p className="text-stone-600 mt-4">Loading service...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 text-lg">Failed to load service</p>
+          <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+            ← Back to Services
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Not found state
   if (!service) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -101,7 +85,7 @@ function ServiceDetails() {
     )
   }
 
-  const toggleAddOn = (id: number) => {
+  const toggleAddOn = (id: string) => {
     setSelectedAddOns(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     )
@@ -162,15 +146,19 @@ function ServiceDetails() {
                 <h3 className="text-lg font-medium mb-3 text-stone-900">Description</h3>
                 <p className="text-stone-700 font-light leading-relaxed">{service.description}</p>
 
-                <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">Benefits</h3>
-                <ul className="space-y-2 text-stone-700">
-                  {service.benefits.map((benefit: string, i: number) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
+                {service.benefits.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">Benefits</h3>
+                    <ul className="space-y-2 text-stone-700">
+                      {service.benefits.map((benefit: string, i: number) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             </div>
 
