@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { supabase } from '../lib/supabase'
+import { GoogleMapsPicker } from './GoogleMapsPicker'
 import {
   X,
   Building,
@@ -387,43 +388,20 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      ละติจูด (Latitude)
-                    </label>
-                    <input
-                      {...register('latitude')}
-                      type="number"
-                      step="any"
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="13.7563"
-                    />
-                    {errors.latitude && (
-                      <p className="mt-1 text-sm text-red-600">{errors.latitude.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      ลองจิจูด (Longitude)
-                    </label>
-                    <input
-                      {...register('longitude')}
-                      type="number"
-                      step="any"
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="100.5018"
-                    />
-                    {errors.longitude && (
-                      <p className="mt-1 text-sm text-red-600">{errors.longitude.message}</p>
-                    )}
-                  </div>
+                {/* Google Maps Picker */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    เลือกตำแหน่งบนแผนที่
+                  </label>
+                  <GoogleMapsPicker
+                    latitude={watch('latitude')}
+                    longitude={watch('longitude')}
+                    onLocationChange={(lat, lng) => {
+                      setValue('latitude', lat, { shouldValidate: true })
+                      setValue('longitude', lng, { shouldValidate: true })
+                    }}
+                  />
                 </div>
-
-                <p className="text-xs text-gray-500">
-                  💡 ระบุพิกัดเพื่อแสดงตำแหน่งบน Google Maps
-                </p>
               </div>
 
               {/* Business Information */}
