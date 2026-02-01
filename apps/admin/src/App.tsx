@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
 import Staff from './pages/Staff'
 import Customers from './pages/Customers'
+import SOSAlerts from './pages/SOSAlerts'
 import Hotels from './pages/Hotels'
 import HotelDetail from './pages/HotelDetail'
 import HotelBilling from './pages/HotelBilling'
@@ -105,6 +106,7 @@ function App() {
         <Route path="services" element={<Services />} />
         <Route path="staff" element={<Staff />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="sos-alerts" element={<SOSAlerts />} />
         <Route path="hotels" element={<Hotels />} />
         <Route path="hotels/:id" element={<HotelDetail />} />
         <Route path="hotels/:id/billing" element={<HotelBilling />} />
