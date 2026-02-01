@@ -1,4 +1,4 @@
-import { supabase } from '@the-bliss-at-home/supabase'
+import { supabase } from './supabase'
 
 export type CustomerStatus = 'active' | 'suspended' | 'banned'
 
@@ -50,28 +50,6 @@ export interface CustomerBooking {
   hotel_name?: string
 }
 
-export interface SOSAlert {
-  id: string
-  customer_id: string | null
-  booking_id: string | null
-  latitude: number | null
-  longitude: number | null
-  location_accuracy: number | null
-  message: string | null
-  user_agent: string | null
-  status: 'pending' | 'acknowledged' | 'resolved' | 'cancelled'
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  acknowledged_by: string | null
-  acknowledged_at: string | null
-  resolved_by: string | null
-  resolved_at: string | null
-  resolution_notes: string | null
-  created_at: string
-  updated_at: string
-  // Joined data
-  customer_name?: string
-  customer_phone?: string
-}
 
 // ============================================
 // CUSTOMER QUERIES
@@ -80,31 +58,21 @@ export interface SOSAlert {
 export async function getAllCustomers() {
   const { data, error } = await supabase
     .from('customers')
-    .select(`
-      *,
-      profiles:profile_id (
-        email
-      )
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (error) throw error
 
   return (data || []).map((customer) => ({
     ...customer,
-    email: customer.profiles?.email || '',
+    email: '',
   })) as Customer[]
 }
 
 export async function getCustomerById(id: string) {
   const { data, error } = await supabase
     .from('customers')
-    .select(`
-      *,
-      profiles:profile_id (
-        email
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .single()
 
@@ -112,7 +80,7 @@ export async function getCustomerById(id: string) {
 
   return {
     ...data,
-    email: data.profiles?.email || '',
+    email: '',
   } as Customer
 }
 
@@ -161,13 +129,10 @@ export async function getCustomerBookings(customerId: string) {
     .select(`
       *,
       services:service_id (
-        name
+        name_th
       ),
       staff:staff_id (
-        full_name
-      ),
-      hotels:hotel_id (
-        name
+        name_th
       )
     `)
     .eq('customer_id', customerId)
@@ -177,9 +142,9 @@ export async function getCustomerBookings(customerId: string) {
 
   return (data || []).map((booking) => ({
     ...booking,
-    service_name: booking.services?.name || '',
-    staff_name: booking.staff?.full_name || '',
-    hotel_name: booking.hotels?.name || '',
+    service_name: booking.services?.name_th || '',
+    staff_name: booking.staff?.name_th || '',
+    hotel_name: '',
   })) as CustomerBooking[]
 }
 
@@ -207,97 +172,6 @@ export async function updateCustomer(id: string, updates: Partial<Customer>) {
   return data as Customer
 }
 
-// ============================================
-// SOS ALERT QUERIES
-// ============================================
-
-export async function getAllSOSAlerts() {
-  const { data, error } = await supabase
-    .from('sos_alerts')
-    .select(`
-      *,
-      customers:customer_id (
-        full_name,
-        phone
-      )
-    `)
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-
-  return (data || []).map((alert) => ({
-    ...alert,
-    customer_name: alert.customers?.full_name || 'Unknown',
-    customer_phone: alert.customers?.phone || '',
-  })) as SOSAlert[]
-}
-
-export async function getPendingSOSAlerts() {
-  const { data, error } = await supabase
-    .from('sos_alerts')
-    .select(`
-      *,
-      customers:customer_id (
-        full_name,
-        phone
-      )
-    `)
-    .in('status', ['pending', 'acknowledged'])
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-
-  return (data || []).map((alert) => ({
-    ...alert,
-    customer_name: alert.customers?.full_name || 'Unknown',
-    customer_phone: alert.customers?.phone || '',
-  })) as SOSAlert[]
-}
-
-export async function acknowledgeSOSAlert(id: string, adminId: string) {
-  const { data, error } = await supabase
-    .from('sos_alerts')
-    .update({
-      status: 'acknowledged',
-      acknowledged_by: adminId,
-      acknowledged_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as SOSAlert
-}
-
-export async function resolveSOSAlert(id: string, adminId: string, notes: string) {
-  const { data, error } = await supabase
-    .from('sos_alerts')
-    .update({
-      status: 'resolved',
-      resolved_by: adminId,
-      resolved_at: new Date().toISOString(),
-      resolution_notes: notes,
-    })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as SOSAlert
-}
-
-export async function cancelSOSAlert(id: string) {
-  const { data, error } = await supabase
-    .from('sos_alerts')
-    .update({ status: 'cancelled' })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as SOSAlert
-}
 
 // ============================================
 // STATISTICS QUERIES

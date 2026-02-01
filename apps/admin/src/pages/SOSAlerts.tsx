@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { ShieldAlert, MapPin, Phone, Calendar, CheckCircle, XCircle, AlertTriangle, Filter } from 'lucide-react'
-import { useSOSAlerts, useSOSAlertActions } from '../hooks/useCustomers'
-import { SOSAlert } from '../lib/customerQueries'
+import { ShieldAlert, MapPin, Phone, Calendar, CheckCircle, XCircle, AlertTriangle, Users, UserCircle } from 'lucide-react'
+import { useSOSAlerts, useSOSAlertActions } from '../hooks/useSOS'
+import { useAdminAuth } from '../hooks/useAdminAuth'
+import { SOSAlert, SOSSourceType } from '../lib/sosQueries'
 
 function SOSAlerts() {
-  const { alerts, loading, error, refetch } = useSOSAlerts()
+  const { user } = useAdminAuth()
+  const [sourceFilter, setSourceFilter] = useState<SOSSourceType>('all')
+  const { alerts, loading, error, refetch } = useSOSAlerts(sourceFilter)
   const { acknowledge, resolve, cancel, loading: actionLoading } = useSOSAlertActions()
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'acknowledged' | 'resolved'>('all')
   const [selectedAlert, setSelectedAlert] = useState<SOSAlert | null>(null)
@@ -17,9 +20,12 @@ function SOSAlerts() {
   })
 
   const handleAcknowledge = async (alertId: string) => {
+    if (!user?.id) {
+      console.error('No admin user ID available')
+      return
+    }
     try {
-      // TODO: Get actual admin ID from auth context
-      await acknowledge(alertId, 'admin-user-id')
+      await acknowledge(alertId, user.id)
       refetch()
     } catch (error) {
       console.error('Failed to acknowledge alert:', error)
@@ -27,10 +33,12 @@ function SOSAlerts() {
   }
 
   const handleResolve = async () => {
-    if (!selectedAlert) return
+    if (!selectedAlert || !user?.id) {
+      console.error('No selected alert or admin user ID')
+      return
+    }
     try {
-      // TODO: Get actual admin ID from auth context
-      await resolve(selectedAlert.id, 'admin-user-id', resolveNotes)
+      await resolve(selectedAlert.id, user.id, resolveNotes)
       setShowResolveModal(false)
       setResolveNotes('')
       setSelectedAlert(null)
@@ -90,6 +98,30 @@ function SOSAlerts() {
     )
   }
 
+  const getSourceBadge = (sourceType?: SOSSourceType) => {
+    if (!sourceType) return null
+    const styles = {
+      customer: 'bg-purple-100 text-purple-700 border-purple-200',
+      staff: 'bg-blue-100 text-blue-700 border-blue-200',
+    }
+    const labels = {
+      customer: 'ลูกค้า',
+      staff: 'พนักงาน',
+    }
+    const icons = {
+      customer: UserCircle,
+      staff: Users,
+    }
+    const Icon = icons[sourceType as 'customer' | 'staff']
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium border inline-flex items-center gap-1 ${styles[sourceType as 'customer' | 'staff']}`}>
+        <Icon className="w-3 h-3" />
+        {labels[sourceType as 'customer' | 'staff']}
+      </span>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -112,6 +144,8 @@ function SOSAlerts() {
   const pendingCount = alerts.filter((a) => a.status === 'pending').length
   const acknowledgedCount = alerts.filter((a) => a.status === 'acknowledged').length
   const resolvedCount = alerts.filter((a) => a.status === 'resolved').length
+  const customerCount = alerts.filter((a) => a.source_type === 'customer').length
+  const staffCount = alerts.filter((a) => a.source_type === 'staff').length
 
   return (
     <div className="space-y-6">
@@ -120,17 +154,62 @@ function SOSAlerts() {
         <div>
           <h1 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
             <ShieldAlert className="w-7 h-7 text-red-600" />
-            แจ้งเตือน SOS
+            ศูนย์แจ้งเตือนฉุกเฉิน (SOS Center)
           </h1>
-          <p className="text-stone-500">Emergency Alerts from Customers</p>
+          <p className="text-stone-500">Emergency Alerts from Customers & Staff</p>
+        </div>
+      </div>
+
+      {/* Source Filter Tabs */}
+      <div className="bg-white rounded-2xl shadow-lg p-2 border border-stone-100">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setSourceFilter('all')}
+            className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
+              sourceFilter === 'all'
+                ? 'bg-red-600 text-white shadow-md'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <ShieldAlert className="w-4 h-4" />
+              <span>ทั้งหมด ({alerts.length})</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setSourceFilter('customer')}
+            className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
+              sourceFilter === 'customer'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <UserCircle className="w-4 h-4" />
+              <span>จากลูกค้า ({customerCount})</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setSourceFilter('staff')}
+            className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
+              sourceFilter === 'staff'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Users className="w-4 h-4" />
+              <span>จากพนักงาน ({staffCount})</span>
+            </div>
+          </button>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
-          <p className="text-2xl font-bold text-stone-900">{alerts.length}</p>
-          <p className="text-xs text-stone-500">การแจ้งเตือนทั้งหมด</p>
+          <p className="text-2xl font-bold text-stone-900">{filteredAlerts.length}</p>
+          <p className="text-xs text-stone-500">การแจ้งเตือนที่แสดง</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-red-100">
           <p className="text-2xl font-bold text-red-600">{pendingCount}</p>
@@ -146,10 +225,9 @@ function SOSAlerts() {
         </div>
       </div>
 
-      {/* Filter */}
+      {/* Status Filter */}
       <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
         <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-stone-400" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -190,18 +268,19 @@ function SOSAlerts() {
                       <AlertTriangle className="w-6 h-6 text-red-600" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="font-semibold text-stone-900 text-lg">
-                          {alert.customer_name || 'ลูกค้าไม่ระบุชื่อ'}
+                          {alert.source_name || 'ไม่ระบุชื่อ'}
                         </h3>
+                        {getSourceBadge(alert.source_type)}
                         {getStatusBadge(alert.status)}
                         {getPriorityBadge(alert.priority)}
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-stone-600">
-                        {alert.customer_phone && (
+                        {alert.source_phone && (
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4" />
-                            <span>{alert.customer_phone}</span>
+                            <span>{alert.source_phone}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2">
@@ -309,8 +388,8 @@ function SOSAlerts() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-stone-900 mb-4">แก้ไขการแจ้งเตือน SOS</h3>
             <p className="text-sm text-stone-600 mb-4">
-              กรุณาบันทึกรายละเอียดการแก้ไขปัญหาสำหรับลูกค้า{' '}
-              <strong>{selectedAlert.customer_name}</strong>
+              กรุณาบันทึกรายละเอียดการแก้ไขปัญหาสำหรับ{' '}
+              <strong>{selectedAlert.source_name}</strong> ({selectedAlert.source_type === 'customer' ? 'ลูกค้า' : 'พนักงาน'})
             </p>
             <textarea
               value={resolveNotes}
