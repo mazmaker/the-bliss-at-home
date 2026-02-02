@@ -14,6 +14,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react'
+import { SOSWidget } from '../components/SOSWidget'
 
 // Mock data
 const stats = [
@@ -179,6 +180,9 @@ function Dashboard() {
           <span>อัปเดตล่าสุด: 15 ม.ค. 2026, 14:30</span>
         </div>
       </div>
+
+      {/* SOS Emergency Widget - Highest Priority */}
+      <SOSWidget />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
