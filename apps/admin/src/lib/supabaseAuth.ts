@@ -250,8 +250,16 @@ export async function getCurrentUserWithProfile(): Promise<{
   try {
     console.log('🔍 Starting getCurrentUserWithProfile...')
 
-    // Get user - no timeout to avoid issues
-    const { data: { user } } = await supabase.auth.getUser()
+    // Add timeout to prevent hanging (increased to 15 seconds for slower connections)
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Auth timeout after 15 seconds')), 15000)
+    )
+
+    // Get user with timeout
+    const getUserPromise = supabase.auth.getUser()
+    const { data: { user } } = await Promise.race([getUserPromise, timeout])
+
+    console.log('✅ getUser() completed')
 
     if (!user || !user.email) {
       console.log('❌ No user or email found')
@@ -263,11 +271,19 @@ export async function getCurrentUserWithProfile(): Promise<{
     // Get profile directly from profiles table with better error handling
     console.log('🔍 Fetching profile for user:', user.email)
 
-    const { data: profile, error: profileError } = await supabase
+    const profileTimeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Profile fetch timeout after 10 seconds')), 10000)
+    )
+
+    const profilePromise = supabase
       .from('profiles')
       .select('*')
       .eq('email', user.email)
-      .maybeSingle() // Use maybeSingle instead of single to handle not found gracefully
+      .maybeSingle()
+
+    const { data: profile, error: profileError } = await Promise.race([profilePromise, profileTimeout])
+
+    console.log('✅ Profile query completed')
 
     if (profileError) {
       console.error('❌ Profile fetch error:', profileError.message, profileError.code)
@@ -296,6 +312,9 @@ export async function getCurrentUserWithProfile(): Promise<{
 
   } catch (error) {
     console.error('❌ getCurrentUserWithProfile error:', error)
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.error('⏱️ Request timed out - this may indicate a database or network issue')
+    }
     return { user: null, profile: null }
   }
 }
