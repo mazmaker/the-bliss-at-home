@@ -6,16 +6,10 @@ import {
   getCustomerBookings,
   updateCustomerStatus,
   updateCustomer,
-  getAllSOSAlerts,
-  getPendingSOSAlerts,
-  acknowledgeSOSAlert,
-  resolveSOSAlert,
-  cancelSOSAlert,
   getCustomerStatistics,
   type Customer,
   type CustomerWithStats,
   type CustomerBooking,
-  type SOSAlert,
   type CustomerStatus,
 } from '../lib/customerQueries'
 
@@ -189,121 +183,6 @@ export function useUpdateCustomer() {
   }
 
   return { update, loading, error }
-}
-
-// ============================================
-// SOS ALERT HOOKS
-// ============================================
-
-export function useSOSAlerts() {
-  const [alerts, setAlerts] = useState<SOSAlert[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchAlerts = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await getAllSOSAlerts()
-      setAlerts(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch SOS alerts')
-      console.error('Error fetching SOS alerts:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAlerts()
-  }, [])
-
-  return { alerts, loading, error, refetch: fetchAlerts }
-}
-
-export function usePendingSOSAlerts() {
-  const [alerts, setAlerts] = useState<SOSAlert[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchAlerts = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await getPendingSOSAlerts()
-      setAlerts(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch pending alerts')
-      console.error('Error fetching pending SOS alerts:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAlerts()
-
-    // Poll for new alerts every 30 seconds
-    const interval = setInterval(fetchAlerts, 30000)
-    return () => clearInterval(interval)
-  }, [])
-
-  return { alerts, loading, error, refetch: fetchAlerts }
-}
-
-export function useSOSAlertActions() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const acknowledge = async (id: string, adminId: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await acknowledgeSOSAlert(id, adminId)
-      return data
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to acknowledge alert'
-      setError(errorMessage)
-      console.error('Error acknowledging SOS alert:', err)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const resolve = async (id: string, adminId: string, notes: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await resolveSOSAlert(id, adminId, notes)
-      return data
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to resolve alert'
-      setError(errorMessage)
-      console.error('Error resolving SOS alert:', err)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const cancel = async (id: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await cancelSOSAlert(id)
-      return data
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to cancel alert'
-      setError(errorMessage)
-      console.error('Error cancelling SOS alert:', err)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return { acknowledge, resolve, cancel, loading, error }
 }
 
 // ============================================

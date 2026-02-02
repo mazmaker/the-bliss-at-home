@@ -13,7 +13,7 @@ import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3009
 
 // Middleware
 app.use(cors())
