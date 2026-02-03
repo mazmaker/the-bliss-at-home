@@ -1,5 +1,8 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ShieldAlert, X, MapPin, Phone, AlertTriangle } from 'lucide-react'
+import { useCreateSOSAlert } from '@bliss/supabase/hooks/useSOSAlerts'
+import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 
 interface SOSButtonProps {
   className?: string
@@ -7,15 +10,25 @@ interface SOSButtonProps {
 
 function SOSButton({ className = '' }: SOSButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false)
-  const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 
+  const { data: customer } = useCurrentCustomer()
+  const createSOSAlert = useCreateSOSAlert()
+
   const handleSendSOS = async () => {
-    setSending(true)
+    if (!customer) {
+      console.error('No customer found')
+      return
+    }
 
     try {
       // Get current location
-      let location = { lat: 0, lng: 0 }
+      let location: { lat: number | null; lng: number | null; accuracy: number | null } = {
+        lat: null,
+        lng: null,
+        accuracy: null,
+      }
+
       if (navigator.geolocation) {
         await new Promise((resolve) => {
           navigator.geolocation.getCurrentPosition(
@@ -23,6 +36,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
               location = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
+                accuracy: position.coords.accuracy,
               }
               resolve(null)
             },
@@ -34,24 +48,15 @@ function SOSButton({ className = '' }: SOSButtonProps) {
         })
       }
 
-      // Send SOS alert to backend
-      // TODO: Replace with actual API call
-      await fetch('/api/sos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          location,
-          userAgent: navigator.userAgent,
-        }),
-      }).catch(() => {
-        // Fallback: log to console if API fails
-        console.error('SOS Alert:', {
-          timestamp: new Date().toISOString(),
-          location,
-        })
+      // Create SOS alert in database
+      await createSOSAlert.mutateAsync({
+        customer_id: customer.id,
+        latitude: location.lat || undefined,
+        longitude: location.lng || undefined,
+        location_accuracy: location.accuracy || undefined,
+        user_agent: navigator.userAgent,
+        priority: 'high',
+        message: 'Emergency alert from customer',
       })
 
       setSent(true)
@@ -61,8 +66,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
       }, 3000)
     } catch (error) {
       console.error('Failed to send SOS:', error)
-    } finally {
-      setSending(false)
+      alert('Failed to send SOS alert. Please try again or contact support.')
     }
   }
 
@@ -79,9 +83,10 @@ function SOSButton({ className = '' }: SOSButtonProps) {
       </button>
 
       {/* Confirmation Modal */}
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+      {showConfirm && createPortal(
+        <div className="fixed inset-0 bg-black/60 z-[9999] overflow-y-auto animate-in fade-in duration-200">
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 my-8">
             {!sent ? (
               <>
                 {/* Header */}
@@ -97,7 +102,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                   </div>
                   <button
                     onClick={() => setShowConfirm(false)}
-                    disabled={sending}
+                    disabled={createSOSAlert.isPending}
                     className="p-1 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
                   >
                     <X className="w-5 h-5 text-stone-400" />
@@ -131,17 +136,17 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowConfirm(false)}
-                    disabled={sending}
+                    disabled={createSOSAlert.isPending}
                     className="flex-1 px-4 py-3 border border-stone-300 rounded-xl text-stone-700 font-medium hover:bg-stone-50 transition disabled:opacity-50"
                   >
                     ยกเลิก
                   </button>
                   <button
                     onClick={handleSendSOS}
-                    disabled={sending}
+                    disabled={createSOSAlert.isPending}
                     className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {sending ? (
+                    {createSOSAlert.isPending ? (
                       <>
                         <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         <span>กำลังส่ง...</span>
@@ -170,8 +175,10 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                 </p>
               </div>
             )}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

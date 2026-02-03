@@ -1,13 +1,16 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useMemo } from 'react'
-import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react'
+import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCreateBooking } from '@bliss/supabase/hooks/useBookings'
 import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
 import PaymentForm from '../components/PaymentForm'
+import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
 
-type Step = 1 | 2 | 3 | 4 | 5
+type Step = 1 | 2 | 3 | 4 | 5 | 6
+
+type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference'
 
 function BookingWizard() {
   const [searchParams] = useSearchParams()
@@ -26,6 +29,9 @@ function BookingWizard() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
+  const [providerPreference, setProviderPreference] = useState<ProviderPreference>('no-preference')
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [showManualAddressForm, setShowManualAddressForm] = useState(false)
   const [address, setAddress] = useState({
     name: '',
     phone: '',
@@ -34,6 +40,13 @@ function BookingWizard() {
     subdistrict: '',
     province: '',
     zipcode: '',
+  })
+  const [manualAddressLocation, setManualAddressLocation] = useState<{
+    latitude: number | null
+    longitude: number | null
+  }>({
+    latitude: null,
+    longitude: null,
   })
   const [notes, setNotes] = useState('')
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
@@ -78,13 +91,14 @@ function BookingWizard() {
   const steps = [
     { num: 1, label: 'Service' },
     { num: 2, label: 'Date/Time' },
-    { num: 3, label: 'Address' },
-    { num: 4, label: 'Confirm' },
-    { num: 5, label: 'Payment' },
+    { num: 3, label: 'Provider' },
+    { num: 4, label: 'Address' },
+    { num: 5, label: 'Confirm' },
+    { num: 6, label: 'Payment' },
   ]
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 6) {
       setCurrentStep((prev) => (prev + 1) as Step)
     }
   }
@@ -95,6 +109,47 @@ function BookingWizard() {
     } else {
       navigate(`/services/${serviceSlug}`)
     }
+  }
+
+  const handleSelectAddress = (addressId: string) => {
+    const selectedAddr = addresses?.find((a) => a.id === addressId)
+    if (selectedAddr) {
+      setSelectedAddressId(addressId)
+      setShowManualAddressForm(false)
+      // Populate address state from selected saved address
+      setAddress({
+        name: selectedAddr.recipient_name,
+        phone: selectedAddr.phone,
+        address: selectedAddr.address_line,
+        district: selectedAddr.district || '',
+        subdistrict: selectedAddr.subdistrict || '',
+        province: selectedAddr.province,
+        zipcode: selectedAddr.zipcode || '',
+      })
+    }
+  }
+
+  const handleShowManualForm = () => {
+    setSelectedAddressId(null)
+    setShowManualAddressForm(true)
+    // Reset address form
+    setAddress({
+      name: '',
+      phone: '',
+      address: '',
+      district: '',
+      subdistrict: '',
+      province: '',
+      zipcode: '',
+    })
+    setManualAddressLocation({
+      latitude: null,
+      longitude: null,
+    })
+  }
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    setManualAddressLocation({ latitude: lat, longitude: lng })
   }
 
   const handleCompleteBooking = async () => {
@@ -145,7 +200,7 @@ function BookingWizard() {
       setCreatedBookingNumber(result.booking_number)
 
       // Go to Payment step
-      setCurrentStep(5)
+      setCurrentStep(6)
     } catch (error: any) {
       console.error('Booking error:', error)
       console.error('Error details:', {
@@ -348,115 +403,262 @@ function BookingWizard() {
           {/* Step 3: Address */}
           {currentStep === 3 && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Address and Contact Information</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">Provider Preference</h2>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Contact Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={address.name}
-                    onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                    placeholder="Full Name"
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
+                <p className="text-stone-600 mb-6">Please select your preferred service provider</p>
 
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={address.phone}
-                    onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                    placeholder="08x-xxx-xxxx"
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={address.address}
-                    onChange={(e) => setAddress({ ...address, address: e.target.value })}
-                    placeholder="House number, village, street"
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Sub-district
-                    </label>
-                    <input
-                      type="text"
-                      value={address.subdistrict}
-                      onChange={(e) => setAddress({ ...address, subdistrict: e.target.value })}
-                      placeholder="Sub-district"
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      District
-                    </label>
-                    <input
-                      type="text"
-                      value={address.district}
-                      onChange={(e) => setAddress({ ...address, district: e.target.value })}
-                      placeholder="District"
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Province <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={address.province}
-                      onChange={(e) => setAddress({ ...address, province: e.target.value })}
-                      placeholder="Province"
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Postal Code
-                    </label>
-                    <input
-                      type="text"
-                      value={address.zipcode}
-                      onChange={(e) => setAddress({ ...address, zipcode: e.target.value })}
-                      placeholder="10500"
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Additional Notes
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="E.g., building access code, meeting point, or other important information"
-                    rows={3}
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
-                  />
-                </div>
+                {[
+                  { value: 'female-only', label: 'Female only', description: 'Only female service providers' },
+                  { value: 'male-only', label: 'Male only', description: 'Only male service providers' },
+                  { value: 'prefer-female', label: 'Prefer female', description: 'Female preferred, male if unavailable' },
+                  { value: 'prefer-male', label: 'Prefer male', description: 'Male preferred, female if unavailable' },
+                  { value: 'no-preference', label: 'No preference', description: 'Any available service provider' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setProviderPreference(option.value as ProviderPreference)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition ${
+                      providerPreference === option.value
+                        ? 'border-amber-700 bg-amber-50'
+                        : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-stone-900">{option.label}</h3>
+                        <p className="text-sm text-stone-600 mt-1">{option.description}</p>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        providerPreference === option.value
+                          ? 'border-amber-700 bg-amber-700'
+                          : 'border-stone-300'
+                      }`}>
+                        {providerPreference === option.value && (
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
+            <div>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">Address and Contact Information</h2>
+
+              {/* Saved Addresses */}
+              {addresses && addresses.length > 0 && !showManualAddressForm ? (
+                <div className="space-y-4">
+                  <p className="text-stone-600 mb-4">Select a saved address or add a new one</p>
+
+                  {/* Saved Address Cards */}
+                  <div className="space-y-3">
+                    {addresses.map((addr) => (
+                      <button
+                        key={addr.id}
+                        onClick={() => handleSelectAddress(addr.id)}
+                        className={`w-full p-4 rounded-xl border-2 text-left transition ${
+                          selectedAddressId === addr.id
+                            ? 'border-amber-700 bg-amber-50'
+                            : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="inline-block px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded">
+                                {addr.label}
+                              </span>
+                              {addr.is_default && (
+                                <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="font-semibold text-stone-900 mb-1">{addr.recipient_name}</h3>
+                            <p className="text-sm text-stone-600 mb-1">{addr.phone}</p>
+                            <p className="text-sm text-stone-600">
+                              {addr.address_line}
+                              {addr.subdistrict && `, ${addr.subdistrict}`}
+                              {addr.district && `, ${addr.district}`}
+                              {`, ${addr.province} ${addr.zipcode || ''}`}
+                            </p>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                            selectedAddressId === addr.id
+                              ? 'border-amber-700 bg-amber-700'
+                              : 'border-stone-300'
+                          }`}>
+                            {selectedAddressId === addr.id && (
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Add New Address Button */}
+                  <button
+                    onClick={handleShowManualForm}
+                    className="w-full p-4 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span className="font-medium">Add New Address</span>
+                  </button>
+
+                  {/* Additional Notes */}
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      Additional Notes
+                    </label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="E.g., building access code, meeting point, or other important information"
+                      rows={3}
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Back to Saved Addresses */}
+                  {addresses && addresses.length > 0 && showManualAddressForm && (
+                    <button
+                      onClick={() => setShowManualAddressForm(false)}
+                      className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back to saved addresses
+                    </button>
+                  )}
+
+                  {/* Manual Address Form */}
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      Contact Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={address.name}
+                      onChange={(e) => setAddress({ ...address, name: e.target.value })}
+                      placeholder="Full Name"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={address.phone}
+                      onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                      placeholder="08x-xxx-xxxx"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={address.address}
+                      onChange={(e) => setAddress({ ...address, address: e.target.value })}
+                      placeholder="House number, village, street"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        Sub-district
+                      </label>
+                      <input
+                        type="text"
+                        value={address.subdistrict}
+                        onChange={(e) => setAddress({ ...address, subdistrict: e.target.value })}
+                        placeholder="Sub-district"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        District
+                      </label>
+                      <input
+                        type="text"
+                        value={address.district}
+                        onChange={(e) => setAddress({ ...address, district: e.target.value })}
+                        placeholder="District"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        Province <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={address.province}
+                        onChange={(e) => setAddress({ ...address, province: e.target.value })}
+                        placeholder="Province"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        Postal Code
+                      </label>
+                      <input
+                        type="text"
+                        value={address.zipcode}
+                        onChange={(e) => setAddress({ ...address, zipcode: e.target.value })}
+                        placeholder="10500"
+                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Google Maps Location Picker */}
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <MapPin className="w-4 h-4 inline mr-1" />
+                      เลือกตำแหน่งบนแผนที่ (ไม่บังคับ)
+                    </label>
+                    <GoogleMapsPicker
+                      latitude={manualAddressLocation.latitude}
+                      longitude={manualAddressLocation.longitude}
+                      onLocationChange={handleLocationChange}
+                    />
+                  </div>
+
+                  {/* Additional Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      Additional Notes
+                    </label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="E.g., building access code, meeting point, or other important information"
+                      rows={3}
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-sm flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
@@ -466,7 +668,7 @@ function BookingWizard() {
           )}
 
           {/* Step 4: Review */}
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">Confirm Booking</h2>
 
@@ -534,8 +736,8 @@ function BookingWizard() {
             </div>
           )}
 
-          {/* Step 5: Payment */}
-          {currentStep === 5 && customer && createdBookingId && (
+          {/* Step 6: Payment */}
+          {currentStep === 6 && customer && createdBookingId && (
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">Payment</h2>
 
@@ -555,7 +757,7 @@ function BookingWizard() {
         </div>
 
         {/* Navigation Buttons */}
-        {currentStep < 5 && (
+        {currentStep < 6 && (
           <div className="flex justify-between mt-6">
             <button
               onClick={handleBack}
@@ -565,12 +767,12 @@ function BookingWizard() {
               Back
             </button>
 
-            {currentStep < 4 ? (
+            {currentStep < 5 ? (
               <button
                 onClick={handleNext}
                 disabled={
                   (currentStep === 2 && (!selectedDate || !selectedTime)) ||
-                  (currentStep === 3 && (!address.name || !address.phone || !address.address || !address.province))
+                  (currentStep === 4 && (!address.name || !address.phone || !address.address || !address.province))
                 }
                 className="px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed"
               >

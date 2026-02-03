@@ -5,3 +5,4 @@ export * from './paymentMethodService';
 export * from './bookingService';
 export * from './transactionService';
 export * from './taxInformationService';
+export * from './sosService';

@@ -156,7 +156,7 @@ function Header() {
                 </div>
 
                 <Link
-                  to="/booking"
+                  to="/services"
                   className="bg-gradient-to-r from-amber-700 to-amber-800 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
                 >
                   Book Now
@@ -226,7 +226,7 @@ function Header() {
                       <span>My Profile</span>
                     </Link>
                     <Link
-                      to="/booking"
+                      to="/services"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center justify-center gap-2 mt-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
                     >
