@@ -36,6 +36,7 @@ export interface CreateChargeParams {
   amount: number // Amount in smallest currency unit (satangs for THB)
   currency: string
   token?: string // Card token from Omise.js
+  card?: string // Saved card ID
   customerId?: string // Saved customer ID
   description: string
   metadata?: Record<string, any>
@@ -84,13 +85,20 @@ export async function createCharge(params: CreateChargeParams): Promise<ChargeRe
       metadata: params.metadata || {},
     }
 
-    // Use token or customer ID
+    // Use token, card ID, or customer ID
     if (params.token) {
+      // New card payment with token
       chargeData.card = params.token
     } else if (params.customerId) {
+      // Charge via Omise Customer (preferred for saved cards)
       chargeData.customer = params.customerId
+      // Note: Customer's default card will be used automatically
+      // We don't pass the card ID when using customer
+    } else if (params.card) {
+      // Fallback: use card token directly (old method, may expire)
+      chargeData.card = params.card
     } else {
-      throw new Error('Either token or customerId must be provided')
+      throw new Error('Either token, card, or customerId must be provided')
     }
 
     // Add return URI for 3DS
@@ -218,6 +226,108 @@ export async function createRefund(chargeId: string, amount?: number): Promise<a
 }
 
 /**
+ * Create a payment source (for PromptPay, Internet Banking, Mobile Banking)
+ */
+export async function createSource(sourceType: string, amount: number, currency: string = 'THB'): Promise<any> {
+  try {
+    const omise = getOmiseClient()
+    const source = await omise.sources.create({
+      type: sourceType,
+      amount: amount,
+      currency: currency,
+    })
+
+    return {
+      id: source.id,
+      type: source.type,
+      flow: source.flow,
+      amount: source.amount,
+      currency: source.currency,
+      scannable_code: source.scannable_code, // QR code for PromptPay
+      authorize_uri: source.authorize_uri, // Redirect URL for banking
+      createdAt: source.created_at,
+    }
+  } catch (error: any) {
+    console.error('Omise createSource error:', error)
+    throw new Error(error.message || 'Failed to create payment source')
+  }
+}
+
+/**
+ * Create a charge with source (for PromptPay, Internet Banking, Mobile Banking)
+ */
+export async function createChargeWithSource(params: {
+  amount: number
+  currency: string
+  source: string
+  description: string
+  metadata?: Record<string, any>
+  returnUri?: string
+}): Promise<ChargeResponse> {
+  try {
+    const omise = getOmiseClient()
+    const charge = await omise.charges.create({
+      amount: params.amount,
+      currency: params.currency,
+      source: params.source,
+      description: params.description,
+      metadata: params.metadata || {},
+      return_uri: params.returnUri,
+    })
+
+    return {
+      id: charge.id,
+      object: charge.object,
+      amount: charge.amount,
+      currency: charge.currency,
+      status: charge.status,
+      paid: charge.paid,
+      transaction: charge.transaction,
+      card: charge.card
+        ? {
+            brand: charge.card.brand,
+            lastDigits: charge.card.last_digits,
+            expirationMonth: charge.card.expiration_month,
+            expirationYear: charge.card.expiration_year,
+            name: charge.card.name,
+          }
+        : undefined,
+      failureCode: charge.failure_code,
+      failureMessage: charge.failure_message,
+      metadata: charge.metadata,
+      createdAt: charge.created_at,
+    }
+  } catch (error: any) {
+    console.error('Omise createChargeWithSource error:', error)
+    throw new Error(error.message || 'Failed to create charge with source')
+  }
+}
+
+/**
+ * Retrieve a source by ID (to get updated QR code after charge creation)
+ */
+export async function getSource(sourceId: string): Promise<any> {
+  try {
+    const omise = getOmiseClient()
+    const source = await omise.sources.retrieve(sourceId)
+
+    return {
+      id: source.id,
+      type: source.type,
+      flow: source.flow,
+      amount: source.amount,
+      currency: source.currency,
+      scannable_code: source.scannable_code,
+      authorize_uri: source.authorize_uri,
+      createdAt: source.created_at,
+    }
+  } catch (error: any) {
+    console.error('Omise getSource error:', error)
+    throw new Error(error.message || 'Failed to retrieve source')
+  }
+}
+
+/**
  * Verify webhook signature (for security)
  */
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
@@ -232,5 +342,8 @@ export const omiseService = {
   createCustomer,
   getCharge,
   createRefund,
+  createSource,
+  createChargeWithSource,
+  getSource,
   verifyWebhookSignature,
 }
