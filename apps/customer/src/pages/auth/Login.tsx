@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout, LoginForm, PasswordResetForm } from '@bliss/ui'
-import { APP_CONFIGS } from '@bliss/supabase/auth'
+import { APP_CONFIGS, authService } from '@bliss/supabase/auth'
 
 type AuthView = 'login' | 'register' | 'forgot-password'
 
@@ -14,10 +14,11 @@ export function CustomerLoginPage() {
   const navigate = useNavigate()
   const config = APP_CONFIGS.CUSTOMER
   const [view, setView] = useState<AuthView>('login')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleRegisterClick = () => {
-    // TODO: Navigate to registration page
-    console.log('Navigate to register')
+    navigate('/register')
   }
 
   const handleForgotPasswordClick = () => {
@@ -26,26 +27,52 @@ export function CustomerLoginPage() {
 
   const handleBackToLogin = () => {
     setView('login')
+    setError(null)
+  }
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      if (provider === 'google') {
+        await authService.signInWithGoogle()
+      } else {
+        await authService.signInWithFacebook()
+      }
+      // OAuth will redirect to callback URL
+    } catch (err) {
+      console.error('Social login error:', err)
+      setError(`Failed to sign in with ${provider === 'google' ? 'Google' : 'Facebook'}. Please try again.`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <AuthLayout
       appTitle={config.name}
-      appLogo={config.logoUrl}
+      appLogo="/logo.svg"
       backgroundVariant="default"
-      backLinkText="Back to Home"
-      backLinkTo="/"
+      showBackLink={false}
     >
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
       {view === 'login' && (
         <LoginForm
-          appTitle={config.name}
-          appLogo={config.logoUrl}
+          appTitle=""
           primaryColor={config.primaryColor}
+          expectedRole={config.allowedRole}
           redirectTo={config.defaultPath}
           showRegister={true}
           showForgotPassword={true}
+          showSocialLogin={true}
           onRegisterClick={handleRegisterClick}
           onForgotPasswordClick={handleForgotPasswordClick}
+          onSocialLogin={handleSocialLogin}
           showRememberMe={true}
         />
       )}

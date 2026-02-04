@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Star, ChevronRight, Sparkles, Home, Shield, Gem, ChevronLeft, Hand, Flower2, Waves } from 'lucide-react'
+import { useServices } from '@bliss/supabase/hooks/useServices'
 
 function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const { data: services, isLoading, error } = useServices()
 
   const categories = [
     { id: 'massage', name: 'Massage', icon: Sparkles, color: 'champagne', services: 15 },
@@ -30,12 +32,19 @@ function HomePage() {
     },
   ]
 
-  const popularServices = [
-    { id: 1, name: 'Thai Massage (2 hours)', price: 800, category: 'massage', rating: 4.8, slug: 'thai-massage-2hr', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80' },
-    { id: 2, name: 'Oil Massage (2 hours)', price: 1000, category: 'massage', rating: 4.9, slug: 'oil-massage-2hr', image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80' },
-    { id: 3, name: 'Gel Manicure', price: 450, category: 'nail', rating: 4.7, slug: 'gel-manicure', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80' },
-    { id: 4, name: 'Luxury Spa Package', price: 2500, category: 'spa', rating: 5.0, slug: 'luxury-spa-package', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80' },
-  ]
+  // Get top 4 popular services sorted by rating
+  const popularServices = services
+    ?.sort((a, b) => (b.base_price || 0) - (a.base_price || 0))
+    .slice(0, 4)
+    .map((service) => ({
+      id: service.id,
+      name: service.name_en || service.name_th,
+      price: Number(service.base_price || 0),
+      category: service.category,
+      rating: 4.5, // Default rating
+      slug: service.slug,
+      image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+    })) || []
 
   return (
     <div className="min-h-screen">
@@ -130,8 +139,27 @@ function HomePage() {
             </Link>
           </div>
 
+          {isLoading && (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+              <p className="text-stone-600 mt-4">Loading services...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-600">Failed to load services. Please try again.</p>
+            </div>
+          )}
+
+          {!isLoading && !error && popularServices.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-stone-600">No services available at the moment.</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {popularServices.map((service) => {
+          {!isLoading && !error && popularServices.map((service) => {
             const category = categories.find(c => c.id === service.category)
             const IconComponent = category?.icon || Sparkles
             return (

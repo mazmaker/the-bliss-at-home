@@ -11,7 +11,7 @@ import { useAuth } from '@bliss/supabase/auth'
 import Loader from '../Loader'
 
 // DEV MODE: Set to false to enable authentication
-const DISABLE_AUTH = true
+const DISABLE_AUTH = false
 
 export interface ProtectedRouteProps {
   children: React.ReactNode

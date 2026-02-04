@@ -7,7 +7,12 @@ import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
 import Staff from './pages/Staff'
 import Customers from './pages/Customers'
+import SOSAlerts from './pages/SOSAlerts'
 import Hotels from './pages/Hotels'
+import HotelDetail from './pages/HotelDetail'
+import HotelBilling from './pages/HotelBilling'
+import HotelPayments from './pages/HotelPayments'
+import HotelBookings from './pages/HotelBookings'
 import Bookings from './pages/Bookings'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
@@ -105,7 +110,12 @@ function App() {
         <Route path="services" element={<Services />} />
         <Route path="staff" element={<Staff />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="sos-alerts" element={<SOSAlerts />} />
         <Route path="hotels" element={<Hotels />} />
+        <Route path="hotels/:id" element={<HotelDetail />} />
+        <Route path="hotels/:id/billing" element={<HotelBilling />} />
+        <Route path="hotels/:id/payments" element={<HotelPayments />} />
+        <Route path="hotels/:id/bookings" element={<HotelBookings />} />
         <Route path="bookings" element={<Bookings />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />

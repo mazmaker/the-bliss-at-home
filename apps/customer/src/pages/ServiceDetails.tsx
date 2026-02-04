@@ -1,20 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import {
-  Star,
-  Clock,
-  ChevronLeft,
-  Plus,
-  Minus,
-  Heart,
-  Sparkles,
-  Search,
-  Hand,
-  Flower2,
-  Palette,
-  Loader2,
-  AlertCircle,
-} from 'lucide-react'
+import { Star, Clock, ChevronLeft, Plus, Minus, Heart, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle } from 'lucide-react'
+import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -24,136 +11,42 @@ const categoryIcons: Record<string, React.ComponentType<{className?: string}>> =
   facial: Palette,
 }
 
-interface Service {
-  id: string
-  name_th: string
-  name_en: string
-  description_th?: string
-  description_en?: string
-  category: 'massage' | 'nail' | 'spa' | 'facial'
-  duration: number
-  base_price: number
-  hotel_price: number
-  image_url?: string
-  slug: string
-  is_active: boolean
-}
-
-// Mock service data
-const mockServices: Record<string, Service> = {
-  'thai-massage-2hr': {
-    id: '1',
-    name_th: 'นวดไทยแบบดั้งเดิม 2 ชั่วโมง',
-    name_en: 'Traditional Thai Massage 2 Hours',
-    description_th: 'นวดไทยแบบดั้งเดิมด้วยเทคนิคการกดจุดและยืดเส้น ช่วยคลายกล้ามเนื้อ ผ่องคลายความเครียด และเพิ่มความยืดหยุ่นให้ร่างกาย',
-    description_en: 'Traditional Thai massage using ancient techniques of acupressure and stretching. Helps relax muscles, relieve stress, and improve flexibility.',
-    category: 'massage',
-    duration: 120,
-    base_price: 800,
-    hotel_price: 650,
-    image_url: null,
-    slug: 'thai-massage-2hr',
-    is_active: true,
-  },
-  'oil-massage-90min': {
-    id: '2',
-    name_th: 'นวดน้ำมันหอมระเหย 90 นาที',
-    name_en: 'Aromatherapy Oil Massage 90 Minutes',
-    description_th: 'นวดด้วยน้ำมันหอมระเหยจากธรรมชาติ ช่วยผ่อนคลายความเครียด เพิ่มความชุ่มชื้นให้ผิว และสร้างความรู้สึกสงบ',
-    description_en: 'Massage with natural essential oils to relieve stress, moisturize skin, and create a sense of tranquility.',
-    category: 'massage',
-    duration: 90,
-    base_price: 650,
-    hotel_price: 520,
-    image_url: null,
-    slug: 'oil-massage-90min',
-    is_active: true,
-  },
-  'classic-manicure': {
-    id: '3',
-    name_th: 'เพ้นท์เล็บคลาสสิค',
-    name_en: 'Classic Manicure',
-    description_th: 'บริการทำเล็บมือแบบคลาสสิค ตัดแต่งเล็บ ดูแลผิวหนังรอบเล็บ และทาสีเล็บตามต้องการ',
-    description_en: 'Classic manicure service including nail trimming, cuticle care, and nail polish application.',
-    category: 'nail',
-    duration: 60,
-    base_price: 300,
-    hotel_price: 250,
-    image_url: null,
-    slug: 'classic-manicure',
-    is_active: true,
-  },
-  'spa-facial-deluxe': {
-    id: '4',
-    name_th: 'ทรีตเมนท์ใบหน้าระดับพรีเมี่ยม',
-    name_en: 'Deluxe Spa Facial',
-    description_th: 'ทรีตเมนท์ใบหน้าแบบครบวงจร รวมการทำความสะอาดผิว มาส์กหน้า และบำรุงผิวด้วยผลิตภัณฑ์คุณภาพสูง',
-    description_en: 'Complete facial treatment including deep cleansing, face mask, and skin nourishment with premium products.',
-    category: 'facial',
-    duration: 75,
-    base_price: 950,
-    hotel_price: 800,
-    image_url: null,
-    slug: 'spa-facial-deluxe',
-    is_active: true,
-  },
-}
-
-// Mock add-ons data
-const mockAddOns: Record<string, any[]> = {
-  massage: [
-    { id: 1, name: 'Herbal Ball', price: 100, description: 'Traditional herbal compress' },
-    { id: 2, name: 'Aromatherapy Oil', price: 150, description: 'Essential oil blend' },
-    { id: 3, name: 'Extra 30 min', price: 200, description: 'Extend session by 30 minutes' },
-  ],
-  nail: [
-    { id: 1, name: 'Nail Art', price: 100, description: 'Custom nail design' },
-    { id: 2, name: 'Paraffin Treatment', price: 150, description: 'Paraffin wax treatment' },
-  ],
-  spa: [
-    { id: 1, name: 'Face Mask', price: 200, description: 'Premium face mask treatment' },
-    { id: 2, name: 'Body Scrub', price: 300, description: 'Exfoliating body treatment' },
-  ],
-  facial: [
-    { id: 1, name: 'Gold Mask', price: 500, description: 'Luxury gold face mask' },
-    { id: 2, name: 'LED Therapy', price: 300, description: 'LED light therapy' },
-  ],
-}
-
 function ServiceDetails() {
   const { slug } = useParams()
-  const [service, setService] = useState<Service | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [selectedAddOns, setSelectedAddOns] = useState<number[]>([])
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [quantity, setQuantity] = useState(1)
 
-  useEffect(() => {
-    // Simulate loading from mock data
-    const loadService = () => {
-      if (!slug) {
-        setError('ไม่พบ URL บริการ')
-        setIsLoading(false)
-        return
-      }
+  const { data: serviceData, isLoading, error } = useServiceBySlug(slug)
 
-      // Simulate API delay
-      setTimeout(() => {
-        const foundService = mockServices[slug]
-        if (foundService) {
-          setService(foundService)
-          setError('')
-        } else {
-          setError('ไม่พบบริการที่ต้องการ')
-        }
-        setIsLoading(false)
-      }, 500) // 500ms delay to simulate loading
+  // Transform service data to match expected format
+  const service = useMemo(() => {
+    if (!serviceData) return null
+
+    return {
+      id: serviceData.id,
+      name_en: serviceData.name_en || serviceData.name_th,
+      name_th: serviceData.name_th,
+      base_price: Number(serviceData.base_price || 0),
+      hotel_price: Number(serviceData.hotel_price || serviceData.base_price || 0),
+      category: serviceData.category,
+      rating: 4.5, // Default rating
+      reviews: 0, // Default reviews
+      duration: serviceData.duration || 60,
+      image_url: serviceData.image_url,
+      description_en: serviceData.description_en || '',
+      description_th: serviceData.description_th || '',
+      benefits: [], // Parse from description or separate field
+      addOns: serviceData.addons?.map(addon => ({
+        id: addon.id,
+        name: addon.name_en || addon.name_th,
+        price: Number(addon.price || 0),
+        description: addon.description_en || addon.description_th || '',
+      })) || [],
     }
+  }, [serviceData])
 
-    loadService()
-  }, [slug])
+  const IconComponent = service ? categoryIcons[service.category] || Sparkles : Sparkles
 
-  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -164,21 +57,13 @@ function ServiceDetails() {
     )
   }
 
-  if (error || !service) {
+  // Error state
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          {error ? (
-            <>
-              <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-              <h2 className="text-2xl font-medium text-stone-900 mt-4">{error}</h2>
-            </>
-          ) : (
-            <>
-              <Search className="w-16 h-16 text-stone-400 mx-auto" />
-              <h2 className="text-2xl font-medium text-stone-900 mt-4">ไม่พบบริการ</h2>
-            </>
-          )}
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
+          <h2 className="text-2xl font-medium text-stone-900 mt-4">ไม่สามารถโหลดข้อมูลบริการได้</h2>
           <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
             ← กลับไปดูบริการทั้งหมด
           </Link>
@@ -187,10 +72,24 @@ function ServiceDetails() {
     )
   }
 
-  const IconComponent = categoryIcons[service.category] || Sparkles
-  const addOns = mockAddOns[service.category] || []
+  // Not found state
+  if (!service) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Search className="w-16 h-16 text-stone-400 mx-auto" />
+          <h2 className="text-2xl font-medium text-stone-900 mt-4">ไม่พบบริการที่ต้องการ</h2>
+          <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+            ← กลับไปดูบริการทั้งหมด
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
-  const toggleAddOn = (id: number) => {
+  const addOns = service.addOns || []
+
+  const toggleAddOn = (id: string) => {
     setSelectedAddOns(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     )
@@ -272,6 +171,20 @@ function ServiceDetails() {
                   <>
                     <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">รายละเอียด</h3>
                     <p className="text-stone-700 font-light leading-relaxed">{service.description_th}</p>
+                  </>
+                )}
+
+                {service.benefits.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">Benefits</h3>
+                    <ul className="space-y-2 text-stone-700">
+                      {service.benefits.map((benefit: string, i: number) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
                   </>
                 )}
               </div>

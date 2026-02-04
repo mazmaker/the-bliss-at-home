@@ -1,12 +1,19 @@
+// Load environment variables FIRST before any other imports
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+dotenv.config({ path: join(__dirname, '..', '.env') })
+
 import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
-
-// Load environment variables
-dotenv.config()
+import paymentRoutes from './routes/payment.js'
+import otpRoutes from './routes/otp.js'
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3009
 
 // Middleware
 app.use(cors())
@@ -37,9 +44,17 @@ app.get('/api', (req: Request, res: Response) => {
     endpoints: {
       health: '/health',
       api: '/api',
+      payments: '/api/payments',
+      otp: '/api/otp',
     },
   })
 })
+
+// Payment routes
+app.use('/api/payments', paymentRoutes)
+
+// OTP routes
+app.use('/api/otp', otpRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {
