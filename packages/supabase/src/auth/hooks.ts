@@ -26,9 +26,9 @@ export function useAuth(expectedRole?: UserRole) {
 
     async function loadUser() {
       try {
-        // Add timeout to prevent infinite loading
+        // Add timeout to prevent infinite loading (increased to 15 seconds)
         const timeoutPromise = new Promise<null>((_, reject) => {
-          setTimeout(() => reject(new Error('Auth timeout')), 10000)
+          setTimeout(() => reject(new Error('Auth timeout')), 15000)
         })
 
         const profile = await Promise.race([
@@ -60,7 +60,11 @@ export function useAuth(expectedRole?: UserRole) {
         })
       } catch (error) {
         if (!mounted) return
-        console.error('Auth loadUser error:', error)
+
+        // Only log non-timeout errors in development
+        if (import.meta.env.DEV && !(error instanceof Error && error.message === 'Auth timeout')) {
+          console.error('Auth loadUser error:', error)
+        }
 
         // Set state FIRST to stop loading immediately
         setState({
@@ -70,12 +74,8 @@ export function useAuth(expectedRole?: UserRole) {
           isAuthenticated: false,
         })
 
-        // If timeout occurred, clear any stale session in the background (don't await)
-        if (error instanceof Error && error.message === 'Auth timeout') {
-          authService.logout().catch(() => {
-            // Ignore logout errors
-          })
-        }
+        // Don't logout on timeout - just let the user stay logged out
+        // Logging out would clear the session and cause issues with LIFF auto-login
       }
     }
 
@@ -90,9 +90,9 @@ export function useAuth(expectedRole?: UserRole) {
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         try {
-          // Add timeout to prevent hanging
+          // Add timeout to prevent hanging (increased to 10 seconds for slower networks)
           const timeoutPromise = new Promise<null>((_, reject) => {
-            setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+            setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
           })
           const profile = await Promise.race([
             authService.getCurrentProfile(),
@@ -107,7 +107,11 @@ export function useAuth(expectedRole?: UserRole) {
             })
           }
         } catch (error) {
-          console.error('Auth state change error:', error)
+          // Silently fail on timeout during token refresh - keep current user state
+          // Only log in development mode
+          if (import.meta.env.DEV && !(error instanceof Error && error.message === 'Profile fetch timeout')) {
+            console.error('Auth state change error:', error)
+          }
           // Don't change state on error - keep current user state
         }
       } else if (event === 'SIGNED_OUT') {

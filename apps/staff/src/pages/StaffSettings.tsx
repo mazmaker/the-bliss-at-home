@@ -98,20 +98,48 @@ function StaffSettings() {
     setShowLogoutConfirm(false)
 
     try {
-      await logout()
-    } catch (error) {
-      console.error('Supabase logout error:', error)
-    }
+      // Check if user logged in via LIFF
+      const loggedInViaLiff = localStorage.getItem('staff_logged_in_via_liff') === 'true'
 
-    try {
-      if (liffService.isInitialized()) {
-        liffService.logout()
+      if (loggedInViaLiff) {
+        console.log('[Logout] User logged in via LIFF, initializing LIFF for logout...')
+
+        // Get LIFF ID from environment
+        const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
+
+        if (LIFF_ID) {
+          // Initialize LIFF if not already initialized
+          if (!liffService.isInitialized()) {
+            await liffService.initialize(LIFF_ID)
+          }
+
+          // Logout from LIFF
+          if (liffService.isLoggedIn()) {
+            console.log('[Logout] Logging out from LIFF...')
+            liffService.logout()
+            // Wait for LIFF logout to complete
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        }
+
+        // Clear the flag
+        localStorage.removeItem('staff_logged_in_via_liff')
       }
     } catch (error) {
       console.error('LIFF logout error:', error)
     }
 
-    navigate('/staff/login', { replace: true })
+    try {
+      // Then logout from Supabase
+      console.log('[Logout] Logging out from Supabase...')
+      await logout()
+    } catch (error) {
+      console.error('Supabase logout error:', error)
+    }
+
+    // Force full page reload to login page (clears all state)
+    console.log('[Logout] Redirecting to login page...')
+    window.location.href = '/staff/login'
   }
 
   const settings = [

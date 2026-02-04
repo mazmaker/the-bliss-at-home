@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
+import { NotificationPanel, type Notification } from '../components'
 
 const navigation = [
   { name: 'วันนี้', nameEn: 'Today', href: '/staff', icon: Calendar },
@@ -25,29 +26,99 @@ function StaffLayout() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+
+  // Mock notifications - replace with actual data from database later
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: '1',
+      type: 'new_job',
+      title: 'งานใหม่เข้ามา!',
+      message: 'คุณมีงาน "นวดแผนไทย 2 ชั่วโมง" ที่ Grande Centre Point Terminal 21',
+      read: false,
+      created_at: new Date(Date.now() - 10 * 60000).toISOString(), // 10 minutes ago
+    },
+    {
+      id: '2',
+      type: 'payment_received',
+      title: 'รับเงินเรียบร้อย',
+      message: 'คุณได้รับเงิน ฿770 จากงาน "นวดน้ำมันหอมระเหย" พร้อมทิป ฿100',
+      read: false,
+      created_at: new Date(Date.now() - 2 * 3600000).toISOString(), // 2 hours ago
+    },
+    {
+      id: '3',
+      type: 'job_updated',
+      title: 'งานได้รับการอัพเดท',
+      message: 'งาน "นวดหินร้อน" เวลาเปลี่ยนเป็น 20:00 น.',
+      read: true,
+      created_at: new Date(Date.now() - 5 * 3600000).toISOString(), // 5 hours ago
+    },
+  ])
+
+  const handleMarkAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    )
+  }
+
+  const handleMarkAllAsRead = () => {
+    setNotifications((prev) =>
+      prev.map((notif) => ({ ...notif, read: true }))
+    )
+  }
+
+  const unreadCount = notifications.filter(n => !n.read).length
 
   const handleLogout = async () => {
     // Close modal first
     setShowLogoutConfirm(false)
 
     try {
-      // Logout from Supabase
-      await logout()
-    } catch (error) {
-      console.error('Supabase logout error:', error)
-    }
+      // Check if user logged in via LIFF
+      const loggedInViaLiff = localStorage.getItem('staff_logged_in_via_liff') === 'true'
 
-    try {
-      // Also logout from LIFF if initialized
-      if (liffService.isInitialized()) {
-        liffService.logout()
+      if (loggedInViaLiff) {
+        console.log('[Logout] User logged in via LIFF, initializing LIFF for logout...')
+
+        // Get LIFF ID from environment
+        const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
+
+        if (LIFF_ID) {
+          // Initialize LIFF if not already initialized
+          if (!liffService.isInitialized()) {
+            await liffService.initialize(LIFF_ID)
+          }
+
+          // Logout from LIFF
+          if (liffService.isLoggedIn()) {
+            console.log('[Logout] Logging out from LIFF...')
+            liffService.logout()
+            // Wait for LIFF logout to complete
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        }
+
+        // Clear the flag
+        localStorage.removeItem('staff_logged_in_via_liff')
       }
     } catch (error) {
       console.error('LIFF logout error:', error)
     }
 
-    // Navigate to login page (always navigate even if logout fails)
-    navigate('/staff/login', { replace: true })
+    try {
+      // Then logout from Supabase
+      console.log('[Logout] Logging out from Supabase...')
+      await logout()
+    } catch (error) {
+      console.error('Supabase logout error:', error)
+    }
+
+    // Force full page reload to login page (clears all state)
+    console.log('[Logout] Redirecting to login page...')
+    window.location.href = '/staff/login'
   }
 
   return (
@@ -85,27 +156,20 @@ function StaffLayout() {
 
       {/* Header */}
       <header className="bg-gradient-to-r from-amber-700 to-amber-800 text-white sticky top-0 z-30">
-        <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.full_name || 'Profile'}
-                className="w-10 h-10 rounded-full border-2 border-white/30"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <User className="w-5 h-5" />
-              </div>
-            )}
-            <div>
-              <h1 className="text-base font-bold">{user?.full_name || 'Bliss Provider'}</h1>
-              <p className="text-xs opacity-90">พนักงานให้บริการ</p>
-            </div>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3">
+          <h1 className="text-lg font-bold">The Bliss at Home</h1>
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-white/10 rounded-lg transition">
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="p-2 hover:bg-white/10 rounded-lg transition relative"
+              title="การแจ้งเตือน"
+            >
               <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setShowLogoutConfirm(true)}
@@ -117,6 +181,15 @@ function StaffLayout() {
           </div>
         </div>
       </header>
+
+      {/* Notification Panel */}
+      <NotificationPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        notifications={notifications}
+        onMarkAsRead={handleMarkAsRead}
+        onMarkAllAsRead={handleMarkAllAsRead}
+      />
 
       {/* Main content */}
       <main className="px-4 py-4">
