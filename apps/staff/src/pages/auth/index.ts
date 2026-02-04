@@ -3,3 +3,4 @@
  */
 
 export { StaffLoginPage } from './Login'
+export { StaffAuthCallback } from './Callback'
