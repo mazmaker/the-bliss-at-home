@@ -45,10 +45,14 @@ export function usePendingSOSAlerts(sourceFilter: SOSSourceType = 'all') {
   const [alerts, setAlerts] = useState<SOSAlert[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = async (isPolling = false) => {
     try {
-      setLoading(true)
+      // Only set loading on initial load, not when polling
+      if (!isPolling) {
+        setLoading(true)
+      }
       setError(null)
       const data = await getPendingSOSAlerts(sourceFilter)
       setAlerts(data)
@@ -56,19 +60,26 @@ export function usePendingSOSAlerts(sourceFilter: SOSSourceType = 'all') {
       setError(err instanceof Error ? err.message : 'Failed to fetch pending alerts')
       console.error('Error fetching pending SOS alerts:', err)
     } finally {
-      setLoading(false)
+      if (!isPolling) {
+        setLoading(false)
+      }
+      if (isInitialLoad) {
+        setIsInitialLoad(false)
+      }
     }
   }
 
   useEffect(() => {
-    fetchAlerts()
+    // Initial fetch
+    fetchAlerts(false)
 
     // Poll for new alerts every 5 seconds for faster response
-    const interval = setInterval(fetchAlerts, 5000)
+    // Use polling flag to prevent loading state flicker
+    const interval = setInterval(() => fetchAlerts(true), 5000)
     return () => clearInterval(interval)
   }, [sourceFilter])
 
-  return { alerts, loading, error, refetch: fetchAlerts }
+  return { alerts, loading, error, refetch: () => fetchAlerts(false) }
 }
 
 export function useSOSAlertActions() {

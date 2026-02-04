@@ -28,18 +28,60 @@ interface AuthState {
   isAuthenticated: boolean
 }
 
+// Module-level flags to prevent concurrent profile fetches across all hook instances
+let isFetchingProfile = false
+let lastFetchTime = 0
+let loadedUserId: string | null = null // Track which user profile is loaded
+let fetchingUserId: string | null = null // Track which user is currently being fetched
+const FETCH_DEBOUNCE_MS = 100 // Debounce multiple rapid calls
+const CACHE_STALE_TIME = 5 * 60 * 1000 // Cache valid for 5 minutes
+
+// Get cached profile from localStorage for instant loading
+function getCachedProfile(): { profile: Profile | null; isStale: boolean } {
+  try {
+    const cached = window.localStorage.getItem('bliss-admin-profile-cache')
+    if (!cached) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Cache check: No cache found in localStorage')
+      }
+      return { profile: null, isStale: true }
+    }
+
+    const data = JSON.parse(cached)
+    const age = Date.now() - data.timestamp
+    const isStale = age > CACHE_STALE_TIME
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Cache check:', {
+        hasCache: true,
+        cacheAge: `${Math.floor(age / 1000)}s`,
+        isStale,
+        staleTime: `${CACHE_STALE_TIME / 1000}s`,
+        profileEmail: data.profile?.email
+      })
+    }
+
+    return { profile: data.profile, isStale }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Cache check: Parse error', error)
+    }
+    return { profile: null, isStale: true }
+  }
+}
+
 /**
  * Admin Auth Hook - switches between Mock and Real auth
  */
 export function useAdminAuth() {
-  // Quick check for existing session in localStorage
-  const hasLocalSession = !!window.localStorage.getItem('bliss-admin-auth')
+  // Initialize with cached profile for instant loading
+  const cachedData = getCachedProfile()
 
   const [authState, setAuthState] = useState<AuthState>({
-    user: null,
+    user: cachedData.profile,
     isLoading: true,
     error: null,
-    isAuthenticated: false,
+    isAuthenticated: !!cachedData.profile,
   })
 
   // Initialize auth state
@@ -47,7 +89,9 @@ export function useAdminAuth() {
     let mounted = true
 
     async function initializeAuth() {
-      console.log('🔍 Initializing auth...', { USE_MOCK_AUTH })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Initializing auth...', { USE_MOCK_AUTH })
+      }
 
       try {
         if (USE_MOCK_AUTH) {
@@ -64,59 +108,112 @@ export function useAdminAuth() {
           })
         } else {
           // Real Supabase authentication
-          console.log('🔐 Checking Supabase session...')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔐 Checking Supabase session...')
+          }
 
-          // First try to get session from localStorage
-          if (hasLocalSession) {
-            try {
-              // Quick check if session is valid
-              const { user, profile } = await getCurrentUserWithProfile()
+          // Check if we have valid cached profile
+          const { profile: cachedProfile, isStale } = getCachedProfile()
+          if (cachedProfile && !isStale) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('⚡ Using cached profile (still fresh)')
+            }
+            // Update loadedUserId from cache
+            loadedUserId = cachedProfile.id
+            // Set isLoading to false when using cache
+            setAuthState(prev => ({
+              ...prev,
+              isLoading: false,
+              isAuthenticated: true
+            }))
+            return // Skip fetch if cache is still valid
+          }
 
-              if (user && profile) {
-                console.log('✅ Auth restored from local session')
-                setAuthState({
-                  user: profile,
-                  isLoading: false,
-                  error: null,
-                  isAuthenticated: true,
-                })
-                return
+          // Prevent concurrent profile fetches with debouncing
+          const now = Date.now()
+          if (isFetchingProfile && now - lastFetchTime < FETCH_DEBOUNCE_MS) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('⏭️ Profile fetch already in progress during init, skipping...')
+            }
+            return
+          }
+
+          if (isFetchingProfile) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('⏳ Waiting for previous fetch to complete...')
+            }
+            // Wait a bit and try again
+            await new Promise(resolve => setTimeout(resolve, 50))
+            if (isFetchingProfile) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('⏭️ Previous fetch still running, skipping...')
               }
-            } catch (quickCheckError) {
-              console.log('Local session invalid, checking with server...')
+              return
             }
           }
 
-          // Direct call without timeout - let getCurrentUserWithProfile handle it
-          console.log('🔍 Getting current user and profile...')
+          isFetchingProfile = true
+          lastFetchTime = now
 
-          const { user, profile } = await getCurrentUserWithProfile()
+          let fetchedUser: any = null
+          let fetchedProfile: any = null
 
-          if (!mounted) return
+          try {
+            // Get current user and profile - Supabase will restore from localStorage automatically
+            const result = await getCurrentUserWithProfile()
+            fetchedUser = result.user
+            fetchedProfile = result.profile
 
-          console.log('✅ Auth initialized:', {
-            user: user?.email,
-            userId: user?.id,
-            profile: !!profile,
-            profileEmail: profile?.email,
-            profileRole: profile?.role
-          })
+            if (!mounted) return
 
-          // Save successful auth to localStorage
-          if (user && profile) {
-            window.localStorage.setItem('bliss-admin-auth', JSON.stringify({
-              userId: user.id,
-              email: user.email,
-              timestamp: Date.now()
-            }))
+            if (process.env.NODE_ENV === 'development') {
+              console.log('✅ Auth initialized:', {
+                user: fetchedUser?.email,
+                userId: fetchedUser?.id,
+                profile: !!fetchedProfile,
+                profileEmail: fetchedProfile?.email,
+                profileRole: fetchedProfile?.role
+              })
+            }
+
+            // Save both user and profile to cache for instant loading on next visit
+            if (fetchedUser && fetchedProfile) {
+              window.localStorage.setItem('bliss-admin-profile-cache', JSON.stringify({
+                profile: fetchedProfile,
+                timestamp: Date.now()
+              }))
+              // Keep user cache for backward compatibility
+              window.localStorage.setItem('bliss-admin-user-cache', JSON.stringify({
+                userId: fetchedUser.id,
+                email: fetchedUser.email,
+                timestamp: Date.now()
+              }))
+            } else {
+              // Clear caches if no user
+              window.localStorage.removeItem('bliss-admin-profile-cache')
+              window.localStorage.removeItem('bliss-admin-user-cache')
+            }
+
+            setAuthState({
+              user: fetchedProfile,
+              isLoading: false,
+              error: null,
+              isAuthenticated: !!fetchedUser && !!fetchedProfile,
+            })
+          } finally {
+            // Set loadedUserId in finally block to prevent race condition
+            if (fetchedUser && fetchedProfile) {
+              loadedUserId = fetchedUser.id
+              fetchingUserId = null
+              if (process.env.NODE_ENV === 'development') {
+                console.log('📍 Loaded user ID set:', fetchedUser.id)
+              }
+            } else {
+              loadedUserId = null
+              fetchingUserId = null
+            }
+            isFetchingProfile = false
           }
-
-          setAuthState({
-            user: profile,
-            isLoading: false,
-            error: null,
-            isAuthenticated: !!user && !!profile,
-          })
         }
       } catch (error) {
         if (!mounted) return
@@ -152,16 +249,23 @@ export function useAdminAuth() {
       authListener = onAuthStateChange(async (event, session) => {
         if (!mounted) return
 
-        console.log('🔄 Auth state change:', event, {
-          hasSession: !!session,
-          hasUser: !!session?.user,
-          userEmail: session?.user?.email,
-          expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'N/A'
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Auth state change:', event, {
+            hasSession: !!session,
+            hasUser: !!session?.user,
+            userEmail: session?.user?.email,
+            expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'N/A'
+          })
+        }
 
         try {
           if (event === 'SIGNED_OUT' || !session) {
-            console.log('👋 User signed out or no session')
+            if (process.env.NODE_ENV === 'development') {
+              console.log('👋 User signed out or no session')
+            }
+            loadedUserId = null // Clear loaded user ID
+            window.localStorage.removeItem('bliss-admin-profile-cache')
+            window.localStorage.removeItem('bliss-admin-user-cache')
             setAuthState({
               user: null,
               isLoading: false,
@@ -172,33 +276,108 @@ export function useAdminAuth() {
           }
 
           if (event === 'TOKEN_REFRESHED') {
-            console.log('🔄 Token refreshed successfully')
+            // Don't fetch profile on token refresh, just ensure state is correct
+            if (loadedUserId && loadedUserId === session?.user?.id && !authState.isAuthenticated) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('🔄 Updating auth state to authenticated after token refresh')
+              }
+              setAuthState(prev => ({
+                ...prev,
+                isLoading: false,
+                isAuthenticated: true
+              }))
+            }
+            return
           }
 
           if (session?.user) {
-            console.log('✅ Session exists, getting profile...')
-            const { profile } = await getCurrentUserWithProfile()
+            // Check if profile is already loaded for this user
+            if (loadedUserId && loadedUserId === session.user.id) {
+              // Just ensure auth state is correct, don't fetch again
+              if (!authState.isAuthenticated) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('🔄 Updating auth state to authenticated')
+                }
+                setAuthState(prev => ({
+                  ...prev,
+                  isLoading: false,
+                  isAuthenticated: true
+                }))
+              }
+              return
+            }
 
-            if (profile) {
-              console.log('✅ Profile found:', profile.email)
-              setAuthState({
-                user: profile,
-                isLoading: false,
-                error: null,
-                isAuthenticated: true,
-              })
+            // Check if we're already fetching profile for this user
+            if (fetchingUserId === session.user.id) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('⏭️ Already fetching profile for this user, skipping...')
+              }
+              return
+            }
+
+            // Profile not loaded yet - fetch it (only for INITIAL_SESSION or SIGNED_IN)
+            if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('📥 Fetching profile for auth event:', event)
+              }
+
+              // Prevent concurrent fetches
+              if (isFetchingProfile) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('⏭️ Profile fetch already in progress, skipping...')
+                }
+                return
+              }
+
+              // Mark that we're fetching for this specific user
+              fetchingUserId = session.user.id
+              isFetchingProfile = true
+              lastFetchTime = Date.now()
+
+              try {
+                const { user, profile } = await getCurrentUserWithProfile()
+
+                if (!mounted) return
+
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('✅ Profile fetched on auth event:', {
+                    user: user?.email,
+                    profile: !!profile
+                  })
+                }
+
+                if (user && profile) {
+                  loadedUserId = user.id
+                  // Save to cache
+                  window.localStorage.setItem('bliss-admin-profile-cache', JSON.stringify({
+                    profile,
+                    timestamp: Date.now()
+                  }))
+                  setAuthState({
+                    user: profile,
+                    isLoading: false,
+                    error: null,
+                    isAuthenticated: true,
+                  })
+                }
+              } catch (error) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.error('❌ Failed to fetch profile on auth event:', error)
+                }
+              } finally {
+                isFetchingProfile = false
+                fetchingUserId = null
+              }
             } else {
-              console.log('❌ No profile found for user')
-              setAuthState({
-                user: null,
-                isLoading: false,
-                error: 'No profile found',
-                isAuthenticated: false,
-              })
+              if (process.env.NODE_ENV === 'development') {
+                console.log('⚠️ Session user mismatch on event:', event)
+              }
             }
           }
         } catch (error) {
-          console.error('❌ Auth state change error:', error)
+          if (process.env.NODE_ENV === 'development') {
+            console.error('❌ Auth state change error:', error)
+          }
           setAuthState({
             user: null,
             isLoading: false,

@@ -62,20 +62,31 @@ export function useSOSNotifications() {
 
   // Detect new alerts and trigger notifications
   useEffect(() => {
+    // Skip if loading or no alerts
+    if (loading) {
+      return
+    }
+
     const currentAlertIds = new Set(alerts.map(a => a.id))
 
     // Handle case when there are no alerts
     if (!alerts.length) {
-      // Reset title when no pending alerts
-      document.title = originalTitleRef.current
-      // Stop all repeating sounds
-      soundAlertService.stopAllRepeatingAlerts()
-      // Clear previous alerts reference
-      previousAlertsRef.current = new Set()
+      // Only update if we previously had alerts
+      if (previousAlertsRef.current.size > 0) {
+        // Reset title when no pending alerts
+        document.title = originalTitleRef.current
+        // Stop all repeating sounds
+        soundAlertService.stopAllRepeatingAlerts()
+        // Clear previous alerts reference
+        previousAlertsRef.current = new Set()
+      }
       return
     }
 
-    if (loading) {
+    // On first load, initialize previousAlertsRef without triggering notifications
+    if (previousAlertsRef.current.size === 0) {
+      previousAlertsRef.current = currentAlertIds
+      updateTabTitle(alerts.length)
       return
     }
 

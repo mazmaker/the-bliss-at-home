@@ -210,14 +210,14 @@ function AdminLayout() {
           {/* User info */}
           <div className="p-4 border-t border-stone-200">
             <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                 {user?.full_name?.[0]?.toUpperCase() || 'A'}
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-stone-900">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-stone-900 truncate">
                   {user?.full_name || 'Admin'}
                 </p>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-stone-500 truncate">
                   {user?.email || 'admin@theblissathome.com'}
                 </p>
               </div>

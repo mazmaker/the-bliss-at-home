@@ -1,22 +1,51 @@
 import { Link } from 'react-router-dom'
 import { ShieldAlert, AlertTriangle, Clock, MapPin, ArrowRight } from 'lucide-react'
 import { useSOSNotifications } from '../hooks/useSOSNotifications'
+import { useMemo, memo } from 'react'
 
-export function SOSWidget() {
+/**
+ * Calculate time ago from timestamp
+ */
+function getTimeAgo(timestamp: string): string {
+  const now = new Date()
+  const then = new Date(timestamp)
+  const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000)
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} วินาทีที่แล้ว`
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60)
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} นาทีที่แล้ว`
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) {
+    return `${diffInHours} ชั่วโมงที่แล้ว`
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24)
+  return `${diffInDays} วันที่แล้ว`
+}
+
+const SOSWidget = memo(function SOSWidget() {
   const { pendingAlerts, pendingCount, hasCriticalAlerts, loading } = useSOSNotifications()
 
-  // Show top 3 most urgent alerts
-  const topAlerts = pendingAlerts
-    .sort((a, b) => {
-      // Sort by priority first (critical > high > medium > low)
-      const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
-      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
-      if (priorityDiff !== 0) return priorityDiff
+  // Show top 3 most urgent alerts - memoized to prevent re-sorting on every render
+  const topAlerts = useMemo(() => {
+    return [...pendingAlerts]
+      .sort((a, b) => {
+        // Sort by priority first (critical > high > medium > low)
+        const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
+        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
+        if (priorityDiff !== 0) return priorityDiff
 
-      // Then by creation date (newest first)
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
-    .slice(0, 3)
+        // Then by creation date (newest first)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+      .slice(0, 3)
+  }, [pendingAlerts])
 
   if (loading) {
     return null
@@ -43,11 +72,17 @@ export function SOSWidget() {
   }
 
   return (
-    <div className={`bg-white rounded-2xl shadow-lg border-2 overflow-hidden ${
+    <div className={`bg-white rounded-2xl shadow-lg border-2 overflow-hidden transition-all duration-500 ${
       hasCriticalAlerts
-        ? 'border-red-500 animate-pulse'
+        ? 'border-red-500'
         : 'border-orange-300'
-    }`}>
+    }`}
+      style={{
+        boxShadow: hasCriticalAlerts
+          ? '0 0 20px rgba(239, 68, 68, 0.4)'
+          : undefined
+      }}
+    >
       {/* Header */}
       <div className={`p-6 ${
         hasCriticalAlerts
@@ -57,7 +92,12 @@ export function SOSWidget() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-white animate-bounce" />
+              <ShieldAlert
+                className="w-6 h-6 text-white transition-transform duration-1000"
+                style={{
+                  animation: hasCriticalAlerts ? 'bounce 2s ease-in-out infinite' : 'pulse 3s ease-in-out infinite'
+                }}
+              />
             </div>
             <div>
               <h3 className="font-bold text-white text-lg">
@@ -97,7 +137,10 @@ export function SOSWidget() {
           return (
             <div
               key={alert.id}
-              className={`p-4 rounded-xl border-2 ${priorityStyles[alert.priority]}`}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 ease-in-out ${priorityStyles[alert.priority]}`}
+              style={{
+                animation: 'fadeIn 0.3s ease-in-out',
+              }}
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-start gap-2 flex-1">
@@ -146,30 +189,6 @@ export function SOSWidget() {
       </div>
     </div>
   )
-}
+})
 
-/**
- * Calculate time ago from timestamp
- */
-function getTimeAgo(timestamp: string): string {
-  const now = new Date()
-  const then = new Date(timestamp)
-  const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} วินาทีที่แล้ว`
-  }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} นาทีที่แล้ว`
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) {
-    return `${diffInHours} ชั่วโมงที่แล้ว`
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24)
-  return `${diffInDays} วันที่แล้ว`
-}
+export { SOSWidget }
