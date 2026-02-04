@@ -22,7 +22,7 @@ function App() {
   const { isLoading, isAuthenticated, error } = useAdminAuth()
 
   // Skip loading screen if no error and not authenticated (likely first visit)
-  const showLoadingScreen = isLoading && (isAuthenticated || error || window.localStorage.getItem('bliss-admin-auth'))
+  const showLoadingScreen = isLoading && (isAuthenticated || error || window.localStorage.getItem('bliss-admin-user-cache'))
 
   if (showLoadingScreen) {
     return (
@@ -96,10 +96,14 @@ function App() {
         }
       />
 
-      {/* Admin routes - Authentication temporarily disabled */}
+      {/* Protected admin routes - require ADMIN role */}
       <Route
         path="/admin"
-        element={<AdminLayout />}
+        element={
+          <AdminProtectedRoute redirectTo="/admin/login">
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }
       >
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />

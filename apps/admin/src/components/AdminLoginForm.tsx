@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Input, Loader } from '@bliss/ui'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAdminAuth } from '../hooks/useAdminAuth'
-import { USE_MOCK_AUTH } from '../lib/mockAuth'
 import type { LoginCredentials } from '@bliss/supabase/auth'
 
 export interface AdminLoginFormProps {
@@ -83,30 +82,6 @@ export function AdminLoginForm({
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             เข้าสู่ระบบ {appTitle}
           </h1>
-          <div className={`rounded-md p-3 mb-4 ${USE_MOCK_AUTH
-          ? 'bg-yellow-50 border border-yellow-200'
-          : 'bg-green-50 border border-green-200'
-        }`}>
-          {USE_MOCK_AUTH ? (
-            <>
-              <p className="text-sm text-yellow-800">
-                🧪 <strong>โหมดพัฒนา:</strong> Mock Authentication
-              </p>
-              <p className="text-xs text-yellow-700 mt-1">
-                Email: admin@theblissathome.com | Password: admin123456
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-green-800">
-                🔐 <strong>โหมดจริง:</strong> Supabase Authentication
-              </p>
-              <p className="text-xs text-green-700 mt-1">
-                ใช้ข้อมูลผู้ใช้จริงจาก Supabase
-              </p>
-            </>
-          )}
-        </div>
         </div>
 
         {/* Error Message */}
