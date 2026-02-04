@@ -22,7 +22,7 @@ function App() {
   const { isLoading, isAuthenticated, error } = useAdminAuth()
 
   // Skip loading screen if no error and not authenticated (likely first visit)
-  const showLoadingScreen = isLoading && (isAuthenticated || error || window.localStorage.getItem('bliss-admin-auth'))
+  const showLoadingScreen = isLoading && (isAuthenticated || error || window.localStorage.getItem('bliss-admin-user-cache'))
 
   if (showLoadingScreen) {
     return (
