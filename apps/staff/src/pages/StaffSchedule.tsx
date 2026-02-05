@@ -232,7 +232,7 @@ function StaffSchedule() {
     const weekStart = new Date(currentDate)
     weekStart.setDate(weekStart.getDate() - weekStart.getDay())
 
-    const days = []
+    const days: JSX.Element[] = []
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart)
       date.setDate(date.getDate() + i)
@@ -291,8 +291,8 @@ function StaffSchedule() {
     const startDay = firstDay.getDay()
     const totalDays = lastDay.getDate()
 
-    const weeks = []
-    let days = []
+    const weeks: JSX.Element[] = []
+    let days: JSX.Element[] = []
 
     // Add empty cells for days before the first of the month
     for (let i = 0; i < startDay; i++) {

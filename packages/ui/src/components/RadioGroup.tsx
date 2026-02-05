@@ -7,7 +7,7 @@ export interface RadioOption {
   description?: string
 }
 
-export interface RadioGroupProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value'> {
+export interface RadioGroupProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> {
   label?: string
   options: RadioOption[]
   value: string

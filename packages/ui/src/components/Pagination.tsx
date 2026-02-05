@@ -16,7 +16,7 @@ export default function Pagination({
   showFirstLast = false,
   className,
 }: PaginationProps) {
-  const pages = []
+  const pages: (number | string)[] = []
   const showEllipses = totalPages > 7
 
   if (showEllipses) {
