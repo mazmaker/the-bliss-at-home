@@ -34,9 +34,9 @@ export function useAddPaymentMethod() {
     mutationFn: async (client, paymentMethod: PaymentMethodInsert) => {
       return paymentMethodService.addPaymentMethod(client, paymentMethod);
     },
-    invalidateKeys: (_, variables) => [
-      ['paymentMethods', 'customer', variables.customer_id],
-      ['paymentMethods', 'default', variables.customer_id],
+    invalidateKeys: (result) => [
+      ['paymentMethods', 'customer', result?.customer_id],
+      ['paymentMethods', 'default', result?.customer_id],
     ],
   });
 }
@@ -65,9 +65,9 @@ export function useSetDefaultPaymentMethod() {
     mutationFn: async (client, { paymentMethodId, customerId }: { paymentMethodId: string; customerId: string }) => {
       return paymentMethodService.setDefaultPaymentMethod(client, paymentMethodId, customerId);
     },
-    invalidateKeys: (_, variables) => [
-      ['paymentMethods', 'customer', variables.customerId],
-      ['paymentMethods', 'default', variables.customerId],
+    invalidateKeys: (result) => [
+      ['paymentMethods', 'customer', result?.customer_id],
+      ['paymentMethods', 'default', result?.customer_id],
     ],
   });
 }

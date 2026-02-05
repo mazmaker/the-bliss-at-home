@@ -12,10 +12,15 @@ import { AuthError } from './types'
 /**
  * Main auth hook - manages auth state
  */
-export function useAuth(expectedRole?: UserRole) {
+export function useAuth(expectedRole?: UserRole, options?: { skipInitialCheck?: boolean }) {
+  // Quick check: only set isLoading=true if there's a session to check
+  // BUT: if skipInitialCheck is true, never load initially (for login/register pages)
+  const hasSession = typeof window !== 'undefined' && !!localStorage.getItem('bliss-customer-auth')
+  const shouldLoad = hasSession && !options?.skipInitialCheck
+
   const [state, setState] = useState<AuthState>({
     user: null,
-    isLoading: true,
+    isLoading: shouldLoad, // Only loading if we have a session AND not skipping!
     error: null,
     isAuthenticated: false,
   })
@@ -27,12 +32,9 @@ export function useAuth(expectedRole?: UserRole) {
 
     async function loadUser() {
       try {
-        // Set a timeout to prevent infinite loading
-        timeoutId = setTimeout(() => {
+        // Skip initial check if requested (for login/register pages)
+        if (options?.skipInitialCheck) {
           if (mounted) {
-            console.warn('Auth loading timeout - clearing session')
-            // Clear potentially corrupt session
-            supabase.auth.signOut({ scope: 'local' })
             setState({
               user: null,
               isLoading: false,
@@ -40,22 +42,61 @@ export function useAuth(expectedRole?: UserRole) {
               isAuthenticated: false,
             })
           }
-        }, 10000) // 10 second timeout
+          return
+        }
 
+        // Quick check: if no session exists in localStorage, skip loading entirely
+        const sessionData = localStorage.getItem('bliss-customer-auth')
+        if (!sessionData) {
+          if (mounted) {
+            setState({
+              user: null,
+              isLoading: false,
+              error: null,
+              isAuthenticated: false,
+            })
+          }
+          return
+        }
+
+        // Set a timeout to prevent infinite loading
+        // Use 10 seconds for all environments - long enough for network but not too long to hang
+        const timeoutDuration = 10000 // 10 seconds
+
+        console.log('⏱️ Starting auth check with 10s timeout')
+
+        timeoutId = setTimeout(() => {
+          if (mounted) {
+            console.warn('⚠️ Auth loading timeout (10s) - setting not authenticated')
+            // Don't clear session - just mark as not authenticated
+            // This allows the user to retry without logging in again
+            setState({
+              user: null,
+              isLoading: false,
+              error: 'Authentication check timed out. Please refresh the page.',
+              isAuthenticated: false,
+            })
+          }
+        }, timeoutDuration)
+
+        console.log('🔄 Fetching profile from authService.getCurrentProfile()')
         const profile = await authService.getCurrentProfile()
+        console.log('✅ Profile fetched:', profile ? 'Success' : 'No profile found')
 
         // Clear timeout if we got a response
         if (timeoutId) clearTimeout(timeoutId)
 
         if (!mounted) return
 
-        // If no profile but we have a session, it might be corrupt
+        // If no profile but we have a session, it might be corrupt or missing
         if (!profile) {
           const { data: { session } } = await supabase.auth.getSession()
           if (session) {
-            // Session exists but no profile - clear it
-            console.warn('Session exists but no profile found - clearing session')
-            await supabase.auth.signOut({ scope: 'local' })
+            // Session exists but no profile - might need to create profile in database
+            console.warn('⚠️ Session exists but no profile found in database!')
+            console.log('User ID:', session.user.id)
+            console.log('User Email:', session.user.email)
+            // Don't sign out - just mark as not authenticated so user can see the error
           }
         }
 
@@ -83,9 +124,9 @@ export function useAuth(expectedRole?: UserRole) {
 
         if (!mounted) return
 
-        // Clear potentially corrupt session on error
-        console.error('Auth error - clearing session:', error)
-        await supabase.auth.signOut({ scope: 'local' })
+        // Don't clear session on error - just mark as not authenticated
+        // This allows the user to retry without logging in again
+        console.error('❌ Auth error (session preserved):', error)
 
         setState({
           user: null,
@@ -112,9 +153,9 @@ export function useAuth(expectedRole?: UserRole) {
             })
           }
         } catch (error) {
-          console.error('Error loading profile after auth change:', error)
+          console.error('❌ Error loading profile after auth change (session preserved):', error)
           if (mounted) {
-            await supabase.auth.signOut({ scope: 'local' })
+            // Don't sign out - just mark as not authenticated
             setState({
               user: null,
               isLoading: false,
@@ -133,14 +174,14 @@ export function useAuth(expectedRole?: UserRole) {
           })
         }
       } else if (event === 'TOKEN_REFRESH_FAILED') {
-        // Token refresh failed - clear session and redirect to login
-        console.warn('Token refresh failed - clearing session')
+        // Token refresh failed - might be temporary network issue
+        // Don't immediately sign out - let Supabase retry
+        console.warn('⚠️ Token refresh failed - will retry automatically')
         if (mounted) {
-          await supabase.auth.signOut({ scope: 'local' })
           setState({
             user: null,
             isLoading: false,
-            error: null,
+            error: 'Session refresh failed. Please refresh the page.',
             isAuthenticated: false,
           })
         }
@@ -152,7 +193,7 @@ export function useAuth(expectedRole?: UserRole) {
       if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
-  }, [expectedRole])
+  }, [expectedRole, options?.skipInitialCheck])
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))

@@ -1,6 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { ProtectedRoute } from '@bliss/ui'
 import Header from './components/Header'
+import './debug-session' // Load debug utilities
 import HomePage from './pages/Home'
 import ServiceCatalog from './pages/ServiceCatalog'
 import ServiceDetails from './pages/ServiceDetails'
@@ -13,16 +15,21 @@ import Register from './pages/Register'
 import PaymentConfirmation from './pages/PaymentConfirmation'
 import TransactionHistory from './pages/TransactionHistory'
 import OTPVerification from './pages/OTPVerification'
+import TermsPage from './pages/Terms'
+import PrivacyPage from './pages/Privacy'
 import { CustomerLoginPage, AuthCallback } from './pages/auth'
 
 function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+      <Toaster position="top-right" />
       <Routes>
         {/* Public routes - Login only */}
         <Route path="/login" element={<CustomerLoginPageWrapper />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/design-system" element={<ColorPalette />} />
 
         {/* Protected routes - All customer pages require login */}
@@ -116,14 +123,20 @@ function App() {
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-stone-200 py-8 mt-12">
         <div className="container mx-auto px-4">
-          <div className="text-center text-gray-500 text-sm">
+          <div className="text-center text-gray-500 text-sm pt-4">
             <p>© 2026 The Bliss at Home. All rights reserved.</p>
             <div className="flex justify-center gap-4 mt-4">
-              <a href="#" className="hover:text-amber-700 transition">Terms of Service</a>
+              <Link to="/terms" className="hover:text-amber-700 transition font-medium">
+                เงื่อนไขการให้บริการ
+              </Link>
               <span>|</span>
-              <a href="#" className="hover:text-amber-700 transition">Privacy Policy</a>
+              <Link to="/privacy" className="hover:text-amber-700 transition font-medium">
+                นโยบายความเป็นส่วนตัว
+              </Link>
               <span>|</span>
-              <a href="#" className="hover:text-amber-700 transition">Contact Us</a>
+              <a href="mailto:support@theblissathome.com" className="hover:text-amber-700 transition font-medium">
+                ติดต่อเรา
+              </a>
             </div>
           </div>
         </div>

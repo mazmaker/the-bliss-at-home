@@ -35,9 +35,9 @@ export function useCreateAddress() {
     mutationFn: async (client, address: AddressInsert) => {
       return addressService.createAddress(client, address);
     },
-    invalidateKeys: (_, variables) => [
-      ['addresses', 'customer', variables.customer_id],
-      ['addresses', 'default', variables.customer_id],
+    invalidateKeys: (result) => [
+      ['addresses', 'customer', result?.customer_id],
+      ['addresses', 'default', result?.customer_id],
     ],
   });
 }
@@ -81,9 +81,9 @@ export function useSetDefaultAddress() {
     mutationFn: async (client, { addressId, customerId }: { addressId: string; customerId: string }) => {
       return addressService.setDefaultAddress(client, addressId, customerId);
     },
-    invalidateKeys: (_, variables) => [
-      ['addresses', 'customer', variables.customerId],
-      ['addresses', 'default', variables.customerId],
+    invalidateKeys: (result) => [
+      ['addresses', 'customer', result?.customer_id],
+      ['addresses', 'default', result?.customer_id],
     ],
   });
 }

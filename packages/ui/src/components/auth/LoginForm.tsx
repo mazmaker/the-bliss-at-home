@@ -64,7 +64,8 @@ export function LoginForm({
   onSocialLogin,
 }: LoginFormProps) {
   const navigate = useNavigate()
-  const { login, isLoading, error, clearError } = useAuth(expectedRole)
+  // Skip initial auth check on login page - only load during login attempt
+  const { login, isLoading, error, clearError } = useAuth(expectedRole, { skipInitialCheck: true })
 
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
@@ -82,16 +83,16 @@ export function LoginForm({
 
     // Email validation
     if (!credentials.email) {
-      errors.email = 'Email is required'
+      errors.email = 'กรุณากรอกอีเมล'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
-      errors.email = 'Invalid email format'
+      errors.email = 'รูปแบบอีเมลไม่ถูกต้อง'
     }
 
     // Password validation
     if (!credentials.password) {
-      errors.password = 'Password is required'
+      errors.password = 'กรุณากรอกรหัสผ่าน'
     } else if (credentials.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters'
+      errors.password = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
     }
 
     setValidationErrors(errors)
@@ -140,7 +141,7 @@ export function LoginForm({
             <img src={appLogo} alt={appTitle} className="h-16 mx-auto mb-4" />
           )}
           <h1 className="text-2xl font-bold text-gray-900">{appTitle}</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+          <p className="text-gray-600 mt-2">เข้าสู่ระบบบัญชีของคุณ</p>
         </div>
       )}
 
@@ -165,7 +166,7 @@ export function LoginForm({
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-stone-200 rounded-xl font-medium text-stone-700 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
             >
               <FaGoogle className="w-5 h-5 text-red-500" />
-              Continue with Google
+              เข้าสู่ระบบด้วย Google
             </button>
 
             {/* Facebook Login - Temporarily disabled due to Development mode limitations */}
@@ -187,7 +188,7 @@ export function LoginForm({
               <div className="w-full border-t border-stone-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-stone-500">Or continue with email</span>
+              <span className="px-4 bg-white text-stone-500">หรือเข้าสู่ระบบด้วยอีเมล</span>
             </div>
           </div>
         </>
@@ -201,7 +202,7 @@ export function LoginForm({
             htmlFor="email"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Email Address
+            อีเมล
           </label>
           <Input
             id="email"
@@ -222,7 +223,7 @@ export function LoginForm({
             htmlFor="password"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Password
+            รหัสผ่าน
           </label>
           <Input
             id="password"
@@ -255,7 +256,7 @@ export function LoginForm({
                   className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-2 focus:ring-offset-0"
                   style={{ accentColor: primaryColor }}
                 />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                <span className="ml-2 text-sm text-gray-600">จดจำฉัน</span>
               </label>
             )}
 
@@ -267,7 +268,7 @@ export function LoginForm({
                 className="text-sm font-medium hover:underline disabled:opacity-50"
                 style={{ color: primaryColor }}
               >
-                Forgot password?
+                ลืมรหัสผ่าน?
               </button>
             )}
           </div>
@@ -283,10 +284,10 @@ export function LoginForm({
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
               <Loader size="sm" />
-              Signing in...
+              กำลังเข้าสู่ระบบ...
             </span>
           ) : (
-            'Sign In'
+            'เข้าสู่ระบบ'
           )}
         </Button>
       </form>
@@ -294,7 +295,7 @@ export function LoginForm({
       {/* Register Link */}
       {showRegister && onRegisterClick && (
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          ยังไม่มีบัญชี?{' '}
           <button
             type="button"
             onClick={onRegisterClick}
@@ -302,7 +303,7 @@ export function LoginForm({
             className="font-medium hover:underline disabled:opacity-50"
             style={{ color: primaryColor }}
           >
-            Create one
+            สร้างบัญชี
           </button>
         </p>
       )}

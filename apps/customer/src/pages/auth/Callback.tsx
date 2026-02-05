@@ -8,6 +8,8 @@ export function AuthCallback() {
   const [status, setStatus] = useState('Processing authentication...')
 
   useEffect(() => {
+    let cancelled = false
+
     const handleCallback = async () => {
       try {
         console.log('=== OAuth Callback Started ===')
@@ -23,8 +25,15 @@ export function AuthCallback() {
           throw new Error(errorDescription || 'OAuth authentication failed')
         }
 
-        // Get session - Supabase automatically handles the OAuth callback
+        // Supabase automatically handles the OAuth callback
+        // Just wait a bit for it to process and get the session
         setStatus('Completing sign in...')
+
+        // Give Supabase a moment to process the callback
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        if (cancelled) return
+
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
         if (sessionError) {
@@ -33,7 +42,7 @@ export function AuthCallback() {
         }
 
         if (!session) {
-          console.error('No session found')
+          console.error('No session found after callback')
           throw new Error('Authentication failed - no session created')
         }
 
@@ -82,17 +91,22 @@ export function AuthCallback() {
                 throw new Error('Profile exists but cannot be accessed')
               }
 
-              profile = existingProfile
+              profile = existingProfile as any
             } else {
               console.error('Profile creation error:', profileError)
               throw new Error('Failed to create profile: ' + profileError.message)
             }
           } else {
-            profile = newProfile
+            profile = newProfile as any
           }
         }
 
         console.log('Profile ready:', profile)
+
+        // Ensure profile exists
+        if (!profile) {
+          throw new Error('Profile could not be created or retrieved')
+        }
 
         // Validate role
         if (profile.role !== 'CUSTOMER') {
@@ -124,6 +138,10 @@ export function AuthCallback() {
     }
 
     handleCallback()
+
+    return () => {
+      cancelled = true
+    }
   }, [navigate])
 
   return (

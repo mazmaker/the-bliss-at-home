@@ -10,8 +10,9 @@
     "./auth": "./src/auth/index.ts",
     "./payment": "./src/payment/index.ts",
     "./client": "./src/client/index.ts",
-    "./hooks/*": "./src/hooks/*.ts",
-    "./types": "./src/types/database.types.ts"
+    "./hooks": "./src/hooks/index.ts",
+    "./hooks/*": "./src/hooks/*",
+    "./types/database.types": "./src/types/database.types.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

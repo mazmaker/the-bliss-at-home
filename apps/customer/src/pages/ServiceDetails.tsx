@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Star, Clock, ChevronLeft, Plus, Minus, Heart, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle } from 'lucide-react'
+import { Star, Clock, ChevronLeft, Plus, Minus, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 
 // Map category to icon
@@ -47,6 +47,8 @@ function ServiceDetails() {
 
   const IconComponent = service ? categoryIcons[service.category] || Sparkles : Sparkles
 
+  // Loading state
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -272,18 +274,12 @@ function ServiceDetails() {
                 <span className="text-2xl font-semibold text-amber-700">฿{totalPrice.toLocaleString()}</span>
               </div>
 
-              <div className="space-y-3">
-                <Link
-                  to={`/booking?service=${slug}&addons=${selectedAddOns.join(',')}&qty=${quantity}`}
-                  className="block w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white text-center py-4 rounded-xl font-medium hover:shadow-lg transition transform hover:scale-105 shadow-md"
-                >
-                  จองบริการ
-                </Link>
-                <button className="w-full border-2 border-stone-300 text-stone-700 py-3 rounded-xl font-medium hover:bg-stone-50 hover:border-amber-500 transition flex items-center justify-center gap-2">
-                  <Heart className="w-4 h-4" />
-                  บันทึกไว้ดูภายหลัง
-                </button>
-              </div>
+              <Link
+                to={`/booking?service=${slug}&addons=${selectedAddOns.join(',')}&qty=${quantity}`}
+                className="block w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white text-center py-4 rounded-xl font-medium hover:shadow-lg transition transform hover:scale-105 shadow-md"
+              >
+                จองบริการ
+              </Link>
 
               {/* Show hotel discount if user is from hotel */}
               <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">

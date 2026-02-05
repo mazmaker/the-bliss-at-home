@@ -1,13 +1,38 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { User, Bell, Lock, Globe, MapPin, CreditCard, Banknote, Plus, LogOut, FileText, Building2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Bell, Lock, Globe, MapPin, CreditCard, Plus, LogOut, FileText, Building2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useCurrentCustomer, useUpdateCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress, useSetDefaultAddress } from '@bliss/supabase/hooks/useAddresses'
 import { usePaymentMethods, useAddPaymentMethod, useDeletePaymentMethod, useSetDefaultPaymentMethod } from '@bliss/supabase/hooks/usePaymentMethods'
 import { useTaxInformation, useUpsertTaxInformation } from '@bliss/supabase/hooks/useTaxInformation'
+import AddressFormModal from '../components/AddressFormModal'
+import PaymentMethodModal from '../components/PaymentMethodModal'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import type { Database } from '@bliss/supabase/types/database.types'
+
+type Address = Database['public']['Tables']['addresses']['Row']
 
 function Profile() {
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'payment' | 'tax'>('profile')
+
+  // Modal control state
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  })
 
   // Fetch real data from Supabase
   const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
@@ -28,10 +53,9 @@ function Profile() {
 
   // Local form state
   const [profileForm, setProfileForm] = useState({
-    first_name: '',
-    last_name: '',
+    full_name: '',
     phone: '',
-    birth_date: '',
+    date_of_birth: '',
   })
 
   const [taxForm, setTaxForm] = useState({
@@ -47,18 +71,17 @@ function Profile() {
   })
 
   // Initialize forms when data loads
-  useState(() => {
+  useEffect(() => {
     if (customer) {
       setProfileForm({
-        first_name: customer.first_name || '',
-        last_name: customer.last_name || '',
+        full_name: customer.full_name || '',
         phone: customer.phone || '',
-        birth_date: customer.birth_date || '',
+        date_of_birth: customer.date_of_birth || '',
       })
     }
-  })
+  }, [customer])
 
-  useState(() => {
+  useEffect(() => {
     if (taxInformation) {
       setTaxForm({
         tax_type: taxInformation.tax_type as 'individual' | 'company',
@@ -72,7 +95,7 @@ function Profile() {
         zipcode: taxInformation.zipcode || '',
       })
     }
-  })
+  }, [taxInformation])
 
   const handleProfileSave = async () => {
     if (!customer) return
@@ -81,34 +104,40 @@ function Profile() {
         customerId: customer.id,
         updates: profileForm,
       })
-      alert('Profile updated successfully')
+      toast.success('อัปเดตข้อมูลโปรไฟล์สำเร็จ')
     } catch (error) {
       console.error('Update profile error:', error)
-      alert('Failed to update profile')
+      toast.error('ไม่สามารถอัปเดตข้อมูลโปรไฟล์ได้')
     }
   }
 
   const handleAddAddress = () => {
-    // This would open a modal/form - for now just alert
-    alert('Add address functionality - would open a form modal')
+    setEditingAddress(null)
+    setIsAddressModalOpen(true)
   }
 
   const handleEditAddress = (id: string) => {
-    // This would open a modal/form with pre-filled data
-    alert(`Edit address ${id} - would open a form modal`)
+    const address = addresses.find((a) => a.id === id)
+    setEditingAddress(address || null)
+    setIsAddressModalOpen(true)
   }
 
-  const handleDeleteAddress = async (id: string) => {
+  const handleDeleteAddress = (id: string) => {
     if (!customer) return
-    if (confirm('Confirm to delete this address?')) {
-      try {
-        await deleteAddress.mutateAsync({ addressId: id, customerId: customer.id })
-        alert('Address deleted successfully')
-      } catch (error) {
-        console.error('Delete address error:', error)
-        alert('Failed to delete address')
-      }
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'ลบที่อยู่',
+      message: 'คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+      onConfirm: async () => {
+        try {
+          await deleteAddress.mutateAsync({ addressId: id, customerId: customer.id })
+          toast.success('ลบที่อยู่สำเร็จ')
+        } catch (error) {
+          console.error('Delete address error:', error)
+          toast.error('ไม่สามารถลบที่อยู่ได้')
+        }
+      },
+    })
   }
 
   const handleSetDefaultAddress = async (id: string) => {
@@ -117,26 +146,41 @@ function Profile() {
       await setDefaultAddress.mutateAsync({ addressId: id, customerId: customer.id })
     } catch (error) {
       console.error('Set default address error:', error)
-      alert('Failed to set default address')
+      toast.error('ไม่สามารถตั้งค่าที่อยู่เริ่มต้นได้')
     }
   }
 
   const handleAddPaymentMethod = () => {
-    // This would integrate with Omise.js - for now just alert
-    alert('Add payment method - would integrate with Omise.js')
+    setIsPaymentModalOpen(true)
   }
 
-  const handleDeletePaymentMethod = async (id: string) => {
+  const handleSetDefaultPaymentMethod = async (id: string) => {
     if (!customer) return
-    if (confirm('Confirm to delete this payment method?')) {
-      try {
-        await deletePaymentMethod.mutateAsync({ paymentMethodId: id, customerId: customer.id })
-        alert('Payment method deleted successfully')
-      } catch (error) {
-        console.error('Delete payment method error:', error)
-        alert('Failed to delete payment method')
-      }
+    try {
+      await setDefaultPaymentMethod.mutateAsync({ paymentMethodId: id, customerId: customer.id })
+      toast.success('ตั้งค่าวิธีการชำระเงินเริ่มต้นสำเร็จ')
+    } catch (error) {
+      console.error('Set default payment method error:', error)
+      toast.error('ไม่สามารถตั้งค่าวิธีการชำระเงินเริ่มต้นได้')
     }
+  }
+
+  const handleDeletePaymentMethod = (id: string) => {
+    if (!customer) return
+    setConfirmDialog({
+      isOpen: true,
+      title: 'ลบวิธีการชำระเงิน',
+      message: 'คุณแน่ใจหรือไม่ว่าต้องการลบวิธีการชำระเงินนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+      onConfirm: async () => {
+        try {
+          await deletePaymentMethod.mutateAsync({ paymentMethodId: id, customerId: customer.id })
+          toast.success('ลบวิธีการชำระเงินสำเร็จ')
+        } catch (error) {
+          console.error('Delete payment method error:', error)
+          toast.error('ไม่สามารถลบวิธีการชำระเงินได้')
+        }
+      },
+    })
   }
 
   const handleSaveTaxInfo = async () => {
@@ -146,10 +190,10 @@ function Profile() {
         customer_id: customer.id,
         ...taxForm,
       })
-      alert('Tax information saved successfully')
+      toast.success('บันทึกข้อมูลภาษีสำเร็จ')
     } catch (error) {
       console.error('Save tax info error:', error)
-      alert('Failed to save tax information')
+      toast.error('ไม่สามารถบันทึกข้อมูลภาษีได้')
     }
   }
 
@@ -195,7 +239,7 @@ function Profile() {
                 <User className="w-10 h-10 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">{customer.first_name} {customer.last_name}</h2>
+                <h2 className="text-xl font-bold">{customer.full_name}</h2>
                 <p className="text-white/80">{customer.phone}</p>
               </div>
             </div>
@@ -257,23 +301,12 @@ function Profile() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
-                        First Name
+                        Full Name
                       </label>
                       <input
                         type="text"
-                        value={profileForm.first_name}
-                        onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Last Name
-                      </label>
-                      <input
-                        type="text"
-                        value={profileForm.last_name}
-                        onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })}
+                        value={profileForm.full_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -294,8 +327,8 @@ function Profile() {
                       </label>
                       <input
                         type="date"
-                        value={profileForm.birth_date}
-                        onChange={(e) => setProfileForm({ ...profileForm, birth_date: e.target.value })}
+                        value={profileForm.date_of_birth}
+                        onChange={(e) => setProfileForm({ ...profileForm, date_of_birth: e.target.value })}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -480,12 +513,22 @@ function Profile() {
                               )}
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeletePaymentMethod(method.id)}
-                            className="text-red-600 hover:text-red-800 font-medium text-sm"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex gap-2">
+                            {!method.is_default && (
+                              <button
+                                onClick={() => handleSetDefaultPaymentMethod(method.id)}
+                                className="text-amber-700 hover:text-amber-800 font-medium text-sm"
+                              >
+                                Set as Default
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeletePaymentMethod(method.id)}
+                              className="text-red-600 hover:text-red-800 font-medium text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -503,17 +546,6 @@ function Profile() {
                     </button>
                   </div>
                 )}
-
-                {/* Cash Payment Option */}
-                <div className="border-2 border-stone-200 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <Banknote className="w-8 h-8 text-stone-600" />
-                    <div>
-                      <h4 className="font-semibold text-stone-900">Cash</h4>
-                      <p className="text-sm text-stone-600">Pay cash to staff after service</p>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -717,6 +749,34 @@ function Profile() {
             Logout
           </button>
         </div>
+
+        {/* Modals */}
+        <AddressFormModal
+          isOpen={isAddressModalOpen}
+          onClose={() => {
+            setIsAddressModalOpen(false)
+            setEditingAddress(null)
+          }}
+          customerId={customer!.id}
+          addressToEdit={editingAddress}
+        />
+
+        <PaymentMethodModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          customerId={customer!.id}
+        />
+
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmDialog.onConfirm}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmText="ลบ"
+          cancelText="ยกเลิก"
+          variant="danger"
+        />
       </div>
     </div>
   )
