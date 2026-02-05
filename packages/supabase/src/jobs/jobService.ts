@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../auth/supabaseClient'
-import type { Job, JobStatus, JobFilter, StaffStats, PaymentStatus } from './types'
+import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
 
 // Get jobs for current staff member
 export async function getStaffJobs(

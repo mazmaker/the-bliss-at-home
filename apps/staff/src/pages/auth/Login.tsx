@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { AuthLayout, LoginForm, Button } from '@bliss/ui'
 import { APP_CONFIGS, authService, liffService } from '@bliss/supabase/auth'
 import { AlertCircle } from 'lucide-react'
@@ -13,7 +12,6 @@ import { AlertCircle } from 'lucide-react'
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 
 export function StaffLoginPage() {
-  const navigate = useNavigate()
   const config = APP_CONFIGS.STAFF
   const [isLoading, setIsLoading] = useState(false)
   const [isLiffReady, setIsLiffReady] = useState(false)
@@ -52,21 +50,34 @@ export function StaffLoginPage() {
     setError(null)
 
     try {
+      console.log('[Auto-login] Getting LIFF profile...')
       const profile = await liffService.getProfile()
+      console.log('[Auto-login] LIFF profile:', profile)
 
-      await authService.loginWithLine({
+      console.log('[Auto-login] Calling loginWithLine...')
+      const result = await authService.loginWithLine({
         lineUserId: profile.userId,
         displayName: profile.displayName,
         pictureUrl: profile.pictureUrl,
       })
+      console.log('[Auto-login] Login successful:', result)
+
+      // Mark that user logged in via LIFF (for logout later)
+      localStorage.setItem('staff_logged_in_via_liff', 'true')
+
+      // Wait for auth state to update (onAuthStateChange event)
+      console.log('[Auto-login] Waiting for auth state update...')
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Clear LIFF parameters from URL before navigating
       window.history.replaceState({}, '', window.location.pathname)
-      navigate(config.defaultPath, { replace: true })
+
+      // Use window.location to force a full page reload with updated auth state
+      console.log('[Auto-login] Redirecting to:', config.defaultPath)
+      window.location.href = config.defaultPath
     } catch (err: any) {
-      console.error('Auto-login error:', err)
+      console.error('[Auto-login] Error:', err)
       setError(err.message || 'Auto-login failed')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -82,26 +93,42 @@ export function StaffLoginPage() {
     setError(null)
 
     try {
+      console.log('[LINE Login] Checking LIFF login status...')
       if (liffService.isLoggedIn()) {
+        console.log('[LINE Login] Already logged in, getting profile...')
         // Already logged in, get profile and authenticate
         const profile = await liffService.getProfile()
+        console.log('[LINE Login] LIFF profile:', profile)
 
-        await authService.loginWithLine({
+        console.log('[LINE Login] Calling loginWithLine...')
+        const result = await authService.loginWithLine({
           lineUserId: profile.userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
         })
+        console.log('[LINE Login] Login successful:', result)
+
+        // Mark that user logged in via LIFF (for logout later)
+        localStorage.setItem('staff_logged_in_via_liff', 'true')
+
+        // Wait for auth state to update (onAuthStateChange event)
+        console.log('[LINE Login] Waiting for auth state update...')
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Clear LIFF parameters from URL before navigating
         window.history.replaceState({}, '', window.location.pathname)
-        navigate(config.defaultPath, { replace: true })
+
+        // Use window.location to force a full page reload with updated auth state
+        console.log('[LINE Login] Redirecting to:', config.defaultPath)
+        window.location.href = config.defaultPath
       } else {
+        console.log('[LINE Login] Not logged in, redirecting to LINE authorization...')
         // Not logged in, redirect to LINE authorization
         // LIFF will redirect back to the Endpoint URL after login
         liffService.login()
       }
     } catch (err: any) {
-      console.error('LINE login error:', err)
+      console.error('[LINE Login] Error:', err)
       setError(err.message || 'LINE login failed')
       setIsLoading(false)
     }
@@ -173,7 +200,6 @@ export function StaffLoginPage() {
       <LoginForm
         appTitle={config.name}
         primaryColor={config.primaryColor}
-        expectedRole="STAFF"
         redirectTo={config.defaultPath}
         showRegister={false}
         showForgotPassword={false}
