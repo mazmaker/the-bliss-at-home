@@ -1,10 +1,11 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { useState, useMemo } from 'react'
-import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus, QrCode, Smartphone, Wallet } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCreateBooking } from '@bliss/supabase/hooks/useBookings'
 import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
+import { usePaymentMethods } from '@bliss/supabase/hooks/usePaymentMethods'
 import PaymentForm from '../components/PaymentForm'
 import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
 
@@ -24,6 +25,7 @@ function BookingWizard() {
   const { data: serviceData, isLoading: serviceLoading } = useServiceBySlug(serviceSlug)
   const { data: customer } = useCurrentCustomer()
   const { data: addresses } = useAddresses(customer?.id)
+  const { data: paymentMethods } = usePaymentMethods(customer?.id)
   const createBooking = useCreateBooking()
 
   const [currentStep, setCurrentStep] = useState<Step>(1)
@@ -49,6 +51,12 @@ function BookingWizard() {
     longitude: null,
   })
   const [notes, setNotes] = useState('')
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null)
+  const [showManualPaymentForm, setShowManualPaymentForm] = useState(false)
+  const [selectedPaymentChannel, setSelectedPaymentChannel] = useState<string | null>(null)
+  const [selectedBank, setSelectedBank] = useState<string | null>(null)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [promptpayQRCode, setPromptpayQRCode] = useState<string | null>(null)
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
   const [createdBookingNumber, setCreatedBookingNumber] = useState<string | null>(null)
 
@@ -75,6 +83,26 @@ function BookingWizard() {
 
   const addOnPrice = selectedAddOns.reduce((sum, a) => sum + Number(a.price), 0)
   const totalPrice = service ? (service.price + addOnPrice) * qtyParam : 0
+
+  // Auto-select default address when addresses are loaded
+  useEffect(() => {
+    if (addresses && addresses.length > 0 && !selectedAddressId && !showManualAddressForm) {
+      const defaultAddress = addresses.find(addr => addr.is_default)
+      if (defaultAddress) {
+        handleSelectAddress(defaultAddress.id)
+      }
+    }
+  }, [addresses, selectedAddressId, showManualAddressForm])
+
+  // Auto-select default payment method when payment methods are loaded
+  useEffect(() => {
+    if (paymentMethods && paymentMethods.length > 0 && !selectedPaymentMethodId && !showManualPaymentForm) {
+      const defaultPaymentMethod = paymentMethods.find(pm => pm.is_default)
+      if (defaultPaymentMethod) {
+        setSelectedPaymentMethodId(defaultPaymentMethod.id)
+      }
+    }
+  }, [paymentMethods, selectedPaymentMethodId, showManualPaymentForm])
 
   // Mock available dates (next 7 days)
   const availableDates = Array.from({ length: 7 }, (_, i) => {
@@ -150,6 +178,175 @@ function BookingWizard() {
 
   const handleLocationChange = (lat: number, lng: number) => {
     setManualAddressLocation({ latitude: lat, longitude: lng })
+  }
+
+  const handlePayWithPromptPay = async () => {
+    if (!customer || !createdBookingId) {
+      alert('Missing required information')
+      return
+    }
+
+    setIsProcessingPayment(true)
+
+    try {
+      // Create PromptPay QR payment source
+      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-source`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: createdBookingId,
+          customer_id: customer.id,
+          amount: totalPrice,
+          source_type: 'promptpay',
+          payment_method: 'promptpay',
+        }),
+      })
+
+      const data = await result.json()
+
+      if (data.success && data.qr_code_url) {
+        // Show QR code for user to scan
+        setPromptpayQRCode(data.qr_code_url)
+
+        // Start polling for payment status
+        pollPaymentStatus(data.charge_id)
+      } else {
+        throw new Error(data.error || 'Failed to create PromptPay payment')
+      }
+    } catch (error: any) {
+      console.error('PromptPay payment error:', error)
+      alert(`Payment failed: ${error.message || 'Please try again.'}`)
+      setIsProcessingPayment(false)
+    }
+  }
+
+  const handlePayWithBank = async (bankCode: string, isMobile: boolean) => {
+    if (!customer || !createdBookingId) {
+      alert('Missing required information')
+      return
+    }
+
+    setIsProcessingPayment(true)
+
+    try {
+      const sourceType = isMobile ? `mobile_banking_${bankCode}` : `internet_banking_${bankCode}`
+
+      // Create banking source
+      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-source`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: createdBookingId,
+          customer_id: customer.id,
+          amount: totalPrice,
+          source_type: sourceType,
+          payment_method: isMobile ? 'mobile_banking' : 'internet_banking',
+        }),
+      })
+
+      const data = await result.json()
+
+      if (data.success && data.authorize_uri) {
+        // Redirect to bank's payment page
+        window.location.href = data.authorize_uri
+      } else {
+        throw new Error(data.error || 'Failed to create payment source')
+      }
+    } catch (error: any) {
+      console.error('Banking payment error:', error)
+      alert(`Payment failed: ${error.message || 'Please try again.'}`)
+      setIsProcessingPayment(false)
+    }
+  }
+
+  const pollPaymentStatus = async (chargeId: string) => {
+    // Poll every 3 seconds for payment status
+    const pollInterval = setInterval(async () => {
+      try {
+        const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/status/${chargeId}`)
+        const data = await result.json()
+
+        if (data.status === 'successful') {
+          clearInterval(pollInterval)
+          setIsProcessingPayment(false)
+          navigate(`/bookings?success=true`)
+        } else if (data.status === 'failed') {
+          clearInterval(pollInterval)
+          setIsProcessingPayment(false)
+          alert('Payment failed. Please try again.')
+          setPromptpayQRCode(null)
+        }
+      } catch (error) {
+        console.error('Error polling payment status:', error)
+      }
+    }, 3000)
+
+    // Stop polling after 10 minutes
+    setTimeout(() => {
+      clearInterval(pollInterval)
+      if (isProcessingPayment) {
+        setIsProcessingPayment(false)
+        alert('Payment timeout. Please try again.')
+        setPromptpayQRCode(null)
+      }
+    }, 600000)
+  }
+
+  const handlePayWithSavedCard = async () => {
+    if (!customer || !createdBookingId || !selectedPaymentMethodId) {
+      alert('Missing required information')
+      return
+    }
+
+    setIsProcessingPayment(true)
+
+    try {
+      // Find the selected payment method
+      const selectedPaymentMethod = paymentMethods?.find(pm => pm.id === selectedPaymentMethodId)
+      if (!selectedPaymentMethod) {
+        throw new Error('Payment method not found')
+      }
+
+      // Call API to create charge with saved card
+      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-charge`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: createdBookingId,
+          customer_id: customer.id,
+          amount: totalPrice,
+          omise_card_id: selectedPaymentMethod.omise_card_id,
+          payment_method: 'credit_card',
+          card_info: {
+            brand: selectedPaymentMethod.card_brand,
+            last_digits: selectedPaymentMethod.card_last_digits,
+            expiry_month: selectedPaymentMethod.card_expiry_month,
+            expiry_year: selectedPaymentMethod.card_expiry_year,
+            name: selectedPaymentMethod.card_holder_name || 'Card Holder',
+          },
+        }),
+      })
+
+      const data = await result.json()
+
+      if (data.success) {
+        // Payment successful, navigate to bookings page
+        navigate(`/bookings?success=true`)
+      } else {
+        throw new Error(data.error || 'Payment failed')
+      }
+    } catch (error: any) {
+      console.error('Payment error:', error)
+      alert(`Payment failed: ${error.message || 'Please try again.'}`)
+    } finally {
+      setIsProcessingPayment(false)
+    }
   }
 
   const handleCompleteBooking = async () => {
@@ -741,17 +938,391 @@ function BookingWizard() {
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">Payment</h2>
 
-              <PaymentForm
-                amount={totalPrice}
-                bookingId={createdBookingId}
-                customerId={customer.id}
-                onSuccess={() => {
-                  navigate(`/bookings?success=true`)
-                }}
-                onError={(error) => {
-                  alert(`Payment failed: ${error}`)
-                }}
-              />
+              {/* Payment Channel Selection - Show if no channel selected yet */}
+              {!selectedPaymentChannel ? (
+                <div className="space-y-4">
+                  <p className="text-stone-600 mb-4">เลือกช่องทางการชำระเงิน</p>
+
+                  {/* Payment Channel Options */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Credit/Debit Card */}
+                    <button
+                      onClick={() => setSelectedPaymentChannel('credit_card')}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-stone-900">บัตรเครดิต/เดบิต</h3>
+                        <p className="text-xs text-stone-600">Credit/Debit Card</p>
+                      </div>
+                    </button>
+
+                    {/* PromptPay QR */}
+                    <button
+                      onClick={() => setSelectedPaymentChannel('promptpay')}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                        <QrCode className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-stone-900">พร้อมเพย์</h3>
+                        <p className="text-xs text-stone-600">PromptPay QR Code</p>
+                      </div>
+                    </button>
+
+                    {/* Internet Banking */}
+                    <button
+                      onClick={() => setSelectedPaymentChannel('internet_banking')}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-stone-900">อินเทอร์เน็ตแบงก์กิ้ง</h3>
+                        <p className="text-xs text-stone-600">Internet Banking</p>
+                      </div>
+                    </button>
+
+                    {/* Mobile Banking */}
+                    <button
+                      onClick={() => setSelectedPaymentChannel('mobile_banking')}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                        <Smartphone className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-stone-900">โมบายแบงก์กิ้ง</h3>
+                        <p className="text-xs text-stone-600">Mobile Banking</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              ) : selectedPaymentChannel === 'credit_card' ? (
+                /* Credit Card Payment - Show saved cards or new card form */
+                <div className="space-y-4">
+                  {/* Back Button */}
+                  <button
+                    onClick={() => {
+                      setSelectedPaymentChannel(null)
+                      setSelectedPaymentMethodId(null)
+                      setShowManualPaymentForm(false)
+                    }}
+                    className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    เปลี่ยนช่องทางชำระเงิน
+                  </button>
+
+                  {/* Saved Payment Methods */}
+                  {paymentMethods && paymentMethods.length > 0 && !showManualPaymentForm ? (
+                    <div className="space-y-4">
+                      <p className="text-stone-600 mb-4">เลือกบัตรที่บันทึกไว้ หรือเพิ่มบัตรใหม่</p>
+
+                      {/* Saved Payment Method Cards */}
+                      <div className="space-y-3">
+                        {paymentMethods.map((pm) => (
+                          <button
+                            key={pm.id}
+                            onClick={() => setSelectedPaymentMethodId(pm.id)}
+                            className={`w-full p-4 rounded-xl border-2 text-left transition ${
+                              selectedPaymentMethodId === pm.id
+                                ? 'border-amber-700 bg-amber-50'
+                                : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start gap-3 flex-1">
+                                <div className="w-12 h-8 bg-gradient-to-br from-stone-700 to-stone-900 rounded flex items-center justify-center text-white text-xs font-bold">
+                                  <CreditCard className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-semibold text-stone-900">
+                                      {pm.card_brand} •••• {pm.card_last_digits}
+                                    </span>
+                                    {pm.is_default && (
+                                      <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                                        Default
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-stone-600">
+                                    Expires {String(pm.card_expiry_month).padStart(2, '0')}/{pm.card_expiry_year}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                                selectedPaymentMethodId === pm.id
+                                  ? 'border-amber-700 bg-amber-700'
+                                  : 'border-stone-300'
+                              }`}>
+                                {selectedPaymentMethodId === pm.id && (
+                                  <CheckCircle className="w-4 h-4 text-white" />
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Add New Card Button */}
+                      <button
+                        onClick={() => setShowManualPaymentForm(true)}
+                        className="w-full p-4 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span className="font-medium">เพิ่มบัตรใหม่</span>
+                      </button>
+
+                      {/* Pay with Selected Card Button */}
+                      {selectedPaymentMethodId && (
+                        <button
+                          onClick={handlePayWithSavedCard}
+                          disabled={isProcessingPayment}
+                          className="w-full bg-amber-700 text-white py-4 rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {isProcessingPayment ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              กำลังประมวลผล...
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="w-4 h-4" />
+                              ชำระเงิน ฿{totalPrice.toLocaleString()}
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Back to Saved Payment Methods */}
+                      {paymentMethods && paymentMethods.length > 0 && showManualPaymentForm && (
+                        <button
+                          onClick={() => setShowManualPaymentForm(false)}
+                          className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          กลับไปบัตรที่บันทึกไว้
+                        </button>
+                      )}
+
+                      {/* Manual Payment Form */}
+                      <PaymentForm
+                        amount={totalPrice}
+                        bookingId={createdBookingId}
+                        customerId={customer.id}
+                        onSuccess={() => {
+                          navigate(`/bookings?success=true`)
+                        }}
+                        onError={(error) => {
+                          alert(`Payment failed: ${error}`)
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : selectedPaymentChannel === 'promptpay' ? (
+                /* PromptPay QR Payment */
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setSelectedPaymentChannel(null)
+                      setPromptpayQRCode(null)
+                      setIsProcessingPayment(false)
+                    }}
+                    className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    เปลี่ยนช่องทางชำระเงิน
+                  </button>
+
+                  {!promptpayQRCode ? (
+                    <div className="text-center py-8">
+                      <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <QrCode className="w-12 h-12 text-blue-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-stone-900 mb-2">ชำระเงินผ่านพร้อมเพย์</h3>
+                      <p className="text-stone-600 mb-2">จำนวนเงิน</p>
+                      <p className="text-3xl font-bold text-amber-700 mb-6">฿{totalPrice.toLocaleString()}</p>
+                      <p className="text-sm text-stone-600 mb-6">
+                        กดปุ่มด้านล่างเพื่อสร้าง QR Code<br />
+                        จากนั้นสแกนด้วยแอปธนาคารของคุณ
+                      </p>
+                      <button
+                        onClick={handlePayWithPromptPay}
+                        disabled={isProcessingPayment}
+                        className="px-8 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:bg-stone-300 disabled:cursor-not-allowed"
+                      >
+                        {isProcessingPayment ? 'กำลังสร้าง QR Code...' : 'สร้าง QR Code'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <h3 className="text-xl font-bold text-stone-900 mb-4">สแกน QR Code เพื่อชำระเงิน</h3>
+                      <div className="bg-white p-6 rounded-2xl shadow-lg inline-block mb-4">
+                        <img src={promptpayQRCode} alt="PromptPay QR Code" className="w-64 h-64 mx-auto" />
+                      </div>
+                      <p className="text-lg font-semibold text-amber-700 mb-2">฿{totalPrice.toLocaleString()}</p>
+                      <p className="text-sm text-stone-600 mb-6">
+                        กรุณาสแกน QR Code ด้วยแอปธนาคารของคุณ<br />
+                        ระบบจะตรวจสอบการชำระเงินอัตโนมัติ
+                      </p>
+                      <div className="flex items-center justify-center gap-2 text-blue-600">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                        <span className="text-sm">รอการชำระเงิน...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : selectedPaymentChannel === 'internet_banking' || selectedPaymentChannel === 'mobile_banking' ? (
+                /* Internet/Mobile Banking */
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setSelectedPaymentChannel(null)
+                      setSelectedBank(null)
+                      setIsProcessingPayment(false)
+                    }}
+                    className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    เปลี่ยนช่องทางชำระเงิน
+                  </button>
+
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-stone-900 mb-2">
+                      {selectedPaymentChannel === 'internet_banking' ? 'อินเทอร์เน็ตแบงก์กิ้ง' : 'โมบายแบงก์กิ้ง'}
+                    </h3>
+                    <p className="text-stone-600">เลือกธนาคารของคุณ</p>
+                    <p className="text-2xl font-bold text-amber-700 mt-4">฿{totalPrice.toLocaleString()}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {/* SCB */}
+                    <button
+                      onClick={() => handlePayWithBank('scb', selectedPaymentChannel === 'mobile_banking')}
+                      disabled={isProcessingPayment}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-purple-500 hover:bg-purple-50 transition disabled:opacity-50"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-purple-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
+                          SCB
+                        </div>
+                        <p className="text-xs font-medium text-stone-900">ไทยพาณิชย์</p>
+                      </div>
+                    </button>
+
+                    {/* Kbank */}
+                    <button
+                      onClick={() => handlePayWithBank('kbank', selectedPaymentChannel === 'mobile_banking')}
+                      disabled={isProcessingPayment}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-green-500 hover:bg-green-50 transition disabled:opacity-50"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-green-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
+                          K
+                        </div>
+                        <p className="text-xs font-medium text-stone-900">กสิกรไทย</p>
+                      </div>
+                    </button>
+
+                    {/* BBL */}
+                    <button
+                      onClick={() => handlePayWithBank('bbl', selectedPaymentChannel === 'mobile_banking')}
+                      disabled={isProcessingPayment}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-blue-500 hover:bg-blue-50 transition disabled:opacity-50"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
+                          BBL
+                        </div>
+                        <p className="text-xs font-medium text-stone-900">กรุงเทพ</p>
+                      </div>
+                    </button>
+
+                    {/* KTB */}
+                    <button
+                      onClick={() => handlePayWithBank('ktb', selectedPaymentChannel === 'mobile_banking')}
+                      disabled={isProcessingPayment}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-cyan-500 hover:bg-cyan-50 transition disabled:opacity-50"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-cyan-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
+                          KTB
+                        </div>
+                        <p className="text-xs font-medium text-stone-900">กรุงไทย</p>
+                      </div>
+                    </button>
+
+                    {/* BAY */}
+                    <button
+                      onClick={() => handlePayWithBank('bay', selectedPaymentChannel === 'mobile_banking')}
+                      disabled={isProcessingPayment}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-yellow-500 hover:bg-yellow-50 transition disabled:opacity-50"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-yellow-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
+                          BAY
+                        </div>
+                        <p className="text-xs font-medium text-stone-900">กรุงศรี</p>
+                      </div>
+                    </button>
+
+                    {/* TTB */}
+                    <button
+                      onClick={() => handlePayWithBank('ttb', selectedPaymentChannel === 'mobile_banking')}
+                      disabled={isProcessingPayment}
+                      className="p-4 rounded-xl border-2 border-stone-200 hover:border-orange-500 hover:bg-orange-50 transition disabled:opacity-50"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-orange-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
+                          TTB
+                        </div>
+                        <p className="text-xs font-medium text-stone-900">ทหารไทยธนชาต</p>
+                      </div>
+                    </button>
+                  </div>
+
+                  {isProcessingPayment && (
+                    <div className="text-center py-4">
+                      <div className="flex items-center justify-center gap-2 text-amber-700">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-700"></div>
+                        <span>กำลังเตรียมการชำระเงิน...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Fallback */
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setSelectedPaymentChannel(null)}
+                    className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    เปลี่ยนช่องทางชำระเงิน
+                  </button>
+
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="w-8 h-8 text-amber-700" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-stone-900 mb-2">
+                      ช่องทางชำระเงินนี้กำลังพัฒนา
+                    </h3>
+                    <p className="text-stone-600 mb-6">
+                      กรุณาเลือกช่องทางอื่น
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

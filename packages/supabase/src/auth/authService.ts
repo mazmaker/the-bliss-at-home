@@ -9,24 +9,91 @@ import { AuthError } from './types'
 
 /**
  * Get current user profile from profiles table
+ * Auto-creates profile if it doesn't exist (for OAuth users)
  */
 async function getCurrentProfile(): Promise<Profile | null> {
-  const { data: { user } } = await supabase.auth.getUser()
+  console.log('📍 getCurrentProfile: Starting...')
 
-  if (!user) return null
+  try {
+    // WORKAROUND: Read session from localStorage directly instead of using getSession()
+    // because getSession() hangs with OAuth sessions
+    console.log('📍 getCurrentProfile: Reading session from localStorage directly...')
 
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+    const sessionData = localStorage.getItem('bliss-customer-auth')
+    if (!sessionData) {
+      console.log('📍 getCurrentProfile: No session found in localStorage')
+      return null
+    }
 
-  if (error) {
-    console.error('Error fetching profile:', error)
+    const session = JSON.parse(sessionData)
+
+    // Log full structure to debug
+    console.log('📍 getCurrentProfile: Full session structure:', {
+      keys: Object.keys(session),
+      hasUser: !!session.user,
+      hasCurrentSession: !!session.currentSession,
+      userId_direct: session.user?.id,
+      userId_nested: session.currentSession?.user?.id,
+    })
+
+    // Try different possible structures
+    const user = session.user || session.currentSession?.user
+    const accessToken = session.access_token
+    const refreshToken = session.refresh_token
+
+    if (!user) {
+      console.log('📍 getCurrentProfile: No valid user found in session')
+      return null
+    }
+
+    // Check if session is expired
+    const expiresAt = session.expires_at || session.currentSession?.expires_at
+    if (expiresAt && expiresAt < Date.now() / 1000) {
+      console.log('📍 getCurrentProfile: Session expired')
+      localStorage.removeItem('bliss-customer-auth')
+      return null
+    }
+
+    console.log('📍 getCurrentProfile: Session valid, fetching profile for user:', user.id)
+
+    // IMPORTANT: Use direct REST API call with access token to avoid setSession() hanging
+    if (!accessToken) {
+      console.log('📍 getCurrentProfile: No access token found')
+      return null
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
+    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.log('📍 getCurrentProfile: API error:', response.status, errorText)
+      return null
+    }
+
+    const profiles = await response.json()
+    const profile = profiles[0]
+
+    if (!profile) {
+      console.log('📍 getCurrentProfile: No profile found')
+      return null
+    }
+
+    console.log('📍 getCurrentProfile: Profile found!')
+    return profile as Profile
+  } catch (error) {
+    console.error('❌ getCurrentProfile: Error caught:', error)
+
+    // If there's an error parsing session or fetching profile, return null
+    // This allows the user to login again
     return null
   }
-
-  return profile as Profile
 }
 
 /**
@@ -83,9 +150,14 @@ async function login(
     .update({ updated_at: new Date().toISOString() })
     .eq('id', profile.id)
 
-  // Handle remember me
+  // Handle remember me - store preference for session management
   if (rememberMe) {
-    // Session will persist in localStorage
+    // Keep session in localStorage (default behavior)
+    localStorage.setItem('rememberMe', 'true')
+  } else {
+    // Don't remember - mark for cleanup on browser close
+    localStorage.setItem('rememberMe', 'false')
+    sessionStorage.setItem('sessionOnly', 'true')
   }
 
   return {
@@ -189,6 +261,9 @@ async function logout(): Promise<void> {
   if (error) {
     throw new AuthError('Failed to logout', 'UNKNOWN')
   }
+  // Clear remember me preferences
+  localStorage.removeItem('rememberMe')
+  sessionStorage.removeItem('sessionOnly')
 }
 
 /**

@@ -11,12 +11,12 @@ function Register() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    agreeToTerms: false,
+    name: 'สมชาย ใจดี',
+    email: 'somchai.test@example.com',
+    phone: '081-234-5678',
+    password: 'password123',
+    confirmPassword: 'password123',
+    agreeToTerms: true,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {

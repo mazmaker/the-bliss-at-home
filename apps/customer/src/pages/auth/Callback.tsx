@@ -91,17 +91,22 @@ export function AuthCallback() {
                 throw new Error('Profile exists but cannot be accessed')
               }
 
-              profile = existingProfile
+              profile = existingProfile as any
             } else {
               console.error('Profile creation error:', profileError)
               throw new Error('Failed to create profile: ' + profileError.message)
             }
           } else {
-            profile = newProfile
+            profile = newProfile as any
           }
         }
 
         console.log('Profile ready:', profile)
+
+        // Ensure profile exists
+        if (!profile) {
+          throw new Error('Profile could not be created or retrieved')
+        }
 
         // Validate role
         if (profile.role !== 'CUSTOMER') {

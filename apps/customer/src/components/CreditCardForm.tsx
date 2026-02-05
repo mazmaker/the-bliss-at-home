@@ -5,9 +5,10 @@ import type { CardDetails } from '@bliss/supabase/payment'
 interface CreditCardFormProps {
   onSubmit: (cardDetails: CardDetails) => void
   isLoading?: boolean
+  submitButtonText?: string
 }
 
-function CreditCardForm({ onSubmit, isLoading }: CreditCardFormProps) {
+function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely' }: CreditCardFormProps) {
   const [cardDetails, setCardDetails] = useState<CardDetails>({
     name: '',
     number: '',
@@ -224,7 +225,7 @@ function CreditCardForm({ onSubmit, isLoading }: CreditCardFormProps) {
         ) : (
           <>
             <Lock className="w-4 h-4" />
-            <span>Pay Securely</span>
+            <span>{submitButtonText}</span>
           </>
         )}
       </button>
