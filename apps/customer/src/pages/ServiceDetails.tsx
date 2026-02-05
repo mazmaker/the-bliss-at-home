@@ -47,6 +47,8 @@ function ServiceDetails() {
 
   const IconComponent = service ? categoryIcons[service.category] || Sparkles : Sparkles
 
+  // Loading state
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
