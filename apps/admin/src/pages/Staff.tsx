@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   Search,
@@ -32,6 +33,7 @@ const skills = [
 ]
 
 function StaffPage() {
+  const navigate = useNavigate()
   const [selectedSkill, setSelectedSkill] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'suspended'>('all')
@@ -345,6 +347,7 @@ function StaffPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => navigate(`/admin/staff/${staff.id}`)}
                           className="p-2 hover:bg-stone-100 rounded-lg transition"
                           title="ดูรายละเอียด"
                         >

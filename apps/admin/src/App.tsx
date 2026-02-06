@@ -6,6 +6,7 @@ import AdminLayout from './layouts/AdminLayout'
 import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
 import Staff from './pages/Staff'
+import StaffDetail from './pages/StaffDetail'
 import Customers from './pages/Customers'
 import SOSAlerts from './pages/SOSAlerts'
 import Hotels from './pages/Hotels'
@@ -109,6 +110,7 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="services" element={<Services />} />
         <Route path="staff" element={<Staff />} />
+        <Route path="staff/:id" element={<StaffDetail />} />
         <Route path="customers" element={<Customers />} />
         <Route path="sos-alerts" element={<SOSAlerts />} />
         <Route path="hotels" element={<Hotels />} />
