@@ -135,6 +135,8 @@ export function useAdminAuth() {
             if (process.env.NODE_ENV === 'development') {
               console.log('⏭️ Profile fetch already in progress during init, skipping...')
             }
+            // Set isLoading to false to prevent stuck loading screen
+            setAuthState(prev => ({ ...prev, isLoading: false }))
             return
           }
 
@@ -148,6 +150,8 @@ export function useAdminAuth() {
               if (process.env.NODE_ENV === 'development') {
                 console.log('⏭️ Previous fetch still running, skipping...')
               }
+              // Set isLoading to false to prevent stuck loading screen
+              setAuthState(prev => ({ ...prev, isLoading: false }))
               return
             }
           }

@@ -24,6 +24,25 @@ export function useStaffById(id: string) {
   })
 }
 
+// Get staff detail (comprehensive data)
+export function useStaffDetail(id: string) {
+  return useQuery({
+    queryKey: ['staff', 'detail', id],
+    queryFn: async () => {
+      const staff = await staffService.getStaffById(id)
+      // Add computed fields
+      return {
+        ...staff,
+        completed_jobs: Math.floor((staff.total_jobs || 0) * 0.95), // Mock: 95% completion rate
+        response_rate: 95.5, // Mock
+        cancel_rate: 2.3, // Mock
+      }
+    },
+    enabled: !!id,
+    staleTime: 1000 * 60, // 1 minute
+  })
+}
+
 // Get staff statistics
 export function useStaffStats() {
   return useQuery({
