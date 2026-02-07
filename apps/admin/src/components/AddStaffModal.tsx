@@ -32,19 +32,22 @@ const skills = [
   { id: 'spa', name: 'สปา', icon: Flower2 },
 ]
 
+// Initial empty form data
+const getEmptyFormData = (): CreateStaffData => ({
+  name_th: '',
+  name_en: '',
+  phone: '',
+  id_card: '',
+  address: '',
+  bio_th: '',
+  bio_en: '',
+  skills: [],
+})
+
 export default function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
   const [currentStep, setCurrentStep] = useState<'form' | 'invite' | 'success'>('form')
   const [inviteData, setInviteData] = useState<any>(null)
-  const [formData, setFormData] = useState<CreateStaffData>({
-    name_th: '',
-    name_en: '',
-    phone: '',
-    id_card: '',
-    address: '',
-    bio_th: '',
-    bio_en: '',
-    skills: [],
-  })
+  const [formData, setFormData] = useState<CreateStaffData>(getEmptyFormData())
 
   const createStaffMutation = useCreateStaff()
   const generateInviteMutation = useGenerateLineInvite()
@@ -53,16 +56,7 @@ export default function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
     if (!isOpen) {
       // Reset form when modal closes
       setCurrentStep('form')
-      setFormData({
-        name_th: '',
-        name_en: '',
-        phone: '',
-        id_card: '',
-        address: '',
-        bio_th: '',
-        bio_en: '',
-        skills: [],
-      })
+      setFormData(getEmptyFormData())
       setInviteData(null)
     }
   }, [isOpen])
@@ -109,15 +103,6 @@ export default function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
       } catch (err) {
         toast.error('ไม่สามารถคัดลอกได้')
       }
-    }
-  }
-
-  const sendLineMessage = () => {
-    if (inviteData?.inviteLink) {
-      const lineMessage = `🎉 เชิญเข้าร่วมเป็นพนักงาน The Bliss at Home\n\n👤 ชื่อ: ${formData.name_th}\n📱 เบอร์: ${formData.phone}\n\nคลิกลิงก์เพื่อลงทะเบียน:\n${inviteData.inviteLink}`
-
-      const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(lineMessage)}`
-      window.open(lineUrl, '_blank')
     }
   }
 
@@ -380,30 +365,20 @@ export default function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={sendLineMessage}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition"
+                  onClick={handleComplete}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 transition"
                 >
-                  <MessageCircle className="w-5 h-5" />
-                  ส่งข้อความ LINE
+                  <Check className="w-4 h-4" />
+                  เสร็จสิ้น
                 </button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleComplete}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 transition"
-                  >
-                    <Check className="w-4 h-4" />
-                    เสร็จสิ้น
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="px-4 py-2 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
-                  >
-                    ปิด
-                  </button>
-                </div>
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+                >
+                  ปิด
+                </button>
               </div>
 
               {/* Instructions */}

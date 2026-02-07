@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { staffService, Staff, CreateStaffData } from '../services/staffService'
 import { toast } from 'react-hot-toast'
 
@@ -9,9 +9,12 @@ export function useStaff(filters?: {
   search?: string
 }) {
   return useQuery({
-    queryKey: ['staff', filters],
+    queryKey: ['staff', filters?.status, filters?.skill, filters?.search],
     queryFn: () => staffService.getAllStaff(filters),
     staleTime: 1000 * 60, // 1 minute
+    refetchOnWindowFocus: false, // Prevent refetch on window focus to avoid input focus loss
+    refetchOnMount: false, // Prevent refetch on mount since we have staleTime
+    placeholderData: keepPreviousData, // Keep previous data while fetching new data to prevent unmounting components
   })
 }
 
