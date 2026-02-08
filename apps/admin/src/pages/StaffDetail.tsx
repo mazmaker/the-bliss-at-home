@@ -46,6 +46,14 @@ import {
   useStaffJobs,
   useStaffJobsStats,
 } from '../hooks/useStaffJobs'
+import {
+  useStaffPerformanceMetrics,
+  useCurrentMonthPerformance,
+  usePlatformAverages,
+  calculateTrend,
+  formatMonthThai,
+  generateRecommendations,
+} from '../hooks/useStaffPerformance'
 import { DocumentViewerModal } from '../components/DocumentViewerModal'
 import { UploadDocumentModal } from '../components/UploadDocumentModal'
 import { PayoutDetailModal } from '../components/PayoutDetailModal'
@@ -56,6 +64,7 @@ import { StatusManagementModal } from '../components/StatusManagementModal'
 import { JobDetailModal } from '../components/JobDetailModal'
 import EditStaffModal from '../components/EditStaffModal'
 import { useAdminAuth } from '../hooks/useAdminAuth'
+import { ReviewsTabContent } from '../components/ReviewsTabContent'
 
 type TabType = 'overview' | 'documents' | 'schedule' | 'performance' | 'reviews' | 'earnings'
 
@@ -921,42 +930,64 @@ function ScheduleTab({ staff }: { staff: Staff }) {
 function PerformanceTab({ staff }: { staff: Staff }) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
 
-  // Mock performance data
-  const completionRate = ((staff.completed_jobs || 0) / (staff.total_jobs || 1) * 100).toFixed(1)
-  const responseRate = 95.5
-  const cancelRate = 2.3
-  const customerSatisfaction = 4.7
-  const performanceScore = 92
-
-  // Mock performance history (last 6 months)
-  const performanceHistory = [
-    { month: 'ก.ย. 67', completion: 94, response: 96, cancel: 3.1, rating: 4.6 },
-    { month: 'ต.ค. 67', completion: 92, response: 94, cancel: 3.8, rating: 4.5 },
-    { month: 'พ.ย. 67', completion: 96, response: 97, cancel: 2.1, rating: 4.8 },
-    { month: 'ธ.ค. 67', completion: 93, response: 95, cancel: 2.8, rating: 4.6 },
-    { month: 'ม.ค. 68', completion: 95, response: 96, cancel: 2.5, rating: 4.7 },
-    { month: 'ก.พ. 68', completion: parseFloat(completionRate), response: responseRate, cancel: cancelRate, rating: staff.rating },
-  ]
-
-  // Mock comparison data (average of all staff)
-  const platformAverage = {
-    completion: 88.5,
-    response: 89.2,
-    cancel: 5.8,
-    rating: 4.3,
+  // Map period to number of months
+  const getMonthsFromPeriod = (period: 'week' | 'month' | 'quarter' | 'year') => {
+    switch (period) {
+      case 'week':
+        return 2 // Show 2 months
+      case 'month':
+        return 6 // Show 6 months (default)
+      case 'quarter':
+        return 3 // Show 3 months
+      case 'year':
+        return 12 // Show 12 months
+      default:
+        return 6
+    }
   }
 
-  // Calculate performance trend
-  const getTrend = (current: number, previous: number) => {
-    const diff = current - previous
-    if (diff > 0) return { direction: 'up' as const, value: Math.abs(diff).toFixed(1), color: 'text-green-600' }
-    if (diff < 0) return { direction: 'down' as const, value: Math.abs(diff).toFixed(1), color: 'text-red-600' }
-    return { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const months = getMonthsFromPeriod(selectedPeriod)
+
+  // Fetch real performance data
+  const { data: performanceHistory = [], isLoading: historyLoading } = useStaffPerformanceMetrics(staff.id, months)
+  const { data: currentMetrics, isLoading: currentLoading } = useCurrentMonthPerformance(staff.id)
+  const { data: platformAverage } = usePlatformAverages()
+
+  // Show loading state
+  if (historyLoading || currentLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+      </div>
+    )
   }
 
-  const completionTrend = getTrend(parseFloat(completionRate), performanceHistory[4].completion)
-  const responseTrend = getTrend(responseRate, performanceHistory[4].response)
-  const cancelTrend = getTrend(cancelRate, performanceHistory[4].cancel)
+  // Use current metrics or fallback to latest history
+  const current = currentMetrics || performanceHistory[performanceHistory.length - 1]
+
+  // Extract current values
+  const completionRate = current?.completion_rate?.toFixed(1) || '0.0'
+  const responseRate = current?.response_rate || 0
+  const cancelRate = current?.cancel_rate || 0
+  const customerSatisfaction = current?.avg_rating || 0
+  const performanceScore = current?.performance_score || 0
+
+  // Calculate trends (compare with previous month)
+  const previous = performanceHistory.length >= 2 ? performanceHistory[performanceHistory.length - 2] : null
+  const completionTrend = previous ? calculateTrend(parseFloat(completionRate), previous.completion_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const responseTrend = previous ? calculateTrend(responseRate, previous.response_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const cancelTrend = previous ? calculateTrend(cancelRate, previous.cancel_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+
+  // Safe platform average with fallback
+  const platformAverageData = platformAverage || {
+    avg_completion_rate: 88.5,
+    avg_response_rate: 89.2,
+    avg_cancel_rate: 5.8,
+    avg_rating: 4.3,
+  }
+
+  // Generate recommendations
+  const recommendations = generateRecommendations(current || null, performanceHistory, platformAverageData)
 
   return (
     <div className="space-y-6">
@@ -996,7 +1027,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.completion}%</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_completion_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -1015,7 +1046,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.response}%</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_response_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -1034,7 +1065,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.cancel}%</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_cancel_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -1053,7 +1084,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.rating.toFixed(1)}</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_rating.toFixed(1)}</span>
             </div>
           </div>
         </div>
@@ -1068,64 +1099,70 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             onChange={(e) => setSelectedPeriod(e.target.value as any)}
             className="px-3 py-2 bg-stone-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
           >
-            <option value="week">7 วันที่ผ่านมา</option>
-            <option value="month">30 วันที่ผ่านมา</option>
+            <option value="week">2 เดือนล่าสุด</option>
+            <option value="month">6 เดือนที่ผ่านมา</option>
             <option value="quarter">3 เดือนที่ผ่านมา</option>
-            <option value="year">1 ปีที่ผ่านมา</option>
+            <option value="year">12 เดือนที่ผ่านมา</option>
           </select>
         </div>
 
         {/* Simple Chart Visualization */}
         <div className="space-y-4">
-          {performanceHistory.map((data, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-stone-700 w-16">{data.month}</span>
-                <div className="flex-1 grid grid-cols-4 gap-2">
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Complete</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-500"
-                        style={{ width: `${data.completion}%` }}
-                      />
+          {performanceHistory.length > 0 ? (
+            performanceHistory.map((data, index) => (
+              <div key={data.id} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-stone-700 w-16">{formatMonthThai(data.year, data.month)}</span>
+                  <div className="flex-1 grid grid-cols-4 gap-2">
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Complete</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-green-500"
+                          style={{ width: `${data.completion_rate}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.completion_rate.toFixed(1)}%</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.completion}%</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Response</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{ width: `${data.response}%` }}
-                      />
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Response</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500"
+                          style={{ width: `${data.response_rate}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.response_rate.toFixed(1)}%</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.response}%</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Cancel</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-red-500"
-                        style={{ width: `${Math.min(data.cancel * 10, 100)}%` }}
-                      />
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Cancel</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-red-500"
+                          style={{ width: `${Math.min(data.cancel_rate * 10, 100)}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.cancel_rate.toFixed(1)}%</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.cancel}%</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Rating</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500"
-                        style={{ width: `${(data.rating / 5) * 100}%` }}
-                      />
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Rating</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500"
+                          style={{ width: `${(data.avg_rating / 5) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.avg_rating.toFixed(1)}</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.rating}</div>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-stone-500">
+              ยังไม่มีข้อมูลประสิทธิภาพย้อนหลัง
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -1137,14 +1174,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-stone-600">Job Completion Rate</span>
               <span className="text-sm font-medium text-stone-900">
-                {(parseFloat(completionRate) - platformAverage.completion).toFixed(1)}% {parseFloat(completionRate) > platformAverage.completion ? 'สูงกว่า' : 'ต่ำกว่า'}
+                {(parseFloat(completionRate) - (platformAverage?.avg_completion_rate || 88.5)).toFixed(1)}% {parseFloat(completionRate) > (platformAverage?.avg_completion_rate || 88.5) ? 'สูงกว่า' : 'ต่ำกว่า'}
               </span>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500"
-                  style={{ width: `${platformAverage.completion}%` }}
+                  style={{ width: `${platformAverage?.avg_completion_rate || 88.5}%` }}
                 />
               </div>
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -1155,7 +1192,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
               </div>
             </div>
             <div className="flex justify-between text-xs text-stone-500 mt-1">
-              <span>Avg: {platformAverage.completion}%</span>
+              <span>Avg: {(platformAverage?.avg_completion_rate || 88.5).toFixed(1)}%</span>
               <span>You: {completionRate}%</span>
             </div>
           </div>
@@ -1164,14 +1201,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-stone-600">Response Rate</span>
               <span className="text-sm font-medium text-stone-900">
-                {(responseRate - platformAverage.response).toFixed(1)}% สูงกว่า
+                {(responseRate - (platformAverage?.avg_response_rate || 89.2)).toFixed(1)}% {responseRate > (platformAverage?.avg_response_rate || 89.2) ? 'สูงกว่า' : 'ต่ำกว่า'}
               </span>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500"
-                  style={{ width: `${platformAverage.response}%` }}
+                  style={{ width: `${platformAverage?.avg_response_rate || 89.2}%` }}
                 />
               </div>
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -1182,8 +1219,8 @@ function PerformanceTab({ staff }: { staff: Staff }) {
               </div>
             </div>
             <div className="flex justify-between text-xs text-stone-500 mt-1">
-              <span>Avg: {platformAverage.response}%</span>
-              <span>You: {responseRate}%</span>
+              <span>Avg: {(platformAverage?.avg_response_rate || 89.2).toFixed(1)}%</span>
+              <span>You: {responseRate.toFixed(1)}%</span>
             </div>
           </div>
 
@@ -1191,14 +1228,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-stone-600">Cancel Rate</span>
               <span className="text-sm font-medium text-green-600">
-                {(platformAverage.cancel - cancelRate).toFixed(1)}% ดีกว่า
+                {((platformAverage?.avg_cancel_rate || 5.8) - cancelRate).toFixed(1)}% ดีกว่า
               </span>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-500"
-                  style={{ width: `${platformAverage.cancel * 10}%` }}
+                  style={{ width: `${(platformAverage?.avg_cancel_rate || 5.8) * 10}%` }}
                 />
               </div>
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -1209,8 +1246,8 @@ function PerformanceTab({ staff }: { staff: Staff }) {
               </div>
             </div>
             <div className="flex justify-between text-xs text-stone-500 mt-1">
-              <span>Avg: {platformAverage.cancel}%</span>
-              <span>You: {cancelRate}%</span>
+              <span>Avg: {(platformAverage?.avg_cancel_rate || 5.8).toFixed(1)}%</span>
+              <span>You: {cancelRate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -1225,22 +1262,18 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-stone-900 mb-2">Performance Insights</h3>
             <ul className="space-y-2 text-sm text-stone-600">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>ประสิทธิภาพโดยรวมสูงกว่าค่าเฉลี่ยของแพลตฟอร์ม {(performanceScore - 85).toFixed(0)} คะแนน</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>อัตราการตอบรับงานสูงกว่าค่าเฉลี่ย {(responseRate - platformAverage.response).toFixed(1)}%</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>อัตราการยกเลิกงานต่ำกว่าค่าเฉลี่ย {(platformAverage.cancel - cancelRate).toFixed(1)}%</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
-                <span>แนะนำ: รักษาระดับประสิทธิภาพให้คงที่และพัฒนาทักษะเพิ่มเติม</span>
-              </li>
+              {recommendations.map((recommendation, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  {recommendation.startsWith('✅') || recommendation.startsWith('🏆') ? (
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  ) : recommendation.startsWith('🔴') || recommendation.startsWith('📉') ? (
+                    <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  )}
+                  <span>{recommendation.replace(/^[✅🏆🔴📉⚡⚠️⭐💪]\s*/, '')}</span>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -1251,13 +1284,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 
 // Reviews Tab Component
 function ReviewsTab({ staff }: { staff: Staff }) {
-  return (
-    <div className="text-center py-12">
-      <MessageSquare className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-      <p className="text-stone-500">รีวิวจากลูกค้าจะแสดงที่นี่</p>
-      <p className="text-sm text-stone-400 mt-2">กำลังพัฒนาฟีเจอร์นี้</p>
-    </div>
-  )
+  return <ReviewsTabContent staff={staff} />
 }
 
 // Earnings Tab Component
