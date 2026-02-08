@@ -17,13 +17,14 @@ import HotelBookings from './pages/HotelBookings'
 import Bookings from './pages/Bookings'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Promotions from './pages/Promotions'
 import { AdminLoginPage } from './pages/auth'
 
 function App() {
   const { isLoading, isAuthenticated, error } = useAdminAuth()
 
-  // Skip loading screen if no error and not authenticated (likely first visit)
-  const showLoadingScreen = isLoading && (isAuthenticated || error || window.localStorage.getItem('bliss-admin-user-cache'))
+  // Show loading screen when initializing authentication
+  const showLoadingScreen = isLoading
 
   if (showLoadingScreen) {
     return (
@@ -121,6 +122,7 @@ function App() {
         <Route path="bookings" element={<Bookings />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="promotions" element={<Promotions />} />
         <Route path="*" element={<Dashboard />} />
       </Route>
 

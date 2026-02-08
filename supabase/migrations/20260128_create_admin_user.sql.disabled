@@ -1,0 +1,92 @@
+-- Create admin user with proper auth and profile
+-- This replaces the problematic profile insertion in previous migration
+
+-- First create the auth user
+INSERT INTO auth.users (
+  id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  role,
+  aud,
+  confirmation_token,
+  raw_app_meta_data,
+  raw_user_meta_data
+) VALUES (
+  '6d5eee8b-799b-4eb4-8650-d43eadd0fd6f',
+  'admin@theblissathome.com',
+  crypt('admin123', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  'authenticated',
+  'authenticated',
+  '',
+  '{"provider":"email","providers":["email"]}',
+  '{"full_name":"ผู้ดูแลระบบ"}'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Also create the identity for email login
+INSERT INTO auth.identities (
+  id,
+  user_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at
+) VALUES (
+  '6d5eee8b-799b-4eb4-8650-d43eadd0fd6f',
+  '6d5eee8b-799b-4eb4-8650-d43eadd0fd6f',
+  '{"sub":"6d5eee8b-799b-4eb4-8650-d43eadd0fd6f","email":"admin@theblissathome.com"}',
+  'email',
+  NOW(),
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Update the profile that was automatically created by the trigger
+UPDATE profiles
+SET
+  role = 'ADMIN',
+  full_name = 'ผู้ดูแลระบบ',
+  phone = '0812345678',
+  updated_at = NOW()
+WHERE id = '6d5eee8b-799b-4eb4-8650-d43eadd0fd6f';
+
+-- Create some sample staff data for testing
+INSERT INTO staff (id, name_th, phone, status, rating, total_reviews, total_jobs, total_earnings, is_available)
+VALUES
+  ('STF001', 'สมหญิง นวดเก่ง', '081-234-5678', 'active', 4.8, 156, 1250, 450000, true),
+  ('STF002', 'ดอกไม้ ทำเล็บสวย', '082-345-6789', 'active', 4.9, 203, 890, 320000, true),
+  ('STF003', 'แก้ว สปาชำนาญ', '083-456-7890', 'active', 4.7, 89, 670, 520000, true),
+  ('STF004', 'มานี รอดำเนินการ', '084-567-8901', 'pending', 0, 0, 0, 0, false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Add skills to staff
+INSERT INTO staff_skills (staff_id, skill_id, level, years_experience)
+SELECT 'STF001', 'massage', 'expert', 5
+WHERE EXISTS (SELECT 1 FROM skills WHERE id = 'massage')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO staff_skills (staff_id, skill_id, level, years_experience)
+SELECT 'STF002', 'nail', 'advanced', 3
+WHERE EXISTS (SELECT 1 FROM skills WHERE id = 'nail')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO staff_skills (staff_id, skill_id, level, years_experience)
+SELECT 'STF003', 'spa', 'expert', 7
+WHERE EXISTS (SELECT 1 FROM skills WHERE id = 'spa')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO staff_skills (staff_id, skill_id, level, years_experience)
+SELECT 'STF003', 'massage', 'intermediate', 4
+WHERE EXISTS (SELECT 1 FROM skills WHERE id = 'massage')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO staff_skills (staff_id, skill_id, level, years_experience)
+SELECT 'STF004', 'nail', 'intermediate', 2
+WHERE EXISTS (SELECT 1 FROM skills WHERE id = 'nail')
+ON CONFLICT DO NOTHING;

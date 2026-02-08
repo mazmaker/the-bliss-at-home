@@ -22,6 +22,7 @@ import {
   Clock,
   MapPin,
   ArrowRight,
+  TrendingUp,
 } from 'lucide-react'
 
 const navigation = [
@@ -33,6 +34,7 @@ const navigation = [
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },
   { name: 'การจอง', nameEn: 'Bookings', href: '/admin/bookings', icon: Calendar },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },
+  { name: 'จัดการโปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'ตั้งค่า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
