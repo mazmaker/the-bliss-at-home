@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { PromotionForm } from '../components/PromotionForm'
+import { CouponCodesModal } from '../components/CouponCodesModal'
+import { PromotionReportsModal } from '../components/PromotionReportsModal'
 import {
   Plus,
   Search,
@@ -18,6 +21,13 @@ import {
   Users,
   Gift,
   TrendingUp,
+  FileText,
+  Play,
+  Pause,
+  BarChart3,
+  Copy,
+  ExternalLink,
+  Settings,
 } from 'lucide-react'
 
 interface Promotion {
@@ -32,13 +42,17 @@ interface Promotion {
   min_order_amount?: number
   max_discount?: number
   usage_limit?: number
+  usage_limit_per_user?: number
   usage_count: number
   start_date: string
   end_date: string
-  is_active: boolean
+  status: 'draft' | 'active' | 'expired' | 'disabled'
   applies_to: 'all_services' | 'specific_services' | 'categories'
   target_services?: string[]
   target_categories?: string[]
+  auto_generate_code: boolean
+  code_prefix: string
+  code_length: number
   created_at: string
   updated_at: string
 }
@@ -52,8 +66,9 @@ const promotionTypes = [
 
 const statusFilters = [
   { id: 'all', name: 'ทั้งหมด', icon: Filter },
+  { id: 'draft', name: 'ร่าง', icon: FileText },
   { id: 'active', name: 'ใช้งานอยู่', icon: CheckCircle },
-  { id: 'inactive', name: 'ระงับการใช้งาน', icon: AlertCircle },
+  { id: 'disabled', name: 'ระงับการใช้งาน', icon: Pause },
   { id: 'expired', name: 'หมดอายุ', icon: Clock },
 ]
 
@@ -68,6 +83,9 @@ function Promotions() {
   const [editingPromotion, setEditingPromotion] = useState<Promotion | undefined>()
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
+  const [couponModalOpen, setCouponModalOpen] = useState(false)
+  const [reportsModalOpen, setReportsModalOpen] = useState(false)
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null)
 
   // Fetch promotions from Supabase
   const fetchPromotions = async () => {
@@ -137,14 +155,26 @@ function Promotions() {
 
   const togglePromotionStatus = async (promotion: Promotion) => {
     try {
+      let newStatus: string = promotion.status
+
+      // Toggle logic based on current status
+      if (promotion.status === 'active' || promotion.status === 'draft') {
+        newStatus = 'disabled'
+      } else if (promotion.status === 'disabled') {
+        // Check if it should be active or expired
+        const now = new Date()
+        const endDate = new Date(promotion.end_date)
+        newStatus = now <= endDate ? 'active' : 'expired'
+      }
+
       const { error } = await supabase
         .from('promotions')
-        .update({ is_active: !promotion.is_active })
+        .update({ status: newStatus })
         .eq('id', promotion.id)
 
       if (error) throw error
 
-      setSuccessMessage(`${promotion.is_active ? 'ปิด' : 'เปิด'}ใช้งานโปรโมชั่นเรียบร้อยแล้ว`)
+      setSuccessMessage(`${newStatus === 'disabled' ? 'ระงับ' : 'เปิดใช้'}โปรโมชั่นเรียบร้อยแล้ว`)
       fetchPromotions()
     } catch (err) {
       console.error('Error toggling promotion status:', err)
@@ -152,21 +182,46 @@ function Promotions() {
     }
   }
 
-  const isExpired = (endDate: string) => {
-    return new Date(endDate) < new Date()
-  }
+  const activatePromotion = async (promotion: Promotion) => {
+    try {
+      const { error } = await supabase
+        .from('promotions')
+        .update({ status: 'active' })
+        .eq('id', promotion.id)
 
-  const isActive = (promotion: Promotion) => {
-    const now = new Date()
-    const startDate = new Date(promotion.start_date)
-    const endDate = new Date(promotion.end_date)
-    return promotion.is_active && now >= startDate && now <= endDate
+      if (error) throw error
+
+      setSuccessMessage('เปิดใช้โปรโมชั่นเรียบร้อยแล้ว')
+      fetchPromotions()
+    } catch (err) {
+      console.error('Error activating promotion:', err)
+      setError('ไม่สามารถเปิดใช้โปรโมชั่นได้')
+    }
   }
 
   const getPromotionStatus = (promotion: Promotion) => {
-    if (isExpired(promotion.end_date)) return 'expired'
-    if (isActive(promotion)) return 'active'
-    return 'inactive'
+    // Check if promotion has expired
+    const now = new Date()
+    const endDate = new Date(promotion.end_date)
+
+    if (now > endDate && promotion.status !== 'expired') {
+      // Auto-update expired promotions
+      updatePromotionStatus(promotion.id, 'expired')
+      return 'expired'
+    }
+
+    return promotion.status
+  }
+
+  const updatePromotionStatus = async (promotionId: string, status: string) => {
+    try {
+      await supabase
+        .from('promotions')
+        .update({ status })
+        .eq('id', promotionId)
+    } catch (err) {
+      console.error('Error updating promotion status:', err)
+    }
   }
 
   const filteredPromotions = promotions.filter((promotion) => {
@@ -200,8 +255,12 @@ function Promotions() {
   const getStatusColor = (promotion: Promotion) => {
     const status = getPromotionStatus(promotion)
     switch (status) {
+      case 'draft':
+        return 'bg-gray-500 text-white'
       case 'active':
         return 'bg-green-500 text-white'
+      case 'disabled':
+        return 'bg-orange-500 text-white'
       case 'expired':
         return 'bg-red-500 text-white'
       default:
@@ -212,13 +271,64 @@ function Promotions() {
   const getStatusText = (promotion: Promotion) => {
     const status = getPromotionStatus(promotion)
     switch (status) {
+      case 'draft':
+        return 'ร่าง'
       case 'active':
         return 'ใช้งานอยู่'
+      case 'disabled':
+        return 'ระงับ'
       case 'expired':
         return 'หมดอายุ'
       default:
-        return 'ระงับ'
+        return 'ไม่ทราบ'
     }
+  }
+
+  const getStatusActions = (promotion: Promotion) => {
+    const status = getPromotionStatus(promotion)
+    const actions = []
+
+    switch (status) {
+      case 'draft':
+        actions.push({
+          label: 'เปิดใช้',
+          onClick: () => activatePromotion(promotion),
+          className: 'bg-green-100 text-green-700 hover:bg-green-200',
+          icon: Play
+        })
+        break
+      case 'active':
+        actions.push({
+          label: 'ระงับ',
+          onClick: () => togglePromotionStatus(promotion),
+          className: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
+          icon: Pause
+        })
+        break
+      case 'disabled':
+        actions.push({
+          label: 'เปิดใช้',
+          onClick: () => togglePromotionStatus(promotion),
+          className: 'bg-green-100 text-green-700 hover:bg-green-200',
+          icon: Play
+        })
+        break
+      case 'expired':
+        // No actions for expired promotions
+        break
+    }
+
+    return actions
+  }
+
+  const openCouponModal = (promotion: Promotion) => {
+    setSelectedPromotion(promotion)
+    setCouponModalOpen(true)
+  }
+
+  const openReportsModal = (promotion: Promotion) => {
+    setSelectedPromotion(promotion)
+    setReportsModalOpen(true)
   }
 
   if (isLoading) {
@@ -454,28 +564,64 @@ function Promotions() {
               )}
 
               {/* Actions */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                {/* Status Actions */}
+                {getStatusActions(promotion).map((action, index) => {
+                  const Icon = action.icon
+                  return (
+                    <button
+                      key={index}
+                      onClick={action.onClick}
+                      className={`flex items-center justify-center gap-1 px-3 py-2 text-sm rounded-lg transition ${action.className}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {action.label}
+                    </button>
+                  )
+                })}
+
+                {/* Copy Code */}
                 <button
-                  onClick={() => togglePromotionStatus(promotion)}
-                  className={`flex items-center justify-center px-3 py-2 text-sm rounded-lg transition ${
-                    promotion.is_active
-                      ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
-                  }`}
-                  disabled={isExpired(promotion.end_date)}
+                  onClick={() => navigator.clipboard.writeText(promotion.code)}
+                  className="flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 text-sm rounded-lg hover:bg-blue-200 transition"
+                  title="คัดลอกรหัส"
                 >
-                  {promotion.is_active ? 'ระงับ' : 'เปิดใช้'}
+                  <Copy className="w-4 h-4" />
                 </button>
+
+                {/* Coupon Codes */}
+                <button
+                  onClick={() => openCouponModal(promotion)}
+                  className="flex items-center justify-center px-3 py-2 bg-amber-100 text-amber-700 text-sm rounded-lg hover:bg-amber-200 transition"
+                  title="จัดการคูปอง"
+                >
+                  <Tag className="w-4 h-4" />
+                </button>
+
+                {/* View Reports */}
+                <button
+                  onClick={() => openReportsModal(promotion)}
+                  className="flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 text-sm rounded-lg hover:bg-purple-200 transition"
+                  title="ดูรายงาน"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                </button>
+
+                {/* Edit */}
                 <button
                   onClick={() => handleEdit(promotion)}
-                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition"
+                  className="flex items-center justify-center gap-1 px-3 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition"
                 >
                   <Edit className="w-4 h-4" />
                   แก้ไข
                 </button>
+
+                {/* Delete */}
                 <button
                   onClick={() => setDeleteConfirmId(promotion.id)}
                   className="flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition"
+                  disabled={promotion.status === 'active'}
+                  title={promotion.status === 'active' ? 'ไม่สามารถลบโปรโมชั่นที่ใช้งานอยู่ได้' : 'ลบโปรโมชั่น'}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -535,34 +681,42 @@ function Promotions() {
       )}
 
       {/* Promotion Form Modal */}
-      {/* TODO: Create PromotionForm component */}
-      {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-stone-900">
-                  {editingPromotion ? 'แก้ไขโปรโมชั่น' : 'เพิ่มโปรโมชั่นใหม่'}
-                </h2>
-                <button
-                  onClick={() => {
-                    setIsFormOpen(false)
-                    setEditingPromotion(undefined)
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
+      <PromotionForm
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false)
+          setEditingPromotion(undefined)
+        }}
+        onSuccess={handleFormSuccess}
+        editData={editingPromotion}
+      />
 
-              {/* TODO: Add PromotionForm component here */}
-              <div className="text-center py-8 text-stone-500">
-                <TrendingUp className="w-12 h-12 mx-auto mb-4" />
-                <p>ฟอร์มโปรโมชั่นจะเพิ่มในขั้นตอนถัดไป</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Coupon Codes Modal */}
+      {selectedPromotion && (
+        <CouponCodesModal
+          isOpen={couponModalOpen}
+          onClose={() => {
+            setCouponModalOpen(false)
+            if (!reportsModalOpen) setSelectedPromotion(null)
+          }}
+          promotionId={selectedPromotion.id}
+          promotionName={selectedPromotion.name_th}
+          promotionCode={selectedPromotion.code}
+        />
+      )}
+
+      {/* Reports Modal */}
+      {selectedPromotion && (
+        <PromotionReportsModal
+          isOpen={reportsModalOpen}
+          onClose={() => {
+            setReportsModalOpen(false)
+            if (!couponModalOpen) setSelectedPromotion(null)
+          }}
+          promotionId={selectedPromotion.id}
+          promotionName={selectedPromotion.name_th}
+          promotionCode={selectedPromotion.code}
+        />
       )}
     </div>
   )
