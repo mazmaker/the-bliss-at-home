@@ -121,6 +121,17 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
   useEffect(() => {
     if (editData && isOpen) {
       console.log('🔄 Loading edit data:', editData)
+
+      // Convert single duration to array format
+      let durationOptionsArray = ['60'] // default
+      if (editData.duration_options) {
+        durationOptionsArray = editData.duration_options
+      } else if (editData.duration) {
+        durationOptionsArray = [editData.duration.toString()]
+      }
+
+      console.log('📋 Duration options array:', durationOptionsArray)
+
       // Reset form with edit data
       reset({
         name_th: editData.name_th || '',
@@ -129,7 +140,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: editData.description_th || '',
         description_en: editData.description_en || '',
         category: editData.category || undefined,
-        duration_options: editData.duration_options || [editData.duration] || [60],
+        duration_options: durationOptionsArray,
         base_price: editData.base_price || undefined,
         hotel_price: editData.hotel_price || undefined,
         staff_commission_rate: editData.staff_commission_rate || 25.00,
@@ -406,7 +417,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {durationOptions.map((option) => {
-                  const isSelected = watch('duration_options')?.includes(option.value) || false
+                  const currentOptions = watch('duration_options') || []
+                  const isSelected = currentOptions.includes(option.value)
+
                   return (
                     <label
                       key={option.value}
@@ -417,15 +430,15 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       }`}
                     >
                       <input
-                        {...register('duration_options')}
                         type="checkbox"
-                        value={option.value}
+                        checked={isSelected}
                         className="sr-only"
                         onChange={(e) => {
-                          const currentOptions = watch('duration_options') || []
                           if (e.target.checked) {
+                            // Add option to array
                             setValue('duration_options', [...currentOptions, option.value])
                           } else {
+                            // Remove option from array
                             setValue('duration_options', currentOptions.filter(val => val !== option.value))
                           }
                         }}
