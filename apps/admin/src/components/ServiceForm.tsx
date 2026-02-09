@@ -30,10 +30,9 @@ const serviceFormSchema = z.object({
   category: z.enum(['massage', 'nail', 'spa', 'facial'], {
     required_error: 'กรุณาเลือกประเภทบริการ',
   }),
-  duration: z.coerce
-    .number({ required_error: 'ระบุเวลาเป็นตัวเลข' })
-    .min(15, 'ระยะเวลาขั้นต่ำ 15 นาที')
-    .max(480, 'ระยะเวลาสูงสุด 8 ชั่วโมง'),
+  duration: z.enum(['60', '90', '120'], {
+    required_error: 'กรุณาเลือกระยะเวลาบริการ',
+  }).transform((val) => parseInt(val, 10)),
   base_price: z.coerce
     .number({ required_error: 'ระบุราคาเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
@@ -67,6 +66,12 @@ const categories = [
   { id: 'facial', name: 'เฟเชียล', nameEn: 'Facial', icon: Palette, color: 'green' },
 ]
 
+const durationOptions = [
+  { value: '60', label: '60 นาที (1 ชั่วโมง)' },
+  { value: '90', label: '90 นาที (1.5 ชั่วโมง)' },
+  { value: '120', label: '120 นาที (2 ชั่วโมง)' },
+]
+
 // Function to generate slug from text
 const generateSlug = (text: string): string => {
   return text
@@ -98,7 +103,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       description_th: '',
       description_en: '',
       category: undefined,
-      duration: undefined,
+      duration: 60, // Default 60 minutes
       base_price: undefined,
       hotel_price: undefined,
       staff_commission_rate: 25.00, // Default 25%
@@ -126,7 +131,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: editData.description_th || '',
         description_en: editData.description_en || '',
         category: editData.category || undefined,
-        duration: editData.duration || undefined,
+        duration: editData.duration || 60,
         base_price: editData.base_price || undefined,
         hotel_price: editData.hotel_price || undefined,
         staff_commission_rate: editData.staff_commission_rate || 25.00,
@@ -143,7 +148,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: '',
         description_en: '',
         category: undefined,
-        duration: undefined,
+        duration: 60,
         base_price: undefined,
         hotel_price: undefined,
         staff_commission_rate: 25.00,
@@ -395,20 +400,24 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <Clock className="w-4 h-4 inline mr-1" />
-                ระยะเวลา (นาที)
+                ระยะเวลาบริการ
               </label>
-              <input
+              <select
                 {...register('duration')}
-                type="number"
-                min="15"
-                max="480"
-                step="15"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                placeholder="60"
-              />
+              >
+                {durationOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               {errors.duration && (
                 <p className="mt-1 text-sm text-red-600">{errors.duration.message}</p>
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                เลือกระยะเวลาที่เหมาะสมสำหรับบริการนี้
+              </p>
             </div>
 
             {/* Pricing */}
@@ -577,7 +586,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                                 {field === 'name_th' && 'ชื่อภาษาไทย'}
                                 {field === 'name_en' && 'ชื่อภาษาอังกฤษ'}
                                 {field === 'category' && 'ประเภทบริการ'}
-                                {field === 'duration' && 'ระยะเวลา'}
+                                {field === 'duration' && 'ระยะเวลาบริการ'}
                                 {field === 'base_price' && 'ราคาปกติ'}
                                 {field === 'hotel_price' && 'ราคาโรงแรม'}
                                 {field === 'staff_commission_rate' && 'คอมมิชชั่น'}
