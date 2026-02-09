@@ -30,9 +30,7 @@ const serviceFormSchema = z.object({
   category: z.enum(['massage', 'nail', 'spa', 'facial'], {
     required_error: 'กรุณาเลือกประเภทบริการ',
   }),
-  duration: z.enum(['60', '90', '120'], {
-    required_error: 'กรุณาเลือกระยะเวลาบริการ',
-  }).transform((val) => parseInt(val, 10)),
+  duration_options: z.array(z.enum(['60', '90', '120'])).min(1, 'กรุณาเลือกระยะเวลาอย่างน้อย 1 ตัวเลือก').transform((arr) => arr.map(val => parseInt(val, 10))),
   base_price: z.coerce
     .number({ required_error: 'ระบุราคาเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
@@ -103,7 +101,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       description_th: '',
       description_en: '',
       category: undefined,
-      duration: 60, // Default 60 minutes
+      duration_options: [60], // Default 60 minutes
       base_price: undefined,
       hotel_price: undefined,
       staff_commission_rate: 25.00, // Default 25%
@@ -131,7 +129,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: editData.description_th || '',
         description_en: editData.description_en || '',
         category: editData.category || undefined,
-        duration: editData.duration || 60,
+        duration_options: editData.duration_options || [editData.duration] || [60],
         base_price: editData.base_price || undefined,
         hotel_price: editData.hotel_price || undefined,
         staff_commission_rate: editData.staff_commission_rate || 25.00,
@@ -148,7 +146,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: '',
         description_en: '',
         category: undefined,
-        duration: 60,
+        duration_options: [60],
         base_price: undefined,
         hotel_price: undefined,
         staff_commission_rate: 25.00,
@@ -202,6 +200,10 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         slug: data.slug || generateSlug(data.name_en),
         image_url: data.image_url || null,
         sort_order: data.sort_order || 0,
+        // Backward compatibility: set primary duration as the first selected option
+        duration: data.duration_options[0],
+        // For future database schema update
+        // duration_options: data.duration_options,
       }
 
       console.log('📝 Submitting service data:', cleanData)
@@ -396,27 +398,61 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               </div>
             </div>
 
-            {/* Duration */}
+            {/* Duration Options */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 <Clock className="w-4 h-4 inline mr-1" />
-                ระยะเวลาบริการ
+                ระยะเวลาบริการ (เลือกได้หลายตัวเลือก)
               </label>
-              <select
-                {...register('duration')}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              >
-                {durationOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.duration && (
-                <p className="mt-1 text-sm text-red-600">{errors.duration.message}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {durationOptions.map((option) => {
+                  const isSelected = watch('duration_options')?.includes(option.value) || false
+                  return (
+                    <label
+                      key={option.value}
+                      className={`relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        {...register('duration_options')}
+                        type="checkbox"
+                        value={option.value}
+                        className="sr-only"
+                        onChange={(e) => {
+                          const currentOptions = watch('duration_options') || []
+                          if (e.target.checked) {
+                            setValue('duration_options', [...currentOptions, option.value])
+                          } else {
+                            setValue('duration_options', currentOptions.filter(val => val !== option.value))
+                          }
+                        }}
+                      />
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-sm font-medium ${isSelected ? 'text-amber-900' : 'text-gray-700'}`}>
+                        {option.label}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+              {errors.duration_options && (
+                <p className="mt-2 text-sm text-red-600">{errors.duration_options.message}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">
-                เลือกระยะเวลาที่เหมาะสมสำหรับบริการนี้
+              <p className="mt-2 text-xs text-gray-500">
+                💡 เลือกตัวเลือกระยะเวลาที่ต้องการให้บริการ (สามารถเลือกได้หลายตัวเลือก)
               </p>
             </div>
 
@@ -586,7 +622,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                                 {field === 'name_th' && 'ชื่อภาษาไทย'}
                                 {field === 'name_en' && 'ชื่อภาษาอังกฤษ'}
                                 {field === 'category' && 'ประเภทบริการ'}
-                                {field === 'duration' && 'ระยะเวลาบริการ'}
+                                {field === 'duration_options' && 'ระยะเวลาบริการ'}
                                 {field === 'base_price' && 'ราคาปกติ'}
                                 {field === 'hotel_price' && 'ราคาโรงแรม'}
                                 {field === 'staff_commission_rate' && 'คอมมิชชั่น'}
