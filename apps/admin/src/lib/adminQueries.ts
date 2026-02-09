@@ -3,7 +3,7 @@
  * Handles all data fetching for admin dashboard
  */
 
-import { supabase } from '@bliss/supabase'
+import { supabase } from './supabase'
 
 export interface AdminStats {
   todaySales: number

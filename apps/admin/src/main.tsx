@@ -18,7 +18,8 @@ const queryClient = new QueryClient({
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  // Temporarily disable Strict Mode to test focus loss issue
+  // <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
@@ -44,5 +45,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         />
       </BrowserRouter>
     </QueryClientProvider>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 )
