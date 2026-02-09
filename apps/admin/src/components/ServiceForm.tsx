@@ -213,9 +213,11 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         sort_order: data.sort_order || 0,
         // Backward compatibility: set primary duration as the first selected option
         duration: data.duration_options[0],
-        // For future database schema update
-        // duration_options: data.duration_options,
+        // Remove duration_options from submission until migration is applied
       }
+
+      // Remove the duration_options field since column doesn't exist yet
+      delete cleanData.duration_options
 
       console.log('📝 Submitting service data:', cleanData)
 
