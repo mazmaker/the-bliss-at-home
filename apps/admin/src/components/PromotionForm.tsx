@@ -16,6 +16,9 @@ import {
   Copy,
   Eye,
   EyeOff,
+  Upload,
+  Image,
+  Trash2,
 } from 'lucide-react'
 
 interface Service {
@@ -46,6 +49,7 @@ interface PromotionFormData {
   auto_generate_code: boolean
   code_prefix: string
   code_length: number
+  image_url?: string
 }
 
 interface PromotionFormProps {
@@ -84,6 +88,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
     auto_generate_code: false,
     code_prefix: '',
     code_length: 8,
+    image_url: '',
   })
 
   const [services, setServices] = useState<Service[]>([])
@@ -91,6 +96,9 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
   const [error, setError] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([])
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Load form data for editing
   useEffect(() => {
@@ -116,7 +124,9 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
         auto_generate_code: editData.auto_generate_code || false,
         code_prefix: editData.code_prefix || '',
         code_length: editData.code_length || 8,
+        image_url: editData.image_url || '',
       })
+      setImagePreview(editData.image_url || '')
     } else {
       // Reset form for new promotion
       setFormData({
@@ -140,7 +150,10 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
         auto_generate_code: false,
         code_prefix: '',
         code_length: 8,
+        image_url: '',
       })
+      setImagePreview('')
+      setSelectedImage(null)
     }
   }, [editData, isOpen])
 
@@ -176,6 +189,100 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
 
     setFormData({ ...formData, code: result })
   }
+
+  // Image handling functions
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      setUploadingImage(true)
+      console.log('🖼️ Starting real image upload:', file.name, 'Size:', file.size, 'Type:', file.type)
+
+      // Generate unique filename with proper extension
+      const fileExt = file.name.split('.').pop() || 'jpg'
+      const fileName = `promotion_${Date.now()}.${fileExt}`
+
+      console.log('📁 Uploading to bucket: promotion-images, filename:', fileName)
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('promotion-images')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true
+        })
+
+      if (error) {
+        console.error('❌ Storage upload failed:', error.message)
+        console.error('Error details:', error)
+
+        // Instead of falling back to placeholder, throw the error
+        throw new Error(`การอัพโหลดรูปภาพล้มเหลว: ${error.message}`)
+      }
+
+      if (!data?.path) {
+        throw new Error('ไม่ได้รับ path จากการอัพโหลด')
+      }
+
+      // Get the public URL for the uploaded image
+      const { data: { publicUrl } } = supabase.storage
+        .from('promotion-images')
+        .getPublicUrl(fileName)
+
+      console.log('✅ Real image uploaded successfully!')
+      console.log('📍 Storage path:', data.path)
+      console.log('🌐 Public URL:', publicUrl)
+
+      // Verify the URL is accessible
+      if (publicUrl && publicUrl.includes('supabase.co')) {
+        console.log('🎉 Real image URL confirmed:', publicUrl)
+        return publicUrl
+      } else {
+        throw new Error('ไม่สามารถสร้าง public URL ได้')
+      }
+
+    } catch (error: any) {
+      console.error('💥 Upload failed completely:', error)
+      setError(error.message || 'การอัพโหลดรูปภาพล้มเหลว')
+
+      // Return null instead of placeholder - let the user retry
+      return null
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Check file size (2MB limit)
+      if (file.size > 2 * 1024 * 1024) {
+        setError('ขนาดไฟล์ต้องไม่เกิน 2MB')
+        return
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError('กรุณาเลือกไฟล์รูปภาพเท่านั้น')
+        return
+      }
+
+      setSelectedImage(file)
+
+      // Show preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setSelectedImage(null)
+    setImagePreview('')
+    setFormData({ ...formData, image_url: '' })
+  }
+
 
   const generateCouponCodes = async (promotionId: string, count: number = 5) => {
     try {
@@ -224,7 +331,22 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
         throw new Error('วันที่สิ้นสุดต้องมากกว่าวันที่เริ่มต้น')
       }
 
-      // Prepare data for database
+      // Upload image if selected
+      let imageUrl = formData.image_url
+      if (selectedImage) {
+        console.log('🖼️ Processing image upload...')
+        const uploadedUrl = await uploadImage(selectedImage)
+        if (uploadedUrl) {
+          console.log('✅ Image uploaded successfully, using real URL:', uploadedUrl)
+          imageUrl = uploadedUrl
+        } else {
+          console.error('❌ Image upload failed, continuing without image')
+          // Don't stop the form submission, just continue without the image
+          imageUrl = '' // Clear any existing image URL
+        }
+      }
+
+      // Prepare data for database (exclude image_url if column doesn't exist)
       const promotionData = {
         ...formData,
         start_date: new Date(formData.start_date).toISOString(),
@@ -235,6 +357,11 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
         usage_limit_per_user: formData.usage_limit_per_user || null,
         target_services: formData.applies_to === 'specific_services' ? formData.target_services : null,
         target_categories: formData.applies_to === 'categories' ? formData.target_categories : null,
+      }
+
+      // Add image_url only if we have a value (will be removed if column doesn't exist)
+      if (imageUrl) {
+        promotionData.image_url = imageUrl
       }
 
       let result
@@ -342,6 +469,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
             </div>
           </div>
 
+
           {/* Code Generation */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
@@ -428,7 +556,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 >
                   <option value="percentage">ลดเปอร์เซ็นต์ (%)</option>
                   <option value="fixed_amount">ลดจำนวนคงที่ (฿)</option>
-                  <option value="buy_x_get_y">ซื้อ X ได้ Y</option>
+                  <option value="buy_x_get_y">แถม</option>
                 </select>
               </div>
 
@@ -436,16 +564,28 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 <label className="block text-sm font-medium text-green-700 mb-2">
                   จำนวนส่วนลด *
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.discount_value}
-                  onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500"
-                  placeholder="20"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.discount_value}
+                    onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500"
+                    placeholder={formData.discount_type === 'percentage' ? '20' : '200'}
+                    required
+                  />
+                  {formData.discount_type === 'percentage' && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <span className="text-green-600 text-sm font-medium">%</span>
+                    </div>
+                  )}
+                  {formData.discount_type === 'fixed_amount' && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <span className="text-green-600 text-sm font-medium">฿</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -480,6 +620,142 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
             </div>
           </div>
 
+          {/* Service Targeting - Now visible by default */}
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-purple-800 mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              เป้าหมายบริการ
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-purple-700 mb-2">
+                  ใช้ได้กับ
+                </label>
+                <select
+                  value={formData.applies_to}
+                  onChange={(e) => setFormData({ ...formData, applies_to: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="all_services">บริการทั้งหมด</option>
+                  <option value="categories">หมวดหมู่เฉพาะ</option>
+                  <option value="specific_services">บริการเฉพาะ</option>
+                </select>
+              </div>
+
+              {formData.applies_to === 'categories' && (
+                <div>
+                  <label className="block text-sm font-medium text-purple-700 mb-2">
+                    เลือกหมวดหมู่บริการ
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {categories.map((category) => (
+                      <label key={category.id} className="flex items-center gap-2 text-sm bg-white p-3 rounded-lg border border-purple-200 hover:bg-purple-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.target_categories?.includes(category.id) || false}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({
+                                ...formData,
+                                target_categories: [...(formData.target_categories || []), category.id]
+                              })
+                            } else {
+                              setFormData({
+                                ...formData,
+                                target_categories: formData.target_categories?.filter(c => c !== category.id)
+                              })
+                            }
+                          }}
+                          className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="font-medium text-purple-900">{category.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {formData.applies_to === 'specific_services' && (
+                <div>
+                  <label className="block text-sm font-medium text-purple-700 mb-2">
+                    เลือกบริการ
+                  </label>
+                  <div className="max-h-40 overflow-y-auto border border-purple-200 rounded-lg p-2 space-y-1 bg-white">
+                    {services.map((service) => (
+                      <label key={service.id} className="flex items-center gap-2 text-sm hover:bg-purple-50 p-1 rounded">
+                        <input
+                          type="checkbox"
+                          checked={formData.target_services?.includes(service.id) || false}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({
+                                ...formData,
+                                target_services: [...(formData.target_services || []), service.id]
+                              })
+                            } else {
+                              setFormData({
+                                ...formData,
+                                target_services: formData.target_services?.filter(s => s !== service.id)
+                              })
+                            }
+                          }}
+                          className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="flex-1">{service.name_th}</span>
+                        <span className="text-xs text-purple-500">{service.name_en}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Usage Limits - Now visible by default */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              ข้อจำกัดการใช้งาน
+            </h3>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-blue-700 mb-2">
+                  จำนวนครั้งทั้งหมด
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.usage_limit || ''}
+                  onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value ? parseInt(e.target.value) : undefined })}
+                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="ไม่จำกัด"
+                />
+                <p className="text-xs text-blue-600 mt-1">
+                  จำนวนครั้งทั้งหมดที่โปรโมชั่นนี้สามารถใช้ได้ (เว้นว่างหมายถึงไม่จำกัด)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-blue-700 mb-2">
+                  จำนวนครั้งต่อคน
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.usage_limit_per_user || ''}
+                  onChange={(e) => setFormData({ ...formData, usage_limit_per_user: e.target.value ? parseInt(e.target.value) : undefined })}
+                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="ไม่จำกัด"
+                />
+                <p className="text-xs text-blue-600 mt-1">
+                  จำนวนครั้งสูงสุดที่ลูกค้า 1 คนใช้โปรโมชั่นนี้ได้ (เว้นว่างหมายถึงไม่จำกัด)
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Advanced Settings Toggle */}
           <div className="border-t border-stone-200 pt-4">
             <button
@@ -495,135 +771,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           {/* Advanced Settings */}
           {showAdvanced && (
             <div className="space-y-6">
-              {/* Usage Limits */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  ข้อจำกัดการใช้งาน
-                </h3>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-blue-700 mb-2">
-                      จำนวนครั้งทั้งหมด
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.usage_limit || ''}
-                      onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value ? parseInt(e.target.value) : undefined })}
-                      className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="ไม่จำกัด"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-blue-700 mb-2">
-                      จำนวนครั้งต่อคน
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.usage_limit_per_user || ''}
-                      onChange={(e) => setFormData({ ...formData, usage_limit_per_user: e.target.value ? parseInt(e.target.value) : undefined })}
-                      className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="ไม่จำกัด"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Service Targeting */}
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  เป้าหมายบริการ
-                </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-purple-700 mb-2">
-                      ใช้ได้กับ
-                    </label>
-                    <select
-                      value={formData.applies_to}
-                      onChange={(e) => setFormData({ ...formData, applies_to: e.target.value as any })}
-                      className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="all_services">บริการทั้งหมด</option>
-                      <option value="categories">หมวดหมู่เฉพาะ</option>
-                      <option value="specific_services">บริการเฉพาะ</option>
-                    </select>
-                  </div>
-
-                  {formData.applies_to === 'categories' && (
-                    <div>
-                      <label className="block text-sm font-medium text-purple-700 mb-2">
-                        เลือกหมวดหมู่
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {categories.map((category) => (
-                          <label key={category.id} className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={formData.target_categories?.includes(category.id) || false}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setFormData({
-                                    ...formData,
-                                    target_categories: [...(formData.target_categories || []), category.id]
-                                  })
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    target_categories: formData.target_categories?.filter(c => c !== category.id)
-                                  })
-                                }
-                              }}
-                              className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
-                            />
-                            {category.name}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {formData.applies_to === 'specific_services' && (
-                    <div>
-                      <label className="block text-sm font-medium text-purple-700 mb-2">
-                        เลือกบริการ
-                      </label>
-                      <div className="max-h-40 overflow-y-auto border border-purple-200 rounded-lg p-2 space-y-1">
-                        {services.map((service) => (
-                          <label key={service.id} className="flex items-center gap-2 text-sm hover:bg-purple-50 p-1 rounded">
-                            <input
-                              type="checkbox"
-                              checked={formData.target_services?.includes(service.id) || false}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setFormData({
-                                    ...formData,
-                                    target_services: [...(formData.target_services || []), service.id]
-                                  })
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    target_services: formData.target_services?.filter(s => s !== service.id)
-                                  })
-                                }
-                              }}
-                              className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
-                            />
-                            <span className="flex-1">{service.name_th}</span>
-                            <span className="text-xs text-purple-500">{service.name_en}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           )}
 
@@ -698,6 +846,61 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 rows={3}
                 placeholder="Promotion details and conditions"
               />
+            </div>
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              ภาพประกอบโปรโมชั่น
+            </h3>
+
+            <div className="space-y-4">
+              {/* Current Image Display */}
+              {imagePreview && (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="ตัวอย่างภาพโปรโมชั่น"
+                    className="w-full h-48 object-cover rounded-lg border border-blue-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                    {formData.image_url ? 'ภาพปัจจุบัน' : 'ภาพใหม่'}
+                  </div>
+                </div>
+              )}
+
+              {/* File Upload */}
+              <div>
+                <label className="block text-sm font-medium text-blue-700 mb-2">
+                  {imagePreview ? 'เปลี่ยนภาพ' : 'อัพโหลดภาพ'}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                />
+                <p className="text-xs text-blue-600 mt-1">
+                  รองรับไฟล์: JPG, PNG, GIF (ขนาดสูงสุด 2MB)
+                </p>
+              </div>
+
+              {/* Upload Progress */}
+              {uploadingImage && (
+                <div className="flex items-center gap-2 text-blue-600">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">กำลังอัพโหลดภาพ...</span>
+                </div>
+              )}
             </div>
           </div>
 

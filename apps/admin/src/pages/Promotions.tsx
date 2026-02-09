@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { PromotionForm } from '../components/PromotionForm'
-import { CouponCodesModal } from '../components/CouponCodesModal'
-import { PromotionReportsModal } from '../components/PromotionReportsModal'
+import { PromotionPreview } from '../components/PromotionPreview'
 import {
   Plus,
   Search,
   Filter,
   Edit,
   Trash2,
-  Star,
   Clock,
   Percent,
   Calendar,
@@ -17,17 +15,14 @@ import {
   AlertCircle,
   CheckCircle,
   Tag,
-  Eye,
   Users,
   Gift,
   TrendingUp,
   FileText,
   Play,
   Pause,
-  BarChart3,
   Copy,
-  ExternalLink,
-  Settings,
+  Eye,
 } from 'lucide-react'
 
 interface Promotion {
@@ -53,6 +48,7 @@ interface Promotion {
   auto_generate_code: boolean
   code_prefix: string
   code_length: number
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -61,7 +57,7 @@ const promotionTypes = [
   { id: 'all', name: 'ทั้งหมด', icon: Filter },
   { id: 'percentage', name: 'ลดเปอร์เซ็นต์', icon: Percent },
   { id: 'fixed_amount', name: 'ลดจำนวนคงที่', icon: Tag },
-  { id: 'buy_x_get_y', name: 'ซื้อ X ได้ Y', icon: Gift },
+  { id: 'buy_x_get_y', name: 'แถม', icon: Gift },
 ]
 
 const statusFilters = [
@@ -83,8 +79,7 @@ function Promotions() {
   const [editingPromotion, setEditingPromotion] = useState<Promotion | undefined>()
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
-  const [couponModalOpen, setCouponModalOpen] = useState(false)
-  const [reportsModalOpen, setReportsModalOpen] = useState(false)
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null)
 
   // Fetch promotions from Supabase
@@ -246,7 +241,7 @@ function Promotions() {
       case 'fixed_amount':
         return `฿${promotion.discount_value.toLocaleString()}`
       case 'buy_x_get_y':
-        return `ซื้อ ${promotion.discount_value} ฟรี 1`
+        return `แถม ${promotion.discount_value} ชิ้น`
       default:
         return promotion.discount_value.toString()
     }
@@ -266,6 +261,10 @@ function Promotions() {
       default:
         return 'bg-stone-500 text-white'
     }
+  }
+
+  const isExpired = (endDate: string) => {
+    return new Date() > new Date(endDate)
   }
 
   const getStatusText = (promotion: Promotion) => {
@@ -321,14 +320,11 @@ function Promotions() {
     return actions
   }
 
-  const openCouponModal = (promotion: Promotion) => {
-    setSelectedPromotion(promotion)
-    setCouponModalOpen(true)
-  }
 
-  const openReportsModal = (promotion: Promotion) => {
+
+  const openPreviewModal = (promotion: Promotion) => {
     setSelectedPromotion(promotion)
-    setReportsModalOpen(true)
+    setPreviewModalOpen(true)
   }
 
   if (isLoading) {
@@ -467,24 +463,52 @@ function Promotions() {
             key={promotion.id}
             className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100 hover:shadow-xl transition"
           >
+            {/* Image Section */}
+            {promotion.image_url && (
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={promotion.image_url}
+                  alt={promotion.name_en}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <div
+                  className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(promotion)}`}
+                >
+                  {getStatusText(promotion)}
+                </div>
+              </div>
+            )}
+
             {/* Header */}
-            <div className="relative p-4 bg-gradient-to-r from-amber-100 to-amber-50">
+            <div className={`relative p-4 ${promotion.image_url ? 'bg-white' : 'bg-gradient-to-r from-amber-100 to-amber-50'}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-semibold text-stone-900 mb-1">{promotion.name_en}</h3>
                   <p className="text-sm text-stone-600">{promotion.name_th}</p>
                 </div>
-                <div
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(promotion)}`}
-                >
-                  {getStatusText(promotion)}
-                </div>
+                {!promotion.image_url && (
+                  <div
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(promotion)}`}
+                  >
+                    {getStatusText(promotion)}
+                  </div>
+                )}
               </div>
 
               {/* Promotion Code */}
-              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-white rounded-lg border border-amber-200">
-                <Tag className="w-4 h-4 text-amber-600" />
-                <span className="font-mono font-bold text-amber-700">{promotion.code}</span>
+              <div className="mt-3 flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-lg border border-amber-200">
+                  <Tag className="w-4 h-4 text-amber-600" />
+                  <span className="font-mono font-bold text-amber-700">{promotion.code}</span>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(promotion.code)}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-sm rounded-lg hover:bg-amber-200 transition"
+                  title="คัดลอกรหัสโปรโมชั่น"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
@@ -563,68 +587,48 @@ function Promotions() {
                 </div>
               )}
 
-              {/* Actions */}
-              <div className="flex gap-2 flex-wrap">
-                {/* Status Actions */}
-                {getStatusActions(promotion).map((action, index) => {
-                  const Icon = action.icon
-                  return (
-                    <button
-                      key={index}
-                      onClick={action.onClick}
-                      className={`flex items-center justify-center gap-1 px-3 py-2 text-sm rounded-lg transition ${action.className}`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {action.label}
-                    </button>
-                  )
-                })}
+              {/* Professional Action Buttons */}
+              <div className="mt-5 border-t border-gray-100 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  {/* Status Actions */}
+                  {getStatusActions(promotion).map((action, index) => {
+                    const Icon = action.icon
+                    return (
+                      <button
+                        key={index}
+                        onClick={action.onClick}
+                        className={`flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-lg transition ${action.className}`}
+                      >
+                        <Icon className="w-3 h-3" />
+                        <span>{action.label}</span>
+                      </button>
+                    )
+                  })}
 
-                {/* Copy Code */}
-                <button
-                  onClick={() => navigator.clipboard.writeText(promotion.code)}
-                  className="flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 text-sm rounded-lg hover:bg-blue-200 transition"
-                  title="คัดลอกรหัส"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
+                  <button
+                    onClick={() => openPreviewModal(promotion)}
+                    className="flex items-center gap-1 px-3 py-2 bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition"
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>พรีวิว</span>
+                  </button>
 
-                {/* Coupon Codes */}
-                <button
-                  onClick={() => openCouponModal(promotion)}
-                  className="flex items-center justify-center px-3 py-2 bg-amber-100 text-amber-700 text-sm rounded-lg hover:bg-amber-200 transition"
-                  title="จัดการคูปอง"
-                >
-                  <Tag className="w-4 h-4" />
-                </button>
+                  <button
+                    onClick={() => handleEdit(promotion)}
+                    className="flex items-center gap-1 px-3 py-2 bg-gray-100 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition"
+                  >
+                    <Edit className="w-3 h-3" />
+                    <span>แก้ไข</span>
+                  </button>
 
-                {/* View Reports */}
-                <button
-                  onClick={() => openReportsModal(promotion)}
-                  className="flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 text-sm rounded-lg hover:bg-purple-200 transition"
-                  title="ดูรายงาน"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                </button>
-
-                {/* Edit */}
-                <button
-                  onClick={() => handleEdit(promotion)}
-                  className="flex items-center justify-center gap-1 px-3 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition"
-                >
-                  <Edit className="w-4 h-4" />
-                  แก้ไข
-                </button>
-
-                {/* Delete */}
-                <button
-                  onClick={() => setDeleteConfirmId(promotion.id)}
-                  className="flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition"
-                  disabled={promotion.status === 'active'}
-                  title={promotion.status === 'active' ? 'ไม่สามารถลบโปรโมชั่นที่ใช้งานอยู่ได้' : 'ลบโปรโมชั่น'}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  <button
+                    onClick={() => setDeleteConfirmId(promotion.id)}
+                    className="flex items-center gap-1 px-3 py-2 bg-red-50 border border-red-200 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>ลบ</span>
+                  </button>
+                </div>
               </div>
 
               {/* Delete Confirmation */}
@@ -691,33 +695,17 @@ function Promotions() {
         editData={editingPromotion}
       />
 
-      {/* Coupon Codes Modal */}
-      {selectedPromotion && (
-        <CouponCodesModal
-          isOpen={couponModalOpen}
-          onClose={() => {
-            setCouponModalOpen(false)
-            if (!reportsModalOpen) setSelectedPromotion(null)
-          }}
-          promotionId={selectedPromotion.id}
-          promotionName={selectedPromotion.name_th}
-          promotionCode={selectedPromotion.code}
-        />
-      )}
 
-      {/* Reports Modal */}
-      {selectedPromotion && (
-        <PromotionReportsModal
-          isOpen={reportsModalOpen}
-          onClose={() => {
-            setReportsModalOpen(false)
-            if (!couponModalOpen) setSelectedPromotion(null)
-          }}
-          promotionId={selectedPromotion.id}
-          promotionName={selectedPromotion.name_th}
-          promotionCode={selectedPromotion.code}
-        />
-      )}
+
+      {/* Promotion Preview Modal */}
+      <PromotionPreview
+        isOpen={previewModalOpen}
+        onClose={() => {
+          setPreviewModalOpen(false)
+          setSelectedPromotion(null)
+        }}
+        promotion={selectedPromotion}
+      />
     </div>
   )
 }

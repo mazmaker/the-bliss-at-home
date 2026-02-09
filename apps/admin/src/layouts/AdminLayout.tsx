@@ -33,8 +33,8 @@ const navigation = [
   { name: 'แจ้งเตือน SOS', nameEn: 'SOS Alerts', href: '/admin/sos-alerts', icon: ShieldAlert },
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },
   { name: 'การจอง', nameEn: 'Bookings', href: '/admin/bookings', icon: Calendar },
+  { name: 'โปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'จัดการโปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'ตั้งค่า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
