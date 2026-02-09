@@ -56,6 +56,7 @@ function Services() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | undefined>()
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [softDeleteConfirm, setSoftDeleteConfirm] = useState<{id: string, hasBookings: boolean} | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
 
   // Fetch services from Supabase
@@ -103,20 +104,78 @@ function Services() {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
+      console.log('🗑️ Checking service for deletion:', id)
+
+      // Check if service has any bookings
+      const { data: bookings, error: bookingError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('service_id', id)
+        .limit(1)
+
+      if (bookingError) {
+        console.error('❌ Error checking bookings:', bookingError)
+        throw new Error('ไม่สามารถตรวจสอบการจองได้')
+      }
+
+      const hasBookings = bookings && bookings.length > 0
+
+      if (hasBookings) {
+        console.log('⚠️ Service has bookings, requesting confirmation for soft delete')
+        // Show confirmation popup for soft delete
+        setSoftDeleteConfirm({ id, hasBookings: true })
+        setDeleteConfirmId(null) // Hide normal delete confirmation
+      } else {
+        console.log('✅ No bookings found, proceeding with hard delete')
+        // Hard delete: no bookings exist
+        const { error: deleteError } = await supabase
+          .from('services')
+          .delete()
+          .eq('id', id)
+
+        if (deleteError) {
+          console.error('❌ Hard delete error:', deleteError)
+          throw deleteError
+        }
+
+        console.log('✅ Service deleted successfully')
+        setSuccessMessage('ลบบริการเรียบร้อยแล้ว')
+        fetchServices()
+        setDeleteConfirmId(null)
+      }
+    } catch (err) {
+      console.error('💥 Error handling service deletion:', err)
+      const errorMsg = err instanceof Error ? err.message : 'ไม่สามารถลบบริการได้'
+      setError(`การดำเนินการไม่สำเร็จ: ${errorMsg}`)
+      setDeleteConfirmId(null)
+    }
+  }
+
+  const handleConfirmSoftDelete = async () => {
+    if (!softDeleteConfirm) return
+
+    try {
+      console.log('✅ User confirmed soft delete, proceeding...')
+
+      const { error: updateError } = await supabase
         .from('services')
-        .delete()
-        .eq('id', id)
+        .update({ is_active: false })
+        .eq('id', softDeleteConfirm.id)
 
-      if (error) throw error
+      if (updateError) {
+        console.error('❌ Soft delete error:', updateError)
+        throw updateError
+      }
 
-      setSuccessMessage('ลบบริการเรียบร้อยแล้ว')
+      console.log('✅ Service deactivated successfully')
+      setSuccessMessage('บริการถูกปิดใช้งานแล้ว (มีการจองที่เกี่ยวข้อง)')
       fetchServices()
     } catch (err) {
-      console.error('Error deleting service:', err)
-      setError('ไม่สามารถลบบริการได้')
+      console.error('💥 Error in soft delete:', err)
+      const errorMsg = err instanceof Error ? err.message : 'ไม่สามารถปิดใช้งานบริการได้'
+      setError(`การปิดใช้งานไม่สำเร็จ: ${errorMsg}`)
     } finally {
-      setDeleteConfirmId(null)
+      setSoftDeleteConfirm(null)
     }
   }
 
@@ -448,6 +507,74 @@ function Services() {
               เพิ่มบริการแรก
             </button>
           )}
+        </div>
+      )}
+
+      {/* Soft Delete Confirmation Modal */}
+      {softDeleteConfirm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop */}
+          <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
+
+          {/* Modal */}
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    ไม่สามารถลบได้
+                  </h3>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="px-6 py-4">
+                <div className="mb-4">
+                  <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <AlertCircle className="w-8 h-8 text-orange-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-orange-800">มีการจองที่เกี่ยวข้อง</p>
+                      <p className="text-sm text-orange-700 mt-1">
+                        บริการนี้มีการจองที่ยังไม่เสร็จสิ้น ไม่สามารถลบออกจากระบบได้
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-sm text-gray-600">
+                  <p>คุณสามารถเลือกทำอย่างใดอย่างหนึ่ง:</p>
+                  <ul className="space-y-2 ml-4">
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 mt-0.5">•</span>
+                      <span><strong>ปิดใช้งาน:</strong> บริการจะหยุดรับการจองใหม่ แต่การจองเก่ายังทำงานต่อได้</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5">•</span>
+                      <span><strong>ยกเลิก:</strong> กลับไปแก้ไขหรือดำเนินการอื่น</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end">
+                <button
+                  onClick={() => setSoftDeleteConfirm(null)}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleConfirmSoftDelete}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition font-medium"
+                >
+                  ปิดใช้งานบริการ
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

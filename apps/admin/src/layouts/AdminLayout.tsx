@@ -22,6 +22,7 @@ import {
   Clock,
   MapPin,
   ArrowRight,
+  Tag,
 } from 'lucide-react'
 
 const navigation = [
@@ -29,11 +30,12 @@ const navigation = [
   { name: 'จัดการบริการ', nameEn: 'Services', href: '/admin/services', icon: Package },
   { name: 'พนักงาน', nameEn: 'Staff', href: '/admin/staff', icon: Users },
   { name: 'ลูกค้า', nameEn: 'Customers', href: '/admin/customers', icon: Users },
+  { name: 'โปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: Tag },
   { name: 'แจ้งเตือน SOS', nameEn: 'SOS Alerts', href: '/admin/sos-alerts', icon: ShieldAlert },
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },
   { name: 'การจอง', nameEn: 'Bookings', href: '/admin/bookings', icon: Calendar },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'ตั้งค่า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'ตั้งค้า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 function AdminLayout() {

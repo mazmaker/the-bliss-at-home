@@ -114,6 +114,46 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
   const nameEn = watch('name_en')
   const staffCommissionRate = watch('staff_commission_rate')
 
+  // Load form data when editing
+  useEffect(() => {
+    if (editData && isOpen) {
+      console.log('🔄 Loading edit data:', editData)
+      // Reset form with edit data
+      reset({
+        name_th: editData.name_th || '',
+        name_en: editData.name_en || '',
+        slug: editData.slug || '',
+        description_th: editData.description_th || '',
+        description_en: editData.description_en || '',
+        category: editData.category || undefined,
+        duration: editData.duration || undefined,
+        base_price: editData.base_price || undefined,
+        hotel_price: editData.hotel_price || undefined,
+        staff_commission_rate: editData.staff_commission_rate || 25.00,
+        image_url: editData.image_url || '',
+        is_active: editData.is_active !== undefined ? editData.is_active : true,
+        sort_order: editData.sort_order || 0,
+      })
+    } else if (!editData && isOpen) {
+      // Reset form for new service
+      reset({
+        name_th: '',
+        name_en: '',
+        slug: '',
+        description_th: '',
+        description_en: '',
+        category: undefined,
+        duration: undefined,
+        base_price: undefined,
+        hotel_price: undefined,
+        staff_commission_rate: 25.00,
+        image_url: '',
+        is_active: true,
+        sort_order: 0,
+      })
+    }
+  }, [editData, isOpen, reset])
+
   // Auto-generate slug when name_en changes
   useEffect(() => {
     if (nameEn && !editData) {
