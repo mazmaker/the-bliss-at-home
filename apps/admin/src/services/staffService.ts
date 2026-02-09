@@ -1,4 +1,4 @@
-import { supabase } from '@bliss/supabase'
+import { supabase } from '../lib/supabase'
 
 // Check if we're in mock mode
 const isMockMode = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
