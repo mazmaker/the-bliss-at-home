@@ -213,13 +213,10 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         slug: data.slug || generateSlug(data.name_en),
         image_url: data.image_url || null,
         sort_order: data.sort_order || 0,
-        // Backward compatibility: set primary duration as the first selected option
-        duration: data.duration_options[0],
-        // Remove duration_options from submission until migration is applied
+        // Keep both duration_options and duration for compatibility
+        duration: data.duration_options[0], // Primary duration for backward compatibility
+        duration_options: data.duration_options, // New multiple options
       }
-
-      // Remove the duration_options field since column doesn't exist yet
-      delete cleanData.duration_options
 
       console.log('📝 Submitting service data:', cleanData)
 

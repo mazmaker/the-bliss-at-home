@@ -61,6 +61,7 @@ export interface Service {
   description_en?: string
   category: 'massage' | 'nail' | 'spa'
   duration: number
+  duration_options?: number[] // New multiple duration options
   base_price: number
   hotel_price: number
   image_url?: string
@@ -77,6 +78,7 @@ export interface CreateServiceData {
   description_en?: string
   category: 'massage' | 'nail' | 'spa'
   duration: number
+  duration_options?: number[] // New multiple duration options
   base_price: number
   hotel_price: number
   image_url?: string

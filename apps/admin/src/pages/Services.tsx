@@ -27,6 +27,7 @@ interface Service {
   description_en?: string
   category: 'massage' | 'nail' | 'spa'
   duration: number
+  duration_options?: number[] // New multiple duration options
   base_price: number
   hotel_price: number
   staff_commission_rate: number
