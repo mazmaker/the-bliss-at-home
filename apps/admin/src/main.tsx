@@ -21,7 +21,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   // Temporarily disable Strict Mode to test focus loss issue
   // <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_relativeSplatPath: true,
+        }}
+      >
         <App />
         <Toaster
           position="top-right"
