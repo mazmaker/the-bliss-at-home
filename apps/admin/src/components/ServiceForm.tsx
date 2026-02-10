@@ -14,7 +14,6 @@ import {
   Sparkles,
   Hand,
   Flower2,
-  Palette,
   AlertCircle,
   CheckCircle,
   TrendingUp,
@@ -27,7 +26,7 @@ const serviceFormSchema = z.object({
   slug: z.string().optional(),
   description_th: z.string().optional(),
   description_en: z.string().optional(),
-  category: z.enum(['massage', 'nail', 'spa', 'facial'], {
+  category: z.enum(['massage', 'nail', 'spa'], {
     required_error: 'กรุณาเลือกประเภทบริการ',
   }),
   duration_options: z.array(z.enum(['60', '90', '120'])).min(1, 'กรุณาเลือกระยะเวลาอย่างน้อย 1 ตัวเลือก').transform((arr) => arr.map(val => parseInt(val, 10))),
@@ -61,7 +60,6 @@ const categories = [
   { id: 'massage', name: 'นวด', nameEn: 'Massage', icon: Sparkles, color: 'purple' },
   { id: 'nail', name: 'เล็บ', nameEn: 'Nail', icon: Hand, color: 'pink' },
   { id: 'spa', name: 'สปา', nameEn: 'Spa', icon: Flower2, color: 'blue' },
-  { id: 'facial', name: 'เฟเชียล', nameEn: 'Facial', icon: Palette, color: 'green' },
 ]
 
 const durationOptions = [

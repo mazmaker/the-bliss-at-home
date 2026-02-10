@@ -37,7 +37,7 @@ interface ServiceFormData {
   name_en: string
   description_th: string
   description_en: string
-  category: 'massage' | 'nail' | 'spa' | 'facial'
+  category: 'massage' | 'nail' | 'spa'
   duration: number
   base_price: number
   hotel_price: number
@@ -85,7 +85,6 @@ const categories = [
   { id: 'massage', name: 'นวด', nameEn: 'Massage', icon: Sparkles },
   { id: 'nail', name: 'เล็บ', nameEn: 'Nail', icon: Hand },
   { id: 'spa', name: 'สปา', nameEn: 'Spa', icon: Flower2 },
-  { id: 'facial', name: 'ผิวหน้า', nameEn: 'Facial', icon: Zap },
 ]
 
 const skillLevels = [

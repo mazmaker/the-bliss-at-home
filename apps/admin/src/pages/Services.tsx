@@ -12,7 +12,6 @@ import {
   Sparkles,
   Hand,
   Flower2,
-  Palette,
   RefreshCw,
   AlertCircle,
   CheckCircle,
@@ -26,7 +25,7 @@ interface Service {
   name_en: string
   description_th?: string
   description_en?: string
-  category: 'massage' | 'nail' | 'spa' | 'facial'
+  category: 'massage' | 'nail' | 'spa'
   duration: number
   base_price: number
   hotel_price: number
@@ -44,7 +43,6 @@ const categories = [
   { id: 'massage', name: 'นวด', icon: Sparkles },
   { id: 'nail', name: 'เล็บ', icon: Hand },
   { id: 'spa', name: 'สปา', icon: Flower2 },
-  { id: 'facial', name: 'เฟเชียล', icon: Palette },
 ]
 
 function Services() {
@@ -364,7 +362,6 @@ function Services() {
                   {service.category === 'massage' && <Sparkles className="w-16 h-16 text-amber-600" />}
                   {service.category === 'nail' && <Hand className="w-16 h-16 text-amber-600" />}
                   {service.category === 'spa' && <Flower2 className="w-16 h-16 text-amber-600" />}
-                  {service.category === 'facial' && <Palette className="w-16 h-16 text-amber-600" />}
                 </div>
               )}
               <div

@@ -59,7 +59,7 @@ export interface Service {
   name_en: string
   description_th?: string
   description_en?: string
-  category: 'massage' | 'nail' | 'spa' | 'facial'
+  category: 'massage' | 'nail' | 'spa'
   duration: number
   base_price: number
   hotel_price: number
@@ -75,7 +75,7 @@ export interface CreateServiceData {
   name_en: string
   description_th?: string
   description_en?: string
-  category: 'massage' | 'nail' | 'spa' | 'facial'
+  category: 'massage' | 'nail' | 'spa'
   duration: number
   base_price: number
   hotel_price: number
@@ -272,7 +272,6 @@ export async function getServiceStats() {
       massage: data.filter(s => s.category === 'massage').length,
       nail: data.filter(s => s.category === 'nail').length,
       spa: data.filter(s => s.category === 'spa').length,
-      facial: data.filter(s => s.category === 'facial').length,
     }
   }
 

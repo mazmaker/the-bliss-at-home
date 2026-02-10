@@ -1331,7 +1331,7 @@ export type Database = {
         | "cancelled"
       hotel_status: "active" | "inactive" | "pending"
       payment_status: "pending" | "processing" | "paid" | "failed" | "refunded"
-      service_category: "massage" | "nail" | "spa" | "facial"
+      service_category: "massage" | "nail" | "spa"
       skill_level: "beginner" | "intermediate" | "advanced" | "expert"
       staff_status: "active" | "inactive" | "pending"
       user_role: "ADMIN" | "CUSTOMER" | "HOTEL" | "STAFF"
@@ -1472,7 +1472,7 @@ export const Constants = {
       ],
       hotel_status: ["active", "inactive", "pending"],
       payment_status: ["pending", "processing", "paid", "failed", "refunded"],
-      service_category: ["massage", "nail", "spa", "facial"],
+      service_category: ["massage", "nail", "spa"],
       skill_level: ["beginner", "intermediate", "advanced", "expert"],
       staff_status: ["active", "inactive", "pending"],
       user_role: ["ADMIN", "CUSTOMER", "HOTEL", "STAFF"],

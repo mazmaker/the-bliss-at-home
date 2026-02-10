@@ -63,7 +63,6 @@ const categories = [
   { id: 'massage', name: 'นวด' },
   { id: 'nail', name: 'เล็บ' },
   { id: 'spa', name: 'สปา' },
-  { id: 'facial', name: 'เฟเชียล' },
 ]
 
 export function PromotionForm({ isOpen, onClose, onSuccess, editData }: PromotionFormProps) {
