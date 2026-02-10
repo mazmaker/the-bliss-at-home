@@ -120,15 +120,19 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
     if (editData && isOpen) {
       console.log('🔄 Loading edit data:', editData)
 
-      // Convert single duration to array format
+      // Convert single duration to array format for multiple selection
       let durationOptionsArray = ['60'] // default
-      if (editData.duration_options) {
-        durationOptionsArray = editData.duration_options
+      if (editData.duration_options && Array.isArray(editData.duration_options)) {
+        // If duration_options exists (when migration is applied)
+        durationOptionsArray = editData.duration_options.map(d => d.toString())
       } else if (editData.duration) {
+        // Convert single duration to array format (current database structure)
         durationOptionsArray = [editData.duration.toString()]
       }
 
       console.log('📋 Duration options array:', durationOptionsArray)
+      console.log('🔄 Original duration:', editData.duration)
+      console.log('🔄 Original duration_options:', editData.duration_options)
 
       // Reset form with edit data
       reset({
@@ -415,6 +419,21 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 <Clock className="w-4 h-4 inline mr-1" />
                 ระยะเวลาบริการ (เลือกได้หลายตัวเลือก)
               </label>
+
+              {/* Show current saved duration if editing */}
+              {editData && (
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 font-medium mb-1">
+                    📋 ระยะเวลาปัจจุบันที่บันทึกไว้:
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {editData.duration} นาที
+                    {editData.duration_options && Array.isArray(editData.duration_options)
+                      ? ` (ตัวเลือก: ${editData.duration_options.join(', ')} นาที)`
+                      : ' (ระบบเก่า: ใช้ระยะเวลาเดียว)'}
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {durationOptions.map((option) => {
                   const currentOptions = watch('duration_options') || []
@@ -467,6 +486,15 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               <p className="mt-2 text-xs text-gray-500">
                 💡 เลือกตัวเลือกระยะเวลาที่ต้องการให้บริการ (สามารถเลือกได้หลายตัวเลือก)
               </p>
+
+              {/* Debug info for current selections */}
+              {editData && (
+                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
+                  <p className="text-gray-600">
+                    🔍 Debug: ตัวเลือกที่เลือกอยู่ = {JSON.stringify(watch('duration_options') || [])}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Pricing */}
