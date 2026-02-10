@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, ZoomIn, ZoomOut, RotateCw, Download, Check, XCircle as XIcon } from 'lucide-react'
 import { useUpdateDocumentStatus, useDownloadDocument } from '../hooks/useStaffDocuments'
+import { useAdminAuth } from '../hooks/useAdminAuth'
 import type { StaffDocument } from '../services/staffDocumentService'
 
 interface DocumentViewerModalProps {
@@ -15,6 +16,7 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
 
+  const { user: adminUser } = useAdminAuth()
   const updateStatusMutation = useUpdateDocumentStatus()
   const downloadMutation = useDownloadDocument()
 
@@ -32,10 +34,15 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
   }
 
   const handleApprove = async () => {
+    if (!adminUser?.id) {
+      alert('ไม่พบข้อมูลผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่')
+      return
+    }
+
     await updateStatusMutation.mutateAsync({
       documentId: document.id,
       updates: { verification_status: 'verified' },
-      adminId: 'current-admin-id', // TODO: Get from auth context
+      adminId: adminUser.id,
     })
     onClose()
   }
@@ -46,13 +53,18 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
       return
     }
 
+    if (!adminUser?.id) {
+      alert('ไม่พบข้อมูลผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่')
+      return
+    }
+
     await updateStatusMutation.mutateAsync({
       documentId: document.id,
       updates: {
         verification_status: 'rejected',
         rejection_reason: rejectionReason,
       },
-      adminId: 'current-admin-id', // TODO: Get from auth context
+      adminId: adminUser.id,
     })
     setShowRejectModal(false)
     setRejectionReason('')

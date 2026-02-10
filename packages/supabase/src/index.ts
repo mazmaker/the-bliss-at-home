@@ -9,6 +9,21 @@ export * from './auth'
 // Payment module
 export * from './payment'
 
+// Jobs module
+export * from './jobs'
+
+// Earnings module
+export * from './earnings'
+
+// Staff module
+export * from './staff'
+
+// Services module
+export * from './services'
+
+// Hooks module
+export * from './hooks'
+
 // Client
 export { createSupabaseClient, createSupabaseAdminClient, getBrowserClient } from './client'
 

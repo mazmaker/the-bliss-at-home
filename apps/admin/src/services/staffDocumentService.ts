@@ -1,4 +1,4 @@
-import { supabase } from '@bliss/supabase'
+import { supabase } from '../lib/supabase'
 import { lineMessagingService } from '@bliss/supabase/notifications/lineMessagingService'
 
 export type DocumentType = 'id_card' | 'license' | 'certificate' | 'bank_statement' | 'other'

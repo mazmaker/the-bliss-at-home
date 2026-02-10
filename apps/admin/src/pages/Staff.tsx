@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus,
@@ -24,6 +24,7 @@ import {
 import { useStaff, useStaffStats, useUpdateStaffStatus } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
 import AddStaffModal from '../components/AddStaffModal'
+import SearchInput from '../components/SearchInput'
 
 const skills = [
   { id: 'all', name: 'ทั้งหมด', icon: Filter },
@@ -39,16 +40,20 @@ function StaffPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'suspended'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
 
+  // Memoize filters to prevent unnecessary re-renders
+  const filters = useMemo(() => ({
+    status: statusFilter,
+    search: searchQuery,
+  }), [statusFilter, searchQuery])
+
   // Real data from database
   const {
     data: staffData,
     isLoading: staffLoading,
     error: staffError,
     refetch: refetchStaff,
-  } = useStaff({
-    status: statusFilter,
-    search: searchQuery,
-  })
+    isFetching: staffFetching,
+  } = useStaff(filters)
 
   const {
     data: statsData,
@@ -66,14 +71,30 @@ function StaffPage() {
     }
   }
 
-  // Filter staff by skills
-  const filteredStaff = staffData?.filter((staff) => {
-    const hasSkill = selectedSkill === 'all' || staff.skills?.some(skill =>
-      skill.skill?.name_en?.toLowerCase() === selectedSkill ||
-      skill.skill?.name_th?.includes(selectedSkill)
-    )
-    return hasSkill
-  }) || []
+  // Filter staff by skills (memoized to prevent unnecessary re-renders)
+  const filteredStaff = useMemo(() => {
+    // Map skill button IDs to skill name patterns
+    const skillNameMap: Record<string, string[]> = {
+      'massage': ['massage', 'นวด', 'Thai Massage'],
+      'nail': ['nail', 'เล็บ', 'Nail Art'],
+      'spa': ['spa', 'สปา', 'Spa Treatment']
+    }
+
+    return staffData?.filter((staff) => {
+      if (selectedSkill === 'all') return true
+
+      return staff.skills?.some(skill => {
+        const namePatterns = skillNameMap[selectedSkill] || []
+        const skillNameTh = skill.skill?.name_th?.toLowerCase() || ''
+        const skillNameEn = skill.skill?.name_en?.toLowerCase() || ''
+
+        return namePatterns.some(pattern =>
+          skillNameTh.includes(pattern.toLowerCase()) ||
+          skillNameEn.includes(pattern.toLowerCase())
+        )
+      })
+    }) || []
+  }, [staffData, selectedSkill])
 
   const getStatusBadge = (status: Staff['status']) => {
     const badges = {
@@ -99,8 +120,8 @@ function StaffPage() {
     return skill.skill?.name_th || skill.skill?.name_en || 'Unknown'
   }
 
-  // Loading state
-  if (staffLoading || statsLoading) {
+  // Initial loading state (only show spinner if there's no data yet)
+  if ((staffLoading && !staffData) || (statsLoading && !statsData)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -214,16 +235,10 @@ function StaffPage() {
       <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-            <input
-              type="text"
-              placeholder="ค้นหาชื่อ, โทรศัพท์..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
-            />
-          </div>
+          <SearchInput
+            onDebouncedChange={setSearchQuery}
+            placeholder="ค้นหาชื่อ, โทรศัพท์..."
+          />
 
           {/* Skills */}
           <div className="flex flex-wrap gap-2">

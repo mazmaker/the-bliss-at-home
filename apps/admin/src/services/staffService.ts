@@ -1,4 +1,4 @@
-import { supabase } from '@bliss/supabase'
+import { supabase } from '../lib/supabase'
 
 // Check if we're in mock mode
 const isMockMode = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
@@ -169,6 +169,42 @@ export interface CreateStaffData {
   skills?: string[] // skill IDs
 }
 
+// Helper function to map friendly skill IDs to database UUIDs
+async function mapSkillIdsToUUIDs(friendlySkillIds: string[]): Promise<string[]> {
+  const skillMapping: Record<string, string> = {
+    'massage': 'Thai Massage',
+    'nail': 'Manicure',
+    'spa': 'Spa Treatment'
+  }
+
+  const searchNames = friendlySkillIds.map(id => skillMapping[id]).filter(Boolean)
+
+  if (searchNames.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('skills')
+    .select('id, name_en')
+    .in('name_en', searchNames)
+
+  if (error) {
+    console.error('Error fetching skills:', error)
+    return []
+  }
+
+  // Map back to the order of friendly IDs
+  const uuidMap: Record<string, string> = {}
+  data?.forEach(skill => {
+    const friendlyId = Object.keys(skillMapping).find(
+      key => skillMapping[key] === skill.name_en
+    )
+    if (friendlyId) {
+      uuidMap[friendlyId] = skill.id
+    }
+  })
+
+  return friendlySkillIds.map(id => uuidMap[id]).filter(Boolean)
+}
+
 export const staffService = {
   // Get all staff with filters
   async getAllStaff(filters?: {
@@ -313,18 +349,23 @@ export const staffService = {
 
     // Add skills if provided
     if (staffData.skills && staffData.skills.length > 0 && data) {
-      const skillsData = staffData.skills.map(skillId => ({
-        staff_id: data.id,
-        skill_id: skillId,
-        level: 'intermediate' as const,
-        years_experience: 0
-      }))
+      // Map friendly skill IDs to database UUIDs
+      const skillUUIDs = await mapSkillIdsToUUIDs(staffData.skills)
 
-      const { error: skillsError } = await supabase
-        .from('staff_skills')
-        .insert(skillsData)
+      if (skillUUIDs.length > 0) {
+        const skillsData = skillUUIDs.map(skillId => ({
+          staff_id: data.id,
+          skill_id: skillId,
+          level: 'intermediate' as const,
+          years_experience: 0
+        }))
 
-      if (skillsError) throw skillsError
+        const { error: skillsError } = await supabase
+          .from('staff_skills')
+          .insert(skillsData)
+
+        if (skillsError) throw skillsError
+      }
     }
 
     return data
@@ -373,10 +414,14 @@ export const staffService = {
       return mockStaffData[staffIndex]
     }
 
+    // Extract skills from updates (skills should be handled separately)
+    const { skills, ...staffUpdates } = updates
+
+    // Update basic staff information (excluding skills)
     const { data, error } = await supabase
       .from('staff')
       .update({
-        ...updates,
+        ...staffUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -384,6 +429,39 @@ export const staffService = {
       .single()
 
     if (error) throw error
+
+    // Update skills if provided
+    if (skills !== undefined) {
+      // Delete existing skills
+      const { error: deleteError } = await supabase
+        .from('staff_skills')
+        .delete()
+        .eq('staff_id', id)
+
+      if (deleteError) throw deleteError
+
+      // Insert new skills if any
+      if (skills.length > 0) {
+        // Map friendly skill IDs to database UUIDs
+        const skillUUIDs = await mapSkillIdsToUUIDs(skills)
+
+        if (skillUUIDs.length > 0) {
+          const skillsData = skillUUIDs.map(skillId => ({
+            staff_id: id,
+            skill_id: skillId,
+            level: 'intermediate' as const,
+            years_experience: 0
+          }))
+
+          const { error: skillsError } = await supabase
+            .from('staff_skills')
+            .insert(skillsData)
+
+          if (skillsError) throw skillsError
+        }
+      }
+    }
+
     return data
   },
 
@@ -442,8 +520,8 @@ export const staffService = {
 
     if (isMockMode) {
       await delay(1000)
-      // Generate mock LINE LIFF link
-      const token = btoa(JSON.stringify(inviteData))
+      // Generate mock LINE LIFF link with Unicode-safe base64 encoding
+      const token = btoa(unescape(encodeURIComponent(JSON.stringify(inviteData))))
       const mockLiffUrl = `http://localhost:3004/staff/register?token=${token}`
 
       return {
@@ -453,8 +531,8 @@ export const staffService = {
       }
     }
 
-    // Generate LINE LIFF link that opens Staff app with invitation token
-    const token = btoa(JSON.stringify(inviteData))
+    // Generate LINE LIFF link that opens Staff app with invitation token (Unicode-safe)
+    const token = btoa(unescape(encodeURIComponent(JSON.stringify(inviteData))))
     const liffUrl = `${import.meta.env.VITE_LINE_LIFF_URL || 'https://liff.line.me/YOUR_LIFF_ID'}/staff/register?token=${token}`
 
     return {

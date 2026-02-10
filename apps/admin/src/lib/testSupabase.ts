@@ -1,13 +1,12 @@
 /**
  * Test Supabase Connection
  */
-import { getBrowserClient } from '@bliss/supabase'
+import { supabase } from './supabase'
 
 export async function testSupabaseConnection() {
   console.log('🔍 Testing Supabase connection...')
 
   try {
-    const supabase = getBrowserClient()
 
     // Test 1: Simple query
     console.log('📊 Test 1: Query profiles table...')

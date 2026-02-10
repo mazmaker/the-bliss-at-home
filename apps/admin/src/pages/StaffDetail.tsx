@@ -28,6 +28,7 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { useStaffDetail } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
 import {
@@ -37,9 +38,33 @@ import {
   useDeleteDocument,
   useDownloadDocument,
 } from '../hooks/useStaffDocuments'
+import {
+  useStaffEarningsSummary,
+  useStaffPayouts,
+} from '../hooks/useStaffEarnings'
+import {
+  useStaffJobs,
+  useStaffJobsStats,
+} from '../hooks/useStaffJobs'
+import {
+  useStaffPerformanceMetrics,
+  useCurrentMonthPerformance,
+  usePlatformAverages,
+  calculateTrend,
+  formatMonthThai,
+  generateRecommendations,
+} from '../hooks/useStaffPerformance'
 import { DocumentViewerModal } from '../components/DocumentViewerModal'
 import { UploadDocumentModal } from '../components/UploadDocumentModal'
+import { PayoutDetailModal } from '../components/PayoutDetailModal'
+import { ProcessPayoutModal } from '../components/ProcessPayoutModal'
+import { PayoutCalculationModal } from '../components/PayoutCalculationModal'
+import { EditBankModal } from '../components/EditBankModal'
+import { StatusManagementModal } from '../components/StatusManagementModal'
+import { JobDetailModal } from '../components/JobDetailModal'
+import EditStaffModal from '../components/EditStaffModal'
 import { useAdminAuth } from '../hooks/useAdminAuth'
+import { ReviewsTabContent } from '../components/ReviewsTabContent'
 
 type TabType = 'overview' | 'documents' | 'schedule' | 'performance' | 'reviews' | 'earnings'
 
@@ -51,6 +76,7 @@ function StaffDetail() {
   console.log('🟢 adminAuth.user:', adminAuth?.user)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [showStatusModal, setShowStatusModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   const {
     data: staff,
@@ -155,7 +181,10 @@ function StaffDetail() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition flex items-center gap-2">
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition flex items-center gap-2"
+              >
                 <Edit className="w-4 h-4" />
                 แก้ไขข้อมูล
               </button>
@@ -256,6 +285,23 @@ function StaffDetail() {
           {activeTab === 'earnings' && <EarningsTab staff={staff} />}
         </div>
       </div>
+
+      {/* Status Management Modal */}
+      {showStatusModal && (
+        <StatusManagementModal
+          staff={staff}
+          onClose={() => setShowStatusModal(false)}
+        />
+      )}
+
+      {/* Edit Staff Modal */}
+      {showEditModal && (
+        <EditStaffModal
+          staff={staff}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   )
 }
@@ -665,11 +711,217 @@ function DocumentsTab({ staff }: { staff: Staff }) {
 
 // Schedule Tab Component
 function ScheduleTab({ staff }: { staff: Staff }) {
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month' | 'all'>('week')
+  const [selectedJob, setSelectedJob] = useState<any>(null)
+  const [showJobModal, setShowJobModal] = useState(false)
+
+  // Calculate date range based on selected period
+  const getDateRange = () => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    switch (selectedPeriod) {
+      case 'today':
+        return {
+          dateFrom: today.toISOString().split('T')[0],
+          dateTo: today.toISOString().split('T')[0],
+        }
+      case 'week': {
+        const weekAgo = new Date(today)
+        weekAgo.setDate(today.getDate() - 7)
+        return {
+          dateFrom: weekAgo.toISOString().split('T')[0],
+          dateTo: undefined,
+        }
+      }
+      case 'month': {
+        const monthAgo = new Date(today)
+        monthAgo.setMonth(today.getMonth() - 1)
+        return {
+          dateFrom: monthAgo.toISOString().split('T')[0],
+          dateTo: undefined,
+        }
+      }
+      default:
+        return {}
+    }
+  }
+
+  const dateRange = getDateRange()
+
+  const { data: jobs, isLoading } = useStaffJobs(staff.id, {
+    status: selectedStatus,
+    ...dateRange,
+  })
+
+  const { data: stats } = useStaffJobsStats(staff.id)
+
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { bg: string; text: string; label: string; icon: any }> = {
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'รอยืนยัน', icon: Clock },
+      confirmed: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'ยืนยันแล้ว', icon: CheckCircle },
+      in_progress: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'กำลังดำเนินการ', icon: Clock },
+      completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'เสร็จสิ้น', icon: CheckCircle },
+      cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'ยกเลิก', icon: XCircle },
+    }
+    const badge = badges[status] || badges.pending
+    const Icon = badge.icon
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
+        <Icon className="w-3 h-3" />
+        {badge.label}
+      </span>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+        <span className="ml-2 text-stone-500">กำลังโหลดข้อมูล...</span>
+      </div>
+    )
+  }
+
   return (
-    <div className="text-center py-12">
-      <Calendar className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-      <p className="text-stone-500">ตารางงานจะแสดงที่นี่</p>
-      <p className="text-sm text-stone-400 mt-2">กำลังพัฒนาฟีเจอร์นี้</p>
+    <div className="space-y-6">
+      {/* Stats Summary */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="bg-stone-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-stone-900">{stats.total}</p>
+            <p className="text-xs text-stone-500">ทั้งหมด</p>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
+            <p className="text-xs text-yellow-600">รอยืนยัน</p>
+          </div>
+          <div className="bg-blue-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-blue-900">{stats.confirmed}</p>
+            <p className="text-xs text-blue-600">ยืนยันแล้ว</p>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-purple-900">{stats.in_progress}</p>
+            <p className="text-xs text-purple-600">กำลังดำเนินการ</p>
+          </div>
+          <div className="bg-green-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-green-900">{stats.completed}</p>
+            <p className="text-xs text-green-600">เสร็จสิ้น</p>
+          </div>
+          <div className="bg-red-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-red-900">{stats.cancelled}</p>
+            <p className="text-xs text-red-600">ยกเลิก</p>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div>
+          <label className="text-sm font-medium text-stone-700 mr-2">ช่วงเวลา:</label>
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value as any)}
+            className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="today">วันนี้</option>
+            <option value="week">7 วันที่ผ่านมา</option>
+            <option value="month">30 วันที่ผ่านมา</option>
+            <option value="all">ทั้งหมด</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-stone-700 mr-2">สถานะ:</label>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="all">ทั้งหมด</option>
+            <option value="pending">รอยืนยัน</option>
+            <option value="confirmed">ยืนยันแล้ว</option>
+            <option value="in_progress">กำลังดำเนินการ</option>
+            <option value="completed">เสร็จสิ้น</option>
+            <option value="cancelled">ยกเลิก</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Jobs List */}
+      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+        {jobs && jobs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-200">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เวลา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">บริการ</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานที่</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ราคา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job) => (
+                  <tr
+                    key={job.id}
+                    onClick={() => {
+                      setSelectedJob(job)
+                      setShowJobModal(true)
+                    }}
+                    className="border-b border-stone-100 hover:bg-blue-50 cursor-pointer transition-colors"
+                  >
+                    <td className="py-3 px-4 text-sm text-stone-900">
+                      {new Date(job.scheduled_date).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-stone-900">{job.scheduled_time}</td>
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium text-stone-900">{job.service_name}</p>
+                        {job.notes && (
+                          <p className="text-xs text-stone-500 mt-1">{job.notes}</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-stone-900">{job.customer_name}</td>
+                    <td className="py-3 px-4">
+                      <p className="text-sm text-stone-600 max-w-xs truncate">{job.address}</p>
+                    </td>
+                    <td className="py-3 px-4 text-sm font-medium text-amber-700">
+                      ฿{job.amount.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4">{getStatusBadge(job.status)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Calendar className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+            <p className="text-stone-500">ไม่พบงานในช่วงเวลาที่เลือก</p>
+            <p className="text-sm text-stone-400 mt-2">ลองเปลี่ยนตัวกรองเพื่อดูงานอื่นๆ</p>
+          </div>
+        )}
+      </div>
+
+      {/* Job Detail Modal */}
+      {showJobModal && selectedJob && (
+        <JobDetailModal
+          job={selectedJob}
+          onClose={() => {
+            setShowJobModal(false)
+            setSelectedJob(null)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -678,42 +930,64 @@ function ScheduleTab({ staff }: { staff: Staff }) {
 function PerformanceTab({ staff }: { staff: Staff }) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
 
-  // Mock performance data
-  const completionRate = ((staff.completed_jobs || 0) / (staff.total_jobs || 1) * 100).toFixed(1)
-  const responseRate = 95.5
-  const cancelRate = 2.3
-  const customerSatisfaction = 4.7
-  const performanceScore = 92
-
-  // Mock performance history (last 6 months)
-  const performanceHistory = [
-    { month: 'ก.ย. 67', completion: 94, response: 96, cancel: 3.1, rating: 4.6 },
-    { month: 'ต.ค. 67', completion: 92, response: 94, cancel: 3.8, rating: 4.5 },
-    { month: 'พ.ย. 67', completion: 96, response: 97, cancel: 2.1, rating: 4.8 },
-    { month: 'ธ.ค. 67', completion: 93, response: 95, cancel: 2.8, rating: 4.6 },
-    { month: 'ม.ค. 68', completion: 95, response: 96, cancel: 2.5, rating: 4.7 },
-    { month: 'ก.พ. 68', completion: parseFloat(completionRate), response: responseRate, cancel: cancelRate, rating: staff.rating },
-  ]
-
-  // Mock comparison data (average of all staff)
-  const platformAverage = {
-    completion: 88.5,
-    response: 89.2,
-    cancel: 5.8,
-    rating: 4.3,
+  // Map period to number of months
+  const getMonthsFromPeriod = (period: 'week' | 'month' | 'quarter' | 'year') => {
+    switch (period) {
+      case 'week':
+        return 2 // Show 2 months
+      case 'month':
+        return 6 // Show 6 months (default)
+      case 'quarter':
+        return 3 // Show 3 months
+      case 'year':
+        return 12 // Show 12 months
+      default:
+        return 6
+    }
   }
 
-  // Calculate performance trend
-  const getTrend = (current: number, previous: number) => {
-    const diff = current - previous
-    if (diff > 0) return { direction: 'up' as const, value: Math.abs(diff).toFixed(1), color: 'text-green-600' }
-    if (diff < 0) return { direction: 'down' as const, value: Math.abs(diff).toFixed(1), color: 'text-red-600' }
-    return { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const months = getMonthsFromPeriod(selectedPeriod)
+
+  // Fetch real performance data
+  const { data: performanceHistory = [], isLoading: historyLoading } = useStaffPerformanceMetrics(staff.id, months)
+  const { data: currentMetrics, isLoading: currentLoading } = useCurrentMonthPerformance(staff.id)
+  const { data: platformAverage } = usePlatformAverages()
+
+  // Show loading state
+  if (historyLoading || currentLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+      </div>
+    )
   }
 
-  const completionTrend = getTrend(parseFloat(completionRate), performanceHistory[4].completion)
-  const responseTrend = getTrend(responseRate, performanceHistory[4].response)
-  const cancelTrend = getTrend(cancelRate, performanceHistory[4].cancel)
+  // Use current metrics or fallback to latest history
+  const current = currentMetrics || performanceHistory[performanceHistory.length - 1]
+
+  // Extract current values
+  const completionRate = current?.completion_rate?.toFixed(1) || '0.0'
+  const responseRate = current?.response_rate || 0
+  const cancelRate = current?.cancel_rate || 0
+  const customerSatisfaction = current?.avg_rating || 0
+  const performanceScore = current?.performance_score || 0
+
+  // Calculate trends (compare with previous month)
+  const previous = performanceHistory.length >= 2 ? performanceHistory[performanceHistory.length - 2] : null
+  const completionTrend = previous ? calculateTrend(parseFloat(completionRate), previous.completion_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const responseTrend = previous ? calculateTrend(responseRate, previous.response_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const cancelTrend = previous ? calculateTrend(cancelRate, previous.cancel_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+
+  // Safe platform average with fallback
+  const platformAverageData = platformAverage || {
+    avg_completion_rate: 88.5,
+    avg_response_rate: 89.2,
+    avg_cancel_rate: 5.8,
+    avg_rating: 4.3,
+  }
+
+  // Generate recommendations
+  const recommendations = generateRecommendations(current || null, performanceHistory, platformAverageData)
 
   return (
     <div className="space-y-6">
@@ -753,7 +1027,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.completion}%</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_completion_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -772,7 +1046,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.response}%</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_response_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -791,7 +1065,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.cancel}%</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_cancel_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -810,7 +1084,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="mt-3 pt-3 border-t border-stone-100">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverage.rating.toFixed(1)}</span>
+              <span className="font-medium text-stone-700">{platformAverageData.avg_rating.toFixed(1)}</span>
             </div>
           </div>
         </div>
@@ -825,64 +1099,70 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             onChange={(e) => setSelectedPeriod(e.target.value as any)}
             className="px-3 py-2 bg-stone-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
           >
-            <option value="week">7 วันที่ผ่านมา</option>
-            <option value="month">30 วันที่ผ่านมา</option>
+            <option value="week">2 เดือนล่าสุด</option>
+            <option value="month">6 เดือนที่ผ่านมา</option>
             <option value="quarter">3 เดือนที่ผ่านมา</option>
-            <option value="year">1 ปีที่ผ่านมา</option>
+            <option value="year">12 เดือนที่ผ่านมา</option>
           </select>
         </div>
 
         {/* Simple Chart Visualization */}
         <div className="space-y-4">
-          {performanceHistory.map((data, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-stone-700 w-16">{data.month}</span>
-                <div className="flex-1 grid grid-cols-4 gap-2">
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Complete</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-500"
-                        style={{ width: `${data.completion}%` }}
-                      />
+          {performanceHistory.length > 0 ? (
+            performanceHistory.map((data, index) => (
+              <div key={data.id} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-stone-700 w-16">{formatMonthThai(data.year, data.month)}</span>
+                  <div className="flex-1 grid grid-cols-4 gap-2">
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Complete</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-green-500"
+                          style={{ width: `${data.completion_rate}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.completion_rate.toFixed(1)}%</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.completion}%</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Response</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{ width: `${data.response}%` }}
-                      />
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Response</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500"
+                          style={{ width: `${data.response_rate}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.response_rate.toFixed(1)}%</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.response}%</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Cancel</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-red-500"
-                        style={{ width: `${Math.min(data.cancel * 10, 100)}%` }}
-                      />
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Cancel</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-red-500"
+                          style={{ width: `${Math.min(data.cancel_rate * 10, 100)}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.cancel_rate.toFixed(1)}%</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.cancel}%</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-stone-500 mb-1">Rating</div>
-                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500"
-                        style={{ width: `${(data.rating / 5) * 100}%` }}
-                      />
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Rating</div>
+                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500"
+                          style={{ width: `${(data.avg_rating / 5) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-stone-700 mt-1">{data.avg_rating.toFixed(1)}</div>
                     </div>
-                    <div className="text-xs font-medium text-stone-700 mt-1">{data.rating}</div>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-stone-500">
+              ยังไม่มีข้อมูลประสิทธิภาพย้อนหลัง
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -894,14 +1174,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-stone-600">Job Completion Rate</span>
               <span className="text-sm font-medium text-stone-900">
-                {(parseFloat(completionRate) - platformAverage.completion).toFixed(1)}% {parseFloat(completionRate) > platformAverage.completion ? 'สูงกว่า' : 'ต่ำกว่า'}
+                {(parseFloat(completionRate) - (platformAverage?.avg_completion_rate || 88.5)).toFixed(1)}% {parseFloat(completionRate) > (platformAverage?.avg_completion_rate || 88.5) ? 'สูงกว่า' : 'ต่ำกว่า'}
               </span>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500"
-                  style={{ width: `${platformAverage.completion}%` }}
+                  style={{ width: `${platformAverage?.avg_completion_rate || 88.5}%` }}
                 />
               </div>
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -912,7 +1192,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
               </div>
             </div>
             <div className="flex justify-between text-xs text-stone-500 mt-1">
-              <span>Avg: {platformAverage.completion}%</span>
+              <span>Avg: {(platformAverage?.avg_completion_rate || 88.5).toFixed(1)}%</span>
               <span>You: {completionRate}%</span>
             </div>
           </div>
@@ -921,14 +1201,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-stone-600">Response Rate</span>
               <span className="text-sm font-medium text-stone-900">
-                {(responseRate - platformAverage.response).toFixed(1)}% สูงกว่า
+                {(responseRate - (platformAverage?.avg_response_rate || 89.2)).toFixed(1)}% {responseRate > (platformAverage?.avg_response_rate || 89.2) ? 'สูงกว่า' : 'ต่ำกว่า'}
               </span>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500"
-                  style={{ width: `${platformAverage.response}%` }}
+                  style={{ width: `${platformAverage?.avg_response_rate || 89.2}%` }}
                 />
               </div>
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -939,8 +1219,8 @@ function PerformanceTab({ staff }: { staff: Staff }) {
               </div>
             </div>
             <div className="flex justify-between text-xs text-stone-500 mt-1">
-              <span>Avg: {platformAverage.response}%</span>
-              <span>You: {responseRate}%</span>
+              <span>Avg: {(platformAverage?.avg_response_rate || 89.2).toFixed(1)}%</span>
+              <span>You: {responseRate.toFixed(1)}%</span>
             </div>
           </div>
 
@@ -948,14 +1228,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-stone-600">Cancel Rate</span>
               <span className="text-sm font-medium text-green-600">
-                {(platformAverage.cancel - cancelRate).toFixed(1)}% ดีกว่า
+                {((platformAverage?.avg_cancel_rate || 5.8) - cancelRate).toFixed(1)}% ดีกว่า
               </span>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-500"
-                  style={{ width: `${platformAverage.cancel * 10}%` }}
+                  style={{ width: `${(platformAverage?.avg_cancel_rate || 5.8) * 10}%` }}
                 />
               </div>
               <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -966,8 +1246,8 @@ function PerformanceTab({ staff }: { staff: Staff }) {
               </div>
             </div>
             <div className="flex justify-between text-xs text-stone-500 mt-1">
-              <span>Avg: {platformAverage.cancel}%</span>
-              <span>You: {cancelRate}%</span>
+              <span>Avg: {(platformAverage?.avg_cancel_rate || 5.8).toFixed(1)}%</span>
+              <span>You: {cancelRate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -982,22 +1262,18 @@ function PerformanceTab({ staff }: { staff: Staff }) {
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-stone-900 mb-2">Performance Insights</h3>
             <ul className="space-y-2 text-sm text-stone-600">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>ประสิทธิภาพโดยรวมสูงกว่าค่าเฉลี่ยของแพลตฟอร์ม {(performanceScore - 85).toFixed(0)} คะแนน</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>อัตราการตอบรับงานสูงกว่าค่าเฉลี่ย {(responseRate - platformAverage.response).toFixed(1)}%</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>อัตราการยกเลิกงานต่ำกว่าค่าเฉลี่ย {(platformAverage.cancel - cancelRate).toFixed(1)}%</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
-                <span>แนะนำ: รักษาระดับประสิทธิภาพให้คงที่และพัฒนาทักษะเพิ่มเติม</span>
-              </li>
+              {recommendations.map((recommendation, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  {recommendation.startsWith('✅') || recommendation.startsWith('🏆') ? (
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  ) : recommendation.startsWith('🔴') || recommendation.startsWith('📉') ? (
+                    <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  )}
+                  <span>{recommendation.replace(/^[✅🏆🔴📉⚡⚠️⭐💪]\s*/, '')}</span>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -1008,70 +1284,145 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 
 // Reviews Tab Component
 function ReviewsTab({ staff }: { staff: Staff }) {
-  return (
-    <div className="text-center py-12">
-      <MessageSquare className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-      <p className="text-stone-500">รีวิวจากลูกค้าจะแสดงที่นี่</p>
-      <p className="text-sm text-stone-400 mt-2">กำลังพัฒนาฟีเจอร์นี้</p>
-    </div>
-  )
+  return <ReviewsTabContent staff={staff} />
 }
 
 // Earnings Tab Component
 function EarningsTab({ staff }: { staff: Staff }) {
   const [showPayoutModal, setShowPayoutModal] = useState(false)
   const [showBankModal, setShowBankModal] = useState(false)
+  const [showPayoutDetailModal, setShowPayoutDetailModal] = useState(false)
+  const [showCalculationModal, setShowCalculationModal] = useState(false)
+  const [selectedPayout, setSelectedPayout] = useState<string | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')
 
-  // Mock earnings data - should come from API
-  const earningsSummary = {
-    total_earnings: staff.total_earnings || 0,
-    pending_payout: 15250,
-    paid_this_month: 32500,
-    total_paid: staff.total_earnings - 15250,
+  // Fetch real earnings data from API
+  const { data: earningsSummary, isLoading: isLoadingSummary } = useStaffEarningsSummary(staff.id)
+  const { data: payouts, isLoading: isLoadingPayouts } = useStaffPayouts(staff.id)
+
+  // Download report as CSV
+  const handleDownloadReport = () => {
+    if (!payoutHistory || payoutHistory.length === 0) {
+      toast.error('ไม่มีข้อมูลให้ดาวน์โหลด')
+      return
+    }
+
+    // Create CSV content
+    const headers = ['วันที่', 'ช่วงเวลา', 'จำนวนงาน', 'จำนวนเงิน (฿)', 'สถานะ', 'วันที่จ่าย', 'วิธีการจ่าย']
+    const statusMap: Record<string, string> = {
+      paid: 'จ่ายแล้ว',
+      pending: 'รอดำเนินการ',
+      processing: 'กำลังดำเนินการ',
+      failed: 'ล้มเหลว'
+    }
+
+    const rows = payoutHistory.map(payout => [
+      new Date(payout.date).toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+      payout.period,
+      `${payout.jobs_count} งาน`,
+      payout.amount.toLocaleString(),
+      statusMap[payout.status] || payout.status,
+      payout.payment_date
+        ? new Date(payout.payment_date).toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })
+        : '-',
+      payout.payment_method || '-'
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    // Add BOM for proper Thai character encoding in Excel
+    const BOM = '\uFEFF'
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    const periodMap = {
+      week: 'สัปดาห์นี้',
+      month: 'เดือนนี้',
+      year: 'ปีนี้'
+    }
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', `รายงานการจ่ายเงิน_${staff.name_th}_${periodMap[selectedPeriod]}_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast.success(`ดาวน์โหลดรายงาน${periodMap[selectedPeriod]}สำเร็จ (${payoutHistory.length} รายการ)`)
   }
 
-  // Mock payout history
-  const payoutHistory = [
-    {
-      id: '1',
-      date: '2025-01-31',
-      period: 'มกราคม 2025',
-      amount: 32500,
-      jobs_count: 18,
-      status: 'paid' as const,
-      payment_date: '2025-02-01',
-      payment_method: 'Bank Transfer',
-    },
-    {
-      id: '2',
-      date: '2024-12-31',
-      period: 'ธันวาคม 2024',
-      amount: 28900,
-      jobs_count: 16,
-      status: 'paid' as const,
-      payment_date: '2025-01-01',
-      payment_method: 'Bank Transfer',
-    },
-    {
-      id: '3',
-      date: '2025-02-15',
-      period: 'กุมภาพันธ์ 2025 (สัปดาห์ที่ 1-2)',
-      amount: 15250,
-      jobs_count: 9,
-      status: 'pending' as const,
-      payment_date: null,
-      payment_method: null,
-    },
-  ]
+  // Format payout history for display
+  const allPayoutHistory = payouts?.map((payout) => {
+    const periodStart = new Date(payout.period_start)
+    const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+    const periodText = `${monthNames[periodStart.getMonth()]} ${periodStart.getFullYear()}`
 
-  // Mock bank info
-  const bankInfo = {
+    // Map database status to display status
+    const statusMap: Record<string, 'paid' | 'pending' | 'processing' | 'failed'> = {
+      'completed': 'paid',
+      'pending': 'pending',
+      'processing': 'processing',
+      'failed': 'failed'
+    }
+
+    return {
+      id: payout.id,
+      date: payout.period_end,
+      period: periodText,
+      amount: parseFloat(payout.net_amount),
+      jobs_count: payout.total_jobs,
+      status: statusMap[payout.status] || 'pending',
+      payment_date: payout.transferred_at || null,
+      payment_method: payout.status === 'completed' ? 'Bank Transfer' : null,
+    }
+  }) || []
+
+  // Filter payout history based on selected period
+  const payoutHistory = allPayoutHistory.filter((payout) => {
+    const payoutDate = new Date(payout.date)
+    const now = new Date()
+
+    switch (selectedPeriod) {
+      case 'week': {
+        const weekAgo = new Date()
+        weekAgo.setDate(now.getDate() - 7)
+        return payoutDate >= weekAgo
+      }
+      case 'month': {
+        const monthAgo = new Date()
+        monthAgo.setMonth(now.getMonth() - 1)
+        return payoutDate >= monthAgo
+      }
+      case 'year': {
+        const yearAgo = new Date()
+        yearAgo.setFullYear(now.getFullYear() - 1)
+        return payoutDate >= yearAgo
+      }
+      default:
+        return true
+    }
+  })
+
+  // Mock bank info (converted to state for editing)
+  const [bankInfo, setBankInfo] = useState({
     bank_name: 'ธนาคารกสิกรไทย',
     account_name: staff.name_th,
     account_number: '123-4-56789-0',
     branch: 'สาขาเซ็นทรัล ลาดพร้าว',
-  }
+  })
 
   const getStatusBadge = (status: 'paid' | 'pending' | 'processing' | 'failed') => {
     const badges = {
@@ -1090,6 +1441,16 @@ function EarningsTab({ staff }: { staff: Staff }) {
     )
   }
 
+  // Show loading state
+  if (isLoadingSummary || isLoadingPayouts) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-stone-400" />
+        <span className="ml-2 text-stone-500">กำลังโหลดข้อมูล...</span>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Earnings Summary */}
@@ -1099,7 +1460,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
             <DollarSign className="w-8 h-8 text-amber-600" />
           </div>
           <p className="text-3xl font-bold text-amber-900">
-            ฿{earningsSummary.total_earnings.toLocaleString()}
+            ฿{(earningsSummary?.total_earnings || 0).toLocaleString()}
           </p>
           <p className="text-sm font-medium text-amber-700 mt-1">รายได้รวมทั้งหมด</p>
           <p className="text-xs text-amber-600 mt-1">Total Earnings</p>
@@ -1110,7 +1471,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
             <Clock className="w-8 h-8 text-yellow-600" />
           </div>
           <p className="text-3xl font-bold text-yellow-900">
-            ฿{earningsSummary.pending_payout.toLocaleString()}
+            ฿{(earningsSummary?.pending_payout || 0).toLocaleString()}
           </p>
           <p className="text-sm font-medium text-yellow-700 mt-1">ยอดค้างจ่าย</p>
           <p className="text-xs text-yellow-600 mt-1">Pending Payout</p>
@@ -1121,7 +1482,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           <p className="text-3xl font-bold text-green-900">
-            ฿{earningsSummary.paid_this_month.toLocaleString()}
+            ฿{(earningsSummary?.paid_this_month || 0).toLocaleString()}
           </p>
           <p className="text-sm font-medium text-green-700 mt-1">จ่ายเดือนนี้</p>
           <p className="text-xs text-green-600 mt-1">Paid This Month</p>
@@ -1132,7 +1493,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
             <Award className="w-8 h-8 text-blue-600" />
           </div>
           <p className="text-3xl font-bold text-blue-900">
-            ฿{earningsSummary.total_paid.toLocaleString()}
+            ฿{(earningsSummary?.total_paid || 0).toLocaleString()}
           </p>
           <p className="text-sm font-medium text-blue-700 mt-1">จ่ายแล้วทั้งหมด</p>
           <p className="text-xs text-blue-600 mt-1">Total Paid</p>
@@ -1185,7 +1546,10 @@ function EarningsTab({ staff }: { staff: Staff }) {
               <option value="month">เดือนนี้</option>
               <option value="year">ปีนี้</option>
             </select>
-            <button className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm flex items-center gap-2">
+            <button
+              onClick={handleDownloadReport}
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm flex items-center gap-2"
+            >
               <Download className="w-4 h-4" />
               ดาวน์โหลดรายงาน
             </button>
@@ -1235,13 +1599,23 @@ function EarningsTab({ staff }: { staff: Staff }) {
                       <div className="flex items-center gap-2">
                         {payout.status === 'pending' && (
                           <button
-                            onClick={() => setShowPayoutModal(true)}
+                            onClick={() => {
+                              setSelectedPayout(payout.id)
+                              setShowPayoutModal(true)
+                            }}
                             className="px-3 py-1 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-xs"
                           >
                             ดำเนินการจ่าย
                           </button>
                         )}
-                        <button className="p-1 hover:bg-stone-100 rounded transition">
+                        <button
+                          onClick={() => {
+                            setSelectedPayout(payout.id)
+                            setShowPayoutDetailModal(true)
+                          }}
+                          className="p-1 hover:bg-stone-100 rounded transition"
+                          title="ดูรายละเอียด"
+                        >
                           <Eye className="w-4 h-4 text-stone-600" />
                         </button>
                       </div>
@@ -1267,21 +1641,73 @@ function EarningsTab({ staff }: { staff: Staff }) {
             </p>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setShowPayoutModal(true)}
+                onClick={() => {
+                  // Find first pending payout
+                  const firstPending = payoutHistory.find(p => p.status === 'pending')
+                  if (firstPending) {
+                    setSelectedPayout(firstPending.id)
+                    setShowPayoutModal(true)
+                  } else {
+                    toast.error('ไม่มีรายการรอดำเนินการในขณะนี้')
+                  }
+                }}
                 className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm"
               >
                 ดำเนินการจ่ายเงิน
               </button>
-              <button className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 transition text-sm">
+              <button
+                onClick={() => setShowCalculationModal(true)}
+                className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 transition text-sm"
+              >
                 ดูรายละเอียดการคำนวณ
-              </button>
-              <button className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 transition text-sm">
-                ส่งแจ้งเตือน LINE
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Payout Detail Modal */}
+      {showPayoutDetailModal && selectedPayout && (
+        <PayoutDetailModal
+          payoutId={selectedPayout}
+          onClose={() => {
+            setShowPayoutDetailModal(false)
+            setSelectedPayout(null)
+          }}
+        />
+      )}
+
+      {/* Process Payout Modal */}
+      {showPayoutModal && (
+        <ProcessPayoutModal
+          payoutId={selectedPayout}
+          staffId={staff.id}
+          onClose={() => {
+            setShowPayoutModal(false)
+            setSelectedPayout(null)
+          }}
+        />
+      )}
+
+      {/* Calculation Modal */}
+      {showCalculationModal && (
+        <PayoutCalculationModal
+          onClose={() => setShowCalculationModal(false)}
+        />
+      )}
+
+      {/* Edit Bank Modal */}
+      {showBankModal && (
+        <EditBankModal
+          bankInfo={bankInfo}
+          onClose={() => setShowBankModal(false)}
+          onSave={(updatedInfo) => {
+            // TODO: Update database with bank info
+            setBankInfo(updatedInfo)
+            setShowBankModal(false)
+          }}
+        />
+      )}
     </div>
   )
 }
