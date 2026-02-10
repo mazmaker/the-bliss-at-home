@@ -200,6 +200,19 @@ function Services() {
     }
   }
 
+  // Helper function to format duration options display
+  const formatDurationOptions = (service: Service) => {
+    // Use duration_options if available and valid
+    if (service.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0) {
+      // Sort durations and format as "60, 90, 120 นาที"
+      const sortedDurations = [...service.duration_options].sort((a, b) => a - b)
+      return `${sortedDurations.join(', ')} นาที`
+    }
+
+    // Fallback to single duration
+    return `${service.duration} นาที`
+  }
+
   const handlePreview = (service: Service) => {
     // Generate slug from service name if not available
     let slug = service.slug
@@ -389,7 +402,7 @@ function Services() {
               {/* Details */}
               <div className="flex items-center gap-2 text-xs text-stone-500 mb-3">
                 <Clock className="w-4 h-4" />
-                <span>{service.duration} นาที</span>
+                <span>{formatDurationOptions(service)}</span>
               </div>
 
               {/* Prices */}

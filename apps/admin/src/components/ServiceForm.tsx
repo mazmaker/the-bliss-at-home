@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { supabase } from '../lib/supabase'
 import { ImageUpload } from './ImageUpload'
+import { calculatePrice, calculateAllDurationPrices, getPriceDisplay, getDurationLabel } from '../lib/pricingUtils'
 import {
   X,
   Upload,
@@ -159,7 +160,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: '',
         description_en: '',
         category: undefined,
-        duration_options: [60],
+        duration_options: ['60'], // Use string for form consistency
         base_price: undefined,
         hotel_price: undefined,
         staff_commission_rate: 25.00,
@@ -207,18 +208,23 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
     setSubmitError('')
 
     try {
-      // Clean data before submit
+      // Clean data before submit - now including duration_options!
       const cleanData = {
         ...data,
         slug: data.slug || generateSlug(data.name_en),
         image_url: data.image_url || null,
         sort_order: data.sort_order || 0,
-        // Keep both duration_options and duration for compatibility
+        // Set duration from the first selected option for backward compatibility
         duration: data.duration_options[0], // Primary duration for backward compatibility
-        duration_options: data.duration_options, // New multiple options
+        // duration_options is now included since database column exists
+        duration_options: data.duration_options, // Save multiple duration options
       }
 
       console.log('📝 Submitting service data:', cleanData)
+      console.log('🔍 Form data check:')
+      console.log('  - Duration (primary):', data.duration_options[0])
+      console.log('  - Available options (SAVING):', data.duration_options)
+      console.log('  - Will save to database:', cleanData.duration_options)
 
       if (editData?.id) {
         // Update existing service
@@ -231,6 +237,12 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         console.log('✅ Update result:', result)
         if (error) {
           console.error('❌ Update error:', error)
+          console.error('❌ Full error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
           throw error
         }
       } else {
@@ -243,6 +255,12 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         console.log('✅ Insert result:', result)
         if (error) {
           console.error('❌ Insert error:', error)
+          console.error('❌ Full error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
           throw error
         }
       }
@@ -499,39 +517,45 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <DollarSign className="w-4 h-4 inline mr-1" />
-                  ราคาปกติ (บาท)
+                  ราคาปกติ (สำหรับ 60 นาที)
                 </label>
                 <input
                   {...register('base_price')}
                   type="number"
                   min="100"
                   max="50000"
-                  step="50"
+                  step="10"
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="1000"
+                  placeholder="690"
                 />
                 {errors.base_price && (
                   <p className="mt-1 text-sm text-red-600">{errors.base_price.message}</p>
                 )}
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 ราคาฐานสำหรับ 60 นาที (90 นาที และ 120 นาที จะคิดตามสัดส่วน)
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Package className="w-4 h-4 inline mr-1" />
-                  ราคาโรงแรม (บาท)
+                  ราคาโรงแรม (สำหรับ 60 นาที)
                 </label>
                 <input
                   {...register('hotel_price')}
                   type="number"
                   min="50"
                   max="50000"
-                  step="50"
+                  step="10"
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="800"
+                  placeholder="550"
                 />
                 {errors.hotel_price && (
                   <p className="mt-1 text-sm text-red-600">{errors.hotel_price.message}</p>
                 )}
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 ราคาโรงแรมสำหรับ 60 นาที (90 นาที และ 120 นาที จะคิดตามสัดส่วน)
+                </p>
               </div>
 
               <div className="flex items-end">
@@ -541,6 +565,58 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 </div>
               </div>
             </div>
+
+            {/* Dynamic Pricing Preview */}
+            {basePrice && hotelPrice && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-800 mb-3">
+                  💰 ตารางราคาตามระยะเวลา
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[60, 90, 120].map(duration => {
+                    const pricing = calculatePrice(basePrice, hotelPrice, duration)
+                    const isSelected = watch('duration_options')?.includes(duration.toString())
+
+                    return (
+                      <div
+                        key={duration}
+                        className={`p-3 rounded-lg border-2 ${
+                          isSelected
+                            ? 'border-amber-500 bg-amber-50'
+                            : 'border-blue-200 bg-white'
+                        }`}
+                      >
+                        <p className={`text-sm font-medium ${
+                          isSelected ? 'text-amber-800' : 'text-blue-700'
+                        }`}>
+                          {getDurationLabel(duration)}
+                        </p>
+                        <p className={`text-lg font-bold ${
+                          isSelected ? 'text-amber-900' : 'text-blue-900'
+                        }`}>
+                          {pricing.finalBasePrice.toLocaleString()} บาท
+                        </p>
+                        <p className={`text-sm ${
+                          isSelected ? 'text-amber-600' : 'text-blue-600'
+                        }`}>
+                          โรงแรม: {pricing.finalHotelPrice.toLocaleString()} บาท
+                        </p>
+                        {duration !== 60 && (
+                          <p className={`text-xs ${
+                            isSelected ? 'text-amber-500' : 'text-blue-500'
+                          }`}>
+                            ({pricing.multiplier.toFixed(3)}x)
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className="mt-3 text-xs text-blue-600">
+                  💡 ราคาจะเปลี่ยนตามระยะเวลาที่ลูกค้าเลือก โดยคิดจากราคาฐาน 60 นาที
+                </p>
+              </div>
+            )}
 
             {/* Commission Section */}
             <div className="mb-4">
