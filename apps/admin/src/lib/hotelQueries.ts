@@ -138,135 +138,236 @@ export const updateHotelStatus = async (id: string, status: Hotel['status']) => 
   return data as Hotel
 }
 
-// ==================== INVOICES ====================
+// ==================== INVOICES (Using monthly_bills table) ====================
 
 export const getHotelInvoices = async (hotelId: string) => {
   const { data, error } = await supabase
-    .from('hotel_invoices')
+    .from('monthly_bills') // ✅ ใช้ existing table
     .select('*')
     .eq('hotel_id', hotelId)
-    .order('issued_date', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (error) throw error
   return data as HotelInvoice[]
 }
 
 export const createInvoice = async (invoiceData: Partial<HotelInvoice>) => {
+  // แปลงข้อมูลให้เข้ากับโครงสร้าง monthly_bills
+  const billData = {
+    hotel_id: invoiceData.hotel_id,
+    bill_number: invoiceData.invoice_number,
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    period_start: invoiceData.period_start,
+    period_end: invoiceData.period_end,
+    total_bookings: invoiceData.total_bookings || 0,
+    total_amount: invoiceData.total_revenue || 0,
+    status: invoiceData.status === 'paid' ? 'paid' : 'pending',
+    due_date: invoiceData.due_date
+  }
+
   const { data, error } = await supabase
-    .from('hotel_invoices')
-    .insert([invoiceData])
+    .from('monthly_bills') // ✅ ใช้ existing table
+    .insert([billData])
     .select()
     .single()
 
   if (error) throw error
-  return data as HotelInvoice
+  return data as any
 }
 
 export const updateInvoice = async (id: string, invoiceData: Partial<HotelInvoice>) => {
   const { data, error } = await supabase
-    .from('hotel_invoices')
-    .update(invoiceData)
+    .from('monthly_bills') // ✅ ใช้ existing table
+    .update({
+      status: invoiceData.status === 'paid' ? 'paid' : 'pending',
+      total_amount: invoiceData.total_revenue
+    })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
-  return data as HotelInvoice
+  return data as any
 }
 
-// ==================== PAYMENTS ====================
+// ==================== PAYMENTS (Using bookings payment data) ====================
 
 export const getHotelPayments = async (hotelId: string) => {
+  // ใช้ข้อมูล payment จาก bookings table
   const { data, error } = await supabase
-    .from('hotel_payments')
-    .select('*')
+    .from('bookings') // ✅ ใช้ existing table
+    .select(`
+      id,
+      booking_number,
+      final_price,
+      payment_status,
+      payment_method,
+      created_at,
+      completed_at,
+      customer_id
+    `)
     .eq('hotel_id', hotelId)
-    .order('payment_date', { ascending: false })
+    .eq('payment_status', 'paid')
+    .order('completed_at', { ascending: false })
 
   if (error) throw error
-  return data as HotelPayment[]
+
+  // แปลงข้อมูลให้เข้ากับ HotelPayment interface
+  const payments = data?.map(booking => ({
+    id: booking.id,
+    hotel_id: hotelId,
+    transaction_ref: booking.booking_number,
+    amount: booking.final_price,
+    payment_method: booking.payment_method || 'cash',
+    status: 'completed',
+    payment_date: booking.completed_at || booking.created_at,
+    created_at: booking.created_at
+  })) || []
+
+  return payments as HotelPayment[]
 }
 
 export const createPayment = async (paymentData: Partial<HotelPayment>) => {
+  // สำหรับการสร้าง payment ใหม่ - อัพเดตผ่าน bookings
   const { data, error } = await supabase
-    .from('hotel_payments')
-    .insert([paymentData])
+    .from('bookings') // ✅ ใช้ existing table
+    .update({
+      payment_status: 'paid',
+      completed_at: new Date().toISOString()
+    })
+    .eq('booking_number', paymentData.transaction_ref)
+    .eq('hotel_id', paymentData.hotel_id)
     .select()
     .single()
 
   if (error) throw error
-  return data as HotelPayment
+  return data as any
 }
 
 export const updatePayment = async (id: string, paymentData: Partial<HotelPayment>) => {
   const { data, error } = await supabase
-    .from('hotel_payments')
-    .update(paymentData)
+    .from('bookings') // ✅ ใช้ existing table
+    .update({
+      payment_status: paymentData.status === 'completed' ? 'paid' : 'pending'
+    })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
-  return data as HotelPayment
+  return data as any
 }
 
-// ==================== BOOKINGS ====================
+// ==================== BOOKINGS (Using existing bookings table) ====================
 
 export const getHotelBookings = async (hotelId: string) => {
   const { data, error } = await supabase
-    .from('hotel_bookings')
-    .select('*')
+    .from('bookings') // ✅ ใช้ existing table
+    .select(`
+      *,
+      customer:customers(full_name, phone, email),
+      service:services(name_th, name_en, category),
+      staff:staff(name_th, name_en)
+    `)
     .eq('hotel_id', hotelId)
-    .eq('created_by_hotel', true)
-    .order('service_date', { ascending: false })
+    .eq('is_hotel_booking', true) // ✅ เฉพาะการจองของโรงแรม
+    .order('booking_date', { ascending: false })
 
   if (error) throw error
-  return data as HotelBooking[]
+
+  // แปลงข้อมูลให้เข้ากับ HotelBooking interface
+  const hotelBookings = data?.map(booking => ({
+    id: booking.id,
+    booking_number: booking.booking_number,
+    hotel_id: booking.hotel_id,
+    customer_name: booking.customer?.full_name || 'Guest',
+    customer_phone: booking.customer?.phone || '',
+    customer_email: booking.customer?.email || '',
+    service_name: booking.service?.name_th || '',
+    service_category: booking.service?.category || '',
+    staff_name: booking.staff?.name_th || '',
+    booking_date: booking.created_at,
+    service_date: booking.booking_date,
+    service_time: booking.booking_time,
+    duration: booking.duration,
+    total_price: booking.final_price,
+    status: booking.status,
+    payment_status: booking.payment_status,
+    room_number: booking.hotel_room_number,
+    notes: booking.customer_notes,
+    created_by_hotel: booking.is_hotel_booking,
+    created_at: booking.created_at
+  })) || []
+
+  return hotelBookings as HotelBooking[]
 }
 
 export const createBooking = async (bookingData: Partial<HotelBooking>) => {
+  // แปลงข้อมูลให้เข้ากับโครงสร้าง bookings table
+  const newBooking = {
+    hotel_id: bookingData.hotel_id,
+    service_id: bookingData.service_name, // ต้องใส่ service_id จริง
+    booking_date: bookingData.service_date,
+    booking_time: bookingData.service_time,
+    duration: bookingData.duration,
+    base_price: bookingData.total_price,
+    final_price: bookingData.total_price,
+    is_hotel_booking: true,
+    hotel_room_number: bookingData.room_number,
+    customer_notes: bookingData.notes,
+    status: bookingData.status || 'confirmed',
+    payment_status: bookingData.payment_status || 'pending'
+  }
+
   const { data, error } = await supabase
-    .from('hotel_bookings')
-    .insert([bookingData])
+    .from('bookings') // ✅ ใช้ existing table
+    .insert([newBooking])
     .select()
     .single()
 
   if (error) throw error
-  return data as HotelBooking
+  return data as any
 }
 
 export const updateBooking = async (id: string, bookingData: Partial<HotelBooking>) => {
   const { data, error } = await supabase
-    .from('hotel_bookings')
-    .update(bookingData)
+    .from('bookings') // ✅ ใช้ existing table
+    .update({
+      status: bookingData.status,
+      payment_status: bookingData.payment_status,
+      hotel_room_number: bookingData.room_number,
+      customer_notes: bookingData.notes
+    })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
-  return data as HotelBooking
+  return data as any
 }
 
 // ==================== STATS ====================
 
 export const getHotelStats = async (hotelId: string) => {
-  // Get total bookings count
+  // ✅ Get total bookings count from existing bookings table
   const { count: totalBookings } = await supabase
-    .from('hotel_bookings')
+    .from('bookings')
     .select('*', { count: 'exact', head: true })
     .eq('hotel_id', hotelId)
+    .eq('is_hotel_booking', true)
 
-  // Get monthly revenue (sum of paid invoices this month)
+  // ✅ Get monthly revenue from existing monthly_bills table
   const firstDayOfMonth = new Date()
   firstDayOfMonth.setDate(1)
-  const { data: monthlyInvoices } = await supabase
-    .from('hotel_invoices')
-    .select('total_revenue')
+  const { data: monthlyBills } = await supabase
+    .from('monthly_bills')
+    .select('total_amount')
     .eq('hotel_id', hotelId)
     .eq('status', 'paid')
     .gte('period_start', firstDayOfMonth.toISOString().split('T')[0])
 
-  const monthlyRevenue = monthlyInvoices?.reduce((sum, inv) => sum + Number(inv.total_revenue), 0) || 0
+  const monthlyRevenue = monthlyBills?.reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0
 
   return {
     totalBookings: totalBookings || 0,
@@ -275,14 +376,14 @@ export const getHotelStats = async (hotelId: string) => {
 }
 
 export const getTotalMonthlyRevenue = async () => {
-  // Get total revenue across all hotels (sum of all paid invoices)
-  const { data: paidInvoices, error } = await supabase
-    .from('hotel_invoices')
-    .select('total_revenue')
+  // ✅ Get total revenue across all hotels from existing monthly_bills table
+  const { data: paidBills, error } = await supabase
+    .from('monthly_bills')
+    .select('total_amount')
     .eq('status', 'paid')
 
   if (error) throw error
 
-  const totalRevenue = paidInvoices?.reduce((sum, inv) => sum + Number(inv.total_revenue), 0) || 0
+  const totalRevenue = paidBills?.reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0
   return totalRevenue
 }

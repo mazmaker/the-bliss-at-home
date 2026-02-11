@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Calendar,
@@ -10,23 +10,64 @@ import {
   LogOut,
   Menu,
   X,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react'
 import { useState } from 'react'
-
-const navigation = [
-  { name: 'ภาพรวม', nameEn: 'Dashboard', href: '/hotel', icon: LayoutDashboard },
-  { name: 'บริการ', nameEn: 'Services', href: '/hotel/services', icon: Calendar },
-  { name: 'จองให้แขก', nameEn: 'Book for Guest', href: '/hotel/book', icon: CreditCard },
-  { name: 'การจองของแขก', nameEn: 'Guest Bookings', href: '/hotel/guests', icon: Users },
-  { name: 'ประวัติการจอง', nameEn: 'History', href: '/hotel/history', icon: FileText },
-  { name: 'บิลรายเดือน', nameEn: 'Monthly Bill', href: '/hotel/bill', icon: CreditCard },
-  { name: 'ข้อมูลโรงแรม', nameEn: 'Hotel Profile', href: '/hotel/profile', icon: Building },
-  { name: 'ตั้งค่า', nameEn: 'Settings', href: '/hotel/settings', icon: Settings },
-]
+import { useHotelContext } from '../hooks/useHotelContext'
 
 function HotelLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { hotelId, hotelData, isValidHotel, isLoading, getHotelName, getHotelNameEn } = useHotelContext()
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
+          <p className="text-stone-600">กำลังโหลดข้อมูลโรงแรม...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Invalid hotel ID
+  if (!isValidHotel) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">โรงแรมไม่พบ</h1>
+          <p className="text-stone-600 mb-6">
+            ไม่พบข้อมูลโรงแรมที่ระบุ: {hotelId}
+          </p>
+          <Link
+            to="/hotel/550e8400-e29b-41d4-a716-446655440002"
+            className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+          >
+            ไปยังโรงแรมเริ่มต้น
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // ✅ Dynamic navigation with hotel ID
+  const navigation = [
+    { name: 'ภาพรวม', nameEn: 'Dashboard', href: `/hotel/${hotelId}`, icon: LayoutDashboard },
+    { name: 'บริการ', nameEn: 'Services', href: `/hotel/${hotelId}/services`, icon: Calendar },
+    { name: 'จองให้แขก', nameEn: 'Book for Guest', href: `/hotel/${hotelId}/book`, icon: CreditCard },
+    { name: 'การจองของแขก', nameEn: 'Guest Bookings', href: `/hotel/${hotelId}/guests`, icon: Users },
+    { name: 'ประวัติการจอง', nameEn: 'History', href: `/hotel/${hotelId}/history`, icon: FileText },
+    { name: 'บิลรายเดือน', nameEn: 'Monthly Bill', href: `/hotel/${hotelId}/bill`, icon: CreditCard },
+    { name: 'ข้อมูลโรงแรม', nameEn: 'Hotel Profile', href: `/hotel/${hotelId}/profile`, icon: Building },
+    { name: 'ตั้งค่า', nameEn: 'Settings', href: `/hotel/${hotelId}/settings`, icon: Settings },
+  ]
+
+  // ✅ Get hotel avatar (first letter of Thai name)
+  const hotelAvatar = getHotelName().charAt(0) || 'H'
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -40,20 +81,20 @@ function HotelLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-gradient-to-b from-stone-900 to-stone-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl border-r border-stone-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-4 border-b border-stone-700">
+          <div className="flex items-center justify-between p-4 border-b border-stone-200">
             <div>
-              <h1 className="text-xl font-bold text-white">Bliss Hotel</h1>
-              <p className="text-xs text-stone-400">Hotel Partner Portal</p>
+              <h1 className="text-xl font-bold text-stone-900">{getHotelName()}</h1>
+              <p className="text-xs text-stone-500">{getHotelNameEn()}</p>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 text-stone-400 hover:text-white"
+              className="lg:hidden p-2 text-stone-500 hover:text-stone-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -72,7 +113,7 @@ function HotelLayout() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
                     isActive
                       ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                      : 'text-stone-300 hover:bg-stone-800 hover:text-white'
+                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -86,19 +127,19 @@ function HotelLayout() {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-stone-700">
+          <div className="p-4 border-t border-stone-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
-                ฮ
+                {hotelAvatar}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">โรงแรมฮิลตัน</p>
-                <p className="text-xs text-stone-400 truncate">Hilton Bangkok</p>
+                <p className="text-sm font-medium text-stone-900 truncate">{getHotelName()}</p>
+                <p className="text-xs text-stone-500 truncate">{getHotelNameEn()}</p>
               </div>
             </div>
             <Link
               to="/login"
-              className="flex items-center gap-2 px-4 py-2 text-stone-400 hover:text-white transition"
+              className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
             >
               <LogOut className="w-4 h-4" />
               <span className="text-sm">ออกจากระบบ</span>
@@ -121,11 +162,11 @@ function HotelLayout() {
             <div className="flex-1" />
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-stone-900">โรงแรมฮิลตัน อยุธยา</p>
-                <p className="text-xs text-stone-500">Hilton Bangkok</p>
+                <p className="text-sm font-medium text-stone-900">{getHotelName()}</p>
+                <p className="text-xs text-stone-500">{getHotelNameEn()}</p>
               </div>
               <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
-                ฮ
+                {hotelAvatar}
               </div>
             </div>
           </div>
