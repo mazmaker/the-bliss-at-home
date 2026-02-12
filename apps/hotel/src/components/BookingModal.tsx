@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar, Clock, CreditCard, Check, X, User, MapPin, Phone, Users } from 'lucide-react'
+import { PriceCalculator } from '../utils/priceCalculator'
 
 interface Service {
   id: string
@@ -22,6 +24,7 @@ interface Service {
 interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void  // Optional success callback
   service: Service
 }
 
@@ -36,7 +39,7 @@ interface BookingData {
   notes: string
 }
 
-function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
+function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps) {
   const [step, setStep] = useState(1)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [bookingData, setBookingData] = useState<BookingData>({
@@ -75,7 +78,13 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     })
     // Here you would normally send the booking to your backend
     alert('การจองสำเร็จ!')
-    onClose()
+
+    // Call success callback if provided
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      onClose()
+    }
     resetForm()
   }
 
@@ -118,9 +127,12 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+  return createPortal(
+    <div
+      className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[9999]"
+      style={{ margin: 0, padding: 0, minHeight: '100vh', minWidth: '100vw' }}
+    >
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto mx-4 my-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-stone-100">
           <div>
@@ -270,10 +282,18 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                         <p className="text-sm text-stone-500">{duration} นาที • {bookingData.numberOfGuests} คน</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-amber-700">฿{service.hotel_price * bookingData.numberOfGuests}</p>
-                        {bookingData.numberOfGuests > 1 && (
-                          <p className="text-xs text-stone-400">฿{service.hotel_price} × {bookingData.numberOfGuests}</p>
-                        )}
+                        {(() => {
+                          const pricePerPerson = PriceCalculator.calculateServicePrice(service, duration, 'single')
+                          const totalPrice = pricePerPerson * bookingData.numberOfGuests
+                          return (
+                            <>
+                              <p className="font-bold text-amber-700">฿{totalPrice.toLocaleString()}</p>
+                              {bookingData.numberOfGuests > 1 && (
+                                <p className="text-xs text-stone-400">฿{pricePerPerson.toLocaleString()} × {bookingData.numberOfGuests}</p>
+                              )}
+                            </>
+                          )
+                        })()}
                       </div>
                     </div>
                   </button>
@@ -437,7 +457,9 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                   <div className="mt-6 pt-4 border-t border-stone-200">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-stone-900">ยอดรวม</span>
-                      <span className="text-lg font-bold text-amber-700">฿{service.hotel_price * bookingData.numberOfGuests}</span>
+                      <span className="text-lg font-bold text-amber-700">
+                        ฿{(PriceCalculator.calculateServicePrice(service, bookingData.selectedDuration, 'single') * bookingData.numberOfGuests).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -504,7 +526,8 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
