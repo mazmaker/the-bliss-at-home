@@ -219,13 +219,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">รายได้รวม</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">
+              <div className="text-3xl font-bold text-stone-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-stone-200 h-8 w-24 rounded"></div>
                   : states.dashboardStats.isError
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : `฿${(dashboardStats?.totalRevenue || 0).toLocaleString()}`}
-              </p>
+              </div>
               {dashboardStats?.revenueGrowth && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.revenueGrowth >= 0
@@ -248,13 +248,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">การจอง</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">
+              <div className="text-3xl font-bold text-stone-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-stone-200 h-8 w-20 rounded"></div>
                   : states.dashboardStats.isError
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : (dashboardStats?.totalBookings || 0).toLocaleString()}
-              </p>
+              </div>
               {dashboardStats?.bookingsGrowth && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.bookingsGrowth >= 0
@@ -277,13 +277,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">ลูกค้าใหม่</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">
+              <div className="text-3xl font-bold text-stone-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-stone-200 h-8 w-16 rounded"></div>
                   : states.dashboardStats.isError
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : (dashboardStats?.newCustomers || 0).toLocaleString()}
-              </p>
+              </div>
               {dashboardStats?.newCustomersGrowth && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.newCustomersGrowth >= 0
@@ -306,13 +306,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">ค่าเฉลี่ย</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">
+              <div className="text-3xl font-bold text-stone-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-stone-200 h-8 w-24 rounded"></div>
                   : states.dashboardStats.isError
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : `฿${(dashboardStats?.avgBookingValue || 0).toLocaleString()}`}
-              </p>
+              </div>
               {dashboardStats?.avgValueGrowth && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.avgValueGrowth >= 0
@@ -358,13 +358,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">อัตราการจองซ้ำ</p>
-                  <p className="text-3xl font-bold text-stone-900 mb-1">
+                  <div className="text-3xl font-bold text-stone-900 mb-1">
                     {customerBehavior.isLoading
                       ? <div className="animate-pulse bg-stone-200 h-8 w-16 rounded"></div>
                       : customerBehavior.isError
                       ? <AlertCircle className="w-8 h-8 text-red-500" />
                       : `${customerBehavior.data?.repeat_booking_rate || 0}%`}
-                  </p>
+                  </div>
                   {customerBehavior.data?.returning_customer_growth && (
                     <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                       customerBehavior.data.returning_customer_growth >= 0
@@ -387,13 +387,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">ค่าเฉลี่ยลูกค้า</p>
-                  <p className="text-3xl font-bold text-stone-900 mb-1">
+                  <div className="text-3xl font-bold text-stone-900 mb-1">
                     {customerBehavior.isLoading
                       ? <div className="animate-pulse bg-stone-200 h-8 w-20 rounded"></div>
                       : customerBehavior.isError
                       ? <AlertCircle className="w-8 h-8 text-red-500" />
                       : `฿${customerBehavior.data?.avg_customer_lifetime_value?.toLocaleString() || '0'}`}
-                  </p>
+                  </div>
                   {customerBehavior.data?.clv_growth && (
                     <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                       customerBehavior.data.clv_growth >= 0
@@ -416,13 +416,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">อัตราการกลับมา</p>
-                  <p className="text-3xl font-bold text-stone-900 mb-1">
+                  <div className="text-3xl font-bold text-stone-900 mb-1">
                     {customerBehavior.isLoading
                       ? <div className="animate-pulse bg-stone-200 h-8 w-16 rounded"></div>
                       : customerBehavior.isError
                       ? <AlertCircle className="w-8 h-8 text-red-500" />
                       : `${customerBehavior.data?.customer_retention_rate || 0}%`}
-                  </p>
+                  </div>
                   <div className="text-xs text-stone-500">
                     Churn: {customerBehavior.data?.churn_rate || 0}%
                   </div>
@@ -439,13 +439,13 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">ความพึงพอใจ</p>
-                  <p className="text-3xl font-bold text-stone-900 mb-1">
+                  <div className="text-3xl font-bold text-stone-900 mb-1">
                     {customerSatisfaction.isLoading
                       ? <div className="animate-pulse bg-stone-200 h-8 w-12 rounded"></div>
                       : customerSatisfaction.isError
                       ? <AlertCircle className="w-8 h-8 text-red-500" />
                       : `${customerSatisfaction.data?.avg_rating?.toFixed(1) || '0.0'}/5`}
-                  </p>
+                  </div>
                   <div className="text-xs text-stone-500">
                     {customerSatisfaction.data?.satisfaction_rate || 0}% Satisfied
                   </div>
