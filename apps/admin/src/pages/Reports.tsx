@@ -21,6 +21,13 @@ function Reports() {
   const [activeSection, setActiveSection] = useState<ReportSection>('overview')
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'month' | '3_months' | '6_months' | 'year'>('month')
 
+  // Handle period change
+  const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPeriod = e.target.value as 'daily' | 'weekly' | 'month' | '3_months' | '6_months' | 'year'
+    setSelectedPeriod(newPeriod)
+    console.log('Period changed to:', newPeriod) // Debug log
+  }
+
   // Render content based on active section
   const renderSectionContent = () => {
     const commonProps = { selectedPeriod }
@@ -74,7 +81,7 @@ function Reports() {
               <select
                 className="px-4 py-2.5 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500 shadow-sm min-w-[160px]"
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as any)}
+                onChange={handlePeriodChange}
               >
                 {Object.entries(periodLabels).map(([key, label]) => (
                   <option key={key} value={key}>

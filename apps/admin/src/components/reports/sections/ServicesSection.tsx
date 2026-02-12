@@ -10,9 +10,17 @@ import {
   Table,
   ChevronDown,
   Info,
-  Wrench
+  Wrench,
+  MapPin,
+  Calendar,
+  DollarSign
 } from 'lucide-react'
-import { useReportsData } from '../../../hooks/useAnalytics'
+import {
+  useReportsData,
+  useGeographicalAnalytics,
+  useServiceRevenueByCategory,
+  useMonthlyServiceTrends
+} from '../../../hooks/useAnalytics'
 import { quickExportPDF, quickExportExcel } from '../../../lib/exportUtils'
 
 interface ServicesSectionProps {
@@ -59,6 +67,23 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
     states,
     refetch
   } = useReportsData(selectedPeriod)
+
+  // Convert selectedPeriod to days
+  const periodDays = {
+    daily: 1,
+    weekly: 7,
+    month: 30,
+    '3_months': 90,
+    '6_months': 180,
+    year: 365
+  }
+
+  const days = periodDays[selectedPeriod]
+
+  // New enhanced analytics
+  const geographicalData = useGeographicalAnalytics(days, 8)
+  const serviceRevenueData = useServiceRevenueByCategory(days)
+  const monthlyTrendsData = useMonthlyServiceTrends(6)
 
   // Export handlers
   const handleExportPDF = async () => {
@@ -441,13 +466,249 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
         </div>
       </div>
 
+      {/* Service Revenue by Category */}
+      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 border-b border-stone-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <Tooltip content="Revenue breakdown by service categories showing performance and growth | การแบ่งรายได้ตามหมวดบริการแสดงประสิทธิภาพและการเติบโต">
+                <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2 cursor-help">
+                  รายได้ตามประเภทบริการ • Revenue by Service Type
+                  <Info className="w-4 h-4 text-stone-400" />
+                </h3>
+              </Tooltip>
+              <p className="text-sm text-stone-500">Performance and growth by category • ประสิทธิภาพและการเติบโตตามหมวดหมู่</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {serviceRevenueData.isError ? (
+              <div className="col-span-2 text-center py-8 text-stone-500">
+                <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm mb-2">Unable to load revenue data</p>
+                <button
+                  onClick={() => serviceRevenueData.refetch()}
+                  className="text-emerald-600 hover:text-emerald-700 text-sm inline-flex items-center gap-1"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Retry
+                </button>
+              </div>
+            ) : serviceRevenueData.isLoading ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="bg-stone-50 rounded-xl p-4 animate-pulse">
+                  <div className="w-24 h-4 bg-stone-200 rounded mb-3"></div>
+                  <div className="w-16 h-6 bg-stone-200 rounded mb-2"></div>
+                  <div className="w-20 h-3 bg-stone-200 rounded"></div>
+                </div>
+              ))
+            ) : (
+              (serviceRevenueData.data || []).map((item: any, index) => {
+                const colors = [
+                  'border-emerald-200 bg-emerald-50 text-emerald-700',
+                  'border-blue-200 bg-blue-50 text-blue-700',
+                  'border-purple-200 bg-purple-50 text-purple-700',
+                  'border-amber-200 bg-amber-50 text-amber-700',
+                  'border-pink-200 bg-pink-50 text-pink-700'
+                ]
+                const colorClass = colors[index % colors.length]
+
+                return (
+                  <div key={item.category} className={`rounded-xl p-4 border ${colorClass}`}>
+                    <h4 className="font-semibold mb-1">{item.category_th}</h4>
+                    <p className="text-2xl font-bold">฿{item.total_revenue?.toLocaleString() || '0'}</p>
+                    <div className="flex items-center justify-between mt-2 text-sm">
+                      <span>{item.total_bookings || 0} การจอง</span>
+                      <span className={`font-medium ${item.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.growth_rate > 0 ? '+' : ''}{item.growth_rate?.toFixed(1) || '0'}%
+                      </span>
+                    </div>
+                    <p className="text-xs mt-1">Top: {item.top_service_name || 'N/A'}</p>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Geographical Breakdown */}
+        <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 border-b border-stone-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-cyan-600 to-cyan-700 rounded-lg flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <Tooltip content="Booking distribution across geographical areas including hotels and districts | การกระจายการจองในพื้นที่ทางภูมิศาสตร์รวมทั้งโรงแรมและเขต">
+                  <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2 cursor-help">
+                    การจองตามพื้นที่ • Bookings by Area
+                    <Info className="w-4 h-4 text-stone-400" />
+                  </h3>
+                </Tooltip>
+                <p className="text-sm text-stone-500">Regional performance • ประสิทธิภาพตามภูมิภาค</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {geographicalData.isError ? (
+                <div className="text-center py-8 text-stone-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm mb-2">Unable to load geographical data</p>
+                  <button
+                    onClick={() => geographicalData.refetch()}
+                    className="text-cyan-600 hover:text-cyan-700 text-sm inline-flex items-center gap-1"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Retry
+                  </button>
+                </div>
+              ) : geographicalData.isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg animate-pulse">
+                    <div className="w-24 h-4 bg-stone-200 rounded"></div>
+                    <div className="w-16 h-4 bg-stone-200 rounded"></div>
+                    <div className="w-12 h-4 bg-stone-200 rounded"></div>
+                  </div>
+                ))
+              ) : (
+                (geographicalData.data || []).map((area: any, index) => (
+                  <div key={area.area_name} className="group">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${area.area_type === 'hotel' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                        <span className="text-sm font-medium text-stone-700">{area.area_name}</span>
+                        <span className="text-xs px-2 py-1 bg-stone-100 text-stone-500 rounded-full">
+                          {area.area_type === 'hotel' ? 'โรงแรม' : 'เขต'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm text-stone-900 font-semibold">
+                          ฿{area.total_revenue?.toLocaleString() || '0'}
+                        </span>
+                        <div className="text-xs text-stone-500">
+                          {area.total_bookings || 0} การจอง • {area.completion_rate?.toFixed(1) || '0'}%
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 group-hover:opacity-80 ${
+                          area.area_type === 'hotel' ? 'bg-blue-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.min((area.total_revenue / Math.max(...(geographicalData.data || []).map((a: any) => a.total_revenue))) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly Service Trends */}
+        <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 border-b border-stone-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <Tooltip content="Monthly trending of most popular services showing seasonal patterns | แนวโน้มรายเดือนของบริการยอดนิยมแสดงรูปแบบตามฤดูกาล">
+                  <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2 cursor-help">
+                    แนวโน้มบริการรายเดือน • Monthly Service Trends
+                    <Info className="w-4 h-4 text-stone-400" />
+                  </h3>
+                </Tooltip>
+                <p className="text-sm text-stone-500">Seasonal patterns • รูปแบบตามฤดูกาล</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {monthlyTrendsData.isError ? (
+                <div className="text-center py-8 text-stone-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm mb-2">Unable to load trends data</p>
+                  <button
+                    onClick={() => monthlyTrendsData.refetch()}
+                    className="text-indigo-600 hover:text-indigo-700 text-sm inline-flex items-center gap-1"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Retry
+                  </button>
+                </div>
+              ) : monthlyTrendsData.isLoading ? (
+                Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg animate-pulse">
+                    <div className="w-16 h-4 bg-stone-200 rounded"></div>
+                    <div className="w-24 h-4 bg-stone-200 rounded"></div>
+                    <div className="w-8 h-4 bg-stone-200 rounded"></div>
+                  </div>
+                ))
+              ) : (
+                (() => {
+                  // Group by month for better display
+                  const groupedTrends = (monthlyTrendsData.data || []).reduce((acc: any, item: any) => {
+                    if (!acc[item.month_year]) {
+                      acc[item.month_year] = []
+                    }
+                    acc[item.month_year].push(item)
+                    return acc
+                  }, {})
+
+                  return Object.entries(groupedTrends).slice(0, 3).map(([month, services]: [string, any]) => (
+                    <div key={month} className="border border-stone-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-stone-900">{month}</h4>
+                        <span className="text-xs text-stone-500">Top {services.length}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {services.slice(0, 3).map((service: any, index: number) => (
+                          <div key={service.service_name} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                                index === 0 ? 'bg-yellow-500' :
+                                index === 1 ? 'bg-gray-400' :
+                                'bg-amber-600'
+                              }`}>
+                                {service.rank_position}
+                              </div>
+                              <span className="text-stone-700">{service.service_name}</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium text-stone-900">
+                                ฿{service.revenue?.toLocaleString() || '0'}
+                              </div>
+                              <div className="text-xs text-stone-500">
+                                {service.bookings || 0} การจอง
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                })()
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Service Insights */}
       <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6">
         <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
           💡 ข้อมูลเชิงลึกบริการ • Service Insights
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-4">
             <h4 className="font-medium text-stone-700">Popular Trends • แนวโน้มยอดนิยม</h4>
             <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg border border-pink-200">
@@ -474,6 +735,21 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                 {serviceStats.totalServices > 0
                   ? `Currently offering ${serviceStats.totalServices} popular services with strong booking performance`
                   : 'No service data available'}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-medium text-stone-700">Geographical Reach • การขยายพื้นที่</h4>
+            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-5 h-5 text-green-700" />
+                <span className="font-medium text-green-800">Area Coverage</span>
+              </div>
+              <p className="text-sm text-green-700">
+                {geographicalData.data && geographicalData.data.length > 0
+                  ? `Operating in ${geographicalData.data.length} areas with strong regional presence`
+                  : 'Geographical data not available'}
               </p>
             </div>
           </div>

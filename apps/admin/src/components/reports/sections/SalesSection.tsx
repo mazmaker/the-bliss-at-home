@@ -9,9 +9,27 @@ import {
   FileText,
   Table,
   ChevronDown,
-  Info
+  Info,
+  Target,
+  PieChart,
+  Clock,
+  CreditCard,
+  Store,
+  Users,
+  Smartphone,
+  Calculator,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus
 } from 'lucide-react'
-import { useReportsData } from '../../../hooks/useAnalytics'
+import {
+  useReportsData,
+  useAdvancedSalesMetrics,
+  useSalesChannelAnalysis,
+  usePaymentMethodAnalysis,
+  useServiceRevenueByCategory,
+  useTimeBasedRevenueAnalysis
+} from '../../../hooks/useAnalytics'
 import { quickExportPDF, quickExportExcel } from '../../../lib/exportUtils'
 
 interface SalesSectionProps {
@@ -48,6 +66,19 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
     }
   }, [])
 
+  // Period to days conversion
+  const periodDays = {
+    daily: 1,
+    weekly: 7,
+    month: 30,
+    '3_months': 90,
+    '6_months': 180,
+    year: 365
+  }
+
+  const days = periodDays[selectedPeriod]
+
+  // Basic reports data
   const {
     dashboardStats,
     dailyRevenue,
@@ -57,6 +88,13 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
     states,
     refetch
   } = useReportsData(selectedPeriod)
+
+  // Advanced analytics hooks
+  const advancedSalesMetrics = useAdvancedSalesMetrics(days)
+  const salesChannelAnalysis = useSalesChannelAnalysis(days)
+  const paymentMethodAnalysis = usePaymentMethodAnalysis(days)
+  const serviceRevenueByCategory = useServiceRevenueByCategory(days)
+  const timeBasedRevenueAnalysis = useTimeBasedRevenueAnalysis(days)
 
   // Export handlers
   const handleExportPDF = async () => {
@@ -126,11 +164,11 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         <div>
           <h2 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
             💰 ยอดขายและการเงิน
-            <Tooltip content="แนวโน้มรายได้และการวิเคราะห์ทางการเงิน | Revenue trends and financial analytics">
+            <Tooltip content="การวิเคราะห์ขายและการเงินระดับโลก | World-class sales and financial analytics">
               <Info className="w-5 h-5 text-stone-400 hover:text-amber-600 cursor-help" />
             </Tooltip>
           </h2>
-          <p className="text-stone-500 mt-1">Sales & Financial Analytics • แนวโน้มรายได้และประสิทธิภาพทางการเงิน</p>
+          <p className="text-stone-500 mt-1">World-class Sales Analytics • การวิเคราะห์ขายระดับโลก</p>
         </div>
 
         {/* Export Button */}
@@ -181,199 +219,458 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
       </div>
 
-      {/* Revenue Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {/* Total Revenue */}
+      {/* Advanced Revenue Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Gross Revenue */}
         <div className="bg-gradient-to-br from-[#b6d387] to-[#9bc470] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
-              <p className="text-sm opacity-90">รายได้รวม • Total Revenue</p>
-              <p className="text-3xl font-bold mt-3 mb-2">
-                {states.dashboardStats.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
-                  : `฿${(dashboardStats?.totalRevenue || 0).toLocaleString()}`}
+              <p className="text-sm opacity-90">รายได้รวม • Gross Revenue</p>
+              <p className="text-2xl font-bold mt-2 mb-1">
+                {advancedSalesMetrics.isLoading
+                  ? <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                  : `฿${(advancedSalesMetrics.data?.gross_revenue || 0).toLocaleString()}`}
               </p>
-              <p className="text-sm opacity-90">ในช่วงเวลาที่เลือก</p>
+              <div className="flex items-center gap-1 text-xs">
+                <ArrowUpRight className="w-3 h-3" />
+                <span>+{(advancedSalesMetrics.data?.revenue_growth_rate || 0).toFixed(1)}%</span>
+              </div>
             </div>
-            <DollarSign className="w-12 h-12 opacity-80" />
+            <DollarSign className="w-8 h-8 opacity-80" />
           </div>
         </div>
 
-        {/* Average Daily Revenue */}
+        {/* Net Revenue */}
         <div className="bg-gradient-to-br from-[#d29b25] to-[#c08a20] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
-              <p className="text-sm opacity-90">รายได้เฉลี่ย • Avg Daily</p>
-              <p className="text-3xl font-bold mt-3 mb-2">
-                {states.dashboardStats.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
-                  : `฿${((dashboardStats?.totalRevenue || 0) / (dailyRevenue?.length || 1)).toLocaleString()}`}
+              <p className="text-sm opacity-90">รายได้สุทธิ • Net Revenue</p>
+              <p className="text-2xl font-bold mt-2 mb-1">
+                {advancedSalesMetrics.isLoading
+                  ? <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                  : `฿${(advancedSalesMetrics.data?.net_revenue || 0).toLocaleString()}`}
               </p>
-              <p className="text-sm opacity-90">ต่อวัน</p>
+              <div className="text-xs opacity-90">
+                Gross Margin: {(advancedSalesMetrics.data?.gross_margin_percent || 0).toFixed(1)}%
+              </div>
             </div>
-            <BarChart3 className="w-12 h-12 opacity-80" />
+            <Calculator className="w-8 h-8 opacity-80" />
           </div>
         </div>
 
-        {/* Revenue Growth */}
+        {/* Average Order Value */}
         <div className="bg-gradient-to-br from-[#ffe79d] to-[#ffd773] rounded-2xl shadow-lg p-6 text-stone-800 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
-              <p className="text-sm opacity-70">การเติบโต • Growth</p>
-              <p className="text-3xl font-bold mt-3 mb-2">
-                {states.dashboardStats.isLoading
-                  ? <div className="animate-pulse bg-stone-600 bg-opacity-20 h-8 w-16 rounded"></div>
-                  : `${(dashboardStats?.revenueGrowth || 0) > 0 ? '+' : ''}${(dashboardStats?.revenueGrowth || 0).toFixed(1)}%`}
+              <p className="text-sm opacity-70">AOV • มูลค่าเฉลี่ย</p>
+              <p className="text-2xl font-bold mt-2 mb-1">
+                {advancedSalesMetrics.isLoading
+                  ? <div className="animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></div>
+                  : `฿${(advancedSalesMetrics.data?.average_order_value || 0).toLocaleString()}`}
               </p>
-              <p className="text-sm opacity-70">เมื่อเทียบช่วงก่อน</p>
+              <div className="text-xs opacity-70">
+                Per booking
+              </div>
             </div>
-            <TrendingUp className="w-12 h-12 text-stone-700 opacity-80" />
+            <BarChart3 className="w-8 h-8 text-stone-700 opacity-80" />
+          </div>
+        </div>
+
+        {/* Forecasting */}
+        <div className="bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
+          <div className="flex items-start justify-between relative z-10">
+            <div className="flex-1">
+              <p className="text-sm opacity-90">พยากรณ์ • Forecast</p>
+              <p className="text-2xl font-bold mt-2 mb-1">
+                {advancedSalesMetrics.isLoading
+                  ? <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                  : `฿${(advancedSalesMetrics.data?.projected_revenue || 0).toLocaleString()}`}
+              </p>
+              <div className="text-xs opacity-90">
+                Target: {(advancedSalesMetrics.data?.target_achievement_percent || 0).toFixed(1)}%
+              </div>
+            </div>
+            <Target className="w-8 h-8 opacity-80" />
           </div>
         </div>
       </div>
 
-      {/* Daily Revenue Chart */}
+      {/* Sales Channel Analysis */}
       <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 border-b border-stone-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <Tooltip content="Daily revenue trends showing business performance over time | แนวโน้มรายได้รายวันแสดงประสิทธิภาพทางธุรกิจตลอดเวลา">
-                  <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2 cursor-help">
-                    รายได้รายวัน • Daily Revenue Trends
-                    <Info className="w-4 h-4 text-stone-400" />
-                  </h3>
-                </Tooltip>
-                <p className="text-sm text-stone-500">Financial performance tracking • ติดตามประสิทธิภาพทางการเงิน</p>
-              </div>
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+              <PieChart className="w-5 h-5 text-white" />
             </div>
-            <div className="text-sm text-stone-500">
-              Last {dailyRevenue?.length || 7} days
+            <div>
+              <h3 className="text-lg font-semibold text-stone-900">📊 ช่องทางการขาย • Sales Channels</h3>
+              <p className="text-sm text-stone-500">Channel performance and market share • ประสิทธิภาพช่องทางและส่วนแบ่งตลาด</p>
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          <div className="h-64 flex items-end justify-between gap-2">
-            {states.dailyRevenue.isError ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center text-stone-500">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm mb-2">Unable to load revenue data</p>
-                  <p className="text-xs text-stone-400 mb-3">ไม่สามารถโหลดข้อมูลรายได้ได้</p>
-                  <button
-                    onClick={() => refetch.dailyRevenue()}
-                    className="text-green-600 hover:text-green-700 text-sm inline-flex items-center gap-1"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Retry • ลองใหม่
-                  </button>
-                </div>
-              </div>
-            ) : states.dailyRevenue.isLoading ? (
-              Array.from({ length: 7 }).map((_, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full bg-stone-200 rounded-t-lg animate-pulse" style={{ height: `${20 + Math.random() * 60}%` }} />
-                  <div className="w-6 h-3 bg-stone-200 rounded animate-pulse"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {salesChannelAnalysis.isLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="bg-stone-200 h-6 w-24 rounded mb-2"></div>
+                  <div className="bg-stone-200 h-8 w-32 rounded mb-2"></div>
+                  <div className="bg-stone-200 h-4 w-20 rounded"></div>
                 </div>
               ))
             ) : (
-              (dailyRevenue || []).slice(-7).map((item, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2 group relative">
-                  <div
-                    className="w-full bg-gradient-to-t from-green-700 to-green-600 rounded-t-lg transition-all hover:from-green-800 hover:to-green-700 cursor-pointer"
-                    style={{ height: `${Math.max(item.value || 0, 5)}%` }}
-                  />
-                  <span className="text-xs text-stone-500 font-medium">{item.day}</span>
-                  <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-stone-800 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10">
-                    <div className="text-center">
-                      <div className="font-semibold">฿{item.revenue?.toLocaleString() || 0}</div>
-                      <div className="text-stone-300 text-xs">{item.bookings || 0} bookings</div>
+              (salesChannelAnalysis.data || []).map((channel, index) => {
+                const iconMap = {
+                  'Hotel Direct': Store,
+                  'Customer App': Smartphone,
+                  'Walk-in': Users
+                }
+                const Icon = iconMap[channel.channel_name] || Store
+
+                const colorMap = {
+                  'Hotel Direct': 'from-orange-500 to-orange-600',
+                  'Customer App': 'from-blue-500 to-blue-600',
+                  'Walk-in': 'from-green-500 to-green-600'
+                }
+                const bgColor = colorMap[channel.channel_name] || 'from-gray-500 to-gray-600'
+
+                return (
+                  <div key={index} className="p-4 rounded-xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 bg-gradient-to-r ${bgColor} rounded-lg flex items-center justify-center`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-stone-900">{channel.channel_name}</h4>
+                        <p className="text-xs text-stone-500">{channel.market_share_percent}% market share</p>
+                      </div>
                     </div>
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">Revenue:</span>
+                        <span className="font-semibold">฿{channel.revenue?.toLocaleString() || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">Bookings:</span>
+                        <span className="font-semibold">{channel.booking_count || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">AVG Value:</span>
+                        <span className="font-semibold">฿{channel.avg_booking_value?.toLocaleString() || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">Growth:</span>
+                        <span className={`font-semibold flex items-center gap-1 ${
+                          (channel.growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(channel.growth_rate || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                          {Math.abs(channel.growth_rate || 0).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Service Revenue by Category */}
+      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 border-b border-purple-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-stone-900">🎯 รายได้ตามประเภทบริการ • Revenue by Service Type</h3>
+              <p className="text-sm text-stone-500">Performance breakdown by service categories • การแบ่งประสิทธิภาพตามหมวดบริการ</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-4">
+            {serviceRevenueByCategory.isLoading ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="animate-pulse flex items-center gap-4">
+                  <div className="bg-stone-200 w-12 h-12 rounded-lg"></div>
+                  <div className="flex-1">
+                    <div className="bg-stone-200 h-4 w-32 rounded mb-2"></div>
+                    <div className="bg-stone-200 h-3 w-24 rounded"></div>
+                  </div>
+                  <div className="bg-stone-200 h-6 w-20 rounded"></div>
+                </div>
+              ))
+            ) : (
+              (serviceRevenueByCategory.data || []).map((service, index) => {
+                const colors = [
+                  'from-pink-500 to-pink-600',
+                  'from-indigo-500 to-indigo-600',
+                  'from-emerald-500 to-emerald-600',
+                  'from-amber-500 to-amber-600',
+                  'from-violet-500 to-violet-600'
+                ]
+                const bgColor = colors[index % colors.length]
+
+                return (
+                  <div key={index} className="flex items-center gap-4 p-4 bg-stone-50 rounded-lg">
+                    <div className={`w-12 h-12 bg-gradient-to-r ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-lg`}>
+                      {service.service_category?.charAt(0) || '?'}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-stone-900">{service.service_category || 'Unknown'}</h4>
+                      <div className="flex items-center gap-4 text-sm text-stone-600">
+                        <span>{service.booking_count || 0} bookings</span>
+                        <span>•</span>
+                        <span>AVG: ฿{service.avg_booking_value?.toLocaleString() || 0}</span>
+                        <span>•</span>
+                        <span className={`flex items-center gap-1 ${
+                          (service.growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(service.growth_rate || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                          {Math.abs(service.growth_rate || 0).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-stone-900">฿{service.total_revenue?.toLocaleString() || 0}</div>
+                      <div className="text-xs text-stone-500">{service.market_share_percent?.toFixed(1) || 0}% share</div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Method Analysis */}
+      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 border-b border-green-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-stone-900">💳 วิธีการชำระเงิน • Payment Methods</h3>
+              <p className="text-sm text-stone-500">Payment performance and processing costs • ประสิทธิภาพการชำระเงินและค่าดำเนินการ</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {paymentMethodAnalysis.isLoading ? (
+              Array.from({ length: 2 }).map((_, index) => (
+                <div key={index} className="animate-pulse p-4 border border-stone-200 rounded-lg">
+                  <div className="bg-stone-200 h-6 w-20 rounded mb-3"></div>
+                  <div className="space-y-2">
+                    <div className="bg-stone-200 h-4 w-full rounded"></div>
+                    <div className="bg-stone-200 h-4 w-3/4 rounded"></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              (paymentMethodAnalysis.data || []).map((method, index) => (
+                <div key={index} className="p-4 border border-stone-200 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-stone-900 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4" />
+                      {method.payment_method}
+                    </h4>
+                    <span className="text-2xl font-bold text-stone-900">
+                      ฿{method.total_amount?.toLocaleString() || 0}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">Transactions:</span>
+                      <span className="font-semibold">{method.transaction_count || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">Success Rate:</span>
+                      <span className="font-semibold text-green-600">{method.success_rate || 0}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">AVG Transaction:</span>
+                      <span className="font-semibold">฿{method.avg_transaction_value?.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">Processing Fees:</span>
+                      <span className="font-semibold text-red-600">฿{method.processing_fees_estimated?.toLocaleString() || 0}</span>
+                    </div>
                   </div>
                 </div>
               ))
             )}
           </div>
-          <div className="mt-4 flex justify-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gradient-to-r from-green-700 to-green-600 rounded"></div>
-              <span className="text-stone-600">รายได้ • Revenue (฿)</span>
+        </div>
+      </div>
+
+      {/* Peak Time Analysis */}
+      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-6 border-b border-amber-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-stone-900">⏰ ช่วงเวลาเร่าร้อน • Peak Time Analysis</h3>
+              <p className="text-sm text-stone-500">Revenue optimization by time periods • การเพิ่มประสิทธิภาพรายได้ตามช่วงเวลา</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Peak Hours */}
+            <div>
+              <h4 className="font-semibold text-stone-900 mb-4">Peak Hours • ชั่วโมงเร่าร้อน</h4>
+              <div className="space-y-3">
+                {timeBasedRevenueAnalysis.isLoading ? (
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="animate-pulse flex items-center gap-3">
+                      <div className="bg-stone-200 w-16 h-6 rounded"></div>
+                      <div className="bg-stone-200 flex-1 h-6 rounded"></div>
+                      <div className="bg-stone-200 w-20 h-6 rounded"></div>
+                    </div>
+                  ))
+                ) : (
+                  (timeBasedRevenueAnalysis.data || [])
+                    .filter(item => item.analysis_type === 'Peak Hours')
+                    .sort((a, b) => (b.revenue || 0) - (a.revenue || 0))
+                    .slice(0, 6)
+                    .map((hour, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
+                        <div className="w-16 text-sm font-semibold text-stone-700">
+                          {hour.time_period}
+                        </div>
+                        <div className="flex-1">
+                          <div className="w-full bg-stone-200 rounded-full h-2">
+                            <div
+                              className="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full transition-all"
+                              style={{ width: `${Math.max((hour.performance_score || 0), 10)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-stone-900">฿{hour.revenue?.toLocaleString() || 0}</div>
+                          <div className="text-xs text-stone-500">{hour.booking_count || 0} bookings</div>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+
+            {/* Peak Days */}
+            <div>
+              <h4 className="font-semibold text-stone-900 mb-4">Peak Days • วันเร่าร้อน</h4>
+              <div className="space-y-3">
+                {timeBasedRevenueAnalysis.isLoading ? (
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="animate-pulse flex items-center gap-3">
+                      <div className="bg-stone-200 w-20 h-6 rounded"></div>
+                      <div className="bg-stone-200 flex-1 h-6 rounded"></div>
+                      <div className="bg-stone-200 w-20 h-6 rounded"></div>
+                    </div>
+                  ))
+                ) : (
+                  (timeBasedRevenueAnalysis.data || [])
+                    .filter(item => item.analysis_type === 'Peak Days')
+                    .sort((a, b) => (b.revenue || 0) - (a.revenue || 0))
+                    .map((day, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
+                        <div className="w-20 text-sm font-semibold text-stone-700">
+                          {day.time_period?.trim()}
+                        </div>
+                        <div className="flex-1">
+                          <div className="w-full bg-stone-200 rounded-full h-2">
+                            <div
+                              className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all"
+                              style={{ width: `${Math.max((day.performance_score || 0), 10)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-stone-900">฿{day.revenue?.toLocaleString() || 0}</div>
+                          <div className="text-xs text-stone-500">{day.booking_count || 0} bookings</div>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Financial Insights */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6">
-        <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
-          📈 การวิเคราะห์ทางการเงิน • Financial Analysis
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h4 className="font-medium text-stone-700">Revenue Performance • ประสิทธิภาพรายได้</h4>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                <span className="text-green-800 font-medium">Peak Day</span>
-                <span className="text-green-900 font-bold">
-                  {dailyRevenue && dailyRevenue.length > 0
-                    ? `฿${Math.max(...dailyRevenue.map(d => d.revenue || 0)).toLocaleString()}`
-                    : 'N/A'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-                <span className="text-red-800 font-medium">Lowest Day</span>
-                <span className="text-red-900 font-bold">
-                  {dailyRevenue && dailyRevenue.length > 0
-                    ? `฿${Math.min(...dailyRevenue.map(d => d.revenue || 0)).toLocaleString()}`
-                    : 'N/A'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-blue-800 font-medium">Consistency</span>
-                <span className="text-blue-900 font-bold">
-                  {dailyRevenue && dailyRevenue.length > 0
-                    ? `${(((dailyRevenue.filter(d => d.revenue && d.revenue > 0).length / dailyRevenue.length) * 100).toFixed(0))}%`
-                    : 'N/A'}
-                </span>
-              </div>
+      {/* Financial Health Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <TrendingUp className="w-8 h-8" />
+            <div>
+              <h4 className="font-semibold">Cash Flow</h4>
+              <p className="text-xs opacity-80">กระแสเงินสด</p>
             </div>
           </div>
+          <div className="text-3xl font-bold mb-2">
+            {advancedSalesMetrics.isLoading ? (
+              <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
+            ) : (
+              `฿${(advancedSalesMetrics.data?.cash_flow || 0).toLocaleString()}`
+            )}
+          </div>
+          <div className="text-sm opacity-80">
+            Estimated profit after costs
+          </div>
+        </div>
 
-          <div className="space-y-4">
-            <h4 className="font-medium text-stone-700">Revenue Trends • แนวโน้มรายได้</h4>
-            <div className="space-y-3">
-              <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-4 rounded-lg border border-amber-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-5 h-5 text-amber-700" />
-                  <span className="font-medium text-amber-800">Growth Trend</span>
-                </div>
-                <p className="text-sm text-amber-700">
-                  {dashboardStats?.revenueGrowth && dashboardStats.revenueGrowth > 0
-                    ? `Revenue is trending upward by ${dashboardStats.revenueGrowth.toFixed(1)}%`
-                    : dashboardStats?.revenueGrowth && dashboardStats.revenueGrowth < 0
-                    ? `Revenue declined by ${Math.abs(dashboardStats.revenueGrowth).toFixed(1)}%`
-                    : 'Insufficient data for trend analysis'}
-                </p>
-              </div>
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-5 h-5 text-blue-700" />
-                  <span className="font-medium text-blue-800">Forecast</span>
-                </div>
-                <p className="text-sm text-blue-700">
-                  Based on current trends, next period revenue projection varies depending on market conditions.
-                </p>
-              </div>
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <DollarSign className="w-8 h-8" />
+            <div>
+              <h4 className="font-semibold">Accounts Receivable</h4>
+              <p className="text-xs opacity-80">ลูกหนี้การค้า</p>
             </div>
+          </div>
+          <div className="text-3xl font-bold mb-2">
+            {advancedSalesMetrics.isLoading ? (
+              <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
+            ) : (
+              `฿${(advancedSalesMetrics.data?.accounts_receivable || 0).toLocaleString()}`
+            )}
+          </div>
+          <div className="text-sm opacity-80">
+            Collection rate: {(advancedSalesMetrics.data?.payment_collection_rate || 0).toFixed(1)}%
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <Target className="w-8 h-8" />
+            <div>
+              <h4 className="font-semibold">Target Progress</h4>
+              <p className="text-xs opacity-80">ความคืบหน้าเป้าหมาย</p>
+            </div>
+          </div>
+          <div className="text-3xl font-bold mb-2">
+            {advancedSalesMetrics.isLoading ? (
+              <div className="animate-pulse bg-white bg-opacity-20 h-8 w-16 rounded"></div>
+            ) : (
+              `${(advancedSalesMetrics.data?.target_achievement_percent || 0).toFixed(1)}%`
+            )}
+          </div>
+          <div className="text-sm opacity-80">
+            Variance: ฿{(advancedSalesMetrics.data?.variance_from_forecast || 0).toLocaleString()}
           </div>
         </div>
       </div>
