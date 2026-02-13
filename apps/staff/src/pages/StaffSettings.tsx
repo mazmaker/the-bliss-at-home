@@ -259,14 +259,18 @@ function StaffSettings() {
                         <span className="text-sm text-stone-700">{item.label}</span>
                         <button
                           onClick={() => item.onChange(!item.value)}
-                          className={`relative w-12 h-6 rounded-full transition-colors ${
+                          className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
                             item.value ? 'bg-amber-700' : 'bg-stone-300'
                           }`}
+                          style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
                         >
                           <span
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                              item.value ? 'left-7' : 'left-1'
-                            }`}
+                            className="inline-block rounded-full bg-white shadow-sm transition-transform"
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              transform: item.value ? 'translateX(22px)' : 'translateX(2px)',
+                            }}
                           />
                         </button>
                       </div>

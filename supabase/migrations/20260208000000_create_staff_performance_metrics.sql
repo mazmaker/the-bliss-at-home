@@ -206,12 +206,14 @@ ALTER TABLE staff_performance_metrics ENABLE ROW LEVEL SECURITY;
 -- ============================================
 
 -- Staff can view their own performance metrics
+DROP POLICY IF EXISTS "Staff can view own performance" ON staff_performance_metrics;
 CREATE POLICY "Staff can view own performance"
 ON staff_performance_metrics FOR SELECT
 TO authenticated
 USING (staff_id = auth.uid());
 
 -- Admins can view all performance metrics
+DROP POLICY IF EXISTS "Admins can view all performance" ON staff_performance_metrics;
 CREATE POLICY "Admins can view all performance"
 ON staff_performance_metrics FOR SELECT
 TO authenticated
@@ -224,6 +226,7 @@ USING (
 );
 
 -- System can insert/update metrics
+DROP POLICY IF EXISTS "System can manage metrics" ON staff_performance_metrics;
 CREATE POLICY "System can manage metrics"
 ON staff_performance_metrics FOR ALL
 TO authenticated

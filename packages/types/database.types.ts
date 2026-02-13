@@ -1443,6 +1443,8 @@ export type Database = {
           current_location_lng: number | null
           id: string
           id_card: string | null
+          invite_token: string | null
+          invite_token_expires_at: string | null
           is_available: boolean | null
           name_en: string | null
           name_th: string
@@ -1468,6 +1470,8 @@ export type Database = {
           current_location_lng?: number | null
           id?: string
           id_card?: string | null
+          invite_token?: string | null
+          invite_token_expires_at?: string | null
           is_available?: boolean | null
           name_en?: string | null
           name_th: string
@@ -1493,6 +1497,8 @@ export type Database = {
           current_location_lng?: number | null
           id?: string
           id_card?: string | null
+          invite_token?: string | null
+          invite_token_expires_at?: string | null
           is_available?: boolean | null
           name_en?: string | null
           name_th?: string

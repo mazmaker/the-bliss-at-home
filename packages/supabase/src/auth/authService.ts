@@ -340,6 +340,458 @@ async function signInWithFacebook(): Promise<void> {
   }
 }
 
+/**
+ * Login with LINE (for Staff app)
+ * Creates or updates user profile with LINE account info
+ */
+async function loginWithLine(
+  credentials: LineLoginCredentials,
+  expectedRole: UserRole = 'STAFF',
+  inviteStaffId?: string
+): Promise<AuthResponse> {
+  const { lineUserId, displayName, pictureUrl } = credentials
+
+  // Generate synthetic email from LINE userId
+  const syntheticEmail = `line_${lineUserId}@line.local`
+  // Generate a deterministic password from LINE userId (not for security, just for Supabase auth)
+  const syntheticPassword = `LINE_${lineUserId}_${lineUserId.slice(-8)}`
+
+  console.log('🔵 [LINE Login] Attempting to sign in with LINE account')
+
+  // Step 1: Try to sign in first (user might already exist)
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    email: syntheticEmail,
+    password: syntheticPassword,
+  })
+
+  // If sign in succeeded, user exists
+  if (signInData?.session && signInData?.user) {
+    // Get profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', signInData.user.id)
+      .single()
+
+    if (profileError || !profile) {
+      // Profile might not exist yet (edge case), create it
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .upsert({
+          id: signInData.user.id,
+          email: syntheticEmail,
+          full_name: displayName,
+          avatar_url: pictureUrl,
+          role: expectedRole,
+          status: 'ACTIVE',
+          language: 'th',
+        })
+        .select()
+        .single()
+
+      return {
+        profile: (newProfile || {
+          id: signInData.user.id,
+          email: syntheticEmail,
+          full_name: displayName,
+          avatar_url: pictureUrl,
+          role: expectedRole,
+          status: 'ACTIVE',
+          language: 'th',
+        }) as Profile,
+        session: {
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+          expires_at: signInData.session.expires_at || 0,
+        },
+      }
+    }
+
+    // Update profile with latest LINE data
+    // BUT: If user has an admin-created staff record, keep the admin-set name instead of LINE display name
+    const { data: linkedStaff } = await supabase
+      .from('staff')
+      .select('name_th')
+      .eq('profile_id', profile.id)
+      .single()
+
+    const nameToUse = linkedStaff?.name_th || displayName
+
+    await supabase
+      .from('profiles')
+      .update({
+        full_name: nameToUse,
+        avatar_url: pictureUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile.id)
+
+    // Validate role
+    if (profile.role !== expectedRole) {
+      await supabase.auth.signOut()
+      throw new AuthError(
+        `This account is not authorized as ${expectedRole.toLowerCase()}`,
+        'INVALID_ROLE'
+      )
+    }
+
+    // Check account status
+    if (profile.status !== 'ACTIVE') {
+      await supabase.auth.signOut()
+      throw new AuthError(
+        `Account is ${profile.status.toLowerCase().replace('_', ' ')}`,
+        'ACCOUNT_DISABLED'
+      )
+    }
+
+    // If user already exists but has an invite, try to link the admin-created staff record
+    if (inviteStaffId) {
+      console.log('🔵 [LINE Login] Existing user with invite, attempting to link staff record')
+      console.log('🔵 [LINE Login] Invite staff ID:', inviteStaffId, 'User ID:', signInData.user.id)
+
+      // Step A: Check if this user already has a trigger-created staff record (self-signup duplicate)
+      const { data: existingStaff } = await supabase
+        .from('staff')
+        .select('id, name_th')
+        .eq('profile_id', signInData.user.id)
+        .single()
+
+      if (existingStaff && existingStaff.id !== inviteStaffId) {
+        // User has a duplicate staff record created by trigger (self-signup path)
+        // Delete it first so we can link to the admin-created one
+        console.log('🔵 [LINE Login] Found duplicate trigger-created staff:', existingStaff.id, existingStaff.name_th)
+        console.log('🔵 [LINE Login] Deleting duplicate to link invite staff record...')
+        const { error: deleteError } = await supabase
+          .from('staff')
+          .delete()
+          .eq('id', existingStaff.id)
+          .eq('profile_id', signInData.user.id) // Safety: only delete if it belongs to this user
+
+        if (deleteError) {
+          console.error('🔴 [LINE Login] Failed to delete duplicate staff:', deleteError)
+        } else {
+          console.log('🔵 [LINE Login] Duplicate staff deleted successfully')
+        }
+      }
+
+      // Step B: Link the admin-created staff record to this user
+      const { data: linkResult, error: linkError } = await supabase
+        .from('staff')
+        .update({
+          profile_id: signInData.user.id,
+          avatar_url: pictureUrl,
+          invite_token: null,
+          invite_token_expires_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', inviteStaffId)
+        .is('profile_id', null)
+        .select('id, name_th')
+
+      if (linkError) {
+        console.error('🔴 [LINE Login] Failed to link invite staff:', linkError)
+      } else if (linkResult && linkResult.length > 0) {
+        console.log('✅ [LINE Login] Successfully linked staff:', linkResult[0].name_th, '(', linkResult[0].id, ')')
+
+        // Step C: Update profile.full_name to match the admin-created staff name
+        // This ensures the dashboard shows the correct name (admin-set name, not LINE display name)
+        const staffName = linkResult[0].name_th
+        if (staffName) {
+          console.log('🔵 [LINE Login] Updating profile name to match staff:', staffName)
+          await supabase
+            .from('profiles')
+            .update({ full_name: staffName, updated_at: new Date().toISOString() })
+            .eq('id', signInData.user.id)
+
+          // Also update the profile object we'll return
+          profile.full_name = staffName
+        }
+      } else {
+        console.warn('🟡 [LINE Login] Link returned 0 rows - staff may already be linked or invite expired')
+      }
+    }
+
+    return {
+      profile: {
+        ...profile,
+        full_name: nameToUse,
+        avatar_url: pictureUrl,
+      } as Profile,
+      session: {
+        access_token: signInData.session.access_token,
+        refresh_token: signInData.session.refresh_token,
+        expires_at: signInData.session.expires_at || 0,
+      },
+    }
+  }
+
+  // Step 2: Sign in failed, user might not exist or password is wrong
+  console.log('🔵 [LINE Login] Sign in failed:', signInError?.message)
+
+  // Step 3: Try to create new account
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: syntheticEmail,
+    password: syntheticPassword,
+    options: {
+      emailRedirectTo: undefined, // Disable email confirmation redirect
+      data: {
+        full_name: displayName,
+        avatar_url: pictureUrl,
+        role: expectedRole,
+        line_user_id: lineUserId,
+        ...(inviteStaffId ? { invite_staff_id: inviteStaffId } : {}),
+      },
+    },
+  })
+
+  // If signup fails because user already exists, try to recover the account
+  if (authError?.message?.toLowerCase().includes('already')) {
+    console.log('🔵 [LINE Login] User already exists, checking profiles table')
+
+    // User exists but we can't sign in - check if profile exists
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', syntheticEmail)
+      .limit(1)
+
+    if (profiles && profiles.length > 0) {
+      // Profile exists - the issue is password mismatch
+      // This can happen if user was created with different password or account state changed
+      console.error('🔴 [LINE Login] Account exists but password mismatch')
+      throw new AuthError(
+        'บัญชี LINE นี้มีอยู่แล้ว แต่ไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อผู้ดูแลระบบ',
+        'ACCOUNT_EXISTS_PASSWORD_MISMATCH'
+      )
+    }
+
+    // Profile doesn't exist but auth user does - this is unusual
+    console.error('🔴 [LINE Login] Auth user exists but no profile')
+    throw new AuthError(
+      'พบปัญหาในการเข้าสู่ระบบ กรุณาติดต่อผู้ดูแลระบบ',
+      'ORPHANED_AUTH_USER'
+    )
+  }
+
+  if (authError) {
+    // Check for rate limit error
+    if (authError.message?.toLowerCase().includes('rate limit')) {
+      throw new AuthError('Too many login attempts. Please wait a moment and try again.', 'RATE_LIMIT')
+    }
+    console.error('🔴 [LINE Login] Signup failed:', authError)
+    throw new AuthError('Failed to create LINE account: ' + authError.message, 'SIGNUP_FAILED')
+  }
+
+  if (!authData.user || !authData.session) {
+    throw new AuthError('LINE registration failed', 'UNKNOWN')
+  }
+
+  // Create/update profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .upsert({
+      id: authData.user.id,
+      email: syntheticEmail,
+      full_name: displayName,
+      avatar_url: pictureUrl,
+      role: expectedRole,
+      status: 'ACTIVE',
+      language: 'th',
+    })
+    .select()
+    .single()
+
+  if (profileError) {
+    throw new AuthError('Failed to create profile: ' + profileError.message, 'UNKNOWN')
+  }
+
+  // Fallback: If invite was provided, verify the link succeeded (trigger should have handled this)
+  if (inviteStaffId && authData.user) {
+    console.log('🔵 [LINE Login] Verifying invite link after signup...')
+    const { data: staffRecord } = await supabase
+      .from('staff')
+      .select('id, profile_id, name_th')
+      .eq('id', inviteStaffId)
+      .single()
+
+    if (staffRecord && staffRecord.profile_id === authData.user.id) {
+      console.log('✅ [LINE Login] Trigger successfully linked staff:', staffRecord.name_th)
+      // Update profile name to match admin-set staff name
+      if (staffRecord.name_th) {
+        await supabase
+          .from('profiles')
+          .update({ full_name: staffRecord.name_th, updated_at: new Date().toISOString() })
+          .eq('id', authData.user.id)
+      }
+    } else {
+      // Trigger didn't link — handle duplicate and do it manually
+      console.warn('🟡 [LINE Login] Trigger link may have failed, attempting manual link')
+
+      // Check if trigger created a SEPARATE staff record (self-signup path)
+      const { data: duplicateStaff } = await supabase
+        .from('staff')
+        .select('id, name_th')
+        .eq('profile_id', authData.user.id)
+        .neq('id', inviteStaffId)
+        .single()
+
+      if (duplicateStaff) {
+        console.log('🔵 [LINE Login] Found trigger-created duplicate staff:', duplicateStaff.id, duplicateStaff.name_th)
+        const { error: delErr } = await supabase
+          .from('staff')
+          .delete()
+          .eq('id', duplicateStaff.id)
+          .eq('profile_id', authData.user.id)
+
+        if (delErr) {
+          console.error('🔴 [LINE Login] Failed to delete duplicate:', delErr)
+        } else {
+          console.log('🔵 [LINE Login] Duplicate deleted, now linking invite staff...')
+        }
+      }
+
+      // Link the admin-created staff record
+      const { data: linkResult, error: linkError } = await supabase
+        .from('staff')
+        .update({
+          profile_id: authData.user.id,
+          avatar_url: pictureUrl,
+          invite_token: null,
+          invite_token_expires_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', inviteStaffId)
+        .is('profile_id', null)
+        .select('id, name_th')
+
+      if (linkError) {
+        console.error('🔴 [LINE Login] Manual link failed:', linkError)
+      } else if (linkResult && linkResult.length > 0) {
+        console.log('✅ [LINE Login] Manually linked staff:', linkResult[0].name_th)
+        // Update profile name to match admin-set staff name
+        if (linkResult[0].name_th) {
+          await supabase
+            .from('profiles')
+            .update({ full_name: linkResult[0].name_th, updated_at: new Date().toISOString() })
+            .eq('id', authData.user.id)
+        }
+      } else {
+        console.warn('🟡 [LINE Login] Manual link returned 0 rows')
+      }
+    }
+  }
+
+  return {
+    profile: profile as Profile,
+    session: {
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token,
+      expires_at: authData.session.expires_at || 0,
+    },
+  }
+}
+
+/**
+ * Link LINE account to existing user profile
+ * For users who registered via Email/Google and want to connect their LINE account
+ */
+async function linkLineAccount(credentials: LineLoginCredentials): Promise<void> {
+  const { lineUserId, displayName, pictureUrl } = credentials
+
+  // Get current session
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
+
+  if (sessionError || !session) {
+    throw new AuthError('Please login first', 'UNAUTHORIZED')
+  }
+
+  // Check if LINE account is already linked to another user
+  const { data: existingProfile, error: checkError } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .eq('line_user_id', lineUserId)
+    .neq('id', session.user.id) // Exclude current user
+    .maybeSingle()
+
+  if (checkError) {
+    throw new AuthError('Failed to check LINE account status', 'DATABASE_ERROR')
+  }
+
+  if (existingProfile) {
+    throw new AuthError(
+      `บัญชี LINE นี้ถูกเชื่อมต่อกับบัญชี ${existingProfile.email || existingProfile.full_name} อยู่แล้ว กรุณาใช้บัญชี LINE อื่น`,
+      'LINE_ALREADY_LINKED'
+    )
+  }
+
+  // Update profile with LINE information
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      line_user_id: lineUserId,
+      line_display_name: displayName,
+      line_picture_url: pictureUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', session.user.id)
+
+  if (updateError) {
+    throw new AuthError('Failed to link LINE account', 'DATABASE_ERROR')
+  }
+}
+
+/**
+ * Link LINE account to specific user (bypassing session check)
+ * Used when session might have changed during OAuth redirect
+ */
+async function linkLineAccountToUser(credentials: LineLoginCredentials & { userId: string }): Promise<void> {
+  const { userId, lineUserId, displayName, pictureUrl } = credentials
+
+  console.log('[linkLineAccountToUser] Linking LINE to user:', userId)
+
+  // Check if LINE account is already linked to another user
+  const { data: existingProfile, error: checkError } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .eq('line_user_id', lineUserId)
+    .neq('id', userId) // Exclude current user
+    .maybeSingle()
+
+  if (checkError) {
+    console.error('[linkLineAccountToUser] Check failed:', checkError)
+    throw new AuthError('Failed to check LINE account status', 'DATABASE_ERROR')
+  }
+
+  if (existingProfile) {
+    console.error('[linkLineAccountToUser] LINE already linked to:', existingProfile)
+    throw new AuthError(
+      `บัญชี LINE นี้ถูกเชื่อมต่อกับบัญชี ${existingProfile.email || existingProfile.full_name} อยู่แล้ว กรุณาใช้บัญชี LINE อื่น`,
+      'LINE_ALREADY_LINKED'
+    )
+  }
+
+  // Update profile with LINE information using explicit user ID
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      line_user_id: lineUserId,
+      line_display_name: displayName,
+      line_picture_url: pictureUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+
+  if (updateError) {
+    console.error('[linkLineAccountToUser] Update failed:', updateError)
+    throw new AuthError('Failed to link LINE account: ' + updateError.message, 'DATABASE_ERROR')
+  }
+
+  console.log('[linkLineAccountToUser] Successfully linked!')
+}
+
 // Export auth service
 export const authService = {
   getCurrentProfile,
@@ -351,4 +803,7 @@ export const authService = {
   updatePassword,
   signInWithGoogle,
   signInWithFacebook,
+  loginWithLine,
+  linkLineAccount,
+  linkLineAccountToUser,
 }

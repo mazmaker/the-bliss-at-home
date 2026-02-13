@@ -2,22 +2,25 @@
  * Staff Profile Types
  */
 
-// Document types
-export type DocumentType = 'id_card' | 'certificate' | 'training' | 'other'
-export type DocumentStatus = 'pending' | 'approved' | 'rejected' | 'expired'
+// Document types (match Admin app)
+export type DocumentType = 'id_card' | 'license' | 'certificate' | 'bank_statement' | 'other'
+export type DocumentStatus = 'pending' | 'reviewing' | 'verified' | 'rejected'
 
 export interface StaffDocument {
   id: string
   staff_id: string
-  type: DocumentType
-  name: string
+  document_type: DocumentType
   file_url: string
   file_name: string
-  status: DocumentStatus
-  expires_at?: string
+  file_size: number
+  mime_type: string
+  verification_status: DocumentStatus
+  verified_by?: string
+  verified_at?: string
+  rejection_reason?: string
   notes?: string
-  reviewed_by?: string
-  reviewed_at?: string
+  uploaded_at: string
+  expires_at?: string
   created_at: string
   updated_at: string
 }
@@ -43,21 +46,21 @@ export interface StaffSkill {
   id: string
   staff_id: string
   skill_id: string
-  skill_name: string
-  skill_name_en?: string
-  level: number // 1-5
+  level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
   years_experience?: number
-  is_certified: boolean
-  certificate_url?: string
   created_at: string
-  updated_at: string
+  skills?: {
+    name_th: string
+    name_en: string
+  }
 }
 
-// Document type labels
+// Document type labels (match Admin app)
 export const DOCUMENT_TYPES: Record<DocumentType, { th: string; en: string }> = {
-  id_card: { th: 'บัตรประชาชน', en: 'ID Card' },
-  certificate: { th: 'ใบรับรองวิชาชีพ', en: 'Professional Certificate' },
-  training: { th: 'หนังสือรับรองอบรม', en: 'Training Certificate' },
+  id_card: { th: 'สำเนาบัตรประชาชน', en: 'ID Card' },
+  license: { th: 'ใบประกอบวิชาชีพ', en: 'Professional License' },
+  certificate: { th: 'ใบรับรองการอบรม', en: 'Training Certificate' },
+  bank_statement: { th: 'สำเนาบัญชีธนาคาร', en: 'Bank Statement' },
   other: { th: 'เอกสารอื่นๆ', en: 'Other Documents' },
 }
 
@@ -141,3 +144,14 @@ export const THAI_PROVINCES = [
   'อุทัยธานี',
   'อุบลราชธานี',
 ]
+
+// Staff Eligibility (for checking if staff can start working)
+export interface StaffEligibility {
+  canWork: boolean
+  reasons: string[]
+  status: 'active' | 'inactive' | 'pending'
+  documents: {
+    id_card: { uploaded: boolean; verified: boolean; status?: string }
+    bank_statement: { uploaded: boolean; verified: boolean; status?: string }
+  }
+}

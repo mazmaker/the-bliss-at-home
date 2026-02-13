@@ -10,10 +10,13 @@ import {
   Flower2,
   Check,
   Loader2,
+  Star,
 } from 'lucide-react'
 import { useUpdateStaff } from '../hooks/useStaff'
 import { CreateStaffData, Staff } from '../services/staffService'
 import { toast } from 'react-hot-toast'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
 
 interface EditStaffModalProps {
   isOpen: boolean
@@ -21,10 +24,11 @@ interface EditStaffModalProps {
   staff: Staff
 }
 
-const skills = [
-  { id: 'massage', name: 'นวด', icon: Sparkles },
-  { id: 'nail', name: 'เล็บ', icon: Hand },
-  { id: 'spa', name: 'สปา', icon: Flower2 },
+// Icon mapping for skills
+const skillIconMap = [
+  { name: 'นวด', icon: Sparkles },
+  { name: 'เล็บ', icon: Hand },
+  { name: 'สปา', icon: Flower2 },
 ]
 
 export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModalProps) {
@@ -40,6 +44,20 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
   })
 
   const updateStaffMutation = useUpdateStaff()
+
+  // Fetch available skills from database
+  const { data: availableSkills = [] } = useQuery({
+    queryKey: ['skills'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('skills')
+        .select('id, name_th, name_en')
+        .order('name_th')
+
+      if (error) throw error
+      return data || []
+    }
+  })
 
   useEffect(() => {
     if (isOpen) {
@@ -196,24 +214,27 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
               <label className="block text-sm font-medium text-stone-700 mb-3">
                 ทักษะ/ความสามารถ
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                {skills.map((skill) => {
-                  const Icon = skill.icon
+              <div className="grid grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
+                {availableSkills.map((skill: any) => {
+                  const skillIcon = skillIconMap.find(
+                    (s) => skill.name_th?.includes(s.name) || skill.name_en?.toLowerCase().includes(s.name.toLowerCase())
+                  )
+                  const Icon = skillIcon?.icon || Star
                   const isSelected = formData.skills?.includes(skill.id)
                   return (
                     <button
                       key={skill.id}
                       type="button"
                       onClick={() => handleSkillToggle(skill.id)}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition ${
+                      className={`flex flex-col items-center gap-2 px-3 py-3 rounded-xl font-medium transition relative ${
                         isSelected
                           ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
                           : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span>{skill.name}</span>
-                      {isSelected && <Check className="w-4 h-4 ml-auto" />}
+                      <Icon className="w-5 h-5" />
+                      <span className="text-sm">{skill.name_th}</span>
+                      {isSelected && <Check className="w-4 h-4 absolute top-1 right-1" />}
                     </button>
                   )
                 })}

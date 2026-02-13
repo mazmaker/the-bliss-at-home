@@ -375,12 +375,29 @@ function OverviewTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Bio */}
-      {staff.bio && (
-        <div>
-          <h3 className="text-lg font-semibold text-stone-900 mb-4">เกี่ยวกับ</h3>
-          <p className="text-stone-600 leading-relaxed">{staff.bio}</p>
+      <div>
+        <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลเพิ่มเติม</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-stone-400 mt-1" />
+            <div>
+              <p className="text-sm text-stone-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
+              <p className="font-medium text-stone-900 leading-relaxed">
+                {staff.bio_th || <span className="text-stone-400">ไม่ระบุ</span>}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-stone-400 mt-1" />
+            <div>
+              <p className="text-sm text-stone-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
+              <p className="font-medium text-stone-900 leading-relaxed">
+                {staff.bio_en || <span className="text-stone-400">ไม่ระบุ</span>}
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

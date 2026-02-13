@@ -1,81 +1,63 @@
 /**
- * Authentication Hooks
- * React hooks for auth state management
+ * AuthProvider - Centralized Auth State Management
  *
- * When used inside an AuthProvider, useAuth() reads from shared context (single listener).
- * When used without AuthProvider, falls back to standalone mode (each call creates its own listener).
+ * Solves the problem where multiple useAuth() calls each create their own
+ * useEffect + onAuthStateChange listener, causing getCurrentProfile() to be
+ * called dozens of times.
+ *
+ * With AuthProvider, auth state is managed ONCE at the top of the component tree,
+ * and all useAuth() consumers read from the shared context.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 import { authService } from './authService'
 import type { AuthState, LoginCredentials, RegisterCredentials, UserRole } from './types'
 import { AuthError } from './types'
-import { useOptionalAuthContext } from './AuthProvider'
 
-/**
- * Main auth hook - manages auth state
- *
- * If AuthProvider is available, reads from shared context (recommended).
- * Otherwise falls back to standalone mode for backward compatibility.
- */
-export function useAuth(expectedRole?: UserRole, options?: { skipInitialCheck?: boolean }) {
-  // Always call useContext (safe even if no provider - returns null)
-  const contextValue = useOptionalAuthContext()
-  const hasProvider = contextValue !== null
+interface AuthContextType extends AuthState {
+  login: (credentials: LoginCredentials) => Promise<any>
+  register: (credentials: RegisterCredentials) => Promise<any>
+  logout: () => Promise<void>
+  clearError: () => void
+  expectedRole?: UserRole
+}
 
-  // Always call standalone hook (React rules: hooks must always be called)
-  // When provider exists, pass skipInitialCheck to minimize work
-  const standaloneResult = useAuthStandalone(
-    hasProvider ? undefined : expectedRole,
-    hasProvider ? { skipInitialCheck: true } : options
-  )
+const AuthContext = createContext<AuthContextType | null>(null)
 
-  // If provider is available AND not skipping initial check, use context
-  if (hasProvider && !options?.skipInitialCheck) {
-    return contextValue
-  }
-
-  // Fallback: standalone mode
-  return standaloneResult
+interface AuthProviderProps {
+  children: React.ReactNode
+  expectedRole?: UserRole
 }
 
 /**
- * Standalone auth hook - original implementation
- * Used when no AuthProvider is available, or for login pages with skipInitialCheck
+ * AuthProvider - Wrap your app with this to provide auth state to all children.
+ * Only ONE instance should exist per app.
  */
-function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck?: boolean }) {
+export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
   const hasSession = typeof window !== 'undefined' && !!localStorage.getItem('bliss-customer-auth')
-  const shouldLoad = hasSession && !options?.skipInitialCheck
 
   const [state, setState] = useState<AuthState>({
     user: null,
-    isLoading: shouldLoad,
+    isLoading: hasSession,
     error: null,
     isAuthenticated: false,
   })
 
-  // Initialize auth state
+  // Track if initial load has completed to prevent duplicate fetches
+  const initialLoadDone = useRef(false)
+
+  // Initialize auth state - runs ONCE
   useEffect(() => {
     let mounted = true
     let timeoutId: NodeJS.Timeout
 
     async function loadUser() {
-      try {
-        // Skip initial check if requested (for login/register pages)
-        if (options?.skipInitialCheck) {
-          if (mounted) {
-            setState({
-              user: null,
-              isLoading: false,
-              error: null,
-              isAuthenticated: false,
-            })
-          }
-          return
-        }
+      // Prevent duplicate initial loads (React StrictMode)
+      if (initialLoadDone.current) return
+      initialLoadDone.current = true
 
-        // Quick check: if no session exists in localStorage, skip loading entirely
+      try {
         const sessionData = localStorage.getItem('bliss-customer-auth')
         if (!sessionData) {
           if (mounted) {
@@ -90,12 +72,11 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
         }
 
         const timeoutDuration = 10000
-
-        console.log('⏱️ Starting auth check with 10s timeout')
+        console.log('⏱️ [AuthProvider] Starting auth check with 10s timeout')
 
         timeoutId = setTimeout(() => {
           if (mounted) {
-            console.warn('⚠️ Auth loading timeout (10s) - setting not authenticated')
+            console.warn('⚠️ [AuthProvider] Auth loading timeout (10s)')
             setState({
               user: null,
               isLoading: false,
@@ -105,9 +86,9 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
           }
         }, timeoutDuration)
 
-        console.log('🔄 Fetching profile from authService.getCurrentProfile()')
+        console.log('🔄 [AuthProvider] Fetching profile...')
         const profile = await authService.getCurrentProfile()
-        console.log('✅ Profile fetched:', profile ? 'Success' : 'No profile found')
+        console.log('✅ [AuthProvider] Profile fetched:', profile ? 'Success' : 'No profile')
 
         if (timeoutId) clearTimeout(timeoutId)
         if (!mounted) return
@@ -115,11 +96,11 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
         if (!profile) {
           const { data: { session } } = await supabase.auth.getSession()
           if (session) {
-            console.warn('⚠️ Session exists but no profile found in database!')
+            console.warn('⚠️ [AuthProvider] Session exists but no profile found')
           }
         }
 
-        // Validate role if expectedRole is provided
+        // Validate role
         if (expectedRole && profile && profile.role !== expectedRole) {
           await authService.logout()
           setState({
@@ -141,7 +122,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
         if (timeoutId) clearTimeout(timeoutId)
         if (!mounted) return
 
-        console.error('❌ Auth error (session preserved):', error)
+        console.error('❌ [AuthProvider] Auth error:', error)
         setState({
           user: null,
           isLoading: false,
@@ -153,7 +134,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
 
     loadUser()
 
-    // Listen for auth changes - debounce to prevent rapid re-fetches
+    // Listen for auth changes - single listener for the entire app
     let lastProfileFetchTime = 0
     const PROFILE_FETCH_DEBOUNCE = 2000
 
@@ -161,7 +142,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         const now = Date.now()
         if (now - lastProfileFetchTime < PROFILE_FETCH_DEBOUNCE) {
-          console.log('⏭️ Skipping profile fetch (debounced)', event)
+          console.log('⏭️ [AuthProvider] Skipping profile fetch (debounced)', event)
           return
         }
         lastProfileFetchTime = now
@@ -169,6 +150,18 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
         try {
           const profile = await authService.getCurrentProfile()
           if (mounted) {
+            // Validate role
+            if (expectedRole && profile && profile.role !== expectedRole) {
+              await authService.logout()
+              setState({
+                user: null,
+                isLoading: false,
+                error: 'Invalid role for this application',
+                isAuthenticated: false,
+              })
+              return
+            }
+
             setState({
               user: profile,
               isLoading: false,
@@ -177,7 +170,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
             })
           }
         } catch (error) {
-          console.error('❌ Error loading profile after auth change (session preserved):', error)
+          console.error('❌ [AuthProvider] Error loading profile after auth change:', error)
           if (mounted) {
             setState({
               user: null,
@@ -197,7 +190,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
           })
         }
       } else if ((event as string) === 'TOKEN_REFRESH_FAILED') {
-        console.warn('⚠️ Token refresh failed - will retry automatically')
+        console.warn('⚠️ [AuthProvider] Token refresh failed')
         if (mounted) {
           setState({
             user: null,
@@ -214,11 +207,10 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
       if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
-  }, [expectedRole, options?.skipInitialCheck])
+  }, [expectedRole])
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
-
     try {
       const response = await authService.login(credentials, expectedRole)
       setState({
@@ -230,18 +222,13 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
       return response
     } catch (error) {
       const errorMessage = error instanceof AuthError ? error.message : 'Login failed'
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }))
+      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }))
       throw error
     }
   }, [expectedRole])
 
   const register = useCallback(async (credentials: RegisterCredentials) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
-
     try {
       const response = await authService.register(credentials)
       setState({
@@ -253,11 +240,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
       return response
     } catch (error) {
       const errorMessage = error instanceof AuthError ? error.message : 'Registration failed'
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }))
+      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }))
       throw error
     }
   }, [])
@@ -285,35 +268,46 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
     setState(prev => ({ ...prev, error: null }))
   }, [])
 
-  return {
+  const value: AuthContextType = {
     ...state,
     login,
     register,
     logout,
     clearError,
+    expectedRole,
   }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 /**
- * Hook to check if user has specific role
+ * Hook to consume auth context from AuthProvider.
+ * Must be used within an AuthProvider.
  */
-export function useHasRole(role: UserRole): boolean {
-  const { user } = useAuth()
-  return user?.role === role
+export function useAuthContext(): AuthContextType {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuthContext must be used within an AuthProvider')
+  }
+  return context
 }
 
 /**
- * Hook to check if user has any of the specified roles
+ * Hook that returns auth context if available, or null if no AuthProvider exists.
+ * Always safe to call (no conditional hooks).
  */
-export function useHasAnyRole(roles: UserRole[]): boolean {
-  const { user } = useAuth()
-  return user ? roles.includes(user.role) : false
+export function useOptionalAuthContext(): AuthContextType | null {
+  return useContext(AuthContext)
 }
 
 /**
- * Hook to get current user profile with loading state
+ * Check if AuthProvider is available (for backward compatibility)
  */
-export function useProfile() {
-  const { user, isLoading, error } = useAuth()
-  return { profile: user, isLoading, error }
+export function useAuthProviderAvailable(): boolean {
+  const context = useContext(AuthContext)
+  return context !== null
 }
