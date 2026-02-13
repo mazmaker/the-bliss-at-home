@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../auth/hooks'
 import { staffService } from './staffService'
-import type { StaffDocument, ServiceArea, StaffSkill, DocumentType } from './types'
+import type { StaffDocument, ServiceArea, StaffSkill, DocumentType, StaffEligibility } from './types'
 
 // ============================================
 // useDocuments Hook
@@ -38,13 +38,13 @@ export function useDocuments() {
     }
   }, [isAuthLoading, user?.id, fetchDocuments])
 
-  const uploadDocument = async (type: DocumentType, name: string, file: File) => {
+  const uploadDocument = async (type: DocumentType, file: File, notes?: string, expires_at?: string) => {
     if (!user?.id) throw new Error('Not authenticated')
 
     try {
       setIsUploading(true)
       setError(null)
-      const newDoc = await staffService.uploadDocument(user.id, type, name, file)
+      const newDoc = await staffService.uploadDocument(user.id, type, file, notes, expires_at)
       setDocuments((prev) => [newDoc, ...prev])
       return newDoc
     } catch (err: any) {
@@ -182,7 +182,9 @@ export function useServiceAreas() {
 export function useStaffSkills() {
   const { user, isLoading: isAuthLoading } = useAuth()
   const [skills, setSkills] = useState<StaffSkill[]>([])
+  const [availableSkills, setAvailableSkills] = useState<Array<{ id: string; name_th: string; name_en: string; category: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchSkills = useCallback(async () => {
@@ -199,32 +201,90 @@ export function useStaffSkills() {
     }
   }, [user?.id])
 
+  const fetchAvailableSkills = useCallback(async () => {
+    try {
+      const data = await staffService.getAllSkills()
+      setAvailableSkills(data)
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }, [])
+
   useEffect(() => {
     if (!isAuthLoading && user?.id) {
       fetchSkills()
+      fetchAvailableSkills()
     }
-  }, [isAuthLoading, user?.id, fetchSkills])
+  }, [isAuthLoading, user?.id, fetchSkills, fetchAvailableSkills])
 
-  const updateLevel = async (skillId: string, level: number) => {
+  const addSkill = async (
+    skillId: string,
+    level: 'beginner' | 'intermediate' | 'advanced' | 'expert',
+    yearsExperience?: number
+  ) => {
     if (!user?.id) throw new Error('Not authenticated')
 
     try {
+      setIsSaving(true)
       setError(null)
-      await staffService.updateSkillLevel(user.id, skillId, level)
+      const newSkill = await staffService.addSkill(user.id, skillId, level, yearsExperience)
+      setSkills((prev) => [newSkill, ...prev])
+      return newSkill
+    } catch (err: any) {
+      setError(err.message)
+      throw err
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const updateSkill = async (
+    skillId: string,
+    level: 'beginner' | 'intermediate' | 'advanced' | 'expert',
+    yearsExperience?: number
+  ) => {
+    if (!user?.id) throw new Error('Not authenticated')
+
+    try {
+      setIsSaving(true)
+      setError(null)
+      await staffService.updateSkillLevel(user.id, skillId, level, yearsExperience)
       setSkills((prev) =>
-        prev.map((s) => (s.skill_id === skillId ? { ...s, level } : s))
+        prev.map((s) => (s.skill_id === skillId ? { ...s, level, years_experience: yearsExperience } : s))
       )
     } catch (err: any) {
       setError(err.message)
       throw err
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const deleteSkill = async (skillId: string) => {
+    if (!user?.id) throw new Error('Not authenticated')
+
+    try {
+      setIsSaving(true)
+      setError(null)
+      await staffService.deleteSkill(user.id, skillId)
+      setSkills((prev) => prev.filter((s) => s.skill_id !== skillId))
+    } catch (err: any) {
+      setError(err.message)
+      throw err
+    } finally {
+      setIsSaving(false)
     }
   }
 
   return {
     skills,
+    availableSkills,
     isLoading,
+    isSaving,
     error,
-    updateLevel,
+    addSkill,
+    updateSkill,
+    deleteSkill,
     refetch: fetchSkills,
   }
 }
@@ -275,6 +335,30 @@ export function useProfileUpdate() {
     }
   }
 
+  const updateStaffData = async (data: {
+    name_th?: string
+    name_en?: string
+    phone?: string
+    id_card?: string
+    address?: string
+    bio_th?: string
+    bio_en?: string
+  }) => {
+    if (!user?.id) throw new Error('Not authenticated')
+
+    try {
+      setIsSaving(true)
+      setError(null)
+      await staffService.updateStaffData(user.id, data)
+      // No need to refreshUser since we're updating staff table, not profiles table
+    } catch (err: any) {
+      setError(err.message)
+      throw err
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const changePassword = async (newPassword: string) => {
     try {
       setIsSaving(true)
@@ -292,7 +376,46 @@ export function useProfileUpdate() {
     isSaving,
     error,
     updateProfile,
+    updateStaffData,
     uploadAvatar,
     changePassword,
+  }
+}
+
+// ============================================
+// useStaffEligibility Hook
+// ============================================
+
+export function useStaffEligibility() {
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const [eligibility, setEligibility] = useState<StaffEligibility | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchEligibility = useCallback(async () => {
+    if (!user?.id) return
+
+    try {
+      setIsLoading(true)
+      const data = await staffService.canStaffStartWork(user.id)
+      setEligibility(data)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthLoading && user?.id) {
+      fetchEligibility()
+    }
+  }, [isAuthLoading, user?.id, fetchEligibility])
+
+  return {
+    eligibility,
+    isLoading,
+    error,
+    refetch: fetchEligibility,
   }
 }

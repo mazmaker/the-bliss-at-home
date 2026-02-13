@@ -17,6 +17,9 @@ export interface Profile {
   full_name?: string
   phone?: string
   avatar_url?: string
+  line_user_id?: string
+  line_display_name?: string
+  line_picture_url?: string
   status: UserStatus
   language: string
   created_at: string
@@ -124,7 +127,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
 export class AuthError extends Error {
   constructor(
     message: string,
-    public code?: 'INVALID_CREDENTIALS' | 'INVALID_ROLE' | 'ACCOUNT_DISABLED' | 'OAUTH_ERROR' | 'UNKNOWN'
+    public code?: 'INVALID_CREDENTIALS' | 'INVALID_ROLE' | 'ACCOUNT_DISABLED' | 'OAUTH_ERROR' | 'LINE_ALREADY_LINKED' | 'LINE_LINKED_USE_EMAIL_LOGIN' | 'DATABASE_ERROR' | 'UNAUTHORIZED' | 'UNKNOWN'
   ) {
     super(message)
     this.name = 'AuthError'
