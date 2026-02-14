@@ -102,7 +102,7 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-stone-200">
           <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Staff Info */}
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold text-lg mx-auto mb-2">

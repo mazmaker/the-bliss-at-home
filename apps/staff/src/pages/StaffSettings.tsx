@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Lock, Globe, LogOut, Info, ChevronRight, Volume2, VolumeX, Check } from 'lucide-react'
+import { Bell, LogOut, Volume2, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
@@ -10,7 +10,6 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: 'staff_notifications_enabled',
   EMAIL_ALERTS: 'staff_email_alerts',
   SMS_ALERTS: 'staff_sms_alerts',
-  LANGUAGE: 'staff_language',
 }
 
 // Helper functions for localStorage
@@ -24,15 +23,6 @@ const setStoredBoolean = (key: string, value: boolean): void => {
   localStorage.setItem(key, String(value))
 }
 
-const getStoredLanguage = (): 'th' | 'en' => {
-  const stored = localStorage.getItem(STORAGE_KEYS.LANGUAGE)
-  return (stored === 'en' ? 'en' : 'th') as 'th' | 'en'
-}
-
-const setStoredLanguage = (lang: 'th' | 'en'): void => {
-  localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang)
-}
-
 function StaffSettings() {
   const navigate = useNavigate()
   const { logout } = useAuth()
@@ -40,7 +30,6 @@ function StaffSettings() {
   const [soundEnabled, setSoundEnabledState] = useState(true)
   const [emailAlerts, setEmailAlerts] = useState(true)
   const [smsAlerts, setSmsAlerts] = useState(false)
-  const [language, setLanguage] = useState<'th' | 'en'>('th')
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showSaveSuccess, setShowSaveSuccess] = useState(false)
 
@@ -50,7 +39,6 @@ function StaffSettings() {
     setNotifications(getStoredBoolean(STORAGE_KEYS.NOTIFICATIONS, true))
     setEmailAlerts(getStoredBoolean(STORAGE_KEYS.EMAIL_ALERTS, true))
     setSmsAlerts(getStoredBoolean(STORAGE_KEYS.SMS_ALERTS, false))
-    setLanguage(getStoredLanguage())
   }, [])
 
   const handleSoundToggle = (enabled: boolean) => {
@@ -79,14 +67,6 @@ function StaffSettings() {
     setSmsAlerts(enabled)
     setStoredBoolean(STORAGE_KEYS.SMS_ALERTS, enabled)
     showSaved()
-  }
-
-  const handleLanguageChange = (lang: 'th' | 'en') => {
-    setLanguage(lang)
-    setStoredLanguage(lang)
-    showSaved()
-    // Note: Full i18n implementation would require a context/provider
-    // For now, this saves the preference
   }
 
   const showSaved = () => {
@@ -283,64 +263,6 @@ function StaffSettings() {
         })}
       </div>
 
-      {/* Language Selector */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
-            <Globe className="w-5 h-5 text-stone-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-stone-900">ภาษา</h3>
-            <p className="text-xs text-stone-500">Language</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => handleLanguageChange('th')}
-            className={`p-3 rounded-xl font-medium transition ${
-              language === 'th'
-                ? 'bg-amber-700 text-white'
-                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
-          >
-            ไทย
-          </button>
-          <button
-            onClick={() => handleLanguageChange('en')}
-            className={`p-3 rounded-xl font-medium transition ${
-              language === 'en'
-                ? 'bg-amber-700 text-white'
-                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
-          >
-            English
-          </button>
-        </div>
-      </div>
-
-      {/* App Info */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
-            <Info className="w-5 h-5 text-stone-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-stone-900">เกี่ยวกับแอป</h3>
-            <p className="text-xs text-stone-500">About</p>
-          </div>
-        </div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-stone-500">เวอร์ชัน</span>
-            <span className="text-stone-900">1.0.0</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-stone-500">บริษัท</span>
-            <span className="text-stone-900">The Bliss at Home</span>
-          </div>
-        </div>
-      </div>
-
       {/* Logout Button */}
       <button
         onClick={() => setShowLogoutConfirm(true)}
@@ -349,6 +271,7 @@ function StaffSettings() {
         <LogOut className="w-5 h-5" />
         ออกจากระบบ
       </button>
+
     </div>
   )
 }
