@@ -353,7 +353,7 @@ export async function getSkills(profileId: string): Promise<StaffSkill[]> {
     .from('staff_skills')
     .select(`
       *,
-      skills:skill_id (
+      skill:skill_id (
         name_th,
         name_en
       )
@@ -365,8 +365,8 @@ export async function getSkills(profileId: string): Promise<StaffSkill[]> {
   // Transform data to include skill names
   return (data || []).map((item: any) => ({
     ...item,
-    skill_name: item.skills?.name || '',
-    skill_name_en: item.skills?.name_en || '',
+    skill_name: item.skill?.name_th || '',
+    skill_name_en: item.skill?.name_en || '',
   })) as StaffSkill[]
 }
 
@@ -401,7 +401,7 @@ export async function addSkill(
     })
     .select(`
       *,
-      skills:skill_id (
+      skill:skill_id (
         name_th,
         name_en
       )

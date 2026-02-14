@@ -60,6 +60,7 @@ function StaffProfile() {
     isLoading: isBankLoading,
     isSaving: isBankSaving,
     addAccount,
+    updateAccount,
     deleteAccount,
     setPrimary,
   } = useBankAccounts()
@@ -78,6 +79,7 @@ function StaffProfile() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [showAddBank, setShowAddBank] = useState(false)
+  const [editingBankId, setEditingBankId] = useState<string | null>(null)
   const [showAddDocument, setShowAddDocument] = useState(false)
   const [showAddArea, setShowAddArea] = useState(false)
   const [showAddSkill, setShowAddSkill] = useState(false)
@@ -213,18 +215,33 @@ function StaffProfile() {
     }
 
     try {
-      await addAccount(
-        newBank.bank_code,
-        bank.name,
-        newBank.account_number,
-        newBank.account_name,
-        newBank.is_primary || bankAccounts.length === 0
-      )
+      if (editingBankId) {
+        // Update existing account
+        await updateAccount(editingBankId, {
+          bank_code: newBank.bank_code,
+          bank_name: bank.name,
+          account_number: newBank.account_number,
+          account_name: newBank.account_name,
+        })
+        setSuccess('แก้ไขบัญชีเรียบร้อย')
+      } else {
+        // Add new account
+        await addAccount(
+          newBank.bank_code,
+          bank.name,
+          newBank.account_number,
+          newBank.account_name,
+          newBank.is_primary || bankAccounts.length === 0
+        )
+        setSuccess('เพิ่มบัญชีเรียบร้อย')
+      }
       setShowAddBank(false)
+      setEditingBankId(null)
       setNewBank({ bank_code: '', account_number: '', account_name: '', is_primary: false })
       setError(null)
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
-      setError(err.message || 'ไม่สามารถเพิ่มบัญชีได้')
+      setError(err.message || (editingBankId ? 'ไม่สามารถแก้ไขบัญชีได้' : 'ไม่สามารถเพิ่มบัญชีได้'))
     }
   }
 
@@ -721,7 +738,7 @@ function StaffProfile() {
               return (
                 <div key={skill.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-amber-50 text-amber-800 rounded-full text-sm font-medium border border-amber-200">
                   <Icon className="w-4 h-4" />
-                  <span>{skill.skills?.name_th || 'Unknown'}</span>
+                  <span>{skill.skill?.name_th || 'Unknown'}</span>
                   <button
                     onClick={() => setDeleteConfirm({ type: 'skill', id: skill.skill_id })}
                     className="ml-1 p-0.5 hover:bg-amber-200 rounded-full transition"
@@ -878,24 +895,83 @@ function StaffProfile() {
         )}
       </div>
 
-      {/* Security Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-4">
-        <h3 className="font-semibold text-stone-900 mb-4">ความปลอดภัย</h3>
-        <button
-          onClick={() => setShowChangePassword(true)}
-          className="w-full flex items-center justify-between p-3 bg-stone-50 rounded-xl hover:bg-stone-100 transition"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-stone-200 rounded-lg flex items-center justify-center">
-              <Lock className="w-5 h-5 text-stone-600" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium text-stone-900">เปลี่ยนรหัสผ่าน</p>
-              <p className="text-xs text-stone-500">อัปเดตรหัสผ่านเข้าใช้งาน</p>
-            </div>
+      {/* Bank Accounts Section */}
+      <div id="bank" className="bg-white rounded-2xl shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-stone-900">บัญชีรับเงิน</h2>
+            <p className="text-sm text-stone-500">Bank Accounts</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-stone-400" />
-        </button>
+          {bankAccounts.length === 0 && (
+            <button
+              onClick={() => setShowAddBank(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+            >
+              <Plus className="w-4 h-4" />
+              เพิ่มบัญชี
+            </button>
+          )}
+        </div>
+
+        {isBankLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
+          </div>
+        ) : bankAccounts.length === 0 ? (
+          <div className="text-center py-8 text-stone-500">
+            <CreditCard className="w-12 h-12 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm">ยังไม่มีบัญชีรับเงิน</p>
+            <p className="text-xs text-stone-400 mt-1">กดปุ่ม "เพิ่มบัญชี" เพื่อเพิ่มบัญชีธนาคาร</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {bankAccounts.map((account) => {
+              const bank = THAI_BANKS.find((b) => b.code === account.bank_code)
+              return (
+                <div
+                  key={account.id}
+                  className="flex items-center gap-3 p-4 border border-stone-200 rounded-xl hover:border-stone-300 transition"
+                >
+                  <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-stone-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-stone-900 truncate mb-1">{bank?.name || account.bank_code}</p>
+                    <p className="text-sm text-stone-600 font-mono">{account.account_number}</p>
+                    <p className="text-xs text-stone-500 truncate">{account.account_name}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingBankId(account.id)
+                        setNewBank({
+                          bank_code: account.bank_code,
+                          account_number: account.account_number,
+                          account_name: account.account_name,
+                          is_primary: account.is_primary,
+                        })
+                        setShowAddBank(true)
+                      }}
+                      disabled={isBankSaving}
+                      className="px-3 py-1.5 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-xs disabled:opacity-50"
+                      title="แก้ไข"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm({ type: 'bank', id: account.id })}
+                      disabled={isBankSaving}
+                      className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-xs disabled:opacity-50"
+                      title="ลบ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add Bank Account Modal */}
@@ -903,8 +979,17 @@ function StaffProfile() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-stone-900">เพิ่มบัญชีธนาคาร</h3>
-              <button onClick={() => setShowAddBank(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
+              <h3 className="font-semibold text-lg text-stone-900">
+                {editingBankId ? 'แก้ไขบัญชีธนาคาร' : 'เพิ่มบัญชีธนาคาร'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAddBank(false)
+                  setEditingBankId(null)
+                  setNewBank({ bank_code: '', account_number: '', account_name: '', is_primary: false })
+                }}
+                className="p-2 hover:bg-stone-100 rounded-lg transition"
+              >
                 <X className="w-5 h-5 text-stone-600" />
               </button>
             </div>
@@ -944,23 +1029,18 @@ function StaffProfile() {
                   className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
                 />
               </div>
-              {bankAccounts.length > 0 && (
-                <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newBank.is_primary}
-                    onChange={(e) => setNewBank({ ...newBank, is_primary: e.target.checked })}
-                    className="w-5 h-5 text-amber-600 rounded focus:ring-amber-500"
-                  />
-                  <span className="text-sm text-stone-700">ตั้งเป็นบัญชีหลัก</span>
-                </label>
-              )}
               <button
                 onClick={handleAddBankAccount}
                 disabled={isBankSaving}
                 className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50"
               >
-                {isBankSaving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'เพิ่มบัญชี'}
+                {isBankSaving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : editingBankId ? (
+                  'บันทึกการแก้ไข'
+                ) : (
+                  'เพิ่มบัญชี'
+                )}
               </button>
             </div>
           </div>
