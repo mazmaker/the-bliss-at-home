@@ -80,6 +80,7 @@ export async function getCustomerById(
 
 /**
  * Update customer profile
+ * Also syncs full_name back to profiles table for consistency
  */
 export async function updateCustomer(
   client: SupabaseClient<Database>,
@@ -94,6 +95,15 @@ export async function updateCustomer(
     .single();
 
   if (error) throw error;
+
+  // Sync full_name to profiles table if it was updated
+  if (updates.full_name && data.profile_id) {
+    await client
+      .from('profiles')
+      .update({ full_name: updates.full_name })
+      .eq('id', data.profile_id);
+  }
+
   return data;
 }
 

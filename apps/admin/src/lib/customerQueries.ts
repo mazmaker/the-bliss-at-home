@@ -27,6 +27,40 @@ export interface CustomerWithStats extends Customer {
   last_30_days_spent: number
 }
 
+export interface CustomerAddress {
+  id: string
+  customer_id: string
+  label: string
+  recipient_name: string
+  phone: string
+  address_line: string
+  subdistrict: string | null
+  district: string | null
+  province: string
+  zipcode: string
+  latitude: number | null
+  longitude: number | null
+  is_default: boolean | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomerTaxInfo {
+  id: string
+  customer_id: string
+  tax_type: string
+  tax_id: string
+  company_name: string | null
+  branch_code: string | null
+  address_line: string
+  subdistrict: string | null
+  district: string | null
+  province: string
+  zipcode: string
+  created_at: string
+  updated_at: string
+}
+
 export interface CustomerBooking {
   id: string
   booking_number: string
@@ -63,9 +97,24 @@ export async function getAllCustomers() {
 
   if (error) throw error
 
-  return (data || []).map((customer) => ({
+  const customers = data || []
+
+  // Fetch emails from profiles table (no FK, so separate query)
+  const profileIds = customers.map((c) => c.profile_id).filter(Boolean)
+  let emailMap: Record<string, string> = {}
+  if (profileIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .in('id', profileIds)
+    if (profiles) {
+      emailMap = Object.fromEntries(profiles.map((p) => [p.id, p.email || '']))
+    }
+  }
+
+  return customers.map((customer) => ({
     ...customer,
-    email: '',
+    email: customer.profile_id ? emailMap[customer.profile_id] || '' : '',
   })) as Customer[]
 }
 
@@ -78,10 +127,18 @@ export async function getCustomerById(id: string) {
 
   if (error) throw error
 
-  return {
-    ...data,
-    email: '',
-  } as Customer
+  // Fetch email from profiles table
+  let email = ''
+  if (data.profile_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', data.profile_id)
+      .single()
+    email = profile?.email || ''
+  }
+
+  return { ...data, email } as Customer
 }
 
 export async function getCustomerWithStats(id: string): Promise<CustomerWithStats> {
@@ -172,6 +229,133 @@ export async function updateCustomer(id: string, updates: Partial<Customer>) {
   return data as Customer
 }
 
+
+// ============================================
+// CUSTOMER ADDRESSES & TAX INFO QUERIES
+// ============================================
+
+export async function getCustomerAddresses(customerId: string) {
+  const { data, error } = await supabase
+    .from('addresses')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []) as CustomerAddress[]
+}
+
+export async function getCustomerTaxInfo(customerId: string) {
+  const { data, error } = await supabase
+    .from('tax_information')
+    .select('*')
+    .eq('customer_id', customerId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data as CustomerTaxInfo | null
+}
+
+// ============================================
+// ADDRESS CRUD
+// ============================================
+
+export async function createCustomerAddress(
+  customerId: string,
+  addressData: Omit<CustomerAddress, 'id' | 'customer_id' | 'created_at' | 'updated_at'>
+) {
+  // If setting as default, unset other defaults first
+  if (addressData.is_default) {
+    await supabase
+      .from('addresses')
+      .update({ is_default: false })
+      .eq('customer_id', customerId)
+  }
+
+  const { data, error } = await supabase
+    .from('addresses')
+    .insert({ customer_id: customerId, ...addressData })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as CustomerAddress
+}
+
+export async function updateCustomerAddress(
+  id: string,
+  customerId: string,
+  addressData: Partial<Omit<CustomerAddress, 'id' | 'customer_id' | 'created_at' | 'updated_at'>>
+) {
+  // If setting as default, unset other defaults first
+  if (addressData.is_default) {
+    await supabase
+      .from('addresses')
+      .update({ is_default: false })
+      .eq('customer_id', customerId)
+      .neq('id', id)
+  }
+
+  const { data, error } = await supabase
+    .from('addresses')
+    .update(addressData)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as CustomerAddress
+}
+
+export async function deleteCustomerAddress(id: string) {
+  const { error } = await supabase
+    .from('addresses')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+export async function setDefaultAddress(customerId: string, addressId: string) {
+  // Unset all defaults
+  await supabase
+    .from('addresses')
+    .update({ is_default: false })
+    .eq('customer_id', customerId)
+
+  // Set the selected one
+  const { data, error } = await supabase
+    .from('addresses')
+    .update({ is_default: true })
+    .eq('id', addressId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as CustomerAddress
+}
+
+// ============================================
+// TAX INFO CRUD
+// ============================================
+
+export async function upsertCustomerTaxInfo(
+  customerId: string,
+  taxData: Omit<CustomerTaxInfo, 'id' | 'customer_id' | 'created_at' | 'updated_at'>
+) {
+  const { data, error } = await supabase
+    .from('tax_information')
+    .upsert(
+      { customer_id: customerId, ...taxData },
+      { onConflict: 'customer_id' }
+    )
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as CustomerTaxInfo
+}
 
 // ============================================
 // STATISTICS QUERIES

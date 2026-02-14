@@ -24,7 +24,7 @@ export function createSupabaseClient(config: ClientConfig): SupabaseClient<Datab
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'implicit', // Use implicit flow to match auth client
+      flowType: 'pkce', // Must match supabaseClient.ts auth flow
       storage: window?.localStorage,
       storageKey: 'bliss-customer-auth', // Match the auth client storage key
       debug: false, // Disable debug logs in production

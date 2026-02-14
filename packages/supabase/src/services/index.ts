@@ -6,3 +6,4 @@ export * from './bookingService';
 export * from './transactionService';
 export * from './taxInformationService';
 export * from './sosService';
+export * from './thaiGeographyService';

@@ -8,6 +8,7 @@ import { usePaymentMethods, useAddPaymentMethod, useDeletePaymentMethod, useSetD
 import { useTaxInformation, useUpsertTaxInformation } from '@bliss/supabase/hooks/useTaxInformation'
 import AddressFormModal from '../components/AddressFormModal'
 import PaymentMethodModal from '../components/PaymentMethodModal'
+import ThaiAddressFields from '../components/ThaiAddressFields'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { Database } from '@bliss/supabase/types/database.types'
 
@@ -657,59 +658,14 @@ function Profile() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        แขวง/ตำบล
-                      </label>
-                      <input
-                        type="text"
-                        value={taxForm.subdistrict}
-                        onChange={(e) => setTaxForm({ ...taxForm, subdistrict: e.target.value })}
-                        placeholder="แขวง/ตำบล"
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        เขต/อำเภอ
-                      </label>
-                      <input
-                        type="text"
-                        value={taxForm.district}
-                        onChange={(e) => setTaxForm({ ...taxForm, district: e.target.value })}
-                        placeholder="เขต/อำเภอ"
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        จังหวัด <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={taxForm.province}
-                        onChange={(e) => setTaxForm({ ...taxForm, province: e.target.value })}
-                        placeholder="จังหวัด"
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        รหัสไปรษณีย์
-                      </label>
-                      <input
-                        type="text"
-                        value={taxForm.zipcode}
-                        onChange={(e) => setTaxForm({ ...taxForm, zipcode: e.target.value })}
-                        placeholder="10100"
-                        maxLength={5}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
+                  <div className="space-y-4 mb-6">
+                    <ThaiAddressFields
+                      province={taxForm.province}
+                      district={taxForm.district}
+                      subdistrict={taxForm.subdistrict}
+                      zipcode={taxForm.zipcode}
+                      onChange={(fields) => setTaxForm((prev) => ({ ...prev, ...fields }))}
+                    />
                   </div>
 
                   <div className="flex justify-end">

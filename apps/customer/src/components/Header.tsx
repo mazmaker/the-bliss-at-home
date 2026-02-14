@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
-import type { Profile } from '@bliss/supabase/auth'
+import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import SOSButton from './SOSButton'
 
 function Header() {
@@ -10,11 +10,14 @@ function Header() {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
+
+  // Fetch customer data from customers table
+  const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
 
   useEffect(() => {
-    loadProfile()
+    checkAuth()
   }, [])
 
   // Close dropdown when clicking outside
@@ -35,14 +38,14 @@ function Header() {
     }
   }, [userMenuOpen])
 
-  const loadProfile = async () => {
+  const checkAuth = async () => {
     try {
-      const userProfile = await authService.getCurrentProfile()
-      setProfile(userProfile)
+      const profile = await authService.getCurrentProfile()
+      setIsLoggedIn(!!profile)
     } catch (error) {
-      console.error('Failed to load profile:', error)
+      setIsLoggedIn(false)
     } finally {
-      setIsLoading(false)
+      setIsAuthLoading(false)
     }
   }
 
@@ -62,7 +65,8 @@ function Header() {
     return location.pathname.startsWith(path)
   }
 
-  const displayName = profile?.full_name || profile?.email?.split('@')[0] || 'User'
+  const isLoading = isAuthLoading || customerLoading
+  const displayName = customer?.full_name || customer?.phone || 'User'
 
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
@@ -108,7 +112,7 @@ function Header() {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
-            {!isLoading && profile ? (
+            {!isLoading && isLoggedIn ? (
               <>
                 {/* SOS Button */}
                 <SOSButton />
@@ -202,14 +206,14 @@ function Header() {
               ))}
 
               {/* SOS Button - Mobile */}
-              {!isLoading && profile && (
+              {!isLoading && isLoggedIn && (
                 <div className="px-3">
                   <SOSButton className="w-full" />
                 </div>
               )}
 
               <div className="border-t border-stone-200 pt-3 mt-3">
-                {!isLoading && profile ? (
+                {!isLoading && isLoggedIn ? (
                   <>
                     <div className="px-4 py-2 text-xs text-stone-500 font-medium">
                       Signed in as
