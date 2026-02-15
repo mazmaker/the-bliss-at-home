@@ -2,8 +2,10 @@ import { useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
+import { useTranslation } from '@bliss/i18n'
 
 function BookingDetails() {
+  const { t } = useTranslation(['booking', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -18,28 +20,28 @@ function BookingDetails() {
       id: bookingData.booking_number,
       serviceName: bookingData.service?.name_en || bookingData.service?.name_th || 'Unknown Service',
       serviceSlug: bookingData.service?.slug || '',
-      date: new Date(bookingData.booking_date).toISOString().split('T')[0],
-      time: new Date(bookingData.booking_date).toTimeString().slice(0, 5),
+      date: bookingData.booking_date,
+      time: bookingData.booking_time || '00:00',
       status: bookingData.status,
-      price: Number(bookingData.service_price),
-      duration: bookingData.duration_minutes / 60,
+      price: Number(bookingData.final_price || bookingData.base_price || 0),
+      duration: (bookingData.duration || 60) / 60,
       addOns: bookingData.addons?.map((a) => ({
         name: a.addon?.name_en || a.addon?.name_th || 'Add-on',
         price: Number(a.total_price),
       })) || [],
       address: {
-        name: bookingData.recipient_name,
-        phone: bookingData.recipient_phone,
-        address: bookingData.address_line,
-        district: bookingData.district || '',
-        subdistrict: bookingData.subdistrict || '',
-        province: bookingData.province || '',
-        zipcode: bookingData.zipcode || '',
+        name: bookingData.customer?.full_name || '',
+        phone: bookingData.customer?.phone || '',
+        address: bookingData.address || '',
+        district: '',
+        subdistrict: '',
+        province: '',
+        zipcode: '',
       },
-      notes: bookingData.notes || '',
+      notes: bookingData.customer_notes || '',
       provider: bookingData.staff
         ? {
-            name: `${bookingData.staff.first_name || ''} ${bookingData.staff.last_name || ''}`.trim(),
+            name: bookingData.staff.name_en || bookingData.staff.name_th || '',
             rating: 4.8, // TODO: Calculate from reviews
             reviews: 0, // TODO: Count from reviews
           }
@@ -52,7 +54,7 @@ function BookingDetails() {
         method: bookingData.payment_method || 'cash',
         status: bookingData.payment_status || 'pending',
       },
-      createdAt: new Date(bookingData.created_at).toISOString().split('T')[0],
+      createdAt: new Date(bookingData.created_at!).toISOString().split('T')[0],
       image: bookingData.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
     }
   }, [bookingData])
@@ -64,7 +66,7 @@ function BookingDetails() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-            <p className="text-stone-600 mt-4">Loading booking details...</p>
+            <p className="text-stone-600 mt-4">{t('common:loading.bookingDetails')}</p>
           </div>
         </div>
       </div>
@@ -78,13 +80,13 @@ function BookingDetails() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <XCircle className="w-16 h-16 text-red-500 mx-auto" />
-            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">Error Loading Booking</h2>
+            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">{t('details.errorLoading')}</h2>
             <p className="text-stone-600 mb-6">{error.message}</p>
             <Link
               to="/bookings"
               className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
             >
-              Back to Booking History
+              {t('details.backToHistory')}
             </Link>
           </div>
         </div>
@@ -98,13 +100,13 @@ function BookingDetails() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <XCircle className="w-16 h-16 text-stone-400 mx-auto" />
-            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">Booking Not Found</h2>
-            <p className="text-stone-600 mb-6">The booking you're looking for doesn't exist</p>
+            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">{t('details.notFound')}</h2>
+            <p className="text-stone-600 mb-6">{t('details.notFoundMessage')}</p>
             <Link
               to="/bookings"
               className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
             >
-              Back to Booking History
+              {t('details.backToHistory')}
             </Link>
           </div>
         </div>
@@ -130,13 +132,13 @@ function BookingDetails() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'Confirmed'
+        return t('common:status.confirmed')
       case 'completed':
-        return 'Completed'
+        return t('common:status.completed')
       case 'pending':
-        return 'Pending'
+        return t('common:status.pending')
       case 'cancelled':
-        return 'Cancelled'
+        return t('common:status.cancelled')
       default:
         return status
     }
@@ -145,11 +147,11 @@ function BookingDetails() {
   const getPaymentMethodText = (method: string) => {
     switch (method) {
       case 'credit_card':
-        return 'Credit/Debit Card'
+        return t('details.creditCard')
       case 'bank_transfer':
-        return 'Bank Transfer'
+        return t('details.bankTransfer')
       case 'cash':
-        return 'Cash'
+        return t('details.cash')
       default:
         return method
     }
@@ -165,9 +167,9 @@ function BookingDetails() {
         <div className="mb-6">
           <Link to="/bookings" className="inline-flex items-center text-amber-700 hover:text-amber-900 mb-4">
             <ChevronLeft className="w-5 h-5" />
-            Back to Booking History
+            {t('details.backToHistory')}
           </Link>
-          <h1 className="text-2xl font-bold text-stone-900">Booking Details</h1>
+          <h1 className="text-2xl font-bold text-stone-900">{t('details.title')}</h1>
         </div>
 
         {/* Status Banner */}
@@ -180,11 +182,11 @@ function BookingDetails() {
         }`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-stone-600 mb-1">Booking Number</p>
+              <p className="text-sm text-stone-600 mb-1">{t('details.bookingNumber')}</p>
               <p className="font-bold text-stone-900">{booking.id}</p>
             </div>
-            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status)}`}>
-              {getStatusText(booking.status)}
+            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status ?? '')}`}>
+              {getStatusText(booking.status ?? '')}
             </span>
           </div>
         </div>
@@ -194,7 +196,7 @@ function BookingDetails() {
           <div className="md:col-span-2 space-y-6">
             {/* Service Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">Booked Service</h2>
+              <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.bookedService')}</h2>
 
               <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl">
                 <div className="w-20 h-20 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
@@ -202,14 +204,14 @@ function BookingDetails() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg text-stone-900 mb-1">{booking.serviceName}</h3>
-                  <p className="text-sm text-stone-600 mb-2 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.duration} hours</p>
+                  <p className="text-sm text-stone-600 mb-2 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.duration} {t('details.hours')}</p>
                   <p className="text-lg font-bold text-amber-700">฿{booking.price}</p>
                 </div>
               </div>
 
               {booking.addOns.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-stone-100">
-                  <h4 className="font-medium text-stone-900 mb-3">Add-ons</h4>
+                  <h4 className="font-medium text-stone-900 mb-3">{t('details.addons')}</h4>
                   {booking.addOns.map((addon: any, index: number) => (
                     <div key={index} className="flex justify-between items-center py-2">
                       <span className="text-stone-600">{addon.name}</span>
@@ -222,7 +224,7 @@ function BookingDetails() {
 
             {/* Date & Time */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Appointment Date & Time</h2>
+              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> {t('details.dateTime')}</h2>
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <p className="text-stone-900 font-semibold">
@@ -238,7 +240,7 @@ function BookingDetails() {
                 {booking.status === 'confirmed' && (
                   <div className="text-right">
                     <button className="text-amber-700 hover:text-amber-900 font-medium text-sm">
-                      Reschedule
+                      {t('details.reschedule')}
                     </button>
                   </div>
                 )}
@@ -247,7 +249,7 @@ function BookingDetails() {
 
             {/* Location */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5" /> Service Location</h2>
+              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5" /> {t('details.location')}</h2>
               <div className="space-y-2">
                 <p className="text-stone-900 font-medium">{booking.address.name}</p>
                 <p className="text-stone-600">{booking.address.phone}</p>
@@ -262,7 +264,7 @@ function BookingDetails() {
               <div className="mt-4 pt-4 border-t border-stone-100">
                 <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
                   <Map className="w-4 h-4" />
-                  View Map
+                  {t('details.viewMap')}
                 </button>
               </div>
             </div>
@@ -270,14 +272,14 @@ function BookingDetails() {
             {/* Notes */}
             {booking.notes && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-lg font-bold text-stone-900 mb-4">Notes</h2>
+                <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.notes')}</h2>
                 <p className="text-stone-600 bg-stone-50 p-4 rounded-xl">{booking.notes}</p>
               </div>
             )}
 
             {/* Provider Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">Service Provider</h2>
+              <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.provider')}</h2>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-amber-100 rounded-full flex items-center justify-center">
                   <Sparkles className="w-8 h-8 text-amber-700" />
@@ -288,13 +290,13 @@ function BookingDetails() {
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                     <span>{booking.provider.rating}</span>
                     <span>•</span>
-                    <span>{booking.provider.reviews} reviews</span>
+                    <span>{booking.provider.reviews} {t('details.reviews')}</span>
                   </div>
                 </div>
                 {booking.status === 'confirmed' && (
                   <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
                     <MessageCircle className="w-4 h-4" />
-                    Chat
+                    {t('details.chat')}
                   </button>
                 )}
               </div>
@@ -305,10 +307,10 @@ function BookingDetails() {
           <div className="space-y-6">
             {/* Price Summary */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">Price Summary</h2>
+              <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.priceSummary')}</h2>
               <div className="space-y-3">
                 <div className="flex justify-between text-stone-600">
-                  <span>Main Service</span>
+                  <span>{t('details.mainService')}</span>
                   <span>฿{booking.price}</span>
                 </div>
                 {booking.addOns.map((addon: any, index: number) => (
@@ -318,12 +320,12 @@ function BookingDetails() {
                   </div>
                 ))}
                 <div className="flex justify-between text-stone-600">
-                  <span>Service Fee</span>
+                  <span>{t('details.serviceFee')}</span>
                   <span>฿0</span>
                 </div>
                 <div className="pt-3 border-t border-stone-200">
                   <div className="flex justify-between">
-                    <span className="font-bold text-stone-900">Total</span>
+                    <span className="font-bold text-stone-900">{t('details.total')}</span>
                     <span className="font-bold text-xl text-amber-700">฿{totalPrice}</span>
                   </div>
                 </div>
@@ -332,20 +334,20 @@ function BookingDetails() {
 
             {/* Payment Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Payment</h2>
+              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> {t('details.paymentTitle')}</h2>
               <div className="space-y-2">
                 <div className="flex justify-between text-stone-600">
-                  <span>Payment Method</span>
+                  <span>{t('details.paymentMethod')}</span>
                   <span className="text-stone-900 font-medium">{getPaymentMethodText(booking.payment.method)}</span>
                 </div>
                 <div className="flex justify-between text-stone-600">
-                  <span>Status</span>
+                  <span>{t('common:status.label')}</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     booking.payment.status === 'paid'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {booking.payment.status === 'paid' ? 'Paid' : 'Pending'}
+                    {booking.payment.status === 'paid' ? t('common:status.paid') : t('common:status.pending')}
                   </span>
                 </div>
               </div>
@@ -356,10 +358,10 @@ function BookingDetails() {
               {booking.status === 'confirmed' && (
                 <>
                   <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
-                    Edit Booking
+                    {t('details.editBooking')}
                   </button>
                   <button className="w-full border-2 border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition">
-                    Cancel Booking
+                    {t('details.cancelBooking')}
                   </button>
                 </>
               )}
@@ -367,10 +369,10 @@ function BookingDetails() {
               {booking.status === 'completed' && (
                 <>
                   <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
-                    Book Again
+                    {t('details.bookAgain')}
                   </button>
                   <button className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition">
-                    Rate & Review
+                    {t('details.rateReview')}
                   </button>
                 </>
               )}
@@ -379,20 +381,20 @@ function BookingDetails() {
                 onClick={() => navigate(`/services/${booking.serviceSlug}`)}
                 className="w-full border-2 border-stone-200 text-stone-700 py-3 rounded-xl font-medium hover:bg-stone-50 transition"
               >
-                View This Service
+                {t('details.viewService')}
               </button>
 
               <button className="w-full text-stone-500 py-2 text-sm hover:text-stone-700">
-                Contact Support
+                {t('details.contactSupport')}
               </button>
             </div>
 
             {/* Booking Info */}
             <div className="bg-stone-50 rounded-xl p-4 text-sm">
               <p className="text-stone-600">
-                Booked on {new Date(booking.createdAt).toLocaleDateString('en-US', {
+                {t('details.bookedOn', { date: new Date(booking.createdAt).toLocaleDateString('en-US', {
                   dateStyle: 'long',
-                })}
+                }) })}
               </p>
             </div>
           </div>

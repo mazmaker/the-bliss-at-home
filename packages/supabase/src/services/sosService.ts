@@ -1,30 +1,13 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 
-// SOS Alert types (matching admin sosQueries.ts)
+type SOSAlertRow = Database['public']['Tables']['sos_alerts']['Row'];
+type SOSAlertInsert = Database['public']['Tables']['sos_alerts']['Insert'];
+
+// Re-export for consumers
 export type SOSStatus = 'pending' | 'acknowledged' | 'resolved' | 'cancelled';
 export type SOSPriority = 'low' | 'medium' | 'high' | 'critical';
-
-export interface SOSAlert {
-  id: string;
-  customer_id: string | null;
-  staff_id: string | null;
-  booking_id: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  location_accuracy: number | null;
-  message: string | null;
-  user_agent: string | null;
-  status: SOSStatus;
-  priority: SOSPriority;
-  acknowledged_by: string | null;
-  acknowledged_at: string | null;
-  resolved_by: string | null;
-  resolved_at: string | null;
-  resolution_notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+export type SOSAlert = SOSAlertRow;
 
 export interface CreateSOSAlertInput {
   customer_id?: string;
@@ -45,7 +28,7 @@ export async function createSOSAlert(
   client: SupabaseClient<Database>,
   input: CreateSOSAlertInput
 ): Promise<SOSAlert> {
-  const alertData = {
+  const alertData: SOSAlertInsert = {
     customer_id: input.customer_id || null,
     staff_id: input.staff_id || null,
     booking_id: input.booking_id || null,
@@ -54,8 +37,8 @@ export async function createSOSAlert(
     location_accuracy: input.location_accuracy || null,
     message: input.message || null,
     user_agent: input.user_agent || null,
-    status: 'pending' as SOSStatus,
-    priority: input.priority || ('high' as SOSPriority),
+    status: 'pending',
+    priority: input.priority || 'high',
   };
 
   const { data, error } = await client
@@ -65,7 +48,7 @@ export async function createSOSAlert(
     .single();
 
   if (error) throw error;
-  return data as SOSAlert;
+  return data;
 }
 
 /**
@@ -82,7 +65,7 @@ export async function getCustomerSOSAlerts(
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data || []) as SOSAlert[];
+  return data || [];
 }
 
 /**
@@ -94,13 +77,13 @@ export async function cancelSOSAlert(
 ): Promise<SOSAlert> {
   const { data, error } = await client
     .from('sos_alerts')
-    .update({ status: 'cancelled' as SOSStatus })
+    .update({ status: 'cancelled' })
     .eq('id', alertId)
     .select()
     .single();
 
   if (error) throw error;
-  return data as SOSAlert;
+  return data;
 }
 
 export const sosService = {

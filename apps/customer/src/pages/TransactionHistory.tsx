@@ -27,7 +27,7 @@ function TransactionHistory() {
       status: txn.status,
       card_brand: txn.card_brand,
       card_last_digits: txn.card_last_digits,
-      description: txn.booking?.service?.name_en || txn.booking?.service?.name_th || 'Payment',
+      description: txn.description || 'Payment',
       created_at: txn.created_at,
       updated_at: txn.updated_at,
     }))
@@ -213,20 +213,20 @@ function TransactionHistory() {
                         <p className="text-sm text-stone-500">
                           {getPaymentMethodLabel(
                             transaction.payment_method,
-                            transaction.card_brand,
-                            transaction.card_last_digits
+                            transaction.card_brand ?? undefined,
+                            transaction.card_last_digits ?? undefined
                           )}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-lg font-bold text-stone-900">฿{transaction.amount}</p>
-                        {getStatusBadge(transaction.status)}
+                        {getStatusBadge(transaction.status ?? '')}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
                       <p className="text-stone-500">
-                        {new Date(transaction.created_at).toLocaleDateString('en-US', {
+                        {new Date(transaction.created_at!).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -272,25 +272,25 @@ function TransactionHistory() {
               <div>
                 <p className="text-sm text-stone-500 mb-1">Total Transactions</p>
                 <p className="text-xl font-bold text-stone-900">
-                  {summary?.total_count || transactions.length}
+                  {summary?.total_transactions || transactions.length}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-stone-500 mb-1">Total Spent</p>
                 <p className="text-xl font-bold text-amber-700">
-                  ฿{summary?.total_amount || transactions.filter(t => t.status === 'successful').reduce((sum, t) => sum + t.amount, 0)}
+                  ฿{summary?.total_spent || transactions.filter(t => t.status === 'successful').reduce((sum, t) => sum + t.amount, 0)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-stone-500 mb-1">Successful</p>
                 <p className="text-xl font-bold text-green-600">
-                  {summary?.successful_count || transactions.filter((t) => t.status === 'successful').length}
+                  {summary?.successful_transactions || transactions.filter((t) => t.status === 'successful').length}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-stone-500 mb-1">Refunded</p>
                 <p className="text-xl font-bold text-purple-600">
-                  {summary?.refunded_count || transactions.filter((t) => t.status === 'refunded').length}
+                  {transactions.filter((t) => t.status === 'refunded').length}
                 </p>
               </div>
             </div>

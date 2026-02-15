@@ -39,7 +39,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.get('/api', (req: Request, res: Response) => {
   res.json({
-    message: 'The Bliss at Home - API Server',
+    message: 'The Bliss Massage at Home - API Server',
     version: '1.0.0',
     endpoints: {
       health: '/health',

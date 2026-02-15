@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Star, Clock, ChevronLeft, Plus, Minus, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
+import { useTranslation } from '@bliss/i18n'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -12,6 +13,7 @@ const categoryIcons: Record<string, React.ComponentType<{className?: string}>> =
 }
 
 function ServiceDetails() {
+  const { t } = useTranslation(['services', 'common'])
   const { slug } = useParams()
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [quantity, setQuantity] = useState(1)
@@ -53,7 +55,7 @@ function ServiceDetails() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto" />
-          <p className="text-stone-600 mt-2">กำลังโหลดข้อมูล...</p>
+          <p className="text-stone-600 mt-2">{t('common:loading.services')}</p>
         </div>
       </div>
     )
@@ -65,9 +67,9 @@ function ServiceDetails() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-2xl font-medium text-stone-900 mt-4">ไม่สามารถโหลดข้อมูลบริการได้</h2>
+          <h2 className="text-2xl font-medium text-stone-900 mt-4">{t('common:errors.cannotLoadService')}</h2>
           <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
-            ← กลับไปดูบริการทั้งหมด
+            {t('common:errors.backToServices')}
           </Link>
         </div>
       </div>
@@ -80,9 +82,9 @@ function ServiceDetails() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Search className="w-16 h-16 text-stone-400 mx-auto" />
-          <h2 className="text-2xl font-medium text-stone-900 mt-4">ไม่พบบริการที่ต้องการ</h2>
+          <h2 className="text-2xl font-medium text-stone-900 mt-4">{t('common:errors.serviceNotFound')}</h2>
           <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
-            ← กลับไปดูบริการทั้งหมด
+            {t('common:errors.backToServices')}
           </Link>
         </div>
       </div>
@@ -105,11 +107,11 @@ function ServiceDetails() {
   const totalPrice = (basePrice + addOnsPrice) * quantity
 
   // Category display names
-  const categoryNames = {
-    massage: 'นวด',
-    nail: 'ทำเล็บ',
-    spa: 'สปา',
-    facial: 'ทรีตเมนท์ใบหน้า',
+  const categoryNames: Record<string, string> = {
+    massage: t('services:details.categoryMassage'),
+    nail: t('services:details.categoryNail'),
+    spa: t('services:details.categorySpa'),
+    facial: t('services:details.categoryFacial'),
   }
 
   return (
@@ -117,7 +119,7 @@ function ServiceDetails() {
       <div className="container mx-auto px-4">
         <Link to="/services" className="inline-flex items-center text-stone-600 hover:text-amber-700 mb-6 font-medium transition">
           <ChevronLeft className="w-5 h-5" />
-          กลับไปดูบริการ
+          {t('services:details.backToServices')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -153,7 +155,7 @@ function ServiceDetails() {
               <div className="flex items-center gap-6 text-stone-600 mb-6">
                 <span className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  {service.duration} นาที
+                  {service.duration} {t('services:details.minutes')}
                 </span>
                 <span className="flex items-center gap-2">
                   <IconComponent className="w-4 h-4 text-amber-700" />
@@ -164,21 +166,21 @@ function ServiceDetails() {
               <div className="prose max-w-none">
                 {service.description_en && (
                   <>
-                    <h3 className="text-lg font-medium mb-3 text-stone-900">Description</h3>
+                    <h3 className="text-lg font-medium mb-3 text-stone-900">{t('services:details.description')}</h3>
                     <p className="text-stone-700 font-light leading-relaxed">{service.description_en}</p>
                   </>
                 )}
 
                 {service.description_th && (
                   <>
-                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">รายละเอียด</h3>
+                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">{t('services:details.descriptionTh')}</h3>
                     <p className="text-stone-700 font-light leading-relaxed">{service.description_th}</p>
                   </>
                 )}
 
                 {service.benefits.length > 0 && (
                   <>
-                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">Benefits</h3>
+                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">{t('services:details.benefits')}</h3>
                     <ul className="space-y-2 text-stone-700">
                       {service.benefits.map((benefit: string, i: number) => (
                         <li key={i} className="flex items-center gap-2">
@@ -194,7 +196,7 @@ function ServiceDetails() {
 
             {addOns.length > 0 && (
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
-                <h3 className="text-xl font-medium text-stone-900 mb-4">เสริมพิเศษ</h3>
+                <h3 className="text-xl font-medium text-stone-900 mb-4">{t('services:details.addons')}</h3>
                 <div className="space-y-3">
                   {addOns.map((addOn: any) => (
                     <button
@@ -231,10 +233,10 @@ function ServiceDetails() {
 
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-stone-100">
-              <h3 className="text-xl font-medium text-stone-900 mb-6">สรุปการจอง</h3>
+              <h3 className="text-xl font-medium text-stone-900 mb-6">{t('services:details.bookingSummary')}</h3>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-stone-700 mb-3">จำนวน</label>
+                <label className="block text-sm font-medium text-stone-700 mb-3">{t('services:details.quantity')}</label>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -254,23 +256,23 @@ function ServiceDetails() {
 
               <div className="space-y-3 mb-6 pb-6 border-b border-stone-200">
                 <div className="flex justify-between text-stone-600">
-                  <span>บริการ</span>
+                  <span>{t('services:details.service')}</span>
                   <span>฿{basePrice.toLocaleString()}</span>
                 </div>
                 {selectedAddOns.length > 0 && (
                   <div className="flex justify-between text-stone-600">
-                    <span>เสริมพิเศษ</span>
+                    <span>{t('services:details.addons')}</span>
                     <span>฿{addOnsPrice.toLocaleString()}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-stone-600">
-                  <span>จำนวน</span>
+                  <span>{t('services:details.quantity')}</span>
                   <span>x{quantity}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center mb-6">
-                <span className="text-xl font-medium text-stone-900">รวมทั้งหมด</span>
+                <span className="text-xl font-medium text-stone-900">{t('services:details.total')}</span>
                 <span className="text-2xl font-semibold text-amber-700">฿{totalPrice.toLocaleString()}</span>
               </div>
 
@@ -278,23 +280,23 @@ function ServiceDetails() {
                 to={`/booking?service=${slug}&addons=${selectedAddOns.join(',')}&qty=${quantity}`}
                 className="block w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white text-center py-4 rounded-xl font-medium hover:shadow-lg transition transform hover:scale-105 shadow-md"
               >
-                จองบริการ
+                {t('services:details.bookService')}
               </Link>
 
               {/* Show hotel discount if user is from hotel */}
               <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <p className="text-sm text-amber-800">
-                  <span className="font-medium">สำหรับโรงแรม:</span> ราคาพิเศษ ฿{service.hotel_price.toLocaleString()}
+                  <span className="font-medium">{t('services:details.hotelPrice')}</span> {t('services:details.hotelPriceSpecial')} ฿{service.hotel_price.toLocaleString()}
                   <span className="text-green-700 font-medium ml-1">
-                    (ประหยัด {Math.round(((basePrice - service.hotel_price) / basePrice) * 100)}%)
+                    ({t('services:details.save')} {Math.round(((basePrice - service.hotel_price) / basePrice) * 100)}%)
                   </span>
                 </p>
               </div>
 
               <div className="mt-6 pt-6 border-t border-stone-200 text-center">
-                <p className="text-sm text-stone-500">มีคำถาม?</p>
+                <p className="text-sm text-stone-500">{t('services:details.questions')}</p>
                 <button className="text-amber-700 font-medium text-sm hover:underline mt-1">
-                  สอบถามเพิ่มเติม
+                  {t('services:details.askMore')}
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-# Known Issues - The Bliss at Home
+# Known Issues - The Bliss Massage at Home
 
 ## 🚨 Critical Issues
 

@@ -1,4 +1,4 @@
-# Project Status - The Bliss at Home
+# Project Status - The Bliss Massage at Home
 
 **Last Updated:** January 25, 2026 - 21:30
 **Current Phase:** Phase 1 - Backend Infrastructure & Data Persistence

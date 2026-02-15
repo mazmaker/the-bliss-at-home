@@ -1,5 +1,5 @@
 /**
- * Authentication Types for The Bliss at Home
+ * Authentication Types for The Bliss Massage at Home
  * Shared across all 4 applications
  */
 
@@ -97,7 +97,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
     primaryColor: '#6366f1',
   },
   CUSTOMER: {
-    name: 'The Bliss at Home',
+    name: 'The Bliss Massage at Home',
     port: 3002,
     allowedRole: 'CUSTOMER',
     loginPath: '/login',
@@ -127,7 +127,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
 export class AuthError extends Error {
   constructor(
     message: string,
-    public code?: 'INVALID_CREDENTIALS' | 'INVALID_ROLE' | 'ACCOUNT_DISABLED' | 'OAUTH_ERROR' | 'LINE_ALREADY_LINKED' | 'LINE_LINKED_USE_EMAIL_LOGIN' | 'DATABASE_ERROR' | 'UNAUTHORIZED' | 'UNKNOWN'
+    public code?: 'INVALID_CREDENTIALS' | 'INVALID_ROLE' | 'ACCOUNT_DISABLED' | 'OAUTH_ERROR' | 'LINE_ALREADY_LINKED' | 'LINE_LINKED_USE_EMAIL_LOGIN' | 'DATABASE_ERROR' | 'UNAUTHORIZED' | 'UNKNOWN' | 'ACCOUNT_EXISTS_PASSWORD_MISMATCH' | 'ORPHANED_AUTH_USER' | 'RATE_LIMIT' | 'SIGNUP_FAILED'
   ) {
     super(message)
     this.name = 'AuthError'

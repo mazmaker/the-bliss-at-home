@@ -339,7 +339,7 @@ export async function exportComprehensiveExcel(days: number = 30): Promise<void>
         {
           name: 'สรุปรายงาน',
           data: [
-            ['รายงานผลการดำเนินงาน - The Bliss at Home'],
+            ['รายงานผลการดำเนินงาน - The Bliss Massage at Home'],
             ['วันที่สร้างรายงาน:', data.summary.reportDate],
             ['ช่วงเวลา:', data.summary.period],
             [''],
@@ -453,7 +453,7 @@ export async function exportComprehensivePDF(days: number = 30): Promise<void> {
 
     // Create a formatted text report that can be copied or saved
     let reportContent = `
-รายงานผลการดำเนินงาน - The Bliss at Home
+รายงานผลการดำเนินงาน - The Bliss Massage at Home
 ==============================================
 
 วันที่สร้างรายงาน: ${data.summary.reportDate}
@@ -499,7 +499,7 @@ ${data.financial.monthly_trend.map(month =>
 ).join('\n')}
 
 --------------------------------------------------
-รายงานนี้สร้างโดยระบบ The Bliss at Home Admin
+รายงานนี้สร้างโดยระบบ The Bliss Massage at Home Admin
 `
 
     // Create and download as text file (can be converted to PDF)

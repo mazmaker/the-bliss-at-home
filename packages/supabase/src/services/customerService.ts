@@ -116,7 +116,7 @@ export async function getCustomerStats(
 ): Promise<CustomerStats> {
   const { data: bookings, error } = await client
     .from('bookings')
-    .select('status, total_price')
+    .select('status, final_price')
     .eq('customer_id', customerId);
 
   if (error) throw error;
@@ -130,7 +130,7 @@ export async function getCustomerStats(
   bookings?.forEach((booking) => {
     if (booking.status === 'completed') {
       stats.completed_bookings++;
-      stats.total_spent += Number(booking.total_price || 0);
+      stats.total_spent += Number(booking.final_price || 0);
     }
   });
 

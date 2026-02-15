@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, initSessionManager } from '@bliss/supabase/auth'
+import { I18nProvider } from '@bliss/i18n'
 import App from './App'
 import './index.css'
 
@@ -22,11 +23,13 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider expectedRole="CUSTOMER">
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
+      <I18nProvider>
+        <BrowserRouter>
+          <AuthProvider expectedRole="CUSTOMER">
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </I18nProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 )

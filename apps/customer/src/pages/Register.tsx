@@ -3,21 +3,33 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, Check, AlertCircle } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
 import type { RegisterCredentials } from '@bliss/supabase/auth'
+import { useTranslation } from '@bliss/i18n'
+
+function generateTestData() {
+  const firstNames = ['สมชาย', 'สมหญิง', 'วิชัย', 'สุดา', 'ประเสริฐ', 'นภา', 'ธนา', 'พิมพ์', 'กิตติ', 'อรุณ']
+  const lastNames = ['ใจดี', 'สุขสันต์', 'มีชัย', 'รักไทย', 'แสนดี', 'วงษ์สวัสดิ์', 'พงศ์พันธ์', 'ศรีสุข']
+  const id = Math.random().toString(36).slice(2, 7)
+  const name = firstNames[Math.floor(Math.random() * firstNames.length)]
+  const surname = lastNames[Math.floor(Math.random() * lastNames.length)]
+  const phone = `08${Math.floor(Math.random() * 2) + 1}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`
+  return {
+    name: `${name} ${surname}`,
+    email: `test.${id}@example.com`,
+    phone,
+    password: 'Test1234!',
+    confirmPassword: 'Test1234!',
+    agreeToTerms: true,
+  }
+}
 
 function Register() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    name: 'สมชาย ใจดี',
-    email: 'somchai.test@example.com',
-    phone: '081-234-5678',
-    password: 'password123',
-    confirmPassword: 'password123',
-    agreeToTerms: true,
-  })
+  const [formData, setFormData] = useState(generateTestData)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +39,7 @@ function Register() {
     try {
       // Validate password match
       if (formData.password !== formData.confirmPassword) {
-        setError('รหัสผ่านไม่ตรงกัน')
+        setError(t('register.passwordMismatch'))
         setIsLoading(false)
         return
       }
@@ -48,7 +60,7 @@ function Register() {
       navigate('/services')
     } catch (err: any) {
       console.error('Registration error:', err)
-      setError(err.message || 'การลงทะเบียนล้มเหลว กรุณาลองใหม่อีกครั้ง')
+      setError(err.message || t('register.error'))
     } finally {
       setIsLoading(false)
     }
@@ -67,14 +79,14 @@ function Register() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md md:max-w-lg lg:max-w-xl">
         {/* Back Button */}
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-900 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>กลับหน้าหลัก</span>
+          <span>{t('register.backToHome')}</span>
         </Link>
 
         {/* Register Card */}
@@ -84,8 +96,8 @@ function Register() {
             <div className="w-16 h-16 bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">บ</span>
             </div>
-            <h1 className="text-2xl font-bold text-stone-900">ลงทะเบียน</h1>
-            <p className="text-stone-500">สร้างบัญชีใหม่กับ The Bliss at Home</p>
+            <h1 className="text-2xl font-bold text-stone-900">{t('register.title')}</h1>
+            <p className="text-stone-500">{t('register.subtitle')}</p>
           </div>
 
           {/* Error Alert */}
@@ -101,7 +113,7 @@ function Register() {
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                ชื่อ-นามสกุล
+                {t('register.fullName')}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -109,7 +121,7 @@ function Register() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="สมชาย ใจดี"
+                  placeholder={t('register.namePlaceholder')}
                   required
                   disabled={isLoading}
                   className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
@@ -120,7 +132,7 @@ function Register() {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                อีเมล
+                {t('register.email')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -128,7 +140,7 @@ function Register() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="your@email.com"
+                  placeholder={t('register.emailPlaceholder')}
                   required
                   disabled={isLoading}
                   className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
@@ -139,7 +151,7 @@ function Register() {
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                เบอร์โทรศัพท์
+                {t('register.phone')}
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -147,7 +159,7 @@ function Register() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="081-234-5678"
+                  placeholder={t('register.phonePlaceholder')}
                   required
                   disabled={isLoading}
                   className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
@@ -158,7 +170,7 @@ function Register() {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                รหัสผ่าน
+                {t('register.password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -166,7 +178,7 @@ function Register() {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="••••••••"
+                  placeholder={t('register.passwordPlaceholder')}
                   required
                   minLength={8}
                   disabled={isLoading}
@@ -181,13 +193,13 @@ function Register() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-stone-500 mt-1">อย่างน้อย 8 ตัวอักษร</p>
+              <p className="text-xs text-stone-500 mt-1">{t('register.passwordHint')}</p>
             </div>
 
             {/* Confirm Password */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                ยืนยันรหัสผ่าน
+                {t('register.confirmPassword')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -195,7 +207,7 @@ function Register() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  placeholder="••••••••"
+                  placeholder={t('register.passwordPlaceholder')}
                   required
                   disabled={isLoading}
                   className="w-full pl-10 pr-12 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
@@ -210,12 +222,12 @@ function Register() {
                 </button>
               </div>
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="text-xs text-red-600 mt-1">รหัสผ่านไม่ตรงกัน</p>
+                <p className="text-xs text-red-600 mt-1">{t('register.passwordMismatch')}</p>
               )}
               {formData.confirmPassword && formData.password === formData.confirmPassword && (
                 <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
                   <Check className="w-3 h-3" />
-                  <span>รหัสผ่านตรงกัน</span>
+                  <span>{t('register.passwordMatch')}</span>
                 </div>
               )}
             </div>
@@ -231,13 +243,13 @@ function Register() {
                 className="w-4 h-4 mt-0.5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
               />
               <span className="text-sm text-stone-600">
-                ฉันยอมรับ{' '}
+                {t('register.agreeTerms')}{' '}
                 <Link to="/terms" className="text-amber-700 hover:underline">
-                  เงื่อนไขการให้บริการ
+                  {t('register.termsOfService')}
                 </Link>{' '}
-                และ{' '}
+                {t('register.and')}{' '}
                 <Link to="/privacy" className="text-amber-700 hover:underline">
-                  นโยบายความเป็นส่วนตัว
+                  {t('register.privacyPolicy')}
                 </Link>
               </span>
             </label>
@@ -251,19 +263,19 @@ function Register() {
               {isLoading ? (
                 <>
                   <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>กำลังลงทะเบียน...</span>
+                  <span>{t('register.submitting')}</span>
                 </>
               ) : (
-                'ลงทะเบียน'
+                t('register.submit')
               )}
             </button>
           </form>
 
           {/* Login Link */}
           <p className="text-center text-sm text-stone-600 mt-6">
-            มีบัญชีอยู่แล้ว?{' '}
+            {t('register.haveAccount')}{' '}
             <Link to="/login" className="text-amber-700 hover:text-amber-800 font-medium">
-              เข้าสู่ระบบ
+              {t('register.loginLink')}
             </Link>
           </p>
         </div>

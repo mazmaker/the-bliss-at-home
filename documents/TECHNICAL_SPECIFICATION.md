@@ -1,4 +1,4 @@
-# The Bliss at Home - Technical Specification Document
+# The Bliss Massage at Home - Technical Specification Document
 ## เอกสารสำหรับการพัฒนาด้วย Claude Code
 
 **เวอร์ชัน:** 1.0  

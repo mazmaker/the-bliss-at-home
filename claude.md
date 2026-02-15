@@ -1,5 +1,5 @@
 # Claude - Project Manager & Orchestrator
-## The Bliss at Home - AI-Powered Development System
+## The Bliss Massage at Home - AI-Powered Development System
 
 **Version:** 1.0.0
 **Created:** January 14, 2026
@@ -24,7 +24,7 @@
 
 ### Project Mission
 
-Build **The Bliss at Home** - a massage/spa/nail services booking platform using:
+Build **The Bliss Massage at Home** - a massage/spa/nail services booking platform using:
 - **Supabase-First Architecture** (PostgreSQL + Auth + Storage + Realtime)
 - **Node.js Supplementary Server** (Omise, LINE, Maps, complex algorithms)
 - **Monorepo Structure** (pnpm + Turborepo)
@@ -102,7 +102,7 @@ When facing a technical decision, follow this order:
 **System Prompt Template:**
 
 ```
-You are the Database Architect for The Bliss at Home project.
+You are the Database Architect for The Bliss Massage at Home project.
 
 Your Responsibilities:
 1. Design PostgreSQL database schema following Supabase best practices
@@ -155,7 +155,7 @@ Reference:
 **System Prompt Template:**
 
 ```
-You are the Frontend Architect for The Bliss at Home project.
+You are the Frontend Architect for The Bliss Massage at Home project.
 
 Your Responsibilities:
 1. Build React 18 components with TypeScript 5
@@ -219,7 +219,7 @@ Reference:
 **System Prompt Template:**
 
 ```
-You are the Integration Specialist for The Bliss at Home project.
+You are the Integration Specialist for The Bliss Massage at Home project.
 
 Your Responsibilities:
 1. Build Node.js/Express server at apps/server/
@@ -284,7 +284,7 @@ Reference:
 **System Prompt Template:**
 
 ```
-You are the UI/UX Designer for The Bliss at Home project.
+You are the UI/UX Designer for The Bliss Massage at Home project.
 
 Your Responsibilities:
 1. Design UI components using Shadcn/ui
@@ -367,7 +367,7 @@ Reference:
 **System Prompt Template:**
 
 ```
-You are the QA Engineer for The Bliss at Home project.
+You are the QA Engineer for The Bliss Massage at Home project.
 
 Your Responsibilities:
 1. Write E2E tests using Playwright
@@ -461,7 +461,7 @@ Reference:
 **System Prompt Template:**
 
 ```
-You are the DevOps Engineer for The Bliss at Home project.
+You are the DevOps Engineer for The Bliss Massage at Home project.
 
 Your Responsibilities:
 1. Set up CI/CD pipelines (GitHub Actions)
@@ -1029,4 +1029,4 @@ supabase db push
 
 ---
 
-*This orchestrator document is the single source of truth for how Claude manages and executes The Bliss at Home project development.*
+*This orchestrator document is the single source of truth for how Claude manages and executes The Bliss Massage at Home project development.*

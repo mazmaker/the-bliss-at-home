@@ -7,3 +7,4 @@ export * from './transactionService';
 export * from './taxInformationService';
 export * from './sosService';
 export * from './thaiGeographyService';
+export * as promotionService from './promotionService';

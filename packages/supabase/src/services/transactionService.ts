@@ -33,7 +33,7 @@ export async function getCustomerTransactions(
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data as TransactionWithBooking[];
+  return (data as unknown) as TransactionWithBooking[];
 }
 
 /**
@@ -55,7 +55,7 @@ export async function getTransactionsByStatus(
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data as TransactionWithBooking[];
+  return (data as unknown) as TransactionWithBooking[];
 }
 
 /**
@@ -121,7 +121,7 @@ export async function getTransactionById(
     throw error;
   }
 
-  return data as TransactionWithBooking;
+  return (data as unknown) as TransactionWithBooking;
 }
 
 /**
@@ -145,7 +145,7 @@ export async function getTransactionByNumber(
     throw error;
   }
 
-  return data as TransactionWithBooking;
+  return (data as unknown) as TransactionWithBooking;
 }
 
 export const transactionService = {

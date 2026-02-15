@@ -2,20 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, Star, Clock, List, Sparkles, Hand, Flower2 } from 'lucide-react'
 import { useServices } from '@bliss/supabase/hooks/useServices'
-
-const categories = [
-  { id: 'all', name: 'All', icon: List },
-  { id: 'massage', name: 'Massage', icon: Sparkles },
-  { id: 'nail', name: 'Nail Care', icon: Hand },
-  { id: 'spa', name: 'Spa', icon: Flower2 },
-]
-
-const sortOptions = [
-  { id: 'popular', name: 'Popular' },
-  { id: 'price-low', name: 'Price: Low to High' },
-  { id: 'price-high', name: 'Price: High to Low' },
-  { id: 'rating', name: 'Top Rated' },
-]
+import { useTranslation } from '@bliss/i18n'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -25,6 +12,7 @@ const categoryIcons: Record<string, React.ComponentType<{className?: string}>> =
 }
 
 function ServiceCatalog() {
+  const { t } = useTranslation(['services', 'common'])
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('popular')
@@ -32,9 +20,25 @@ function ServiceCatalog() {
 
   const { data: services, isLoading, error } = useServices()
 
+  const categories = [
+    { id: 'all', name: t('services:catalog.all'), icon: List },
+    { id: 'massage', name: t('services:catalog.massage'), icon: Sparkles },
+    { id: 'nail', name: t('services:catalog.nail'), icon: Hand },
+    { id: 'spa', name: t('services:catalog.spa'), icon: Flower2 },
+  ]
+
+  const sortOptions = [
+    { id: 'popular', name: t('services:catalog.popular') },
+    { id: 'price-low', name: t('services:catalog.priceLowToHigh') },
+    { id: 'price-high', name: t('services:catalog.priceHighToLow') },
+    { id: 'rating', name: t('services:catalog.topRated') },
+  ]
+
   useEffect(() => {
     const category = searchParams.get('category')
     if (category) setSelectedCategory(category)
+    const search = searchParams.get('search')
+    if (search) setSearchQuery(search)
   }, [searchParams])
 
   // Transform services to match expected format
@@ -80,8 +84,8 @@ function ServiceCatalog() {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-light text-stone-900 mb-2 tracking-wide">All Services</h1>
-          <p className="text-stone-600 font-light">Discover and select your desired service</p>
+          <h1 className="text-3xl font-light text-stone-900 mb-2 tracking-wide">{t('services:catalog.title')}</h1>
+          <p className="text-stone-600 font-light">{t('services:catalog.subtitle')}</p>
         </div>
 
         {/* Search */}
@@ -91,7 +95,7 @@ function ServiceCatalog() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
                 type="text"
-                placeholder="Search services..."
+                placeholder={t('services:catalog.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition bg-white"
@@ -140,14 +144,14 @@ function ServiceCatalog() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-            <p className="text-stone-600 mt-4">Loading services...</p>
+            <p className="text-stone-600 mt-4">{t('common:loading.services')}</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
           <div className="text-center py-12">
-            <p className="text-red-600">Failed to load services. Please try again.</p>
+            <p className="text-red-600">{t('common:errors.cannotLoadService')}</p>
           </div>
         )}
 
@@ -155,7 +159,7 @@ function ServiceCatalog() {
         {!isLoading && !error && (
           <>
             <div className="mb-4 text-stone-600 font-light">
-              {filteredServices.length} services found
+              {t('services:catalog.resultsCount', { count: filteredServices.length })}
             </div>
 
             {/* Services Grid */}
@@ -180,17 +184,17 @@ function ServiceCatalog() {
                   <div className="flex items-center gap-2 mb-3">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                     <span className="text-sm font-medium text-stone-700">{service.rating}</span>
-                    <span className="text-sm text-stone-400">({service.reviews} reviews)</span>
+                    <span className="text-sm text-stone-400">({service.reviews} {t('services:catalog.reviews')})</span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-stone-500 mb-4">
-                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} min</span>
+                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('services:catalog.min')}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-semibold text-amber-700">฿{service.price}</span>
                     <button className="bg-stone-900 text-white px-4 py-2 rounded-full font-medium hover:bg-amber-700 transition">
-                      Book
+                      {t('services:catalog.book')}
                     </button>
                   </div>
                 </div>
@@ -200,7 +204,7 @@ function ServiceCatalog() {
         ) : (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-stone-400 mx-auto" />
-            <p className="text-stone-500 mt-4 font-light">No services found</p>
+            <p className="text-stone-500 mt-4 font-light">{t('services:catalog.noResults')}</p>
             <button
               onClick={() => {
                 setSearchQuery('')
@@ -209,7 +213,7 @@ function ServiceCatalog() {
               }}
               className="mt-4 text-amber-700 hover:text-amber-800 font-medium"
             >
-              Clear Filters
+              {t('services:catalog.clearFilters')}
             </button>
           </div>
         )}

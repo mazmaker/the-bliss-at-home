@@ -1,0 +1,52 @@
+{
+  "hero": {
+    "title1": "奢华水疗",
+    "title2": "在您家中",
+    "subtitle1": "优质按摩、水疗和美甲服务",
+    "subtitle2": "由精选专业人员提供",
+    "searchPlaceholder": "搜索服务...",
+    "searchButton": "搜索"
+  },
+  "promotions": {
+    "discount": "优惠",
+    "code": "代码",
+    "validUntil": "有效期至",
+    "minOrder": "最低消费",
+    "maxDiscount": "最高优惠",
+    "useCode": "预约时使用此代码",
+    "bookNow": "立即预约",
+    "close": "关闭",
+    "appliesTo": "适用于",
+    "allServices": "所有服务",
+    "selectedCategories": "指定分类",
+    "selectedServices": "指定服务"
+  },
+  "categories": {
+    "title": "服务项目",
+    "massage": "按摩",
+    "nail": "美甲",
+    "spa": "水疗",
+    "servicesCount": "{{count}} 项服务"
+  },
+  "popular": {
+    "title": "热门服务",
+    "book": "预约",
+    "loading": "正在加载服务...",
+    "error": "加载服务失败，请重试。",
+    "empty": "暂无可用服务。"
+  },
+  "whyChooseUs": {
+    "title": "为什么选择我们",
+    "experts": "专业团队",
+    "expertsDesc": "经过专业培训的团队",
+    "atYourDoor": "上门服务",
+    "atYourDoorDesc": "便捷的上门服务",
+    "premiumQuality": "优质品质",
+    "premiumQualityDesc": "奢华产品与服务"
+  },
+  "cta": {
+    "title": "准备好享受了吗？",
+    "subtitle1": "立即预约按摩、水疗或美甲服务",
+    "subtitle2": "在家中体验奢华"
+  }
+}

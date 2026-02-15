@@ -143,7 +143,7 @@ function StaffLayout() {
       {/* Header */}
       <header className="bg-gradient-to-r from-amber-700 to-amber-800 text-white sticky top-0 z-30">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-bold">The Bliss at Home</h1>
+          <h1 className="text-lg font-bold">The Bliss Massage at Home</h1>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowNotifications(true)}

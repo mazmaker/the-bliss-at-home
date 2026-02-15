@@ -3,21 +3,23 @@
  * เงื่อนไขการให้บริการ
  */
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 
 export default function TermsPage() {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Back Link */}
-        <Link
-          to="/register"
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center text-stone-600 hover:text-amber-700 mb-6 font-medium transition"
         >
           <ChevronLeft className="w-5 h-5" />
-          กลับไปหน้าลงทะเบียน
-        </Link>
+          กลับไปหน้าก่อนหน้า
+        </button>
 
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-stone-100">
@@ -36,7 +38,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-stone-900 mb-4">1. การยอมรับเงื่อนไข</h2>
               <p className="text-stone-700 mb-4">
-                ยินดีต้อนรับสู่ The Bliss at Home การใช้บริการของเราถือว่าท่านได้อ่าน เข้าใจ และยอมรับเงื่อนไขการให้บริการทั้งหมดนี้
+                ยินดีต้อนรับสู่ The Bliss Massage at Home การใช้บริการของเราถือว่าท่านได้อ่าน เข้าใจ และยอมรับเงื่อนไขการให้บริการทั้งหมดนี้
                 หากท่านไม่เห็นด้วยกับเงื่อนไขใดๆ กรุณาอย่าใช้บริการของเรา
               </p>
               <p className="text-stone-700">
@@ -75,7 +77,7 @@ export default function TermsPage() {
 
               <h3 className="text-xl font-medium text-stone-800 mb-3 mt-4">3.1 บริการที่ให้</h3>
               <p className="text-stone-700 mb-4">
-                The Bliss at Home ให้บริการสปาและนวดที่บ้าน ผ่านแพลตฟอร์มออนไลน์ที่ผู้ใช้สามารถ:
+                The Bliss Massage at Home ให้บริการสปาและนวดที่บ้าน ผ่านแพลตฟอร์มออนไลน์ที่ผู้ใช้สามารถ:
               </p>
               <ul className="list-disc pl-6 text-stone-700 space-y-2 mb-4">
                 <li>เรียกดูและเลือกบริการสปาที่หลากหลาย</li>
@@ -186,7 +188,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-stone-900 mb-4">7. ทรัพย์สินทางปัญญา</h2>
               <p className="text-stone-700 mb-4">
-                เนื้อหาทั้งหมดบนแพลตฟอร์มนี้ รวมถึงข้อความ รูปภาพ โลโก้ ไอคอน และซอฟต์แวร์ เป็นทรัพย์สินของ The Bliss at Home
+                เนื้อหาทั้งหมดบนแพลตฟอร์มนี้ รวมถึงข้อความ รูปภาพ โลโก้ ไอคอน และซอฟต์แวร์ เป็นทรัพย์สินของ The Bliss Massage at Home
                 หรือผู้ให้อนุญาต และได้รับความคุ้มครองตามกฎหมายทรัพย์สินทางปัญญา
               </p>
               <p className="text-stone-700">
@@ -238,7 +240,7 @@ export default function TermsPage() {
                 หากท่านมีคำถามหรือข้อสงสัยเกี่ยวกับเงื่อนไขการให้บริการนี้ กรุณาติดต่อเราที่:
               </p>
               <div className="bg-stone-50 p-6 rounded-lg border border-stone-200">
-                <p className="text-stone-700 mb-2"><strong>The Bliss at Home</strong></p>
+                <p className="text-stone-700 mb-2"><strong>The Bliss Massage at Home</strong></p>
                 <p className="text-stone-700 mb-2">อีเมล: support@theblissathome.com</p>
                 <p className="text-stone-700 mb-2">โทรศัพท์: 02-XXX-XXXX</p>
                 <p className="text-stone-700 mb-2">ไลน์: @theblissathome</p>
@@ -249,7 +251,7 @@ export default function TermsPage() {
             {/* Footer */}
             <div className="mt-8 pt-6 border-t border-stone-200">
               <p className="text-sm text-stone-500 text-center">
-                ขอบคุณที่ใช้บริการ The Bliss at Home - ความผ่อนคลายและความสุขคือสิ่งที่เราห่วงใย
+                ขอบคุณที่ใช้บริการ The Bliss Massage at Home - ความผ่อนคลายและความสุขคือสิ่งที่เราห่วงใย
               </p>
             </div>
 
@@ -258,12 +260,12 @@ export default function TermsPage() {
 
         {/* Quick Action */}
         <div className="mt-6 flex gap-4 justify-center">
-          <Link
-            to="/register"
+          <button
+            onClick={() => navigate(-1)}
             className="px-6 py-3 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition font-medium"
           >
-            กลับไปลงทะเบียน
-          </Link>
+            กลับไปหน้าก่อนหน้า
+          </button>
           <Link
             to="/privacy"
             className="px-6 py-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl hover:border-amber-500 transition font-medium"

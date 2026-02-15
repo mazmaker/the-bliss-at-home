@@ -3,8 +3,10 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { ClipboardList, Calendar, Clock } from 'lucide-react'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerBookings } from '@bliss/supabase/hooks/useBookings'
+import { useTranslation } from '@bliss/i18n'
 
 function BookingHistory() {
+  const { t } = useTranslation(['booking', 'common'])
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status') || 'all'
 
@@ -21,7 +23,7 @@ function BookingHistory() {
       serviceName: booking.service?.name_en || booking.service?.name_th || 'Unknown Service',
       date: booking.booking_date, // Already in YYYY-MM-DD format
       time: booking.booking_time || '00:00', // Already in HH:MM format
-      status: booking.status,
+      status: booking.status ?? 'pending',
       price: Number(booking.final_price || 0),
       image: booking.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
     }))
@@ -56,13 +58,13 @@ function BookingHistory() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'Confirmed'
+        return t('common:status.confirmed')
       case 'completed':
-        return 'Completed'
+        return t('common:status.completed')
       case 'pending':
-        return 'Pending'
+        return t('common:status.pending')
       case 'cancelled':
-        return 'Cancelled'
+        return t('common:status.cancelled')
       default:
         return status
     }
@@ -74,7 +76,7 @@ function BookingHistory() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-          <p className="text-stone-600 mt-4">Loading bookings...</p>
+          <p className="text-stone-600 mt-4">{t('common:loading.bookings')}</p>
         </div>
       </div>
     )
@@ -85,9 +87,9 @@ function BookingHistory() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-stone-600 text-lg">Please log in to view bookings</p>
+          <p className="text-stone-600 text-lg">{t('common:auth.pleaseLoginBookings')}</p>
           <Link to="/login" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
-            Go to Login
+            {t('common:auth.goToLogin')}
           </Link>
         </div>
       </div>
@@ -97,7 +99,7 @@ function BookingHistory() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        <h1 className="text-3xl font-bold text-stone-900 mb-8">Booking History</h1>
+        <h1 className="text-3xl font-bold text-stone-900 mb-8">{t('history.title')}</h1>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8 overflow-x-auto">
@@ -107,7 +109,7 @@ function BookingHistory() {
               statusFilter === 'all' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            All
+            {t('history.all')}
           </button>
           <button
             onClick={() => setSearchParams({ status: 'upcoming' })}
@@ -115,7 +117,7 @@ function BookingHistory() {
               statusFilter === 'upcoming' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            Upcoming
+            {t('history.upcoming')}
           </button>
           <button
             onClick={() => setSearchParams({ status: 'completed' })}
@@ -123,7 +125,7 @@ function BookingHistory() {
               statusFilter === 'completed' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            Completed
+            {t('history.completed')}
           </button>
           <button
             onClick={() => setSearchParams({ status: 'cancelled' })}
@@ -131,14 +133,14 @@ function BookingHistory() {
               statusFilter === 'cancelled' ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            Cancelled
+            {t('history.cancelled')}
           </button>
         </div>
 
         {/* Error state */}
         {error && (
           <div className="text-center py-12">
-            <p className="text-red-600">Failed to load bookings. Please try again.</p>
+            <p className="text-red-600">{t('common:errors.failedToLoadBookings')}</p>
           </div>
         )}
 
@@ -158,7 +160,7 @@ function BookingHistory() {
 
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg text-stone-900 mb-1">{booking.serviceName}</h3>
-                    <p className="text-sm text-stone-500 mb-1">Booking #{booking.bookingNumber}</p>
+                    <p className="text-sm text-stone-500 mb-1">{t('history.bookingNumber', { number: booking.bookingNumber })}</p>
                     <div className="flex items-center gap-4 text-sm text-stone-600">
                       <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {booking.date}</span>
                       <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</span>
@@ -178,9 +180,9 @@ function BookingHistory() {
         ) : !error && (
           <div className="text-center py-12">
             <ClipboardList className="w-16 h-16 text-stone-400 mx-auto" />
-            <p className="text-stone-500 mt-4 mb-4">No bookings yet</p>
+            <p className="text-stone-500 mt-4 mb-4">{t('history.noBookings')}</p>
             <Link to="/services" className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition">
-              View Services
+              {t('history.viewServices')}
             </Link>
           </div>
         )}

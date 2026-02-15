@@ -4,7 +4,7 @@
  */
 
 import { supabase } from './supabaseClient'
-import type { Profile, LoginCredentials, RegisterCredentials, UserRole, AuthResponse } from './types'
+import type { Profile, LoginCredentials, RegisterCredentials, UserRole, AuthResponse, LineLoginCredentials } from './types'
 import { AuthError } from './types'
 
 /**

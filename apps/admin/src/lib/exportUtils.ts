@@ -241,7 +241,7 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
       <body>
         <div class="header">
           <div class="title">รายงานสรุปผลประกอบการ</div>
-          <div class="subtitle">The Bliss at Home</div>
+          <div class="subtitle">The Bliss Massage at Home</div>
           <div class="subtitle">ช่วงเวลา: ${getPeriodName(period)} | สร้างเมื่อ: ${new Date(generatedAt).toLocaleString('th-TH')}</div>
         </div>
 
@@ -432,7 +432,7 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
         ` : ''}
 
         <div class="footer">
-          <p>รายงานนี้สร้างขึ้นอัตโนมัติโดยระบบ The Bliss at Home</p>
+          <p>รายงานนี้สร้างขึ้นอัตโนมัติโดยระบบ The Bliss Massage at Home</p>
           <p>สร้างเมื่อ: ${new Date(generatedAt).toLocaleString('th-TH')}</p>
         </div>
       </body>

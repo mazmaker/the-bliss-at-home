@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Debug script to check session storage
  * Run this in browser console to see what's happening

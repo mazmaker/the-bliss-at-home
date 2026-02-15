@@ -134,7 +134,7 @@ function AdminLayout() {
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b border-stone-200">
             <div>
-              <h1 className="text-xl font-bold text-stone-900">The Bliss at Home</h1>
+              <h1 className="text-xl font-bold text-stone-900">The Bliss Massage at Home</h1>
               <p className="text-xs text-stone-500">Admin Panel</p>
             </div>
             <button
