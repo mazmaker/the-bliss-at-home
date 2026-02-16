@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Star, ChevronRight, Sparkles, Home, Shield, Gem, ChevronLeft, Hand, Flower2, Waves, X, Copy, Check, Calendar, Tag } from 'lucide-react'
+import { Search, Star, ChevronRight, Sparkles, Home, Gem, ChevronLeft, Hand, Flower2 } from 'lucide-react'
 import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
 import { useTranslation } from '@bliss/i18n'
+import { PromotionDetailModal } from '../components/PromotionDetailModal'
 
 function HomePage() {
   const { t, i18n } = useTranslation(['home', 'common'])
@@ -13,7 +14,6 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [promoIndex, setPromoIndex] = useState(0)
   const [selectedPromo, setSelectedPromo] = useState<any>(null)
-  const [codeCopied, setCodeCopied] = useState(false)
   const isPaused = useRef(false)
   const { data: services, isLoading, error } = useServices()
   const { data: promotions } = useActivePromotions()
@@ -36,12 +36,6 @@ function HomePage() {
     }, 4000)
     return () => clearInterval(timer)
   }, [promoCount, nextPromo])
-
-  const copyCode = useCallback((code: string) => {
-    navigator.clipboard.writeText(code)
-    setCodeCopied(true)
-    setTimeout(() => setCodeCopied(false), 2000)
-  }, [])
 
   const gradients = [
     'from-amber-600 via-yellow-600 to-amber-700',
@@ -339,116 +333,10 @@ function HomePage() {
       </section>
 
       {/* Promotion Detail Modal */}
-      {selectedPromo && (() => {
-        const promo = selectedPromo
-        const name = isEn ? promo.name_en : promo.name_th
-        const description = isEn ? (promo.description_en || promo.description_th) : (promo.description_th || promo.description_en)
-        const discountLabel = promo.discount_type === 'percentage'
-          ? `${t('home:promotions.discount')} ${Number(promo.discount_value)}%`
-          : promo.discount_type === 'fixed_amount'
-            ? `${t('home:promotions.discount')} ฿${Number(promo.discount_value).toLocaleString()}`
-            : promo.code
-        const promoGradient = gradients[(promotions?.indexOf(promo) ?? 0) % gradients.length]
-        const endDate = new Date(promo.end_date).toLocaleDateString(isEn ? 'en-US' : 'th-TH', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        })
-
-        return (
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={(e) => { if (e.target === e.currentTarget) setSelectedPromo(null) }}
-          >
-            <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-              {/* Header with gradient */}
-              <div className={`bg-gradient-to-r ${promoGradient} p-8 text-white relative overflow-hidden`}>
-                {promo.image_url && (
-                  <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-20" />
-                )}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                <button
-                  onClick={() => setSelectedPromo(null)}
-                  className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <div className="relative">
-                  <span className="inline-block bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-semibold mb-3">
-                    {discountLabel}
-                  </span>
-                  <h3 className="text-2xl md:text-3xl font-bold">{name}</h3>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-5">
-                {description && (
-                  <p className="text-stone-600 leading-relaxed">{description}</p>
-                )}
-
-                {/* Promo Code */}
-                <div className="bg-stone-50 rounded-xl p-4">
-                  <p className="text-xs text-stone-500 mb-2 font-medium uppercase tracking-wide">{t('home:promotions.useCode')}</p>
-                  <div className="flex items-center gap-3">
-                    <code className="flex-1 bg-white border-2 border-dashed border-amber-300 rounded-lg px-4 py-3 text-center text-lg font-bold text-amber-800 tracking-widest">
-                      {promo.code}
-                    </code>
-                    <button
-                      onClick={() => copyCode(promo.code)}
-                      className="w-12 h-12 bg-amber-100 hover:bg-amber-200 rounded-xl flex items-center justify-center transition text-amber-700"
-                    >
-                      {codeCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Details */}
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-3 text-stone-600">
-                    <Calendar className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                    <span>{t('home:promotions.validUntil')} {endDate}</span>
-                  </div>
-
-                  {promo.min_order_amount && Number(promo.min_order_amount) > 0 && (
-                    <div className="flex items-center gap-3 text-stone-600">
-                      <Tag className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                      <span>{t('home:promotions.minOrder')} ฿{Number(promo.min_order_amount).toLocaleString()}</span>
-                    </div>
-                  )}
-
-                  {promo.max_discount && Number(promo.max_discount) > 0 && (
-                    <div className="flex items-center gap-3 text-stone-600">
-                      <Tag className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                      <span>{t('home:promotions.maxDiscount')} ฿{Number(promo.max_discount).toLocaleString()}</span>
-                    </div>
-                  )}
-
-                  {promo.applies_to && promo.applies_to !== 'all_services' && (
-                    <div className="flex items-center gap-3 text-stone-600">
-                      <Sparkles className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                      <span>
-                        {t('home:promotions.appliesTo')}: {
-                          promo.applies_to === 'categories'
-                            ? t('home:promotions.selectedCategories')
-                            : t('home:promotions.selectedServices')
-                        }
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action */}
-                <Link
-                  to="/services"
-                  onClick={() => setSelectedPromo(null)}
-                  className="block w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white text-center py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition transform hover:scale-[1.02]"
-                >
-                  {t('home:promotions.bookNow')}
-                </Link>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+      <PromotionDetailModal
+        promotion={selectedPromo}
+        onClose={() => setSelectedPromo(null)}
+      />
     </div>
   )
 }

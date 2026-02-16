@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { MapPin, Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { MapPin, Loader2, LocateFixed } from 'lucide-react'
 
 interface GoogleMapsPickerProps {
   latitude?: number | null
@@ -25,6 +25,7 @@ export function GoogleMapsPicker({
   const googleMapRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLocating, setIsLocating] = useState(false)
   const [error, setError] = useState('')
 
   // Default center (Bangkok)
@@ -165,6 +166,32 @@ export function GoogleMapsPicker({
     }
   }
 
+  const locateCurrentPosition = useCallback(() => {
+    if (!navigator.geolocation) return
+
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+
+        if (googleMapRef.current && markerRef.current) {
+          const pos = { lat, lng }
+          markerRef.current.setPosition(pos)
+          googleMapRef.current.setCenter(pos)
+          googleMapRef.current.setZoom(17)
+        }
+
+        onLocationChange(lat, lng)
+        setIsLocating(false)
+      },
+      () => {
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }, [onLocationChange])
+
   if (error) {
     return (
       <div className={`flex flex-col items-center justify-center bg-gray-100 rounded-lg p-8 ${className}`}>
@@ -189,6 +216,22 @@ export function GoogleMapsPicker({
           </div>
         )}
         <div ref={mapRef} className="w-full h-full min-h-[400px]" />
+        {/* Current location button */}
+        {!isLoading && !error && (
+          <button
+            type="button"
+            onClick={locateCurrentPosition}
+            disabled={isLocating}
+            className="absolute bottom-4 right-4 z-10 flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg shadow-lg border border-stone-200 text-sm font-medium text-stone-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition disabled:opacity-60"
+          >
+            {isLocating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <LocateFixed className="w-4 h-4" />
+            )}
+            {isLocating ? 'กำลังค้นหา...' : 'ตำแหน่งปัจจุบัน'}
+          </button>
+        )}
       </div>
 
       <div className="flex items-start gap-2 text-xs text-gray-600 bg-amber-50 p-3 rounded-lg">
@@ -196,6 +239,7 @@ export function GoogleMapsPicker({
         <div>
           <p className="font-medium text-amber-900 mb-1">วิธีใช้งาน:</p>
           <ul className="space-y-1 text-amber-700">
+            <li>• กดปุ่ม "ตำแหน่งปัจจุบัน" เพื่อใช้ตำแหน่งของคุณ</li>
             <li>• คลิกบนแผนที่เพื่อกำหนดตำแหน่ง</li>
             <li>• ลากหมุดสีแดงเพื่อปรับตำแหน่ง</li>
             <li>• ค้นหาสถานที่ด้วยช่องค้นหาด้านบนแผนที่</li>

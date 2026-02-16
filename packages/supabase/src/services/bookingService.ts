@@ -226,12 +226,90 @@ export async function getUpcomingBookings(
   return data as BookingDetails[];
 }
 
+/**
+ * Create booking with services (supports single + couple bookings).
+ * Uses direct table inserts into the existing bookings schema.
+ * The primary service (person 1) is stored in the bookings row.
+ */
+export async function createBookingWithServices(
+  client: SupabaseClient<Database>,
+  bookingData: {
+    customer_id: string;
+    booking_date: string;
+    booking_time: string;
+    address?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    customer_notes?: string | null;
+    service_format: 'single' | 'simultaneous' | 'sequential';
+    recipient_count: number;
+    discount_amount?: number;
+    final_price: number;
+  },
+  services: Array<{
+    service_id: string;
+    duration: number;
+    price: number;
+    recipient_index: number;
+    recipient_name?: string;
+    sort_order?: number;
+  }>,
+  addons?: Array<Omit<BookingAddonInsert, 'booking_id'>>
+): Promise<string> {
+  // Use the primary service (person 1 / recipient_index 0) for the booking row
+  const primaryService = services.find((s) => s.recipient_index === 0) || services[0];
+
+  const bookingInsert: BookingInsert = {
+    customer_id: bookingData.customer_id,
+    service_id: primaryService.service_id,
+    booking_date: bookingData.booking_date,
+    booking_time: bookingData.booking_time,
+    duration: primaryService.duration,
+    base_price: primaryService.price,
+    final_price: bookingData.final_price,
+    discount_amount: bookingData.discount_amount || 0,
+    address: bookingData.address || null,
+    latitude: bookingData.latitude || null,
+    longitude: bookingData.longitude || null,
+    customer_notes: bookingData.customer_notes || null,
+    status: 'pending',
+    payment_status: 'pending',
+  };
+
+  const { data, error } = await client
+    .from('bookings')
+    .insert(bookingInsert)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  const bookingId = data.id;
+
+  // Insert add-ons if provided
+  if (addons && addons.length > 0) {
+    const bookingAddons = addons.map((addon) => ({
+      ...addon,
+      booking_id: bookingId,
+    }));
+
+    const { error: addonsError } = await client
+      .from('booking_addons')
+      .insert(bookingAddons);
+
+    if (addonsError) throw addonsError;
+  }
+
+  return bookingId;
+}
+
 export const bookingService = {
   getCustomerBookings,
   getBookingsByStatus,
   getBookingById,
   getBookingByNumber,
   createBooking,
+  createBookingWithServices,
   cancelBooking,
   getUpcomingBookings,
 };

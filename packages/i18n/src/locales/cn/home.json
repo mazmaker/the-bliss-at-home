@@ -19,7 +19,20 @@
     "appliesTo": "适用于",
     "allServices": "所有服务",
     "selectedCategories": "指定分类",
-    "selectedServices": "指定服务"
+    "selectedServices": "指定服务",
+    "promoCode": "促销代码",
+    "copyCode": "复制代码",
+    "copied": "已复制！",
+    "statusActive": "进行中",
+    "periodTitle": "促销期间",
+    "startDate": "开始",
+    "endDate": "结束",
+    "daysLeft": "剩余 {{count}} 天",
+    "usageTitle": "使用情况",
+    "used": "已使用",
+    "limitPerUser": "每人限 {{count}} 次",
+    "termsTitle": "使用条款",
+    "share": "分享促销"
   },
   "categories": {
     "title": "服务项目",

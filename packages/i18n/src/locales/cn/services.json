@@ -39,6 +39,11 @@
     "hotelPrice": "酒店价格：",
     "hotelPriceSpecial": "特别价格",
     "save": "节省",
+    "duration": "时长",
+    "durationAndPricing": "时长与价格",
+    "min": "分钟",
+    "startingFrom": "起价",
+    "noDescription": "暂无此服务的描述",
     "questions": "有问题？",
     "askMore": "咨询更多"
   }

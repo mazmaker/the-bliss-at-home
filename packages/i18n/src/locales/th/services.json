@@ -39,6 +39,11 @@
     "hotelPrice": "สำหรับโรงแรม:",
     "hotelPriceSpecial": "ราคาพิเศษ",
     "save": "ประหยัด",
+    "duration": "ระยะเวลา",
+    "durationAndPricing": "ระยะเวลาและราคา",
+    "min": "นาที",
+    "startingFrom": "เริ่มต้น",
+    "noDescription": "ยังไม่มีรายละเอียดบริการนี้",
     "questions": "มีคำถาม?",
     "askMore": "สอบถามเพิ่มเติม"
   }
