@@ -17,6 +17,9 @@ export interface Booking {
   booking_date: string
   booking_time: string
   duration: number
+  recipient_count?: number
+  service_format?: string | null
+  promotion_id?: string | null
 
   // Location
   is_hotel_booking: boolean
@@ -75,6 +78,28 @@ export interface Booking {
     duration: number
     base_price: number
   }
+  promotion?: {
+    id: string
+    name_th: string
+    name_en: string
+    code: string
+    discount_type: string
+    discount_value: number
+  } | null
+  booking_services?: Array<{
+    id: string
+    service_id: string
+    duration: number
+    price: number
+    recipient_index: number
+    recipient_name: string | null
+    service?: {
+      id: string
+      name_th: string
+      name_en: string
+      category: string
+    }
+  }>
 }
 
 export interface BookingFilters {
@@ -87,6 +112,32 @@ export interface BookingFilters {
 }
 
 class BookingService {
+  private async fetchBookingServices(bookingIds: string[]): Promise<Record<string, Booking['booking_services']>> {
+    if (bookingIds.length === 0) return {}
+    try {
+      const { data, error } = await supabase
+        .from('booking_services')
+        .select('id, booking_id, service_id, duration, price, recipient_index, recipient_name, service:services(id, name_th, name_en, category)')
+        .in('booking_id', bookingIds)
+        .order('recipient_index', { ascending: true })
+
+      if (error) {
+        console.warn('booking_services not available:', error.message)
+        return {}
+      }
+
+      const map: Record<string, Booking['booking_services']> = {}
+      for (const row of data || []) {
+        const bid = (row as any).booking_id
+        if (!map[bid]) map[bid] = []
+        map[bid]!.push(row as any)
+      }
+      return map
+    } catch {
+      return {}
+    }
+  }
+
   async getAllBookings(filters?: BookingFilters): Promise<Booking[]> {
     try {
       let query = supabase
@@ -96,7 +147,8 @@ class BookingService {
           customer:customers(id, full_name, phone),
           hotel:hotels(id, name_th),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price)
+          service:services(id, name_th, name_en, category, duration, base_price),
+          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
         .order('created_at', { ascending: false })
 
@@ -159,6 +211,18 @@ class BookingService {
         )
       }
 
+      // Fetch booking_services for couple bookings
+      const coupleBookingIds = filteredData
+        .filter(b => (b.recipient_count || 1) > 1)
+        .map(b => b.id)
+      if (coupleBookingIds.length > 0) {
+        const bsMap = await this.fetchBookingServices(coupleBookingIds)
+        filteredData = filteredData.map(b => ({
+          ...b,
+          booking_services: bsMap[b.id] || undefined,
+        }))
+      }
+
       return filteredData
     } catch (error) {
       console.error('Error in getAllBookings:', error)
@@ -175,7 +239,8 @@ class BookingService {
           customer:customers(id, full_name, phone),
           hotel:hotels(id, name_th),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price)
+          service:services(id, name_th, name_en, category, duration, base_price),
+          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
         .eq('id', id)
         .single()
@@ -185,7 +250,15 @@ class BookingService {
         throw error
       }
 
-      return data as Booking
+      const booking = data as Booking
+
+      // Fetch booking_services if couple booking
+      if ((booking.recipient_count || 1) > 1) {
+        const bsMap = await this.fetchBookingServices([booking.id])
+        booking.booking_services = bsMap[booking.id] || undefined
+      }
+
+      return booking
     } catch (error) {
       console.error('Error in getBookingById:', error)
       return null
@@ -221,7 +294,8 @@ class BookingService {
           customer:customers(id, full_name, phone),
           hotel:hotels(id, name_th),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price)
+          service:services(id, name_th, name_en, category, duration, base_price),
+          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
         .single()
 
@@ -248,7 +322,8 @@ class BookingService {
           customer:customers(id, full_name, phone),
           hotel:hotels(id, name_th),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price)
+          service:services(id, name_th, name_en, category, duration, base_price),
+          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
         .single()
 
@@ -275,7 +350,8 @@ class BookingService {
           customer:customers(id, full_name, phone),
           hotel:hotels(id, name_th),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price)
+          service:services(id, name_th, name_en, category, duration, base_price),
+          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
         .single()
 
@@ -300,7 +376,8 @@ class BookingService {
           customer:customers(id, full_name, phone),
           hotel:hotels(id, name_th),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price)
+          service:services(id, name_th, name_en, category, duration, base_price),
+          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
         .or(`booking_number.ilike.%${query}%,customer.full_name.ilike.%${query}%,customer.phone.ilike.%${query}%`)
         .order('created_at', { ascending: false })

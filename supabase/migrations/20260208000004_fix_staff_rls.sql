@@ -9,7 +9,13 @@ DROP POLICY IF EXISTS "Anyone can view active staff" ON staff;
 DROP POLICY IF EXISTS "Staff can update own profile" ON staff;
 DROP POLICY IF EXISTS "Admins can manage staff" ON staff;
 
--- 2. Create new policies using helper functions
+-- 2. Drop policies with new names if they already exist
+DROP POLICY IF EXISTS "public_can_view_active_staff" ON staff;
+DROP POLICY IF EXISTS "admins_can_view_all_staff" ON staff;
+DROP POLICY IF EXISTS "staff_can_update_own_profile" ON staff;
+DROP POLICY IF EXISTS "admins_can_manage_all_staff" ON staff;
+
+-- Create new policies using helper functions
 
 -- Allow anyone to view active staff (public-facing)
 CREATE POLICY "public_can_view_active_staff"

@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout, LoginForm, PasswordResetForm } from '@bliss/ui'
 import { APP_CONFIGS, authService } from '@bliss/supabase/auth'
 import { useTranslation } from '@bliss/i18n'
@@ -14,7 +14,9 @@ type AuthView = 'login' | 'register' | 'forgot-password'
 export function CustomerLoginPage() {
   const { t } = useTranslation('auth')
   const navigate = useNavigate()
+  const location = useLocation()
   const config = APP_CONFIGS.CUSTOMER
+  const redirectAfterLogin = (location.state as any)?.from || '/'
   const [view, setView] = useState<AuthView>('login')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,7 +70,7 @@ export function CustomerLoginPage() {
           appTitle=""
           primaryColor={config.primaryColor}
           expectedRole={config.allowedRole}
-          redirectTo="/"
+          redirectTo={redirectAfterLogin}
           showRegister={true}
           showForgotPassword={true}
           showSocialLogin={true}

@@ -1,7 +1,7 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from '@bliss/i18n'
-import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus, QrCode, Smartphone, Wallet } from 'lucide-react'
+import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus, QrCode, Smartphone, Wallet, User, Phone } from 'lucide-react'
 import { useServiceBySlug, useServiceById } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCreateBookingWithServices } from '@bliss/supabase/hooks/useBookings'
@@ -14,6 +14,7 @@ import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
 import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
 import { CoupleServiceConfig } from '../components/CoupleServiceConfig'
 import { VoucherCodeInput } from '../components/VoucherCodeInput'
+import ThaiAddressFields from '../components/ThaiAddressFields'
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -226,6 +227,11 @@ function BookingWizard() {
         subdistrict: selectedAddr.subdistrict || '',
         province: selectedAddr.province,
         zipcode: selectedAddr.zipcode || '',
+      })
+      // Copy coordinates from saved address
+      setManualAddressLocation({
+        latitude: selectedAddr.latitude ? Number(selectedAddr.latitude) : null,
+        longitude: selectedAddr.longitude ? Number(selectedAddr.longitude) : null,
       })
     }
   }
@@ -503,6 +509,7 @@ function BookingWizard() {
           recipient_count: recipientCount,
           discount_amount: discountAmount,
           final_price: totalPrice,
+          promotion_id: appliedPromo?.valid ? appliedPromo.promotion?.id || null : null,
         },
         services,
         addons: addonsData.length > 0 ? addonsData : undefined,
@@ -900,6 +907,7 @@ function BookingWizard() {
                   {/* Manual Address Form */}
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <User className="w-4 h-4 inline mr-1" />
                       {t('wizard.step4.contactName')} <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -913,6 +921,7 @@ function BookingWizard() {
 
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <Phone className="w-4 h-4 inline mr-1" />
                       {t('wizard.step4.phoneNumber')} <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -926,6 +935,7 @@ function BookingWizard() {
 
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <MapPin className="w-4 h-4 inline mr-1" />
                       {t('wizard.step4.address')} <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -937,59 +947,16 @@ function BookingWizard() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        {t('wizard.step4.subdistrict')}
-                      </label>
-                      <input
-                        type="text"
-                        value={address.subdistrict}
-                        onChange={(e) => setAddress({ ...address, subdistrict: e.target.value })}
-                        placeholder={t('wizard.step4.subdistrict')}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        {t('wizard.step4.district')}
-                      </label>
-                      <input
-                        type="text"
-                        value={address.district}
-                        onChange={(e) => setAddress({ ...address, district: e.target.value })}
-                        placeholder={t('wizard.step4.district')}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        {t('wizard.step4.province')} <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={address.province}
-                        onChange={(e) => setAddress({ ...address, province: e.target.value })}
-                        placeholder={t('wizard.step4.province')}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        {t('wizard.step4.postalCode')}
-                      </label>
-                      <input
-                        type="text"
-                        value={address.zipcode}
-                        onChange={(e) => setAddress({ ...address, zipcode: e.target.value })}
-                        placeholder="10500"
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
+                  {/* Thai Address Cascading Dropdowns */}
+                  <ThaiAddressFields
+                    province={address.province}
+                    district={address.district}
+                    subdistrict={address.subdistrict}
+                    zipcode={address.zipcode}
+                    onChange={(fields) => {
+                      setAddress((prev) => ({ ...prev, ...fields }))
+                    }}
+                  />
 
                   {/* Google Maps Location Picker */}
                   <div>

@@ -245,6 +245,7 @@ export async function createBookingWithServices(
     recipient_count: number;
     discount_amount?: number;
     final_price: number;
+    promotion_id?: string | null;
   },
   services: Array<{
     service_id: string;
@@ -272,9 +273,13 @@ export async function createBookingWithServices(
     latitude: bookingData.latitude || null,
     longitude: bookingData.longitude || null,
     customer_notes: bookingData.customer_notes || null,
+    recipient_count: bookingData.recipient_count,
+    service_format: bookingData.service_format,
+    promotion_id: bookingData.promotion_id || null,
+    is_multi_service: services.length > 1,
     status: 'pending',
     payment_status: 'pending',
-  };
+  } as any;
 
   const { data, error } = await client
     .from('bookings')
@@ -285,6 +290,23 @@ export async function createBookingWithServices(
   if (error) throw error;
 
   const bookingId = data.id;
+
+  // Insert into booking_services for all services (person 1 + person 2)
+  const bookingServicesData = services.map((svc) => ({
+    booking_id: bookingId,
+    service_id: svc.service_id,
+    duration: svc.duration,
+    price: svc.price,
+    recipient_index: svc.recipient_index,
+    recipient_name: svc.recipient_name || null,
+    sort_order: svc.sort_order || 0,
+  }));
+
+  const { error: bsError } = await client
+    .from('booking_services')
+    .insert(bookingServicesData);
+
+  if (bsError) throw bsError;
 
   // Insert add-ons if provided
   if (addons && addons.length > 0) {
@@ -298,6 +320,19 @@ export async function createBookingWithServices(
       .insert(bookingAddons);
 
     if (addonsError) throw addonsError;
+  }
+
+  // Record promotion usage (enables limit enforcement)
+  if (bookingData.promotion_id && bookingData.discount_amount) {
+    const { data: { user } } = await client.auth.getUser();
+    if (user) {
+      await client.from('promotion_usage').insert({
+        promotion_id: bookingData.promotion_id,
+        user_id: user.id,
+        booking_id: bookingId,
+        discount_amount: bookingData.discount_amount,
+      });
+    }
   }
 
   return bookingId;

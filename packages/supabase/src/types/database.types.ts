@@ -161,6 +161,60 @@ export type Database = {
           },
         ]
       }
+      booking_services: {
+        Row: {
+          booking_id: string
+          created_at: string
+          duration: number
+          id: string
+          price: number
+          recipient_index: number
+          recipient_name: string | null
+          service_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          duration: number
+          id?: string
+          price: number
+          recipient_index?: number
+          recipient_name?: string | null
+          service_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          duration?: number
+          id?: string
+          price?: number
+          recipient_index?: number
+          recipient_name?: string | null
+          service_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_services_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string | null
@@ -182,10 +236,14 @@ export type Database = {
           hotel_room_number: string | null
           id: string
           is_hotel_booking: boolean | null
+          is_multi_service: boolean
           latitude: number | null
           longitude: number | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          promotion_id: string | null
+          recipient_count: number | null
+          service_format: string | null
           service_id: string
           staff_earnings: number | null
           staff_id: string | null
@@ -215,10 +273,14 @@ export type Database = {
           hotel_room_number?: string | null
           id?: string
           is_hotel_booking?: boolean | null
+          is_multi_service?: boolean
           latitude?: number | null
           longitude?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          promotion_id?: string | null
+          recipient_count?: number | null
+          service_format?: string | null
           service_id: string
           staff_earnings?: number | null
           staff_id?: string | null
@@ -248,10 +310,14 @@ export type Database = {
           hotel_room_number?: string | null
           id?: string
           is_hotel_booking?: boolean | null
+          is_multi_service?: boolean
           latitude?: number | null
           longitude?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          promotion_id?: string | null
+          recipient_count?: number | null
+          service_format?: string | null
           service_id?: string
           staff_earnings?: number | null
           staff_id?: string | null
@@ -274,6 +340,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
           {
@@ -608,6 +681,7 @@ export type Database = {
           description: string | null
           discount_rate: number
           email: string
+          hotel_slug: string | null
           id: string
           last_login: string | null
           latitude: number | null
@@ -639,6 +713,7 @@ export type Database = {
           description?: string | null
           discount_rate?: number
           email: string
+          hotel_slug?: string | null
           id?: string
           last_login?: string | null
           latitude?: number | null
@@ -670,6 +745,7 @@ export type Database = {
           description?: string | null
           discount_rate?: number
           email?: string
+          hotel_slug?: string | null
           id?: string
           last_login?: string | null
           latitude?: number | null
@@ -2617,6 +2693,7 @@ export type Database = {
         Args: { length?: number; prefix?: string }
         Returns: string
       }
+      generate_hotel_slug: { Args: { hotel_name_en: string }; Returns: string }
       generate_transaction_number: { Args: never; Returns: string }
       get_dashboard_stats: {
         Args: { period_days?: number }

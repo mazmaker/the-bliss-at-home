@@ -106,11 +106,12 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       console.error('Failed to create transaction record:', txnError)
     }
 
-    // Update booking payment status
+    // Update booking payment status and method
     const { error: updateError } = await getSupabaseClient()
       .from('bookings')
       .update({
         payment_status: charge.paid ? 'paid' : 'pending',
+        payment_method: payment_method || 'credit_card',
       })
       .eq('id', booking_id)
 
@@ -383,11 +384,12 @@ router.post('/create-source', async (req: Request, res: Response) => {
       console.error('Failed to create transaction record:', txnError)
     }
 
-    // Update booking payment status
+    // Update booking payment status and method
     await getSupabaseClient()
       .from('bookings')
       .update({
         payment_status: charge.paid ? 'paid' : 'pending',
+        payment_method: payment_method || source_type,
       })
       .eq('id', booking_id)
 

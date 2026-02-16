@@ -144,7 +144,7 @@ export async function getCustomerById(id: string) {
 export async function getCustomerWithStats(id: string): Promise<CustomerWithStats> {
   const customer = await getCustomerById(id)
 
-  // Calculate repeat booking rate
+  // Fetch all bookings for this customer (real data, not stale columns)
   const { data: bookings } = await supabase
     .from('bookings')
     .select('id, created_at, final_price')
@@ -152,27 +152,27 @@ export async function getCustomerWithStats(id: string): Promise<CustomerWithStat
     .order('created_at', { ascending: true })
 
   const totalBookings = bookings?.length || 0
+  const totalSpent = bookings?.reduce((sum, b) => sum + Number(b.final_price || 0), 0) || 0
+
+  // Calculate repeat booking rate
   const repeatBookings = totalBookings > 1 ? totalBookings - 1 : 0
   const repeatBookingRate = totalBookings > 0 ? (repeatBookings / totalBookings) * 100 : 0
 
   // Calculate average booking value
-  const averageBookingValue = totalBookings > 0 ? customer.total_spent / totalBookings : 0
+  const averageBookingValue = totalBookings > 0 ? totalSpent / totalBookings : 0
 
   // Calculate last 30 days stats
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const { data: recentBookings } = await supabase
-    .from('bookings')
-    .select('final_price')
-    .eq('customer_id', id)
-    .gte('created_at', thirtyDaysAgo.toISOString())
-
-  const last30DaysBookings = recentBookings?.length || 0
-  const last30DaysSpent = recentBookings?.reduce((sum, b) => sum + Number(b.final_price), 0) || 0
+  const recentBookings = bookings?.filter(b => new Date(b.created_at) >= thirtyDaysAgo) || []
+  const last30DaysBookings = recentBookings.length
+  const last30DaysSpent = recentBookings.reduce((sum, b) => sum + Number(b.final_price || 0), 0)
 
   return {
     ...customer,
+    total_bookings: totalBookings,
+    total_spent: totalSpent,
     repeat_booking_rate: repeatBookingRate,
     average_booking_value: averageBookingValue,
     last_30_days_bookings: last30DaysBookings,
