@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../auth/hooks'
+import { supabase } from '../auth/supabaseClient'
 import type {
   EarningsSummary,
   DailyEarning,
@@ -202,24 +203,43 @@ export function useBankAccounts() {
   const [error, setError] = useState<Error | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const staffId = user?.id
+  const profileId = user?.id
 
   const refresh = useCallback(async () => {
-    if (!staffId) {
+    if (!profileId) {
+      console.log('[useBankAccounts] No profileId')
       setIsLoading(false)
       return
     }
 
     setIsLoading(true)
     try {
-      const data = await getBankAccounts(staffId)
+      console.log('[useBankAccounts] Converting profile_id to staff_id:', profileId)
+
+      // Convert profile_id to staff_id first
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('profile_id', profileId)
+        .single()
+
+      console.log('[useBankAccounts] Staff data:', staffData)
+      console.log('[useBankAccounts] Staff error:', staffError)
+
+      if (staffError) throw staffError
+      if (!staffData) throw new Error('Staff record not found')
+
+      console.log('[useBankAccounts] Fetching bank accounts for staff_id:', staffData.id)
+      const data = await getBankAccounts(staffData.id)
+      console.log('[useBankAccounts] Bank accounts:', data)
       setAccounts(data)
     } catch (err) {
+      console.error('[useBankAccounts] Error:', err)
       setError(err as Error)
     } finally {
       setIsLoading(false)
     }
-  }, [staffId])
+  }, [profileId])
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -235,12 +255,22 @@ export function useBankAccounts() {
       accountName: string,
       isPrimary = false
     ) => {
-      if (!staffId) throw new Error('Not authenticated')
+      if (!profileId) throw new Error('Not authenticated')
 
       setIsSaving(true)
       try {
+        // Convert profile_id to staff_id first
+        const { data: staffData, error: staffError } = await supabase
+          .from('staff')
+          .select('id')
+          .eq('profile_id', profileId)
+          .single()
+
+        if (staffError) throw staffError
+        if (!staffData) throw new Error('Staff record not found')
+
         const newAccount = await addBankAccount(
-          staffId,
+          staffData.id,
           bankCode,
           bankName,
           accountNumber,
@@ -258,7 +288,7 @@ export function useBankAccounts() {
         setIsSaving(false)
       }
     },
-    [staffId]
+    [profileId]
   )
 
   const updateAccount = useCallback(
@@ -277,11 +307,21 @@ export function useBankAccounts() {
 
   const setPrimary = useCallback(
     async (accountId: string) => {
-      if (!staffId) throw new Error('Not authenticated')
+      if (!profileId) throw new Error('Not authenticated')
 
       setIsSaving(true)
       try {
-        await setPrimaryBankAccount(staffId, accountId)
+        // Convert profile_id to staff_id first
+        const { data: staffData, error: staffError } = await supabase
+          .from('staff')
+          .select('id')
+          .eq('profile_id', profileId)
+          .single()
+
+        if (staffError) throw staffError
+        if (!staffData) throw new Error('Staff record not found')
+
+        await setPrimaryBankAccount(staffData.id, accountId)
         setAccounts((prev) =>
           prev.map((a) => ({
             ...a,
@@ -292,7 +332,7 @@ export function useBankAccounts() {
         setIsSaving(false)
       }
     },
-    [staffId]
+    [profileId]
   )
 
   const deleteAccount = useCallback(async (accountId: string) => {

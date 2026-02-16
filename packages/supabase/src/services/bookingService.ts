@@ -9,7 +9,7 @@ interface BookingDetails extends Booking {
   service?: Database['public']['Tables']['services']['Row'];
   staff?: Database['public']['Tables']['staff']['Row'];
   customer?: Database['public']['Tables']['customers']['Row'];
-  address?: Database['public']['Tables']['addresses']['Row'];
+  delivery_address?: Database['public']['Tables']['addresses']['Row'];
   addons?: Array<{
     id: string;
     quantity: number;
@@ -47,7 +47,7 @@ export async function getCustomerBookings(
 export async function getBookingsByStatus(
   client: SupabaseClient<Database>,
   customerId: string,
-  status: string
+  status: Database['public']['Enums']['booking_status']
 ): Promise<BookingDetails[]> {
   const { data, error } = await client
     .from('bookings')

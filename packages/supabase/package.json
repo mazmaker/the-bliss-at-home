@@ -12,6 +12,7 @@
     "./client": "./src/client/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./hooks/*": "./src/hooks/*",
+    "./services/*": "./src/services/*",
     "./types/database.types": "./src/types/database.types.ts"
   },
   "scripts": {

@@ -23,7 +23,7 @@ export function useUpsertTaxInformation() {
   return useSupabaseMutation({
     mutationFn: async (
       client,
-      taxInfo: TaxInformationInsert | (TaxInformationUpdate & { customer_id: string })
+      taxInfo: TaxInformationInsert
     ) => {
       return taxInformationService.upsertTaxInformation(client, taxInfo);
     },

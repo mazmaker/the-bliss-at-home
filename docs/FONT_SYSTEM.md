@@ -1,4 +1,4 @@
-# Font System - The Bliss at Home
+# Font System - The Bliss Massage at Home
 
 ## Primary Font
 
@@ -62,7 +62,7 @@ Use Tailwind utility classes for font weights:
 <h1 className="text-2xl font-bold">ยินดีต้อนรับ</h1>
 
 // English text
-<p className="text-base font-normal">Welcome to The Bliss at Home</p>
+<p className="text-base font-normal">Welcome to The Bliss Massage at Home</p>
 
 // Mixed content
 <span className="font-medium">ราคา: 1,500 THB</span>

@@ -22,7 +22,7 @@ export function useCustomerBookings(customerId: string | undefined) {
 export function useBookingsByStatus(customerId: string | undefined, status: string | undefined) {
   return useSupabaseQuery({
     queryKey: ['bookings', 'customer', customerId, 'status', status],
-    queryFn: (client) => bookingService.getBookingsByStatus(client, customerId!, status!),
+    queryFn: (client) => bookingService.getBookingsByStatus(client, customerId!, status! as Database['public']['Enums']['booking_status']),
     enabled: !!customerId && !!status,
   });
 }

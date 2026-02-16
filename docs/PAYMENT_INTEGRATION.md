@@ -1,6 +1,6 @@
 # Payment Integration Guide
 
-This document describes the Omise payment integration for The Bliss at Home customer application.
+This document describes the Omise payment integration for The Bliss Massage at Home customer application.
 
 ## Overview
 

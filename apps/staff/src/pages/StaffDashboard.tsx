@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loader2 } from 'lucide-react'
+import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loader2, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
-import { useJobs, useStaffStats, type Job, type JobStatus } from '@bliss/supabase'
+import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus } from '@bliss/supabase'
 import { SOSButton, JobCancellationModal, ServiceTimer } from '../components'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -13,6 +13,7 @@ function StaffDashboard() {
     onNewJob: handleNewJob,
   })
   const { stats } = useStaffStats()
+  const { eligibility, isLoading: isEligibilityLoading } = useStaffEligibility()
 
   const [currentJob, setCurrentJob] = useState<Job | null>(null)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
@@ -182,7 +183,7 @@ function StaffDashboard() {
           <div className="flex-1">
             <h2 className="font-semibold text-lg">{user?.full_name || 'Staff'}</h2>
             <p className="text-sm opacity-90">
-              {currentJob ? 'กำลังทำงาน' : 'พร้อมรับงาน'}
+              {currentJob ? 'กำลังทำงาน' : eligibility?.canWork ? 'พร้อมรับงาน' : 'ยังไม่พร้อมรับงาน'}
             </p>
           </div>
           <div className="text-right">
@@ -193,6 +194,32 @@ function StaffDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Eligibility Warning Banner */}
+      {!isEligibilityLoading && eligibility && !eligibility.canWork && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900 mb-1">ยังไม่สามารถรับงานได้</h3>
+              <p className="text-sm text-amber-800 mb-2">
+                คุณต้องดำเนินการให้ครบก่อนจึงจะสามารถรับงานได้:
+              </p>
+              <ul className="text-sm text-amber-800 space-y-1 ml-4">
+                {!eligibility.requirements?.status && (
+                  <li className="list-disc">รอการอนุมัติจากผู้ดูแลระบบ</li>
+                )}
+                {!eligibility.requirements?.hasIdCard && (
+                  <li className="list-disc">อัพโหลดและรอการตรวจสอบบัตรประชาชน</li>
+                )}
+                {!eligibility.requirements?.hasBankStatement && (
+                  <li className="list-disc">อัพโหลดและรอการตรวจสอบสำเนาบัญชีธนาคาร</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Today's Stats */}
       <div className="grid grid-cols-3 gap-3">
@@ -351,8 +378,9 @@ function StaffDashboard() {
                   <p className="text-lg font-bold text-amber-700">฿{job.staff_earnings}</p>
                   <button
                     onClick={() => handleStartJob(job.id)}
-                    disabled={isProcessing === job.id}
+                    disabled={isProcessing === job.id || !eligibility?.canWork}
                     className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium text-sm flex items-center gap-1 disabled:opacity-50"
+                    title={!eligibility?.canWork ? 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้' : undefined}
                   >
                     {isProcessing === job.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -413,8 +441,9 @@ function StaffDashboard() {
                   <p className="text-lg font-bold text-amber-700">฿{job.staff_earnings}</p>
                   <button
                     onClick={() => handleAcceptJob(job.id)}
-                    disabled={isProcessing === job.id}
+                    disabled={isProcessing === job.id || !eligibility?.canWork}
                     className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-1"
+                    title={!eligibility?.canWork ? 'คุณยังไม่สามารถรับงานได้ในขณะนี้' : undefined}
                   >
                     {isProcessing === job.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

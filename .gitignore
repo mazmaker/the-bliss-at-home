@@ -58,3 +58,14 @@ supabase/logs/
 
 # Project credentials (NEVER commit these)
 docs/SUPABASE_CREDENTIALS.md
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Debug/temporary SQL files
+check_staff_rls.sql
+debug_staff_issue.sql
+fix_staff_rls_now.sql
+
+# Windows null file
+nul

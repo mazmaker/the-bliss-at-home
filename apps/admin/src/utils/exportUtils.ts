@@ -135,7 +135,7 @@ export function exportToPDF(data: any[], filename: string, title: string = 'ร�
           </tbody>
         </table>
         <div class="footer">
-          <p>สร้างโดยระบบ The Bliss at Home - Hotel Management System</p>
+          <p>สร้างโดยระบบ The Bliss Massage at Home - Hotel Management System</p>
         </div>
       </body>
     </html>

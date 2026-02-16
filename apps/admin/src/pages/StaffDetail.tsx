@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -27,8 +27,12 @@ import {
   Users,
   ThumbsUp,
   ThumbsDown,
+  Trash2,
+  Plus,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { type BankAccount, THAI_BANKS } from '@bliss/supabase'
+import { supabase } from '../lib/supabase'
 import { useStaffDetail } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
 import {
@@ -375,12 +379,29 @@ function OverviewTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Bio */}
-      {staff.bio && (
-        <div>
-          <h3 className="text-lg font-semibold text-stone-900 mb-4">เกี่ยวกับ</h3>
-          <p className="text-stone-600 leading-relaxed">{staff.bio}</p>
+      <div>
+        <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลเพิ่มเติม</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-stone-400 mt-1" />
+            <div>
+              <p className="text-sm text-stone-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
+              <p className="font-medium text-stone-900 leading-relaxed">
+                {staff.bio_th || <span className="text-stone-400">ไม่ระบุ</span>}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-stone-400 mt-1" />
+            <div>
+              <p className="text-sm text-stone-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
+              <p className="font-medium text-stone-900 leading-relaxed">
+                {staff.bio_en || <span className="text-stone-400">ไม่ระบุ</span>}
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -1293,6 +1314,10 @@ function EarningsTab({ staff }: { staff: Staff }) {
   const [showBankModal, setShowBankModal] = useState(false)
   const [showPayoutDetailModal, setShowPayoutDetailModal] = useState(false)
   const [showCalculationModal, setShowCalculationModal] = useState(false)
+  const [showDeleteBankConfirm, setShowDeleteBankConfirm] = useState(false)
+  const [showAddBankModal, setShowAddBankModal] = useState(false)
+  const [newBankForm, setNewBankForm] = useState({ bank_code: '', account_number: '', account_name: '' })
+  const [isAddingBank, setIsAddingBank] = useState(false)
   const [selectedPayout, setSelectedPayout] = useState<string | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')
 
@@ -1416,13 +1441,37 @@ function EarningsTab({ staff }: { staff: Staff }) {
     }
   })
 
-  // Mock bank info (converted to state for editing)
-  const [bankInfo, setBankInfo] = useState({
-    bank_name: 'ธนาคารกสิกรไทย',
-    account_name: staff.name_th,
-    account_number: '123-4-56789-0',
-    branch: 'สาขาเซ็นทรัล ลาดพร้าว',
-  })
+  // Bank account info state
+  const [bankAccount, setBankAccount] = useState<BankAccount | null>(null)
+  const [isBankLoading, setIsBankLoading] = useState(true)
+
+  // Fetch bank account data using admin's own supabase client
+  useEffect(() => {
+    const fetchBankAccount = async () => {
+      if (!staff?.id) return
+
+      setIsBankLoading(true)
+      try {
+        const { data: accounts, error } = await supabase
+          .from('bank_accounts')
+          .select('*')
+          .eq('staff_id', staff.id)
+          .order('is_primary', { ascending: false })
+
+        if (error) throw error
+
+        const primaryAccount = accounts?.find((a: BankAccount) => a.is_primary) || accounts?.[0]
+        setBankAccount(primaryAccount || null)
+      } catch (error) {
+        console.error('Error fetching bank account:', error)
+        setBankAccount(null)
+      } finally {
+        setIsBankLoading(false)
+      }
+    }
+
+    fetchBankAccount()
+  }, [staff?.id])
 
   const getStatusBadge = (status: 'paid' | 'pending' | 'processing' | 'failed') => {
     const badges = {
@@ -1504,32 +1553,58 @@ function EarningsTab({ staff }: { staff: Staff }) {
       <div className="bg-white border border-stone-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-stone-900">ข้อมูลบัญชีธนาคาร</h3>
-          <button
-            onClick={() => setShowBankModal(true)}
-            className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-sm flex items-center gap-2"
-          >
-            <Edit className="w-4 h-4" />
-            แก้ไข
-          </button>
+          {bankAccount && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowBankModal(true)}
+                className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-sm flex items-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                แก้ไข
+              </button>
+              <button
+                onClick={() => setShowDeleteBankConfirm(true)}
+                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                ลบ
+              </button>
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-stone-500">ธนาคาร</p>
-            <p className="font-medium text-stone-900">{bankInfo.bank_name}</p>
+        {isBankLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
+            <span className="ml-2 text-stone-500">กำลังโหลดข้อมูลบัญชี...</span>
           </div>
-          <div>
-            <p className="text-sm text-stone-500">ชื่อบัญชี</p>
-            <p className="font-medium text-stone-900">{bankInfo.account_name}</p>
+        ) : bankAccount ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-stone-500">ธนาคาร</p>
+              <p className="font-medium text-stone-900">{bankAccount.bank_name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-stone-500">ชื่อบัญชี</p>
+              <p className="font-medium text-stone-900">{bankAccount.account_name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-stone-500">เลขที่บัญชี</p>
+              <p className="font-medium text-stone-900">{bankAccount.account_number}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-stone-500">เลขที่บัญชี</p>
-            <p className="font-medium text-stone-900">{bankInfo.account_number}</p>
+        ) : (
+          <div className="text-center py-8 text-stone-500">
+            <AlertCircle className="w-12 h-12 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm mb-4">ยังไม่มีข้อมูลบัญชีธนาคาร</p>
+            <button
+              onClick={() => setShowAddBankModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              เพิ่มบัญชี
+            </button>
           </div>
-          <div>
-            <p className="text-sm text-stone-500">สาขา</p>
-            <p className="font-medium text-stone-900">{bankInfo.branch}</p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Payout History */}
@@ -1697,16 +1772,206 @@ function EarningsTab({ staff }: { staff: Staff }) {
       )}
 
       {/* Edit Bank Modal */}
-      {showBankModal && (
+      {showBankModal && bankAccount && (
         <EditBankModal
-          bankInfo={bankInfo}
+          bankInfo={{
+            bank_name: bankAccount.bank_name,
+            account_name: bankAccount.account_name,
+            account_number: bankAccount.account_number,
+          }}
           onClose={() => setShowBankModal(false)}
-          onSave={(updatedInfo) => {
-            // TODO: Update database with bank info
-            setBankInfo(updatedInfo)
-            setShowBankModal(false)
+          onSave={async (updatedInfo) => {
+            try {
+              // Update bank account in database
+              const { error: updateError } = await supabase
+                .from('bank_accounts')
+                .update({
+                  bank_name: updatedInfo.bank_name,
+                  account_name: updatedInfo.account_name,
+                  account_number: updatedInfo.account_number,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', bankAccount.id)
+
+              if (updateError) throw updateError
+
+              // Refresh bank account data after update
+              const { data: accounts, error: fetchError } = await supabase
+                .from('bank_accounts')
+                .select('*')
+                .eq('staff_id', staff.id)
+                .order('is_primary', { ascending: false })
+
+              if (fetchError) throw fetchError
+
+              const primaryAccount = accounts?.find((a: BankAccount) => a.is_primary) || accounts?.[0]
+              setBankAccount(primaryAccount || null)
+              setShowBankModal(false)
+              toast.success('อัปเดตข้อมูลบัญชีเรียบร้อย')
+            } catch (error) {
+              console.error('Error updating bank account:', error)
+              toast.error('ไม่สามารถบันทึกข้อมูลบัญชีได้')
+            }
           }}
         />
+      )}
+
+      {/* Delete Bank Account Confirm Modal */}
+      {showDeleteBankConfirm && bankAccount && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-stone-900 mb-2">ยืนยันการลบ</h3>
+              <p className="text-sm text-stone-500 mb-6">
+                ต้องการลบบัญชีธนาคาร {bankAccount.bank_name} ({bankAccount.account_number}) หรือไม่?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteBankConfirm(false)}
+                  className="flex-1 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const { error } = await supabase
+                        .from('bank_accounts')
+                        .delete()
+                        .eq('id', bankAccount.id)
+
+                      if (error) throw error
+
+                      setBankAccount(null)
+                      setShowDeleteBankConfirm(false)
+                      toast.success('ลบข้อมูลบัญชีธนาคารเรียบร้อย')
+                    } catch (error) {
+                      console.error('Error deleting bank account:', error)
+                      toast.error('ไม่สามารถลบข้อมูลบัญชีได้')
+                    }
+                  }}
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition"
+                >
+                  ลบ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Bank Account Modal */}
+      {showAddBankModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold text-lg text-stone-900">เพิ่มบัญชีธนาคาร</h3>
+              <button
+                onClick={() => {
+                  setShowAddBankModal(false)
+                  setNewBankForm({ bank_code: '', account_number: '', account_name: '' })
+                }}
+                className="p-2 hover:bg-stone-100 rounded-lg transition"
+              >
+                <XCircle className="w-5 h-5 text-stone-500" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">ธนาคาร</label>
+                <select
+                  value={newBankForm.bank_code}
+                  onChange={(e) => setNewBankForm({ ...newBankForm, bank_code: e.target.value })}
+                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">เลือกธนาคาร</option>
+                  {THAI_BANKS.map((bank) => (
+                    <option key={bank.code} value={bank.code}>
+                      {bank.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">เลขที่บัญชี</label>
+                <input
+                  type="text"
+                  value={newBankForm.account_number}
+                  onChange={(e) => setNewBankForm({ ...newBankForm, account_number: e.target.value })}
+                  placeholder="xxx-x-xxxxx-x"
+                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">ชื่อบัญชี</label>
+                <input
+                  type="text"
+                  value={newBankForm.account_name}
+                  onChange={(e) => setNewBankForm({ ...newBankForm, account_name: e.target.value })}
+                  placeholder="ชื่อ-นามสกุล ตามบัญชี"
+                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                onClick={async () => {
+                  const bank = THAI_BANKS.find((b) => b.code === newBankForm.bank_code)
+                  if (!bank) {
+                    toast.error('กรุณาเลือกธนาคาร')
+                    return
+                  }
+                  if (!newBankForm.account_number.trim()) {
+                    toast.error('กรุณากรอกเลขที่บัญชี')
+                    return
+                  }
+                  if (!newBankForm.account_name.trim()) {
+                    toast.error('กรุณากรอกชื่อบัญชี')
+                    return
+                  }
+
+                  setIsAddingBank(true)
+                  try {
+                    const { data, error } = await supabase
+                      .from('bank_accounts')
+                      .insert({
+                        staff_id: staff.id,
+                        bank_code: newBankForm.bank_code,
+                        bank_name: bank.name,
+                        account_number: newBankForm.account_number,
+                        account_name: newBankForm.account_name,
+                        is_primary: true,
+                        is_verified: false,
+                      })
+                      .select()
+                      .single()
+
+                    if (error) throw error
+
+                    setBankAccount(data)
+                    setShowAddBankModal(false)
+                    setNewBankForm({ bank_code: '', account_number: '', account_name: '' })
+                    toast.success('เพิ่มบัญชีธนาคารเรียบร้อย')
+                  } catch (error) {
+                    console.error('Error adding bank account:', error)
+                    toast.error('ไม่สามารถเพิ่มบัญชีธนาคารได้')
+                  } finally {
+                    setIsAddingBank(false)
+                  }
+                }}
+                disabled={isAddingBank}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {isAddingBank ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  'เพิ่มบัญชี'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -31,7 +31,7 @@ export async function getTaxInformation(
  */
 export async function upsertTaxInformation(
   client: SupabaseClient<Database>,
-  taxInfo: TaxInformationInsert | (TaxInformationUpdate & { customer_id: string })
+  taxInfo: TaxInformationInsert
 ): Promise<TaxInformation> {
   const { data, error } = await client
     .from('tax_information')

@@ -20,10 +20,12 @@ import {
   ExternalLink,
   Loader2,
   AlertCircle,
+  Link2,
 } from 'lucide-react'
 import { useStaff, useStaffStats, useUpdateStaffStatus } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
 import AddStaffModal from '../components/AddStaffModal'
+import InviteLinkModal from '../components/InviteLinkModal'
 import SearchInput from '../components/SearchInput'
 
 const skills = [
@@ -39,6 +41,7 @@ function StaffPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'suspended'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [inviteModalStaff, setInviteModalStaff] = useState<{ id: string; name: string } | null>(null)
 
   // Memoize filters to prevent unnecessary re-renders
   const filters = useMemo(() => ({
@@ -369,6 +372,17 @@ function StaffPage() {
                           <Eye className="w-4 h-4 text-stone-600" />
                         </button>
 
+                        {/* Show invite link button for staff not yet registered */}
+                        {!staff.profile_id && (
+                          <button
+                            onClick={() => setInviteModalStaff({ id: staff.id, name: staff.name_th })}
+                            className="p-2 hover:bg-amber-100 rounded-lg transition"
+                            title="ดูลิงก์คำเชิญ"
+                          >
+                            <Link2 className="w-4 h-4 text-amber-600" />
+                          </button>
+                        )}
+
                         {staff.status === 'pending' && (
                           <>
                             <button
@@ -415,6 +429,16 @@ function StaffPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
       />
+
+      {/* Invite Link Modal */}
+      {inviteModalStaff && (
+        <InviteLinkModal
+          isOpen={!!inviteModalStaff}
+          onClose={() => setInviteModalStaff(null)}
+          staffId={inviteModalStaff.id}
+          staffName={inviteModalStaff.name}
+        />
+      )}
     </div>
   )
 }

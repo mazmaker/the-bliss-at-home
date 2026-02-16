@@ -3,12 +3,14 @@ import { createPortal } from 'react-dom'
 import { ShieldAlert, X, MapPin, Phone, AlertTriangle } from 'lucide-react'
 import { useCreateSOSAlert } from '@bliss/supabase/hooks/useSOSAlerts'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { useTranslation } from '@bliss/i18n'
 
 interface SOSButtonProps {
   className?: string
 }
 
 function SOSButton({ className = '' }: SOSButtonProps) {
+  const { t } = useTranslation('common')
   const [showConfirm, setShowConfirm] = useState(false)
   const [sent, setSent] = useState(false)
 
@@ -66,7 +68,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
       }, 3000)
     } catch (error) {
       console.error('Failed to send SOS:', error)
-      alert('Failed to send SOS alert. Please try again or contact support.')
+      alert(t('sos.failedAlert'))
     }
   }
 
@@ -79,7 +81,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
         title="Emergency Alert"
       >
         <ShieldAlert className="w-4 h-4" />
-        <span>SOS</span>
+        <span>{t('sos.button')}</span>
       </button>
 
       {/* Confirmation Modal */}
@@ -96,8 +98,8 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                       <AlertTriangle className="w-6 h-6 text-red-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-stone-900">ส่งสัญญาณฉุกเฉิน</h3>
-                      <p className="text-xs text-stone-500">Emergency Alert</p>
+                      <h3 className="text-lg font-bold text-stone-900">{t('sos.title')}</h3>
+                      <p className="text-xs text-stone-500">{t('sos.subtitle')}</p>
                     </div>
                   </div>
                   <button
@@ -113,22 +115,22 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                 <div className="mb-6 space-y-3">
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                     <p className="text-sm text-red-800 font-medium mb-2">
-                      การแจ้งเตือนนี้จะส่งไปยัง:
+                      {t('sos.alertSentTo')}
                     </p>
                     <ul className="text-sm text-red-700 space-y-1">
                       <li className="flex items-center gap-2">
                         <Phone className="w-4 h-4" />
-                        ทีม Admin ของ The Bliss
+                        {t('sos.adminTeam')}
                       </li>
                       <li className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
-                        พร้อมข้อมูลตำแหน่งของคุณ
+                        {t('sos.withLocation')}
                       </li>
                     </ul>
                   </div>
 
                   <p className="text-sm text-stone-600">
-                    กดยืนยันหากคุณต้องการความช่วยเหลือเร่งด่วน
+                    {t('sos.confirmMessage')}
                   </p>
                 </div>
 
@@ -139,7 +141,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                     disabled={createSOSAlert.isPending}
                     className="flex-1 px-4 py-3 border border-stone-300 rounded-xl text-stone-700 font-medium hover:bg-stone-50 transition disabled:opacity-50"
                   >
-                    ยกเลิก
+                    {t('buttons.cancel')}
                   </button>
                   <button
                     onClick={handleSendSOS}
@@ -149,12 +151,12 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                     {createSOSAlert.isPending ? (
                       <>
                         <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>กำลังส่ง...</span>
+                        <span>{t('sos.sending')}</span>
                       </>
                     ) : (
                       <>
                         <ShieldAlert className="w-4 h-4" />
-                        <span>ยืนยันส่ง SOS</span>
+                        <span>{t('sos.confirmSend')}</span>
                       </>
                     )}
                   </button>
@@ -168,10 +170,9 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-2">ส่งสัญญาณสำเร็จ</h3>
-                <p className="text-stone-600">
-                  ทีมงานได้รับการแจ้งเตือนแล้ว<br />
-                  และจะติดต่อกลับโดยเร็วที่สุด
+                <h3 className="text-xl font-bold text-stone-900 mb-2">{t('sos.success')}</h3>
+                <p className="text-stone-600 whitespace-pre-line">
+                  {t('sos.successMessage')}
                 </p>
               </div>
             )}

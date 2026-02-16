@@ -1,4 +1,4 @@
-# The Bliss at Home - แผนการพัฒนา 12 สัปดาห์
+# The Bliss Massage at Home - แผนการพัฒนา 12 สัปดาห์
 ## Implementation Plan (13 ม.ค. - 7 เม.ย. 2026)
 
 **เวอร์ชัน:** 1.0.0
@@ -1103,7 +1103,7 @@ FROM bookings;
 
 ---
 
-**เอกสารนี้เป็นแผนการพัฒนาหลักของโปรเจกต์ The Bliss at Home**
+**เอกสารนี้เป็นแผนการพัฒนาหลักของโปรเจกต์ The Bliss Massage at Home**
 
 **Version:** 1.0.0
 **Last Updated:** 14 มกราคม 2026
@@ -1111,4 +1111,4 @@ FROM bookings;
 
 ---
 
-*Made with ❤️ for The Bliss at Home Team*
+*Made with ❤️ for The Bliss Massage at Home Team*

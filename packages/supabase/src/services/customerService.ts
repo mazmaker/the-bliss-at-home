@@ -80,6 +80,7 @@ export async function getCustomerById(
 
 /**
  * Update customer profile
+ * Also syncs full_name back to profiles table for consistency
  */
 export async function updateCustomer(
   client: SupabaseClient<Database>,
@@ -94,6 +95,15 @@ export async function updateCustomer(
     .single();
 
   if (error) throw error;
+
+  // Sync full_name to profiles table if it was updated
+  if (updates.full_name && data.profile_id) {
+    await client
+      .from('profiles')
+      .update({ full_name: updates.full_name })
+      .eq('id', data.profile_id);
+  }
+
   return data;
 }
 
@@ -106,7 +116,7 @@ export async function getCustomerStats(
 ): Promise<CustomerStats> {
   const { data: bookings, error } = await client
     .from('bookings')
-    .select('status, total_price')
+    .select('status, final_price')
     .eq('customer_id', customerId);
 
   if (error) throw error;
@@ -120,7 +130,7 @@ export async function getCustomerStats(
   bookings?.forEach((booking) => {
     if (booking.status === 'completed') {
       stats.completed_bookings++;
-      stats.total_spent += Number(booking.total_price || 0);
+      stats.total_spent += Number(booking.final_price || 0);
     }
   });
 

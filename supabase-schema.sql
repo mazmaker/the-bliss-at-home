@@ -1,5 +1,5 @@
 -- ============================================
--- The Bliss at Home - Supabase Database Schema
+-- The Bliss Massage at Home - Supabase Database Schema
 -- ============================================
 
 -- Enable required extensions

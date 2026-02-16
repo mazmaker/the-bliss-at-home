@@ -8,7 +8,7 @@
 ### ขั้นตอนที่ 1: เข้า Supabase Dashboard
 1. เปิด browser ไปที่ https://supabase.com/dashboard
 2. Login เข้า account ของคุณ
-3. เลือก Project: **rbdvlfriqjnwpxmmgisf** (The Bliss at Home)
+3. เลือก Project: **rbdvlfriqjnwpxmmgisf** (The Bliss Massage at Home)
 
 ### ขั้นตอนที่ 2: เปิด SQL Editor
 1. ในเมนูด้านซ้าย คลิกที่ **SQL Editor**

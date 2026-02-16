@@ -1,4 +1,4 @@
-# The Bliss at Home - Additional Features & Special Requirements
+# The Bliss Massage at Home - Additional Features & Special Requirements
 
 เอกสารเพิ่มเติมสำหรับฟีเจอร์พิเศษและข้อกำหนดที่สำคัญ
 

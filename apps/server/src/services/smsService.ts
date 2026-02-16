@@ -51,7 +51,7 @@ export async function sendOTP(phoneNumber: string, code: string): Promise<boolea
 
     // Send actual SMS via Twilio in production
     const message = await client.messages.create({
-      body: `Your verification code is ${code}. Valid for 5 minutes. - The Bliss At Home`,
+      body: `Your verification code is ${code}. Valid for 5 minutes. - The Bliss Massage at Home`,
       from: TWILIO_PHONE_NUMBER,
       to: formattedPhone,
     })
@@ -76,7 +76,7 @@ export async function sendBookingConfirmation(
   try {
     const formattedPhone = formatPhoneNumber(phoneNumber)
 
-    const message = `Booking confirmed! ${bookingNumber}\n${serviceName}\n${dateTime}\nThank you - The Bliss At Home`
+    const message = `Booking confirmed! ${bookingNumber}\n${serviceName}\n${dateTime}\nThank you - The Bliss Massage at Home`
 
     // In development mode, just log
     if (process.env.NODE_ENV === 'development') {

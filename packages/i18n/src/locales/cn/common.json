@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "home": "首页",
+    "services": "服务",
+    "bookings": "预约",
+    "profile": "个人资料"
+  },
+  "footer": {
+    "copyright": "© 2026 The Bliss Massage at Home. 版权所有。",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "contact": "联系我们"
+  },
+  "buttons": {
+    "bookNow": "立即预约",
+    "search": "搜索",
+    "save": "保存设置",
+    "cancel": "取消",
+    "back": "返回",
+    "next": "下一步",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "login": "登录",
+    "logout": "退出登录",
+    "register": "注册",
+    "viewAll": "查看全部",
+    "clearFilters": "清除筛选",
+    "goBack": "返回上一页"
+  },
+  "status": {
+    "confirmed": "已确认",
+    "completed": "已完成",
+    "pending": "待处理",
+    "cancelled": "已取消",
+    "paid": "已支付",
+    "label": "状态"
+  },
+  "loading": {
+    "services": "正在加载服务...",
+    "bookings": "正在加载预约...",
+    "profile": "正在加载个人资料...",
+    "bookingDetails": "正在加载预约详情...",
+    "data": "正在加载数据..."
+  },
+  "errors": {
+    "failedToLoadServices": "加载服务失败，请重试。",
+    "failedToLoadBookings": "加载预约失败，请重试。",
+    "noServicesAvailable": "目前没有可用的服务。",
+    "serviceNotFound": "未找到服务",
+    "cannotLoadService": "无法加载服务信息",
+    "backToServices": "← 返回所有服务"
+  },
+  "auth": {
+    "signedInAs": "已登录为",
+    "myProfile": "我的资料",
+    "myBookings": "我的预约",
+    "pleaseLogin": "请登录以查看您的个人资料",
+    "pleaseLoginBookings": "请登录以查看预约",
+    "goToLogin": "前往登录"
+  },
+  "sos": {
+    "button": "SOS",
+    "title": "发送紧急警报",
+    "subtitle": "紧急警报",
+    "alertSentTo": "此警报将发送至：",
+    "adminTeam": "The Bliss 管理团队",
+    "withLocation": "包含您的位置信息",
+    "confirmMessage": "如需紧急帮助，请点击确认",
+    "confirmSend": "确认发送 SOS",
+    "sending": "正在发送...",
+    "success": "警报发送成功",
+    "successMessage": "我们的团队已收到通知\n将尽快与您联系",
+    "failedAlert": "SOS警报发送失败，请重试或联系客服。"
+  },
+  "currency": "฿"
+}

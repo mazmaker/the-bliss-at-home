@@ -7,10 +7,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout, LoginForm, PasswordResetForm } from '@bliss/ui'
 import { APP_CONFIGS, authService } from '@bliss/supabase/auth'
+import { useTranslation } from '@bliss/i18n'
 
 type AuthView = 'login' | 'register' | 'forgot-password'
 
 export function CustomerLoginPage() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const config = APP_CONFIGS.CUSTOMER
   const [view, setView] = useState<AuthView>('login')
@@ -42,7 +44,7 @@ export function CustomerLoginPage() {
       // OAuth will redirect to callback URL
     } catch (err) {
       console.error('Social login error:', err)
-      setError(`Failed to sign in with ${provider === 'google' ? 'Google' : 'Facebook'}. Please try again.`)
+      setError(t('login.socialLoginError', { provider: provider === 'google' ? 'Google' : 'Facebook' }))
     } finally {
       setIsLoading(false)
     }
@@ -66,7 +68,7 @@ export function CustomerLoginPage() {
           appTitle=""
           primaryColor={config.primaryColor}
           expectedRole={config.allowedRole}
-          redirectTo={config.defaultPath}
+          redirectTo="/"
           showRegister={true}
           showForgotPassword={true}
           showSocialLogin={true}

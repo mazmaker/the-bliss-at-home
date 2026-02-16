@@ -15,7 +15,7 @@ export function useServices() {
 /**
  * Get services by category
  */
-export function useServicesByCategory(category: string) {
+export function useServicesByCategory(category: Database['public']['Enums']['service_category']) {
   return useSupabaseQuery({
     queryKey: ['services', 'category', category],
     queryFn: (client) => serviceService.getServicesByCategory(client, category),
