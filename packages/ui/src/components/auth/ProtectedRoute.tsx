@@ -6,7 +6,7 @@
  * Set DISABLE_AUTH=false to enable authentication
  */
 
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@bliss/supabase/auth'
 import Loader from '../Loader'
 
@@ -37,6 +37,7 @@ export function ProtectedRoute({
   }
 
   const { user, isLoading } = useAuth()
+  const location = useLocation()
 
   // Show loading while checking auth
   if (isLoading) {
@@ -47,9 +48,9 @@ export function ProtectedRoute({
     )
   }
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated, preserving intended destination
   if (!user) {
-    return <Navigate to={redirectTo} replace />
+    return <Navigate to={redirectTo} state={{ from: location.pathname + location.search }} replace />
   }
 
   // Check role if specified

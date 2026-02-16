@@ -292,8 +292,24 @@ function Bookings() {
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-stone-600">
-                      <p>{booking.service?.name_th || booking.service?.name_en || 'ไม่ระบุ'}</p>
-                      <p className="text-xs text-stone-400">{booking.duration} นาที</p>
+                      {booking.booking_services && booking.booking_services.length > 1 ? (
+                        // Couple booking — show per-person services
+                        <div className="space-y-0.5">
+                          {booking.booking_services
+                            .sort((a, b) => a.recipient_index - b.recipient_index)
+                            .map((bs, i) => (
+                              <p key={bs.id} className="text-xs">
+                                <span className="text-stone-400">คนที่ {i + 1}:</span>{' '}
+                                {bs.service?.name_th || 'ไม่ระบุ'} {bs.duration} นาที
+                              </p>
+                            ))}
+                        </div>
+                      ) : (
+                        <>
+                          <p>{booking.service?.name_th || booking.service?.name_en || 'ไม่ระบุ'}</p>
+                          <p className="text-xs text-stone-400">{booking.duration} นาที</p>
+                        </>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-amber-700">{booking.hotel?.name_th || '-'}</td>
                     <td className="py-3 px-4 text-sm text-stone-600">{booking.staff?.name_th || 'รอมอบหมาย'}</td>
@@ -462,12 +478,31 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
 
             <div className="flex items-start gap-3">
               <Briefcase className="w-5 h-5 text-amber-600 mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-stone-500">บริการ</p>
-                <p className="font-medium text-stone-900">{booking.service?.name_th || booking.service?.name_en || 'ไม่ระบุ'}</p>
-                <p className="text-xs text-stone-500 mt-1">
-                  ประเภท: {getCategoryLabel(booking.service?.category as string)}
-                </p>
+                {booking.booking_services && booking.booking_services.length > 1 ? (
+                  <div className="space-y-2 mt-1">
+                    {booking.booking_services
+                      .sort((a, b) => a.recipient_index - b.recipient_index)
+                      .map((bs, i) => (
+                        <div key={bs.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-amber-200">
+                          <div>
+                            <span className="text-xs text-amber-600 font-medium">คนที่ {i + 1}</span>
+                            <p className="font-medium text-stone-900">{bs.service?.name_th || 'ไม่ระบุ'}</p>
+                            <p className="text-xs text-stone-500">{bs.duration} นาที • {getCategoryLabel(bs.service?.category as string)}</p>
+                          </div>
+                          <span className="text-sm font-semibold text-stone-700">฿{Number(bs.price).toLocaleString()}</span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="font-medium text-stone-900">{booking.service?.name_th || booking.service?.name_en || 'ไม่ระบุ'}</p>
+                    <p className="text-xs text-stone-500 mt-1">
+                      ประเภท: {getCategoryLabel(booking.service?.category as string)}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -483,16 +518,54 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
               <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
               <div>
                 <p className="text-sm text-stone-500">เวลา</p>
-                <p className="font-medium text-stone-900">{booking.booking_time} ({booking.duration} นาที)</p>
+                <p className="font-medium text-stone-900">{booking.booking_time}</p>
               </div>
             </div>
+
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div>
+                <p className="text-sm text-stone-500">ระยะเวลา</p>
+                <p className="font-medium text-stone-900">
+                  {booking.duration} นาที
+                  {booking.duration >= 60 && (
+                    <span className="text-stone-500 text-sm ml-1">
+                      ({Math.floor(booking.duration / 60)}{booking.duration % 60 > 0 ? `.${booking.duration % 60}` : ''} ชั่วโมง)
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <User className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div>
+                <p className="text-sm text-stone-500">จำนวนลูกค้า</p>
+                <p className="font-medium text-stone-900">
+                  {(booking.recipient_count || 1) === 1 ? 'คนเดียว (1 คน)' : `คู่ (${booking.recipient_count} คน)`}
+                </p>
+              </div>
+            </div>
+
+            {booking.service_format && booking.service_format !== 'single' && (
+              <div className="flex items-start gap-3">
+                <Briefcase className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm text-stone-500">รูปแบบบริการ</p>
+                  <p className="font-medium text-stone-900">
+                    {booking.service_format === 'simultaneous' && 'พร้อมกัน (ผู้ให้บริการ 2 คน)'}
+                    {booking.service_format === 'sequential' && 'สลับกัน (ผู้ให้บริการ 1 คน)'}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {booking.hotel && (
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div>
                   <p className="text-sm text-stone-500">โรงแรม</p>
-                  <p className="font-medium text-amber-700">{booking.hotel.name}</p>
+                  <p className="font-medium text-amber-700">{booking.hotel.name_th}</p>
                   {booking.hotel_room_number && (
                     <p className="text-xs text-stone-500 mt-1">ห้อง: {booking.hotel_room_number}</p>
                   )}
@@ -515,14 +588,32 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
 
             <div className="flex items-start gap-3">
               <DollarSign className="w-5 h-5 text-green-600 mt-0.5" />
-              <div>
-                <p className="text-sm text-stone-500">ราคารวม</p>
-                <p className="text-2xl font-bold text-green-600">฿{Number(booking.final_price).toLocaleString()}</p>
-                {booking.discount_amount > 0 && (
-                  <p className="text-xs text-stone-500 mt-1">
-                    ส่วนลด: ฿{Number(booking.discount_amount).toLocaleString()}
-                  </p>
-                )}
+              <div className="flex-1">
+                <p className="text-sm text-stone-500 mb-2">รายละเอียดราคา</p>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-stone-600">ราคาบริการ</span>
+                    <span className="text-stone-900">฿{Number(booking.base_price).toLocaleString()}</span>
+                  </div>
+                  {booking.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-red-600">ส่วนลด</span>
+                      <span className="text-red-600">-฿{Number(booking.discount_amount).toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.promotion && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                        {booking.promotion.code}
+                      </span>
+                      <span className="text-xs text-stone-500">{booking.promotion.name_th}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-green-200 pt-2 mt-2 flex justify-between">
+                    <span className="font-semibold text-stone-900">ราคาสุทธิ</span>
+                    <span className="text-xl font-bold text-green-600">฿{Number(booking.final_price).toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -72,7 +72,8 @@ FROM
     ) months
 WHERE
     p.role = 'STAFF'
-    AND s.status = 'active';
+    AND s.status = 'active'
+ON CONFLICT (staff_id, year, month) DO NOTHING;
 
 SELECT 'Re-seeded performance data with correct staff.id' as status;
 
