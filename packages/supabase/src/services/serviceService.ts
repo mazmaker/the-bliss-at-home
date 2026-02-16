@@ -29,7 +29,7 @@ export async function getServices(
  */
 export async function getServicesByCategory(
   client: SupabaseClient<Database>,
-  category: string
+  category: Database['public']['Enums']['service_category']
 ): Promise<Service[]> {
   const { data, error } = await client
     .from('services')

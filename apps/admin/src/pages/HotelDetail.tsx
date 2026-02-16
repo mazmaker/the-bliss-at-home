@@ -287,39 +287,39 @@ export default function HotelDetail() {
 
         {/* Right Column - Stats & Actions */}
         <div className="space-y-6">
-          {/* Stats Cards */}
-          <div className="space-y-4">
-            <div className="rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">รายได้รายเดือน</p>
-                  <p className="text-3xl font-bold">
-                    ฿{hotel.monthly_revenue?.toLocaleString() || 0}
-                  </p>
+          {/* Stats Cards - 4 Columns */}
+          <div className="rounded-lg bg-white p-6 shadow">
+            <div className="grid grid-cols-4 gap-4">
+              {/* การจอง */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {hotel.total_bookings || 0}
                 </div>
-                <TrendingUp className="h-12 w-12 opacity-50" />
+                <p className="text-sm text-gray-500">การจอง</p>
               </div>
-            </div>
 
-            <div className="rounded-lg bg-white p-6 shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">จำนวนการจอง</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {hotel.total_bookings || 0}
-                  </p>
+              {/* รายได้/เดือน */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  ฿{hotel.monthly_revenue?.toLocaleString() || 0}
                 </div>
-                <Calendar className="h-10 w-10 text-blue-600" />
+                <p className="text-sm text-gray-500">รายได้/เดือน</p>
               </div>
-            </div>
 
-            <div className="rounded-lg bg-white p-6 shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">อัตราคอมมิชชั่น</p>
-                  <p className="text-2xl font-bold text-gray-900">{hotel.commission_rate}%</p>
+              {/* คอมมิชชั่น */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {hotel.commission_rate}%
                 </div>
-                <Percent className="h-10 w-10 text-blue-600" />
+                <p className="text-sm text-gray-500">คอมมิชชั่น</p>
+              </div>
+
+              {/* ส่วนลด */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {hotel.discount_rate || 0}%
+                </div>
+                <p className="text-sm text-gray-500">ส่วนลด</p>
               </div>
             </div>
           </div>

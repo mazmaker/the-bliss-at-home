@@ -1,4 +1,4 @@
-# 🏠 The Bliss at Home - Booking Massage Platform
+# 🏠 The Bliss Massage at Home - Booking Massage Platform
 
 ระบบจองบริการนวด สปา และทำเล็บถึงที่ แบบ Monorepo สำหรับ 4 แอพพลิเคชัน
 
@@ -498,7 +498,7 @@ chore: update dependencies
 
 This project is proprietary software. All rights reserved.
 
-© 2026 The Bliss at Home. All rights reserved.
+© 2026 The Bliss Massage at Home. All rights reserved.
 
 ---
 

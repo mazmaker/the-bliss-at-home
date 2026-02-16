@@ -2,19 +2,24 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
-import type { Profile } from '@bliss/supabase/auth'
+import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { useTranslation } from '@bliss/i18n'
 import SOSButton from './SOSButton'
 
 function Header() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
+
+  // Fetch customer data from customers table
+  const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
 
   useEffect(() => {
-    loadProfile()
+    checkAuth()
   }, [])
 
   // Close dropdown when clicking outside
@@ -35,14 +40,14 @@ function Header() {
     }
   }, [userMenuOpen])
 
-  const loadProfile = async () => {
+  const checkAuth = async () => {
     try {
-      const userProfile = await authService.getCurrentProfile()
-      setProfile(userProfile)
+      const profile = await authService.getCurrentProfile()
+      setIsLoggedIn(!!profile)
     } catch (error) {
-      console.error('Failed to load profile:', error)
+      setIsLoggedIn(false)
     } finally {
-      setIsLoading(false)
+      setIsAuthLoading(false)
     }
   }
 
@@ -62,13 +67,14 @@ function Header() {
     return location.pathname.startsWith(path)
   }
 
-  const displayName = profile?.full_name || profile?.email?.split('@')[0] || 'User'
+  const isLoading = isAuthLoading || customerLoading
+  const displayName = customer?.full_name || customer?.phone || 'User'
 
   const navItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/services', label: 'Services', icon: Briefcase },
-    { path: '/bookings', label: 'Bookings', icon: ClipboardList },
-    { path: '/profile', label: 'Profile', icon: User },
+    { path: '/', label: t('nav.home'), icon: Home },
+    { path: '/services', label: t('nav.services'), icon: Briefcase },
+    { path: '/bookings', label: t('nav.bookings'), icon: ClipboardList },
+    { path: '/profile', label: t('nav.profile'), icon: User },
   ]
 
   const IconComponent = ({ icon: Icon }: { icon: any }) => <Icon className="w-5 h-5" />
@@ -83,7 +89,7 @@ function Header() {
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-stone-900 tracking-tight">The Bliss at Home</h1>
+              <h1 className="text-xl font-semibold text-stone-900 tracking-tight">The Bliss Massage at Home</h1>
               <p className="text-xs text-stone-500 hidden sm:block font-light tracking-wide">Massage • Spa • Nail</p>
             </div>
           </Link>
@@ -108,7 +114,7 @@ function Header() {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
-            {!isLoading && profile ? (
+            {!isLoading && isLoggedIn ? (
               <>
                 {/* SOS Button */}
                 <SOSButton />
@@ -133,7 +139,7 @@ function Header() {
                         className="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
                       >
                         <User className="w-4 h-4" />
-                        My Profile
+                        {t('auth.myProfile')}
                       </Link>
                       <Link
                         to="/bookings"
@@ -141,7 +147,7 @@ function Header() {
                         className="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
                       >
                         <ClipboardList className="w-4 h-4" />
-                        My Bookings
+                        {t('auth.myBookings')}
                       </Link>
                       <div className="border-t border-stone-200 my-1"></div>
                       <button
@@ -149,7 +155,7 @@ function Header() {
                         className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         <LogOut className="w-4 h-4" />
-                        Logout
+                        {t('buttons.logout')}
                       </button>
                     </div>
                   )}
@@ -159,7 +165,7 @@ function Header() {
                   to="/services"
                   className="bg-gradient-to-r from-amber-700 to-amber-800 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
                 >
-                  Book Now
+                  {t('buttons.bookNow')}
                 </Link>
               </>
             ) : (
@@ -167,7 +173,7 @@ function Header() {
                 to="/login"
                 className="bg-gradient-to-r from-amber-700 to-amber-800 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
               >
-                Login
+                {t('buttons.login')}
               </Link>
             )}
           </div>
@@ -202,17 +208,17 @@ function Header() {
               ))}
 
               {/* SOS Button - Mobile */}
-              {!isLoading && profile && (
+              {!isLoading && isLoggedIn && (
                 <div className="px-3">
                   <SOSButton className="w-full" />
                 </div>
               )}
 
               <div className="border-t border-stone-200 pt-3 mt-3">
-                {!isLoading && profile ? (
+                {!isLoading && isLoggedIn ? (
                   <>
                     <div className="px-4 py-2 text-xs text-stone-500 font-medium">
-                      Signed in as
+                      {t('auth.signedInAs')}
                     </div>
                     <div className="px-4 py-2 text-sm font-medium text-stone-700 bg-stone-50 rounded-lg mx-3 mb-3">
                       {displayName}
@@ -223,14 +229,14 @@ function Header() {
                       className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-stone-700 hover:bg-stone-100 mx-3"
                     >
                       <User className="w-5 h-5" />
-                      <span>My Profile</span>
+                      <span>{t('auth.myProfile')}</span>
                     </Link>
                     <Link
                       to="/services"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center justify-center gap-2 mt-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
                     >
-                      Book Now
+                      {t('buttons.bookNow')}
                     </Link>
                     <button
                       onClick={() => {
@@ -240,7 +246,7 @@ function Header() {
                       className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 w-full mt-3 mx-3"
                     >
                       <LogOut className="w-5 h-5" />
-                      <span>Logout</span>
+                      <span>{t('buttons.logout')}</span>
                     </button>
                   </>
                 ) : (
@@ -249,7 +255,7 @@ function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-center gap-2 mt-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
                   >
-                    Login
+                    {t('buttons.login')}
                   </Link>
                 )}
               </div>

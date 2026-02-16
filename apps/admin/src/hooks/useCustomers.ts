@@ -4,12 +4,21 @@ import {
   getCustomerById,
   getCustomerWithStats,
   getCustomerBookings,
+  getCustomerAddresses,
+  getCustomerTaxInfo,
   updateCustomerStatus,
   updateCustomer,
+  createCustomerAddress,
+  updateCustomerAddress,
+  deleteCustomerAddress,
+  setDefaultAddress,
+  upsertCustomerTaxInfo,
   getCustomerStatistics,
   type Customer,
   type CustomerWithStats,
   type CustomerBooking,
+  type CustomerAddress,
+  type CustomerTaxInfo,
   type CustomerStatus,
 } from '../lib/customerQueries'
 
@@ -183,6 +192,193 @@ export function useUpdateCustomer() {
   }
 
   return { update, loading, error }
+}
+
+// ============================================
+// CUSTOMER ADDRESSES & TAX INFO HOOKS
+// ============================================
+
+export function useCustomerAddresses(customerId: string | null) {
+  const [addresses, setAddresses] = useState<CustomerAddress[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchAddresses = async () => {
+    if (!customerId) {
+      setAddresses([])
+      setLoading(false)
+      return
+    }
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await getCustomerAddresses(customerId)
+      setAddresses(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch addresses')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchAddresses()
+  }, [customerId])
+
+  return { addresses, loading, error, refetch: fetchAddresses }
+}
+
+export function useCustomerTaxInfo(customerId: string | null) {
+  const [taxInfo, setTaxInfo] = useState<CustomerTaxInfo | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchTaxInfo = async () => {
+    if (!customerId) {
+      setTaxInfo(null)
+      setLoading(false)
+      return
+    }
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await getCustomerTaxInfo(customerId)
+      setTaxInfo(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch tax info')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTaxInfo()
+  }, [customerId])
+
+  return { taxInfo, loading, error, refetch: fetchTaxInfo }
+}
+
+// ============================================
+// ADDRESS MUTATION HOOKS
+// ============================================
+
+export function useCreateAddress() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const create = async (
+    customerId: string,
+    data: Omit<CustomerAddress, 'id' | 'customer_id' | 'created_at' | 'updated_at'>
+  ) => {
+    try {
+      setLoading(true)
+      setError(null)
+      return await createCustomerAddress(customerId, data)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to create address'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { create, loading, error }
+}
+
+export function useUpdateAddress() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const update = async (
+    id: string,
+    customerId: string,
+    data: Partial<Omit<CustomerAddress, 'id' | 'customer_id' | 'created_at' | 'updated_at'>>
+  ) => {
+    try {
+      setLoading(true)
+      setError(null)
+      return await updateCustomerAddress(id, customerId, data)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update address'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { update, loading, error }
+}
+
+export function useDeleteAddress() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const remove = async (id: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+      await deleteCustomerAddress(id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete address'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { remove, loading, error }
+}
+
+export function useSetDefaultAddress() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const setDefault = async (customerId: string, addressId: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+      return await setDefaultAddress(customerId, addressId)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to set default address'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { setDefault, loading, error }
+}
+
+// ============================================
+// TAX INFO MUTATION HOOK
+// ============================================
+
+export function useUpsertTaxInfo() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const upsert = async (
+    customerId: string,
+    data: Omit<CustomerTaxInfo, 'id' | 'customer_id' | 'created_at' | 'updated_at'>
+  ) => {
+    try {
+      setLoading(true)
+      setError(null)
+      return await upsertCustomerTaxInfo(customerId, data)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to save tax info'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { upsert, loading, error }
 }
 
 // ============================================

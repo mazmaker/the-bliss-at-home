@@ -1,4 +1,4 @@
-# The Bliss at Home - Project Constitution
+# The Bliss Massage at Home - Project Constitution
 
 **Version:** 2.0.0 (Supabase-First Architecture)
 **Effective:** January 14, 2026
@@ -8,7 +8,7 @@
 
 ## บทนำ (Preamble)
 
-เอกสารนี้เป็น "Single Source of Truth" สำหรับการตัดสินใจด้านเทคนิคทั้งหมดของโปรเจกต์ **The Bliss at Home** - แพลตฟอร์มจองบริการนวด สปา และทำเล็บถึงที่
+เอกสารนี้เป็น "Single Source of Truth" สำหรับการตัดสินใจด้านเทคนิคทั้งหมดของโปรเจกต์ **The Bliss Massage at Home** - แพลตฟอร์มจองบริการนวด สปา และทำเล็บถึงที่
 
 สถาปัตยกรรมหลัก: **Supabase-First** พร้อม Node.js Server เสริมสำหรับงานที่ซับซ้อน
 
@@ -1245,7 +1245,7 @@ pnpm typecheck              # Check types
 
 ---
 
-**เอกสารนี้เป็น "Single Source of Truth" สำหรับโปรเจกต์ The Bliss at Home**
+**เอกสารนี้เป็น "Single Source of Truth" สำหรับโปรเจกต์ The Bliss Massage at Home**
 
 ---
 

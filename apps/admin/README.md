@@ -1,8 +1,8 @@
-# Admin App - The Bliss at Home
+# Admin App - The Bliss Massage at Home
 
 ## 🎯 Overview
 
-Admin dashboard for managing The Bliss at Home platform.
+Admin dashboard for managing The Bliss Massage at Home platform.
 
 ## 🚀 Quick Start
 
@@ -94,7 +94,7 @@ VITE_SUPABASE_URL=https://rbdvlfriqjnwpxmmgisf.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 
 # App Configuration
-VITE_APP_NAME=The Bliss at Home - Admin
+VITE_APP_NAME=The Bliss Massage at Home - Admin
 VITE_APP_PORT=3001
 
 # Authentication Mode
@@ -140,4 +140,4 @@ VITE_USE_MOCK_AUTH=false  # true for mock, false for real auth
 
 ## 📝 License
 
-Private - The Bliss at Home © 2026
+Private - The Bliss Massage at Home © 2026

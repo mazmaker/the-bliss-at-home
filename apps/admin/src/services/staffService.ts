@@ -128,6 +128,8 @@ export interface Staff {
   bio_th?: string
   bio_en?: string
   avatar_url?: string
+  invite_token?: string | null
+  invite_token_expires_at?: string | null
   status: 'pending' | 'active' | 'inactive' | 'suspended'
   rating: number
   total_reviews: number
@@ -143,6 +145,13 @@ export interface Staff {
     email: string
     full_name?: string
   }
+}
+
+export interface InviteLinkData {
+  inviteLink: string
+  qrCode: string
+  expiresAt: string
+  isExpired: boolean
 }
 
 export interface StaffSkill {
@@ -167,42 +176,6 @@ export interface CreateStaffData {
   bio_th?: string
   bio_en?: string
   skills?: string[] // skill IDs
-}
-
-// Helper function to map friendly skill IDs to database UUIDs
-async function mapSkillIdsToUUIDs(friendlySkillIds: string[]): Promise<string[]> {
-  const skillMapping: Record<string, string> = {
-    'massage': 'Thai Massage',
-    'nail': 'Manicure',
-    'spa': 'Spa Treatment'
-  }
-
-  const searchNames = friendlySkillIds.map(id => skillMapping[id]).filter(Boolean)
-
-  if (searchNames.length === 0) return []
-
-  const { data, error } = await supabase
-    .from('skills')
-    .select('id, name_en')
-    .in('name_en', searchNames)
-
-  if (error) {
-    console.error('Error fetching skills:', error)
-    return []
-  }
-
-  // Map back to the order of friendly IDs
-  const uuidMap: Record<string, string> = {}
-  data?.forEach(skill => {
-    const friendlyId = Object.keys(skillMapping).find(
-      key => skillMapping[key] === skill.name_en
-    )
-    if (friendlyId) {
-      uuidMap[friendlyId] = skill.id
-    }
-  })
-
-  return friendlySkillIds.map(id => uuidMap[id]).filter(Boolean)
 }
 
 export const staffService = {
@@ -347,25 +320,20 @@ export const staffService = {
 
     if (error) throw error
 
-    // Add skills if provided
+    // Add skills if provided (skill IDs are already real UUIDs from the skills table)
     if (staffData.skills && staffData.skills.length > 0 && data) {
-      // Map friendly skill IDs to database UUIDs
-      const skillUUIDs = await mapSkillIdsToUUIDs(staffData.skills)
+      const skillsData = staffData.skills.map(skillId => ({
+        staff_id: data.id,
+        skill_id: skillId,
+        level: 'intermediate' as const,
+        years_experience: 0
+      }))
 
-      if (skillUUIDs.length > 0) {
-        const skillsData = skillUUIDs.map(skillId => ({
-          staff_id: data.id,
-          skill_id: skillId,
-          level: 'intermediate' as const,
-          years_experience: 0
-        }))
+      const { error: skillsError } = await supabase
+        .from('staff_skills')
+        .insert(skillsData)
 
-        const { error: skillsError } = await supabase
-          .from('staff_skills')
-          .insert(skillsData)
-
-        if (skillsError) throw skillsError
-      }
+      if (skillsError) throw skillsError
     }
 
     return data
@@ -440,25 +408,20 @@ export const staffService = {
 
       if (deleteError) throw deleteError
 
-      // Insert new skills if any
+      // Insert new skills if any (skill IDs are already real UUIDs)
       if (skills.length > 0) {
-        // Map friendly skill IDs to database UUIDs
-        const skillUUIDs = await mapSkillIdsToUUIDs(skills)
+        const skillsData = skills.map(skillId => ({
+          staff_id: id,
+          skill_id: skillId,
+          level: 'intermediate' as const,
+          years_experience: 0
+        }))
 
-        if (skillUUIDs.length > 0) {
-          const skillsData = skillUUIDs.map(skillId => ({
-            staff_id: id,
-            skill_id: skillId,
-            level: 'intermediate' as const,
-            years_experience: 0
-          }))
+        const { error: skillsError } = await supabase
+          .from('staff_skills')
+          .insert(skillsData)
 
-          const { error: skillsError } = await supabase
-            .from('staff_skills')
-            .insert(skillsData)
-
-          if (skillsError) throw skillsError
-        }
+        if (skillsError) throw skillsError
       }
     }
 
@@ -510,19 +473,13 @@ export const staffService = {
     // Create staff record first
     const staff = await this.createStaff(staffData)
 
-    // Generate invitation link
-    const inviteData = {
-      staffId: staff.id,
-      staffName: staffData.name_th,
-      staffPhone: staffData.phone,
-      timestamp: new Date().getTime()
-    }
+    // Generate a secure invite token (UUID)
+    const inviteToken = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
     if (isMockMode) {
       await delay(1000)
-      // Generate mock LINE LIFF link with Unicode-safe base64 encoding
-      const token = btoa(unescape(encodeURIComponent(JSON.stringify(inviteData))))
-      const mockLiffUrl = `http://localhost:3004/staff/register?token=${token}`
+      const mockLiffUrl = `http://localhost:3007/staff/login?token=${inviteToken}`
 
       return {
         staff,
@@ -531,14 +488,101 @@ export const staffService = {
       }
     }
 
-    // Generate LINE LIFF link that opens Staff app with invitation token (Unicode-safe)
-    const token = btoa(unescape(encodeURIComponent(JSON.stringify(inviteData))))
-    const liffUrl = `${import.meta.env.VITE_LINE_LIFF_URL || 'https://liff.line.me/YOUR_LIFF_ID'}/staff/register?token=${token}`
+    // Store invite token in database
+    const { error: tokenError } = await supabase
+      .from('staff')
+      .update({
+        invite_token: inviteToken,
+        invite_token_expires_at: expiresAt.toISOString()
+      })
+      .eq('id', staff.id)
+
+    if (tokenError) throw tokenError
+
+    // Generate invite link with secure token
+    // IMPORTANT: Do NOT add extra path after LIFF URL — LIFF appends path to its Endpoint URL
+    // So we pass token as query param only: liff.line.me/LIFF_ID?token=xxx
+    // Login.tsx will read the token from liff.state or URL params
+    const baseUrl = import.meta.env.VITE_LINE_LIFF_URL || 'https://liff.line.me/YOUR_LIFF_ID'
+    const inviteLink = `${baseUrl}?token=${inviteToken}`
 
     return {
       staff,
-      inviteLink: liffUrl,
-      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(liffUrl)}`
+      inviteLink,
+      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteLink)}`
     }
-  }
+  },
+
+  // Get existing invite link for a staff member
+  async getInviteLink(staffId: string): Promise<InviteLinkData | null> {
+    if (isMockMode) {
+      await delay(300)
+      const mockToken = 'mock-token-' + staffId.slice(0, 8)
+      const mockLink = `http://localhost:3007/staff/login?token=${mockToken}`
+      return {
+        inviteLink: mockLink,
+        qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockLink)}`,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        isExpired: false,
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('staff')
+      .select('invite_token, invite_token_expires_at')
+      .eq('id', staffId)
+      .single()
+
+    if (error || !data?.invite_token) return null
+
+    const baseUrl = import.meta.env.VITE_LINE_LIFF_URL || 'https://liff.line.me/YOUR_LIFF_ID'
+    const inviteLink = `${baseUrl}?token=${data.invite_token}`
+    const isExpired = data.invite_token_expires_at
+      ? new Date(data.invite_token_expires_at) < new Date()
+      : false
+
+    return {
+      inviteLink,
+      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteLink)}`,
+      expiresAt: data.invite_token_expires_at || '',
+      isExpired,
+    }
+  },
+
+  // Regenerate invite link (new token, extends expiry)
+  async regenerateInvite(staffId: string): Promise<InviteLinkData> {
+    const inviteToken = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+
+    if (isMockMode) {
+      await delay(500)
+      const mockLink = `http://localhost:3007/staff/login?token=${inviteToken}`
+      return {
+        inviteLink: mockLink,
+        qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockLink)}`,
+        expiresAt: expiresAt.toISOString(),
+        isExpired: false,
+      }
+    }
+
+    const { error } = await supabase
+      .from('staff')
+      .update({
+        invite_token: inviteToken,
+        invite_token_expires_at: expiresAt.toISOString(),
+      })
+      .eq('id', staffId)
+
+    if (error) throw error
+
+    const baseUrl = import.meta.env.VITE_LINE_LIFF_URL || 'https://liff.line.me/YOUR_LIFF_ID'
+    const inviteLink = `${baseUrl}?token=${inviteToken}`
+
+    return {
+      inviteLink,
+      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteLink)}`,
+      expiresAt: expiresAt.toISOString(),
+      isExpired: false,
+    }
+  },
 }

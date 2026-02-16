@@ -14,19 +14,27 @@ ADD COLUMN IF NOT EXISTS staff_id UUID REFERENCES staff(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_sos_alerts_staff ON sos_alerts(staff_id);
 
 -- Add constraint to ensure either customer_id or staff_id is set (but not both)
-ALTER TABLE sos_alerts
-ADD CONSTRAINT IF NOT EXISTS sos_alerts_source_check
-CHECK (
-  (customer_id IS NOT NULL AND staff_id IS NULL) OR
-  (customer_id IS NULL AND staff_id IS NOT NULL)
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'sos_alerts_source_check'
+  ) THEN
+    ALTER TABLE sos_alerts
+    ADD CONSTRAINT sos_alerts_source_check
+    CHECK (
+      (customer_id IS NOT NULL AND staff_id IS NULL) OR
+      (customer_id IS NULL AND staff_id IS NOT NULL)
+    );
+  END IF;
+END $$;
 
 -- ============================================
 -- UPDATE RLS POLICIES
 -- ============================================
 
 -- Staff can create their own SOS alerts
-CREATE POLICY IF NOT EXISTS "Staff can create SOS alerts" ON sos_alerts
+DROP POLICY IF EXISTS "Staff can create SOS alerts" ON sos_alerts;
+CREATE POLICY "Staff can create SOS alerts" ON sos_alerts
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM staff
@@ -36,7 +44,8 @@ CREATE POLICY IF NOT EXISTS "Staff can create SOS alerts" ON sos_alerts
   );
 
 -- Staff can view their own SOS alerts
-CREATE POLICY IF NOT EXISTS "Staff can view own SOS alerts" ON sos_alerts
+DROP POLICY IF EXISTS "Staff can view own SOS alerts" ON sos_alerts;
+CREATE POLICY "Staff can view own SOS alerts" ON sos_alerts
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM staff

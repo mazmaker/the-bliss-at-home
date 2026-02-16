@@ -76,44 +76,30 @@ function StaffLayout() {
     // Close modal first
     setShowLogoutConfirm(false)
 
-    try {
-      // Check if user logged in via LIFF
-      const loggedInViaLiff = localStorage.getItem('staff_logged_in_via_liff') === 'true'
-
-      if (loggedInViaLiff) {
-        console.log('[Logout] User logged in via LIFF, initializing LIFF for logout...')
-
-        // Get LIFF ID from environment
-        const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
-
-        if (LIFF_ID) {
-          // Initialize LIFF if not already initialized
-          if (!liffService.isInitialized()) {
-            await liffService.initialize(LIFF_ID)
-          }
-
-          // Logout from LIFF
-          if (liffService.isLoggedIn()) {
-            console.log('[Logout] Logging out from LIFF...')
-            liffService.logout()
-            // Wait for LIFF logout to complete
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-        }
-
-        // Clear the flag
-        localStorage.removeItem('staff_logged_in_via_liff')
-      }
-    } catch (error) {
-      console.error('LIFF logout error:', error)
-    }
+    // Set flag BEFORE logout to prevent Login page from auto-login
+    localStorage.setItem('staff_just_logged_out', 'true')
 
     try {
-      // Then logout from Supabase
+      // Logout from Supabase first (invalidate session)
       console.log('[Logout] Logging out from Supabase...')
       await logout()
     } catch (error) {
       console.error('Supabase logout error:', error)
+    }
+
+    // Clear session data
+    localStorage.removeItem('bliss-customer-auth')
+    localStorage.removeItem('staff_logged_in_via_liff')
+
+    // Logout from LIFF only if already initialized (don't re-initialize just to logout)
+    // Re-initializing LIFF from a non-endpoint URL causes warnings and issues
+    try {
+      if (liffService.isInitialized() && liffService.isLoggedIn()) {
+        console.log('[Logout] Logging out from LIFF...')
+        liffService.logout()
+      }
+    } catch (error) {
+      console.error('LIFF logout error:', error)
     }
 
     // Force full page reload to login page (clears all state)
@@ -157,7 +143,7 @@ function StaffLayout() {
       {/* Header */}
       <header className="bg-gradient-to-r from-amber-700 to-amber-800 text-white sticky top-0 z-30">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-bold">The Bliss at Home</h1>
+          <h1 className="text-lg font-bold">The Bliss Massage at Home</h1>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowNotifications(true)}

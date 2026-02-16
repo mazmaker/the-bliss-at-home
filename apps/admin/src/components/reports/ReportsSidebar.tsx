@@ -150,7 +150,7 @@ function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps)
       <div className="p-4 border-t border-stone-200">
         <div className="bg-gradient-to-r from-stone-50 to-stone-100 rounded-xl p-3">
           <div className="text-xs text-stone-600 text-center">
-            <div className="font-medium mb-1">📈 The Bliss at Home</div>
+            <div className="font-medium mb-1">📈 The Bliss Massage at Home</div>
             <div className="text-stone-500">Business Intelligence</div>
           </div>
         </div>

@@ -50,8 +50,8 @@ USING (
 -- Insert default settings
 INSERT INTO app_settings (setting_key, setting_value, setting_type, is_sensitive, description) VALUES
   -- General Settings
-  ('website_name_th', '"เดอะ บลิส แอท โฮม"', 'general', false, 'ชื่อเว็บไซต์ภาษาไทย'),
-  ('website_name_en', '"The Bliss at Home"', 'general', false, 'ชื่อเว็บไซต์ภาษาอังกฤษ'),
+  ('website_name_th', '"เดอะ บลิส มาสสาจ แอท โฮม"', 'general', false, 'ชื่อเว็บไซต์ภาษาไทย'),
+  ('website_name_en', '"The Bliss Massage at Home"', 'general', false, 'ชื่อเว็บไซต์ภาษาอังกฤษ'),
   ('company_logo_url', 'null', 'general', false, 'URL ของโลโก้บริษัท'),
 
   -- Payment Settings

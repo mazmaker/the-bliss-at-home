@@ -5,6 +5,17 @@ import { z } from 'zod'
 import { supabase } from '../lib/supabase'
 import { GoogleMapsPicker } from './GoogleMapsPicker'
 import {
+  createHotelAccount,
+  sendHotelInvitation,
+  resetHotelPassword,
+  toggleHotelLoginAccess,
+  loadHotelAuthStatus,
+  copyToClipboard,
+  formatLastLogin,
+  generateHotelLoginURL,
+  type HotelAuthStatus,
+} from '../utils/hotelAuthUtils'
+import {
   X,
   Building,
   Phone,
@@ -18,6 +29,14 @@ import {
   User,
   Percent,
   Star,
+  KeyRound,
+  Send,
+  Eye,
+  EyeOff,
+  Copy,
+  RefreshCw,
+  Shield,
+  Clock,
 } from 'lucide-react'
 
 // Validation schema
@@ -34,6 +53,10 @@ const hotelFormSchema = z.object({
     .number({ required_error: 'ระบุเปอร์เซ็นต์เป็นตัวเลข' })
     .min(0, 'เปอร์เซ็นต์ขั้นต่ำ 0%')
     .max(100, 'เปอร์เซ็นต์สูงสุด 100%'),
+  discount_rate: z.coerce
+    .number({ required_error: 'ระบุเปอร์เซ็นต์ส่วนลดเป็นตัวเลข' })
+    .min(0, 'เปอร์เซ็นต์ส่วนลดขั้นต่ำ 0%')
+    .max(100, 'เปอร์เซ็นต์ส่วนลดสูงสุด 100%'),
   rating: z.coerce
     .number()
     .min(0, 'คะแนนขั้นต่ำ 0')
@@ -74,6 +97,114 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
+  // Login Account Management State
+  const [loginEnabled, setLoginEnabled] = useState(false)
+  const [temporaryPassword, setTemporaryPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isGeneratingPassword, setIsGeneratingPassword] = useState(false)
+  const [isSendingInvitation, setIsSendingInvitation] = useState(false)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [authStatus, setAuthStatus] = useState<HotelAuthStatus>({ hasAccount: false })
+
+  // Login Account Management Functions
+  const generateTemporaryPassword = async () => {
+    if (!editData?.id) {
+      alert('กรุณาบันทึกข้อมูลโรงแรมก่อนสร้างบัญชีผู้ใช้')
+      return
+    }
+
+    setIsGeneratingPassword(true)
+    try {
+      const result = await createHotelAccount({
+        hotelId: editData.id,
+        email: watch('email'),
+        name: watch('name_th'),
+      })
+
+      if (result.success && result.temporaryPassword) {
+        setTemporaryPassword(result.temporaryPassword)
+        setAuthStatus({
+          hasAccount: true,
+          loginEmail: result.loginEmail,
+        })
+        setLoginEnabled(true)
+        alert('สร้างบัญชีผู้ใช้สำเร็จ!')
+      } else {
+        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถสร้างบัญชีได้'))
+      }
+    } catch (error: any) {
+      console.error('Error creating account:', error)
+      alert('เกิดข้อผิดพลาด: ' + error.message)
+    } finally {
+      setIsGeneratingPassword(false)
+    }
+  }
+
+  const sendInvitationEmail = async () => {
+    if (!editData?.id) return
+
+    setIsSendingInvitation(true)
+    try {
+      const result = await sendHotelInvitation(editData.id)
+      if (result.success) {
+        alert('ส่งอีเมลเชิญใช้งานสำเร็จ!')
+      } else {
+        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถส่งอีเมลได้'))
+      }
+    } catch (error: any) {
+      console.error('Error sending invitation:', error)
+      alert('เกิดข้อผิดพลาด: ' + error.message)
+    } finally {
+      setIsSendingInvitation(false)
+    }
+  }
+
+  const resetPassword = async () => {
+    if (!editData?.id) return
+
+    setIsResettingPassword(true)
+    try {
+      const result = await resetHotelPassword(editData.id)
+      if (result.success && result.data?.temporaryPassword) {
+        setTemporaryPassword(result.data.temporaryPassword)
+        alert('รีเซ็ตรหัสผ่านสำเร็จ! รหัสผ่านชั่วคราวใหม่ถูกสร้างแล้ว')
+      } else {
+        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้'))
+      }
+    } catch (error: any) {
+      console.error('Error resetting password:', error)
+      alert('เกิดข้อผิดพลาด: ' + error.message)
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
+
+  const toggleLoginAccess = async (enabled: boolean) => {
+    if (!editData?.id) return
+
+    try {
+      const result = await toggleHotelLoginAccess(editData.id, enabled)
+      if (result.success) {
+        setLoginEnabled(enabled)
+        alert(enabled ? 'เปิดใช้งานการเข้าสู่ระบบแล้ว' : 'ปิดใช้งานการเข้าสู่ระบบแล้ว')
+      } else {
+        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถเปลี่ยนสถานะได้'))
+      }
+    } catch (error: any) {
+      console.error('Error toggling login access:', error)
+      alert('เกิดข้อผิดพลาด: ' + error.message)
+    }
+  }
+
+  const copyPassword = async () => {
+    const success = await copyToClipboard(temporaryPassword)
+    if (success) {
+      alert('คัดลอกรหัสผ่านแล้ว!')
+    } else {
+      alert('ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง')
+    }
+  }
+
   const {
     register,
     handleSubmit,
@@ -93,6 +224,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       latitude: null,
       longitude: null,
       commission_rate: 20,
+      discount_rate: 20,
       rating: 0,
       status: 'pending',
       bank_name: '',
@@ -104,11 +236,32 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
     },
   })
 
+  // Load hotel auth status
+  const loadAuthStatusData = async (hotelId: string) => {
+    try {
+      const status = await loadHotelAuthStatus(hotelId)
+      if (status) {
+        setAuthStatus(status)
+        setLoginEnabled(status.loginEnabled || false)
+        // แสดงรหัสผ่านชั่วคราวถ้ามี
+        if (status.temporaryPassword) {
+          setTemporaryPassword(status.temporaryPassword)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading auth status:', error)
+    }
+  }
+
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       if (editData) {
         reset(editData)
+        // Load auth status for existing hotel
+        if (editData.id) {
+          loadAuthStatusData(editData.id)
+        }
       } else {
         reset({
           name_th: 'โรงแรมทดสอบ กรุงเทพฯ',
@@ -120,6 +273,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           latitude: 13.7563,
           longitude: 100.5018,
           commission_rate: 20,
+          discount_rate: 20,
           rating: 4.5,
           status: 'pending',
           bank_name: 'ธนาคารกรุงเทพ',
@@ -132,6 +286,12 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       }
       setSubmitError('')
       setSubmitSuccess(false)
+    } else {
+      // Reset auth state when modal closes
+      setAuthStatus({ hasAccount: false })
+      setLoginEnabled(false)
+      setTemporaryPassword('')
+      setShowPassword(false)
     }
   }, [isOpen, editData, reset])
 
@@ -155,6 +315,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             latitude: data.latitude,
             longitude: data.longitude,
             commission_rate: data.commission_rate,
+            discount_rate: data.discount_rate,
             rating: data.rating,
             status: data.status,
             bank_name: data.bank_name,
@@ -181,6 +342,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             latitude: data.latitude,
             longitude: data.longitude,
             commission_rate: data.commission_rate,
+            discount_rate: data.discount_rate,
             rating: data.rating,
             status: data.status,
             bank_name: data.bank_name,
@@ -433,6 +595,27 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
+                      อัตราค่าส่วนลด (%) *
+                    </label>
+                    <div className="relative mt-1">
+                      <Percent className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                      <input
+                        {...register('discount_rate')}
+                        type="number"
+                        step="0.01"
+                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="20"
+                      />
+                    </div>
+                    {errors.discount_rate && (
+                      <p className="mt-1 text-sm text-red-600">{errors.discount_rate.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
                       คะแนนรีวิว (Rating)
                     </label>
                     <div className="relative mt-1">
@@ -522,6 +705,169 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
                 </div>
               </div>
+
+              {/* Login Account Management */}
+              {editData?.id && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <KeyRound className="h-5 w-5" />
+                    จัดการบัญชีผู้ใช้
+                  </h3>
+
+                  <div className="rounded-lg bg-gray-50 p-4">
+                    {/* Login Status */}
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Shield className={`h-5 w-5 ${authStatus.hasAccount ? 'text-green-500' : 'text-gray-400'}`} />
+                        <span className="text-sm font-medium">
+                          สถานะบัญชี: {authStatus.hasAccount ? 'มีบัญชีแล้ว' : 'ยังไม่มีบัญชี'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="h-4 w-4" />
+                        เข้าสู่ระบบล่าสุด: {formatLastLogin(authStatus.lastLogin || null)}
+                      </div>
+                    </div>
+
+                    {/* Login Email */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        อีเมลสำหรับเข้าสู่ระบบ
+                      </label>
+                      <div className="text-sm text-gray-600 bg-white rounded border px-3 py-2">
+                        {authStatus.loginEmail || watch('email') || 'ใช้อีเมลติดต่อหลัก'}
+                      </div>
+                    </div>
+
+                    {/* Login Enable Toggle */}
+                    <div className="mb-4">
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={loginEnabled}
+                          onChange={(e) => toggleLoginAccess(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          disabled={!authStatus.hasAccount}
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          เปิดใช้งานการเข้าสู่ระบบ
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        อนุญาตให้โรงแรมเข้าสู่ระบบผ่านแอปพลิเคชัน Hotel
+                      </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {!authStatus.hasAccount ? (
+                        <button
+                          type="button"
+                          onClick={generateTemporaryPassword}
+                          disabled={isGeneratingPassword || !watch('email')}
+                          className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isGeneratingPassword ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <User className="h-4 w-4" />
+                          )}
+                          {isGeneratingPassword ? 'กำลังสร้างบัญชี...' : 'สร้างบัญชีผู้ใช้'}
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={sendInvitationEmail}
+                            disabled={isSendingInvitation}
+                            className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isSendingInvitation ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+                            {isSendingInvitation ? 'กำลังส่ง...' : 'ส่งอีเมลเชิญใช้งาน'}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={resetPassword}
+                            disabled={isResettingPassword}
+                            className="flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isResettingPassword ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-4 w-4" />
+                            )}
+                            {isResettingPassword ? 'กำลังรีเซ็ต...' : 'รีเซ็ตรหัสผ่าน'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Temporary Password Display */}
+                    {temporaryPassword && (
+                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertCircle className="h-5 w-5 text-yellow-600" />
+                          <span className="text-sm font-semibold text-yellow-800">
+                            รหัสผ่านชั่วคราวปัจจุบัน
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <div className="relative">
+                              <input
+                                type={showPassword ? 'text' : 'password'}
+                                value={temporaryPassword}
+                                readOnly
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={copyPassword}
+                            className="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded text-sm"
+                          >
+                            <Copy className="h-4 w-4" />
+                            คัดลอก
+                          </button>
+                        </div>
+                        <p className="text-xs text-yellow-700 mt-2">
+                          โรงแรมต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งแรก
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Help Text */}
+                    <div className="mt-4 text-xs text-gray-500">
+                      <p className="mb-1">
+                        • สร้างบัญชีผู้ใช้เพื่อให้โรงแรมสามารถเข้าสู่ระบบแอปพลิเคชัน Hotel ได้
+                      </p>
+                      <p className="mb-1">
+                        • อีเมลเชิญใช้งานจะส่งไปยังอีเมลติดต่อของโรงแรม
+                      </p>
+                      <p>
+                        • โรงแรมต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งแรก
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Error/Success Messages */}

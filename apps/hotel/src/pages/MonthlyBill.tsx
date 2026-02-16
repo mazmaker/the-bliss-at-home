@@ -270,7 +270,7 @@ function MonthlyBill() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div>
             <p className="text-stone-400 mb-1">ชื่อบัญชี</p>
-            <p className="font-medium">บริษัท เดอะ บลิส แอท โฮม จำกัด</p>
+            <p className="font-medium">บริษัท เดอะ บลิส มาสสาจ แอท โฮม จำกัด</p>
           </div>
           <div>
             <p className="text-stone-400 mb-1">ธนาคาร</p>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Building, CreditCard, User, MapPin } from 'lucide-react'
+import { X, Building, CreditCard, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 interface EditBankModalProps {
@@ -7,10 +7,9 @@ interface EditBankModalProps {
     bank_name: string
     account_name: string
     account_number: string
-    branch: string
   }
   onClose: () => void
-  onSave: (bankInfo: any) => void
+  onSave: (bankInfo: { bank_name: string; account_name: string; account_number: string }) => void
 }
 
 export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps) {
@@ -18,7 +17,6 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
     bank_name: bankInfo.bank_name,
     account_name: bankInfo.account_name,
     account_number: bankInfo.account_number,
-    branch: bankInfo.branch,
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -28,7 +26,7 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
 
     // Validate
     if (!formData.bank_name.trim()) {
-      toast.error('กรุณากรอกชื่อธนาคาร')
+      toast.error('กรุณาเลือกธนาคาร')
       return
     }
     if (!formData.account_name.trim()) {
@@ -39,19 +37,11 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
       toast.error('กรุณากรอกเลขที่บัญชี')
       return
     }
-    if (!formData.branch.trim()) {
-      toast.error('กรุณากรอกสาขา')
-      return
-    }
 
     setIsSaving(true)
 
     try {
-      // TODO: Save to database
-      // For now, just update the parent component
       await onSave(formData)
-      toast.success('บันทึกข้อมูลธนาคารสำเร็จ')
-      onClose()
     } catch (error: any) {
       console.error('Error saving bank info:', error)
       toast.error(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
@@ -147,25 +137,6 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
               required
             />
             <p className="text-xs text-stone-500 mt-1">กรอกเลขที่บัญชีธนาคาร 10-15 หลัก</p>
-          </div>
-
-          {/* Branch */}
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                สาขา <span className="text-red-500">*</span>
-              </div>
-            </label>
-            <input
-              type="text"
-              value={formData.branch}
-              onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-              placeholder="เช่น สาขาเซ็นทรัล ลาดพร้าว"
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isSaving}
-              required
-            />
           </div>
 
           {/* Warning */}

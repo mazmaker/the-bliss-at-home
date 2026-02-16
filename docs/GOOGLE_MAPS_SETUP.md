@@ -9,7 +9,7 @@
 ### 2. สร้าง Project (ถ้ายังไม่มี)
 - คลิกที่เมนู "Select a project" ด้านบน
 - คลิก "NEW PROJECT"
-- ตั้งชื่อ Project เช่น "The Bliss at Home"
+- ตั้งชื่อ Project เช่น "The Bliss Massage at Home"
 - คลิก "Create"
 
 ### 3. Enable APIs

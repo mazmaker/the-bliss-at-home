@@ -8,7 +8,7 @@ import StaffHistory from './pages/StaffHistory'
 import StaffEarnings from './pages/StaffEarnings'
 import StaffProfile from './pages/StaffProfile'
 import StaffSettings from './pages/StaffSettings'
-import { StaffLoginPage, StaffAuthCallback } from './pages/auth'
+import { StaffLoginPage, StaffRegisterPage, StaffAuthCallback } from './pages/auth'
 
 function App() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -27,15 +27,39 @@ function App() {
       <Route
         path="/staff/login"
         element={
+          (() => {
+            // Check if this is a LIFF callback (has liffClientId and liffRedirectUri params)
+            const urlParams = new URLSearchParams(window.location.search)
+            const isLiffCallback = urlParams.has('liffClientId') && urlParams.has('liffRedirectUri')
+
+            if (isLiffCallback) {
+              // This is a LIFF callback, use Callback component
+              return <StaffAuthCallback />
+            }
+
+            // Normal login page
+            return isAuthenticated ? (
+              <Navigate to="/staff/jobs" replace />
+            ) : (
+              <StaffLoginPage />
+            )
+          })()
+        }
+      />
+
+      {/* Public register route */}
+      <Route
+        path="/staff/register"
+        element={
           isAuthenticated ? (
             <Navigate to="/staff/jobs" replace />
           ) : (
-            <StaffLoginPage />
+            <StaffRegisterPage />
           )
         }
       />
 
-      {/* LIFF Callback route */}
+      {/* OAuth Callback route */}
       <Route path="/staff/auth/callback" element={<StaffAuthCallback />} />
 
       {/* Protected staff routes - require STAFF role */}

@@ -104,7 +104,7 @@ export function GoogleMapsPicker({
         map: map,
         draggable: true, // Allow dragging marker
         animation: window.google.maps.Animation.DROP,
-        title: 'ตำแหน่งโรงแรม',
+        title: 'ตำแหน่งที่อยู่',
       })
       markerRef.current = marker
 

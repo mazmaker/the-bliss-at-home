@@ -36,12 +36,14 @@ export function useSupabaseMutation<TData = unknown, TVariables = unknown>(
   options: {
     mutationFn: (client: SupabaseClient<Database>, variables: TVariables) => Promise<TData>
     invalidateKeys?: ((result: TData) => unknown[][]) | unknown[][]
-  } & Omit<UseMutationOptions<TData, Error, TVariables>, 'mutationFn' | 'onSuccess'>
+    onSuccess?: (data: TData, variables: TVariables, context: unknown) => void
+  } & Omit<UseMutationOptions<TData, Error, TVariables>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient()
+  const { onSuccess: userOnSuccess, ...restOptions } = options
 
   return useMutation({
-    ...options,
+    ...restOptions,
     mutationFn: (variables: TVariables) => options.mutationFn(getBrowserClient(), variables),
     onSuccess: (data, variables, context) => {
       // Invalidate queries if keys are provided
@@ -56,8 +58,8 @@ export function useSupabaseMutation<TData = unknown, TVariables = unknown>(
       }
 
       // Call user's onSuccess if provided
-      if (options.onSuccess) {
-        options.onSuccess(data, variables, context)
+      if (userOnSuccess) {
+        userOnSuccess(data, variables, context)
       }
     },
   })

@@ -1,4 +1,4 @@
-# The Bliss at Home
+# The Bliss Massage at Home
 
 > Massage/Spa/Nail services booking platform - Supabase-First Monorepo
 
@@ -164,4 +164,4 @@ pnpm clean        # Clean build artifacts
 
 ## License
 
-Copyright © 2026 The Bliss at Home
+Copyright © 2026 The Bliss Massage at Home

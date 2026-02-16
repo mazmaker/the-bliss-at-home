@@ -62,8 +62,8 @@ CREATE TRIGGER trigger_update_app_settings_updated_at
 -- Insert default settings
 INSERT INTO app_settings (setting_key, setting_value, setting_type, is_sensitive, description) VALUES
   -- General Settings
-  ('website_name_th', '"เดอะ บลิส แอท โฮม"', 'general', false, 'ชื่อเว็บไซต์ภาษาไทย'),
-  ('website_name_en', '"The Bliss at Home"', 'general', false, 'ชื่อเว็บไซต์ภาษาอังกฤษ'),
+  ('website_name_th', '"เดอะ บลิส มาสสาจ แอท โฮม"', 'general', false, 'ชื่อเว็บไซต์ภาษาไทย'),
+  ('website_name_en', '"The Bliss Massage at Home"', 'general', false, 'ชื่อเว็บไซต์ภาษาอังกฤษ'),
   ('company_logo_url', 'null', 'general', false, 'URL ของโลโก้บริษัท'),
   ('support_email', '"support@theblissathome.com"', 'general', false, 'อีเมลติดต่อ'),
   ('support_phone', '"02-123-4567"', 'general', false, 'เบอร์โทรศัพท์ติดต่อ'),

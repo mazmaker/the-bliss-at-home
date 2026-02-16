@@ -1,0 +1,113 @@
+{
+  "title": "个人资料",
+  "tabs": {
+    "profile": "个人资料",
+    "addresses": "地址",
+    "payment": "支付方式",
+    "tax": "税务发票"
+  },
+  "personal": {
+    "title": "个人信息",
+    "fullName": "姓名",
+    "phone": "电话号码",
+    "dateOfBirth": "出生日期",
+    "save": "保存资料"
+  },
+  "settings": {
+    "title": "设置",
+    "notifications": {
+      "title": "通知",
+      "bookingUpdates": "预约状态更新",
+      "bookingUpdatesDesc": "当预约状态变更时收到通知",
+      "promotions": "促销和特别优惠",
+      "promotionsDesc": "接收促销新闻和特别折扣",
+      "news": "新闻和活动",
+      "newsDesc": "来自 The Bliss Massage at Home 的一般新闻和活动"
+    },
+    "privacy": {
+      "title": "隐私",
+      "publicProfile": "显示公开资料",
+      "publicProfileDesc": "允许他人查看您的个人资料",
+      "marketingEmails": "允许营销邮件",
+      "marketingEmailsDesc": "接收促销邮件和特别优惠"
+    },
+    "language": {
+      "title": "语言",
+      "thai": "ภาษาไทย",
+      "english": "English",
+      "chinese": "中文",
+      "selected": "已选择"
+    },
+    "save": "保存设置"
+  },
+  "addresses": {
+    "title": "我的地址",
+    "addNew": "添加新地址",
+    "addFirst": "添加第一个地址",
+    "noAddresses": "暂无地址",
+    "default": "默认",
+    "setDefault": "设为默认",
+    "edit": "编辑",
+    "delete": "删除",
+    "deleteTitle": "删除地址",
+    "deleteMessage": "您确定要删除此地址吗？此操作无法撤销。"
+  },
+  "payment": {
+    "title": "支付方式",
+    "addNew": "添加支付方式",
+    "addFirst": "添加第一个支付方式",
+    "noMethods": "暂无支付方式",
+    "default": "默认",
+    "setDefault": "设为默认",
+    "delete": "删除",
+    "expires": "到期",
+    "deleteTitle": "删除支付方式",
+    "deleteMessage": "您确定要删除此支付方式吗？此操作无法撤销。"
+  },
+  "tax": {
+    "title": "税务发票信息",
+    "subtitle": "填写税务发票/收据信息",
+    "type": "类型",
+    "individual": "个人",
+    "individualEn": "Individual",
+    "company": "公司",
+    "companyEn": "Company",
+    "nationalId": "身份证号码",
+    "taxId": "税务登记号",
+    "companyName": "公司名称",
+    "companyPlaceholder": "ABC 有限公司",
+    "branch": "分公司",
+    "branchPlaceholder": "总部或 00001",
+    "taxAddress": "税务发票地址",
+    "addressPlaceholder": "门牌号、小区、街道",
+    "save": "保存信息",
+    "note": "注意：",
+    "noteItems": {
+      "usage": "此信息将用于税务发票/收据",
+      "accuracy": "请填写准确完整的信息",
+      "editable": "您可以随时编辑此信息"
+    }
+  },
+  "toast": {
+    "profileUpdated": "个人资料更新成功",
+    "profileUpdateFailed": "无法更新个人资料",
+    "addressDeleted": "地址删除成功",
+    "addressDeleteFailed": "无法删除地址",
+    "defaultAddressFailed": "无法设置默认地址",
+    "defaultPaymentSet": "默认支付方式设置成功",
+    "defaultPaymentFailed": "无法设置默认支付方式",
+    "paymentDeleted": "支付方式删除成功",
+    "paymentDeleteFailed": "无法删除支付方式",
+    "taxSaved": "税务信息保存成功",
+    "taxSaveFailed": "无法保存税务信息",
+    "notificationsSaved": "通知设置保存成功",
+    "privacySaved": "隐私设置保存成功",
+    "languageSaved": "语言设置保存成功",
+    "settingsSaveFailed": "无法保存设置",
+    "languageSaveFailed": "无法保存语言设置"
+  },
+  "confirm": {
+    "delete": "删除",
+    "cancel": "取消"
+  }
+}

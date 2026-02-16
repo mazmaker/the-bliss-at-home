@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { useTranslation } from '@bliss/i18n'
 import { ProtectedRoute } from '@bliss/ui'
 import Header from './components/Header'
 import './debug-session' // Load debug utilities
@@ -20,6 +21,7 @@ import PrivacyPage from './pages/Privacy'
 import { CustomerLoginPage, AuthCallback } from './pages/auth'
 
 function App() {
+  const { t } = useTranslation('common')
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
       <Toaster position="top-right" />
@@ -32,31 +34,10 @@ function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/design-system" element={<ColorPalette />} />
 
-        {/* Protected routes - All customer pages require login */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
-              <HomePageWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/services"
-          element={
-            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
-              <ServiceCatalogWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/services/:slug"
-          element={
-            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
-              <ServiceDetailsWrapper />
-            </ProtectedRoute>
-          }
-        />
+        {/* Public routes - accessible without login */}
+        <Route path="/" element={<HomePageWrapper />} />
+        <Route path="/services" element={<ServiceCatalogWrapper />} />
+        <Route path="/services/:slug" element={<ServiceDetailsWrapper />} />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
@@ -124,18 +105,18 @@ function App() {
       <footer className="bg-white/80 backdrop-blur-sm border-t border-stone-200 py-8 mt-12">
         <div className="container mx-auto px-4">
           <div className="text-center text-gray-500 text-sm pt-4">
-            <p>© 2026 The Bliss at Home. All rights reserved.</p>
+            <p>{t('footer.copyright')}</p>
             <div className="flex justify-center gap-4 mt-4">
               <Link to="/terms" className="hover:text-amber-700 transition font-medium">
-                เงื่อนไขการให้บริการ
+                {t('footer.terms')}
               </Link>
               <span>|</span>
               <Link to="/privacy" className="hover:text-amber-700 transition font-medium">
-                นโยบายความเป็นส่วนตัว
+                {t('footer.privacy')}
               </Link>
               <span>|</span>
               <a href="mailto:support@theblissathome.com" className="hover:text-amber-700 transition font-medium">
-                ติดต่อเรา
+                {t('footer.contact')}
               </a>
             </div>
           </div>

@@ -1,4 +1,4 @@
-# The Bliss at Home - Code Examples & Patterns
+# The Bliss Massage at Home - Code Examples & Patterns
 
 ตัวอย่างโค้ดสำหรับ pattern ต่างๆ ที่ใช้บ่อยในโปรเจกต์
 
@@ -1203,7 +1203,7 @@ export const initializeOmise = async () => {
   OmiseCard.configure({
     publicKey: import.meta.env.VITE_OMISE_PUBLIC_KEY,
     image: '/logo.png',
-    frameLabel: 'The Bliss at Home',
+    frameLabel: 'The Bliss Massage at Home',
     submitLabel: 'ชำระเงิน',
     buttonLabel: 'ชำระด้วยบัตร'
   })

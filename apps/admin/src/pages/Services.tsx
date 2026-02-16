@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { ServiceForm } from '../components/ServiceForm'
+import { ServiceAnalytics } from '../components/ServiceAnalytics'
 import {
   Plus,
   Search,
@@ -17,6 +18,8 @@ import {
   CheckCircle,
   Package,
   Eye,
+  BarChart3,
+  Settings,
 } from 'lucide-react'
 
 interface Service {
@@ -57,6 +60,7 @@ function Services() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [softDeleteConfirm, setSoftDeleteConfirm] = useState<{id: string, hasBookings: boolean} | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
+  const [activeTab, setActiveTab] = useState<'management' | 'analytics'>('management')
 
   // Fetch services from Supabase
   const fetchServices = async () => {
@@ -298,18 +302,55 @@ function Services() {
             <RefreshCw className="w-4 h-4" />
             รีเฟรช
           </button>
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
-          >
-            <Plus className="w-5 h-5" />
-            เพิ่มบริการใหม่
-          </button>
+          {activeTab === 'management' && (
+            <button
+              onClick={handleAdd}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+            >
+              <Plus className="w-5 h-5" />
+              เพิ่มบริการใหม่
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+      {/* Tabs */}
+      <div className="border-b border-stone-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('management')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
+              activeTab === 'management'
+                ? 'border-amber-500 text-amber-600'
+                : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              <span>จัดการบริการ</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
+              activeTab === 'analytics'
+                ? 'border-amber-500 text-amber-600'
+                : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              <span>สถิติและการวิเคราะห์</span>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'management' && (
+        <>
+          {/* Filters */}
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
@@ -405,30 +446,24 @@ function Services() {
                 <span>{formatDurationOptions(service)}</span>
               </div>
 
-              {/* Prices */}
+              {/* Pricing Information */}
               <div className="space-y-2 mb-4 p-3 bg-stone-50 rounded-xl">
                 <div className="flex justify-between text-sm">
-                  <span className="text-stone-600">ราคาปกติ:</span>
-                  <span className="font-semibold text-stone-900">฿{service.base_price.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-stone-600">ราคาโรงแรม:</span>
-                  <span className="font-semibold text-amber-700">฿{service.hotel_price.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs text-green-600">
-                  <span>ส่วนลด:</span>
-                  <span className="font-medium">
-                    {Math.round(((service.base_price - service.hotel_price) / service.base_price) * 100)}%
-                  </span>
+                  <span className="text-stone-600">ราคาบริการ:</span>
+                  <span className="font-semibold text-amber-700">฿{service.base_price.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs text-blue-600">
                   <span>คอมมิชชั่น Staff:</span>
                   <span className="font-medium">{service.staff_commission_rate}%</span>
                 </div>
-                <div className="flex justify-between text-xs text-blue-700">
-                  <span>รายได้ Staff:</span>
-                  <span className="font-medium">
-                    ฿{Math.round((service.base_price * (service.staff_commission_rate / 100)) * 100) / 100}
+                <div className="flex justify-between text-xs text-stone-600">
+                  <span>ระยะเวลาที่มี:</span>
+                  <span className="font-medium">{formatDurationOptions(service)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-stone-600">สถานะการใช้งาน:</span>
+                  <span className={`font-medium ${service.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                    {service.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                   </span>
                 </div>
               </div>
@@ -587,6 +622,13 @@ function Services() {
             </div>
           </div>
         </div>
+      )}
+        </>
+      )}
+
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <ServiceAnalytics className="mt-6" />
       )}
 
       {/* Service Form Modal */}

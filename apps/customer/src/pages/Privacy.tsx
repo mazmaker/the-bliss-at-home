@@ -3,21 +3,23 @@
  * นโยบายความเป็นส่วนตัว
  */
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Shield, Lock, Eye, FileText, UserCheck, Globe } from 'lucide-react'
 
 export default function PrivacyPage() {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Back Link */}
-        <Link
-          to="/register"
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center text-stone-600 hover:text-amber-700 mb-6 font-medium transition"
         >
           <ChevronLeft className="w-5 h-5" />
-          กลับไปหน้าลงทะเบียน
-        </Link>
+          กลับไปหน้าก่อนหน้า
+        </button>
 
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-stone-100">
@@ -33,7 +35,7 @@ export default function PrivacyPage() {
           </p>
           <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
             <p className="text-sm text-amber-900">
-              <strong>สำคัญ:</strong> The Bliss at Home ให้ความสำคัญกับความเป็นส่วนตัวและความปลอดภัยของข้อมูลของท่าน
+              <strong>สำคัญ:</strong> The Bliss Massage at Home ให้ความสำคัญกับความเป็นส่วนตัวและความปลอดภัยของข้อมูลของท่าน
               นโยบายนี้อธิบายวิธีที่เราเก็บรวบรวม ใช้ และปกป้องข้อมูลส่วนบุคคลของท่าน
             </p>
           </div>
@@ -322,7 +324,7 @@ export default function PrivacyPage() {
               </p>
               <div className="bg-stone-50 p-6 rounded-lg border border-stone-200">
                 <p className="text-stone-700 mb-2"><strong>เจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคล (DPO)</strong></p>
-                <p className="text-stone-700 mb-2"><strong>The Bliss at Home Co., Ltd.</strong></p>
+                <p className="text-stone-700 mb-2"><strong>The Bliss Massage at Home Co., Ltd.</strong></p>
                 <p className="text-stone-700 mb-2">อีเมล: privacy@theblissathome.com</p>
                 <p className="text-stone-700 mb-2">โทรศัพท์: 02-XXX-XXXX ต่อ 123</p>
                 <p className="text-stone-700 mb-2">ไลน์: @theblissathome</p>
@@ -354,7 +356,7 @@ export default function PrivacyPage() {
                   ความมุ่งมั่นของเราต่อความเป็นส่วนตัว
                 </h3>
                 <p className="text-sm text-amber-800">
-                  The Bliss at Home มุ่งมั่นที่จะปกป้องความเป็นส่วนตัวและข้อมูลของท่าน
+                  The Bliss Massage at Home มุ่งมั่นที่จะปกป้องความเป็นส่วนตัวและข้อมูลของท่าน
                   เราจะใช้ข้อมูลของท่านด้วยความรับผิดชอบและโปร่งใส
                   หากมีข้อสงสัยหรือต้องการข้อมูลเพิ่มเติม กรุณาติดต่อเราได้ตลอดเวลา
                 </p>
@@ -366,12 +368,12 @@ export default function PrivacyPage() {
 
         {/* Quick Action */}
         <div className="mt-6 flex gap-4 justify-center">
-          <Link
-            to="/register"
+          <button
+            onClick={() => navigate(-1)}
             className="px-6 py-3 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition font-medium"
           >
-            กลับไปลงทะเบียน
-          </Link>
+            กลับไปหน้าก่อนหน้า
+          </button>
           <Link
             to="/terms"
             className="px-6 py-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl hover:border-amber-500 transition font-medium"

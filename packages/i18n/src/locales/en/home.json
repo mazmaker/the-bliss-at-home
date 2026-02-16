@@ -1,0 +1,52 @@
+{
+  "hero": {
+    "title1": "Luxury Spa",
+    "title2": "At Your Home",
+    "subtitle1": "Premium massage, spa & nail services",
+    "subtitle2": "Delivered by curated professionals",
+    "searchPlaceholder": "Search services...",
+    "searchButton": "Search"
+  },
+  "promotions": {
+    "discount": "Save",
+    "code": "Code",
+    "validUntil": "Valid until",
+    "minOrder": "Min. order",
+    "maxDiscount": "Max discount",
+    "useCode": "Use this code when booking",
+    "bookNow": "Book Now",
+    "close": "Close",
+    "appliesTo": "Applies to",
+    "allServices": "All services",
+    "selectedCategories": "Selected categories",
+    "selectedServices": "Selected services"
+  },
+  "categories": {
+    "title": "SERVICES",
+    "massage": "Massage",
+    "nail": "Nail Care",
+    "spa": "Spa",
+    "servicesCount": "{{count}} services"
+  },
+  "popular": {
+    "title": "POPULAR SERVICES",
+    "book": "Book",
+    "loading": "Loading services...",
+    "error": "Failed to load services. Please try again.",
+    "empty": "No services available at the moment."
+  },
+  "whyChooseUs": {
+    "title": "WHY CHOOSE US",
+    "experts": "Experts",
+    "expertsDesc": "Professional & trained team",
+    "atYourDoor": "At Your Door",
+    "atYourDoorDesc": "Convenient home service",
+    "premiumQuality": "Premium Quality",
+    "premiumQualityDesc": "Luxury products & service"
+  },
+  "cta": {
+    "title": "Ready to Indulge?",
+    "subtitle1": "Book your massage, spa or nail service today",
+    "subtitle2": "Experience luxury at your home"
+  }
+}

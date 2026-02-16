@@ -1,4 +1,4 @@
-# Admin Login Guide - The Bliss at Home
+# Admin Login Guide - The Bliss Massage at Home
 
 ## 🎯 Admin User Information
 

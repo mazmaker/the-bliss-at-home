@@ -34,6 +34,43 @@ export async function updateProfile(
 }
 
 /**
+ * Update staff data (name, address, bio, etc.)
+ */
+export async function updateStaffData(
+  profileId: string,
+  data: {
+    name_th?: string
+    name_en?: string
+    phone?: string
+    id_card?: string
+    address?: string
+    bio_th?: string
+    bio_en?: string
+  }
+): Promise<void> {
+  // First, get the staff ID from profile ID
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
+  // Update staff table
+  const { error } = await supabase
+    .from('staff')
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', staffData.id)
+
+  if (error) throw error
+}
+
+/**
  * Update password
  */
 export async function updatePassword(newPassword: string): Promise<void> {
@@ -72,11 +109,21 @@ export async function uploadAvatar(staffId: string, file: File): Promise<string>
 /**
  * Get staff documents
  */
-export async function getDocuments(staffId: string): Promise<StaffDocument[]> {
+export async function getDocuments(profileId: string): Promise<StaffDocument[]> {
+  // Convert profile_id to staff_id first
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
   const { data, error } = await supabase
     .from('staff_documents')
     .select('*')
-    .eq('staff_id', staffId)
+    .eq('staff_id', staffData.id)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -87,34 +134,53 @@ export async function getDocuments(staffId: string): Promise<StaffDocument[]> {
  * Upload document
  */
 export async function uploadDocument(
-  staffId: string,
+  profileId: string,
   type: DocumentType,
-  name: string,
-  file: File
+  file: File,
+  notes?: string,
+  expires_at?: string
 ): Promise<StaffDocument> {
+  // Convert profile_id to staff_id first
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
+  const staffId = staffData.id
   const fileExt = file.name.split('.').pop()
   const fileName = `${staffId}/${type}_${Date.now()}.${fileExt}`
 
-  // Upload file to storage
+  // Upload file to storage (use 'staff-documents' bucket to match Admin app)
   const { error: uploadError } = await supabase.storage
-    .from('documents')
-    .upload(fileName, file)
+    .from('staff-documents')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+    })
 
   if (uploadError) throw uploadError
 
   // Get public URL
-  const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName)
+  const { data: urlData } = supabase.storage.from('staff-documents').getPublicUrl(fileName)
 
-  // Create document record
+  // Create document record (match Admin app schema)
   const { data, error } = await supabase
     .from('staff_documents')
     .insert({
       staff_id: staffId,
-      type,
-      name,
+      document_type: type,
       file_url: urlData.publicUrl,
       file_name: file.name,
-      status: 'pending',
+      file_size: file.size,
+      mime_type: file.type,
+      verification_status: 'pending',
+      notes: notes,
+      expires_at: expires_at,
+      uploaded_at: new Date().toISOString(),
     })
     .select()
     .single()
@@ -138,9 +204,9 @@ export async function deleteDocument(documentId: string): Promise<void> {
 
   // Delete from storage (extract path from URL)
   if (doc?.file_url) {
-    const urlParts = doc.file_url.split('/documents/')
+    const urlParts = doc.file_url.split('/staff-documents/')
     if (urlParts[1]) {
-      await supabase.storage.from('documents').remove([urlParts[1]])
+      await supabase.storage.from('staff-documents').remove([urlParts[1]])
     }
   }
 
@@ -160,11 +226,21 @@ export async function deleteDocument(documentId: string): Promise<void> {
 /**
  * Get staff service areas
  */
-export async function getServiceAreas(staffId: string): Promise<ServiceArea[]> {
+export async function getServiceAreas(profileId: string): Promise<ServiceArea[]> {
+  // Convert profile_id to staff_id first
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
   const { data, error } = await supabase
     .from('staff_service_areas')
     .select('*')
-    .eq('staff_id', staffId)
+    .eq('staff_id', staffData.id)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -175,7 +251,7 @@ export async function getServiceAreas(staffId: string): Promise<ServiceArea[]> {
  * Add service area
  */
 export async function addServiceArea(
-  staffId: string,
+  profileId: string,
   data: {
     province: string
     district?: string
@@ -184,10 +260,20 @@ export async function addServiceArea(
     radius_km?: number
   }
 ): Promise<ServiceArea> {
+  // Convert profile_id to staff_id first
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
   const { data: area, error } = await supabase
     .from('staff_service_areas')
     .insert({
-      staff_id: staffId,
+      staff_id: staffData.id,
       province: data.province,
       district: data.district,
       subdistrict: data.subdistrict,
@@ -237,53 +323,267 @@ export async function deleteServiceArea(areaId: string): Promise<void> {
 // ============================================
 
 /**
+ * Get all available skills
+ */
+export async function getAllSkills(): Promise<Array<{ id: string; name_th: string; name_en: string; category: string }>> {
+  const { data, error } = await supabase
+    .from('skills')
+    .select('id, name_th, name_en, category')
+    .order('name_th')
+
+  if (error) throw error
+  return data || []
+}
+
+/**
  * Get staff skills
  */
-export async function getSkills(staffId: string): Promise<StaffSkill[]> {
+export async function getSkills(profileId: string): Promise<StaffSkill[]> {
+  // First, get the staff ID from the profile ID
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
   const { data, error } = await supabase
     .from('staff_skills')
     .select(`
       *,
-      skills:skill_id (
-        name,
+      skill:skill_id (
+        name_th,
         name_en
       )
     `)
-    .eq('staff_id', staffId)
+    .eq('staff_id', staffData.id)
 
   if (error) throw error
 
   // Transform data to include skill names
   return (data || []).map((item: any) => ({
     ...item,
-    skill_name: item.skills?.name || '',
-    skill_name_en: item.skills?.name_en || '',
+    skill_name: item.skill?.name_th || '',
+    skill_name_en: item.skill?.name_en || '',
   })) as StaffSkill[]
+}
+
+/**
+ * Add skill to staff (or update if already exists)
+ */
+export async function addSkill(
+  profileId: string,
+  skillId: string,
+  level: 'beginner' | 'intermediate' | 'advanced' | 'expert' = 'intermediate',
+  yearsExperience?: number
+): Promise<StaffSkill> {
+  // First, get the staff ID from the profile ID
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
+  const { data, error } = await supabase
+    .from('staff_skills')
+    .upsert({
+      staff_id: staffData.id,
+      skill_id: skillId,
+      level,
+      years_experience: yearsExperience,
+    }, {
+      onConflict: 'staff_id,skill_id',
+    })
+    .select(`
+      *,
+      skill:skill_id (
+        name_th,
+        name_en
+      )
+    `)
+    .single()
+
+  if (error) throw error
+  return data as StaffSkill
 }
 
 /**
  * Update skill level
  */
 export async function updateSkillLevel(
-  staffId: string,
+  profileId: string,
   skillId: string,
-  level: number
+  level: 'beginner' | 'intermediate' | 'advanced' | 'expert',
+  yearsExperience?: number
 ): Promise<void> {
+  // First, get the staff ID from the profile ID
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
   const { error } = await supabase
     .from('staff_skills')
     .update({
       level,
-      updated_at: new Date().toISOString(),
+      years_experience: yearsExperience,
     })
-    .eq('staff_id', staffId)
+    .eq('staff_id', staffData.id)
     .eq('skill_id', skillId)
 
   if (error) throw error
 }
 
+/**
+ * Delete skill from staff
+ */
+export async function deleteSkill(
+  profileId: string,
+  skillId: string
+): Promise<void> {
+  // First, get the staff ID from the profile ID
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError) throw staffError
+  if (!staffData) throw new Error('Staff record not found')
+
+  const { error } = await supabase
+    .from('staff_skills')
+    .delete()
+    .eq('staff_id', staffData.id)
+    .eq('skill_id', skillId)
+
+  if (error) throw error
+}
+
+// ============================================
+// Eligibility Check
+// ============================================
+
+export interface StaffEligibility {
+  canWork: boolean
+  reasons: string[]
+  status: 'active' | 'inactive' | 'pending'
+  documents: {
+    id_card: { uploaded: boolean; verified: boolean; status?: string }
+    bank_statement: { uploaded: boolean; verified: boolean; status?: string }
+  }
+}
+
+/**
+ * Check if staff is eligible to start working
+ * Requires: staff.status='active' + id_card verified + bank_statement verified
+ */
+export async function canStaffStartWork(profileId: string): Promise<StaffEligibility> {
+  // Get staff record
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff')
+    .select('id, status')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (staffError || !staffData) {
+    return {
+      canWork: false,
+      reasons: ['ไม่พบข้อมูลพนักงาน'],
+      status: 'pending',
+      documents: {
+        id_card: { uploaded: false, verified: false },
+        bank_statement: { uploaded: false, verified: false },
+      },
+    }
+  }
+
+  const reasons: string[] = []
+
+  // Check 1: Staff status must be 'active'
+  if (staffData.status !== 'active') {
+    reasons.push('บัญชียังไม่ได้รับการอนุมัติจากแอดมิน')
+  }
+
+  // Check 2: Get documents
+  const { data: documents, error: docsError } = await supabase
+    .from('staff_documents')
+    .select('document_type, verification_status')
+    .eq('staff_id', staffData.id)
+
+  const docs = documents || []
+
+  // Find id_card and bank_statement
+  const idCard = docs.find((d) => d.document_type === 'id_card')
+  const bankStatement = docs.find((d) => d.document_type === 'bank_statement')
+
+  const idCardUploaded = !!idCard
+  const idCardVerified = idCard?.verification_status === 'verified'
+  const bankStatementUploaded = !!bankStatement
+  const bankStatementVerified = bankStatement?.verification_status === 'verified'
+
+  // Check 3: Required documents
+  if (!idCardUploaded) {
+    reasons.push('ยังไม่ได้อัปโหลดสำเนาบัตรประชาชน')
+  } else if (!idCardVerified) {
+    if (idCard.verification_status === 'pending') {
+      reasons.push('สำเนาบัตรประชาชนรอการตรวจสอบ')
+    } else if (idCard.verification_status === 'rejected') {
+      reasons.push('สำเนาบัตรประชาชนถูกปฏิเสธ กรุณาอัปโหลดใหม่')
+    } else if (idCard.verification_status === 'reviewing') {
+      reasons.push('สำเนาบัตรประชาชนกำลังตรวจสอบ')
+    }
+  }
+
+  if (!bankStatementUploaded) {
+    reasons.push('ยังไม่ได้อัปโหลดสำเนาบัญชีธนาคาร')
+  } else if (!bankStatementVerified) {
+    if (bankStatement.verification_status === 'pending') {
+      reasons.push('สำเนาบัญชีธนาคารรอการตรวจสอบ')
+    } else if (bankStatement.verification_status === 'rejected') {
+      reasons.push('สำเนาบัญชีธนาคารถูกปฏิเสธ กรุณาอัปโหลดใหม่')
+    } else if (bankStatement.verification_status === 'reviewing') {
+      reasons.push('สำเนาบัญชีธนาคารกำลังตรวจสอบ')
+    }
+  }
+
+  const canWork =
+    staffData.status === 'active' &&
+    idCardVerified &&
+    bankStatementVerified
+
+  return {
+    canWork,
+    reasons,
+    status: staffData.status as 'active' | 'inactive' | 'pending',
+    documents: {
+      id_card: {
+        uploaded: idCardUploaded,
+        verified: idCardVerified,
+        status: idCard?.verification_status,
+      },
+      bank_statement: {
+        uploaded: bankStatementUploaded,
+        verified: bankStatementVerified,
+        status: bankStatement?.verification_status,
+      },
+    },
+  }
+}
+
 // Export service
 export const staffService = {
   updateProfile,
+  updateStaffData,
   updatePassword,
   uploadAvatar,
   getDocuments,
@@ -293,6 +593,10 @@ export const staffService = {
   addServiceArea,
   updateServiceArea,
   deleteServiceArea,
+  getAllSkills,
   getSkills,
+  addSkill,
   updateSkillLevel,
+  deleteSkill,
+  canStaffStartWork,
 }

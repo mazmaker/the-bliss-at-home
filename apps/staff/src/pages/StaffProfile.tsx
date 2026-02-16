@@ -24,8 +24,12 @@ import {
   Map,
   CircleDot,
   Shield,
+  Download,
+  Sparkles,
+  Hand,
+  Flower2,
 } from 'lucide-react'
-import { useAuth } from '@bliss/supabase/auth'
+import { useAuth, authService, liffService } from '@bliss/supabase/auth'
 import {
   useStaffStats,
   useBankAccounts,
@@ -34,11 +38,19 @@ import {
   useServiceAreas,
   useStaffSkills,
   useProfileUpdate,
+  useStaffEligibility,
   DOCUMENT_TYPES,
   THAI_PROVINCES,
   type DocumentType,
   type BankAccount,
 } from '@bliss/supabase'
+
+// Available skills for selection
+const availableSkillsData = [
+  { id: 'massage', name: 'นวด', icon: Sparkles },
+  { id: 'nail', name: 'เล็บ', icon: Hand },
+  { id: 'spa', name: 'สปา', icon: Flower2 },
+]
 
 function StaffProfile() {
   const { user } = useAuth()
@@ -48,18 +60,29 @@ function StaffProfile() {
     isLoading: isBankLoading,
     isSaving: isBankSaving,
     addAccount,
+    updateAccount,
     deleteAccount,
     setPrimary,
   } = useBankAccounts()
   const { documents, isLoading: isDocsLoading, isUploading, uploadDocument, deleteDocument } = useDocuments()
   const { areas, isLoading: isAreasLoading, isSaving: isAreaSaving, addArea, deleteArea, toggleArea } = useServiceAreas()
-  const { skills, isLoading: isSkillsLoading } = useStaffSkills()
-  const { isSaving: isProfileSaving, updateProfile, uploadAvatar, changePassword } = useProfileUpdate()
+  const {
+    skills,
+    availableSkills,
+    isLoading: isSkillsLoading,
+    isSaving: isSkillSaving,
+    addSkill,
+    deleteSkill,
+  } = useStaffSkills()
+  const { isSaving: isProfileSaving, updateProfile, updateStaffData, uploadAvatar, changePassword } = useProfileUpdate()
+  const { eligibility, isLoading: isEligibilityLoading, refetch: refetchEligibility } = useStaffEligibility()
 
   const [isEditing, setIsEditing] = useState(false)
   const [showAddBank, setShowAddBank] = useState(false)
+  const [editingBankId, setEditingBankId] = useState<string | null>(null)
   const [showAddDocument, setShowAddDocument] = useState(false)
   const [showAddArea, setShowAddArea] = useState(false)
+  const [showAddSkill, setShowAddSkill] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -75,11 +98,12 @@ function StaffProfile() {
     is_primary: false,
   })
 
-  // New document form
+  // New document form (match Admin app)
   const [newDocument, setNewDocument] = useState({
     type: 'id_card' as DocumentType,
-    name: '',
     file: null as File | null,
+    notes: '',
+    expires_at: '',
   })
 
   // New service area form
@@ -89,6 +113,9 @@ function StaffProfile() {
     radius_km: 10,
   })
 
+  // Selected skills for adding
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+
   // Password form
   const [passwordForm, setPasswordForm] = useState({
     newPassword: '',
@@ -97,31 +124,61 @@ function StaffProfile() {
 
   // Profile form data
   const [profile, setProfile] = useState({
-    name: user?.full_name || '',
+    name_th: '',
+    name_en: '',
     email: user?.email || '',
-    phone: user?.phone || '',
-    address: (user as any)?.address || '',
+    phone: '',
+    id_card: '',
+    address: '',
+    bio_th: '',
+    bio_en: '',
   })
 
-  // Update profile when user changes
+  // Fetch staff data once on mount
   useEffect(() => {
-    if (user) {
-      setProfile({
-        name: user.full_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: (user as any).address || '',
-      })
+    if (!user?.id) return
+
+    // Fetch staff data from database
+    const fetchStaffData = async () => {
+      try {
+        const { data, error } = await (await import('@bliss/supabase/auth')).supabase
+          .from('staff')
+          .select('name_th, name_en, phone, id_card, address, bio_th, bio_en')
+          .eq('profile_id', user.id)
+          .single()
+
+        if (!error && data) {
+          setProfile((prev) => ({
+            ...prev,
+            name_th: data.name_th || '',
+            name_en: data.name_en || '',
+            email: user.email || prev.email,
+            phone: data.phone || '',
+            id_card: data.id_card || '',
+            address: data.address || '',
+            bio_th: data.bio_th || '',
+            bio_en: data.bio_en || '',
+          }))
+        }
+      } catch (err) {
+        console.error('Error fetching staff data:', err)
+      }
     }
-  }, [user])
+    fetchStaffData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   const handleSave = async () => {
     try {
       setError(null)
-      await updateProfile({
-        full_name: profile.name,
+      await updateStaffData({
+        name_th: profile.name_th,
+        name_en: profile.name_en,
         phone: profile.phone,
+        id_card: profile.id_card,
         address: profile.address,
+        bio_th: profile.bio_th,
+        bio_en: profile.bio_en,
       })
       setSuccess('บันทึกข้อมูลเรียบร้อย')
       setIsEditing(false)
@@ -158,31 +215,64 @@ function StaffProfile() {
     }
 
     try {
-      await addAccount(
-        newBank.bank_code,
-        bank.name,
-        newBank.account_number,
-        newBank.account_name,
-        newBank.is_primary || bankAccounts.length === 0
-      )
+      if (editingBankId) {
+        // Update existing account
+        await updateAccount(editingBankId, {
+          bank_code: newBank.bank_code,
+          bank_name: bank.name,
+          account_number: newBank.account_number,
+          account_name: newBank.account_name,
+        })
+        setSuccess('แก้ไขบัญชีเรียบร้อย')
+      } else {
+        // Add new account
+        await addAccount(
+          newBank.bank_code,
+          bank.name,
+          newBank.account_number,
+          newBank.account_name,
+          newBank.is_primary || bankAccounts.length === 0
+        )
+        setSuccess('เพิ่มบัญชีเรียบร้อย')
+      }
       setShowAddBank(false)
+      setEditingBankId(null)
       setNewBank({ bank_code: '', account_number: '', account_name: '', is_primary: false })
       setError(null)
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
-      setError(err.message || 'ไม่สามารถเพิ่มบัญชีได้')
+      setError(err.message || (editingBankId ? 'ไม่สามารถแก้ไขบัญชีได้' : 'ไม่สามารถเพิ่มบัญชีได้'))
     }
   }
 
   const handleAddDocument = async () => {
-    if (!newDocument.name || !newDocument.file) {
-      setError('กรุณากรอกข้อมูลและเลือกไฟล์')
+    if (!newDocument.file) {
+      setError('กรุณาเลือกไฟล์')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (newDocument.file.size > 10 * 1024 * 1024) {
+      setError('ไฟล์มีขนาดใหญ่เกิน 10MB')
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+    if (!allowedTypes.includes(newDocument.file.type)) {
+      setError('รองรับเฉพาะไฟล์ JPG, PNG, และ PDF เท่านั้น')
       return
     }
 
     try {
-      await uploadDocument(newDocument.type, newDocument.name, newDocument.file)
+      await uploadDocument(
+        newDocument.type,
+        newDocument.file,
+        newDocument.notes || undefined,
+        newDocument.expires_at || undefined
+      )
       setShowAddDocument(false)
-      setNewDocument({ type: 'id_card', name: '', file: null })
+      setNewDocument({ type: 'id_card', file: null, notes: '', expires_at: '' })
       setSuccess('อัปโหลดเอกสารเรียบร้อย')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
@@ -211,6 +301,35 @@ function StaffProfile() {
     }
   }
 
+  const handleAddSkills = async () => {
+    if (selectedSkills.length === 0) {
+      setError('กรุณาเลือกทักษะอย่างน้อย 1 ทักษะ')
+      return
+    }
+
+    try {
+      // Add all selected skills
+      for (const skillId of selectedSkills) {
+        await addSkill(skillId, 'intermediate', undefined)
+      }
+      setShowAddSkill(false)
+      setSelectedSkills([])
+      setSuccess('เพิ่มทักษะเรียบร้อย')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message || 'ไม่สามารถเพิ่มทักษะได้')
+    }
+  }
+
+  const handleSkillToggle = (skillId: string) => {
+    setSelectedSkills((prev) =>
+      prev.includes(skillId)
+        ? prev.filter((id) => id !== skillId)
+        : [...prev, skillId]
+    )
+  }
+
+
   const handleChangePassword = async () => {
     if (passwordForm.newPassword.length < 6) {
       setError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร')
@@ -232,6 +351,7 @@ function StaffProfile() {
     }
   }
 
+
   const handleDelete = async () => {
     if (!deleteConfirm) return
 
@@ -242,68 +362,40 @@ function StaffProfile() {
         await deleteDocument(deleteConfirm.id)
       } else if (deleteConfirm.type === 'area') {
         await deleteArea(deleteConfirm.id)
+      } else if (deleteConfirm.type === 'skill') {
+        await deleteSkill(deleteConfirm.id)
       }
       setDeleteConfirm(null)
+      if (deleteConfirm.type === 'skill') {
+        setSuccess('ลบทักษะเรียบร้อย')
+        setTimeout(() => setSuccess(null), 3000)
+      }
     } catch (err: any) {
       setError(err.message || 'ไม่สามารถลบได้')
     }
   }
 
-  const renderSkillLevel = (level: number) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <div
-            key={star}
-            className={`w-6 h-1.5 rounded-full ${star <= level ? 'bg-amber-500' : 'bg-stone-200'}`}
-          />
-        ))}
-      </div>
-    )
-  }
 
   const getDocumentStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved':
-        return <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">อนุมัติแล้ว</span>
+      case 'verified':
+        return <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">ยืนยันแล้ว</span>
       case 'rejected':
-        return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">ไม่อนุมัติ</span>
-      case 'expired':
-        return <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">หมดอายุ</span>
+        return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">ถูกปฏิเสธ</span>
+      case 'reviewing':
+        return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">กำลังตรวจสอบ</span>
+      case 'pending':
       default:
         return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">รอตรวจสอบ</span>
     }
   }
 
-  // Use mock skills if database skills not available
-  const displaySkills = skills.length > 0 ? skills : [
-    { id: '1', skill_id: '1', staff_id: '', skill_name: 'นวดไทย', skill_name_en: 'Thai Massage', level: 5, is_certified: true, created_at: '', updated_at: '' },
-    { id: '2', skill_id: '2', staff_id: '', skill_name: 'นวดน้ำมัน', skill_name_en: 'Oil Massage', level: 4, is_certified: false, created_at: '', updated_at: '' },
-    { id: '3', skill_id: '3', staff_id: '', skill_name: 'นวดเท้า', skill_name_en: 'Foot Massage', level: 5, is_certified: true, created_at: '', updated_at: '' },
-  ]
-
   return (
     <div className="space-y-4 pb-4">
-      {/* Header with Edit Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-stone-900">โปรไฟล์</h1>
-          <p className="text-stone-500 text-sm">Profile</p>
-        </div>
-        {!isEditing ? (
-          <button onClick={() => setIsEditing(true)} className="p-2 bg-white rounded-lg shadow-sm border border-stone-200">
-            <Edit className="w-5 h-5 text-stone-600" />
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button onClick={() => setIsEditing(false)} className="p-2 bg-stone-100 rounded-lg">
-              <X className="w-5 h-5 text-stone-600" />
-            </button>
-            <button onClick={handleSave} disabled={isProfileSaving} className="p-2 bg-amber-700 rounded-lg disabled:opacity-50">
-              {isProfileSaving ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Check className="w-5 h-5 text-white" />}
-            </button>
-          </div>
-        )}
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold text-stone-900">โปรไฟล์</h1>
+        <p className="text-stone-500 text-sm">Profile</p>
       </div>
 
       {/* Error/Success Message */}
@@ -376,23 +468,132 @@ function StaffProfile() {
             </div>
           </div>
 
+          {/* Eligibility Status Dashboard */}
+          {!isEligibilityLoading && eligibility && (
+            <div className={`p-4 rounded-xl border-2 ${
+              eligibility.canWork
+                ? 'bg-green-50 border-green-200'
+                : 'bg-amber-50 border-amber-200'
+            }`}>
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${
+                  eligibility.canWork
+                    ? 'bg-green-100'
+                    : 'bg-amber-100'
+                }`}>
+                  {eligibility.canWork ? (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h4 className={`font-semibold text-sm ${
+                    eligibility.canWork
+                      ? 'text-green-900'
+                      : 'text-amber-900'
+                  }`}>
+                    {eligibility.canWork
+                      ? '✓ พร้อมรับงาน'
+                      : 'ยังไม่พร้อมรับงาน'}
+                  </h4>
+                  {eligibility.reasons.length > 0 && (
+                    <ul className={`mt-2 space-y-1 text-xs ${
+                      eligibility.canWork
+                        ? 'text-green-700'
+                        : 'text-amber-700'
+                    }`}>
+                      {eligibility.reasons.map((reason, index) => (
+                        <li key={index} className="flex items-start gap-1">
+                          <span className="mt-0.5">•</span>
+                          <span>{reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Document Status */}
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>บัตรประชาชน:</span>
+                      {eligibility.documents.id_card.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                      ) : eligibility.documents.id_card.uploaded ? (
+                        <span className="text-amber-600">รอตรวจ</span>
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>บัญชีธนาคาร:</span>
+                      {eligibility.documents.bank_statement.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                      ) : eligibility.documents.bank_statement.uploaded ? (
+                        <span className="text-amber-600">รอตรวจ</span>
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Personal Info */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-stone-900">ข้อมูลส่วนตัว</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-stone-900">ข้อมูลส่วนตัว</h3>
+              {!isEditing ? (
+                <button onClick={() => setIsEditing(true)} className="p-2 bg-white rounded-lg shadow-sm border border-stone-200">
+                  <Edit className="w-5 h-5 text-stone-600" />
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button onClick={() => setIsEditing(false)} className="p-2 bg-stone-100 rounded-lg">
+                    <X className="w-5 h-5 text-stone-600" />
+                  </button>
+                  <button onClick={handleSave} disabled={isProfileSaving} className="p-2 bg-amber-700 rounded-lg disabled:opacity-50">
+                    {isProfileSaving ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Check className="w-5 h-5 text-white" />}
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-3">
               <User className="w-5 h-5 text-stone-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">ชื่อ-นามสกุล</p>
+                <p className="text-xs text-stone-500">ชื่อ (ภาษาไทย) *</p>
                 {isEditing ? (
                   <input
                     type="text"
-                    value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                    value={profile.name_th}
+                    onChange={(e) => setProfile({ ...profile, name_th: e.target.value })}
                     className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    placeholder="เช่น สมหญิง นวดเก่ง"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.name || '-'}</p>
+                  <p className="text-sm font-medium text-stone-900">{profile.name_th || '-'}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-stone-400" />
+              <div className="flex-1">
+                <p className="text-xs text-stone-500">ชื่อ (ภาษาอังกฤษ)</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={profile.name_en}
+                    onChange={(e) => setProfile({ ...profile, name_en: e.target.value })}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    placeholder="เช่น Somying Massage"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-stone-900">{profile.name_en || '-'}</p>
                 )}
               </div>
             </div>
@@ -400,11 +601,12 @@ function StaffProfile() {
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-stone-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">อีเมล</p>
-                <p className="text-sm font-medium text-stone-900">
-                  {profile.email?.startsWith('line_') && profile.email?.endsWith('@line.local')
-                    ? <span className="text-green-600">เชื่อมต่อกับ LINE ✓</span>
-                    : (profile.email || '-')}
+                <p className="text-xs text-stone-500">บัญชี LINE</p>
+                <p className="text-sm font-medium text-green-600 flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 5.64 2 10.14c0 4.08 3.6 7.49 8.47 8.14.33.07.78.21.89.49.1.25.07.64.03.89l-.14.85c-.04.26-.2 1.02.89.56.09-.04.18-.08.27-.12 3.66-1.88 6.59-4.54 6.59-8.81C19 5.64 15.52 2 12 2zm4.24 10.15l-.98.02c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0h-.98c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0H8.76c-.18 0-.33-.15-.33-.33V9.34c0-.18.15-.33.33-.33h2.48c.18 0 .33.15.33.33v2.48c0 .18-.15.33-.33.33z"/>
+                  </svg>
+                  {user?.line_display_name || user?.full_name || 'เชื่อมต่อแล้ว'}
                 </p>
               </div>
             </div>
@@ -412,16 +614,35 @@ function StaffProfile() {
             <div className="flex items-center gap-3">
               <Phone className="w-5 h-5 text-stone-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">เบอร์โทรศัพท์</p>
+                <p className="text-xs text-stone-500">เบอร์โทรศัพท์ *</p>
                 {isEditing ? (
                   <input
                     type="tel"
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                     className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    placeholder="เช่น 081-234-5678"
                   />
                 ) : (
                   <p className="text-sm font-medium text-stone-900">{profile.phone || '-'}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-stone-400" />
+              <div className="flex-1">
+                <p className="text-xs text-stone-500">เลขบัตรประชาชน</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={profile.id_card}
+                    onChange={(e) => setProfile({ ...profile, id_card: e.target.value })}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    placeholder="เช่น 1234567890123"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-stone-900">{profile.id_card || '-'}</p>
                 )}
               </div>
             </div>
@@ -443,31 +664,90 @@ function StaffProfile() {
                 )}
               </div>
             </div>
+
+            <div className="flex items-start gap-3">
+              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <div className="flex-1">
+                <p className="text-xs text-stone-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
+                {isEditing ? (
+                  <textarea
+                    value={profile.bio_th}
+                    onChange={(e) => setProfile({ ...profile, bio_th: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    placeholder="เช่น มีประสบการณ์นวดมา 5 ปี เชี่ยวชาญการนวดแผนไทย"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-stone-900">{profile.bio_th || '-'}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <div className="flex-1">
+                <p className="text-xs text-stone-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
+                {isEditing ? (
+                  <textarea
+                    value={profile.bio_en}
+                    onChange={(e) => setProfile({ ...profile, bio_en: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    placeholder="e.g. 5 years experience in Thai massage therapy"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-stone-900">{profile.bio_en || '-'}</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Skills Section */}
       <div className="bg-white rounded-2xl shadow-lg p-4">
-        <h3 className="font-semibold text-stone-900 mb-4">ทักษะ / บริการที่ทำได้</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Star className="w-5 h-5 text-stone-600" />
+            <h3 className="font-semibold text-stone-900">ทักษะ / บริการที่ทำได้</h3>
+          </div>
+          <button
+            onClick={() => setShowAddSkill(true)}
+            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            เพิ่มทักษะ
+          </button>
+        </div>
+
         {isSkillsLoading ? (
-          <div className="flex justify-center py-4">
+          <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
           </div>
+        ) : skills.length === 0 ? (
+          <div className="text-center py-8">
+            <Star className="w-12 h-12 text-stone-300 mx-auto mb-2" />
+            <p className="text-sm text-stone-500">ยังไม่มีทักษะ</p>
+            <p className="text-xs text-stone-400">เพิ่มทักษะเพื่อให้ลูกค้าเห็นความสามารถของคุณ</p>
+          </div>
         ) : (
-          <div className="space-y-3">
-            {displaySkills.map((skill) => (
-              <div key={skill.id}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-stone-900">{skill.skill_name}</p>
-                    {skill.is_certified && <Shield className="w-4 h-4 text-green-500" />}
-                  </div>
-                  <p className="text-xs text-stone-500">{skill.skill_name_en}</p>
+          <div className="flex flex-wrap gap-2">
+            {skills.map((skill) => {
+              const skillData = availableSkillsData.find(s => s.id === skill.skill_id)
+              const Icon = skillData?.icon || Star
+              return (
+                <div key={skill.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-amber-50 text-amber-800 rounded-full text-sm font-medium border border-amber-200">
+                  <Icon className="w-4 h-4" />
+                  <span>{skill.skill?.name_th || 'Unknown'}</span>
+                  <button
+                    onClick={() => setDeleteConfirm({ type: 'skill', id: skill.skill_id })}
+                    className="ml-1 p-0.5 hover:bg-amber-200 rounded-full transition"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                {renderSkillLevel(skill.level)}
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
@@ -477,114 +757,137 @@ function StaffProfile() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-stone-600" />
-            <h3 className="font-semibold text-stone-900">เอกสาร</h3>
+            <h3 className="font-semibold text-stone-900">เอกสาร KYC</h3>
           </div>
           <button
             onClick={() => setShowAddDocument(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium"
+            className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700"
           >
             <Plus className="w-4 h-4" />
-            อัปโหลด
+            เพิ่มเอกสาร
           </button>
         </div>
+
+        {/* Stats Summary */}
+        {documents.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+            <div className="bg-stone-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-stone-900">{documents.length}</p>
+              <p className="text-xs text-stone-500">ทั้งหมด</p>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-yellow-900">
+                {documents.filter(d => d.status === 'pending').length}
+              </p>
+              <p className="text-xs text-yellow-600">รอตรวจสอบ</p>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-blue-900">
+                {documents.filter(d => d.status === 'reviewing').length}
+              </p>
+              <p className="text-xs text-blue-600">กำลังตรวจ</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-green-900">
+                {documents.filter(d => d.status === 'approved').length}
+              </p>
+              <p className="text-xs text-green-600">อนุมัติแล้ว</p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-red-900">
+                {documents.filter(d => d.status === 'rejected').length}
+              </p>
+              <p className="text-xs text-red-600">ปฏิเสธ</p>
+            </div>
+          </div>
+        )}
 
         {isDocsLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
           </div>
         ) : documents.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="text-center py-8 bg-stone-50 rounded-xl">
             <FileText className="w-12 h-12 text-stone-300 mx-auto mb-2" />
             <p className="text-sm text-stone-500">ยังไม่มีเอกสาร</p>
             <p className="text-xs text-stone-400">อัปโหลดเอกสารเพื่อยืนยันตัวตน</p>
+            <button
+              onClick={() => setShowAddDocument(true)}
+              className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm"
+            >
+              เพิ่มเอกสารแรก
+            </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {documents.map((doc) => (
-              <div key={doc.id} className="p-3 bg-stone-50 rounded-xl">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-amber-700" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-stone-900">{doc.name}</p>
-                      <p className="text-xs text-stone-500">{DOCUMENT_TYPES[doc.type]?.th}</p>
-                      <div className="mt-1">{getDocumentStatusBadge(doc.status)}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-stone-200 rounded-lg">
-                      <Eye className="w-4 h-4 text-stone-500" />
-                    </a>
-                    <button onClick={() => setDeleteConfirm({ type: 'document', id: doc.id })} className="p-2 hover:bg-red-100 rounded-lg">
-                      <Trash2 className="w-4 h-4 text-stone-400" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Service Areas Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Map className="w-5 h-5 text-stone-600" />
-            <h3 className="font-semibold text-stone-900">พื้นที่บริการ</h3>
-          </div>
-          <button
-            onClick={() => setShowAddArea(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            เพิ่มพื้นที่
-          </button>
-        </div>
-
-        {isAreasLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
-          </div>
-        ) : areas.length === 0 ? (
-          <div className="text-center py-8">
-            <Map className="w-12 h-12 text-stone-300 mx-auto mb-2" />
-            <p className="text-sm text-stone-500">ยังไม่ได้ตั้งค่าพื้นที่บริการ</p>
-            <p className="text-xs text-stone-400">เพิ่มพื้นที่เพื่อรับงานในบริเวณที่ต้องการ</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {areas.map((area) => (
-              <div key={area.id} className={`p-3 rounded-xl border-2 ${area.is_active ? 'border-green-200 bg-green-50' : 'border-stone-200 bg-stone-50'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${area.is_active ? 'bg-green-200' : 'bg-stone-200'}`}>
-                      <MapPin className={`w-5 h-5 ${area.is_active ? 'text-green-700' : 'text-stone-600'}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-stone-900">
-                        {area.province}
-                        {area.district && ` - ${area.district}`}
-                      </p>
-                      <p className="text-xs text-stone-500">รัศมี {area.radius_km} กม.</p>
-                    </div>
-                  </div>
+              <div key={doc.id} className="border border-stone-200 rounded-xl p-3 hover:shadow-md transition">
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => toggleArea(area.id, !area.is_active)}
-                      disabled={isAreaSaving}
-                      className={`relative w-12 h-6 rounded-full transition ${area.is_active ? 'bg-green-500' : 'bg-stone-300'}`}
-                    >
-                      <div
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${area.is_active ? 'right-1' : 'left-1'}`}
-                      />
-                    </button>
-                    <button onClick={() => setDeleteConfirm({ type: 'area', id: area.id })} className="p-2 hover:bg-red-100 rounded-lg">
-                      <Trash2 className="w-4 h-4 text-stone-400" />
-                    </button>
+                    <div className="p-1.5 bg-blue-100 rounded-lg">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-stone-900 text-sm">{DOCUMENT_TYPES[doc.document_type]?.th}</p>
+                      <p className="text-xs text-stone-500">{doc.file_name}</p>
+                      <p className="text-xs text-stone-400 mt-0.5">
+                        {new Date(doc.created_at).toLocaleDateString('th-TH', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
                   </div>
+                  {getDocumentStatusBadge(doc.verification_status)}
+                </div>
+
+                {/* Rejection Reason */}
+                {doc.verification_status === 'rejected' && doc.rejection_reason && (
+                  <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-xs text-red-700">
+                      <strong>เหตุผล:</strong> {doc.rejection_reason}
+                    </p>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {doc.notes && (
+                  <div className="mb-2 p-2 bg-stone-50 rounded-lg">
+                    <p className="text-xs text-stone-600">
+                      <strong>หมายเหตุ:</strong> {doc.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-1.5">
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-2 py-1.5 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-xs flex items-center justify-center gap-1"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    ดู
+                  </a>
+                  <a
+                    href={doc.file_url}
+                    download
+                    className="flex-1 px-2 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-xs flex items-center justify-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    ดาวน์โหลด
+                  </a>
+                  {doc.verification_status !== 'verified' && (
+                    <button
+                      onClick={() => setDeleteConfirm({ type: 'document', id: doc.id })}
+                      className="px-2 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-xs"
+                      title="ลบ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -593,97 +896,100 @@ function StaffProfile() {
       </div>
 
       {/* Bank Accounts Section */}
-      <div id="bank" className="bg-white rounded-2xl shadow-lg p-4">
+      <div id="bank" className="bg-white rounded-2xl shadow p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-stone-600" />
-            <h3 className="font-semibold text-stone-900">บัญชีรับเงิน</h3>
+          <div>
+            <h2 className="text-lg font-bold text-stone-900">บัญชีรับเงิน</h2>
+            <p className="text-sm text-stone-500">Bank Accounts</p>
           </div>
-          <button
-            onClick={() => setShowAddBank(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            เพิ่มบัญชี
-          </button>
+          {bankAccounts.length === 0 && (
+            <button
+              onClick={() => setShowAddBank(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+            >
+              <Plus className="w-4 h-4" />
+              เพิ่มบัญชี
+            </button>
+          )}
         </div>
 
         {isBankLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
           </div>
         ) : bankAccounts.length === 0 ? (
-          <div className="text-center py-8">
-            <CreditCard className="w-12 h-12 text-stone-300 mx-auto mb-2" />
-            <p className="text-sm text-stone-500">ยังไม่มีบัญชีธนาคาร</p>
-            <p className="text-xs text-stone-400">เพิ่มบัญชีเพื่อรับเงินจากการทำงาน</p>
+          <div className="text-center py-8 text-stone-500">
+            <CreditCard className="w-12 h-12 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm">ยังไม่มีบัญชีรับเงิน</p>
+            <p className="text-xs text-stone-400 mt-1">กดปุ่ม "เพิ่มบัญชี" เพื่อเพิ่มบัญชีธนาคาร</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {bankAccounts.map((account) => (
-              <div
-                key={account.id}
-                className={`p-4 rounded-xl border-2 ${account.is_primary ? 'border-amber-500 bg-amber-50' : 'border-stone-200 bg-stone-50'}`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${account.is_primary ? 'bg-amber-200' : 'bg-stone-200'}`}>
-                      <Building2 className={`w-5 h-5 ${account.is_primary ? 'text-amber-700' : 'text-stone-600'}`} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-stone-900">{account.bank_name}</p>
-                        {account.is_primary && <span className="px-2 py-0.5 bg-amber-500 text-white text-xs rounded-full">หลัก</span>}
-                        {account.is_verified && <CheckCircle className="w-4 h-4 text-green-500" />}
-                      </div>
-                      <p className="text-sm text-stone-600 font-mono">{account.account_number}</p>
-                      <p className="text-xs text-stone-500">{account.account_name}</p>
-                    </div>
+            {bankAccounts.map((account) => {
+              const bank = THAI_BANKS.find((b) => b.code === account.bank_code)
+              return (
+                <div
+                  key={account.id}
+                  className="flex items-center gap-3 p-4 border border-stone-200 rounded-xl hover:border-stone-300 transition"
+                >
+                  <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-stone-600" />
                   </div>
-                  <div className="flex gap-1">
-                    {!account.is_primary && (
-                      <button onClick={() => setPrimary(account.id)} disabled={isBankSaving} className="p-2 hover:bg-amber-100 rounded-lg transition">
-                        <Star className="w-4 h-4 text-stone-400" />
-                      </button>
-                    )}
-                    <button onClick={() => setDeleteConfirm({ type: 'bank', id: account.id })} className="p-2 hover:bg-red-100 rounded-lg transition">
-                      <Trash2 className="w-4 h-4 text-stone-400" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-stone-900 truncate mb-1">{bank?.name || account.bank_code}</p>
+                    <p className="text-sm text-stone-600 font-mono">{account.account_number}</p>
+                    <p className="text-xs text-stone-500 truncate">{account.account_name}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingBankId(account.id)
+                        setNewBank({
+                          bank_code: account.bank_code,
+                          account_number: account.account_number,
+                          account_name: account.account_name,
+                          is_primary: account.is_primary,
+                        })
+                        setShowAddBank(true)
+                      }}
+                      disabled={isBankSaving}
+                      className="px-3 py-1.5 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-xs disabled:opacity-50"
+                      title="แก้ไข"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm({ type: 'bank', id: account.id })}
+                      disabled={isBankSaving}
+                      className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-xs disabled:opacity-50"
+                      title="ลบ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* Security Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-4">
-        <h3 className="font-semibold text-stone-900 mb-4">ความปลอดภัย</h3>
-        <button
-          onClick={() => setShowChangePassword(true)}
-          className="w-full flex items-center justify-between p-3 bg-stone-50 rounded-xl hover:bg-stone-100 transition"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-stone-200 rounded-lg flex items-center justify-center">
-              <Lock className="w-5 h-5 text-stone-600" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium text-stone-900">เปลี่ยนรหัสผ่าน</p>
-              <p className="text-xs text-stone-500">อัปเดตรหัสผ่านเข้าใช้งาน</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-stone-400" />
-        </button>
-      </div>
-
       {/* Add Bank Account Modal */}
       {showAddBank && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-stone-900">เพิ่มบัญชีธนาคาร</h3>
-              <button onClick={() => setShowAddBank(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
+              <h3 className="font-semibold text-lg text-stone-900">
+                {editingBankId ? 'แก้ไขบัญชีธนาคาร' : 'เพิ่มบัญชีธนาคาร'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAddBank(false)
+                  setEditingBankId(null)
+                  setNewBank({ bank_code: '', account_number: '', account_name: '', is_primary: false })
+                }}
+                className="p-2 hover:bg-stone-100 rounded-lg transition"
+              >
                 <X className="w-5 h-5 text-stone-600" />
               </button>
             </div>
@@ -723,23 +1029,18 @@ function StaffProfile() {
                   className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
                 />
               </div>
-              {bankAccounts.length > 0 && (
-                <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newBank.is_primary}
-                    onChange={(e) => setNewBank({ ...newBank, is_primary: e.target.checked })}
-                    className="w-5 h-5 text-amber-600 rounded focus:ring-amber-500"
-                  />
-                  <span className="text-sm text-stone-700">ตั้งเป็นบัญชีหลัก</span>
-                </label>
-              )}
               <button
                 onClick={handleAddBankAccount}
                 disabled={isBankSaving}
                 className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50"
               >
-                {isBankSaving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'เพิ่มบัญชี'}
+                {isBankSaving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : editingBankId ? (
+                  'บันทึกการแก้ไข'
+                ) : (
+                  'เพิ่มบัญชี'
+                )}
               </button>
             </div>
           </div>
@@ -748,17 +1049,22 @@ function StaffProfile() {
 
       {/* Add Document Modal */}
       {showAddDocument && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-20">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b flex items-center justify-between flex-shrink-0">
               <h3 className="font-semibold text-lg text-stone-900">อัปโหลดเอกสาร</h3>
               <button onClick={() => setShowAddDocument(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
                 <X className="w-5 h-5 text-stone-600" />
               </button>
             </div>
-            <div className="p-4 space-y-4">
+
+            {/* Scrollable Content */}
+            <div className="p-4 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ประเภทเอกสาร</label>
+                <label className="block text-sm font-medium text-stone-700 mb-1">
+                  ประเภทเอกสาร <span className="text-red-500">*</span>
+                </label>
                 <select
                   value={newDocument.type}
                   onChange={(e) => setNewDocument({ ...newDocument, type: e.target.value as DocumentType })}
@@ -772,39 +1078,67 @@ function StaffProfile() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ชื่อเอกสาร</label>
-                <input
-                  type="text"
-                  value={newDocument.name}
-                  onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
-                  placeholder="เช่น บัตรประชาชน, ใบประกาศนียบัตร"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ไฟล์เอกสาร</label>
+                <label className="block text-sm font-medium text-stone-700 mb-1">
+                  ไฟล์เอกสาร <span className="text-red-500">*</span>
+                </label>
                 <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-stone-300 rounded-xl cursor-pointer hover:border-amber-500 transition">
                   {newDocument.file ? (
                     <div className="text-center">
                       <FileText className="w-8 h-8 text-amber-600 mx-auto mb-2" />
                       <p className="text-sm text-stone-700">{newDocument.file.name}</p>
                       <p className="text-xs text-stone-500">{(newDocument.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setNewDocument({ ...newDocument, file: null })
+                        }}
+                        className="mt-2 text-xs text-red-600 hover:text-red-700"
+                      >
+                        ลบไฟล์
+                      </button>
                     </div>
                   ) : (
                     <div className="text-center">
                       <Upload className="w-8 h-8 text-stone-400 mx-auto mb-2" />
                       <p className="text-sm text-stone-600">คลิกเพื่อเลือกไฟล์</p>
-                      <p className="text-xs text-stone-400">รองรับ PDF, JPG, PNG</p>
+                      <p className="text-xs text-stone-400">รองรับ JPG, PNG, PDF (ขนาดไม่เกิน 10MB)</p>
                     </div>
                   )}
                   <input
                     type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
+                    accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/jpg,image/png,application/pdf"
                     onChange={(e) => setNewDocument({ ...newDocument, file: e.target.files?.[0] || null })}
                     className="hidden"
                   />
                 </label>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">หมายเหตุ (ถ้ามี)</label>
+                <textarea
+                  value={newDocument.notes}
+                  onChange={(e) => setNewDocument({ ...newDocument, notes: e.target.value })}
+                  placeholder="ระบุรายละเอียดเพิ่มเติม..."
+                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 resize-none"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">วันหมดอายุ (ถ้ามี)</label>
+                <input
+                  type="date"
+                  value={newDocument.expires_at}
+                  onChange={(e) => setNewDocument({ ...newDocument, expires_at: e.target.value })}
+                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                />
+                <p className="text-xs text-stone-500 mt-1">
+                  สำหรับเอกสารที่มีวันหมดอายุ เช่น ใบประกอบวิชาชีพ
+                </p>
+              </div>
+            </div>
+
+            {/* Fixed Footer with Button */}
+            <div className="p-4 border-t flex-shrink-0">
               <button
                 onClick={handleAddDocument}
                 disabled={isUploading}
@@ -819,8 +1153,8 @@ function StaffProfile() {
 
       {/* Add Service Area Modal */}
       {showAddArea && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg text-stone-900">เพิ่มพื้นที่บริการ</h3>
               <button onClick={() => setShowAddArea(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
@@ -882,8 +1216,8 @@ function StaffProfile() {
 
       {/* Change Password Modal */}
       {showChangePassword && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg text-stone-900">เปลี่ยนรหัสผ่าน</h3>
               <button onClick={() => setShowChangePassword(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
@@ -923,6 +1257,68 @@ function StaffProfile() {
         </div>
       )}
 
+      {/* Add Skill Modal */}
+      {showAddSkill && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setShowAddSkill(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-white rounded-t-2xl" style={{ flexShrink: 0 }}>
+              <h3 className="font-semibold text-base text-stone-900">เพิ่มทักษะ</h3>
+              <button onClick={() => setShowAddSkill(false)} className="p-1.5 hover:bg-stone-100 rounded-lg">
+                <X className="w-5 h-5 text-stone-600" />
+              </button>
+            </div>
+            <div className="px-4 py-3 space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-3">
+                  ทักษะ/ความสามารถ
+                </label>
+                <div className="grid grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
+                  {availableSkills
+                    .filter((skill) => !skills.find((s) => s.skill_id === skill.id))
+                    .map((skill) => {
+                      // Map skill name to icon
+                      const skillData = availableSkillsData.find(
+                        (s) => skill.name_th?.includes(s.name) || skill.name_en?.toLowerCase().includes(s.name.toLowerCase())
+                      )
+                      const Icon = skillData?.icon || Star
+                      const isSelected = selectedSkills.includes(skill.id)
+                      return (
+                        <button
+                          key={skill.id}
+                          type="button"
+                          onClick={() => handleSkillToggle(skill.id)}
+                          className={`flex flex-col items-center gap-2 px-3 py-3 rounded-xl font-medium transition relative ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
+                              : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                          <span className="text-sm">{skill.name_th}</span>
+                          {isSelected && <Check className="w-4 h-4 absolute top-1 right-1" />}
+                        </button>
+                      )
+                    })}
+                </div>
+                {availableSkills.filter((skill) => !skills.find((s) => s.skill_id === skill.id)).length === 0 && (
+                  <p className="text-sm text-stone-500 text-center py-4">คุณมีทักษะครบทุกด้านแล้ว</p>
+                )}
+              </div>
+            </div>
+            <div className="px-4 py-3 border-t bg-white rounded-b-2xl" style={{ flexShrink: 0 }}>
+              <button
+                onClick={handleAddSkills}
+                disabled={isSkillSaving || selectedSkills.length === 0}
+                className="w-full py-2.5 bg-amber-700 text-white rounded-lg font-medium text-sm shadow-lg hover:bg-amber-800 disabled:opacity-50"
+              >
+                {isSkillSaving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'เพิ่มทักษะ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -936,6 +1332,7 @@ function StaffProfile() {
                 {deleteConfirm.type === 'bank' && 'ต้องการลบบัญชีธนาคารนี้?'}
                 {deleteConfirm.type === 'document' && 'ต้องการลบเอกสารนี้?'}
                 {deleteConfirm.type === 'area' && 'ต้องการลบพื้นที่บริการนี้?'}
+                {deleteConfirm.type === 'skill' && 'ต้องการลบทักษะนี้?'}
               </p>
               <div className="flex gap-3">
                 <button

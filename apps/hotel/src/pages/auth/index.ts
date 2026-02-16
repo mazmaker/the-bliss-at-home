@@ -3,4 +3,4 @@
  */
 
 export { HotelLoginPage } from './Login'
-export { EnhancedHotelLogin } from './EnhancedLogin'
+export { default as EnhancedHotelLogin } from './EnhancedLogin'

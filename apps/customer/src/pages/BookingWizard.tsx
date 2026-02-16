@@ -1,5 +1,6 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useMemo, useEffect } from 'react'
+import { useTranslation } from '@bliss/i18n'
 import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus, QrCode, Smartphone, Wallet } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
@@ -14,6 +15,7 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6
 type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference'
 
 function BookingWizard() {
+  const { t } = useTranslation('booking')
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -117,12 +119,12 @@ function BookingWizard() {
   ]
 
   const steps = [
-    { num: 1, label: 'Service' },
-    { num: 2, label: 'Date/Time' },
-    { num: 3, label: 'Provider' },
-    { num: 4, label: 'Address' },
-    { num: 5, label: 'Confirm' },
-    { num: 6, label: 'Payment' },
+    { num: 1, label: t('wizard.steps.service') },
+    { num: 2, label: t('wizard.steps.dateTime') },
+    { num: 3, label: t('wizard.steps.provider') },
+    { num: 4, label: t('wizard.steps.address') },
+    { num: 5, label: t('wizard.steps.confirm') },
+    { num: 6, label: t('wizard.steps.payment') },
   ]
 
   const handleNext = () => {
@@ -328,7 +330,7 @@ function BookingWizard() {
             last_digits: selectedPaymentMethod.card_last_digits,
             expiry_month: selectedPaymentMethod.card_expiry_month,
             expiry_year: selectedPaymentMethod.card_expiry_year,
-            name: selectedPaymentMethod.card_holder_name || 'Card Holder',
+            name: selectedPaymentMethod.cardholder_name || 'Card Holder',
           },
         }),
       })
@@ -417,7 +419,7 @@ function BookingWizard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-          <p className="text-stone-600 mt-4">Loading service...</p>
+          <p className="text-stone-600 mt-4">{t('wizard.loadingService')}</p>
         </div>
       </div>
     )
@@ -428,9 +430,9 @@ function BookingWizard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-stone-600 text-lg">Service not found</p>
+          <p className="text-stone-600 text-lg">{t('wizard.serviceNotFound')}</p>
           <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
-            ← Back to Services
+            {t('wizard.backToServices')}
           </Link>
         </div>
       </div>
@@ -444,10 +446,10 @@ function BookingWizard() {
         <div className="mb-8">
           <Link to={`/services/${serviceSlug}`} className="inline-flex items-center text-amber-700 hover:text-amber-900 mb-4">
             <ChevronLeft className="w-5 h-5" />
-            Back to Service Details
+            {t('wizard.backToDetails')}
           </Link>
 
-          <h1 className="text-2xl font-bold text-stone-900 mb-4">Book a Service</h1>
+          <h1 className="text-2xl font-bold text-stone-900 mb-4">{t('wizard.title')}</h1>
 
           {/* Progress Steps */}
           <div className="flex items-center justify-between mb-4">
@@ -488,7 +490,7 @@ function BookingWizard() {
           {/* Step 1: Service Confirmation */}
           {currentStep === 1 && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Confirm Selected Service</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step1.title')}</h2>
 
               <div className="flex items-start gap-6 p-6 bg-stone-50 rounded-xl mb-6">
                 <div className="w-24 h-24 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
@@ -498,7 +500,7 @@ function BookingWizard() {
                   <h3 className="font-semibold text-lg text-stone-900 mb-2">{service.name}</h3>
                   <p className="text-stone-600 text-sm mb-3">{service.description}</p>
                   <div className="flex items-center gap-4">
-                    <span className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} hours</span>
+                    <span className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('wizard.step2.hours')}</span>
                     <span className="text-lg font-bold text-amber-700">฿{service.price}</span>
                   </div>
                 </div>
@@ -506,11 +508,11 @@ function BookingWizard() {
 
               {selectedAddOns.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="font-semibold text-stone-900 mb-3">Selected Add-ons</h4>
+                  <h4 className="font-semibold text-stone-900 mb-3">{t('wizard.step1.selectedAddons')}</h4>
                   <div className="space-y-2">
                     {selectedAddOns.map((addon) => (
                       <div key={addon.id} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
-                        <span className="text-stone-700">{addon.name}</span>
+                        <span className="text-stone-700">{addon.name_th || addon.name_en}</span>
                         <span className="text-amber-700 font-medium">+฿{addon.price}</span>
                       </div>
                     ))}
@@ -520,12 +522,12 @@ function BookingWizard() {
 
               {qtyParam > 1 && (
                 <div className="mb-6 p-3 bg-stone-50 rounded-lg">
-                  <span className="text-stone-700">Quantity: {qtyParam} people</span>
+                  <span className="text-stone-700">{t('wizard.step1.quantity', { count: qtyParam })}</span>
                 </div>
               )}
 
               <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
-                <span className="font-semibold text-stone-900">Total Price</span>
+                <span className="font-semibold text-stone-900">{t('wizard.step1.totalPrice')}</span>
                 <span className="text-2xl font-bold text-amber-700">฿{totalPrice}</span>
               </div>
             </div>
@@ -534,10 +536,10 @@ function BookingWizard() {
           {/* Step 2: Date & Time */}
           {currentStep === 2 && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Select Your Preferred Date and Time</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step2.title')}</h2>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-stone-900 mb-3">Date</h3>
+                <h3 className="font-semibold text-stone-900 mb-3">{t('wizard.step2.date')}</h3>
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {availableDates.map((date) => {
                     const dateObj = new Date(date)
@@ -565,7 +567,7 @@ function BookingWizard() {
               </div>
 
               <div>
-                <h3 className="font-semibold text-stone-900 mb-3">Time</h3>
+                <h3 className="font-semibold text-stone-900 mb-3">{t('wizard.step2.time')}</h3>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   {timeSlots.map((time) => (
                     <button
@@ -586,12 +588,12 @@ function BookingWizard() {
               {!selectedDate || !selectedTime ? (
                 <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
-                  Please select date and time
+                  {t('wizard.step2.pleaseSelect')}
                 </div>
               ) : (
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  Service on {new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'long' })} at {selectedTime}
+                  {t('wizard.step2.selectedDateTime', { date: new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'long' }), time: selectedTime })}
                 </div>
               )}
             </div>
@@ -600,17 +602,17 @@ function BookingWizard() {
           {/* Step 3: Address */}
           {currentStep === 3 && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Provider Preference</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step3.title')}</h2>
 
               <div className="space-y-4">
-                <p className="text-stone-600 mb-6">Please select your preferred service provider</p>
+                <p className="text-stone-600 mb-6">{t('wizard.step3.subtitle')}</p>
 
                 {[
-                  { value: 'female-only', label: 'Female only', description: 'Only female service providers' },
-                  { value: 'male-only', label: 'Male only', description: 'Only male service providers' },
-                  { value: 'prefer-female', label: 'Prefer female', description: 'Female preferred, male if unavailable' },
-                  { value: 'prefer-male', label: 'Prefer male', description: 'Male preferred, female if unavailable' },
-                  { value: 'no-preference', label: 'No preference', description: 'Any available service provider' },
+                  { value: 'female-only', label: t('wizard.step3.femaleOnly'), description: t('wizard.step3.femaleOnlyDesc') },
+                  { value: 'male-only', label: t('wizard.step3.maleOnly'), description: t('wizard.step3.maleOnlyDesc') },
+                  { value: 'prefer-female', label: t('wizard.step3.preferFemale'), description: t('wizard.step3.preferFemaleDesc') },
+                  { value: 'prefer-male', label: t('wizard.step3.preferMale'), description: t('wizard.step3.preferMaleDesc') },
+                  { value: 'no-preference', label: t('wizard.step3.noPreference'), description: t('wizard.step3.noPreferenceDesc') },
                 ].map((option) => (
                   <button
                     key={option.value}
@@ -644,12 +646,12 @@ function BookingWizard() {
 
           {currentStep === 4 && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Address and Contact Information</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step4.title')}</h2>
 
               {/* Saved Addresses */}
               {addresses && addresses.length > 0 && !showManualAddressForm ? (
                 <div className="space-y-4">
-                  <p className="text-stone-600 mb-4">Select a saved address or add a new one</p>
+                  <p className="text-stone-600 mb-4">{t('wizard.step4.selectSaved')}</p>
 
                   {/* Saved Address Cards */}
                   <div className="space-y-3">
@@ -671,7 +673,7 @@ function BookingWizard() {
                               </span>
                               {addr.is_default && (
                                 <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
-                                  Default
+                                  {t('wizard.step4.default')}
                                 </span>
                               )}
                             </div>
@@ -704,18 +706,18 @@ function BookingWizard() {
                     className="w-full p-4 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
                   >
                     <Plus className="w-5 h-5" />
-                    <span className="font-medium">Add New Address</span>
+                    <span className="font-medium">{t('wizard.step4.addNew')}</span>
                   </button>
 
                   {/* Additional Notes */}
                   <div className="mt-6">
                     <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Additional Notes
+                      {t('wizard.step4.notes')}
                     </label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="E.g., building access code, meeting point, or other important information"
+                      placeholder={t('wizard.step4.notesPlaceholder')}
                       rows={3}
                       className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
                     />
@@ -730,46 +732,46 @@ function BookingWizard() {
                       className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
                     >
                       <ChevronLeft className="w-4 h-4" />
-                      Back to saved addresses
+                      {t('wizard.step4.backToSaved')}
                     </button>
                   )}
 
                   {/* Manual Address Form */}
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Contact Name <span className="text-red-500">*</span>
+                      {t('wizard.step4.contactName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={address.name}
                       onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                      placeholder="Full Name"
+                      placeholder={t('wizard.step4.fullName')}
                       className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Phone Number <span className="text-red-500">*</span>
+                      {t('wizard.step4.phoneNumber')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
                       value={address.phone}
                       onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                      placeholder="08x-xxx-xxxx"
+                      placeholder={t('wizard.step4.phonePlaceholder')}
                       className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Address <span className="text-red-500">*</span>
+                      {t('wizard.step4.address')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={address.address}
                       onChange={(e) => setAddress({ ...address, address: e.target.value })}
-                      placeholder="House number, village, street"
+                      placeholder={t('wizard.step4.addressPlaceholder')}
                       className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
@@ -777,25 +779,25 @@ function BookingWizard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Sub-district
+                        {t('wizard.step4.subdistrict')}
                       </label>
                       <input
                         type="text"
                         value={address.subdistrict}
                         onChange={(e) => setAddress({ ...address, subdistrict: e.target.value })}
-                        placeholder="Sub-district"
+                        placeholder={t('wizard.step4.subdistrict')}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
-                        District
+                        {t('wizard.step4.district')}
                       </label>
                       <input
                         type="text"
                         value={address.district}
                         onChange={(e) => setAddress({ ...address, district: e.target.value })}
-                        placeholder="District"
+                        placeholder={t('wizard.step4.district')}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -804,19 +806,19 @@ function BookingWizard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Province <span className="text-red-500">*</span>
+                        {t('wizard.step4.province')} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={address.province}
                         onChange={(e) => setAddress({ ...address, province: e.target.value })}
-                        placeholder="Province"
+                        placeholder={t('wizard.step4.province')}
                         className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Postal Code
+                        {t('wizard.step4.postalCode')}
                       </label>
                       <input
                         type="text"
@@ -832,7 +834,7 @@ function BookingWizard() {
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
                       <MapPin className="w-4 h-4 inline mr-1" />
-                      เลือกตำแหน่งบนแผนที่ (ไม่บังคับ)
+                      {t('wizard.step4.mapLabel')}
                     </label>
                     <GoogleMapsPicker
                       latitude={manualAddressLocation.latitude}
@@ -844,12 +846,12 @@ function BookingWizard() {
                   {/* Additional Notes */}
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">
-                      Additional Notes
+                      {t('wizard.step4.notes')}
                     </label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="E.g., building access code, meeting point, or other important information"
+                      placeholder={t('wizard.step4.notesPlaceholder')}
                       rows={3}
                       className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
                     />
@@ -859,7 +861,7 @@ function BookingWizard() {
 
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-sm flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                Our team will arrive at your location on time
+                {t('wizard.step4.arrivalNote')}
               </div>
             </div>
           )}
@@ -867,7 +869,7 @@ function BookingWizard() {
           {/* Step 4: Review */}
           {currentStep === 5 && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Confirm Booking</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step5.title')}</h2>
 
               <div className="space-y-6">
                 {/* Service Info */}
@@ -877,7 +879,7 @@ function BookingWizard() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-stone-900">{service.name}</h3>
-                    <p className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} hours</p>
+                    <p className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('wizard.step2.hours')}</p>
                   </div>
                   <span className="font-bold text-amber-700">฿{service.price * qtyParam}</span>
                 </div>
@@ -885,10 +887,10 @@ function BookingWizard() {
                 {/* Add-ons */}
                 {selectedAddOns.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-stone-900 mb-2">Add-ons</h4>
+                    <h4 className="font-medium text-stone-900 mb-2">{t('wizard.step5.addons')}</h4>
                     {selectedAddOns.map((addon) => (
                       <div key={addon.id} className="flex justify-between py-2 border-b border-stone-100">
-                        <span className="text-stone-600">{addon.name}</span>
+                        <span className="text-stone-600">{addon.name_th || addon.name_en}</span>
                         <span className="text-stone-900">฿{addon.price * qtyParam}</span>
                       </div>
                     ))}
@@ -897,7 +899,7 @@ function BookingWizard() {
 
                 {/* Date & Time */}
                 <div>
-                  <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2"><Calendar className="w-4 h-4" /> Appointment Date & Time</h4>
+                  <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2"><Calendar className="w-4 h-4" /> {t('wizard.step5.dateTime')}</h4>
                   <p className="text-stone-600">
                     {new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'long' })}
                   </p>
@@ -906,7 +908,7 @@ function BookingWizard() {
 
                 {/* Location */}
                 <div>
-                  <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2"><MapPin className="w-4 h-4" /> Service Location</h4>
+                  <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2"><MapPin className="w-4 h-4" /> {t('wizard.step5.location')}</h4>
                   <div className="text-stone-600 space-y-1">
                     <p>{address.name}</p>
                     <p>{address.phone}</p>
@@ -919,14 +921,14 @@ function BookingWizard() {
                 {/* Notes */}
                 {notes && (
                   <div>
-                    <h4 className="font-medium text-stone-900 mb-2">Notes</h4>
+                    <h4 className="font-medium text-stone-900 mb-2">{t('wizard.step5.notes')}</h4>
                     <p className="text-stone-600 bg-stone-50 p-3 rounded-lg">{notes}</p>
                   </div>
                 )}
 
                 {/* Total */}
                 <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
-                  <span className="font-semibold text-stone-900">Total Price</span>
+                  <span className="font-semibold text-stone-900">{t('wizard.step5.totalPrice')}</span>
                   <span className="text-2xl font-bold text-amber-700">฿{totalPrice}</span>
                 </div>
               </div>
@@ -936,12 +938,12 @@ function BookingWizard() {
           {/* Step 6: Payment */}
           {currentStep === 6 && customer && createdBookingId && (
             <div>
-              <h2 className="text-xl font-bold text-stone-900 mb-6">Payment</h2>
+              <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.payment.title')}</h2>
 
               {/* Payment Channel Selection - Show if no channel selected yet */}
               {!selectedPaymentChannel ? (
                 <div className="space-y-4">
-                  <p className="text-stone-600 mb-4">เลือกช่องทางการชำระเงิน</p>
+                  <p className="text-stone-600 mb-4">{t('wizard.payment.selectChannel')}</p>
 
                   {/* Payment Channel Options */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -954,8 +956,8 @@ function BookingWizard() {
                         <CreditCard className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-stone-900">บัตรเครดิต/เดบิต</h3>
-                        <p className="text-xs text-stone-600">Credit/Debit Card</p>
+                        <h3 className="font-semibold text-stone-900">{t('wizard.payment.creditCard')}</h3>
+                        <p className="text-xs text-stone-600">{t('wizard.payment.creditCardEn')}</p>
                       </div>
                     </button>
 
@@ -968,8 +970,8 @@ function BookingWizard() {
                         <QrCode className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-stone-900">พร้อมเพย์</h3>
-                        <p className="text-xs text-stone-600">PromptPay QR Code</p>
+                        <h3 className="font-semibold text-stone-900">{t('wizard.payment.promptpay')}</h3>
+                        <p className="text-xs text-stone-600">{t('wizard.payment.promptpayEn')}</p>
                       </div>
                     </button>
 
@@ -982,8 +984,8 @@ function BookingWizard() {
                         <Building2 className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-stone-900">อินเทอร์เน็ตแบงก์กิ้ง</h3>
-                        <p className="text-xs text-stone-600">Internet Banking</p>
+                        <h3 className="font-semibold text-stone-900">{t('wizard.payment.internetBanking')}</h3>
+                        <p className="text-xs text-stone-600">{t('wizard.payment.internetBankingEn')}</p>
                       </div>
                     </button>
 
@@ -996,8 +998,8 @@ function BookingWizard() {
                         <Smartphone className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-stone-900">โมบายแบงก์กิ้ง</h3>
-                        <p className="text-xs text-stone-600">Mobile Banking</p>
+                        <h3 className="font-semibold text-stone-900">{t('wizard.payment.mobileBanking')}</h3>
+                        <p className="text-xs text-stone-600">{t('wizard.payment.mobileBankingEn')}</p>
                       </div>
                     </button>
                   </div>
@@ -1015,13 +1017,13 @@ function BookingWizard() {
                     className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    เปลี่ยนช่องทางชำระเงิน
+                    {t('wizard.payment.changeChannel')}
                   </button>
 
                   {/* Saved Payment Methods */}
                   {paymentMethods && paymentMethods.length > 0 && !showManualPaymentForm ? (
                     <div className="space-y-4">
-                      <p className="text-stone-600 mb-4">เลือกบัตรที่บันทึกไว้ หรือเพิ่มบัตรใหม่</p>
+                      <p className="text-stone-600 mb-4">{t('wizard.payment.selectSavedCard')}</p>
 
                       {/* Saved Payment Method Cards */}
                       <div className="space-y-3">
@@ -1047,12 +1049,12 @@ function BookingWizard() {
                                     </span>
                                     {pm.is_default && (
                                       <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
-                                        Default
+                                        {t('wizard.payment.default')}
                                       </span>
                                     )}
                                   </div>
                                   <p className="text-sm text-stone-600">
-                                    Expires {String(pm.card_expiry_month).padStart(2, '0')}/{pm.card_expiry_year}
+                                    {t('wizard.payment.expires')} {String(pm.card_expiry_month).padStart(2, '0')}/{pm.card_expiry_year}
                                   </p>
                                 </div>
                               </div>
@@ -1076,7 +1078,7 @@ function BookingWizard() {
                         className="w-full p-4 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
                       >
                         <Plus className="w-5 h-5" />
-                        <span className="font-medium">เพิ่มบัตรใหม่</span>
+                        <span className="font-medium">{t('wizard.payment.addNewCard')}</span>
                       </button>
 
                       {/* Pay with Selected Card Button */}
@@ -1089,12 +1091,12 @@ function BookingWizard() {
                           {isProcessingPayment ? (
                             <>
                               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                              กำลังประมวลผล...
+                              {t('wizard.payment.processing')}
                             </>
                           ) : (
                             <>
                               <CreditCard className="w-4 h-4" />
-                              ชำระเงิน ฿{totalPrice.toLocaleString()}
+                              {t('wizard.payment.payAmount')} ฿{totalPrice.toLocaleString()}
                             </>
                           )}
                         </button>
@@ -1109,7 +1111,7 @@ function BookingWizard() {
                           className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
                         >
                           <ChevronLeft className="w-4 h-4" />
-                          กลับไปบัตรที่บันทึกไว้
+                          {t('wizard.payment.backToSavedCards')}
                         </button>
                       )}
 
@@ -1140,7 +1142,7 @@ function BookingWizard() {
                     className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    เปลี่ยนช่องทางชำระเงิน
+                    {t('wizard.payment.changeChannel')}
                   </button>
 
                   {!promptpayQRCode ? (
@@ -1148,35 +1150,35 @@ function BookingWizard() {
                       <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <QrCode className="w-12 h-12 text-blue-600" />
                       </div>
-                      <h3 className="text-xl font-bold text-stone-900 mb-2">ชำระเงินผ่านพร้อมเพย์</h3>
-                      <p className="text-stone-600 mb-2">จำนวนเงิน</p>
+                      <h3 className="text-xl font-bold text-stone-900 mb-2">{t('wizard.payment.promptpayTitle')}</h3>
+                      <p className="text-stone-600 mb-2">{t('wizard.payment.amount')}</p>
                       <p className="text-3xl font-bold text-amber-700 mb-6">฿{totalPrice.toLocaleString()}</p>
                       <p className="text-sm text-stone-600 mb-6">
-                        กดปุ่มด้านล่างเพื่อสร้าง QR Code<br />
-                        จากนั้นสแกนด้วยแอปธนาคารของคุณ
+                        {t('wizard.payment.qrInstruction1')}<br />
+                        {t('wizard.payment.qrInstruction2')}
                       </p>
                       <button
                         onClick={handlePayWithPromptPay}
                         disabled={isProcessingPayment}
                         className="px-8 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:bg-stone-300 disabled:cursor-not-allowed"
                       >
-                        {isProcessingPayment ? 'กำลังสร้าง QR Code...' : 'สร้าง QR Code'}
+                        {isProcessingPayment ? t('wizard.payment.generatingQR') : t('wizard.payment.generateQR')}
                       </button>
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <h3 className="text-xl font-bold text-stone-900 mb-4">สแกน QR Code เพื่อชำระเงิน</h3>
+                      <h3 className="text-xl font-bold text-stone-900 mb-4">{t('wizard.payment.scanQR')}</h3>
                       <div className="bg-white p-6 rounded-2xl shadow-lg inline-block mb-4">
                         <img src={promptpayQRCode} alt="PromptPay QR Code" className="w-64 h-64 mx-auto" />
                       </div>
                       <p className="text-lg font-semibold text-amber-700 mb-2">฿{totalPrice.toLocaleString()}</p>
                       <p className="text-sm text-stone-600 mb-6">
-                        กรุณาสแกน QR Code ด้วยแอปธนาคารของคุณ<br />
-                        ระบบจะตรวจสอบการชำระเงินอัตโนมัติ
+                        {t('wizard.payment.scanInstruction1')}<br />
+                        {t('wizard.payment.scanInstruction2')}
                       </p>
                       <div className="flex items-center justify-center gap-2 text-blue-600">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                        <span className="text-sm">รอการชำระเงิน...</span>
+                        <span className="text-sm">{t('wizard.payment.waitingPayment')}</span>
                       </div>
                     </div>
                   )}
@@ -1193,14 +1195,14 @@ function BookingWizard() {
                     className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    เปลี่ยนช่องทางชำระเงิน
+                    {t('wizard.payment.changeChannel')}
                   </button>
 
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-bold text-stone-900 mb-2">
-                      {selectedPaymentChannel === 'internet_banking' ? 'อินเทอร์เน็ตแบงก์กิ้ง' : 'โมบายแบงก์กิ้ง'}
+                      {selectedPaymentChannel === 'internet_banking' ? t('wizard.payment.internetBanking') : t('wizard.payment.mobileBanking')}
                     </h3>
-                    <p className="text-stone-600">เลือกธนาคารของคุณ</p>
+                    <p className="text-stone-600">{t('wizard.payment.selectBank')}</p>
                     <p className="text-2xl font-bold text-amber-700 mt-4">฿{totalPrice.toLocaleString()}</p>
                   </div>
 
@@ -1215,7 +1217,7 @@ function BookingWizard() {
                         <div className="w-12 h-12 bg-purple-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
                           SCB
                         </div>
-                        <p className="text-xs font-medium text-stone-900">ไทยพาณิชย์</p>
+                        <p className="text-xs font-medium text-stone-900">{t('wizard.payment.scb')}</p>
                       </div>
                     </button>
 
@@ -1229,7 +1231,7 @@ function BookingWizard() {
                         <div className="w-12 h-12 bg-green-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
                           K
                         </div>
-                        <p className="text-xs font-medium text-stone-900">กสิกรไทย</p>
+                        <p className="text-xs font-medium text-stone-900">{t('wizard.payment.kbank')}</p>
                       </div>
                     </button>
 
@@ -1243,7 +1245,7 @@ function BookingWizard() {
                         <div className="w-12 h-12 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
                           BBL
                         </div>
-                        <p className="text-xs font-medium text-stone-900">กรุงเทพ</p>
+                        <p className="text-xs font-medium text-stone-900">{t('wizard.payment.bbl')}</p>
                       </div>
                     </button>
 
@@ -1257,7 +1259,7 @@ function BookingWizard() {
                         <div className="w-12 h-12 bg-cyan-600 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
                           KTB
                         </div>
-                        <p className="text-xs font-medium text-stone-900">กรุงไทย</p>
+                        <p className="text-xs font-medium text-stone-900">{t('wizard.payment.ktb')}</p>
                       </div>
                     </button>
 
@@ -1271,7 +1273,7 @@ function BookingWizard() {
                         <div className="w-12 h-12 bg-yellow-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
                           BAY
                         </div>
-                        <p className="text-xs font-medium text-stone-900">กรุงศรี</p>
+                        <p className="text-xs font-medium text-stone-900">{t('wizard.payment.bay')}</p>
                       </div>
                     </button>
 
@@ -1285,7 +1287,7 @@ function BookingWizard() {
                         <div className="w-12 h-12 bg-orange-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs">
                           TTB
                         </div>
-                        <p className="text-xs font-medium text-stone-900">ทหารไทยธนชาต</p>
+                        <p className="text-xs font-medium text-stone-900">{t('wizard.payment.ttb')}</p>
                       </div>
                     </button>
                   </div>
@@ -1294,7 +1296,7 @@ function BookingWizard() {
                     <div className="text-center py-4">
                       <div className="flex items-center justify-center gap-2 text-amber-700">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-700"></div>
-                        <span>กำลังเตรียมการชำระเงิน...</span>
+                        <span>{t('wizard.payment.preparingPayment')}</span>
                       </div>
                     </div>
                   )}
@@ -1307,7 +1309,7 @@ function BookingWizard() {
                     className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 mb-4"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    เปลี่ยนช่องทางชำระเงิน
+                    {t('wizard.payment.changeChannel')}
                   </button>
 
                   <div className="text-center py-12">
@@ -1315,10 +1317,10 @@ function BookingWizard() {
                       <AlertTriangle className="w-8 h-8 text-amber-700" />
                     </div>
                     <h3 className="text-lg font-semibold text-stone-900 mb-2">
-                      ช่องทางชำระเงินนี้กำลังพัฒนา
+                      {t('wizard.payment.channelDeveloping')}
                     </h3>
                     <p className="text-stone-600 mb-6">
-                      กรุณาเลือกช่องทางอื่น
+                      {t('wizard.payment.selectOther')}
                     </p>
                   </div>
                 </div>
@@ -1335,7 +1337,7 @@ function BookingWizard() {
               className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition flex items-center gap-2"
             >
               <ChevronLeft className="w-4 h-4" />
-              Back
+              {t('wizard.back')}
             </button>
 
             {currentStep < 5 ? (
@@ -1347,7 +1349,7 @@ function BookingWizard() {
                 }
                 className="px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed"
               >
-                Next
+                {t('wizard.next')}
               </button>
             ) : (
               <button
@@ -1355,7 +1357,7 @@ function BookingWizard() {
                 className="px-8 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                Confirm Booking
+                {t('wizard.step5.confirmBooking')}
               </button>
             )}
           </div>

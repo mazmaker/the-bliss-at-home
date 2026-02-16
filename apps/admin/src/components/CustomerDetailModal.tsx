@@ -1,5 +1,5 @@
-import { X, Mail, Phone, MapPin, Calendar, TrendingUp, DollarSign, ShoppingBag } from 'lucide-react'
-import { useCustomerWithStats, useCustomerBookings } from '../hooks/useCustomers'
+import { X, Mail, Phone, Calendar, TrendingUp, DollarSign, ShoppingBag, Home, FileText, User, Cake } from 'lucide-react'
+import { useCustomerWithStats, useCustomerBookings, useCustomerAddresses, useCustomerTaxInfo } from '../hooks/useCustomers'
 import { Customer } from '../lib/customerQueries'
 
 interface CustomerDetailModalProps {
@@ -11,6 +11,8 @@ interface CustomerDetailModalProps {
 function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalProps) {
   const { customer: customerStats, loading: statsLoading } = useCustomerWithStats(customer.id)
   const { bookings, loading: bookingsLoading } = useCustomerBookings(customer.id)
+  const { addresses, loading: addressesLoading } = useCustomerAddresses(customer.id)
+  const { taxInfo, loading: taxInfoLoading } = useCustomerTaxInfo(customer.id)
 
   if (!isOpen) return null
 
@@ -89,104 +91,187 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
         {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
           <div className="p-6 space-y-6">
-            {/* Customer Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-stone-500">ชื่อลูกค้า</label>
+            {/* Profile Info - matching customer profile tab */}
+            <div className="bg-stone-50 rounded-xl p-4">
+              <h3 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
+                <User className="w-4 h-4 text-amber-600" />
+                ข้อมูลส่วนตัว (Profile)
+              </h3>
+              <div className="bg-white rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
                   <p className="text-lg font-semibold text-stone-900">{customer.full_name}</p>
+                  {getStatusBadge(customer.status)}
                 </div>
-                <div>
-                  <label className="text-xs text-stone-500 flex items-center gap-1">
-                    <Mail className="w-3 h-3" />
-                    อีเมล
-                  </label>
-                  <p className="text-stone-900">{customer.email || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-stone-500 flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    เบอร์โทร
-                  </label>
-                  <p className="text-stone-900">{customer.phone}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-stone-500 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    ที่อยู่
-                  </label>
-                  <p className="text-stone-900">{customer.address || '-'}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-stone-500">สถานะ</label>
-                  <div className="mt-1">{getStatusBadge(customer.status)}</div>
-                </div>
-                <div>
-                  <label className="text-xs text-stone-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    วันที่สมัคร
-                  </label>
-                  <p className="text-stone-900">
-                    {new Date(customer.created_at).toLocaleDateString('th-TH', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs text-stone-500">วันเกิด</label>
-                  <p className="text-stone-900">
-                    {customer.date_of_birth
-                      ? new Date(customer.date_of_birth).toLocaleDateString('th-TH')
-                      : '-'}
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-stone-400" />
+                    <div>
+                      <p className="text-xs text-stone-500">อีเมล</p>
+                      <p className="text-sm text-stone-900">{customer.email || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-stone-400" />
+                    <div>
+                      <p className="text-xs text-stone-500">เบอร์โทร</p>
+                      <p className="text-sm text-stone-900">{customer.phone || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Cake className="w-4 h-4 text-stone-400" />
+                    <div>
+                      <p className="text-xs text-stone-500">วันเกิด</p>
+                      <p className="text-sm text-stone-900">
+                        {customer.date_of_birth
+                          ? new Date(customer.date_of_birth).toLocaleDateString('th-TH', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })
+                          : '-'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-stone-400" />
+                    <div>
+                      <p className="text-xs text-stone-500">วันที่สมัคร</p>
+                      <p className="text-sm text-stone-900">
+                        {new Date(customer.created_at).toLocaleDateString('th-TH', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* Addresses */}
+            <div className="bg-stone-50 rounded-xl p-4">
+              <h3 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
+                <Home className="w-4 h-4 text-amber-600" />
+                ที่อยู่ (Addresses)
+              </h3>
+              {addressesLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-700 mx-auto mb-2" />
+                  <p className="text-sm text-stone-600">กำลังโหลด...</p>
+                </div>
+              ) : addresses.length === 0 ? (
+                <p className="text-stone-500 text-sm text-center py-4">ยังไม่มีที่อยู่</p>
+              ) : (
+                <div className="space-y-3">
+                  {addresses.map((addr) => (
+                    <div key={addr.id} className="bg-white rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                          {addr.label}
+                        </span>
+                        {addr.is_default && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            ค่าเริ่มต้น
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-stone-900">{addr.recipient_name}</p>
+                      <p className="text-xs text-stone-500">{addr.phone}</p>
+                      <p className="text-sm text-stone-700 mt-1">
+                        {addr.address_line}
+                        {addr.subdistrict && ` ${addr.subdistrict}`}
+                        {addr.district && ` ${addr.district}`}
+                        {addr.province && ` ${addr.province}`}
+                        {addr.zipcode && ` ${addr.zipcode}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tax Invoice */}
+            <div className="bg-stone-50 rounded-xl p-4">
+              <h3 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-600" />
+                ข้อมูลใบกำกับภาษี (Tax Invoice)
+              </h3>
+              {taxInfoLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-700 mx-auto mb-2" />
+                  <p className="text-sm text-stone-600">กำลังโหลด...</p>
+                </div>
+              ) : !taxInfo ? (
+                <p className="text-stone-500 text-sm text-center py-4">ยังไม่มีข้อมูลใบกำกับภาษี</p>
+              ) : (
+                <div className="bg-white rounded-lg p-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-stone-500">ประเภท</p>
+                      <p className="text-sm font-medium text-stone-900">
+                        {taxInfo.tax_type === 'individual' ? 'บุคคลธรรมดา' : 'นิติบุคคล'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-stone-500">เลขประจำตัวผู้เสียภาษี</p>
+                      <p className="text-sm font-medium text-stone-900">{taxInfo.tax_id}</p>
+                    </div>
+                    {taxInfo.tax_type === 'company' && taxInfo.company_name && (
+                      <div>
+                        <p className="text-xs text-stone-500">ชื่อบริษัท</p>
+                        <p className="text-sm font-medium text-stone-900">{taxInfo.company_name}</p>
+                      </div>
+                    )}
+                    {taxInfo.tax_type === 'company' && taxInfo.branch_code && (
+                      <div>
+                        <p className="text-xs text-stone-500">รหัสสาขา</p>
+                        <p className="text-sm font-medium text-stone-900">{taxInfo.branch_code}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-stone-500">ที่อยู่ออกใบกำกับภาษี</p>
+                    <p className="text-sm text-stone-700">
+                      {taxInfo.address_line}
+                      {taxInfo.subdistrict && ` ${taxInfo.subdistrict}`}
+                      {taxInfo.district && ` ${taxInfo.district}`}
+                      {taxInfo.province && ` ${taxInfo.province}`}
+                      {taxInfo.zipcode && ` ${taxInfo.zipcode}`}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Statistics */}
             {!statsLoading && customerStats && (
-              <div className="bg-stone-50 rounded-xl p-4">
-                <h3 className="font-semibold text-stone-900 mb-4">สถิติและข้อมูลเชิงลึก</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <ShoppingBag className="w-4 h-4 text-amber-600" />
-                      <p className="text-xs text-stone-500">การจองทั้งหมด</p>
-                    </div>
-                    <p className="text-2xl font-bold text-stone-900">{customerStats.total_bookings}</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <DollarSign className="w-4 h-4 text-green-600" />
-                      <p className="text-xs text-stone-500">ยอดใช้จ่ายรวม</p>
-                    </div>
-                    <p className="text-2xl font-bold text-stone-900">
-                      ฿{Number(customerStats.total_spent).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
-                      <p className="text-xs text-stone-500">อัตราการจองซ้ำ</p>
-                    </div>
-                    <p className="text-2xl font-bold text-stone-900">
-                      {customerStats.repeat_booking_rate.toFixed(0)}%
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <DollarSign className="w-4 h-4 text-purple-600" />
-                      <p className="text-xs text-stone-500">ค่าเฉลี่ย/ครั้ง</p>
-                    </div>
-                    <p className="text-2xl font-bold text-stone-900">
-                      ฿{customerStats.average_booking_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </p>
-                  </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-amber-50 rounded-xl p-3 text-center">
+                  <ShoppingBag className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-stone-900">{customerStats.total_bookings}</p>
+                  <p className="text-xs text-stone-500">การจองทั้งหมด</p>
+                </div>
+                <div className="bg-green-50 rounded-xl p-3 text-center">
+                  <DollarSign className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-stone-900">
+                    ฿{Number(customerStats.total_spent).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-stone-500">ยอดใช้จ่ายรวม</p>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-3 text-center">
+                  <TrendingUp className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-stone-900">
+                    {customerStats.repeat_booking_rate.toFixed(0)}%
+                  </p>
+                  <p className="text-xs text-stone-500">อัตราการจองซ้ำ</p>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-3 text-center">
+                  <DollarSign className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-stone-900">
+                    ฿{customerStats.average_booking_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-xs text-stone-500">ค่าเฉลี่ย/ครั้ง</p>
                 </div>
               </div>
             )}

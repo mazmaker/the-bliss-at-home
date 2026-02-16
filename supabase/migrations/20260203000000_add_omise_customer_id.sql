@@ -4,7 +4,7 @@
 
 -- Add omise_customer_id column to payment_methods table
 ALTER TABLE payment_methods
-ADD COLUMN omise_customer_id TEXT;
+ADD COLUMN IF NOT EXISTS omise_customer_id TEXT;
 
 -- Update comment on omise_card_id column
 COMMENT ON COLUMN payment_methods.omise_card_id IS 'Omise card ID (from customer.cards.data[].id)';
