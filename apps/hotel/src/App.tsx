@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-// import { ProtectedRoute } from '@bliss/ui'
-// import { useAuth } from '@bliss/supabase/auth'
+import { ProtectedRoute } from '@bliss/ui'
+import { useAuth } from '@bliss/supabase/auth'
 import HotelLayout from './layouts/HotelLayout'
 import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
@@ -10,30 +10,42 @@ import BookingHistory from './pages/BookingHistory'
 import MonthlyBill from './pages/MonthlyBill'
 import HotelProfile from './pages/HotelProfile'
 import HotelSettings from './pages/HotelSettings'
-// import { HotelLoginPage } from './pages/auth'
+import { EnhancedHotelLogin } from './pages/auth'
 
 function App() {
-  // Temporarily disable authentication for development
-  // const { isLoading, isAuthenticated } = useAuth()
+  const { isLoading, isAuthenticated } = useAuth()
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600" />
-  //     </div>
-  //   )
-  // }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600" />
+      </div>
+    )
+  }
 
   return (
     <Routes>
-      {/* Public login route (disabled for now) */}
+      {/* Public login route */}
       <Route
-        path="/hotel/login"
-        element={<Navigate to="/hotel" replace />}
+        path="/login"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
+          ) : (
+            <EnhancedHotelLogin />
+          )
+        }
       />
 
-      {/* Hotel routes with hotel ID parameter */}
-      <Route path="/hotel/:hotelId" element={<HotelLayout />}>
+      {/* Protected hotel routes with hotel ID parameter - require HOTEL role */}
+      <Route
+        path="/hotel/:hotelId"
+        element={
+          <ProtectedRoute allowedRoles={['HOTEL']} redirectTo="/login">
+            <HotelLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="bookings" element={<Dashboard />} />
         <Route path="services" element={<Services />} />
@@ -50,7 +62,11 @@ function App() {
         <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
       } />
       <Route path="/" element={
-        <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
+        isAuthenticated ? (
+          <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
     </Routes>
   )

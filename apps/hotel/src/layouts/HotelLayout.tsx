@@ -15,11 +15,22 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useHotelContext } from '../hooks/useHotelContext'
+import { useAuth } from '@bliss/supabase/auth'
 
 function HotelLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
   const { hotelId, hotelData, isValidHotel, isLoading, getHotelName, getHotelNameEn } = useHotelContext()
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      // The app will automatically redirect to login due to ProtectedRoute
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   // Loading state
   if (isLoading) {
@@ -137,13 +148,13 @@ function HotelLayout() {
                 <p className="text-xs text-stone-500 truncate">{getHotelNameEn()}</p>
               </div>
             </div>
-            <Link
-              to="/login"
-              className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition w-full"
             >
               <LogOut className="w-4 h-4" />
               <span className="text-sm">ออกจากระบบ</span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
