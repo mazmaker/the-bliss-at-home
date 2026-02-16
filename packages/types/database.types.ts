@@ -159,25 +159,10 @@ export type Database = {
             referencedRelation: "service_addons"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "booking_addons_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "active_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "booking_addons_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
         ]
       }
       bookings: {
         Row: {
-          addons_total: number | null
           address: string | null
           admin_notes: string | null
           base_price: number
@@ -199,6 +184,7 @@ export type Database = {
           is_hotel_booking: boolean | null
           latitude: number | null
           longitude: number | null
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           service_id: string
           staff_earnings: number | null
@@ -210,7 +196,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          addons_total?: number | null
           address?: string | null
           admin_notes?: string | null
           base_price: number
@@ -232,6 +217,7 @@ export type Database = {
           is_hotel_booking?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           service_id: string
           staff_earnings?: number | null
@@ -243,7 +229,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          addons_total?: number | null
           address?: string | null
           admin_notes?: string | null
           base_price?: number
@@ -265,6 +250,7 @@ export type Database = {
           is_hotel_booking?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           service_id?: string
           staff_earnings?: number | null
@@ -287,21 +273,7 @@ export type Database = {
             foreignKeyName: "bookings_hotel_id_fkey"
             columns: ["hotel_id"]
             isOneToOne: false
-            referencedRelation: "hotel_performance_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_hotel_id_fkey"
-            columns: ["hotel_id"]
-            isOneToOne: false
             referencedRelation: "hotels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_popularity"
             referencedColumns: ["id"]
           },
           {
@@ -320,6 +292,50 @@ export type Database = {
           },
         ]
       }
+      coupon_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          promotion_id: string
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          promotion_id: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          promotion_id?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_codes_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -331,6 +347,7 @@ export type Database = {
           phone: string
           preferences: Json | null
           profile_id: string | null
+          status: Database["public"]["Enums"]["customer_status"] | null
           total_bookings: number | null
           total_spent: number | null
           updated_at: string | null
@@ -345,6 +362,7 @@ export type Database = {
           phone: string
           preferences?: Json | null
           profile_id?: string | null
+          status?: Database["public"]["Enums"]["customer_status"] | null
           total_bookings?: number | null
           total_spent?: number | null
           updated_at?: string | null
@@ -359,75 +377,293 @@ export type Database = {
           phone?: string
           preferences?: Json | null
           profile_id?: string | null
+          status?: Database["public"]["Enums"]["customer_status"] | null
           total_bookings?: number | null
           total_spent?: number | null
           updated_at?: string | null
         }
         Relationships: []
       }
-      hotels: {
+      hotel_bookings: {
         Row: {
-          address: string | null
-          bank_account: string | null
-          bank_account_name: string | null
-          bank_name: string | null
-          commission_rate: number | null
-          contact_person: string | null
+          booking_date: string
+          booking_number: string
           created_at: string | null
-          email: string | null
+          created_by_hotel: boolean | null
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          duration: number
+          hotel_id: string
           id: string
-          monthly_revenue: number | null
-          name_en: string
-          name_th: string
-          phone: string | null
-          rating: number | null
-          status: Database["public"]["Enums"]["hotel_status"] | null
-          tax_id: string | null
-          total_bookings: number | null
-          total_reviews: number | null
+          notes: string | null
+          payment_status: string
+          room_number: string | null
+          service_category: string
+          service_date: string
+          service_name: string
+          service_time: string
+          staff_name: string | null
+          status: string
+          total_price: number
           updated_at: string | null
         }
         Insert: {
-          address?: string | null
-          bank_account?: string | null
-          bank_account_name?: string | null
-          bank_name?: string | null
-          commission_rate?: number | null
-          contact_person?: string | null
+          booking_date: string
+          booking_number: string
           created_at?: string | null
-          email?: string | null
+          created_by_hotel?: boolean | null
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          duration: number
+          hotel_id: string
           id?: string
-          monthly_revenue?: number | null
-          name_en: string
-          name_th: string
-          phone?: string | null
-          rating?: number | null
-          status?: Database["public"]["Enums"]["hotel_status"] | null
-          tax_id?: string | null
-          total_bookings?: number | null
-          total_reviews?: number | null
+          notes?: string | null
+          payment_status?: string
+          room_number?: string | null
+          service_category: string
+          service_date: string
+          service_name: string
+          service_time: string
+          staff_name?: string | null
+          status?: string
+          total_price: number
           updated_at?: string | null
         }
         Update: {
-          address?: string | null
-          bank_account?: string | null
-          bank_account_name?: string | null
-          bank_name?: string | null
-          commission_rate?: number | null
-          contact_person?: string | null
+          booking_date?: string
+          booking_number?: string
           created_at?: string | null
-          email?: string | null
+          created_by_hotel?: boolean | null
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          duration?: number
+          hotel_id?: string
           id?: string
-          monthly_revenue?: number | null
+          notes?: string | null
+          payment_status?: string
+          room_number?: string | null
+          service_category?: string
+          service_date?: string
+          service_name?: string
+          service_time?: string
+          staff_name?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_bookings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_invoices: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string | null
+          due_date: string
+          hotel_id: string
+          id: string
+          invoice_number: string
+          issued_date: string
+          paid_date: string | null
+          period_end: string
+          period_start: string
+          period_type: string
+          status: string
+          total_bookings: number
+          total_revenue: number
+          updated_at: string | null
+        }
+        Insert: {
+          commission_amount?: number
+          commission_rate: number
+          created_at?: string | null
+          due_date: string
+          hotel_id: string
+          id?: string
+          invoice_number: string
+          issued_date: string
+          paid_date?: string | null
+          period_end: string
+          period_start: string
+          period_type: string
+          status?: string
+          total_bookings?: number
+          total_revenue?: number
+          updated_at?: string | null
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string | null
+          due_date?: string
+          hotel_id?: string
+          id?: string
+          invoice_number?: string
+          issued_date?: string
+          paid_date?: string | null
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          status?: string
+          total_bookings?: number
+          total_revenue?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_invoices_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          hotel_id: string
+          id: string
+          invoice_id: string | null
+          invoice_number: string | null
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          status: string
+          transaction_ref: string
+          updated_at: string | null
+          verified_by: string | null
+          verified_date: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          hotel_id: string
+          id?: string
+          invoice_id?: string | null
+          invoice_number?: string | null
+          notes?: string | null
+          payment_date: string
+          payment_method: string
+          status?: string
+          transaction_ref: string
+          updated_at?: string | null
+          verified_by?: string | null
+          verified_date?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          hotel_id?: string
+          id?: string
+          invoice_id?: string | null
+          invoice_number?: string | null
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          status?: string
+          transaction_ref?: string
+          updated_at?: string | null
+          verified_by?: string | null
+          verified_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_payments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotels: {
+        Row: {
+          address: string
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          commission_rate: number
+          contact_person: string
+          created_at: string | null
+          description: string | null
+          discount_rate: number
+          email: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name_en: string
+          name_th: string
+          phone: string
+          rating: number | null
+          status: string
+          tax_id: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address: string
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          commission_rate?: number
+          contact_person: string
+          created_at?: string | null
+          description?: string | null
+          discount_rate?: number
+          email: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name_en: string
+          name_th: string
+          phone: string
+          rating?: number | null
+          status?: string
+          tax_id?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          commission_rate?: number
+          contact_person?: string
+          created_at?: string | null
+          description?: string | null
+          discount_rate?: number
+          email?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
           name_en?: string
           name_th?: string
-          phone?: string | null
+          phone?: string
           rating?: number | null
-          status?: Database["public"]["Enums"]["hotel_status"] | null
+          status?: string
           tax_id?: string | null
-          total_bookings?: number | null
-          total_reviews?: number | null
           updated_at?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -670,22 +906,7 @@ export type Database = {
           updated_at?: string | null
           year?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "monthly_bills_hotel_id_fkey"
-            columns: ["hotel_id"]
-            isOneToOne: false
-            referencedRelation: "hotel_performance_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "monthly_bills_hotel_id_fkey"
-            columns: ["hotel_id"]
-            isOneToOne: false
-            referencedRelation: "hotels"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -736,6 +957,7 @@ export type Database = {
           is_active: boolean | null
           is_default: boolean | null
           omise_card_id: string
+          omise_customer_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -750,6 +972,7 @@ export type Database = {
           is_active?: boolean | null
           is_default?: boolean | null
           omise_card_id: string
+          omise_customer_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -764,6 +987,7 @@ export type Database = {
           is_active?: boolean | null
           is_default?: boolean | null
           omise_card_id?: string
+          omise_customer_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -783,7 +1007,6 @@ export type Database = {
           id: string
           job_id: string
           payout_id: string
-          tip: number | null
         }
         Insert: {
           amount?: number
@@ -791,7 +1014,6 @@ export type Database = {
           id?: string
           job_id: string
           payout_id: string
-          tip?: number | null
         }
         Update: {
           amount?: number
@@ -799,7 +1021,6 @@ export type Database = {
           id?: string
           job_id?: string
           payout_id?: string
-          tip?: number | null
         }
         Relationships: [
           {
@@ -831,7 +1052,6 @@ export type Database = {
           platform_fee: number
           staff_id: string
           status: Database["public"]["Enums"]["payout_status"] | null
-          tip_amount: number | null
           total_jobs: number
           transfer_reference: string | null
           transfer_slip_url: string | null
@@ -850,7 +1070,6 @@ export type Database = {
           platform_fee?: number
           staff_id: string
           status?: Database["public"]["Enums"]["payout_status"] | null
-          tip_amount?: number | null
           total_jobs?: number
           transfer_reference?: string | null
           transfer_slip_url?: string | null
@@ -869,7 +1088,6 @@ export type Database = {
           platform_fee?: number
           staff_id?: string
           status?: Database["public"]["Enums"]["payout_status"] | null
-          tip_amount?: number | null
           total_jobs?: number
           transfer_reference?: string | null
           transfer_slip_url?: string | null
@@ -902,6 +1120,9 @@ export type Database = {
           full_name: string
           id: string
           language: string
+          line_display_name: string | null
+          line_picture_url: string | null
+          line_user_id: string | null
           metadata: Json | null
           phone: string | null
           role: string
@@ -916,6 +1137,9 @@ export type Database = {
           full_name: string
           id?: string
           language?: string
+          line_display_name?: string | null
+          line_picture_url?: string | null
+          line_user_id?: string | null
           metadata?: Json | null
           phone?: string | null
           role?: string
@@ -930,11 +1154,136 @@ export type Database = {
           full_name?: string
           id?: string
           language?: string
+          line_display_name?: string | null
+          line_picture_url?: string | null
+          line_user_id?: string | null
           metadata?: Json | null
           phone?: string | null
           role?: string
           status?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      promotion_usage: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          discount_amount: number
+          id: string
+          promotion_id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          discount_amount: number
+          id?: string
+          promotion_id: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          discount_amount?: number
+          id?: string
+          promotion_id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_usage_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          applies_to: string | null
+          auto_generate_code: boolean | null
+          code: string
+          code_length: number | null
+          code_prefix: string | null
+          created_at: string | null
+          description_en: string | null
+          description_th: string | null
+          discount_type: string
+          discount_value: number
+          end_date: string
+          id: string
+          image_url: string | null
+          max_discount: number | null
+          min_order_amount: number | null
+          name_en: string
+          name_th: string
+          start_date: string
+          status: string | null
+          target_categories: string[] | null
+          target_services: string[] | null
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+          usage_limit_per_user: number | null
+        }
+        Insert: {
+          applies_to?: string | null
+          auto_generate_code?: boolean | null
+          code: string
+          code_length?: number | null
+          code_prefix?: string | null
+          created_at?: string | null
+          description_en?: string | null
+          description_th?: string | null
+          discount_type: string
+          discount_value: number
+          end_date: string
+          id?: string
+          image_url?: string | null
+          max_discount?: number | null
+          min_order_amount?: number | null
+          name_en: string
+          name_th: string
+          start_date: string
+          status?: string | null
+          target_categories?: string[] | null
+          target_services?: string[] | null
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          usage_limit_per_user?: number | null
+        }
+        Update: {
+          applies_to?: string | null
+          auto_generate_code?: boolean | null
+          code?: string
+          code_length?: number | null
+          code_prefix?: string | null
+          created_at?: string | null
+          description_en?: string | null
+          description_th?: string | null
+          discount_type?: string
+          discount_value?: number
+          end_date?: string
+          id?: string
+          image_url?: string | null
+          max_discount?: number | null
+          min_order_amount?: number | null
+          name_en?: string
+          name_th?: string
+          start_date?: string
+          status?: string | null
+          target_categories?: string[] | null
+          target_services?: string[] | null
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          usage_limit_per_user?: number | null
         }
         Relationships: []
       }
@@ -986,31 +1335,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "reviews_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: true
-            referencedRelation: "active_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: true
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "reviews_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_popularity"
             referencedColumns: ["id"]
           },
           {
@@ -1077,13 +1405,6 @@ export type Database = {
             foreignKeyName: "service_addons_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "service_popularity"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_addons_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -1115,13 +1436,6 @@ export type Database = {
           sort_order?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "service_images_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_popularity"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "service_images_service_id_fkey"
             columns: ["service_id"]
@@ -1164,13 +1478,6 @@ export type Database = {
             foreignKeyName: "service_pricing_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "service_popularity"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_pricing_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -1202,13 +1509,6 @@ export type Database = {
           service_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "service_reviews_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_popularity"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "service_reviews_service_id_fkey"
             columns: ["service_id"]
@@ -1245,13 +1545,6 @@ export type Database = {
             foreignKeyName: "service_skills_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "service_popularity"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_skills_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -1265,12 +1558,16 @@ export type Database = {
           description_en: string | null
           description_th: string | null
           duration: number
+          duration_options: Json | null
           hotel_price: number
           id: string
           image_url: string | null
           is_active: boolean | null
           name_en: string
           name_th: string
+          price_120: number | null
+          price_60: number | null
+          price_90: number | null
           slug: string | null
           sort_order: number | null
           staff_commission_rate: number | null
@@ -1283,12 +1580,16 @@ export type Database = {
           description_en?: string | null
           description_th?: string | null
           duration: number
+          duration_options?: Json | null
           hotel_price: number
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           name_en: string
           name_th: string
+          price_120?: number | null
+          price_60?: number | null
+          price_90?: number | null
           slug?: string | null
           sort_order?: number | null
           staff_commission_rate?: number | null
@@ -1301,12 +1602,16 @@ export type Database = {
           description_en?: string | null
           description_th?: string | null
           duration?: number
+          duration_options?: Json | null
           hotel_price?: number
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           name_en?: string
           name_th?: string
+          price_120?: number | null
+          price_60?: number | null
+          price_90?: number | null
           slug?: string | null
           sort_order?: number | null
           staff_commission_rate?: number | null
@@ -1364,6 +1669,98 @@ export type Database = {
           name_th?: string
         }
         Relationships: []
+      }
+      sos_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          booking_id: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          latitude: number | null
+          location_accuracy: number | null
+          longitude: number | null
+          message: string | null
+          priority: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          staff_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
+          message?: string | null
+          priority?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          staff_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
+          message?: string | null
+          priority?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          staff_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sos_alerts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sos_alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sos_alerts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sos_reports: {
         Row: {
@@ -1443,6 +1840,8 @@ export type Database = {
           current_location_lng: number | null
           id: string
           id_card: string | null
+          invite_token: string | null
+          invite_token_expires_at: string | null
           is_available: boolean | null
           name_en: string | null
           name_th: string
@@ -1468,6 +1867,8 @@ export type Database = {
           current_location_lng?: number | null
           id?: string
           id_card?: string | null
+          invite_token?: string | null
+          invite_token_expires_at?: string | null
           is_available?: boolean | null
           name_en?: string | null
           name_th: string
@@ -1493,6 +1894,8 @@ export type Database = {
           current_location_lng?: number | null
           id?: string
           id_card?: string | null
+          invite_token?: string | null
+          invite_token_expires_at?: string | null
           is_available?: boolean | null
           name_en?: string | null
           name_th?: string
@@ -1569,63 +1972,186 @@ export type Database = {
       }
       staff_documents: {
         Row: {
-          created_at: string | null
+          created_at: string
+          document_type: string
           expires_at: string | null
           file_name: string
+          file_size: number
           file_url: string
           id: string
-          name: string
+          mime_type: string
           notes: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
+          rejection_reason: string | null
           staff_id: string
-          status: Database["public"]["Enums"]["document_status"] | null
-          type: Database["public"]["Enums"]["document_type"]
-          updated_at: string | null
+          updated_at: string
+          uploaded_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
+          document_type: string
           expires_at?: string | null
           file_name: string
+          file_size: number
           file_url: string
           id?: string
-          name: string
+          mime_type: string
           notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
+          rejection_reason?: string | null
           staff_id: string
-          status?: Database["public"]["Enums"]["document_status"] | null
-          type?: Database["public"]["Enums"]["document_type"]
-          updated_at?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
+          document_type?: string
           expires_at?: string | null
           file_name?: string
+          file_size?: number
           file_url?: string
           id?: string
-          name?: string
+          mime_type?: string
           notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
+          rejection_reason?: string | null
           staff_id?: string
-          status?: Database["public"]["Enums"]["document_status"] | null
-          type?: Database["public"]["Enums"]["document_type"]
-          updated_at?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "staff_documents_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "staff_documents_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_documents_audit: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          document_id: string | null
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          rejection_reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          document_id?: string | null
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          rejection_reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          document_id?: string | null
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          rejection_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_documents_audit_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "staff_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_performance_metrics: {
+        Row: {
+          accepted_job_offers: number | null
+          avg_rating: number | null
+          avg_response_time_minutes: number | null
+          cancel_rate: number | null
+          cancelled_jobs: number | null
+          completed_jobs: number | null
+          completion_rate: number | null
+          created_at: string | null
+          id: string
+          month: number
+          pending_jobs: number | null
+          performance_score: number | null
+          response_rate: number | null
+          staff_id: string
+          total_earnings: number | null
+          total_job_offers: number | null
+          total_jobs: number | null
+          total_ratings: number | null
+          total_tips: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          accepted_job_offers?: number | null
+          avg_rating?: number | null
+          avg_response_time_minutes?: number | null
+          cancel_rate?: number | null
+          cancelled_jobs?: number | null
+          completed_jobs?: number | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          month: number
+          pending_jobs?: number | null
+          performance_score?: number | null
+          response_rate?: number | null
+          staff_id: string
+          total_earnings?: number | null
+          total_job_offers?: number | null
+          total_jobs?: number | null
+          total_ratings?: number | null
+          total_tips?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          accepted_job_offers?: number | null
+          avg_rating?: number | null
+          avg_response_time_minutes?: number | null
+          cancel_rate?: number | null
+          cancelled_jobs?: number | null
+          completed_jobs?: number | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          month?: number
+          pending_jobs?: number | null
+          performance_score?: number | null
+          response_rate?: number | null
+          staff_id?: string
+          total_earnings?: number | null
+          total_job_offers?: number | null
+          total_jobs?: number | null
+          total_ratings?: number | null
+          total_tips?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_performance_metrics_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
         ]
@@ -1904,20 +2430,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "transactions_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "active_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "transactions_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -1928,131 +2440,13 @@ export type Database = {
       }
     }
     Views: {
-      active_bookings: {
-        Row: {
-          address: string | null
-          admin_notes: string | null
-          base_price: number | null
-          booking_date: string | null
-          booking_number: string | null
-          booking_time: string | null
-          cancelled_at: string | null
-          completed_at: string | null
-          confirmed_at: string | null
-          created_at: string | null
-          customer_id: string | null
-          customer_name: string | null
-          customer_notes: string | null
-          customer_phone: string | null
-          discount_amount: number | null
-          duration: number | null
-          final_price: number | null
-          hotel_id: string | null
-          hotel_name: string | null
-          hotel_room_number: string | null
-          id: string | null
-          is_hotel_booking: boolean | null
-          latitude: number | null
-          longitude: number | null
-          payment_status: Database["public"]["Enums"]["payment_status"] | null
-          service_id: string | null
-          service_name: string | null
-          service_name_en: string | null
-          staff_earnings: number | null
-          staff_id: string | null
-          staff_name: string | null
-          staff_notes: string | null
-          started_at: string | null
-          status: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount: number | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bookings_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_hotel_id_fkey"
-            columns: ["hotel_id"]
-            isOneToOne: false
-            referencedRelation: "hotel_performance_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_hotel_id_fkey"
-            columns: ["hotel_id"]
-            isOneToOne: false
-            referencedRelation: "hotels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_popularity"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      daily_revenue: {
-        Row: {
-          completed_bookings: number | null
-          date: string | null
-          revenue: number | null
-          total_bookings: number | null
-        }
-        Relationships: []
-      }
-      hotel_performance_summary: {
-        Row: {
-          average_rating: number | null
-          commission_rate: number | null
-          id: string | null
-          name_en: string | null
-          name_th: string | null
-          total_bookings: number | null
-          total_revenue: number | null
-          total_savings: number | null
-        }
-        Relationships: []
-      }
-      service_popularity: {
-        Row: {
-          average_rating: number | null
-          category: Database["public"]["Enums"]["service_category"] | null
-          id: string | null
-          name_en: string | null
-          name_th: string | null
-          total_bookings: number | null
-          total_revenue: number | null
-        }
-        Relationships: []
-      }
       staff_earnings_summary: {
         Row: {
-          pending_amount: number | null
+          pending_payout: number | null
           staff_id: string | null
-          total_completed_jobs: number | null
-          total_earnings: number | null
-          total_tips: number | null
+          total_jobs: number | null
+          total_paid: number | null
+          total_payouts: number | null
         }
         Relationships: [
           {
@@ -2074,6 +2468,16 @@ export type Database = {
           success: boolean
         }[]
       }
+      calculate_staff_performance: {
+        Args: { p_month: number; p_staff_id: string; p_year: number }
+        Returns: undefined
+      }
+      create_coupon_codes_for_promotion: {
+        Args: { count?: number; promotion_id_param: string }
+        Returns: {
+          code: string
+        }[]
+      }
       create_service: {
         Args: {
           p_base_price?: number
@@ -2089,9 +2493,89 @@ export type Database = {
         }
         Returns: string
       }
+      debug_staff_data: {
+        Args: never
+        Returns: {
+          count_records: number
+          info_type: string
+          sample_data: string
+          table_name: string
+        }[]
+      }
       delete_service: { Args: { p_id: string }; Returns: boolean }
       generate_booking_number: { Args: never; Returns: string }
+      generate_coupon_code: {
+        Args: { length?: number; prefix?: string }
+        Returns: string
+      }
       generate_transaction_number: { Args: never; Returns: string }
+      get_dashboard_stats: {
+        Args: { period_days?: number }
+        Returns: {
+          avg_booking_value: number
+          avg_value_growth: number
+          bookings_growth: number
+          new_customers: number
+          new_customers_growth: number
+          revenue_growth: number
+          total_bookings: number
+          total_revenue: number
+        }[]
+      }
+      get_hotel_performance_detailed: {
+        Args: { period_days?: number }
+        Returns: {
+          address: string
+          avg_booking_value: number
+          avg_rating: number
+          avg_service_duration: number
+          booking_growth: number
+          cancellation_rate: number
+          cancelled_bookings: number
+          commission_earned: number
+          commission_rate: number
+          completed_bookings: number
+          completion_rate: number
+          customer_growth: number
+          customer_retention_rate: number
+          hotel_id: string
+          hotel_name: string
+          most_popular_services: string[]
+          negative_reviews: number
+          new_customers: number
+          peak_booking_hours: number[]
+          phone: string
+          positive_reviews: number
+          rank: number
+          returning_customers: number
+          revenue_growth: number
+          staff_count: number
+          top_staff_names: string[]
+          total_bookings: number
+          total_revenue: number
+          total_reviews: number
+          unique_customers: number
+        }[]
+      }
+      get_platform_averages: {
+        Args: { p_month?: number; p_year?: number }
+        Returns: {
+          avg_cancel_rate: number
+          avg_completion_rate: number
+          avg_rating: number
+          avg_response_rate: number
+        }[]
+      }
+      get_promotion_stats: {
+        Args: { promotion_id_param: string }
+        Returns: {
+          avg_discount: number
+          total_discount: number
+          total_usage: number
+          unique_users: number
+          usage_by_date: Json
+        }[]
+      }
       get_services_by_category: {
         Args: { p_category?: string }
         Returns: {
@@ -2111,6 +2595,44 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_staff_performance_detailed: {
+        Args: { period_days?: number; staff_limit?: number }
+        Returns: {
+          avg_rating: number
+          avg_service_price: number
+          base_earnings: number
+          booking_growth: number
+          bookings_cancelled: number
+          bookings_completed: number
+          bookings_no_show: number
+          cancellation_rate: number
+          completion_rate: number
+          email: string
+          join_date: string
+          last_active_date: string
+          negative_reviews: number
+          phone: string
+          positive_reviews: number
+          profile_image: string
+          punctuality_score: number
+          rank: number
+          rating_growth: number
+          response_time_hours: number
+          revenue_growth: number
+          services_per_day: number
+          specializations: string[]
+          staff_id: string
+          staff_name: string
+          status: string
+          tips_earned: number
+          total_earnings: number
+          total_revenue_generated: number
+          total_reviews: number
+          working_days: number
+        }[]
+      }
+      is_admin: { Args: never; Returns: boolean }
+      is_own_staff: { Args: { staff_uuid: string }; Returns: boolean }
       staff_login_check: {
         Args: { p_line_user_id: string }
         Returns: {
@@ -2149,8 +2671,7 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
-      document_status: "pending" | "approved" | "rejected" | "expired"
-      document_type: "id_card" | "certificate" | "training" | "other"
+      customer_status: "active" | "suspended" | "banned"
       hotel_status: "active" | "inactive" | "pending"
       job_payment_status: "pending" | "paid" | "refunded"
       job_status:
@@ -2162,6 +2683,12 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+      payment_method:
+        | "cash"
+        | "credit_card"
+        | "promptpay"
+        | "bank_transfer"
+        | "other"
       payment_status: "pending" | "processing" | "paid" | "failed" | "refunded"
       payout_status: "pending" | "processing" | "completed" | "failed"
       service_category: "massage" | "nail" | "spa" | "facial"
@@ -2303,8 +2830,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      document_status: ["pending", "approved", "rejected", "expired"],
-      document_type: ["id_card", "certificate", "training", "other"],
+      customer_status: ["active", "suspended", "banned"],
       hotel_status: ["active", "inactive", "pending"],
       job_payment_status: ["pending", "paid", "refunded"],
       job_status: [
@@ -2316,6 +2842,13 @@ export const Constants = {
         "in_progress",
         "completed",
         "cancelled",
+      ],
+      payment_method: [
+        "cash",
+        "credit_card",
+        "promptpay",
+        "bank_transfer",
+        "other",
       ],
       payment_status: ["pending", "processing", "paid", "failed", "refunded"],
       payout_status: ["pending", "processing", "completed", "failed"],

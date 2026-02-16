@@ -35,10 +35,21 @@ const serviceFormSchema = z.object({
     .number({ required_error: 'ระบุราคาเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
     .max(50000, 'ราคาสูงสุด 50,000 บาท'),
-  hotel_price: z.coerce
-    .number({ required_error: 'ระบุราคาเป็นตัวเลข' })
-    .min(50, 'ราคาขั้นต่ำ 50 บาท')
-    .max(50000, 'ราคาสูงสุด 50,000 บาท'),
+  price_60: z.coerce
+    .number({ required_error: 'ระบุราคา 60 นาทีเป็นตัวเลข' })
+    .min(100, 'ราคาขั้นต่ำ 100 บาท')
+    .max(50000, 'ราคาสูงสุด 50,000 บาท')
+    .optional(),
+  price_90: z.coerce
+    .number({ required_error: 'ระบุราคา 90 นาทีเป็นตัวเลข' })
+    .min(100, 'ราคาขั้นต่ำ 100 บาท')
+    .max(50000, 'ราคาสูงสุด 50,000 บาท')
+    .optional(),
+  price_120: z.coerce
+    .number({ required_error: 'ระบุราคา 120 นาทีเป็นตัวเลข' })
+    .min(100, 'ราคาขั้นต่ำ 100 บาท')
+    .max(50000, 'ราคาสูงสุด 50,000 บาท')
+    .optional(),
   staff_commission_rate: z.coerce
     .number({ required_error: 'ระบุเปอร์เซ็นต์เป็นตัวเลข' })
     .min(0, 'เปอร์เซ็นต์ขั้นต่ำ 0%')
@@ -102,7 +113,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       category: undefined,
       duration_options: [60], // Default 60 minutes
       base_price: undefined,
-      hotel_price: undefined,
+      price_60: undefined,
+      price_90: undefined,
+      price_120: undefined,
       staff_commission_rate: 25.00, // Default 25%
       image_url: '',
       is_active: true,
@@ -111,10 +124,13 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
   })
 
   const selectedCategory = watch('category')
-  const hotelPrice = watch('hotel_price')
   const basePrice = watch('base_price')
+  const price60 = watch('price_60')
+  const price90 = watch('price_90')
+  const price120 = watch('price_120')
   const nameEn = watch('name_en')
   const staffCommissionRate = watch('staff_commission_rate')
+  const selectedDurations = watch('duration_options') || []
 
   // Load form data when editing
   useEffect(() => {
@@ -145,7 +161,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         category: editData.category || undefined,
         duration_options: durationOptionsArray,
         base_price: editData.base_price || undefined,
-        hotel_price: editData.hotel_price || undefined,
+        price_60: editData.price_60 || undefined,
+        price_90: editData.price_90 || undefined,
+        price_120: editData.price_120 || undefined,
         staff_commission_rate: editData.staff_commission_rate || 25.00,
         image_url: editData.image_url || '',
         is_active: editData.is_active !== undefined ? editData.is_active : true,
@@ -162,7 +180,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         category: undefined,
         duration_options: ['60'], // Use string for form consistency
         base_price: undefined,
-        hotel_price: undefined,
+        price_60: undefined,
+        price_90: undefined,
+        price_120: undefined,
         staff_commission_rate: 25.00,
         image_url: '',
         is_active: true,
@@ -178,19 +198,25 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
     }
   }, [nameEn, setValue, editData])
 
-  // Calculate discount percentage
-  const discountPercentage = basePrice && hotelPrice
-    ? Math.round(((basePrice - hotelPrice) / basePrice) * 100)
-    : 0
+  // Calculate staff commission for each duration
+  const calculateCommission = (price: number | undefined) => {
+    if (!price || !staffCommissionRate) return 0
+    return Math.round((price * (staffCommissionRate / 100)) * 100) / 100
+  }
 
-  // Calculate staff commission
-  const staffCommissionAmount = basePrice && staffCommissionRate
-    ? Math.round((basePrice * (staffCommissionRate / 100)) * 100) / 100
-    : 0
+  const calculateCompanyRevenue = (price: number | undefined) => {
+    if (!price) return 0
+    const commission = calculateCommission(price)
+    return Math.round((price - commission) * 100) / 100
+  }
 
-  const companyRevenue = basePrice && staffCommissionAmount
-    ? Math.round((basePrice - staffCommissionAmount) * 100) / 100
-    : 0
+  const commission60 = calculateCommission(price60)
+  const commission90 = calculateCommission(price90)
+  const commission120 = calculateCommission(price120)
+
+  const revenue60 = calculateCompanyRevenue(price60)
+  const revenue90 = calculateCompanyRevenue(price90)
+  const revenue120 = calculateCompanyRevenue(price120)
 
   // Handle image upload success
   const handleUploadComplete = (imageUrl: string) => {
@@ -435,20 +461,6 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 ระยะเวลาบริการ (เลือกได้หลายตัวเลือก)
               </label>
 
-              {/* Show current saved duration if editing */}
-              {editData && (
-                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800 font-medium mb-1">
-                    📋 ระยะเวลาปัจจุบันที่บันทึกไว้:
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    {editData.duration} นาที
-                    {editData.duration_options && Array.isArray(editData.duration_options)
-                      ? ` (ตัวเลือก: ${editData.duration_options.join(', ')} นาที)`
-                      : ' (ระบบเก่า: ใช้ระยะเวลาเดียว)'}
-                  </p>
-                </div>
-              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {durationOptions.map((option) => {
                   const currentOptions = watch('duration_options') || []
@@ -498,122 +510,146 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               {errors.duration_options && (
                 <p className="mt-2 text-sm text-red-600">{errors.duration_options.message}</p>
               )}
-              <p className="mt-2 text-xs text-gray-500">
-                💡 เลือกตัวเลือกระยะเวลาที่ต้องการให้บริการ (สามารถเลือกได้หลายตัวเลือก)
-              </p>
 
-              {/* Debug info for current selections */}
-              {editData && (
-                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
-                  <p className="text-gray-600">
-                    🔍 Debug: ตัวเลือกที่เลือกอยู่ = {JSON.stringify(watch('duration_options') || [])}
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Pricing */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <DollarSign className="w-4 h-4 inline mr-1" />
-                  ราคาปกติ (สำหรับ 60 นาที)
-                </label>
-                <input
-                  {...register('base_price')}
-                  type="number"
-                  min="100"
-                  max="50000"
-                  step="10"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="690"
-                />
-                {errors.base_price && (
-                  <p className="mt-1 text-sm text-red-600">{errors.base_price.message}</p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
-                  💡 ราคาฐานสำหรับ 60 นาที (90 นาที และ 120 นาที จะคิดตามสัดส่วน)
-                </p>
-              </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <DollarSign className="w-4 h-4 inline mr-1" />
+                ราคาบริการตามระยะเวลา
+              </label>
+              <p className="text-xs text-gray-500 mb-4">
+                💡 กรอกราคาสำหรับแต่ละระยะเวลาที่เลือกไว้
+              </p>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Package className="w-4 h-4 inline mr-1" />
-                  ราคาโรงแรม (สำหรับ 60 นาที)
-                </label>
-                <input
-                  {...register('hotel_price')}
-                  type="number"
-                  min="50"
-                  max="50000"
-                  step="10"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="550"
-                />
-                {errors.hotel_price && (
-                  <p className="mt-1 text-sm text-red-600">{errors.hotel_price.message}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Price for 60 minutes */}
+                {selectedDurations.includes('60') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <Clock className="w-4 h-4 inline mr-1" />
+                      ราคา 60 นาที
+                    </label>
+                    <input
+                      {...register('price_60')}
+                      type="number"
+                      min="100"
+                      max="50000"
+                      step="10"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="690"
+                    />
+                    {errors.price_60 && (
+                      <p className="mt-1 text-sm text-red-600">{errors.price_60.message}</p>
+                    )}
+                  </div>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
-                  💡 ราคาโรงแรมสำหรับ 60 นาที (90 นาที และ 120 นาที จะคิดตามสัดส่วน)
-                </p>
-              </div>
 
-              <div className="flex items-end">
-                <div className="w-full px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">ส่วนลด</p>
-                  <p className="text-lg font-semibold text-green-800">{discountPercentage}%</p>
-                </div>
+                {/* Price for 90 minutes */}
+                {selectedDurations.includes('90') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <Clock className="w-4 h-4 inline mr-1" />
+                      ราคา 90 นาที
+                    </label>
+                    <input
+                      {...register('price_90')}
+                      type="number"
+                      min="100"
+                      max="50000"
+                      step="10"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="990"
+                    />
+                    {errors.price_90 && (
+                      <p className="mt-1 text-sm text-red-600">{errors.price_90.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Price for 120 minutes */}
+                {selectedDurations.includes('120') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <Clock className="w-4 h-4 inline mr-1" />
+                      ราคา 120 นาที
+                    </label>
+                    <input
+                      {...register('price_120')}
+                      type="number"
+                      min="100"
+                      max="50000"
+                      step="10"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="1280"
+                    />
+                    {errors.price_120 && (
+                      <p className="mt-1 text-sm text-red-600">{errors.price_120.message}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Dynamic Pricing Preview */}
-            {basePrice && hotelPrice && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="text-sm font-medium text-blue-800 mb-3">
-                  💰 ตารางราคาตามระยะเวลา
+            {/* Fixed Pricing Preview */}
+            {(price60 || price90 || price120) && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="text-sm font-medium text-green-800 mb-3">
+                  💰 ตารางราคาที่กำหนด
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[60, 90, 120].map(duration => {
-                    const pricing = calculatePrice(basePrice, hotelPrice, duration)
-                    const isSelected = watch('duration_options')?.includes(duration.toString())
+                  {selectedDurations.map(duration => {
+                    let price = 0
+                    let priceEntered = false
+
+                    switch (duration) {
+                      case '60':
+                        price = price60 || 0
+                        priceEntered = !!price60
+                        break
+                      case '90':
+                        price = price90 || 0
+                        priceEntered = !!price90
+                        break
+                      case '120':
+                        price = price120 || 0
+                        priceEntered = !!price120
+                        break
+                      default:
+                        return null
+                    }
 
                     return (
                       <div
                         key={duration}
                         className={`p-3 rounded-lg border-2 ${
-                          isSelected
-                            ? 'border-amber-500 bg-amber-50'
-                            : 'border-blue-200 bg-white'
+                          priceEntered
+                            ? 'border-green-500 bg-green-100'
+                            : 'border-gray-200 bg-gray-50'
                         }`}
                       >
                         <p className={`text-sm font-medium ${
-                          isSelected ? 'text-amber-800' : 'text-blue-700'
+                          priceEntered ? 'text-green-800' : 'text-gray-600'
                         }`}>
-                          {getDurationLabel(duration)}
+                          {getDurationLabel(parseInt(duration))}
                         </p>
                         <p className={`text-lg font-bold ${
-                          isSelected ? 'text-amber-900' : 'text-blue-900'
+                          priceEntered ? 'text-green-900' : 'text-gray-400'
                         }`}>
-                          {pricing.finalBasePrice.toLocaleString()} บาท
+                          {priceEntered ? price.toLocaleString() : '---'} บาท
                         </p>
-                        <p className={`text-sm ${
-                          isSelected ? 'text-amber-600' : 'text-blue-600'
-                        }`}>
-                          โรงแรม: {pricing.finalHotelPrice.toLocaleString()} บาท
-                        </p>
-                        {duration !== 60 && (
-                          <p className={`text-xs ${
-                            isSelected ? 'text-amber-500' : 'text-blue-500'
-                          }`}>
-                            ({pricing.multiplier.toFixed(3)}x)
+                        {!priceEntered && (
+                          <p className="text-xs text-gray-500">
+                            รอการกรอกราคา
                           </p>
                         )}
                       </div>
                     )
                   })}
                 </div>
-                <p className="mt-3 text-xs text-blue-600">
-                  💡 ราคาจะเปลี่ยนตามระยะเวลาที่ลูกค้าเลือก โดยคิดจากราคาฐาน 60 นาที
+                <p className="mt-3 text-xs text-green-600">
+                  💡 ราคาที่กรอกจะถูกบันทึกและใช้แสดงให้ลูกค้าโดยตรง
                 </p>
               </div>
             )}
@@ -624,7 +660,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 <TrendingUp className="w-4 h-4 inline mr-1" />
                 ค่าคอมมิชชั่น Staff
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-4">
+                {/* Commission Rate Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     เปอร์เซ็นต์ (%)
@@ -643,22 +680,93 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   )}
                 </div>
 
-                <div className="flex items-end">
-                  <div className="w-full px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700">รายได้ Staff</p>
-                    <p className="text-lg font-semibold text-blue-800">{staffCommissionAmount} บาท</p>
-                  </div>
-                </div>
+                {/* Commission Breakdown by Duration */}
+                {(price60 || price90 || price120) && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-700">คอมมิชชั่นแยกตามระยะเวลา:</h4>
 
-                <div className="flex items-end">
-                  <div className="w-full px-4 py-2 bg-purple-50 border border-purple-200 rounded-lg">
-                    <p className="text-sm text-purple-700">รายได้ บริษัท</p>
-                    <p className="text-lg font-semibold text-purple-800">{companyRevenue} บาท</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {/* 60 minutes */}
+                      {selectedDurations.includes('60') && price60 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">60 นาที</span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-blue-600">ราคา:</span>
+                              <span className="font-medium text-blue-800">{price60} บาท</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-blue-600">Staff:</span>
+                              <span className="font-medium text-blue-800">{commission60} บาท</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-blue-600">บริษัท:</span>
+                              <span className="font-medium text-blue-800">{revenue60} บาท</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 90 minutes */}
+                      {selectedDurations.includes('90') && price90 && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-4 h-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-800">90 นาที</span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-green-600">ราคา:</span>
+                              <span className="font-medium text-green-800">{price90} บาท</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-green-600">Staff:</span>
+                              <span className="font-medium text-green-800">{commission90} บาท</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-green-600">บริษัท:</span>
+                              <span className="font-medium text-green-800">{revenue90} บาท</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 120 minutes */}
+                      {selectedDurations.includes('120') && price120 && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm font-medium text-purple-800">120 นาที</span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-purple-600">ราคา:</span>
+                              <span className="font-medium text-purple-800">{price120} บาท</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-purple-600">Staff:</span>
+                              <span className="font-medium text-purple-800">{commission120} บาท</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-purple-600">บริษัท:</span>
+                              <span className="font-medium text-purple-800">{revenue120} บาท</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
               <p className="mt-2 text-xs text-gray-500">
-                💡 Staff จะได้รับค่าคอมมิชชั่น {staffCommissionRate || 0}% = {staffCommissionAmount} บาท จากราคา {basePrice || 0} บาท
+                💡 Staff จะได้รับค่าคอมมิชชั่น {staffCommissionRate || 0}% จากราคาแต่ละระยะเวลาที่ลูกค้าเลือก
+                <br />
+                <span className="text-amber-600">
+                  ✨ ระบบคิดคอมมิชชั่นแยกสำหรับแต่ละระยะเวลา เพื่อความยุติธรรม
+                </span>
               </p>
             </div>
 
@@ -738,7 +846,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                                 {field === 'category' && 'ประเภทบริการ'}
                                 {field === 'duration_options' && 'ระยะเวลาบริการ'}
                                 {field === 'base_price' && 'ราคาปกติ'}
-                                {field === 'hotel_price' && 'ราคาโรงแรม'}
+                                {field === 'price_60' && 'ราคา 60 นาที'}
+                                {field === 'price_90' && 'ราคา 90 นาที'}
+                                {field === 'price_120' && 'ราคา 120 นาที'}
                                 {field === 'staff_commission_rate' && 'คอมมิชชั่น'}
                                 {field === 'image_url' && 'รูปภาพ'}
                               </strong>: {error?.message}

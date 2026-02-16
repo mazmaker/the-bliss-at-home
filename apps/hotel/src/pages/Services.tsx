@@ -204,14 +204,10 @@ function Services() {
                 </div>
               </div>
 
-              {/* Prices */}
+              {/* Price */}
               <div className="bg-stone-50 rounded-xl p-3 mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-stone-500">ราคาปกติ</span>
-                  <span className="text-sm text-stone-400 line-through">฿{service.regularPrice}</span>
-                </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-stone-700">ราคาโรงแรม</span>
+                  <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
                   <span className="text-lg font-bold text-amber-700">฿{service.hotelPrice}</span>
                 </div>
               </div>

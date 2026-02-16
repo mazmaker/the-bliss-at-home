@@ -10,7 +10,7 @@ import BookingHistory from './pages/BookingHistory'
 import MonthlyBill from './pages/MonthlyBill'
 import HotelProfile from './pages/HotelProfile'
 import HotelSettings from './pages/HotelSettings'
-import { HotelLoginPage } from './pages/auth'
+import { EnhancedHotelLogin } from './pages/auth'
 
 function App() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -27,12 +27,12 @@ function App() {
     <Routes>
       {/* Public login route */}
       <Route
-        path="/hotel/login"
+        path="/login"
         element={
           isAuthenticated ? (
             <Navigate to="/hotel/bookings" replace />
           ) : (
-            <HotelLoginPage />
+            <EnhancedHotelLogin />
           )
         }
       />
@@ -41,7 +41,7 @@ function App() {
       <Route
         path="/hotel"
         element={
-          <ProtectedRoute allowedRoles={['HOTEL']} redirectTo="/hotel/login">
+          <ProtectedRoute allowedRoles={['HOTEL']} redirectTo="/login">
             <HotelLayout />
           </ProtectedRoute>
         }
