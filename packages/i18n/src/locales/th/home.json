@@ -19,7 +19,20 @@
     "appliesTo": "ใช้ได้กับ",
     "allServices": "บริการทั้งหมด",
     "selectedCategories": "หมวดหมู่ที่เลือก",
-    "selectedServices": "บริการที่เลือก"
+    "selectedServices": "บริการที่เลือก",
+    "promoCode": "รหัสโปรโมชั่น",
+    "copyCode": "คัดลอกรหัส",
+    "copied": "คัดลอกแล้ว!",
+    "statusActive": "ใช้งานอยู่",
+    "periodTitle": "ระยะเวลาโปรโมชั่น",
+    "startDate": "เริ่ม",
+    "endDate": "สิ้นสุด",
+    "daysLeft": "เหลือ {{count}} วัน",
+    "usageTitle": "การใช้งาน",
+    "used": "ใช้แล้ว",
+    "limitPerUser": "จำกัด {{count}} ครั้งต่อผู้ใช้",
+    "termsTitle": "เงื่อนไขการใช้งาน",
+    "share": "แชร์โปรโมชั่น"
   },
   "categories": {
     "title": "บริการของเรา",

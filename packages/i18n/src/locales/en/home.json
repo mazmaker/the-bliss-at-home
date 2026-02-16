@@ -19,7 +19,20 @@
     "appliesTo": "Applies to",
     "allServices": "All services",
     "selectedCategories": "Selected categories",
-    "selectedServices": "Selected services"
+    "selectedServices": "Selected services",
+    "promoCode": "Promotion Code",
+    "copyCode": "Copy code",
+    "copied": "Copied!",
+    "statusActive": "Active",
+    "periodTitle": "Promotion Period",
+    "startDate": "Start",
+    "endDate": "End",
+    "daysLeft": "{{count}} days left",
+    "usageTitle": "Usage",
+    "used": "Used",
+    "limitPerUser": "Limited {{count}} per user",
+    "termsTitle": "Terms & Conditions",
+    "share": "Share Promotion"
   },
   "categories": {
     "title": "SERVICES",

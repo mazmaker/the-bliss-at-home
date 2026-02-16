@@ -74,6 +74,30 @@ export function useCreateBooking() {
 }
 
 /**
+ * Create booking with services (supports single + couple bookings)
+ */
+export function useCreateBookingWithServices() {
+  return useSupabaseMutation({
+    mutationFn: async (
+      client,
+      params: {
+        bookingData: Parameters<typeof bookingService.createBookingWithServices>[1];
+        services: Parameters<typeof bookingService.createBookingWithServices>[2];
+        addons?: Array<Omit<BookingAddonInsert, 'booking_id'>>;
+      }
+    ) => {
+      return bookingService.createBookingWithServices(
+        client,
+        params.bookingData,
+        params.services,
+        params.addons
+      );
+    },
+    invalidateKeys: [['bookings']],
+  });
+}
+
+/**
  * Cancel booking
  */
 export function useCancelBooking() {

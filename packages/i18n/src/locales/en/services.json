@@ -39,6 +39,11 @@
     "hotelPrice": "For Hotels:",
     "hotelPriceSpecial": "Special Price",
     "save": "Save",
+    "duration": "Duration",
+    "durationAndPricing": "Duration & Pricing",
+    "min": "min",
+    "startingFrom": "Starting from",
+    "noDescription": "No description available for this service",
     "questions": "Have a question?",
     "askMore": "Ask Us"
   }

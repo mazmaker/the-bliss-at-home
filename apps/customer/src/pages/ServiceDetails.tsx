@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Star, Clock, ChevronLeft, Plus, Minus, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle } from 'lucide-react'
+import { Clock, ChevronLeft, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle, Check } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useTranslation } from '@bliss/i18n'
+import { getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -13,39 +14,57 @@ const categoryIcons: Record<string, React.ComponentType<{className?: string}>> =
 }
 
 function ServiceDetails() {
-  const { t } = useTranslation(['services', 'common'])
+  const { t, i18n } = useTranslation(['services', 'common'])
   const { slug } = useParams()
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
-  const [quantity, setQuantity] = useState(1)
+  const [selectedDuration, setSelectedDuration] = useState<number>(0)
 
   const { data: serviceData, isLoading, error } = useServiceBySlug(slug)
 
-  // Transform service data to match expected format
+  const isThai = i18n.language === 'th'
+
+  // Transform service data
   const service = useMemo(() => {
     if (!serviceData) return null
 
+    const durations = getAvailableDurations(serviceData)
+
     return {
       id: serviceData.id,
-      name_en: serviceData.name_en || serviceData.name_th,
-      name_th: serviceData.name_th,
+      name: isThai
+        ? (serviceData.name_th || serviceData.name_en)
+        : (serviceData.name_en || serviceData.name_th),
+      name_sub: isThai
+        ? serviceData.name_en
+        : serviceData.name_th,
       base_price: Number(serviceData.base_price || 0),
-      hotel_price: Number(serviceData.hotel_price || serviceData.base_price || 0),
       category: serviceData.category,
-      rating: 4.5, // Default rating
-      reviews: 0, // Default reviews
       duration: serviceData.duration || 60,
+      durations,
       image_url: serviceData.image_url,
-      description_en: serviceData.description_en || '',
-      description_th: serviceData.description_th || '',
-      benefits: [], // Parse from description or separate field
+      description: isThai
+        ? (serviceData.description_th || serviceData.description_en || '')
+        : (serviceData.description_en || serviceData.description_th || ''),
       addOns: serviceData.addons?.map(addon => ({
         id: addon.id,
-        name: addon.name_en || addon.name_th,
+        name: isThai
+          ? (addon.name_th || addon.name_en)
+          : (addon.name_en || addon.name_th),
+        description: isThai
+          ? (addon.description_th || addon.description_en || '')
+          : (addon.description_en || addon.description_th || ''),
         price: Number(addon.price || 0),
-        description: addon.description_en || addon.description_th || '',
       })) || [],
+      raw: serviceData,
     }
-  }, [serviceData])
+  }, [serviceData, isThai])
+
+  // Auto-select default duration
+  useMemo(() => {
+    if (service && selectedDuration === 0) {
+      setSelectedDuration(service.duration || service.durations[0])
+    }
+  }, [service])
 
   const IconComponent = service ? categoryIcons[service.category] || Sparkles : Sparkles
 
@@ -99,12 +118,13 @@ function ServiceDetails() {
     )
   }
 
-  const basePrice = service.base_price
+  const activeDuration = selectedDuration || service.durations[0]
+  const servicePrice = getPriceForDuration(service.raw, activeDuration)
   const addOnsPrice = selectedAddOns.reduce((sum, id) => {
-    const addOn = addOns.find((a: any) => a.id === id)
+    const addOn = addOns.find(a => a.id === id)
     return sum + (addOn?.price || 0)
   }, 0)
-  const totalPrice = (basePrice + addOnsPrice) * quantity
+  const totalPrice = servicePrice + addOnsPrice
 
   // Category display names
   const categoryNames: Record<string, string> = {
@@ -123,16 +143,18 @@ function ServiceDetails() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Service Info */}
           <div className="lg:col-span-2">
+            {/* Image */}
             <div className="rounded-2xl h-80 overflow-hidden mb-6 border border-stone-200 bg-gray-100">
               {service.image_url ? (
                 <img
                   src={service.image_url}
-                  alt={service.name_en}
+                  alt={service.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      service.name_en
+                      service.name
                     )}&background=f59e0b&color=fff&size=600`
                   }}
                 />
@@ -143,62 +165,93 @@ function ServiceDetails() {
               )}
             </div>
 
+            {/* Service Info Card */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-stone-100">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-light text-stone-900 mb-2 tracking-tight">{service.name_en}</h1>
-                  <p className="text-lg text-stone-500 font-light">{service.name_th}</p>
-                </div>
-                {/* Rating section removed since we don't have review data yet */}
+              <div className="mb-4">
+                <h1 className="text-3xl font-light text-stone-900 mb-1 tracking-tight">{service.name}</h1>
+                {service.name_sub && (
+                  <p className="text-lg text-stone-400 font-light">{service.name_sub}</p>
+                )}
               </div>
 
-              <div className="flex items-center gap-6 text-stone-600 mb-6">
-                <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  {service.duration} {t('services:details.minutes')}
-                </span>
-                <span className="flex items-center gap-2">
-                  <IconComponent className="w-4 h-4 text-amber-700" />
+              <div className="flex items-center gap-4 text-stone-600 mb-6">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-medium">
+                  <IconComponent className="w-4 h-4" />
                   {categoryNames[service.category]}
                 </span>
+                <span className="flex items-center gap-1.5 text-sm text-stone-500">
+                  <Clock className="w-4 h-4" />
+                  {service.durations.length > 1
+                    ? `${service.durations[0]}-${service.durations[service.durations.length - 1]} ${t('services:details.min')}`
+                    : `${service.durations[0]} ${t('services:details.min')}`
+                  }
+                </span>
+                <span className="text-sm text-stone-500">
+                  {t('services:details.startingFrom')}{' '}
+                  <span className="font-semibold text-amber-700">
+                    ฿{getPriceForDuration(service.raw, service.durations[0]).toLocaleString()}
+                  </span>
+                </span>
               </div>
 
-              <div className="prose max-w-none">
-                {service.description_en && (
-                  <>
-                    <h3 className="text-lg font-medium mb-3 text-stone-900">{t('services:details.description')}</h3>
-                    <p className="text-stone-700 font-light leading-relaxed">{service.description_en}</p>
-                  </>
-                )}
-
-                {service.description_th && (
-                  <>
-                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">{t('services:details.descriptionTh')}</h3>
-                    <p className="text-stone-700 font-light leading-relaxed">{service.description_th}</p>
-                  </>
-                )}
-
-                {service.benefits.length > 0 && (
-                  <>
-                    <h3 className="text-lg font-medium mt-6 mb-3 text-stone-900">{t('services:details.benefits')}</h3>
-                    <ul className="space-y-2 text-stone-700">
-                      {service.benefits.map((benefit: string, i: number) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
+              {/* Description */}
+              {service.description ? (
+                <div className="prose max-w-none">
+                  <h3 className="text-lg font-medium mb-3 text-stone-900">{t('services:details.description')}</h3>
+                  <p className="text-stone-700 font-light leading-relaxed whitespace-pre-line">{service.description}</p>
+                </div>
+              ) : (
+                <p className="text-stone-400 italic text-sm">{t('services:details.noDescription')}</p>
+              )}
             </div>
 
+            {/* Duration & Pricing Card */}
+            {service.durations.length > 1 && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-stone-100">
+                <h3 className="text-xl font-medium text-stone-900 mb-4">{t('services:details.durationAndPricing')}</h3>
+                <div className="grid gap-3">
+                  {service.durations.map((dur) => {
+                    const price = getPriceForDuration(service.raw, dur)
+                    const isSelected = activeDuration === dur
+                    return (
+                      <button
+                        key={dur}
+                        onClick={() => setSelectedDuration(dur)}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition ${
+                          isSelected
+                            ? 'border-amber-500 bg-amber-50'
+                            : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'border-amber-500 bg-amber-500' : 'border-stone-300'
+                          }`}>
+                            {isSelected && <Check className="w-4 h-4 text-white" />}
+                          </div>
+                          <div className="text-left">
+                            <span className="font-medium text-stone-900">{dur} {t('services:details.minutes')}</span>
+                            <span className="text-sm text-stone-500 ml-2">
+                              ({dur / 60 >= 1 ? `${Math.floor(dur / 60)}${dur % 60 > 0 ? `.${dur % 60}` : ''} ${isThai ? 'ชั่วโมง' : 'hr'}` : ''})
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`text-lg font-semibold ${isSelected ? 'text-amber-700' : 'text-stone-700'}`}>
+                          ฿{price.toLocaleString()}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Add-ons Card */}
             {addOns.length > 0 && (
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
                 <h3 className="text-xl font-medium text-stone-900 mb-4">{t('services:details.addons')}</h3>
                 <div className="space-y-3">
-                  {addOns.map((addOn: any) => (
+                  {addOns.map((addOn) => (
                     <button
                       key={addOn.id}
                       onClick={() => toggleAddOn(addOn.id)}
@@ -211,16 +264,18 @@ function ServiceDetails() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium text-stone-900">{addOn.name}</h4>
-                          <p className="text-sm text-stone-500 font-light">{addOn.description}</p>
+                          {addOn.description && (
+                            <p className="text-sm text-stone-500 font-light mt-0.5">{addOn.description}</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-amber-700">+฿{addOn.price}</span>
+                          <span className="font-semibold text-amber-700">+฿{addOn.price.toLocaleString()}</span>
                           <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                             selectedAddOns.includes(addOn.id)
                               ? 'border-amber-500 bg-amber-500 text-white'
                               : 'border-stone-300'
                           }`}>
-                            {selectedAddOns.includes(addOn.id) && '✓'}
+                            {selectedAddOns.includes(addOn.id) && <Check className="w-4 h-4" />}
                           </span>
                         </div>
                       </div>
@@ -231,44 +286,31 @@ function ServiceDetails() {
             )}
           </div>
 
+          {/* Right Column - Booking Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-stone-100">
               <h3 className="text-xl font-medium text-stone-900 mb-6">{t('services:details.bookingSummary')}</h3>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-stone-700 mb-3">{t('services:details.quantity')}</label>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 rounded-full border-2 border-stone-300 flex items-center justify-center hover:border-amber-500 transition"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="text-xl font-medium">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 rounded-full border-2 border-stone-300 flex items-center justify-center hover:border-amber-500 transition"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
               <div className="space-y-3 mb-6 pb-6 border-b border-stone-200">
+                {/* Service + Duration */}
                 <div className="flex justify-between text-stone-600">
-                  <span>{t('services:details.service')}</span>
-                  <span>฿{basePrice.toLocaleString()}</span>
-                </div>
-                {selectedAddOns.length > 0 && (
-                  <div className="flex justify-between text-stone-600">
-                    <span>{t('services:details.addons')}</span>
-                    <span>฿{addOnsPrice.toLocaleString()}</span>
+                  <div>
+                    <span>{service.name}</span>
+                    <span className="text-stone-400 text-sm ml-1">({activeDuration} {t('services:details.min')})</span>
                   </div>
-                )}
-                <div className="flex justify-between text-stone-600">
-                  <span>{t('services:details.quantity')}</span>
-                  <span>x{quantity}</span>
+                  <span className="font-medium">฿{servicePrice.toLocaleString()}</span>
                 </div>
+                {/* Selected Add-ons */}
+                {selectedAddOns.map(id => {
+                  const addon = addOns.find(a => a.id === id)
+                  if (!addon) return null
+                  return (
+                    <div key={id} className="flex justify-between text-stone-500 text-sm">
+                      <span>+ {addon.name}</span>
+                      <span>฿{addon.price.toLocaleString()}</span>
+                    </div>
+                  )
+                })}
               </div>
 
               <div className="flex justify-between items-center mb-6">
@@ -277,21 +319,11 @@ function ServiceDetails() {
               </div>
 
               <Link
-                to={`/booking?service=${slug}&addons=${selectedAddOns.join(',')}&qty=${quantity}`}
+                to={`/booking?service=${slug}&duration=${activeDuration}${selectedAddOns.length > 0 ? `&addons=${selectedAddOns.join(',')}` : ''}`}
                 className="block w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white text-center py-4 rounded-xl font-medium hover:shadow-lg transition transform hover:scale-105 shadow-md"
               >
                 {t('services:details.bookService')}
               </Link>
-
-              {/* Show hotel discount if user is from hotel */}
-              <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p className="text-sm text-amber-800">
-                  <span className="font-medium">{t('services:details.hotelPrice')}</span> {t('services:details.hotelPriceSpecial')} ฿{service.hotel_price.toLocaleString()}
-                  <span className="text-green-700 font-medium ml-1">
-                    ({t('services:details.save')} {Math.round(((basePrice - service.hotel_price) / basePrice) * 100)}%)
-                  </span>
-                </p>
-              </div>
 
               <div className="mt-6 pt-6 border-t border-stone-200 text-center">
                 <p className="text-sm text-stone-500">{t('services:details.questions')}</p>

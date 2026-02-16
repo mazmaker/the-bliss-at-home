@@ -8,3 +8,4 @@ export * from './taxInformationService';
 export * from './sosService';
 export * from './thaiGeographyService';
 export * as promotionService from './promotionService';
+export type { PromoValidationResult } from './promotionService';

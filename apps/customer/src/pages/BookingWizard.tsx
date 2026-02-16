@@ -2,13 +2,18 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from '@bliss/i18n'
 import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus, QrCode, Smartphone, Wallet } from 'lucide-react'
-import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
+import { useServiceBySlug, useServiceById } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
-import { useCreateBooking } from '@bliss/supabase/hooks/useBookings'
+import { useCreateBookingWithServices } from '@bliss/supabase/hooks/useBookings'
 import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
 import { usePaymentMethods } from '@bliss/supabase/hooks/usePaymentMethods'
+import { Database, PromoValidationResult } from '@bliss/supabase'
 import PaymentForm from '../components/PaymentForm'
 import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
+import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
+import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
+import { CoupleServiceConfig } from '../components/CoupleServiceConfig'
+import { VoucherCodeInput } from '../components/VoucherCodeInput'
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -22,15 +27,26 @@ function BookingWizard() {
   const serviceSlug = searchParams.get('service') || 'thai-massage-2hr'
   const addOnsParam = searchParams.get('addons')?.split(',').filter(Boolean) || []
   const qtyParam = Number(searchParams.get('qty')) || 1
+  const durationParam = Number(searchParams.get('duration')) || 0
 
   // Fetch data from Supabase
   const { data: serviceData, isLoading: serviceLoading } = useServiceBySlug(serviceSlug)
   const { data: customer } = useCurrentCustomer()
   const { data: addresses } = useAddresses(customer?.id)
   const { data: paymentMethods } = usePaymentMethods(customer?.id)
-  const createBooking = useCreateBooking()
+  const createBookingWithServices = useCreateBookingWithServices()
 
   const [currentStep, setCurrentStep] = useState<Step>(1)
+  // New state for customer type, duration, couple config
+  const [customerType, setCustomerType] = useState<'single' | 'couple'>('single')
+  const [coupleFormat, setCoupleFormat] = useState<'simultaneous' | 'sequential'>('simultaneous')
+  const [selectedDuration, setSelectedDuration] = useState<number>(0) // will be set from service
+  const [person2ServiceId, setPerson2ServiceId] = useState<string | null>(null)
+  const [person2Duration, setPerson2Duration] = useState<number>(0)
+  const [person1AddOns, setPerson1AddOns] = useState<string[]>([])
+  const [person2AddOns, setPerson2AddOns] = useState<string[]>([])
+  // Voucher
+  const [appliedPromo, setAppliedPromo] = useState<PromoValidationResult | null>(null)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [providerPreference, setProviderPreference] = useState<ProviderPreference>('no-preference')
@@ -62,6 +78,11 @@ function BookingWizard() {
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
   const [createdBookingNumber, setCreatedBookingNumber] = useState<string | null>(null)
 
+  // Fetch person2's service data if different from person1
+  const { data: person2ServiceData } = useServiceById(
+    person2ServiceId && person2ServiceId !== serviceData?.id ? person2ServiceId : undefined
+  )
+
   // Transform service data
   const service = useMemo(() => {
     if (!serviceData) return null
@@ -70,21 +91,71 @@ function BookingWizard() {
       name: serviceData.name_en || serviceData.name_th,
       price: Number(serviceData.base_price || 0),
       duration: (serviceData.duration || 60) / 60, // Convert to hours
+      durationMinutes: serviceData.duration || 60,
       category: serviceData.category,
       description: serviceData.description_th || serviceData.description_en || '',
       image: serviceData.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
       addons: serviceData.addons || [],
+      raw: serviceData, // keep raw for duration/price helpers
     }
   }, [serviceData])
 
-  // Selected add-ons
+  // Person 2's service with addons (falls back to person1's service)
+  const person2Service = useMemo(() => {
+    if (person2ServiceId && person2ServiceData) return person2ServiceData
+    return serviceData || null
+  }, [person2ServiceId, person2ServiceData, serviceData])
+
+  // Auto-set duration from service when service data loads
+  useEffect(() => {
+    if (serviceData) {
+      const durations = getAvailableDurations(serviceData)
+      if (selectedDuration === 0 || !durations.includes(selectedDuration)) {
+        // Use duration from URL param if valid, otherwise use service default
+        const initialDuration = durationParam && durations.includes(durationParam)
+          ? durationParam
+          : (serviceData.duration || durations[0])
+        setSelectedDuration(initialDuration)
+      }
+      if (person2Duration === 0) {
+        setPerson2Duration(serviceData.duration || durations[0])
+      }
+    }
+  }, [serviceData])
+
+  // Init person1AddOns from URL params
+  useEffect(() => {
+    if (addOnsParam.length > 0 && person1AddOns.length === 0) {
+      setPerson1AddOns(addOnsParam)
+    }
+  }, [addOnsParam])
+
+  // Price calculation
+  const person1Price = service?.raw ? getPriceForDuration(service.raw, selectedDuration) : 0
+  const person1AddonTotal = service?.addons
+    .filter((a) => (customerType === 'couple' ? person1AddOns : addOnsParam).includes(a.id))
+    .reduce((sum, a) => sum + Number(a.price), 0) || 0
+
+  const p2Svc = person2Service || serviceData
+  const person2PriceVal = p2Svc ? getPriceForDuration(p2Svc, person2Duration) : 0
+  const person2AddonTotal = p2Svc
+    ? (p2Svc.addons || [])
+        .filter((a: any) => person2AddOns.includes(a.id))
+        .reduce((sum: number, a: any) => sum + Number(a.price), 0)
+    : 0
+
+  const subtotal = customerType === 'couple'
+    ? person1Price + person1AddonTotal + person2PriceVal + person2AddonTotal
+    : (person1Price + person1AddonTotal) * qtyParam
+
+  const discountAmount = appliedPromo?.valid ? appliedPromo.discountAmount : 0
+  const totalPrice = Math.max(0, subtotal - discountAmount)
+
+  // Selected add-ons (for backwards compat in review step)
   const selectedAddOns = useMemo(() => {
     if (!service?.addons) return []
     return service.addons.filter((addon) => addOnsParam.includes(addon.id))
   }, [service?.addons, addOnsParam])
-
-  const addOnPrice = selectedAddOns.reduce((sum, a) => sum + Number(a.price), 0)
-  const totalPrice = service ? (service.price + addOnPrice) * qtyParam : 0
 
   // Auto-select default address when addresses are loaded
   useEffect(() => {
@@ -368,35 +439,78 @@ function BookingWizard() {
         address.zipcode,
       ].filter(Boolean).join(', ')
 
-      // Create booking with real data matching schema
-      const bookingData = {
-        customer_id: customer.id,
-        service_id: service.id,
-        booking_date: selectedDate, // DATE format: YYYY-MM-DD
-        booking_time: selectedTime, // TIME format: HH:MM
-        duration: service.duration * 60, // minutes
-        base_price: service.price,
-        final_price: totalPrice,
-        customer_notes: notes || null,
-        address: fullAddress || null,
+      // Determine service format
+      const serviceFormat = customerType === 'couple' ? coupleFormat : 'single'
+      const recipientCount = customerType === 'couple' ? 2 : 1
+
+      // Build services array
+      const services: Array<{
+        service_id: string
+        duration: number
+        price: number
+        recipient_index: number
+        recipient_name?: string
+        sort_order?: number
+      }> = [
+        {
+          service_id: service.id,
+          duration: selectedDuration,
+          price: person1Price,
+          recipient_index: 0,
+          sort_order: 0,
+        },
+      ]
+
+      if (customerType === 'couple' && p2Svc) {
+        services.push({
+          service_id: p2Svc.id,
+          duration: person2Duration,
+          price: person2PriceVal,
+          recipient_index: 1,
+          sort_order: 1,
+        })
       }
 
-      // Prepare add-ons data
-      const addonsData = selectedAddOns.map((addon) => ({
-        addon_id: addon.id,
-        quantity: 1,
-        price_per_unit: Number(addon.price),
-        total_price: Number(addon.price),
-      }))
+      // Prepare add-ons data (combine person1 + person2 add-ons)
+      const allAddOnIds = customerType === 'couple'
+        ? [...person1AddOns, ...person2AddOns]
+        : addOnsParam
 
-      const result = await createBooking.mutateAsync({
-        booking: bookingData,
+      const allAddonsForLookup = customerType === 'couple'
+        ? [...(service.addons || []), ...((p2Svc as any)?.addons || [])]
+        : service.addons || []
+
+      const addonsData = allAddOnIds.map((addonId) => {
+        const addon = allAddonsForLookup.find((a: any) => a.id === addonId)
+        return {
+          addon_id: addonId,
+          quantity: 1,
+          price_per_unit: addon ? Number(addon.price) : 0,
+          total_price: addon ? Number(addon.price) : 0,
+        }
+      })
+
+      const bookingId = await createBookingWithServices.mutateAsync({
+        bookingData: {
+          customer_id: customer.id,
+          booking_date: selectedDate,
+          booking_time: selectedTime,
+          address: fullAddress || null,
+          latitude: manualAddressLocation.latitude,
+          longitude: manualAddressLocation.longitude,
+          customer_notes: notes || null,
+          service_format: serviceFormat as 'single' | 'simultaneous' | 'sequential',
+          recipient_count: recipientCount,
+          discount_amount: discountAmount,
+          final_price: totalPrice,
+        },
+        services,
         addons: addonsData.length > 0 ? addonsData : undefined,
       })
 
-      // Store booking ID and number
-      setCreatedBookingId(result.id)
-      setCreatedBookingNumber(result.booking_number)
+      // Store booking ID
+      setCreatedBookingId(bookingId)
+      setCreatedBookingNumber(null) // will be set by DB trigger
 
       // Go to Payment step
       setCurrentStep(6)
@@ -492,6 +606,7 @@ function BookingWizard() {
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step1.title')}</h2>
 
+              {/* Service info card */}
               <div className="flex items-start gap-6 p-6 bg-stone-50 rounded-xl mb-6">
                 <div className="w-24 h-24 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
                   <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
@@ -500,35 +615,81 @@ function BookingWizard() {
                   <h3 className="font-semibold text-lg text-stone-900 mb-2">{service.name}</h3>
                   <p className="text-stone-600 text-sm mb-3">{service.description}</p>
                   <div className="flex items-center gap-4">
-                    <span className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('wizard.step2.hours')}</span>
-                    <span className="text-lg font-bold text-amber-700">฿{service.price}</span>
+                    <span className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {t('wizard.step1.minutes', { count: selectedDuration })}</span>
+                    <span className="text-lg font-bold text-amber-700">฿{person1Price.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
-              {selectedAddOns.length > 0 && (
+              {/* Duration Picker (single mode) */}
+              {customerType === 'single' && service.raw && (
+                <div className="mb-6">
+                  <ServiceDurationPicker
+                    service={service.raw}
+                    selectedDuration={selectedDuration}
+                    onDurationChange={setSelectedDuration}
+                  />
+                </div>
+              )}
+
+              {/* Customer Type Selector */}
+              <div className="mb-6">
+                <CustomerTypeSelector
+                  customerType={customerType}
+                  coupleFormat={coupleFormat}
+                  onCustomerTypeChange={(type) => {
+                    setCustomerType(type)
+                    // Reset voucher when switching mode
+                    setAppliedPromo(null)
+                  }}
+                  onCoupleFormatChange={setCoupleFormat}
+                />
+              </div>
+
+              {/* Single mode: Add-ons */}
+              {customerType === 'single' && selectedAddOns.length > 0 && (
                 <div className="mb-6">
                   <h4 className="font-semibold text-stone-900 mb-3">{t('wizard.step1.selectedAddons')}</h4>
                   <div className="space-y-2">
                     {selectedAddOns.map((addon) => (
                       <div key={addon.id} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
                         <span className="text-stone-700">{addon.name_th || addon.name_en}</span>
-                        <span className="text-amber-700 font-medium">+฿{addon.price}</span>
+                        <span className="text-amber-700 font-medium">+฿{Number(addon.price).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {qtyParam > 1 && (
+              {/* Couple mode: Per-person service config */}
+              {customerType === 'couple' && service.raw && (
+                <div className="mb-6">
+                  <CoupleServiceConfig
+                    person1Service={service.raw as any}
+                    person1Duration={selectedDuration}
+                    person1AddOns={person1AddOns}
+                    person2Service={person2Service as any}
+                    person2Duration={person2Duration}
+                    person2AddOns={person2AddOns}
+                    onPerson1DurationChange={setSelectedDuration}
+                    onPerson1AddOnsChange={setPerson1AddOns}
+                    onPerson2ServiceChange={(id) => setPerson2ServiceId(id)}
+                    onPerson2DurationChange={setPerson2Duration}
+                    onPerson2AddOnsChange={setPerson2AddOns}
+                  />
+                </div>
+              )}
+
+              {customerType === 'single' && qtyParam > 1 && (
                 <div className="mb-6 p-3 bg-stone-50 rounded-lg">
                   <span className="text-stone-700">{t('wizard.step1.quantity', { count: qtyParam })}</span>
                 </div>
               )}
 
+              {/* Price summary */}
               <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
                 <span className="font-semibold text-stone-900">{t('wizard.step1.totalPrice')}</span>
-                <span className="text-2xl font-bold text-amber-700">฿{totalPrice}</span>
+                <span className="text-2xl font-bold text-amber-700">฿{totalPrice.toLocaleString()}</span>
               </div>
             </div>
           )}
@@ -866,36 +1027,91 @@ function BookingWizard() {
             </div>
           )}
 
-          {/* Step 4: Review */}
+          {/* Step 5: Review */}
           {currentStep === 5 && (
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step5.title')}</h2>
 
               <div className="space-y-6">
-                {/* Service Info */}
-                <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl">
-                  <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
-                    <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-stone-900">{service.name}</h3>
-                    <p className="text-sm text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('wizard.step2.hours')}</p>
-                  </div>
-                  <span className="font-bold text-amber-700">฿{service.price * qtyParam}</span>
-                </div>
+                {/* Service Summary */}
+                <div>
+                  <h4 className="font-medium text-stone-900 mb-3">{t('wizard.step5.serviceSummary')}</h4>
 
-                {/* Add-ons */}
-                {selectedAddOns.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-stone-900 mb-2">{t('wizard.step5.addons')}</h4>
-                    {selectedAddOns.map((addon) => (
-                      <div key={addon.id} className="flex justify-between py-2 border-b border-stone-100">
-                        <span className="text-stone-600">{addon.name_th || addon.name_en}</span>
-                        <span className="text-stone-900">฿{addon.price * qtyParam}</span>
-                      </div>
-                    ))}
+                  {/* Person 1 */}
+                  <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl">
+                    <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
+                      <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-stone-900">
+                        {customerType === 'couple' && <span className="text-xs text-stone-500 block">{t('wizard.step1.person1')}</span>}
+                        {service.name}
+                      </h3>
+                      <p className="text-sm text-stone-600 flex items-center gap-1">
+                        <Clock className="w-4 h-4" /> {t('wizard.step1.minutes', { count: selectedDuration })}
+                      </p>
+                    </div>
+                    <span className="font-bold text-amber-700">฿{person1Price.toLocaleString()}</span>
                   </div>
-                )}
+
+                  {/* Person 1 Add-ons */}
+                  {customerType === 'single' && selectedAddOns.length > 0 && (
+                    <div className="mt-2">
+                      {selectedAddOns.map((addon) => (
+                        <div key={addon.id} className="flex justify-between py-2 px-4 border-b border-stone-100">
+                          <span className="text-sm text-stone-600">{addon.name_th || addon.name_en}</span>
+                          <span className="text-sm text-stone-900">+฿{Number(addon.price).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {customerType === 'couple' && person1AddOns.length > 0 && service.addons && (
+                    <div className="mt-2">
+                      {service.addons.filter(a => person1AddOns.includes(a.id)).map((addon) => (
+                        <div key={addon.id} className="flex justify-between py-2 px-4 border-b border-stone-100">
+                          <span className="text-sm text-stone-600">{addon.name_th || addon.name_en}</span>
+                          <span className="text-sm text-stone-900">+฿{Number(addon.price).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Person 2 (couple mode only) */}
+                  {customerType === 'couple' && p2Svc && (
+                    <>
+                      <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl mt-3">
+                        <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-stone-200 rounded-xl overflow-hidden">
+                          <img
+                            src={p2Svc.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80'}
+                            alt={p2Svc.name_th || p2Svc.name_en}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-stone-900">
+                            <span className="text-xs text-stone-500 block">{t('wizard.step1.person2')}</span>
+                            {p2Svc.name_th || p2Svc.name_en}
+                          </h3>
+                          <p className="text-sm text-stone-600 flex items-center gap-1">
+                            <Clock className="w-4 h-4" /> {t('wizard.step1.minutes', { count: person2Duration })}
+                          </p>
+                        </div>
+                        <span className="font-bold text-amber-700">฿{person2PriceVal.toLocaleString()}</span>
+                      </div>
+                      {/* Person 2 Add-ons */}
+                      {person2AddOns.length > 0 && (p2Svc as any).addons && (
+                        <div className="mt-2">
+                          {((p2Svc as any).addons as any[]).filter((a: any) => person2AddOns.includes(a.id)).map((addon: any) => (
+                            <div key={addon.id} className="flex justify-between py-2 px-4 border-b border-stone-100">
+                              <span className="text-sm text-stone-600">{addon.name_th || addon.name_en}</span>
+                              <span className="text-sm text-stone-900">+฿{Number(addon.price).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
 
                 {/* Date & Time */}
                 <div>
@@ -926,10 +1142,41 @@ function BookingWizard() {
                   </div>
                 )}
 
-                {/* Total */}
-                <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
-                  <span className="font-semibold text-stone-900">{t('wizard.step5.totalPrice')}</span>
-                  <span className="text-2xl font-bold text-amber-700">฿{totalPrice}</span>
+                {/* Voucher Code */}
+                {customer && service && (
+                  <VoucherCodeInput
+                    orderAmount={subtotal}
+                    userId={customer.id}
+                    serviceIds={customerType === 'couple' && p2Svc
+                      ? [service.id, p2Svc.id]
+                      : [service.id]
+                    }
+                    categories={customerType === 'couple' && p2Svc
+                      ? [service.category, p2Svc.category]
+                      : [service.category]
+                    }
+                    appliedPromo={appliedPromo}
+                    onApply={setAppliedPromo}
+                    onRemove={() => setAppliedPromo(null)}
+                  />
+                )}
+
+                {/* Price Summary */}
+                <div className="space-y-2 p-4 bg-stone-50 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <span className="text-stone-600">{t('wizard.step5.subtotal')}</span>
+                    <span className="font-medium text-stone-900">฿{subtotal.toLocaleString()}</span>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-center text-green-600">
+                      <span>{t('wizard.step5.discount')}</span>
+                      <span className="font-medium">-฿{discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-stone-200">
+                    <span className="font-semibold text-stone-900">{t('wizard.step5.totalPrice')}</span>
+                    <span className="text-2xl font-bold text-amber-700">฿{totalPrice.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>
