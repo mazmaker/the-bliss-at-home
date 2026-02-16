@@ -212,7 +212,7 @@ function Services() {
                 {/* Price */}
                 <div className="bg-stone-50 rounded-xl p-3 mb-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-stone-700">ราคา</span>
+                    <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
                     <span className="text-lg font-bold text-amber-700">฿{service.hotel_price}</span>
                   </div>
                 </div>

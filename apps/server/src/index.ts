@@ -11,9 +11,10 @@ import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
+import hotelRoutes from './routes/hotel.js'
 
 const app = express()
-const PORT = process.env.PORT || 3009
+const PORT = process.env.PORT || 3000
 
 // Middleware
 app.use(cors())
@@ -46,6 +47,7 @@ app.get('/api', (req: Request, res: Response) => {
       api: '/api',
       payments: '/api/payments',
       otp: '/api/otp',
+      hotels: '/api/hotels',
     },
   })
 })
@@ -55,6 +57,9 @@ app.use('/api/payments', paymentRoutes)
 
 // OTP routes
 app.use('/api/otp', otpRoutes)
+
+// Hotel authentication routes
+app.use('/api/hotels', hotelRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {
