@@ -11,6 +11,7 @@ import MonthlyBill from './pages/MonthlyBill'
 import HotelProfile from './pages/HotelProfile'
 import HotelSettings from './pages/HotelSettings'
 import { EnhancedHotelLogin } from './pages/auth'
+import DynamicHotelRedirect from './components/DynamicHotelRedirect'
 
 function App() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -30,16 +31,16 @@ function App() {
         path="/login"
         element={
           isAuthenticated ? (
-            <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
+            <DynamicHotelRedirect />
           ) : (
             <EnhancedHotelLogin />
           )
         }
       />
 
-      {/* Protected hotel routes with hotel ID parameter - require HOTEL role */}
+      {/* Protected hotel routes with hotel slug parameter - require HOTEL role */}
       <Route
-        path="/hotel/:hotelId"
+        path="/hotel/:hotelSlug"
         element={
           <ProtectedRoute allowedRoles={['HOTEL']} redirectTo="/login">
             <HotelLayout />
@@ -58,12 +59,10 @@ function App() {
       </Route>
 
       {/* Default redirects */}
-      <Route path="/hotel" element={
-        <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
-      } />
+      <Route path="/hotel" element={<DynamicHotelRedirect />} />
       <Route path="/" element={
         isAuthenticated ? (
-          <Navigate to="/hotel/550e8400-e29b-41d4-a716-446655440002" replace />
+          <DynamicHotelRedirect />
         ) : (
           <Navigate to="/login" replace />
         )

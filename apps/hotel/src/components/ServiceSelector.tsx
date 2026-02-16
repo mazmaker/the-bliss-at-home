@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Clock, Check, ChevronRight, User } from 'lucide-react'
 import { Service, ServiceSelection, DurationOption } from '../types/booking'
 import { PriceCalculator } from '../utils/priceCalculator'
+import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
 
 interface ServiceSelectorProps {
   services: Service[]
@@ -83,8 +84,11 @@ function ServiceSelector({
 
     setSelectedDuration(duration)
 
-    // Calculate the correct price for the selected duration
-    const calculatedPrice = PriceCalculator.calculateServicePrice(service, duration, 'single')
+    // Calculate the correct price for the selected duration with hotel discount
+
+    const calculatedPrice = service.discount_rate && service.discount_rate > 0
+      ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, duration, service.discount_rate, 'single')
+      : PriceCalculator.calculateServicePrice(service, duration, 'single')
 
     onServiceSelect({
       id: `${recipientIndex}-${service.id}-${duration}`,
@@ -242,8 +246,10 @@ function ServiceSelector({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {getDurationOptions(selectedServiceData).map((option) => {
                 const isSelected = selectedDuration === option.value
-                // Calculate the correct price for this duration option
-                const calculatedPrice = PriceCalculator.calculateServicePrice(selectedServiceData, option.value, 'single')
+                // Calculate the correct price for this duration option with hotel discount
+                const calculatedPrice = selectedServiceData.discount_rate && selectedServiceData.discount_rate > 0
+                  ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(selectedServiceData, option.value, selectedServiceData.discount_rate, 'single')
+                  : PriceCalculator.calculateServicePrice(selectedServiceData, option.value, 'single')
 
                 return (
                   <button

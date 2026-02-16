@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { Search, Clock, Info, RefreshCw, AlertCircle } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Search, Clock, Info, RefreshCw, AlertCircle, Percent } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
-import BookingModal from '../components/BookingModal'
+import { useHotelContext } from '../hooks/useHotelContext'
+import BookingModalNew from '../components/BookingModalNew'
 
 // Service interface matching database structure
 interface Service {
@@ -13,9 +14,12 @@ interface Service {
   description_en?: string | null
   category: 'massage' | 'nail' | 'spa' | 'facial'
   duration: number
-  duration_options?: number[] | null // Multiple duration options
+  duration_options?: any // Use any to handle Json type from database
   base_price: number
   hotel_price: number
+  price_60?: number | null
+  price_90?: number | null
+  price_120?: number | null
   image_url?: string | null
   is_active: boolean | null
   sort_order?: number | null
@@ -44,20 +48,42 @@ function Services() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
 
+  // Get hotel context for discount rate
+  const { getCommissionRate } = useHotelContext()
+
+  // Memoize discount rate to prevent recalculation
+  const discountRate = useMemo(() => getCommissionRate(), [getCommissionRate])
+
+  // Calculate discounted price based on hotel's discount rate
+  const calculateDiscountedPrice = useCallback((originalPrice: number): number => {
+    const discountAmount = originalPrice * (discountRate / 100)
+    const discountedPrice = originalPrice - discountAmount
+
+    return discountedPrice
+  }, [discountRate])
+
+  // Get discount percentage for display
+  const getDiscountPercentage = useCallback((): number => {
+    return discountRate
+  }, [discountRate])
+
   // Query services from database
   const { data: services = [], isLoading, error, refetch } = useQuery({
     queryKey: ['hotel-services'],
     queryFn: fetchServices,
   })
 
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      service.name_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.name_th?.includes(searchQuery)
-    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter
-    return matchesSearch && matchesCategory
-  })
+
+  const filteredServices = useMemo(() => {
+    return services.filter((service) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        service.name_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.name_th?.includes(searchQuery)
+      const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter
+      return matchesSearch && matchesCategory
+    })
+  }, [services, searchQuery, categoryFilter])
 
   const categoryLabels = {
     all: 'ทั้งหมด',
@@ -66,30 +92,25 @@ function Services() {
     spa: 'สปา',
   }
 
-  // Helper function to format duration options display
-  const formatDurationOptions = (service: Service) => {
-    // Use duration_options if available and valid
-    if (service.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0) {
-      // Sort durations and format as "60, 90, 120 นาที"
-      const sortedDurations = [...service.duration_options].sort((a, b) => a - b)
-      return `${sortedDurations.join(', ')} นาที`
-    }
-
-    // Fallback to single duration
-    return `${service.duration} นาที`
-  }
 
   // Function to open booking modal
-  const handleBookService = (service: Service) => {
-    setSelectedService(service)
+  const handleBookService = useCallback((service: Service) => {
+    // Create service object with discount information - DON'T modify hotel_price
+    const serviceWithDiscount = {
+      ...service,
+      original_price: service.hotel_price, // Keep original price for reference
+      discount_rate: discountRate // Add discount rate for enhanced calculations
+    }
+
+    setSelectedService(serviceWithDiscount)
     setIsBookingModalOpen(true)
-  }
+  }, [discountRate])
 
   // Function to close booking modal
-  const handleCloseBookingModal = () => {
+  const handleCloseBookingModal = useCallback(() => {
     setIsBookingModalOpen(false)
     setSelectedService(null)
-  }
+  }, [])
 
 
   // Loading state
@@ -203,17 +224,72 @@ function Services() {
                 <p className="text-sm text-stone-500 mb-3">{service.name_en}</p>
                 <p className="text-sm text-stone-600 mb-4 line-clamp-2">{service.description_th || service.description_en}</p>
 
-                {/* Duration */}
-                <div className="flex items-center gap-1 mb-4 text-sm text-stone-600">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatDurationOptions(service)}</span>
-                </div>
-
-                {/* Price */}
+                {/* Duration Options with Prices */}
                 <div className="bg-stone-50 rounded-xl p-3 mb-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
-                    <span className="text-lg font-bold text-amber-700">฿{service.hotel_price}</span>
+                    <div className="flex items-center gap-1 text-green-600">
+                      <Percent className="w-3 h-3" />
+                      <span className="text-xs font-medium">
+                        -{getDiscountPercentage()}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Duration Options with Individual Prices */}
+                  <div className="space-y-2">
+                    {service.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0
+                      ? service.duration_options.sort((a, b) => a - b).map((duration) => {
+                          // Get original price for this specific duration from admin-set prices
+                          let originalPriceForDuration: number
+                          if (duration === 60 && service.price_60) {
+                            originalPriceForDuration = service.price_60
+                          } else if (duration === 90 && service.price_90) {
+                            originalPriceForDuration = service.price_90
+                          } else if (duration === 120 && service.price_120) {
+                            originalPriceForDuration = service.price_120
+                          } else {
+                            // Fallback to proportional calculation if specific price not set
+                            originalPriceForDuration = Math.round((service.hotel_price / service.duration) * duration)
+                          }
+
+                          const discountedPriceForDuration = Math.round(calculateDiscountedPrice(originalPriceForDuration))
+
+                          return (
+                            <div key={duration} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-3 h-3 text-stone-400" />
+                                <span className="text-xs text-stone-600">{duration} นาที</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-stone-500 line-through">
+                                  ฿{originalPriceForDuration.toLocaleString()}
+                                </div>
+                                <div className="text-sm font-bold text-amber-700">
+                                  ฿{discountedPriceForDuration.toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })
+                      : (
+                        // Fallback for single duration
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-stone-400" />
+                            <span className="text-xs text-stone-600">{service.duration} นาที</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs text-stone-500 line-through">
+                              ฿{service.hotel_price}
+                            </div>
+                            <div className="text-sm font-bold text-amber-700">
+                              ฿{Math.round(calculateDiscountedPrice(service.hotel_price))}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
                   </div>
                 </div>
 
@@ -243,10 +319,14 @@ function Services() {
 
       {/* Booking Modal */}
       {selectedService && (
-        <BookingModal
+        <BookingModalNew
           isOpen={isBookingModalOpen}
           onClose={handleCloseBookingModal}
-          service={selectedService}
+          initialService={selectedService}
+          onSuccess={() => {
+            // Optional callback after successful booking
+            handleCloseBookingModal()
+          }}
         />
       )}
     </div>
