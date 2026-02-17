@@ -87,15 +87,6 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   const services = useMemo(() => {
     if (!initialService) return rawServices
 
-    console.log('📋 BookingModalNew - Merging initialService data:', {
-      initialServiceId: initialService.id,
-      discount_rate: initialService.discount_rate,
-      original_price: initialService.original_price,
-      price_60: initialService.price_60,
-      price_90: initialService.price_90,
-      price_120: initialService.price_120
-    })
-
     return rawServices.map(service => {
       if (service.id === initialService.id) {
         // Merge discount information from initialService
@@ -107,11 +98,6 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
           price_90: initialService.price_90,
           price_120: initialService.price_120
         }
-
-        console.log('🔄 BookingModalNew - Merged service:', {
-          serviceId: service.id,
-          mergedService
-        })
 
         return mergedService
       }
@@ -126,39 +112,12 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
 
   const today = new Date().toISOString().split('T')[0]
 
-  // Initialize with initial service if provided
+  // Initialize service mode when modal opens with initial service
   useEffect(() => {
-    if (isOpen && initialService && services.length > 0) {
-      // Auto-select single mode and add the initial service
+    if (isOpen && initialService) {
       setServiceMode('single')
-      // Calculate discounted price using EnhancedPriceCalculator if discount rate available
-      const discountedPrice = initialService.discount_rate && initialService.discount_rate > 0
-        ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(
-            initialService,
-            initialService.duration,
-            initialService.discount_rate,
-            'single'
-          )
-        : initialService.hotel_price
-
-      console.log('🎯 BookingModalNew - Initial Service Price Calculation:', {
-        serviceName: initialService.name_th,
-        duration: initialService.duration,
-        originalPrice: initialService.hotel_price,
-        discountRate: initialService.discount_rate,
-        discountedPrice
-      })
-
-      addServiceSelection({
-        id: `0-${initialService.id}-${initialService.duration}`,
-        service: initialService,
-        duration: initialService.duration,
-        recipientIndex: 0,
-        price: discountedPrice,
-        sortOrder: 0
-      })
     }
-  }, [isOpen, initialService, services.length])
+  }, [isOpen, initialService, setServiceMode])
 
   // Reset when modal closes
   useEffect(() => {
@@ -351,6 +310,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                         onServiceSelect={addServiceSelection}
                         onClearSelection={() => clearServiceSelections()}
                         disabled={servicesLoading}
+                        initialServiceId={initialService?.id}
                       />
                     )}
 
