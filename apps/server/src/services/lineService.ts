@@ -1,0 +1,231 @@
+/**
+ * LINE Messaging API Service (Server-side)
+ * Sends LINE push/multicast messages securely using server-side token
+ */
+
+interface LineMessage {
+  type: 'text' | 'flex'
+  text?: string
+  altText?: string
+  contents?: any
+}
+
+interface JobNotificationData {
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  staffEarnings: number
+  durationMinutes: number
+  jobIds?: string[]
+  // Couple booking fields
+  isCouple?: boolean
+  recipientIndex?: number
+  recipientName?: string | null
+  totalRecipients?: number
+  coupleServices?: Array<{
+    recipientIndex: number
+    recipientName: string | null
+    serviceName: string
+    durationMinutes: number
+    staffEarnings: number
+  }>
+}
+
+interface BookingNotificationData {
+  bookingNumber: string
+  customerName: string
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  finalPrice: number
+  hotelName?: string | null
+  isHotelBooking: boolean
+}
+
+// Lazy initialization
+let channelAccessToken: string | null = null
+
+function getToken(): string {
+  if (!channelAccessToken) {
+    channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN || ''
+    if (!channelAccessToken) {
+      console.warn('⚠️ LINE: LINE_CHANNEL_ACCESS_TOKEN not configured')
+    }
+  }
+  return channelAccessToken
+}
+
+const API_URL = 'https://api.line.me/v2/bot/message'
+
+/**
+ * Push message to a single user by LINE User ID
+ */
+async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise<boolean> {
+  const token = getToken()
+  if (!token) return false
+
+  try {
+    const response = await fetch(`${API_URL}/push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ to: lineUserId, messages }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error('LINE push error:', JSON.stringify(error))
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('LINE push failed:', error)
+    return false
+  }
+}
+
+/**
+ * Multicast message to multiple users (max 500 per call)
+ */
+async function multicast(lineUserIds: string[], messages: LineMessage[]): Promise<boolean> {
+  const token = getToken()
+  if (!token || lineUserIds.length === 0) return false
+
+  try {
+    // LINE multicast supports max 500 recipients per call
+    const batches: string[][] = []
+    for (let i = 0; i < lineUserIds.length; i += 500) {
+      batches.push(lineUserIds.slice(i, i + 500))
+    }
+
+    let allSuccess = true
+    for (const batch of batches) {
+      const response = await fetch(`${API_URL}/multicast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ to: batch, messages }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('LINE multicast error:', JSON.stringify(error))
+        allSuccess = false
+      }
+    }
+
+    return allSuccess
+  } catch (error) {
+    console.error('LINE multicast failed:', error)
+    return false
+  }
+}
+
+/**
+ * Send new job notification to staff via LINE
+ */
+async function sendNewJobToStaff(lineUserIds: string[], data: JobNotificationData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}${data.roomNumber ? ` ห้อง ${data.roomNumber}` : ''}`
+    : `📍 สถานที่: ${data.address}`
+
+  // Build deep link to staff app
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  let linkText = 'เปิดแอปเพื่อรับงานนี้'
+  if (staffLiffUrl && data.jobIds && data.jobIds.length === 1) {
+    // Single job: link directly to job detail
+    linkText = `👉 ดูรายละเอียดงาน:\n${staffLiffUrl}/staff/jobs/${data.jobIds[0]}`
+  } else if (staffLiffUrl) {
+    // Multiple jobs or no jobId: link to jobs list
+    linkText = `👉 ดูรายละเอียดงาน:\n${staffLiffUrl}/staff/jobs`
+  }
+
+  let messageText: string
+
+  if (data.isCouple && data.coupleServices && data.coupleServices.length > 0) {
+    // Couple booking: show per-recipient details with individual job links
+    const recipientDetails = data.coupleServices
+      .map((s, idx) => {
+        const name = s.recipientName || `คนที่ ${s.recipientIndex + 1}`
+        const jobLink = staffLiffUrl && data.jobIds && data.jobIds[idx]
+          ? `\n  👉 ${staffLiffUrl}/staff/jobs/${data.jobIds[idx]}`
+          : ''
+        return `  👤 ${name}: ${s.serviceName} (${s.durationMinutes} นาที) — ${s.staffEarnings.toLocaleString()} บาท${jobLink}`
+      })
+      .join('\n')
+
+    messageText =
+      `🔔 มีงาน Couple ใหม่! (ต้องการ ${data.totalRecipients} คน)\n\n` +
+      `📅 วันที่: ${data.scheduledDate}\n` +
+      `⏰ เวลา: ${data.scheduledTime}\n` +
+      `${locationText}\n\n` +
+      `💆 รายละเอียดงาน:\n${recipientDetails}`
+  } else {
+    // Single booking
+    messageText =
+      `🔔 มีงานใหม่!\n\n` +
+      `💆 บริการ: ${data.serviceName}\n` +
+      `📅 วันที่: ${data.scheduledDate}\n` +
+      `⏰ เวลา: ${data.scheduledTime}\n` +
+      `⏱️ ระยะเวลา: ${data.durationMinutes} นาที\n` +
+      `${locationText}\n` +
+      `💰 รายได้: ${data.staffEarnings.toLocaleString()} บาท\n\n` +
+      linkText
+  }
+
+  const message: LineMessage = { type: 'text', text: messageText }
+  return multicast(lineUserIds, [message])
+}
+
+/**
+ * Send new booking notification to admin via LINE
+ */
+async function sendNewBookingToAdmin(lineUserIds: string[], data: BookingNotificationData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const bookingTypeText = data.isHotelBooking
+    ? `🏨 จองผ่านโรงแรม: ${data.hotelName}`
+    : `👤 จองโดยลูกค้า`
+
+  const message: LineMessage = {
+    type: 'text',
+    text:
+      `📋 มีการจองใหม่!\n\n` +
+      `🔢 เลขที่จอง: ${data.bookingNumber}\n` +
+      `👤 ลูกค้า: ${data.customerName}\n` +
+      `💆 บริการ: ${data.serviceName}\n` +
+      `📅 วันที่: ${data.scheduledDate}\n` +
+      `⏰ เวลา: ${data.scheduledTime}\n` +
+      `💰 ราคา: ${data.finalPrice.toLocaleString()} บาท\n` +
+      `${bookingTypeText}\n\n` +
+      `ตรวจสอบรายละเอียดในระบบ Admin`,
+  }
+
+  // Send to each admin individually (may have different LINE User IDs)
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) allSuccess = false
+  }
+
+  return allSuccess
+}
+
+export const lineService = {
+  pushMessage,
+  multicast,
+  sendNewJobToStaff,
+  sendNewBookingToAdmin,
+}
+
+export type { LineMessage, JobNotificationData, BookingNotificationData }
