@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useSOSNotifications } from '../hooks/useSOSNotifications'
+import { useBookingNotifications } from '../hooks/useBookingNotifications'
 import {
   LayoutDashboard,
   Package,
@@ -23,6 +24,8 @@ import {
   MapPin,
   ArrowRight,
   TrendingUp,
+  CalendarCheck,
+  CheckCheck,
 } from 'lucide-react'
 
 const navigation = [
@@ -41,7 +44,9 @@ const navigation = [
 function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
+  const [bookingNotifOpen, setBookingNotifOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const bookingNotifRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { logout, user, isLoading } = useAdminAuth()
@@ -54,23 +59,32 @@ function AdminLayout() {
     toggleSound,
     enableAudio
   } = useSOSNotifications()
+  const {
+    notifications: bookingNotifications,
+    unreadCount: bookingUnreadCount,
+    markAsRead: markBookingAsRead,
+    markAllAsRead: markAllBookingAsRead,
+  } = useBookingNotifications()
 
-  // Handle click outside notification dropdown
+  // Handle click outside notification dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setNotificationOpen(false)
       }
+      if (bookingNotifRef.current && !bookingNotifRef.current.contains(event.target as Node)) {
+        setBookingNotifOpen(false)
+      }
     }
 
-    if (notificationOpen) {
+    if (notificationOpen || bookingNotifOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [notificationOpen])
+  }, [notificationOpen, bookingNotifOpen])
 
   // Handle logout
   const handleLogout = async (e: React.MouseEvent) => {
@@ -251,10 +265,120 @@ function AdminLayout() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Booking Notification Dropdown */}
+              <div className="relative" ref={bookingNotifRef}>
+                <button
+                  onClick={() => { setBookingNotifOpen(!bookingNotifOpen); setNotificationOpen(false) }}
+                  className="relative p-2 hover:bg-stone-100 rounded-lg transition"
+                >
+                  <CalendarCheck className={`w-5 h-5 ${
+                    bookingUnreadCount > 0 ? 'text-amber-600' : 'text-stone-600'
+                  }`} />
+                  {bookingUnreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold text-white bg-amber-600 rounded-full">
+                      {bookingUnreadCount > 99 ? '99+' : bookingUnreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {bookingNotifOpen && (
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50">
+                    {/* Header */}
+                    <div className="p-4 bg-gradient-to-r from-amber-600 to-amber-700">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-bold text-white">การจองใหม่</h3>
+                          <p className="text-xs text-white/90">New Bookings</p>
+                        </div>
+                        {bookingUnreadCount > 0 && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={markAllBookingAsRead}
+                              className="text-xs text-white/80 hover:text-white flex items-center gap-1"
+                            >
+                              <CheckCheck className="w-3.5 h-3.5" />
+                              อ่านทั้งหมด
+                            </button>
+                            <div className="text-2xl font-bold text-white">{bookingUnreadCount}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="max-h-96 overflow-y-auto">
+                      {bookingNotifications.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <CalendarCheck className="w-12 h-12 text-stone-300 mx-auto mb-3" />
+                          <p className="text-stone-500 font-medium">ไม่มีการแจ้งเตือน</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-stone-100">
+                          {bookingNotifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              className={`p-4 hover:bg-stone-50 cursor-pointer transition ${
+                                !notif.is_read ? 'bg-amber-50/50 border-l-4 border-l-amber-500' : ''
+                              }`}
+                              onClick={() => {
+                                if (!notif.is_read) markBookingAsRead(notif.id)
+                                navigate('/admin/bookings')
+                                setBookingNotifOpen(false)
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="text-2xl">📋</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2 mb-1">
+                                    <div className={`font-semibold truncate ${
+                                      !notif.is_read ? 'text-stone-900' : 'text-stone-600'
+                                    }`}>
+                                      {notif.title}
+                                    </div>
+                                    <div className="flex items-center gap-1 text-xs text-stone-500 whitespace-nowrap">
+                                      <Clock className="w-3 h-3" />
+                                      <span>{getTimeAgo(notif.created_at)}</span>
+                                    </div>
+                                  </div>
+                                  <p className={`text-sm line-clamp-2 ${
+                                    !notif.is_read ? 'text-stone-700' : 'text-stone-500'
+                                  }`}>
+                                    {notif.message}
+                                  </p>
+                                  {notif.data?.booking_number && (
+                                    <p className="text-xs text-amber-600 mt-1">
+                                      เลขที่จอง: {notif.data.booking_number}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    {bookingNotifications.length > 0 && (
+                      <div className="p-3 bg-stone-50 border-t border-stone-200">
+                        <Link
+                          to="/admin/bookings"
+                          onClick={() => setBookingNotifOpen(false)}
+                          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-xl font-semibold text-white transition"
+                        >
+                          <span>ดูการจองทั้งหมด</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* SOS Notification Dropdown */}
               <div className="relative" ref={notificationRef}>
                 <button
-                  onClick={() => setNotificationOpen(!notificationOpen)}
+                  onClick={() => { setNotificationOpen(!notificationOpen); setBookingNotifOpen(false) }}
                   className={`relative p-2 hover:bg-stone-100 rounded-lg transition ${
                     pendingCount > 0 && hasCriticalAlerts ? 'animate-pulse' : ''
                   }`}

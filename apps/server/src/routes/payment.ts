@@ -6,6 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { omiseService } from '../services/omiseService.js'
+import { processBookingConfirmed } from '../services/notificationService.js'
 
 const router = Router()
 
@@ -119,6 +120,22 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       console.error('Failed to update booking:', updateError)
     }
 
+    // If paid immediately (credit card), create job + notify
+    if (charge.paid) {
+      try {
+        // Update booking status to confirmed first
+        await getSupabaseClient()
+          .from('bookings')
+          .update({ status: 'confirmed' })
+          .eq('id', booking_id)
+
+        const notifResult = await processBookingConfirmed(booking_id)
+        console.log(`📋 Charge notification result:`, notifResult)
+      } catch (notifError) {
+        console.error('⚠️ Notification failed (non-blocking):', notifError)
+      }
+    }
+
     return res.json({
       success: true,
       charge_id: charge.id,
@@ -188,6 +205,14 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
             status: 'confirmed', // Auto-confirm on successful payment
           })
           .eq('id', transaction.booking_id)
+
+        // Create job + send notifications (non-blocking, don't fail webhook)
+        try {
+          const notifResult = await processBookingConfirmed(transaction.booking_id)
+          console.log(`📋 Webhook notification result:`, notifResult)
+        } catch (notifError) {
+          console.error('⚠️ Notification failed (non-blocking):', notifError)
+        }
       } else if (charge.failure_code) {
         await getSupabaseClient()
           .from('bookings')
@@ -470,6 +495,16 @@ router.get('/status/:chargeId', async (req: Request, res: Response) => {
           status: charge.paid ? 'confirmed' : transaction.status,
         })
         .eq('id', transaction.booking_id)
+
+      // If newly paid, create job + notify
+      if (charge.paid && transaction.status !== 'successful') {
+        try {
+          const notifResult = await processBookingConfirmed(transaction.booking_id)
+          console.log(`📋 Status poll notification result:`, notifResult)
+        } catch (notifError) {
+          console.error('⚠️ Notification failed (non-blocking):', notifError)
+        }
+      }
     }
 
     return res.json({

@@ -304,6 +304,27 @@ class BookingService {
         throw error
       }
 
+      // When admin manually confirms a booking, trigger job creation + notifications
+      if (status === 'confirmed') {
+        try {
+          const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+          const res = await fetch(`${serverUrl}/api/notifications/booking-confirmed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: id }),
+          })
+          const result = await res.json()
+          if (result.success) {
+            console.log(`📋 Booking ${id} notifications sent:`, result)
+          } else {
+            console.warn(`⚠️ Booking ${id} notification partial:`, result)
+          }
+        } catch (notifError) {
+          // Non-blocking: notification failure should not affect booking update
+          console.error('⚠️ Failed to send booking notifications:', notifError)
+        }
+      }
+
       return data as Booking
     } catch (error) {
       console.error('Error in updateBookingStatus:', error)
