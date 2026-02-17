@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@bliss/supabase/auth'
 import { useBookingStore } from '../hooks/useBookingStore'
 import { Service } from '../types/booking'
+import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
 import ServiceModeSelector from './ServiceModeSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ServiceSelector from './ServiceSelector'
@@ -69,17 +70,40 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     resetAll,
     canProceedToStep,
     getBookingData,
-    isConfigurationComplete
+    isConfigurationComplete,
+    setLoading
   } = useBookingStore()
 
   const navigate = useNavigate()
 
   // Query services
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
+  const { data: rawServices = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services'],
     queryFn: fetchServices,
     enabled: isOpen
   })
+
+  // Merge discount information from initialService into services array
+  const services = useMemo(() => {
+    if (!initialService) return rawServices
+
+    return rawServices.map(service => {
+      if (service.id === initialService.id) {
+        // Merge discount information from initialService
+        const mergedService = {
+          ...service,
+          discount_rate: initialService.discount_rate,
+          original_price: initialService.original_price,
+          price_60: initialService.price_60,
+          price_90: initialService.price_90,
+          price_120: initialService.price_120
+        }
+
+        return mergedService
+      }
+      return service
+    })
+  }, [rawServices, initialService])
 
   // Time slots
   const timeSlots = [
@@ -88,21 +112,12 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
 
   const today = new Date().toISOString().split('T')[0]
 
-  // Initialize with initial service if provided
+  // Initialize service mode when modal opens with initial service
   useEffect(() => {
-    if (isOpen && initialService && services.length > 0) {
-      // Auto-select single mode and add the initial service
+    if (isOpen && initialService) {
       setServiceMode('single')
-      addServiceSelection({
-        id: `0-${initialService.id}-${initialService.duration}`,
-        service: initialService,
-        duration: initialService.duration,
-        recipientIndex: 0,
-        price: initialService.hotel_price,
-        sortOrder: 0
-      })
     }
-  }, [isOpen, initialService, services.length])
+  }, [isOpen, initialService, setServiceMode])
 
   // Reset when modal closes
   useEffect(() => {
@@ -137,25 +152,24 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     if (!validation.isValid) return
 
     try {
-      setIsLoading(true)
+      setLoading(true)
       const bookingData = getBookingData()
 
       // Create the main booking record
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
-          guest_name: bookingData.guestName,
-          room_number: bookingData.roomNumber,
-          phone_number: bookingData.phoneNumber,
-          scheduled_date: bookingData.date,
-          scheduled_time: bookingData.time,
-          notes: bookingData.notes,
-          total_duration: bookingData.serviceConfiguration.totalDuration,
-          total_price: bookingData.serviceConfiguration.totalPrice,
-          service_format: bookingData.serviceConfiguration.coupleFormat || 'single',
-          is_multi_service: bookingData.serviceConfiguration.selections.length > 1,
+          // Use first service's ID for single service reference
+          service_id: bookingData.serviceConfiguration.selections[0].service.id,
+          booking_date: bookingData.date,
+          booking_time: bookingData.time,
+          duration: bookingData.serviceConfiguration.totalDuration,
+          hotel_room_number: bookingData.roomNumber,
+          customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Notes: ${bookingData.notes}`,
+          base_price: bookingData.serviceConfiguration.totalPrice,
+          final_price: bookingData.serviceConfiguration.totalPrice,
           status: 'confirmed',
-          created_by_hotel: true
+          is_hotel_booking: true
         })
         .select()
         .single()
@@ -192,7 +206,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
       console.error('Booking failed:', err)
       alert('เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่อีกครั้ง')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
@@ -296,6 +310,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                         onServiceSelect={addServiceSelection}
                         onClearSelection={() => clearServiceSelections()}
                         disabled={servicesLoading}
+                        initialServiceId={initialService?.id}
                       />
                     )}
 

@@ -1,78 +1,124 @@
 import { useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@bliss/supabase/auth'
 
-// ✅ Real hotel data from database
-const REAL_HOTELS = {
-  '550e8400-e29b-41d4-a716-446655440002': {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name_th: 'รีสอร์ทในฝัน เชียงใหม่',
-    name_en: 'Nimman Resort',
-    contact_person: 'คุณวิชัย รวยมั่ง',
-    phone: '053-123-456',
-    email: 'booking@nimman.com',
-    commission_rate: 15,
-    status: 'active'
-  },
-  '550e8400-e29b-41d4-a716-446655440003': {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name_th: 'โรงแรมดุสิต ธานี',
-    name_en: 'Dusit Thani',
-    contact_person: 'คุณสมหมาย ร่ำรวย',
-    phone: '02-987-6543',
-    email: 'info@dusit.com',
-    commission_rate: 25,
-    status: 'active'
-  },
-  '550e8400-e29b-41d4-a716-446655440001': {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name_th: 'โรงแรมฮิลตัน กรุงเทพฯ',
-    name_en: 'Hilton Bangkok',
-    contact_person: 'คุณสมศรี มั่งมี',
-    phone: '02-123-4567',
-    email: 'reservations@hilton.com',
-    commission_rate: 20,
-    status: 'active'
-  }
-} as const
+// ✅ Hotel data interface from database
+export interface HotelData {
+  id: string
+  name_th: string
+  name_en: string
+  hotel_slug: string
+  contact_person?: string
+  phone?: string
+  email?: string
+  commission_rate: number
+  status: 'active' | 'inactive'
+  created_at?: string
+  updated_at?: string
+}
 
-export type HotelData = (typeof REAL_HOTELS)[keyof typeof REAL_HOTELS]
+// Fetch hotel by slug from database
+const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
+  const { data, error } = await supabase
+    .from('hotels')
+    .select('*')
+    .eq('hotel_slug', slug)
+    .eq('status', 'active')
+    .single()
 
-export const useHotelContext = () => {
-  const { hotelId } = useParams<{ hotelId: string }>()
-  const [hotelData, setHotelData] = useState<HotelData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  if (error) {
+    // If not found by slug, try by ID (backward compatibility)
+    const { data: dataById, error: errorById } = await supabase
+      .from('hotels')
+      .select('*')
+      .eq('id', slug)
+      .eq('status', 'active')
+      .single()
 
-  useEffect(() => {
-    setIsLoading(true)
-
-    if (hotelId && REAL_HOTELS[hotelId as keyof typeof REAL_HOTELS]) {
-      setHotelData(REAL_HOTELS[hotelId as keyof typeof REAL_HOTELS])
-    } else {
-      setHotelData(null)
+    if (errorById) {
+      console.warn('Hotel not found:', slug)
+      return null
     }
 
-    setIsLoading(false)
-  }, [hotelId])
+    return dataById as HotelData
+  }
+
+  return data as HotelData
+}
+
+// Fetch all hotels from database
+const fetchAllHotels = async (): Promise<HotelData[]> => {
+  const { data, error } = await supabase
+    .from('hotels')
+    .select('*')
+    .eq('status', 'active')
+    .order('name_th', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching hotels:', error)
+    return []
+  }
+
+  return (data || []) as HotelData[]
+}
+
+export const useHotelContext = () => {
+  const { hotelSlug } = useParams<{ hotelSlug: string }>()
+
+  // Fetch current hotel data by slug/ID
+  const {
+    data: hotelData,
+    isLoading: hotelLoading,
+    error: hotelError
+  } = useQuery({
+    queryKey: ['hotel', hotelSlug],
+    queryFn: () => fetchHotelBySlug(hotelSlug!),
+    enabled: !!hotelSlug,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: 1
+  })
+
+  // Fetch all available hotels
+  const {
+    data: availableHotels = [],
+    isLoading: hotelsLoading
+  } = useQuery({
+    queryKey: ['hotels', 'all'],
+    queryFn: fetchAllHotels,
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    retry: 1
+  })
+
+  const isLoading = hotelLoading || hotelsLoading
+  const isValidHotel = !!hotelData && !hotelError
 
   return {
-    hotelId,
+    hotelId: hotelData?.id,
+    hotelSlug: hotelData?.hotel_slug,
     hotelData,
-    isValidHotel: !!hotelData,
+    isValidHotel,
     isLoading,
+    error: hotelError,
     // Helper methods
     getHotelName: () => hotelData?.name_th || 'Unknown Hotel',
     getHotelNameEn: () => hotelData?.name_en || 'Unknown Hotel',
     getCommissionRate: () => hotelData?.commission_rate || 20,
-    // Available hotels list
-    availableHotels: Object.values(REAL_HOTELS)
+    getHotelSlug: () => hotelData?.hotel_slug || 'unknown-hotel',
+    // Available hotels list (now from database)
+    availableHotels
   }
 }
 
-// Export hotel constants for easy access
+// Export hotel constants for easy access (backward compatibility)
+// Note: These should eventually be phased out as data comes from database
 export const HOTEL_IDS = {
   NIMMAN_RESORT: '550e8400-e29b-41d4-a716-446655440002',
   DUSIT_THANI: '550e8400-e29b-41d4-a716-446655440003',
   HILTON_BANGKOK: '550e8400-e29b-41d4-a716-446655440001'
 } as const
 
-export { REAL_HOTELS }
+export const HOTEL_SLUGS = {
+  RESORT_CHIANG_MAI: 'resort-chiang-mai',
+  DUSIT_THANI_BANGKOK: 'dusit-thani-bangkok',
+  GRAND_PALACE_BANGKOK: 'grand-palace-bangkok'
+} as const

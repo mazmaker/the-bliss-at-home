@@ -10,6 +10,8 @@ import { z } from 'zod'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
+import { useUserHotelId } from '../../hooks/useUserHotelId'
+import { getHotelSlugFromId } from '../../utils/hotelUtils'
 import {
   Eye,
   EyeOff,
@@ -64,6 +66,7 @@ export function EnhancedHotelLogin() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { login, isLoading: authLoading, user, isAuthenticated } = useAuth()
+  const { hotelId: userHotelId } = useUserHotelId()
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -75,7 +78,9 @@ export function EnhancedHotelLogin() {
 
   // Check if user is already authenticated with HOTEL role
   if (isAuthenticated && user?.user_metadata?.role === 'HOTEL') {
-    return <Navigate to="/hotel/bookings" replace />
+    // For already authenticated users, redirect using DynamicHotelRedirect
+    // which handles the async slug resolution
+    return <Navigate to="/hotel" replace />
   }
 
   // Login form
@@ -99,6 +104,15 @@ export function EnhancedHotelLogin() {
   })
 
   const watchNewPassword = changePasswordForm.watch('newPassword')
+
+  // Helper function to get the correct hotel URL for navigation using slug
+  const getHotelUrl = async (): Promise<string> => {
+    if (userHotelId) {
+      const hotelSlug = await getHotelSlugFromId(userHotelId)
+      return `/hotel/${hotelSlug}`
+    }
+    return '/hotel/resort-chiang-mai'
+  }
 
   const handleLogin = async (data: LoginFormData) => {
     setIsSubmitting(true)
@@ -135,8 +149,9 @@ export function EnhancedHotelLogin() {
           setSubmitSuccess('เข้าสู่ระบบสำเร็จ กรุณาเปลี่ยนรหัสผ่านเพื่อความปลอดภัย')
         } else {
           setSubmitSuccess('เข้าสู่ระบบสำเร็จ กำลังเข้าสู่หน้าหลัก...')
-          setTimeout(() => {
-            navigate('/hotel/bookings')
+          setTimeout(async () => {
+            const hotelUrl = await getHotelUrl()
+            navigate(hotelUrl)
           }, 1500)
         }
       }
@@ -206,8 +221,9 @@ export function EnhancedHotelLogin() {
       }
 
       setSubmitSuccess('เปลี่ยนรหัสผ่านสำเร็จ กำลังเข้าสู่หน้าหลัก...')
-      setTimeout(() => {
-        navigate('/hotel/bookings')
+      setTimeout(async () => {
+        const hotelUrl = await getHotelUrl()
+        navigate(hotelUrl)
       }, 1500)
     } catch (error: any) {
       console.error('Password change error:', error)

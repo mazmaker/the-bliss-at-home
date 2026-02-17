@@ -15,11 +15,22 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useHotelContext } from '../hooks/useHotelContext'
+import { useAuth } from '@bliss/supabase/auth'
 
 function HotelLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const { hotelId, hotelData, isValidHotel, isLoading, getHotelName, getHotelNameEn } = useHotelContext()
+  const { hotelId, hotelSlug, hotelData, isValidHotel, isLoading, getHotelName, getHotelNameEn, getHotelSlug } = useHotelContext()
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      // The app will automatically redirect to login due to ProtectedRoute
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   // Loading state
   if (isLoading) {
@@ -41,10 +52,10 @@ function HotelLayout() {
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-stone-900 mb-2">โรงแรมไม่พบ</h1>
           <p className="text-stone-600 mb-6">
-            ไม่พบข้อมูลโรงแรมที่ระบุ: {hotelId}
+            ไม่พบข้อมูลโรงแรมที่ระบุ: {hotelSlug}
           </p>
           <Link
-            to="/hotel/550e8400-e29b-41d4-a716-446655440002"
+            to="/hotel/resort-chiang-mai"
             className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
           >
             ไปยังโรงแรมเริ่มต้น
@@ -54,16 +65,17 @@ function HotelLayout() {
     )
   }
 
-  // ✅ Dynamic navigation with hotel ID
+  // ✅ Dynamic navigation with hotel slug
+  const currentSlug = getHotelSlug()
   const navigation = [
-    { name: 'ภาพรวม', nameEn: 'Dashboard', href: `/hotel/${hotelId}`, icon: LayoutDashboard },
-    { name: 'บริการ', nameEn: 'Services', href: `/hotel/${hotelId}/services`, icon: Calendar },
-    { name: 'จองให้แขก', nameEn: 'Book for Guest', href: `/hotel/${hotelId}/book`, icon: CreditCard },
-    { name: 'การจองของแขก', nameEn: 'Guest Bookings', href: `/hotel/${hotelId}/guests`, icon: Users },
-    { name: 'ประวัติการจอง', nameEn: 'History', href: `/hotel/${hotelId}/history`, icon: FileText },
-    { name: 'บิลรายเดือน', nameEn: 'Monthly Bill', href: `/hotel/${hotelId}/bill`, icon: CreditCard },
-    { name: 'ข้อมูลโรงแรม', nameEn: 'Hotel Profile', href: `/hotel/${hotelId}/profile`, icon: Building },
-    { name: 'ตั้งค่า', nameEn: 'Settings', href: `/hotel/${hotelId}/settings`, icon: Settings },
+    { name: 'ภาพรวม', nameEn: 'Dashboard', href: `/hotel/${currentSlug}`, icon: LayoutDashboard },
+    { name: 'บริการ', nameEn: 'Services', href: `/hotel/${currentSlug}/services`, icon: Calendar },
+    { name: 'จองให้แขก', nameEn: 'Book for Guest', href: `/hotel/${currentSlug}/book`, icon: CreditCard },
+    { name: 'การจองของแขก', nameEn: 'Guest Bookings', href: `/hotel/${currentSlug}/guests`, icon: Users },
+    { name: 'ประวัติการจอง', nameEn: 'History', href: `/hotel/${currentSlug}/history`, icon: FileText },
+    { name: 'บิลรายเดือน', nameEn: 'Monthly Bill', href: `/hotel/${currentSlug}/bill`, icon: CreditCard },
+    { name: 'ข้อมูลโรงแรม', nameEn: 'Hotel Profile', href: `/hotel/${currentSlug}/profile`, icon: Building },
+    { name: 'ตั้งค่า', nameEn: 'Settings', href: `/hotel/${currentSlug}/settings`, icon: Settings },
   ]
 
   // ✅ Get hotel avatar (first letter of Thai name)
@@ -137,13 +149,13 @@ function HotelLayout() {
                 <p className="text-xs text-stone-500 truncate">{getHotelNameEn()}</p>
               </div>
             </div>
-            <Link
-              to="/login"
-              className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition w-full"
             >
               <LogOut className="w-4 h-4" />
               <span className="text-sm">ออกจากระบบ</span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>

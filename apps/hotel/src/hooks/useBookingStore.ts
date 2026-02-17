@@ -10,6 +10,7 @@ import {
   BookingValidation
 } from '../types/booking'
 import { PriceCalculator } from '../utils/priceCalculator'
+import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
 
 interface BookingStore {
   // Configuration state
@@ -96,11 +97,11 @@ const calculateTotalDuration = (
   selections: ServiceSelection[],
   format: ServiceFormat
 ): number => {
-  return PriceCalculator.calculateTotalDuration(selections, format)
+  return EnhancedPriceCalculator.calculateTotalDuration(selections, format)
 }
 
 const calculateTotalPrice = (selections: ServiceSelection[]): number => {
-  return PriceCalculator.calculateTotalPrice(selections)
+  return EnhancedPriceCalculator.calculateTotalPrice(selections)
 }
 
 export const useBookingStore = create<BookingStore>()(
@@ -187,7 +188,19 @@ export const useBookingStore = create<BookingStore>()(
               if (updates.service || updates.duration) {
                 const service = updates.service || newSelections[index].service
                 const duration = updates.duration || newSelections[index].duration
-                newSelections[index].price = PriceCalculator.calculateServicePrice(service, duration, state.serviceConfiguration.mode)
+
+                // Use enhanced calculator with hotel discount if available
+                if (service.discount_rate) {
+                  newSelections[index].price = EnhancedPriceCalculator.calculateServicePriceWithDiscount(
+                    service,
+                    duration,
+                    service.discount_rate,
+                    state.serviceConfiguration.mode
+                  )
+                } else {
+                  // Fallback to original calculator
+                  newSelections[index].price = PriceCalculator.calculateServicePrice(service, duration, state.serviceConfiguration.mode)
+                }
               }
 
               const serviceFormat = get().getServiceFormat()

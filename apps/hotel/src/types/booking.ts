@@ -12,11 +12,17 @@ export interface Service {
   duration_options?: number[] | null
   base_price: number
   hotel_price: number
+  price_60?: number | null
+  price_90?: number | null
+  price_120?: number | null
   image_url?: string | null
   is_active: boolean | null
   sort_order?: number | null
   created_at: string | null
   updated_at: string | null
+  // Enhanced properties for hotel-specific discounts
+  discount_rate?: number // Hotel discount rate percentage
+  original_price?: number // Original price before discount
 }
 
 export interface ServiceSelection {
