@@ -9,7 +9,7 @@ import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMus
 
 function StaffDashboard() {
   const { user } = useAuth()
-  const { jobs, pendingJobs, isLoading, error, refresh, acceptJob, startJob, completeJob, cancelJob } = useJobs({
+  const { jobs, pendingJobs, isLoading, error, refresh, acceptJob, startJob, completeJob } = useJobs({
     realtime: true,
     onNewJob: handleNewJob,
   })
@@ -103,16 +103,28 @@ function StaffDashboard() {
 
   const handleConfirmCancel = async (reason: string, notes?: string) => {
     if (!jobToCancel) return
-    await cancelJob(jobToCancel.id, reason, notes)
-    // Stop background music when job is cancelled
-    stopBackgroundMusic()
-    if (isSoundEnabled()) {
-      NotificationSounds.jobCancelled()
+    try {
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: jobToCancel.id, reason, notes }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
+      // Stop background music when job is cancelled
+      stopBackgroundMusic()
+      if (isSoundEnabled()) {
+        NotificationSounds.jobCancelled()
+      }
+      if (currentJob?.id === jobToCancel.id) {
+        setCurrentJob(null)
+      }
+      setJobToCancel(null)
+      refresh()
+    } catch (err: any) {
+      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
     }
-    if (currentJob?.id === jobToCancel.id) {
-      setCurrentJob(null)
-    }
-    setJobToCancel(null)
   }
 
   const getStatusBadge = (status: JobStatus) => {
@@ -383,13 +395,14 @@ function StaffDashboard() {
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-bold text-amber-700">฿{job.staff_earnings}</p>
                   <div className="flex items-center gap-2">
-                    <Link
-                      to={`/staff/jobs/${job.id}`}
-                      className="px-3 py-2 text-stone-600 hover:bg-stone-50 rounded-xl text-sm flex items-center gap-1"
+                    <button
+                      onClick={() => handleCancelJobClick(job)}
+                      disabled={isProcessing === job.id}
+                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm flex items-center gap-1 disabled:opacity-50"
                     >
-                      ดูรายละเอียด
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
+                      <XCircle className="w-4 h-4" />
+                      ยกเลิก
+                    </button>
                     <button
                       onClick={() => handleStartJob(job.id)}
                       disabled={isProcessing === job.id || !eligibility?.canWork}
@@ -553,9 +566,6 @@ function StaffDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-green-600">+฿{job.staff_earnings}</p>
-                        {job.tip_amount > 0 && (
-                          <p className="text-xs text-amber-600">+฿{job.tip_amount} ทิป</p>
-                        )}
                       </div>
                     </div>
                     {job.hotel_name && (
@@ -600,9 +610,6 @@ function StaffDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600">+฿{job.staff_earnings}</p>
-                    {job.tip_amount > 0 && (
-                      <p className="text-xs text-amber-600">+฿{job.tip_amount} ทิป</p>
-                    )}
                   </div>
                 </div>
               </Link>

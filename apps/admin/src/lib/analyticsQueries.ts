@@ -118,7 +118,6 @@ export interface StaffPerformance {
   // Financial Metrics
   total_revenue_generated: number
   base_earnings: number
-  tips_earned: number
   total_earnings: number
   avg_service_price: number
 
@@ -161,7 +160,6 @@ export interface StaffEarnings {
 
   // Current Period Earnings
   base_earnings: number
-  tips_earned: number
   bonus_earnings: number
   total_earnings: number
 
@@ -763,7 +761,6 @@ export async function getStaffPerformance(days: number = 30, limit: number = 10)
       // Financial Metrics
       total_revenue_generated: Number(staff.total_revenue_generated) || 0,
       base_earnings: Number(staff.base_earnings) || 0,
-      tips_earned: Number(staff.tips_earned) || 0,
       total_earnings: Number(staff.total_earnings) || 0,
       avg_service_price: Number(staff.avg_service_price) || 0,
 
@@ -834,7 +831,6 @@ export async function getStaffEarnings(days: number = 30): Promise<StaffEarnings
 
       // Current Period Earnings
       base_earnings: Number(staff.base_earnings) || 0,
-      tips_earned: Number(staff.tips_earned) || 0,
       bonus_earnings: Number(staff.bonus_earnings) || 0,
       total_earnings: Number(staff.total_earnings) || 0,
 

@@ -200,7 +200,7 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
   // Get today's jobs
   const { data: todayJobs, error: todayError } = await supabase
     .from('jobs')
-    .select('amount, staff_earnings, tip_amount, status')
+    .select('amount, staff_earnings, status')
     .eq('staff_id', staffId)
     .eq('scheduled_date', today)
 
@@ -211,7 +211,7 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
   // Get total stats
   const { data: totalJobs, error: totalError } = await supabase
     .from('jobs')
-    .select('amount, staff_earnings, tip_amount, status')
+    .select('amount, staff_earnings, status')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
 
@@ -237,10 +237,10 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
 
   return {
     today_jobs_count: todayJobsList.length,
-    today_earnings: todayCompleted.reduce((sum: number, j: any) => sum + (j.staff_earnings || 0) + (j.tip_amount || 0), 0),
+    today_earnings: todayCompleted.reduce((sum: number, j: any) => sum + (j.staff_earnings || 0), 0),
     today_completed: todayCompleted.length,
     total_jobs: totalJobsList.length,
-    total_earnings: totalJobsList.reduce((sum: number, j: any) => sum + (j.staff_earnings || 0) + (j.tip_amount || 0), 0),
+    total_earnings: totalJobsList.reduce((sum: number, j: any) => sum + (j.staff_earnings || 0), 0),
     average_rating: ratingsList.length > 0
       ? ratingsList.reduce((sum: number, r: any) => sum + r.rating, 0) / ratingsList.length
       : 0,

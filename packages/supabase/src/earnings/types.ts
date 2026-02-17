@@ -19,7 +19,6 @@ export interface Payout {
   gross_earnings: number
   platform_fee: number
   net_amount: number
-  tip_amount: number
   total_jobs: number
 
   // Payment info
@@ -54,19 +53,16 @@ export interface EarningsSummary {
   // Today
   today_earnings: number
   today_jobs: number
-  today_tips: number
   today_hours: number
 
   // This week
   week_earnings: number
   week_jobs: number
-  week_tips: number
   week_hours: number
 
   // This month
   month_earnings: number
   month_jobs: number
-  month_tips: number
   month_hours: number
 
   // Pending payout
@@ -80,7 +76,6 @@ export interface EarningsSummary {
 export interface DailyEarning {
   date: string
   earnings: number
-  tips: number
   jobs: number
   hours: number
 }

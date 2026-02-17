@@ -31,7 +31,7 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
   // Fetch completed jobs
   const { data: jobs, error } = await supabase
     .from('jobs')
-    .select('staff_earnings, tip_amount, duration_minutes, scheduled_date, status')
+    .select('staff_earnings, duration_minutes, scheduled_date, status')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
     .gte('scheduled_date', monthStartStr)
@@ -42,27 +42,24 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
   }
 
   // Calculate summaries
-  let todayEarnings = 0, todayJobs = 0, todayTips = 0, todayHours = 0
-  let weekEarnings = 0, weekJobs = 0, weekTips = 0, weekHours = 0
-  let monthEarnings = 0, monthJobs = 0, monthTips = 0, monthHours = 0
+  let todayEarnings = 0, todayJobs = 0, todayHours = 0
+  let weekEarnings = 0, weekJobs = 0, weekHours = 0
+  let monthEarnings = 0, monthJobs = 0, monthHours = 0
 
   jobs?.forEach((job) => {
     const jobDate = job.scheduled_date
     const earnings = job.staff_earnings || 0
-    const tips = job.tip_amount || 0
     const hours = (job.duration_minutes || 0) / 60
 
     // Month totals
     monthEarnings += earnings
     monthJobs += 1
-    monthTips += tips
     monthHours += hours
 
     // Week totals
     if (jobDate >= weekStartStr) {
       weekEarnings += earnings
       weekJobs += 1
-      weekTips += tips
       weekHours += hours
     }
 
@@ -70,7 +67,6 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
     if (jobDate === todayStr) {
       todayEarnings += earnings
       todayJobs += 1
-      todayTips += tips
       todayHours += hours
     }
   })
@@ -97,15 +93,12 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
   return {
     today_earnings: todayEarnings,
     today_jobs: todayJobs,
-    today_tips: todayTips,
     today_hours: todayHours,
     week_earnings: weekEarnings,
     week_jobs: weekJobs,
-    week_tips: weekTips,
     week_hours: weekHours,
     month_earnings: monthEarnings,
     month_jobs: monthJobs,
-    month_tips: monthTips,
     month_hours: monthHours,
     pending_payout: pendingPayout,
     average_per_job: monthJobs > 0 ? monthEarnings / monthJobs : 0,
@@ -123,7 +116,7 @@ export async function getDailyEarnings(
 ): Promise<DailyEarning[]> {
   const { data: jobs, error } = await supabase
     .from('jobs')
-    .select('staff_earnings, tip_amount, duration_minutes, scheduled_date')
+    .select('staff_earnings, duration_minutes, scheduled_date')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
     .gte('scheduled_date', startDate)
@@ -146,7 +139,6 @@ export async function getDailyEarnings(
     dailyMap.set(dateStr, {
       date: dateStr,
       earnings: 0,
-      tips: 0,
       jobs: 0,
       hours: 0,
     })
@@ -157,7 +149,6 @@ export async function getDailyEarnings(
     const existing = dailyMap.get(job.scheduled_date)
     if (existing) {
       existing.earnings += job.staff_earnings || 0
-      existing.tips += job.tip_amount || 0
       existing.jobs += 1
       existing.hours += (job.duration_minutes || 0) / 60
     }

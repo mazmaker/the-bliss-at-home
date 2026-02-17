@@ -5,7 +5,7 @@
 
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
-import { processBookingConfirmed } from '../services/notificationService.js'
+import { processBookingConfirmed, processJobCancelled } from '../services/notificationService.js'
 
 const router = Router()
 
@@ -60,6 +60,42 @@ router.post('/booking-confirmed', async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: error.message || 'Failed to process booking notification',
+    })
+  }
+})
+
+/**
+ * POST /api/notifications/job-cancelled
+ * Cancel a job, create replacement pending job, and re-notify staff + admin
+ */
+router.post('/job-cancelled', async (req: Request, res: Response) => {
+  try {
+    const { job_id, reason, notes } = req.body
+
+    if (!job_id || !reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: job_id, reason',
+      })
+    }
+
+    const result = await processJobCancelled(job_id, reason, notes)
+
+    if (!result.success) {
+      return res.status(400).json(result)
+    }
+
+    return res.json({
+      success: true,
+      new_job_id: result.newJobId,
+      staff_notified: result.staffNotified,
+      admins_notified: result.adminsNotified,
+    })
+  } catch (error: any) {
+    console.error('Job cancellation error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to process job cancellation',
     })
   }
 })

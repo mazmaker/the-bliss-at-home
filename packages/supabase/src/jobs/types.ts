@@ -47,7 +47,6 @@ export interface Job {
   // Payment info
   amount: number
   staff_earnings: number
-  tip_amount: number
   payment_status: JobPaymentStatus
 
   // Job status

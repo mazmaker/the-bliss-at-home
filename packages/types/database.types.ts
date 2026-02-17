@@ -118,7 +118,7 @@ export type Database = {
             foreignKeyName: "bank_accounts_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
         ]
@@ -161,6 +161,60 @@ export type Database = {
           },
         ]
       }
+      booking_services: {
+        Row: {
+          booking_id: string
+          created_at: string
+          duration: number
+          id: string
+          price: number
+          recipient_index: number
+          recipient_name: string | null
+          service_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          duration: number
+          id?: string
+          price: number
+          recipient_index?: number
+          recipient_name?: string | null
+          service_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          duration?: number
+          id?: string
+          price?: number
+          recipient_index?: number
+          recipient_name?: string | null
+          service_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_services_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string | null
@@ -182,17 +236,20 @@ export type Database = {
           hotel_room_number: string | null
           id: string
           is_hotel_booking: boolean | null
+          is_multi_service: boolean
           latitude: number | null
           longitude: number | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          promotion_id: string | null
+          recipient_count: number | null
+          service_format: string | null
           service_id: string
           staff_earnings: number | null
           staff_id: string | null
           staff_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount: number | null
           updated_at: string | null
         }
         Insert: {
@@ -215,17 +272,20 @@ export type Database = {
           hotel_room_number?: string | null
           id?: string
           is_hotel_booking?: boolean | null
+          is_multi_service?: boolean
           latitude?: number | null
           longitude?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          promotion_id?: string | null
+          recipient_count?: number | null
+          service_format?: string | null
           service_id: string
           staff_earnings?: number | null
           staff_id?: string | null
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -248,17 +308,20 @@ export type Database = {
           hotel_room_number?: string | null
           id?: string
           is_hotel_booking?: boolean | null
+          is_multi_service?: boolean
           latitude?: number | null
           longitude?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          promotion_id?: string | null
+          recipient_count?: number | null
+          service_format?: string | null
           service_id?: string
           staff_earnings?: number | null
           staff_id?: string | null
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -274,6 +337,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
           {
@@ -598,6 +668,7 @@ export type Database = {
       hotels: {
         Row: {
           address: string
+          auth_user_id: string | null
           bank_account_name: string | null
           bank_account_number: string | null
           bank_name: string | null
@@ -607,20 +678,29 @@ export type Database = {
           description: string | null
           discount_rate: number
           email: string
+          hotel_slug: string | null
           id: string
+          last_login: string | null
           latitude: number | null
+          login_email: string | null
+          login_enabled: boolean | null
           longitude: number | null
           name_en: string
           name_th: string
+          password_change_required: boolean | null
+          password_reset_expires_at: string | null
+          password_reset_token: string | null
           phone: string
           rating: number | null
           status: string
           tax_id: string | null
+          temporary_password: string | null
           updated_at: string | null
           website: string | null
         }
         Insert: {
           address: string
+          auth_user_id?: string | null
           bank_account_name?: string | null
           bank_account_number?: string | null
           bank_name?: string | null
@@ -630,20 +710,29 @@ export type Database = {
           description?: string | null
           discount_rate?: number
           email: string
+          hotel_slug?: string | null
           id?: string
+          last_login?: string | null
           latitude?: number | null
+          login_email?: string | null
+          login_enabled?: boolean | null
           longitude?: number | null
           name_en: string
           name_th: string
+          password_change_required?: boolean | null
+          password_reset_expires_at?: string | null
+          password_reset_token?: string | null
           phone: string
           rating?: number | null
           status?: string
           tax_id?: string | null
+          temporary_password?: string | null
           updated_at?: string | null
           website?: string | null
         }
         Update: {
           address?: string
+          auth_user_id?: string | null
           bank_account_name?: string | null
           bank_account_number?: string | null
           bank_name?: string | null
@@ -653,15 +742,23 @@ export type Database = {
           description?: string | null
           discount_rate?: number
           email?: string
+          hotel_slug?: string | null
           id?: string
+          last_login?: string | null
           latitude?: number | null
+          login_email?: string | null
+          login_enabled?: boolean | null
           longitude?: number | null
           name_en?: string
           name_th?: string
+          password_change_required?: boolean | null
+          password_reset_expires_at?: string | null
+          password_reset_token?: string | null
           phone?: string
           rating?: number | null
           status?: string
           tax_id?: string | null
+          temporary_password?: string | null
           updated_at?: string | null
           website?: string | null
         }
@@ -755,7 +852,6 @@ export type Database = {
           staff_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["job_status"] | null
-          tip_amount: number | null
           updated_at: string | null
         }
         Insert: {
@@ -793,7 +889,6 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -831,7 +926,6 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2096,7 +2190,6 @@ export type Database = {
           total_job_offers: number | null
           total_jobs: number | null
           total_ratings: number | null
-          total_tips: number | null
           updated_at: string | null
           year: number
         }
@@ -2119,7 +2212,6 @@ export type Database = {
           total_job_offers?: number | null
           total_jobs?: number | null
           total_ratings?: number | null
-          total_tips?: number | null
           updated_at?: string | null
           year: number
         }
@@ -2142,7 +2234,6 @@ export type Database = {
           total_job_offers?: number | null
           total_jobs?: number | null
           total_ratings?: number | null
-          total_tips?: number | null
           updated_at?: string | null
           year?: number
         }
@@ -2361,6 +2452,91 @@ export type Database = {
           },
         ]
       }
+      thai_districts: {
+        Row: {
+          district_code: number | null
+          id: number
+          name_en: string
+          name_th: string
+          province_id: number
+        }
+        Insert: {
+          district_code?: number | null
+          id?: number
+          name_en: string
+          name_th: string
+          province_id: number
+        }
+        Update: {
+          district_code?: number | null
+          id?: number
+          name_en?: string
+          name_th?: string
+          province_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thai_districts_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "thai_provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thai_provinces: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+          province_code: number | null
+        }
+        Insert: {
+          id?: number
+          name_en: string
+          name_th: string
+          province_code?: number | null
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+          province_code?: number | null
+        }
+        Relationships: []
+      }
+      thai_subdistricts: {
+        Row: {
+          district_id: number
+          id: number
+          name_en: string
+          name_th: string
+          zipcode: string
+        }
+        Insert: {
+          district_id: number
+          id?: number
+          name_en: string
+          name_th: string
+          zipcode: string
+        }
+        Update: {
+          district_id?: number
+          id?: number
+          name_en?: string
+          name_th?: string
+          zipcode?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thai_subdistricts_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "thai_districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -2508,6 +2684,7 @@ export type Database = {
         Args: { length?: number; prefix?: string }
         Returns: string
       }
+      generate_hotel_slug: { Args: { hotel_name_en: string }; Returns: string }
       generate_transaction_number: { Args: never; Returns: string }
       get_dashboard_stats: {
         Args: { period_days?: number }
@@ -2624,7 +2801,6 @@ export type Database = {
           staff_id: string
           staff_name: string
           status: string
-          tips_earned: number
           total_earnings: number
           total_revenue_generated: number
           total_reviews: number

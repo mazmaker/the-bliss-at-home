@@ -162,11 +162,10 @@ export async function exportToExcel(data: ReportExportData): Promise<void> {
     // Add staff earnings sheet
     if (staffEarnings && staffEarnings.length > 0) {
       const earningsData = [
-        ['พนักงาน', 'รายได้พื้นฐาน', 'เทิป', 'โบนัส', 'รายได้รวม', 'ค่าคอมมิชชั่น', 'หักภาษี', 'รายได้สุทธิ', 'เติบโต (%)'],
+        ['พนักงาน', 'รายได้พื้นฐาน', 'โบนัส', 'รายได้รวม', 'ค่าคอมมิชชั่น', 'หักภาษี', 'รายได้สุทธิ', 'เติบโต (%)'],
         ...staffEarnings.map(staff => [
           staff.name,
           staff.base_earnings,
-          staff.tips_earned,
           staff.bonus_earnings,
           staff.total_earnings,
           staff.platform_commission,
@@ -409,7 +408,6 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
               <tr>
                 <th>พนักงาน</th>
                 <th>รายได้พื้นฐาน</th>
-                <th>เทิป</th>
                 <th>โบนัส</th>
                 <th>รายได้รวม</th>
                 <th>รายได้สุทธิ</th>
@@ -420,7 +418,6 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
                 <tr>
                   <td>${staff.name}</td>
                   <td>฿${staff.base_earnings.toLocaleString()}</td>
-                  <td>฿${staff.tips_earned.toLocaleString()}</td>
                   <td>฿${staff.bonus_earnings.toLocaleString()}</td>
                   <td>฿${staff.total_earnings.toLocaleString()}</td>
                   <td>฿${staff.net_earnings.toLocaleString()}</td>
