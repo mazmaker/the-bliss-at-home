@@ -42,7 +42,7 @@ function StaffLayout() {
       id: '2',
       type: 'payment_received',
       title: 'รับเงินเรียบร้อย',
-      message: 'คุณได้รับเงิน ฿770 จากงาน "นวดน้ำมันหอมระเหย" พร้อมทิป ฿100',
+      message: 'คุณได้รับเงิน ฿770 จากงาน "นวดน้ำมันหอมระเหย"',
       read: false,
       created_at: new Date(Date.now() - 2 * 3600000).toISOString(), // 2 hours ago
     },

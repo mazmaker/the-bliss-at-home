@@ -40,7 +40,6 @@ export interface Booking {
 
   // Staff earnings
   staff_earnings: number
-  tip_amount: number
 
   // Notes
   customer_notes?: string | null

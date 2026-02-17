@@ -221,11 +221,126 @@ async function sendNewBookingToAdmin(lineUserIds: string[], data: BookingNotific
   return allSuccess
 }
 
+interface JobReAvailableData {
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  staffEarnings: number
+  durationMinutes: number
+  newJobId: string
+  // Couple context
+  isCouple?: boolean
+  recipientName?: string | null
+  totalRecipients?: number
+  activeStaffCount?: number
+}
+
+interface JobCancelledAdminData {
+  staffName: string
+  reason: string
+  notes?: string | null
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  customerName: string
+  bookingNumber?: string | null
+  // Couple context
+  isCouple?: boolean
+  totalRecipients?: number
+  activeStaffCount?: number
+}
+
+/**
+ * Send re-available job notification to staff via LINE (after cancellation)
+ */
+async function sendJobReAvailableToStaff(lineUserIds: string[], data: JobReAvailableData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}${data.roomNumber ? ` ห้อง ${data.roomNumber}` : ''}`
+    : `📍 สถานที่: ${data.address}`
+
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const linkText = staffLiffUrl
+    ? `👉 ดูรายละเอียดงาน:\n${staffLiffUrl}/staff/jobs/${data.newJobId}`
+    : 'เปิดแอปเพื่อรับงานนี้'
+
+  let coupleText = ''
+  if (data.isCouple) {
+    const recipientLabel = data.recipientName || 'ผู้รับบริการ'
+    coupleText = `\n👥 Couple booking (${recipientLabel})\n`
+  }
+
+  const messageText =
+    `🔔 มีงานว่าง! (Staff ยกเลิก)\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `⏰ เวลา: ${data.scheduledTime}\n` +
+    `⏱️ ระยะเวลา: ${data.durationMinutes} นาที\n` +
+    `${locationText}\n` +
+    `💰 รายได้: ${data.staffEarnings.toLocaleString()} บาท\n` +
+    coupleText + `\n` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  // Use individual push instead of multicast for reliability
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for staff: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
+/**
+ * Send job cancellation notification to admin via LINE
+ */
+async function sendJobCancelledToAdmin(lineUserIds: string[], data: JobCancelledAdminData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  let coupleInfo = ''
+  if (data.isCouple && data.totalRecipients) {
+    const active = data.activeStaffCount ?? 0
+    coupleInfo = `\n👥 Couple booking: ยังมี Staff รับงานอยู่ ${active}/${data.totalRecipients} ตำแหน่ง`
+  }
+
+  const messageText =
+    `⚠️ Staff ยกเลิกงาน\n\n` +
+    `👤 Staff: ${data.staffName}\n` +
+    `📋 เหตุผล: ${data.reason}\n` +
+    (data.notes ? `📝 หมายเหตุ: ${data.notes}\n` : '') +
+    `\n💆 บริการ: ${data.serviceName}\n` +
+    `👤 ลูกค้า: ${data.customerName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `⏰ เวลา: ${data.scheduledTime}\n` +
+    (data.bookingNumber ? `🔢 เลขที่จอง: ${data.bookingNumber}\n` : '') +
+    coupleInfo + `\n\n` +
+    `ระบบได้สร้างงานใหม่และแจ้ง Staff อื่นแล้ว`
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) allSuccess = false
+  }
+  return allSuccess
+}
+
 export const lineService = {
   pushMessage,
   multicast,
   sendNewJobToStaff,
   sendNewBookingToAdmin,
+  sendJobReAvailableToStaff,
+  sendJobCancelledToAdmin,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData }

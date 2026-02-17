@@ -16,12 +16,20 @@ function StaffJobDetail() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { job, isLoading, error } = useJob(id || null)
-  const { acceptJob, startJob, completeJob, cancelJob } = useJobs({ realtime: false })
+  const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/staff/jobs', { replace: true })
+    }
+  }
 
   const handleAccept = async () => {
     if (!job) return
@@ -69,11 +77,26 @@ function StaffJobDetail() {
 
   const handleConfirmCancel = async (reason: string, notes?: string) => {
     if (!job) return
-    await cancelJob(job.id, reason, notes)
-    stopBackgroundMusic()
-    if (isSoundEnabled()) NotificationSounds.jobCancelled()
-    setShowCancelModal(false)
-    navigate('/staff/jobs', { replace: true })
+    setIsProcessing(true)
+    setActionError(null)
+    try {
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: job.id, reason, notes }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
+      stopBackgroundMusic()
+      if (isSoundEnabled()) NotificationSounds.jobCancelled()
+      setShowCancelModal(false)
+      navigate('/staff/jobs', { replace: true })
+    } catch (err: any) {
+      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const getStatusBadge = (status: JobStatus) => {
@@ -124,7 +147,7 @@ function StaffJobDetail() {
   if (error || !job) {
     return (
       <div className="p-4">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-stone-600 mb-4">
+        <button onClick={goBack} className="flex items-center gap-2 text-stone-600 mb-4">
           <ArrowLeft className="w-5 h-5" />
           <span>กลับ</span>
         </button>
@@ -145,7 +168,7 @@ function StaffJobDetail() {
     <div className="pb-6 space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-stone-600 hover:bg-stone-100 rounded-lg">
+        <button onClick={goBack} className="p-2 -ml-2 text-stone-600 hover:bg-stone-100 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-lg font-semibold text-stone-900 flex-1">รายละเอียดงาน</h1>
@@ -235,9 +258,6 @@ function StaffJobDetail() {
             <div>
               <p className="text-xs text-stone-500">รายได้</p>
               <p className="text-xl font-bold text-amber-700">฿{Number(job.staff_earnings).toLocaleString()}</p>
-              {job.tip_amount > 0 && (
-                <p className="text-sm text-green-600">+ ฿{Number(job.tip_amount).toLocaleString()} ทิป</p>
-              )}
             </div>
           </div>
 

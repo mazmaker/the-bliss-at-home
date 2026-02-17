@@ -134,21 +134,18 @@ function StaffEarnings() {
       return {
         earnings: summary?.today_earnings || 0,
         jobs: summary?.today_jobs || 0,
-        tips: summary?.today_tips || 0,
         hours: summary?.today_hours || 0,
       }
     } else if (viewPeriod === 'week') {
       return {
         earnings: summary?.week_earnings || 0,
         jobs: summary?.week_jobs || 0,
-        tips: summary?.week_tips || 0,
         hours: summary?.week_hours || 0,
       }
     } else {
       return {
         earnings: summary?.month_earnings || 0,
         jobs: summary?.month_jobs || 0,
-        tips: summary?.month_tips || 0,
         hours: summary?.month_hours || 0,
       }
     }
@@ -280,24 +277,6 @@ function StaffEarnings() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Tips */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">💰</span>
-              <span className="text-sm text-stone-500">ทิปรวม</span>
-            </div>
-            {periodEarnings.tips > 0 && (
-              <div className="flex items-center gap-1 text-green-600">
-                <TrendingUp className="w-3 h-3" />
-              </div>
-            )}
-          </div>
-          <p className="text-xl font-bold text-yellow-600 mt-1">
-            ฿{periodEarnings.tips.toLocaleString()}
-          </p>
-        </div>
-
         {/* Pending Payout */}
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between">
@@ -493,12 +472,6 @@ function StaffEarnings() {
                   <span className="text-stone-600">รายได้รวม</span>
                   <span>฿{showPayoutDetail.gross_earnings.toLocaleString()}</span>
                 </div>
-                {showPayoutDetail.tip_amount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">ทิป</span>
-                    <span className="text-green-600">+฿{showPayoutDetail.tip_amount.toLocaleString()}</span>
-                  </div>
-                )}
                 {showPayoutDetail.platform_fee > 0 && (
                   <div className="flex justify-between">
                     <span className="text-stone-600">ค่าธรรมเนียมแพลตฟอร์ม</span>

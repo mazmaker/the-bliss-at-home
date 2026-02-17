@@ -250,7 +250,6 @@ export type Database = {
           staff_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount: number | null
           updated_at: string | null
         }
         Insert: {
@@ -287,7 +286,6 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -324,7 +322,6 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -855,7 +852,6 @@ export type Database = {
           staff_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["job_status"] | null
-          tip_amount: number | null
           updated_at: string | null
         }
         Insert: {
@@ -893,7 +889,6 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -931,7 +926,6 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"] | null
-          tip_amount?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2196,7 +2190,6 @@ export type Database = {
           total_job_offers: number | null
           total_jobs: number | null
           total_ratings: number | null
-          total_tips: number | null
           updated_at: string | null
           year: number
         }
@@ -2219,7 +2212,6 @@ export type Database = {
           total_job_offers?: number | null
           total_jobs?: number | null
           total_ratings?: number | null
-          total_tips?: number | null
           updated_at?: string | null
           year: number
         }
@@ -2242,7 +2234,6 @@ export type Database = {
           total_job_offers?: number | null
           total_jobs?: number | null
           total_ratings?: number | null
-          total_tips?: number | null
           updated_at?: string | null
           year?: number
         }
@@ -2810,7 +2801,6 @@ export type Database = {
           staff_id: string
           staff_name: string
           status: string
-          tips_earned: number
           total_earnings: number
           total_revenue_generated: number
           total_reviews: number
