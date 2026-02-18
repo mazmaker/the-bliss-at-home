@@ -5,6 +5,7 @@
 
 import { getSupabaseClient } from '../lib/supabase.js'
 import { lineService } from './lineService.js'
+import { emailService } from './emailService.js'
 
 /**
  * Create job(s) from a confirmed booking (idempotent)
@@ -87,7 +88,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
     scheduled_date: booking.booking_date,
     scheduled_time: booking.booking_time,
     payment_status: 'paid' as const,
-    status: 'pending' as const,
+    status: 'pending' as 'pending' | 'assigned',
     customer_notes: booking.customer_notes || null,
   }
 
@@ -263,6 +264,7 @@ export async function sendBookingConfirmedNotifications(
     recipientName: string | null
     serviceName: string
     durationMinutes: number
+    staffEarnings: number
   }> = []
   let totalStaffEarnings = 0
 
@@ -703,4 +705,266 @@ export async function processJobCancelled(
   result.success = true
   console.log(`✅ Job cancellation processed: cancelled=${jobId}, new=${newJob.id}, staff=${result.staffNotified}, admins=${result.adminsNotified}`)
   return result
+}
+
+/**
+ * Process job reminders (called by cron every minute)
+ * Queries upcoming jobs with assigned staff, checks reminder preferences,
+ * sends LINE push notifications for due reminders, tracks sent records.
+ */
+export async function processJobReminders(): Promise<number> {
+  const supabase = getSupabaseClient()
+  const now = new Date()
+  let sentCount = 0
+
+  // 1. Get upcoming jobs (within next 25 hours, assigned to staff, not finished)
+  const todayStr = now.toLocaleDateString('en-CA') // YYYY-MM-DD format
+  const tomorrowDate = new Date(now.getTime() + 25 * 60 * 60 * 1000)
+  const tomorrowStr = tomorrowDate.toLocaleDateString('en-CA')
+
+  const { data: upcomingJobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, staff_id, service_name, scheduled_date, scheduled_time, duration_minutes, staff_earnings, address, hotel_name, room_number, customer_name, status')
+    .not('staff_id', 'is', null)
+    .in('status', ['confirmed', 'assigned', 'traveling', 'arrived'])
+    .gte('scheduled_date', todayStr)
+    .lte('scheduled_date', tomorrowStr)
+
+  if (jobsError) {
+    console.error('[Reminder] Query error:', jobsError)
+    return 0
+  }
+
+  if (!upcomingJobs || upcomingJobs.length === 0) {
+    return 0
+  }
+
+  console.log(`[Reminder] Found ${upcomingJobs.length} upcoming jobs to check`)
+
+  // 2. Get staff reminder preferences (only enabled ones)
+  const staffIds = [...new Set(upcomingJobs.map(j => j.staff_id).filter(Boolean))] as string[]
+  if (staffIds.length === 0) return 0
+
+  const { data: staffRecords } = await supabase
+    .from('staff')
+    .select('profile_id, reminder_minutes, reminders_enabled')
+    .in('profile_id', staffIds)
+    .eq('reminders_enabled', true)
+
+  if (!staffRecords || staffRecords.length === 0) return 0
+
+  const staffPrefsMap = new Map(staffRecords.map(s => [s.profile_id, s.reminder_minutes as number[]]))
+
+  // 3. Get LINE user IDs
+  const enabledProfileIds = staffRecords.map(s => s.profile_id).filter(Boolean) as string[]
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .in('id', enabledProfileIds)
+    .not('line_user_id', 'is', null)
+
+  if (!profiles || profiles.length === 0) return 0
+
+  const lineIdMap = new Map(profiles.map(p => [p.id, p.line_user_id as string]))
+
+  // 4. Get already-sent reminders for these jobs
+  const jobIds = upcomingJobs.map(j => j.id)
+  const { data: sentReminders } = await supabase
+    .from('sent_job_reminders')
+    .select('job_id, minutes_before')
+    .in('job_id', jobIds)
+
+  const sentSet = new Set(sentReminders?.map(r => `${r.job_id}-${r.minutes_before}`) || [])
+
+  // 5. Check each job × each reminder time
+  for (const job of upcomingJobs) {
+    const reminderMinutes = staffPrefsMap.get(job.staff_id)
+    if (!reminderMinutes || reminderMinutes.length === 0) continue
+
+    const lineUserId = lineIdMap.get(job.staff_id)
+    if (!lineUserId) continue
+
+    // Parse job datetime in Thailand timezone (UTC+7)
+    const rawTime = (job.scheduled_time || '00:00:00').split('.')[0] // Remove microseconds
+    const jobDateTime = new Date(`${job.scheduled_date}T${rawTime}+07:00`)
+
+    // Skip if job time already passed
+    if (jobDateTime <= now) continue
+
+    for (const minutesBefore of reminderMinutes) {
+      const remindAt = new Date(jobDateTime.getTime() - minutesBefore * 60000)
+      const sentKey = `${job.id}-${minutesBefore}`
+
+      // Send if remind_at has passed and not yet sent
+      if (remindAt <= now && !sentSet.has(sentKey)) {
+        const success = await lineService.sendJobReminderToStaff(lineUserId, {
+          serviceName: job.service_name,
+          scheduledDate: job.scheduled_date,
+          scheduledTime: rawTime.substring(0, 5),
+          address: job.address || '',
+          hotelName: job.hotel_name,
+          roomNumber: job.room_number,
+          staffEarnings: Number(job.staff_earnings) || 0,
+          durationMinutes: job.duration_minutes,
+          customerName: job.customer_name,
+          jobId: job.id,
+          minutesBefore,
+        })
+
+        if (success) {
+          // Mark as sent
+          await supabase
+            .from('sent_job_reminders')
+            .insert({ job_id: job.id, minutes_before: minutesBefore })
+
+          sentCount++
+          console.log(`⏰ Reminder sent: job=${job.id}, ${minutesBefore}min before, staff=${job.staff_id}`)
+        }
+      }
+    }
+  }
+
+  return sentCount
+}
+
+/**
+ * Cleanup old sent_job_reminders and sent_customer_email_reminders records (older than 3 days)
+ * Called by daily cron job
+ */
+export async function cleanupOldReminders(): Promise<void> {
+  const supabase = getSupabaseClient()
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { error: err1 } = await supabase
+    .from('sent_job_reminders')
+    .delete()
+    .lt('sent_at', threeDaysAgo)
+
+  const { error: err2 } = await supabase
+    .from('sent_customer_email_reminders')
+    .delete()
+    .lt('sent_at', threeDaysAgo)
+
+  if (err1) console.error('❌ Failed to cleanup sent_job_reminders:', err1)
+  if (err2) console.error('❌ Failed to cleanup sent_customer_email_reminders:', err2)
+  if (!err1 && !err2) console.log('🧹 Old reminder records cleaned up')
+}
+
+/**
+ * Process customer email reminders (called by cron every 5 minutes)
+ * Sends email reminders to customers 24 hours and 2 hours before their appointment.
+ */
+export async function processCustomerEmailReminders(): Promise<number> {
+  const supabase = getSupabaseClient()
+  const now = new Date()
+  let sentCount = 0
+
+  const REMINDER_MINUTES = [1440, 120] // 24 hours, 2 hours
+
+  // 1. Get upcoming jobs (within next 25 hours)
+  const todayStr = now.toLocaleDateString('en-CA')
+  const futureDate = new Date(now.getTime() + 25 * 60 * 60 * 1000)
+  const futureStr = futureDate.toLocaleDateString('en-CA')
+
+  const { data: upcomingJobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, customer_id, service_name, scheduled_date, scheduled_time, duration_minutes, address, hotel_name, room_number, customer_name, status')
+    .not('customer_id', 'is', null)
+    .in('status', ['confirmed', 'assigned', 'traveling', 'arrived'])
+    .gte('scheduled_date', todayStr)
+    .lte('scheduled_date', futureStr)
+
+  if (jobsError) {
+    console.error('[CustomerReminder] Query error:', jobsError)
+    return 0
+  }
+
+  if (!upcomingJobs || upcomingJobs.length === 0) return 0
+
+  // 2. Get customer emails, language, and notification preferences
+  const customerIds = [...new Set(upcomingJobs.map(j => j.customer_id).filter(Boolean))] as string[]
+  if (customerIds.length === 0) return 0
+
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, language')
+    .in('id', customerIds)
+    .not('email', 'is', null)
+
+  if (!profiles || profiles.length === 0) return 0
+
+  // Check customer preferences (booking_updates toggle)
+  const { data: customers } = await supabase
+    .from('customers')
+    .select('profile_id, preferences')
+    .in('profile_id', customerIds)
+
+  const optOutSet = new Set<string>()
+  if (customers) {
+    for (const c of customers) {
+      const prefs = c.preferences as any
+      if (prefs?.notifications?.booking_updates === false) {
+        optOutSet.add(c.profile_id)
+      }
+    }
+  }
+
+  const profileMap = new Map(profiles
+    .filter(p => !optOutSet.has(p.id))
+    .map(p => [p.id, { email: p.email as string, language: (p.language || 'en') as string }])
+  )
+
+  // 3. Get already-sent email reminders for these jobs
+  const jobIds = upcomingJobs.map(j => j.id)
+  const { data: sentReminders } = await supabase
+    .from('sent_customer_email_reminders')
+    .select('job_id, minutes_before')
+    .in('job_id', jobIds)
+
+  const sentSet = new Set(sentReminders?.map(r => `${r.job_id}-${r.minutes_before}`) || [])
+
+  // 4. Check each job × each reminder time
+  for (const job of upcomingJobs) {
+    const profile = profileMap.get(job.customer_id)
+    if (!profile) continue
+
+    // Parse job datetime in Thailand timezone (UTC+7)
+    const rawTime = (job.scheduled_time || '00:00:00').split('.')[0]
+    const jobDateTime = new Date(`${job.scheduled_date}T${rawTime}+07:00`)
+
+    // Skip if job time already passed
+    if (jobDateTime <= now) continue
+
+    for (const minutesBefore of REMINDER_MINUTES) {
+      const remindAt = new Date(jobDateTime.getTime() - minutesBefore * 60000)
+      const sentKey = `${job.id}-${minutesBefore}`
+
+      if (remindAt <= now && !sentSet.has(sentKey)) {
+        try {
+          await emailService.sendCustomerReminder(profile.email, {
+            customerName: job.customer_name,
+            serviceName: job.service_name,
+            scheduledDate: job.scheduled_date,
+            scheduledTime: rawTime.substring(0, 5),
+            durationMinutes: job.duration_minutes,
+            address: job.address || '',
+            hotelName: job.hotel_name,
+            roomNumber: job.room_number,
+            minutesBefore,
+          }, profile.language)
+
+          await supabase
+            .from('sent_customer_email_reminders')
+            .insert({ job_id: job.id, minutes_before: minutesBefore })
+
+          sentCount++
+          console.log(`📧 Customer reminder sent: job=${job.id}, ${minutesBefore}min before, email=${profile.email}`)
+        } catch (err) {
+          console.error(`❌ Failed to send customer reminder: job=${job.id}, email=${profile.email}`, err)
+        }
+      }
+    }
+  }
+
+  return sentCount
 }

@@ -21,16 +21,11 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { useJobs, type Job, type JobStatus } from '@bliss/supabase'
+import { useAuth } from '@bliss/supabase/auth'
 import { JobCancellationModal } from '../components'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { stopBackgroundMusic } from '../utils/backgroundMusic'
-import {
-  getReminderSettings,
-  saveReminderSettings,
-  requestNotificationPermission,
-  scheduleRemindersForJobs,
-  REMINDER_OPTIONS,
-} from '../utils/jobReminder'
+import { REMINDER_OPTIONS } from '../utils/jobReminder'
 
 type ViewMode = 'day' | 'week' | 'month'
 type FilterMode = 'all' | 'upcoming' | 'completed'
@@ -52,24 +47,35 @@ function formatLocalDate(date: Date): string {
 
 function StaffSchedule() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { jobs, isLoading, refresh } = useJobs({ realtime: true })
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [showReminderSettings, setShowReminderSettings] = useState(false)
-  const [reminderSettings, setReminderSettings] = useState(getReminderSettings)
+  const [reminderSettings, setReminderSettings] = useState({ enabled: true, times: [60, 120] })
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
 
-  // Schedule reminders when jobs change
+  // Fetch reminder settings from server on mount
   useEffect(() => {
-    if (jobs.length > 0 && reminderSettings.enabled) {
-      scheduleRemindersForJobs(jobs)
-    }
-  }, [jobs, reminderSettings])
+    if (!user?.id) return
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+    fetch(`${serverUrl}/api/notifications/reminder-settings?profile_id=${user.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.enabled !== undefined) {
+          setReminderSettings({ enabled: data.enabled, times: data.minutes || [60, 120] })
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingSettings(false))
+  }, [user?.id])
 
   // Handle reminder toggle
   const handleReminderTimeToggle = (minutes: number) => {
@@ -79,16 +85,30 @@ function StaffSchedule() {
     setReminderSettings({ ...reminderSettings, times: newTimes })
   }
 
-  // Save reminder settings
+  // Save reminder settings to server
   const handleSaveReminderSettings = async () => {
-    // Request notification permission if enabling reminders
-    if (reminderSettings.enabled && reminderSettings.times.length > 0) {
-      await requestNotificationPermission()
+    if (!user?.id) return
+    setIsSavingSettings(true)
+    try {
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const res = await fetch(`${serverUrl}/api/notifications/reminder-settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile_id: user.id,
+          enabled: reminderSettings.enabled,
+          minutes: reminderSettings.times,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      setShowReminderSettings(false)
+    } catch (err: any) {
+      console.error('Failed to save reminder settings:', err)
+      setActionError(err.message || 'ไม่สามารถบันทึกการตั้งค่าได้')
+    } finally {
+      setIsSavingSettings(false)
     }
-    saveReminderSettings(reminderSettings)
-    // Re-schedule reminders with new settings
-    scheduleRemindersForJobs(jobs)
-    setShowReminderSettings(false)
   }
 
   // Handle cancel job
@@ -878,20 +898,21 @@ function StaffSchedule() {
                   onClick={() =>
                     setReminderSettings({ ...reminderSettings, enabled: !reminderSettings.enabled })
                   }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                  className={`relative shrink-0 rounded-full transition-colors ${
                     reminderSettings.enabled ? 'bg-amber-700' : 'bg-stone-300'
                   }`}
+                  style={{ width: '3rem', height: '1.75rem', minHeight: 'auto', minWidth: 'auto' }}
                 >
                   <span
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      reminderSettings.enabled ? 'left-7' : 'left-1'
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      reminderSettings.enabled ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>
               </div>
 
               <p className="text-sm text-stone-600">
-                เลือกเวลาที่ต้องการให้แจ้งเตือนก่อนเริ่มงาน
+                ระบบจะแจ้งเตือนผ่าน LINE ก่อนเริ่มงานตามเวลาที่เลือก
               </p>
               {REMINDER_OPTIONS.map((option) => (
                 <button
@@ -914,9 +935,17 @@ function StaffSchedule() {
               ))}
               <button
                 onClick={handleSaveReminderSettings}
-                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
+                disabled={isSavingSettings}
+                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                บันทึก
+                {isSavingSettings ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  'บันทึก'
+                )}
               </button>
             </div>
           </div>

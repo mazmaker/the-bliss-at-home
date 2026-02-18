@@ -9,10 +9,12 @@ dotenv.config({ path: join(__dirname, '..', '.env') })
 
 import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
+import cron from 'node-cron'
 import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
 import hotelRoutes from './routes/hotel.js'
 import notificationRoutes from './routes/notification.js'
+import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders } from './services/notificationService.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -83,11 +85,44 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   })
 })
 
+// === Cron Jobs ===
+
+// Check for due job reminders every minute
+cron.schedule('* * * * *', async () => {
+  try {
+    const count = await processJobReminders()
+    if (count > 0) console.log(`[Cron] Sent ${count} job reminders`)
+  } catch (err) {
+    console.error('[Cron] Error processing reminders:', err)
+  }
+})
+
+// Check for due customer email reminders every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const count = await processCustomerEmailReminders()
+    if (count > 0) console.log(`[Cron] Sent ${count} customer email reminders`)
+  } catch (err) {
+    console.error('[Cron] Error processing customer email reminders:', err)
+  }
+})
+
+// Cleanup old reminder records daily at 3 AM (Thailand time)
+cron.schedule('0 20 * * *', async () => {
+  // 20:00 UTC = 03:00 ICT (Thailand)
+  try {
+    await cleanupOldReminders()
+  } catch (err) {
+    console.error('[Cron] Error cleaning up reminders:', err)
+  }
+})
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min)`)
 })
 
 export default app

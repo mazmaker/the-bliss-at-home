@@ -27,6 +27,18 @@ export interface PasswordResetData {
   expiresIn: string
 }
 
+export interface CustomerReminderData {
+  customerName: string
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  durationMinutes: number
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  minutesBefore: number
+}
+
 class EmailService {
   private transporter: Transporter | null = null
   private isConfigured: boolean = false
@@ -362,6 +374,232 @@ class EmailService {
     `
 
     return { subject, html, text }
+  }
+
+  /**
+   * Send customer appointment reminder email
+   */
+  async sendCustomerReminder(
+    toEmail: string,
+    data: CustomerReminderData,
+    language: string = 'en'
+  ): Promise<void> {
+    if (!this.isConfigured || !this.transporter) {
+      await this.initialize()
+    }
+
+    if (!this.isConfigured || !this.transporter) {
+      throw new Error('Email service not configured')
+    }
+
+    const template = this.generateCustomerReminderTemplate(data, language)
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'noreply@theblissathome.com',
+      to: toEmail,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    }
+
+    try {
+      const result = await this.transporter.sendMail(mailOptions)
+      console.log(`✅ Customer reminder sent to ${toEmail}:`, result.messageId)
+    } catch (error) {
+      console.error(`❌ Failed to send customer reminder to ${toEmail}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Generate customer reminder template with multi-language support (th/en/cn)
+   */
+  private generateCustomerReminderTemplate(data: CustomerReminderData, language: string): EmailTemplate {
+    const { customerName, serviceName, scheduledDate, scheduledTime, durationMinutes, address, hotelName, roomNumber, minutesBefore } = data
+
+    const locationText = hotelName
+      ? `${hotelName}${roomNumber ? ` - Room ${roomNumber}` : ''}`
+      : address
+
+    const timeLabel = this.formatTimeLabel(minutesBefore, language)
+
+    const i18n = this.getReminderI18n(language)
+
+    const subject = `${i18n.subjectPrefix}${timeLabel} - The Bliss at Home`
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${i18n.title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #b45309, #d97706); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header h1 { margin: 0 0 8px 0; font-size: 24px; }
+          .header p { margin: 0; opacity: 0.9; }
+          .content { background: #f8fafc; padding: 30px 20px; }
+          .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; }
+          .detail-row { padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+          .detail-row:last-child { border-bottom: none; }
+          .detail-label { color: #64748b; font-size: 14px; }
+          .detail-value { font-weight: 600; color: #1e293b; font-size: 16px; margin-top: 2px; }
+          .highlight { background: #fffbeb; border: 1px solid #fbbf24; padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center; }
+          .highlight p { margin: 0; font-size: 18px; font-weight: bold; color: #92400e; }
+          .footer { background: #1f2937; color: white; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; }
+          .footer a { color: #fbbf24; text-decoration: none; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>${i18n.headerTitle}</h1>
+            <p>The Bliss at Home</p>
+          </div>
+
+          <div class="content">
+            <div class="highlight">
+              <p>${i18n.timeAlert.replace('{time}', timeLabel)}</p>
+            </div>
+
+            <div class="card">
+              <p style="font-size: 16px;">${i18n.greeting.replace('{name}', customerName)}</p>
+              <p>${i18n.intro}</p>
+
+              <div style="margin-top: 20px;">
+                <div class="detail-row">
+                  <div class="detail-label">${i18n.labelService}</div>
+                  <div class="detail-value">${serviceName}</div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail-label">${i18n.labelDate}</div>
+                  <div class="detail-value">${scheduledDate}</div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail-label">${i18n.labelTime}</div>
+                  <div class="detail-value">${scheduledTime}</div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail-label">${i18n.labelDuration}</div>
+                  <div class="detail-value">${durationMinutes} ${i18n.minutes}</div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail-label">${i18n.labelLocation}</div>
+                  <div class="detail-value">${locationText}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+              <p style="margin: 0; color: #166534;">${i18n.prepareNote}</p>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>${i18n.footerText}</p>
+            <p><a href="mailto:support@theblissathome.com">support@theblissathome.com</a></p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const text = `${i18n.headerTitle} - The Bliss at Home
+
+${i18n.greeting.replace('{name}', customerName)}
+${i18n.intro}
+
+${i18n.labelService}: ${serviceName}
+${i18n.labelDate}: ${scheduledDate}
+${i18n.labelTime}: ${scheduledTime}
+${i18n.labelDuration}: ${durationMinutes} ${i18n.minutes}
+${i18n.labelLocation}: ${locationText}
+
+${i18n.prepareNote}
+
+${i18n.footerText}
+support@theblissathome.com`
+
+    return { subject, html, text }
+  }
+
+  private formatTimeLabel(minutesBefore: number, language: string): string {
+    if (language === 'th') {
+      if (minutesBefore < 60) return `${minutesBefore} นาที`
+      if (minutesBefore < 1440) return `${Math.floor(minutesBefore / 60)} ชั่วโมง`
+      return `${Math.floor(minutesBefore / 1440)} วัน`
+    }
+    if (language === 'cn') {
+      if (minutesBefore < 60) return `${minutesBefore}分钟`
+      if (minutesBefore < 1440) return `${Math.floor(minutesBefore / 60)}小时`
+      return `${Math.floor(minutesBefore / 1440)}天`
+    }
+    // English (default)
+    if (minutesBefore < 60) return `${minutesBefore} minutes`
+    if (minutesBefore < 1440) {
+      const h = Math.floor(minutesBefore / 60)
+      return `${h} hour${h > 1 ? 's' : ''}`
+    }
+    const d = Math.floor(minutesBefore / 1440)
+    return `${d} day${d > 1 ? 's' : ''}`
+  }
+
+  private getReminderI18n(language: string) {
+    if (language === 'th') {
+      return {
+        subjectPrefix: 'แจ้งเตือน: นัดหมายของคุณอีก ',
+        title: 'แจ้งเตือนนัดหมาย',
+        headerTitle: '💆 แจ้งเตือนนัดหมาย',
+        timeAlert: 'นัดหมายของคุณอีก {time}!',
+        greeting: 'สวัสดีคุณ {name},',
+        intro: 'นี่คือการแจ้งเตือนนัดหมายที่กำลังจะมาถึงของคุณ:',
+        labelService: 'บริการ',
+        labelDate: 'วันที่',
+        labelTime: 'เวลา',
+        labelDuration: 'ระยะเวลา',
+        labelLocation: 'สถานที่',
+        minutes: 'นาที',
+        prepareNote: '✅ กรุณาเตรียมตัวให้พร้อมก่อนเวลานัดหมาย',
+        footerText: 'หากมีคำถามหรือต้องการเปลี่ยนแปลง โปรดติดต่อเรา',
+      }
+    }
+    if (language === 'cn') {
+      return {
+        subjectPrefix: '提醒：您的预约还有 ',
+        title: '预约提醒',
+        headerTitle: '💆 预约提醒',
+        timeAlert: '您的预约还有 {time}！',
+        greeting: '您好 {name}，',
+        intro: '以下是您即将到来的预约提醒：',
+        labelService: '服务',
+        labelDate: '日期',
+        labelTime: '时间',
+        labelDuration: '时长',
+        labelLocation: '地点',
+        minutes: '分钟',
+        prepareNote: '✅ 请在预约时间前做好准备',
+        footerText: '如有问题或需要更改，请联系我们',
+      }
+    }
+    // English (default)
+    return {
+      subjectPrefix: 'Reminder: Your appointment in ',
+      title: 'Appointment Reminder',
+      headerTitle: '💆 Appointment Reminder',
+      timeAlert: 'Your appointment is in {time}!',
+      greeting: 'Hello {name},',
+      intro: 'This is a friendly reminder about your upcoming appointment:',
+      labelService: 'Service',
+      labelDate: 'Date',
+      labelTime: 'Time',
+      labelDuration: 'Duration',
+      labelLocation: 'Location',
+      minutes: 'minutes',
+      prepareNote: '✅ Please be ready before your appointment time.',
+      footerText: 'If you have questions or need to make changes, please contact us.',
+    }
   }
 
   /**

@@ -334,6 +334,58 @@ async function sendJobCancelledToAdmin(lineUserIds: string[], data: JobCancelled
   return allSuccess
 }
 
+interface JobReminderData {
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  staffEarnings: number
+  durationMinutes: number
+  customerName: string
+  jobId: string
+  minutesBefore: number
+}
+
+/**
+ * Send job reminder notification to a staff member via LINE
+ */
+async function sendJobReminderToStaff(lineUserId: string, data: JobReminderData): Promise<boolean> {
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const linkText = staffLiffUrl
+    ? `\n👉 ดูรายละเอียด:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
+    : ''
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}${data.roomNumber ? ` ห้อง ${data.roomNumber}` : ''}`
+    : `📍 สถานที่: ${data.address}`
+
+  // Format time label from minutes
+  let timeLabel: string
+  if (data.minutesBefore < 60) {
+    timeLabel = `${data.minutesBefore} นาที`
+  } else if (data.minutesBefore < 1440) {
+    timeLabel = `${Math.floor(data.minutesBefore / 60)} ชั่วโมง`
+  } else {
+    timeLabel = `${Math.floor(data.minutesBefore / 1440)} วัน`
+  }
+
+  const messageText =
+    `⏰ แจ้งเตือน: มีงานใน ${timeLabel}!\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `👤 ลูกค้า: ${data.customerName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `🕐 เวลา: ${data.scheduledTime}\n` +
+    `⏱️ ระยะเวลา: ${data.durationMinutes} นาที\n` +
+    `${locationText}\n` +
+    `💰 รายได้: ${data.staffEarnings.toLocaleString()} บาท` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+  return pushMessage(lineUserId, [message])
+}
+
 export const lineService = {
   pushMessage,
   multicast,
@@ -341,6 +393,7 @@ export const lineService = {
   sendNewBookingToAdmin,
   sendJobReAvailableToStaff,
   sendJobCancelledToAdmin,
+  sendJobReminderToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, JobReminderData }
