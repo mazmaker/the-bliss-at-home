@@ -141,14 +141,70 @@ export const updateHotelStatus = async (id: string, status: Hotel['status']) => 
 // ==================== INVOICES (Using monthly_bills table) ====================
 
 export const getHotelInvoices = async (hotelId: string) => {
-  const { data, error } = await supabase
-    .from('monthly_bills') // ✅ ใช้ existing table
+  // ✅ First try to get from monthly_bills table
+  const { data: existingBills } = await supabase
+    .from('monthly_bills')
     .select('*')
     .eq('hotel_id', hotelId)
     .order('created_at', { ascending: false })
 
+  if (existingBills && existingBills.length > 0) {
+    return existingBills as HotelInvoice[]
+  }
+
+  // ✅ If no bills exist, generate from actual bookings data
+  const { data: bookings, error } = await supabase
+    .from('bookings')
+    .select('booking_date, final_price, status, created_at, hotels!inner(commission_rate)')
+    .eq('hotel_id', hotelId)
+    .eq('is_hotel_booking', true)
+    .in('status', ['confirmed', 'completed'])
+    .order('booking_date', { ascending: false })
+
   if (error) throw error
-  return data as HotelInvoice[]
+
+  if (!bookings || bookings.length === 0) {
+    return []
+  }
+
+  // Group bookings by month to create monthly invoices
+  const monthlyGroups: { [key: string]: typeof bookings } = {}
+  bookings.forEach(booking => {
+    const date = new Date(booking.booking_date)
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
+    if (!monthlyGroups[monthKey]) {
+      monthlyGroups[monthKey] = []
+    }
+    monthlyGroups[monthKey].push(booking)
+  })
+
+  // Convert to invoice format
+  const invoices = Object.entries(monthlyGroups).map(([monthKey, monthBookings]) => {
+    const [year, month] = monthKey.split('-')
+    const totalRevenue = monthBookings.reduce((sum, booking) => sum + Number(booking.final_price), 0)
+    const commissionRate = monthBookings[0].hotels?.commission_rate || 20
+    const commissionAmount = totalRevenue * (commissionRate / 100)
+
+    return {
+      id: `generated-${hotelId}-${monthKey}`,
+      invoice_number: `INV-${year}${month}-${hotelId.slice(-4)}`,
+      hotel_id: hotelId,
+      period_start: `${year}-${month}-01`,
+      period_end: new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0],
+      period_type: 'monthly' as const,
+      total_bookings: monthBookings.length,
+      total_revenue: totalRevenue,
+      commission_rate: commissionRate,
+      commission_amount: commissionAmount,
+      status: 'pending' as const,
+      issued_date: new Date().toISOString(),
+      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString()
+    }
+  })
+
+  return invoices as HotelInvoice[]
 }
 
 export const createInvoice = async (invoiceData: Partial<HotelInvoice>) => {
@@ -266,7 +322,6 @@ export const getHotelBookings = async (hotelId: string) => {
     .from('bookings') // ✅ ใช้ existing table
     .select(`
       *,
-      customer:customers(full_name, phone, email),
       service:services(name_th, name_en, category),
       staff:staff(name_th, name_en)
     `)
@@ -277,28 +332,57 @@ export const getHotelBookings = async (hotelId: string) => {
   if (error) throw error
 
   // แปลงข้อมูลให้เข้ากับ HotelBooking interface
-  const hotelBookings = data?.map(booking => ({
-    id: booking.id,
-    booking_number: booking.booking_number,
-    hotel_id: booking.hotel_id,
-    customer_name: booking.customer?.full_name || 'Guest',
-    customer_phone: booking.customer?.phone || '',
-    customer_email: booking.customer?.email || '',
-    service_name: booking.service?.name_th || '',
-    service_category: booking.service?.category || '',
-    staff_name: booking.staff?.name_th || '',
-    booking_date: booking.created_at,
-    service_date: booking.booking_date,
-    service_time: booking.booking_time,
-    duration: booking.duration,
-    total_price: booking.final_price,
-    status: booking.status,
-    payment_status: booking.payment_status,
-    room_number: booking.hotel_room_number,
-    notes: booking.customer_notes,
-    created_by_hotel: booking.is_hotel_booking,
-    created_at: booking.created_at
-  })) || []
+  const hotelBookings = data?.map(booking => {
+    // Parse customer data from customer_notes using simple string operations
+    // Support formats: "Guest: name, Phone: phone, Notes: notes" and multiline
+    let customerName = 'ไม่ระบุชื่อ'
+    let customerPhone = 'ไม่ระบุเบอร์'
+
+    if (booking.customer_notes) {
+      const notes = booking.customer_notes
+
+      // Parse guest name
+      if (notes.includes('Guest:')) {
+        const guestStart = notes.indexOf('Guest:') + 6
+        let guestEnd = notes.indexOf(',', guestStart)
+        if (guestEnd === -1) guestEnd = notes.indexOf('\n', guestStart)
+        if (guestEnd === -1) guestEnd = notes.length
+        customerName = notes.substring(guestStart, guestEnd).trim()
+      }
+
+      // Parse phone number
+      if (notes.includes('Phone:')) {
+        const phoneStart = notes.indexOf('Phone:') + 6
+        let phoneEnd = notes.indexOf(',', phoneStart)
+        if (phoneEnd === -1) phoneEnd = notes.indexOf('\n', phoneStart)
+        if (phoneEnd === -1) phoneEnd = notes.length
+        customerPhone = notes.substring(phoneStart, phoneEnd).trim()
+      }
+    }
+
+    return {
+      id: booking.id,
+      booking_number: booking.booking_number,
+      hotel_id: booking.hotel_id,
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      customer_email: '', // No email data in customer_notes
+      service_name: booking.service?.name_th || '',
+      service_category: booking.service?.category || '',
+      staff_name: booking.staff?.name_th || '',
+      booking_date: booking.created_at,
+      service_date: booking.booking_date,
+      service_time: booking.booking_time,
+      duration: booking.duration,
+      total_price: booking.final_price,
+      status: booking.status,
+      payment_status: booking.payment_status,
+      room_number: booking.hotel_room_number,
+      notes: booking.customer_notes,
+      created_by_hotel: booking.is_hotel_booking,
+      created_at: booking.created_at
+    }
+  }) || []
 
   return hotelBookings as HotelBooking[]
 }
@@ -357,17 +441,18 @@ export const getHotelStats = async (hotelId: string) => {
     .eq('hotel_id', hotelId)
     .eq('is_hotel_booking', true)
 
-  // ✅ Get monthly revenue from existing monthly_bills table
+  // ✅ Get monthly revenue from ACTUAL bookings (not bills)
   const firstDayOfMonth = new Date()
   firstDayOfMonth.setDate(1)
-  const { data: monthlyBills } = await supabase
-    .from('monthly_bills')
-    .select('total_amount')
+  const { data: monthlyBookings } = await supabase
+    .from('bookings')
+    .select('final_price')
     .eq('hotel_id', hotelId)
-    .eq('status', 'paid')
-    .gte('period_start', firstDayOfMonth.toISOString().split('T')[0])
+    .eq('is_hotel_booking', true)
+    .in('status', ['confirmed', 'completed']) // Only confirmed/completed bookings
+    .gte('booking_date', firstDayOfMonth.toISOString().split('T')[0])
 
-  const monthlyRevenue = monthlyBills?.reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0
+  const monthlyRevenue = monthlyBookings?.reduce((sum, booking) => sum + Number(booking.final_price), 0) || 0
 
   return {
     totalBookings: totalBookings || 0,
@@ -376,14 +461,19 @@ export const getHotelStats = async (hotelId: string) => {
 }
 
 export const getTotalMonthlyRevenue = async () => {
-  // ✅ Get total revenue across all hotels from existing monthly_bills table
-  const { data: paidBills, error } = await supabase
-    .from('monthly_bills')
-    .select('total_amount')
-    .eq('status', 'paid')
+  // ✅ Get total revenue across all hotels from ACTUAL bookings
+  const firstDayOfMonth = new Date()
+  firstDayOfMonth.setDate(1)
+
+  const { data: monthlyBookings, error } = await supabase
+    .from('bookings')
+    .select('final_price')
+    .eq('is_hotel_booking', true)
+    .in('status', ['confirmed', 'completed']) // Only confirmed/completed bookings
+    .gte('booking_date', firstDayOfMonth.toISOString().split('T')[0])
 
   if (error) throw error
 
-  const totalRevenue = paidBills?.reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0
+  const totalRevenue = monthlyBookings?.reduce((sum, booking) => sum + Number(booking.final_price), 0) || 0
   return totalRevenue
 }

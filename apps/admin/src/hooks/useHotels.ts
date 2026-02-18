@@ -81,9 +81,9 @@ export function useHotel(id: string | undefined) {
 
       setHotel({
         ...data,
-        totalBookings: stats.totalBookings,
-        monthlyRevenue: stats.monthlyRevenue,
-      } as Hotel & { totalBookings: number; monthlyRevenue: number })
+        total_bookings: stats.totalBookings,
+        monthly_revenue: stats.monthlyRevenue,
+      } as Hotel & { total_bookings: number; monthly_revenue: number })
       setError(null)
     } catch (err) {
       setError(err as Error)

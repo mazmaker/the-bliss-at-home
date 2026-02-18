@@ -27,6 +27,18 @@ export interface PasswordResetData {
   expiresIn: string
 }
 
+export interface HotelWelcomeData {
+  hotelName: string
+  hotelNameEn: string
+  contactPerson: string
+  loginEmail: string
+  password: string
+  loginUrl: string
+  dashboardUrl: string
+  supportEmail: string
+  companyName: string
+}
+
 class EmailService {
   private transporter: Transporter | null = null
   private isConfigured: boolean = false
@@ -144,6 +156,51 @@ class EmailService {
       console.log(`✅ Hotel invitation sent to ${toEmail}:`, result.messageId)
     } catch (error) {
       console.error(`❌ Failed to send hotel invitation to ${toEmail}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Send hotel welcome email (for new registrations)
+   */
+  async sendHotelWelcomeEmail(
+    toEmail: string,
+    data: HotelWelcomeData
+  ): Promise<void> {
+    // Initialize email service if not already done
+    if (!this.isConfigured || !this.transporter) {
+      await this.initialize()
+    }
+
+    if (!this.isConfigured || !this.transporter) {
+      throw new Error('Email service not configured')
+    }
+
+    // TODO: Implement generateHotelWelcomeTemplate method
+    const template = {
+      subject: 'Welcome to The Bliss at Home',
+      html: '<p>Welcome! Your hotel account has been set up.</p>',
+      text: 'Welcome! Your hotel account has been set up.'
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'noreply@theblissathome.com',
+      to: toEmail,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    }
+
+    try {
+      const result = await this.transporter.sendMail(mailOptions)
+      console.log(`✅ Hotel welcome email sent to ${toEmail}:`, result.messageId)
+
+      // Log preview URL for test mode
+      if (process.env.EMAIL_PROVIDER === 'test') {
+        console.log(`🌐 Preview URL: ${nodemailer.getTestMessageUrl(result)}`)
+      }
+    } catch (error) {
+      console.error(`❌ Failed to send hotel welcome email to ${toEmail}:`, error)
       throw error
     }
   }

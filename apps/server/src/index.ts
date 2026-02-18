@@ -12,6 +12,7 @@ import cors from 'cors'
 import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
 import hotelRoutes from './routes/hotel.js'
+import secureBookingsRoutes from './routes/secure-bookings-v2.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -48,6 +49,7 @@ app.get('/api', (req: Request, res: Response) => {
       payments: '/api/payments',
       otp: '/api/otp',
       hotels: '/api/hotels',
+      'secure-bookings': '/api/secure-bookings (Professional JWT Auth)',
     },
   })
 })
@@ -60,6 +62,9 @@ app.use('/api/otp', otpRoutes)
 
 // Hotel authentication routes
 app.use('/api/hotels', hotelRoutes)
+
+// Secure bookings routes
+app.use('/api/secure-bookings', secureBookingsRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {

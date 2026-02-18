@@ -37,7 +37,7 @@ export function DynamicHotelRedirect({
           setSlugLoading(false)
         })
     }
-  }, [hotelId, slugLoading])
+  }, [hotelId])
 
   // Loading state
   if (isLoading || slugLoading) {

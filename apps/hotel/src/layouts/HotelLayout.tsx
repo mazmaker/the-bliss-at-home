@@ -70,9 +70,7 @@ function HotelLayout() {
   const navigation = [
     { name: 'ภาพรวม', nameEn: 'Dashboard', href: `/hotel/${currentSlug}`, icon: LayoutDashboard },
     { name: 'บริการ', nameEn: 'Services', href: `/hotel/${currentSlug}/services`, icon: Calendar },
-    { name: 'จองให้แขก', nameEn: 'Book for Guest', href: `/hotel/${currentSlug}/book`, icon: CreditCard },
-    { name: 'การจองของแขก', nameEn: 'Guest Bookings', href: `/hotel/${currentSlug}/guests`, icon: Users },
-    { name: 'ประวัติการจอง', nameEn: 'History', href: `/hotel/${currentSlug}/history`, icon: FileText },
+    { name: 'ประวัติการจอง', nameEn: 'Booking History', href: `/hotel/${currentSlug}/history`, icon: FileText },
     { name: 'บิลรายเดือน', nameEn: 'Monthly Bill', href: `/hotel/${currentSlug}/bill`, icon: CreditCard },
     { name: 'ข้อมูลโรงแรม', nameEn: 'Hotel Profile', href: `/hotel/${currentSlug}/profile`, icon: Building },
     { name: 'ตั้งค่า', nameEn: 'Settings', href: `/hotel/${currentSlug}/settings`, icon: Settings },
