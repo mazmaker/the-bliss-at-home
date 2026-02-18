@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Bliss at Home - Project Timeline</title>
+    <style>
+        /* ===== CSS Custom Properties ===== */
+        :root {
+            /* Light theme (default) */
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #f1f5f9;
+            --bg-header: #ffffff;
+            --header-border: #e2e8f0;
+            --header-title: #0f172a;
+            --header-sub: #64748b;
+            --toggle-bg: #f1f5f9;
+            --toggle-border: #e2e8f0;
+            --toggle-color: #334155;
+            --toggle-hover: #e2e8f0;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-tertiary: #64748b;
+            --text-muted: #94a3b8;
+            --text-header: #ffffff;
+
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+
+            --bar-bg: #e2e8f0;
+            --phase-task-bg: #f8fafc;
+            --phase-task-border: #e2e8f0;
+            --timeline-line-color: #cbd5e1;
+
+            --tag-done-bg: #dcfce7;
+            --tag-done-text: #166534;
+            --tag-wip-bg: #fef3c7;
+            --tag-wip-text: #92400e;
+            --tag-ui-bg: #dbeafe;
+            --tag-ui-text: #1e40af;
+            --tag-todo-bg: #f1f5f9;
+            --tag-todo-text: #64748b;
+
+            --status-done-bg: #dcfce7;
+            --status-done-text: #16a34a;
+            --status-partial-bg: #fef3c7;
+            --status-partial-text: #d97706;
+            --status-ui-bg: #dbeafe;
+            --status-ui-text: #2563eb;
+            --status-none-bg: #f1f5f9;
+            --status-none-text: #94a3b8;
+
+            --nav-active: #2563eb;
+            --nav-inactive: #64748b;
+            --nav-hover: #334155;
+            --nav-border: #e2e8f0;
+
+            --filter-bg: transparent;
+            --filter-border: #cbd5e1;
+            --filter-text: #64748b;
+            --filter-hover-border: #94a3b8;
+            --filter-hover-text: #334155;
+            --filter-active-bg: #2563eb;
+            --filter-active-border: #2563eb;
+            --filter-active-text: #ffffff;
+
+            --focus-bg: #eff6ff;
+            --focus-border: #bfdbfe;
+            --focus-title: #1d4ed8;
+            --focus-sprint: #2563eb;
+            --focus-text: #334155;
+            --focus-blocker: #dc2626;
+
+            --overall-card-bg: linear-gradient(135deg, #eff6ff, #f0f9ff);
+            --overall-card-border: #bfdbfe;
+            --updated-text: #94a3b8;
+
+            --chart-grid: #e2e8f0;
+            --chart-label: #64748b;
+            --chart-value: #0f172a;
+            --chart-card-bg: #ffffff;
+            --chart-card-border: #e2e8f0;
+
+            --log-border: #e2e8f0;
+            --log-date: #2563eb;
+            --log-text: #475569;
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+
+            --pct-zero: #94a3b8;
+            --pct-low: #dc2626;
+            --pct-mid: #d97706;
+            --pct-high: #16a34a;
+            --pct-done: #0891b2;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #111128;
+            --bg-tertiary: #1a1a2e;
+            --bg-card: #111128;
+            --bg-card-hover: #1a1a2e;
+            --bg-input: #1e1e3a;
+            --bg-header: #0f172a;
+            --header-border: #1e293b;
+            --header-title: #f0f0ff;
+            --header-sub: #94a3b8;
+            --toggle-bg: rgba(255,255,255,0.08);
+            --toggle-border: rgba(255,255,255,0.12);
+            --toggle-color: #e2e8f0;
+            --toggle-hover: rgba(255,255,255,0.15);
+
+            --text-primary: #f0f0ff;
+            --text-secondary: #e2e8f0;
+            --text-tertiary: #94a3b8;
+            --text-muted: #64748b;
+            --text-header: #f0f0ff;
+
+            --border-color: #2a2a4a;
+            --border-light: #1e1e3a;
+
+            --bar-bg: #1e1e3a;
+            --phase-task-bg: #111128;
+            --phase-task-border: #1e1e3a;
+            --timeline-line-color: #1e1e3a;
+
+            --tag-done-bg: #166534;
+            --tag-done-text: #4ade80;
+            --tag-wip-bg: #854d0e;
+            --tag-wip-text: #fbbf24;
+            --tag-ui-bg: #1e3a5f;
+            --tag-ui-text: #60a5fa;
+            --tag-todo-bg: #1e1e3a;
+            --tag-todo-text: #64748b;
+
+            --status-done-bg: #166534;
+            --status-done-text: #4ade80;
+            --status-partial-bg: #854d0e;
+            --status-partial-text: #fbbf24;
+            --status-ui-bg: #1e3a5f;
+            --status-ui-text: #60a5fa;
+            --status-none-bg: #1e1e3a;
+            --status-none-text: #555;
+
+            --nav-active: #60a5fa;
+            --nav-inactive: #8888aa;
+            --nav-hover: #ccc;
+            --nav-border: #2a2a4a;
+
+            --filter-bg: transparent;
+            --filter-border: #333;
+            --filter-text: #8888aa;
+            --filter-hover-border: #666;
+            --filter-hover-text: #ccc;
+            --filter-active-bg: #3b82f6;
+            --filter-active-border: #3b82f6;
+            --filter-active-text: #ffffff;
+
+            --focus-bg: linear-gradient(135deg, #1a1a2e, #162032);
+            --focus-border: #1e3a5f;
+            --focus-title: #60a5fa;
+            --focus-sprint: #60a5fa;
+            --focus-text: #94a3b8;
+            --focus-blocker: #f87171;
+
+            --overall-card-bg: linear-gradient(135deg, #1a1a2e, #1e293b);
+            --overall-card-border: #2a2a4a;
+            --updated-text: #555;
+
+            --chart-grid: #1e1e3a;
+            --chart-label: #64748b;
+            --chart-value: #e2e8f0;
+            --chart-card-bg: #111128;
+            --chart-card-border: #2a2a4a;
+
+            --log-border: #1e1e3a;
+            --log-date: #60a5fa;
+            --log-text: #94a3b8;
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+
+            --pct-zero: #555;
+            --pct-low: #f87171;
+            --pct-mid: #fbbf24;
+            --pct-high: #4ade80;
+            --pct-done: #22d3ee;
+        }
+
+        /* ===== Base Styles ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Accent Bar ===== */
+        .accent-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #2563eb, #06b6d4, #22c55e);
+            width: 100%;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--header-border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #2563eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .header-logo svg {
+            width: 18px;
+            height: 18px;
+            stroke: #fff;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .header h1 {
+            font-size: 16px;
+            color: var(--header-title);
+            letter-spacing: -0.3px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .header p {
+            font-size: 11px;
+            color: var(--header-sub);
+            margin-top: 1px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        /* Theme Toggle - Pill */
+        .theme-toggle {
+            background: var(--toggle-bg);
+            border: 1px solid var(--toggle-border);
+            border-radius: 20px;
+            width: 64px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            transition: background 0.3s;
+            color: var(--toggle-color);
+            flex-shrink: 0;
+            position: relative;
+        }
+        .theme-toggle:hover {
+            background: var(--toggle-hover);
+        }
+        .theme-toggle .toggle-track {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            position: relative;
+        }
+        .theme-toggle .toggle-thumb {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #2563eb);
+            top: 50%;
+            transform: translateY(-50%);
+            left: 0;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        [data-theme="dark"] .theme-toggle .toggle-thumb {
+            left: calc(100% - 24px);
+        }
+        .theme-toggle .toggle-icon {
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .theme-toggle .toggle-icon svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .theme-toggle .icon-sun { color: var(--toggle-color); }
+        .theme-toggle .icon-moon { color: var(--toggle-color); }
+        [data-theme="light"] .theme-toggle .icon-sun { color: #fff; }
+        [data-theme="dark"] .theme-toggle .icon-moon { color: #fff; }
+
+        /* ===== Container ===== */
+        .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+
+        /* ===== Nav Menu ===== */
+        .nav {
+            display: flex;
+            gap: 4px;
+            margin-top: 20px;
+            border-bottom: 2px solid var(--nav-border);
+        }
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: var(--nav-inactive);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .nav-btn:hover { color: var(--nav-hover); }
+        .nav-btn.active {
+            color: var(--nav-active);
+            border-bottom-color: var(--nav-active);
+        }
+        .nav-btn .nav-icon { display: none; }
+        .nav-btn .nav-icon svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .nav-btn .nav-label { }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; padding-bottom: 40px; }
+
+        /* ===== Overall Card ===== */
+        .overall-card {
+            background: var(--overall-card-bg);
+            border: 1px solid var(--overall-card-border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            text-align: center;
+            margin-top: 24px;
+            box-shadow: var(--shadow-md);
+        }
+        .overall-pct {
+            font-size: 64px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .overall-label {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+        .overall-bar-wrap {
+            width: 100%;
+            height: 12px;
+            background: var(--bar-bg);
+            border-radius: 6px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+        .overall-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+        }
+        .stat-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-item { text-align: center; }
+        .stat-num { font-size: 24px; font-weight: 700; }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .updated-at {
+            font-size: 11px;
+            color: var(--updated-text);
+            margin-top: 12px;
+        }
+
+        /* ===== Section Bars ===== */
+        .chart-card {
+            background: var(--chart-card-bg);
+            border: 1px solid var(--chart-card-border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-top: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .chart-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-bars { margin-top: 8px; }
+        .sec-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .sec-label {
+            flex: 0 0 20%;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: right;
+            font-weight: 500;
+            padding-right: 14px;
+            white-space: nowrap;
+        }
+        .sec-chart {
+            flex: 0 0 80%;
+            display: flex;
+            align-items: center;
+        }
+        .sec-bar-wrap {
+            flex: 1;
+            height: 14px;
+            background: var(--bar-bg);
+            border-radius: 7px;
+            overflow: hidden;
+            min-width: 40px;
+        }
+        .sec-bar {
+            height: 100%;
+            border-radius: 7px;
+            transition: width 0.8s ease;
+        }
+        .sec-pct {
+            font-size: 13px;
+            font-weight: 700;
+            width: 48px;
+            min-width: 48px;
+            text-align: right;
+            padding-left: 14px;
+            flex-shrink: 0;
+        }
+        canvas { width: 100% !important; max-height: 280px; }
+
+        /* ===== Focus Card ===== */
+        .focus-card {
+            background: var(--focus-bg);
+            border: 1px solid var(--focus-border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-top: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .focus-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--focus-title);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .focus-sprint {
+            font-size: 12px;
+            color: var(--focus-sprint);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .focus-text {
+            font-size: 13px;
+            color: var(--focus-text);
+            line-height: 1.8;
+        }
+        .focus-text li {
+            margin-left: 16px;
+            margin-bottom: 4px;
+        }
+
+        /* ===== Filters ===== */
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .filter-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--filter-border);
+            background: var(--filter-bg);
+            color: var(--filter-text);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            border-color: var(--filter-hover-border);
+            color: var(--filter-hover-text);
+        }
+        .filter-btn.active {
+            background: var(--filter-active-bg);
+            border-color: var(--filter-active-border);
+            color: var(--filter-active-text);
+        }
+
+        /* ===== Timeline Phases ===== */
+        .phase { margin-bottom: 8px; margin-top: 8px; }
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-user-select: none;
+            user-select: none;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            box-shadow: var(--shadow-sm);
+        }
+        .phase-header:hover {
+            background: var(--bg-card-hover);
+            box-shadow: var(--shadow-md);
+        }
+        .phase-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .phase-info { flex: 1; min-width: 0; }
+        .phase-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .phase-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .phase-pct {
+            font-size: 20px;
+            font-weight: 700;
+            min-width: 52px;
+            text-align: right;
+        }
+        .phase-bar-wrap {
+            width: 120px;
+            height: 6px;
+            background: var(--bar-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .phase-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s;
+        }
+        .phase-arrow {
+            font-size: 10px;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+            width: 20px;
+            text-align: center;
+        }
+        .phase-arrow.open { transform: rotate(180deg); }
+
+        /* Task items */
+        .phase-tasks {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s;
+            margin-left: 28px;
+            border-left: 2px solid var(--timeline-line-color);
+            padding-left: 20px;
+        }
+        .phase-tasks.open { max-height: 4000px; }
+        .task {
+            padding: 10px 16px;
+            margin: 4px 0;
+            border-radius: 8px;
+            background: var(--phase-task-bg);
+            border: 1px solid var(--phase-task-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+        .task::before {
+            content: '';
+            position: absolute;
+            left: -21px;
+            top: 50%;
+            width: 12px;
+            height: 2px;
+            background: var(--timeline-line-color);
+        }
+        .task-status {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .status-done { background: var(--status-done-bg); color: var(--status-done-text); }
+        .status-partial { background: var(--status-partial-bg); color: var(--status-partial-text); }
+        .status-ui { background: var(--status-ui-bg); color: var(--status-ui-text); }
+        .status-none { background: var(--status-none-bg); color: var(--status-none-text); }
+        .task-info { flex: 1; min-width: 0; }
+        .task-name {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .task-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+        .task-pct {
+            font-size: 13px;
+            font-weight: 700;
+            min-width: 38px;
+            text-align: right;
+        }
+        .task-bar-wrap {
+            width: 80px;
+            height: 5px;
+            background: var(--bar-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .task-bar { height: 100%; border-radius: 3px; }
+
+        /* Tags */
+        .tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .tag-done { background: var(--tag-done-bg); color: var(--tag-done-text); }
+        .tag-wip { background: var(--tag-wip-bg); color: var(--tag-wip-text); }
+        .tag-ui { background: var(--tag-ui-bg); color: var(--tag-ui-text); }
+        .tag-todo { background: var(--tag-todo-bg); color: var(--tag-todo-text); }
+
+        .timeline-line {
+            width: 2px;
+            height: 8px;
+            background: var(--timeline-line-color);
+            margin-left: 47px;
+        }
+
+        /* Percentage colors */
+        .pct-0 { color: var(--pct-zero); }
+        .pct-low { color: var(--pct-low); }
+        .pct-mid { color: var(--pct-mid); }
+        .pct-high { color: var(--pct-high); }
+        .pct-done { color: var(--pct-done); }
+
+        /* Bar colors (same in both themes - they're on bar backgrounds) */
+        .bar-0 { background: #94a3b8; }
+        .bar-low { background: #ef4444; }
+        .bar-mid { background: #f59e0b; }
+        .bar-high { background: #22c55e; }
+        .bar-done { background: #06b6d4; }
+
+        /* Daily Log */
+        .log-entry {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--log-border);
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-date {
+            color: var(--log-date);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .log-focus {
+            font-size: 12px;
+            color: var(--log-text);
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
+        /* ===== Responsive Design ===== */
+        @media (max-width: 768px) {
+            .header-inner { padding: 12px; }
+            .header-logo { width: 30px; height: 30px; border-radius: 8px; }
+            .header-logo svg { width: 16px; height: 16px; }
+            .header h1 { font-size: 15px; }
+            .header p { font-size: 10px; }
+            .theme-toggle { width: 56px; height: 28px; }
+            .theme-toggle .toggle-thumb { width: 20px; height: 20px; }
+            [data-theme="dark"] .theme-toggle .toggle-thumb { left: calc(100% - 20px); }
+            .theme-toggle .toggle-icon svg { width: 12px; height: 12px; }
+            .container { padding: 0 12px; }
+
+            /* Bottom fixed nav on mobile */
+            .nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                margin: 0;
+                gap: 0;
+                background: var(--bg-card);
+                border-bottom: none;
+                border-top: 1px solid var(--border-color);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                padding: 0;
+                justify-content: stretch;
+            }
+            [data-theme="dark"] .nav {
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.4);
+            }
+            .nav-btn {
+                flex: 1;
+                text-align: center;
+                padding: 8px 4px 10px;
+                font-size: 11px;
+                font-weight: 600;
+                border-bottom: none;
+                border-top: 3px solid transparent;
+                margin-bottom: 0;
+                margin-top: -1px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                /* safe area for iPhones with home indicator */
+                padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            }
+            .nav-btn.active {
+                border-bottom: none;
+                border-top-color: var(--nav-active);
+            }
+            .nav-btn .nav-icon {
+                display: block;
+                font-size: 20px;
+                line-height: 1;
+            }
+            .nav-btn .nav-label { font-size: 11px; }
+
+            /* Add bottom padding to content so it doesn't hide behind fixed nav */
+            .tab-content.active {
+                padding-bottom: 90px;
+            }
+
+            .overall-card { padding: 20px 16px; margin-top: 16px; }
+            .overall-pct { font-size: 48px; }
+            .stat-row { gap: 12px; }
+            .stat-num { font-size: 20px; }
+            .chart-card { padding: 16px; }
+            .focus-card { padding: 16px; }
+
+            /* Section bars mobile */
+            .sec-label { font-size: 11px; padding-right: 10px; flex: 0 0 25%; }
+            .sec-chart { flex: 0 0 75%; }
+            .sec-pct { font-size: 11px; padding-left: 10px; width: 40px; min-width: 40px; }
+            .sec-bar-wrap { min-width: 30px; }
+
+            /* Phase headers mobile */
+            .phase-header { padding: 12px; gap: 10px; }
+            .phase-icon { width: 36px; height: 36px; font-size: 16px; }
+            .phase-title { font-size: 14px; }
+            .phase-pct { font-size: 16px; min-width: 42px; }
+            .phase-bar-wrap { width: 60px; }
+
+            /* Tasks mobile */
+            .phase-tasks { margin-left: 18px; padding-left: 14px; }
+            .task { padding: 8px 10px; gap: 8px; }
+            .task::before { left: -15px; width: 8px; }
+            .task-name { font-size: 12px; }
+            .task-detail { font-size: 10px; }
+            .task-bar-wrap { width: 50px; }
+            .task-pct { font-size: 12px; min-width: 32px; }
+
+            /* Filters mobile */
+            .filters { margin-top: 12px; }
+            .filter-btn { padding: 8px 14px; font-size: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 14px; }
+            .header-left { gap: 8px; }
+            .overall-pct { font-size: 40px; }
+            .stat-row { gap: 8px; }
+            .stat-num { font-size: 18px; }
+            .stat-label { font-size: 10px; }
+
+            .sec-label { font-size: 10px; padding-right: 8px; flex: 0 0 28%; }
+            .sec-chart { flex: 0 0 72%; }
+            .sec-pct { font-size: 10px; padding-left: 8px; width: 36px; min-width: 36px; }
+            .sec-bar-wrap { min-width: 20px; }
+
+            .phase-header { flex-wrap: wrap; gap: 8px; }
+            .phase-bar-wrap { width: 100%; order: 5; }
+            .phase-arrow { order: 6; }
+        }
+    </style>
+</head>
+<body>
+<div class="accent-bar"></div>
+<div class="header">
+    <div class="header-inner">
+        <div class="header-left">
+            <div class="header-logo"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div>
+                <h1>The Bliss at Home</h1>
+                <p>Progress Dashboard</p>
+            </div>
+        </div>
+        <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+            <div class="toggle-track">
+                <span class="toggle-icon icon-sun"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+                <span class="toggle-icon icon-moon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span>
+                <div class="toggle-thumb"></div>
+            </div>
+        </button>
+    </div>
+</div>
+<div class="container">
+    <div class="nav" id="mainNav">
+        <button type="button" class="nav-btn active" onclick="showTab('overview',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span class="nav-label">Overview</span></button>
+        <button type="button" class="nav-btn" onclick="showTab('details',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span><span class="nav-label">Tasks</span></button>
+        <button type="button" class="nav-btn" onclick="showTab('history',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span class="nav-label">History</span></button>
+    </div>
+
+    <!-- TAB 1: Overview -->
+    <div class="tab-content active" id="tab-overview">
+        <div class="overall-card" id="overallCard"></div>
+
+        <div class="focus-card" id="focusCard"></div>
+
+        <div class="chart-card">
+            <div class="chart-title">Progress by Section</div>
+            <div class="section-bars" id="sectionBars"></div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Task Details -->
+    <div class="tab-content" id="tab-details">
+        <div class="filters" id="filters"></div>
+        <div id="timeline"></div>
+    </div>
+
+    <!-- TAB 3: History Chart -->
+    <div class="tab-content" id="tab-history">
+        <div class="chart-card" style="margin-top:20px">
+            <div class="chart-title">Overall Progress Over Time</div>
+            <canvas id="historyChart" height="260"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Daily Log</div>
+            <div id="dailyLog"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// THEME MANAGEMENT
+// ============================================================
+function getPreferredTheme() {
+    const saved = localStorage.getItem('bliss-dashboard-theme');
+    if (saved) return saved;
+    return 'light'; // Default to light
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('bliss-dashboard-theme', theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'light' ? 'dark' : 'light');
+    // Re-render charts if history tab is active
+    if (document.getElementById('tab-history').classList.contains('active')) {
+        renderCharts();
+    }
+}
+
+// Apply theme immediately
+applyTheme(getPreferredTheme());
+
+// ============================================================
+// DATA - Claude Code updates this section on each daily check
+// ============================================================
+/*__PROGRESS_DATA_START__*/
+const PROGRESS_HISTORY = [
+    { date: "2026-01-28", overall: 18, focus: "ประเมินโปรเจค เสร็จ UI เบื้องต้น ข้อมูลยังเป็น mock ทั้งหมด", sections: { infra:53, db:95, auth:75, ui:91, customer:11, hotel:10, provider:7, admin:8, payment:0, integrations:0, i18n:1, testing:0 } },
+    { date: "2026-01-29", overall: 32, focus: "สร้าง hooks สำหรับลูกค้า เพิ่มหน้าจัดการบริการ/พนักงานใน Admin", sections: { infra:55, db:96, auth:60, ui:91, customer:45, hotel:12, provider:10, admin:25, payment:10, integrations:5, i18n:2, testing:0 } },
+    { date: "2026-02-04", overall: 45, focus: "ระบบ SOS เสร็จสมบูรณ์ ชำระเงิน Omise ใช้ได้ จัดการโรงแรม/ลูกค้าเสร็จ", sections: { infra:60, db:98, auth:65, ui:93, customer:60, hotel:30, provider:12, admin:55, payment:55, integrations:20, i18n:2, testing:0 } },
+    { date: "2026-02-06", overall: 55, focus: "แอปพนักงานเสร็จ! รับ-ปฏิเสธงาน รายได้ ตารางนัด เสียงแจ้งเตือน LINE LIFF", sections: { infra:65, db:99, auth:72, ui:95, customer:68, hotel:32, provider:72, admin:62, payment:58, integrations:40, i18n:2, testing:0 } },
+    { date: "2026-02-08", overall: 57, focus: "Admin จัดการพนักงานเสร็จ: รีวิว ผลงาน คำนวณเงินเดือน แก้ไขข้อมูลธนาคาร", sections: { infra:65, db:100, auth:72, ui:96, customer:68, hotel:32, provider:72, admin:72, payment:60, integrations:40, i18n:2, testing:0 } },
+    { date: "2026-02-10", overall: 61, focus: "Settings เสร็จ! Duration options ระยะเวลาแบบหลายตัวเลือก LogoUpload สำเร็จ", sections: { infra:67, db:98, auth:69, ui:93, customer:44, hotel:23, provider:79, admin:75, payment:49, integrations:67, i18n:1, testing:0 } },
+    { date: "2026-02-12", overall: 61, focus: "ระบบ Analytics เสร็จสมบูรณ์! Reports 5 หมวด useAnalytics hooks รายงานทุกมุม", sections: { infra:68, db:99, auth:69, ui:94, customer:44, hotel:23, provider:79, admin:82, payment:49, integrations:67, i18n:1, testing:0 } },
+    { date: "2026-02-17", overall: 70, focus: "i18n 3 ภาษาเสร็จ! Hotel App เชื่อมข้อมูลจริง Customer couple booking โปรโมชั่นจาก DB", sections: { infra:68, db:98, auth:83, ui:92, customer:63, hotel:50, provider:80, admin:77, payment:48, integrations:73, i18n:78, testing:2 } },
+    { date: "2026-02-18", overall: 71, focus: "Testing Phase 2! 203 tests ผ่าน (12 files) mockSupabase+components+typecheck+build verified", sections: { infra:68, db:98, auth:83, ui:92, customer:63, hotel:50, provider:80, admin:77, payment:48, integrations:73, i18n:78, testing:17 } },
+];
+/*__PROGRESS_DATA_END__*/
+
+/*__FOCUS_DATA_START__*/
+const WEEKLY_FOCUS = {
+    week: "17-23 ก.พ. 2569",
+    sprint: "สปรินต์ G: i18n + Hotel App เชื่อมข้อมูลจริง",
+    items: [
+        "✅ ระบบหลายภาษา (i18n) เสร็จ 3 ภาษา! ไทย/อังกฤษ/จีน - 27 ไฟล์ 1,590 บรรทัด",
+        "✅ Hotel App เชื่อมข้อมูลจริง 5/8 หน้า (Dashboard, Bookings, Services, Staff, Reports)",
+        "✅ Customer App เพิ่ม couple booking จองนวดคู่ได้แล้ว",
+        "✅ ระบบโปรโมชั่นดึงจาก Supabase จริง + คำนวณส่วนลด",
+        "✅ Staff App ระบบ login LINE LIFF + จัดการพนักงานเสร็จ",
+    ],
+    blockers: [
+        "Hotel App ยังเหลือ 3 หน้าที่ใช้ข้อมูลจำลอง (Settings, Invoices, Billing)",
+        "ยังไม่ได้ทดสอบการชำระเงินจริงกับ Omise (sandbox เท่านั้น)",
+        "ระบบ Testing ยังเกือบไม่มี (2%) ต้องเริ่มเขียน E2E tests",
+    ]
+};
+/*__FOCUS_DATA_END__*/
+
+/*__TASK_DATA_START__*/
+const DATA = [
+    { id:'infra', title:'Infrastructure & Setup', icon:'&#9881;', color:'#6366f1', filter:'infra', tasks:[
+        {name:'Supabase Cloud Project',detail:'the-bliss-at-home-dev created',pct:100},
+        {name:'Monorepo Structure (pnpm + Turborepo)',detail:'Workspace, turbo.json, shared packages',pct:100},
+        {name:'4 Frontend Apps Scaffolding',detail:'Admin:3001, Customer:3002, Hotel:3003, Staff:3004',pct:100},
+        {name:'Node.js Server Setup',detail:'21 endpoints: payment, OTP, hotel auth, email',pct:85},
+        {name:'Environment Configuration',detail:'.env.example, .env.local, env.d.ts',pct:100},
+        {name:'Shared Packages Structure',detail:'supabase + types (2862 lines) + ui + i18n',pct:90},
+        {name:'DB Scripts',detail:'run-migration.js, setup-hotels-db.js, test-db-connection.js',pct:80},
+        {name:'CI/CD Pipeline (GitHub Actions)',detail:'ci.yml: typecheck, lint, build, test - ไม่มี deploy',pct:25},
+        {name:'Staging Deployment',detail:'ยังไม่ได้ deploy',pct:0},
+        {name:'Production Deployment',detail:'ยังไม่ได้ deploy',pct:0},
+    ]},
+    { id:'db', title:'Database & Schema', icon:'&#128451;', color:'#22c55e', filter:'backend', tasks:[
+        {name:'Profiles Table + RLS',detail:'User profiles, roles, status, trigger',pct:100},
+        {name:'Enum Types',detail:'booking_status, payment_status, etc.',pct:100},
+        {name:'Services & Skills Tables',detail:'Service catalog, categories, skills, commission, duration_options',pct:100},
+        {name:'Staff & Hotels Tables',detail:'Staff profiles, hotel info, hotel_invoices, hotel_auth',pct:100},
+        {name:'Customers Table',detail:'Customer-specific data + omise_customer_id',pct:100},
+        {name:'Bookings & Booking Items',detail:'Booking flow, items, addons, coordinates',pct:100},
+        {name:'Reviews & Notifications',detail:'Review system, notification queue',pct:100},
+        {name:'Billing Tables',detail:'Invoice, payments, transactions, tax_info',pct:100},
+        {name:'SOS Alerts Table',detail:'sos_alerts with staff assignment',pct:100},
+        {name:'Storage Buckets',detail:'service-images, staff-documents, logos',pct:100},
+        {name:'RLS Policies (All Tables)',detail:'109 migration files (71 unique)',pct:95},
+        {name:'Database Indexes',detail:'Analytics functions + geographical indexes',pct:85},
+    ]},
+    { id:'auth', title:'Authentication', icon:'&#128274;', color:'#f59e0b', filter:'backend', tasks:[
+        {name:'Email/Password Login',detail:'ใช้ได้ทุก app: Customer, Admin, Hotel, Staff',pct:85},
+        {name:'Registration + Profile Creation',detail:'Auto profile via trigger',pct:100},
+        {name:'Logout',detail:'ทุก app',pct:100},
+        {name:'Role Validation',detail:'ADMIN/CUSTOMER/HOTEL/STAFF',pct:100},
+        {name:'Account Status Check',detail:'Active/Suspended',pct:100},
+        {name:'Protected Routes',detail:'Role-based ทุก app',pct:100},
+        {name:'Session Refresh',detail:'refreshSession() + sessionManager.ts',pct:85},
+        {name:'Password Reset',detail:'resetPassword() + form',pct:70},
+        {name:'Hotel Auth System',detail:'hotelAuthService.ts + invite system!',pct:80},
+        {name:'Social Login (Facebook/Google)',detail:'OAuth ใน Customer auth/Login.tsx!',pct:60},
+        {name:'OTP Phone Verification',detail:'otpService + routes + smsService',pct:35},
+    ]},
+    { id:'ui', title:'Shared UI Components', icon:'&#127912;', color:'#ec4899', filter:'frontend', tasks:[
+        {name:'AuthLayout + LoginForm',detail:'Shared login layout ใช้ทุก app',pct:100},
+        {name:'PasswordResetForm',detail:'Password reset UI',pct:90},
+        {name:'ProtectedRoute Component',detail:'Role-based route guard',pct:100},
+        {name:'Layout (Sidebar, Header, Footer)',detail:'Responsive, collapsible',pct:90},
+        {name:'Core Components',detail:'Button, Card, Badge, Input',pct:100},
+        {name:'Form Components',detail:'Avatar, Checkbox, DatePicker, ThaiAddressFields',pct:90},
+        {name:'UX State Components',detail:'EmptyState, Loader, Modal, ConfirmDialog',pct:85},
+        {name:'LogoUpload Component',detail:'Drag & drop, Supabase Storage',pct:90},
+        {name:'Responsive Design',detail:'Mobile-first ทุก app',pct:85},
+    ]},
+    { id:'customer', title:'Customer App (SRS 3.1)', icon:'&#128100;', color:'#3b82f6', filter:'frontend', tasks:[
+        {name:'Home Page',detail:'useServices + useActivePromotions จาก DB + i18n!',pct:70},
+        {name:'Service Catalog',detail:'useServices + category filter + i18n',pct:75},
+        {name:'Service Detail',detail:'useServiceBySlug + addons + ServiceDurationPicker',pct:75},
+        {name:'Booking Wizard (5 Steps)',detail:'Couple booking, duration picker, VoucherCode, payment!',pct:85},
+        {name:'Booking Summary',detail:'useBookingByNumber + full detail',pct:70},
+        {name:'Cancel/Reschedule (3hr)',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Booking History',detail:'useCustomerBookings + pagination + filter',pct:75},
+        {name:'Booking Detail',detail:'useBookingByNumber + provider info',pct:75},
+        {name:'Profile Management',detail:'useCurrentCustomer CRUD + preferences + language!',pct:80},
+        {name:'Address/Location Mgmt',detail:'Full CRUD + Thai cascading dropdowns + Google Maps!',pct:85},
+        {name:'Payment Methods',detail:'usePaymentMethods full CRUD + default card',pct:80},
+        {name:'Transaction History',detail:'useCustomerTransactions + summary stats',pct:70},
+        {name:'Review & Rating',detail:'ยังไม่ได้ทำ (DB ready)',pct:0},
+        {name:'SOS Button',detail:'Real geolocation + DB save + realtime',pct:95},
+        {name:'Promotions Display',detail:'useActivePromotions carousel บน Home page',pct:60},
+        {name:'FAQ & Help Center',detail:'Privacy + Terms pages only',pct:15},
+    ]},
+    { id:'hotel', title:'Hotel/B2B App (SRS 3.2)', icon:'&#127976;', color:'#06b6d4', filter:'frontend', tasks:[
+        {name:'Hotel Auth System',detail:'EnhancedLogin + role-based + useHotelContext!',pct:85},
+        {name:'Dashboard Overview',detail:'Real stats: bookings, revenue, guests, pending!',pct:75},
+        {name:'Billing Summary',detail:'MonthlyBill with platform fee calculation!',pct:75},
+        {name:'Recent Bookings',detail:'GuestBookings: real data + search + filter!',pct:80},
+        {name:'Upcoming Appointments',detail:'รวมใน GuestBookings (pending/confirmed)',pct:65},
+        {name:'Guest Activity Snapshot',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Service Catalog',detail:'Services.tsx: real services + hotel discount pricing!',pct:75},
+        {name:'Book for Guest',detail:'UI form + hardcoded services ยังไม่เชื่อม DB',pct:25},
+        {name:'Guest Bookings List',detail:'BookingHistory: completed/cancelled + CSV export',pct:75},
+        {name:'Cancel/Reschedule',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Auto Invoice Generation',detail:'MonthlyBill: platform fee + hotel split calculation',pct:65},
+        {name:'Monthly Bill',detail:'Real billing data + text file download',pct:70},
+        {name:'Invoice Download PDF',detail:'Text file only ยังไม่ใช่ PDF',pct:20},
+        {name:'Bill Status Display',detail:'Real payment status tracking',pct:65},
+        {name:'Hotel Profile + Map',detail:'ยังเป็น mock data',pct:30},
+        {name:'Change Password',detail:'ยังไม่ได้ทำ',pct:0},
+    ]},
+    { id:'provider', title:'Staff/Provider App (SRS 3.3)', icon:'&#128170;', color:'#a855f7', filter:'frontend', tasks:[
+        {name:'LINE LIFF Auth',detail:'Invite token + auto-login + LIFF profile!',pct:90},
+        {name:'LINE Job Notification',detail:'lineMessagingService.ts created',pct:60},
+        {name:'Job Details Display',detail:'StaffDashboard 603 lines: useJobs + realtime + stats!',pct:95},
+        {name:'Accept/Decline Job',detail:'Real acceptJob/declineJob functions',pct:90},
+        {name:'Personal Job Queue',detail:'useJobs with realtime subscription',pct:90},
+        {name:'Job Status + Music',detail:'ServiceTimer + backgroundMusic.ts!',pct:85},
+        {name:'Cancel Accepted Job',detail:'JobCancellationModal complete',pct:90},
+        {name:'Job History',detail:'StaffHistory.tsx with filters',pct:80},
+        {name:'Job Filter',detail:'JobFilter in useJobs',pct:75},
+        {name:'SOS Button',detail:'SOSButton component done!',pct:90},
+        {name:'Schedule Calendar',detail:'StaffSchedule.tsx page!',pct:80},
+        {name:'Earnings Display',detail:'StaffEarnings + useEarnings hook',pct:85},
+        {name:'Payment/Payout Status',detail:'earningsService with payout tracking',pct:75},
+        {name:'Personal Profile',detail:'StaffProfile + useStaffProfile hook',pct:85},
+        {name:'Document Upload',detail:'Admin side done, staff side pending',pct:40},
+        {name:'Service Area Setup',detail:'staffService.updateWorkArea()',pct:60},
+        {name:'Notification Sounds',detail:'soundNotification.ts + jobReminder.ts',pct:90},
+        {name:'Settings',detail:'StaffSettings.tsx complete',pct:75},
+    ]},
+    { id:'admin', title:'Admin App (SRS 3.4)', icon:'&#9881;', color:'#ef4444', filter:'frontend', tasks:[
+        {name:'Dashboard Stats',detail:'UI + SOSWidget integrated',pct:40},
+        {name:'Booking List + Filters',detail:'BookingDetailModal + useBookings + real status updates',pct:80},
+        {name:'Booking Detail',detail:'BookingDetailModal complete',pct:75},
+        {name:'Change Booking Status',detail:'Real Supabase mutation working!',pct:85},
+        {name:'Booking Search',detail:'UI with filters',pct:35},
+        {name:'Service CRUD',detail:'ServiceForm: Zod, multi-duration pricing, pricingUtils!',pct:90},
+        {name:'Service Image Upload',detail:'ImageUpload + storage bucket',pct:70},
+        {name:'Service Categories',detail:'Filter tabs + slug + duration_options',pct:60},
+        {name:'Staff List',detail:'Staff.tsx + SearchInput enhanced',pct:80},
+        {name:'Staff Detail Page',detail:'StaffDetail.tsx massively enhanced',pct:95},
+        {name:'Staff Edit',detail:'EditStaffModal + EditBankModal CRUD!',pct:90},
+        {name:'Staff Documents',detail:'DocumentViewerModal + UploadDocumentModal',pct:90},
+        {name:'Staff Status Management',detail:'StatusManagementModal + real mutations',pct:85},
+        {name:'Staff Reviews',detail:'ReviewsTabContent + useStaffReviews',pct:90},
+        {name:'Staff Performance Metrics',detail:'useStaffPerformance + performance_metrics table',pct:85},
+        {name:'Staff Jobs View',detail:'JobDetailModal + useStaffJobs hook',pct:85},
+        {name:'Staff Payout Calculate',detail:'PayoutCalculationModal complete',pct:85},
+        {name:'Staff Payout Process',detail:'ProcessPayoutModal + PayoutDetailModal',pct:80},
+        {name:'Hotel List + Detail',detail:'Hotels.tsx + HotelDetail.tsx pages',pct:70},
+        {name:'Hotel CRUD + Map',detail:'HotelForm + GoogleMapsPicker!',pct:75},
+        {name:'Hotel Bookings',detail:'HotelBookings.tsx page complete',pct:70},
+        {name:'Hotel Billing',detail:'HotelBilling.tsx + InvoiceForm',pct:70},
+        {name:'Hotel Payments',detail:'HotelPayments.tsx + PaymentForm',pct:65},
+        {name:'Customer List',detail:'Customers.tsx + useCustomers hook',pct:65},
+        {name:'Customer Detail',detail:'CustomerDetailModal complete',pct:70},
+        {name:'Customer Edit',detail:'CustomerEditModal 697 lines: CRUD + map + Thai address!',pct:85},
+        {name:'Customer Stats',detail:'CustomerStats component',pct:65},
+        {name:'Customer Export',detail:'comprehensiveExport + exportUtils',pct:60},
+        {name:'SOS Alerts Dashboard',detail:'SOSAlerts.tsx + useSOS + realtime!',pct:90},
+        {name:'SOS Notifications',detail:'useSOSNotifications + sound alerts',pct:85},
+        {name:'Promotion CRUD',detail:'PromotionForm + Preview + CouponCodes + Reports!',pct:85},
+        {name:'Booking Reports',detail:'5 sections: Overview/Sales/Hotels/Staff/Services! Real data',pct:85},
+        {name:'Revenue Reports',detail:'useAnalytics hooks + analyticsQueries.ts 912 lines!',pct:85},
+        {name:'Report Export',detail:'comprehensiveExport.ts + CSV/Excel ready',pct:80},
+        {name:'General Settings',detail:'Settings page เชื่อมกับ DB จริง!',pct:75},
+    ]},
+    { id:'payment', title:'Payment (Omise)', icon:'&#128179;', color:'#10b981', filter:'integration', tasks:[
+        {name:'Omise Service (Frontend)',detail:'omiseService.ts DONE',pct:90},
+        {name:'Omise Service (Backend)',detail:'apps/server omiseService.ts DONE',pct:85},
+        {name:'Payment Routes',detail:'routes/payment.ts 7 endpoints!',pct:85},
+        {name:'Credit/Debit Card',detail:'CreditCardForm + charge working',pct:80},
+        {name:'Saved Card Support',detail:'omise_customer_id + card tokens',pct:75},
+        {name:'PromptPay',detail:'ยังไม่ได้เชื่อม',pct:0},
+        {name:'Bank Transfer',detail:'ยังไม่ได้เชื่อม',pct:0},
+        {name:'Webhook Handler',detail:'Basic handler, ยังไม่ verify signature',pct:40},
+        {name:'Customer PaymentForm',detail:'PaymentForm + PaymentMethodModal',pct:75},
+        {name:'PaymentConfirmation Page',detail:'UI complete แต่ใช้ mock data',pct:40},
+        {name:'Refund System',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Invoice PDF',detail:'ยังไม่ได้ทำ',pct:0},
+    ]},
+    { id:'integrations', title:'External Integrations', icon:'&#128268;', color:'#f97316', filter:'integration', tasks:[
+        {name:'OTP Service',detail:'otpService.ts + smsService.ts + routes',pct:40},
+        {name:'OTP Routes',detail:'routes/otp.ts 4 endpoints',pct:40},
+        {name:'Google Maps Picker',detail:'GoogleMapsPicker ใน Admin + Customer + Hotel',pct:90},
+        {name:'Google Maps Display',detail:'For hotel/address locations',pct:75},
+        {name:'LINE Messaging API',detail:'lineMessagingService.ts done!',pct:80},
+        {name:'LINE Notify Service',detail:'lineNotifyService.ts done!',pct:80},
+        {name:'LINE LIFF Auth',detail:'liffService.ts + Login + invite tokens!',pct:90},
+        {name:'Email Service',detail:'emailService.ts created ใน server',pct:40},
+        {name:'Sound Notifications',detail:'soundAlert.ts + soundNotification.ts',pct:90},
+        {name:'Browser Notifications',detail:'notificationService.ts + jobReminder.ts',pct:85},
+        {name:'Background Music',detail:'backgroundMusic.ts for Staff service',pct:90},
+    ]},
+    { id:'i18n', title:'Multi-Language (i18n)', icon:'&#127760;', color:'#8b5cf6', filter:'frontend', tasks:[
+        {name:'i18n Package Setup',detail:'I18nProvider + config + index.ts เสร็จ!',pct:95},
+        {name:'Thai Translation',detail:'6 modules: auth, booking, common, home, profile, services',pct:90},
+        {name:'English Translation',detail:'6 modules ครบ 18.8KB',pct:85},
+        {name:'Chinese Translation',detail:'6 modules ครบ 17.6KB',pct:80},
+        {name:'Language Switcher UI',detail:'อยู่ใน Profile page ของ Customer app',pct:75},
+        {name:'Auto Language Detection',detail:'เก็บใน profiles.language column',pct:40},
+    ]},
+    { id:'testing', title:'Testing & QA', icon:'&#9989;', color:'#64748b', filter:'qa', tasks:[
+        {name:'E2E Tests (Playwright)',detail:'ยังไม่มี test files',pct:0},
+        {name:'Unit Tests (Vitest)',detail:'12 files, 203 tests ผ่าน! utils+mockSupabase+components',pct:90},
+        {name:'RLS Policy Tests',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Integration Tests',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'PDPA Compliance',detail:'Privacy + Terms pages มีแล้ว',pct:10},
+        {name:'Security Audit',detail:'ยังไม่ได้ทำ',pct:0},
+    ]},
+];
+/*__TASK_DATA_END__*/
+
+const SECTION_LABELS = {
+    infra:'Infrastructure', db:'Database', auth:'Authentication', ui:'UI Components',
+    customer:'Customer App', hotel:'Hotel App', provider:'Provider App', admin:'Admin App',
+    payment:'Payment', integrations:'Integrations', i18n:'i18n', testing:'Testing'
+};
+const SECTION_COLORS = {
+    infra:'#6366f1', db:'#22c55e', auth:'#f59e0b', ui:'#ec4899',
+    customer:'#3b82f6', hotel:'#06b6d4', provider:'#a855f7', admin:'#ef4444',
+    payment:'#10b981', integrations:'#f97316', i18n:'#8b5cf6', testing:'#64748b'
+};
+const FILTERS = [
+    {id:'all',label:'All'},{id:'infra',label:'Infrastructure'},{id:'backend',label:'Backend'},
+    {id:'frontend',label:'Frontend'},{id:'integration',label:'Integrations'},{id:'qa',label:'Testing & QA'},
+];
+let activeFilter = 'all', openPhases = new Set();
+
+function pctClass(p) { return p === 0 ? 'pct-0' : p < 30 ? 'pct-low' : p < 70 ? 'pct-mid' : p < 100 ? 'pct-high' : 'pct-done'; }
+function barClass(p) { return p === 0 ? 'bar-0' : p < 30 ? 'bar-low' : p < 70 ? 'bar-mid' : p < 100 ? 'bar-high' : 'bar-done'; }
+function statusIcon(p) { return p === 100 ? ['status-done', '&#10003;'] : p >= 30 ? ['status-partial', '&#9679;'] : p > 0 ? ['status-ui', '&#9679;'] : ['status-none', '&#8211;']; }
+function tagInfo(p) { return p === 100 ? ['tag-done', 'DONE'] : p >= 30 ? ['tag-wip', 'WIP'] : p > 0 ? ['tag-ui', 'UI Only'] : ['tag-todo', 'TODO']; }
+function phaseAvg(ph) { return ph.tasks.length ? Math.round(ph.tasks.reduce((s, t) => s + t.pct, 0) / ph.tasks.length) : 0; }
+function calcOverall() { let t = 0, c = 0; DATA.forEach(p => p.tasks.forEach(tk => { t += tk.pct; c++; })); return Math.round(t / c); }
+function getStats() { let d = 0, w = 0, u = 0, n = 0; DATA.forEach(p => p.tasks.forEach(t => { t.pct === 100 ? d++ : t.pct >= 30 ? w++ : t.pct > 0 ? u++ : n++; })); return { done: d, wip: w, uiOnly: u, todo: n, total: d + w + u + n }; }
+
+function showTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (id === 'history') renderCharts();
+}
+
+function renderOverall() {
+    const p = calcOverall(), s = getStats(), last = PROGRESS_HISTORY[PROGRESS_HISTORY.length - 1];
+    const prev = PROGRESS_HISTORY.length > 1 ? PROGRESS_HISTORY[PROGRESS_HISTORY.length - 2] : null;
+    const delta = prev ? p - prev.overall : 0;
+    const deltaHtml = delta > 0 ? `<span style="color:#16a34a">+${delta}%</span>` : delta < 0 ? `<span style="color:#dc2626">${delta}%</span>` : '';
+    document.getElementById('overallCard').innerHTML = `
+        <div class="overall-pct">${p}%</div>
+        <div class="overall-label">Overall Project Completion ${deltaHtml}</div>
+        <div class="overall-bar-wrap"><div class="overall-bar" style="width:${p}%"></div></div>
+        <div class="stat-row">
+            <div class="stat-item"><div class="stat-num" style="color:#0891b2">${s.done}</div><div class="stat-label">Done</div></div>
+            <div class="stat-item"><div class="stat-num" style="color:#d97706">${s.wip}</div><div class="stat-label">In Progress</div></div>
+            <div class="stat-item"><div class="stat-num" style="color:#2563eb">${s.uiOnly}</div><div class="stat-label">UI Only</div></div>
+            <div class="stat-item"><div class="stat-num" style="color:#94a3b8">${s.todo}</div><div class="stat-label">Not Started</div></div>
+            <div class="stat-item"><div class="stat-num" style="color:var(--text-primary)">${s.total}</div><div class="stat-label">Total</div></div>
+        </div>
+        <div class="updated-at">Last updated: ${last.date} | Snapshots: ${PROGRESS_HISTORY.length}</div>`;
+}
+
+function renderFocus() {
+    const f = WEEKLY_FOCUS;
+    let html = `<div class="focus-title">&#127919; Focus This Week: ${f.week}</div>
+        <div class="focus-sprint">${f.sprint}</div>
+        <div class="focus-text"><ul>`;
+    f.items.forEach(i => html += `<li>${i}</li>`);
+    html += `</ul></div>`;
+    if (f.blockers && f.blockers.length) {
+        html += `<div style="margin-top:12px;font-size:12px;color:var(--focus-blocker);font-weight:600">Blockers:</div><div class="focus-text"><ul>`;
+        f.blockers.forEach(b => html += `<li style="color:var(--focus-blocker)">${b}</li>`);
+        html += `</ul></div>`;
+    }
+    document.getElementById('focusCard').innerHTML = html;
+}
+
+function renderSectionBars() {
+    const last = PROGRESS_HISTORY[PROGRESS_HISTORY.length - 1];
+    const entries = Object.entries(last.sections).sort((a, b) => b[1] - a[1]);
+    let html = '';
+    entries.forEach(([k, v]) => {
+        const c = SECTION_COLORS[k] || '#666';
+        html += `<div class="sec-row">
+            <div class="sec-label">${SECTION_LABELS[k] || k}</div>
+            <div class="sec-chart"><div class="sec-bar-wrap"><div class="sec-bar" style="width:${v}%;background:${c}"></div></div>
+            <div class="sec-pct ${pctClass(v)}">${v}%</div></div></div>`;
+    });
+    document.getElementById('sectionBars').innerHTML = html;
+}
+
+function renderFilters() {
+    document.getElementById('filters').innerHTML = FILTERS.map(f =>
+        `<button class="filter-btn ${activeFilter === f.id ? 'active' : ''}" onclick="setFilter('${f.id}')">${f.label}</button>`
+    ).join('');
+}
+function setFilter(id) { activeFilter = id; renderFilters(); renderTimeline(); }
+function togglePhase(id) { openPhases.has(id) ? openPhases.delete(id) : openPhases.add(id); renderTimeline(); }
+
+function renderTimeline() {
+    const filtered = activeFilter === 'all' ? DATA : DATA.filter(p => p.filter === activeFilter);
+    let html = '';
+    filtered.forEach((phase, idx) => {
+        const avg = phaseAvg(phase), isOpen = openPhases.has(phase.id);
+        const [tC, tT] = tagInfo(avg), done = phase.tasks.filter(t => t.pct === 100).length;
+        html += `<div class="phase"><div class="phase-header" onclick="togglePhase('${phase.id}')">
+            <div class="phase-icon" style="background:${phase.color}18;color:${phase.color}">${phase.icon}</div>
+            <div class="phase-info"><div class="phase-title">${phase.title} <span class="tag ${tC}">${tT}</span></div>
+            <div class="phase-subtitle">${done}/${phase.tasks.length} tasks complete</div></div>
+            <div class="phase-bar-wrap"><div class="phase-bar ${barClass(avg)}" style="width:${avg}%"></div></div>
+            <div class="phase-pct ${pctClass(avg)}">${avg}%</div>
+            <div class="phase-arrow ${isOpen ? 'open' : ''}">&#9660;</div></div>
+            <div class="phase-tasks ${isOpen ? 'open' : ''}">`;
+        phase.tasks.forEach(t => {
+            const [sC, sI] = statusIcon(t.pct);
+            html += `<div class="task"><div class="task-status ${sC}">${sI}</div>
+                <div class="task-info"><div class="task-name">${t.name}</div><div class="task-detail">${t.detail}</div></div>
+                <div class="task-bar-wrap"><div class="task-bar ${barClass(t.pct)}" style="width:${t.pct}%"></div></div>
+                <div class="task-pct ${pctClass(t.pct)}">${t.pct}%</div></div>`;
+        });
+        html += `</div></div>`;
+        if (idx < filtered.length - 1) html += `<div class="timeline-line"></div>`;
+    });
+    document.getElementById('timeline').innerHTML = html;
+}
+
+// ============================================================
+// Canvas charts
+// ============================================================
+function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+
+function renderCharts() {
+    renderOverallChart();
+
+    renderDailyLog();
+}
+
+function renderOverallChart() {
+    const canvas = document.getElementById('historyChart');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width = canvas.parentElement.clientWidth - 48;
+    const H = canvas.height = 220;
+    const pad = { t: 20, r: 20, b: 30, l: 40 };
+    const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+    ctx.clearRect(0, 0, W, H);
+
+    const dark = isDark();
+    const gridColor = dark ? '#1e1e3a' : '#e2e8f0';
+    const labelColor = dark ? '#555' : '#94a3b8';
+    const valueColor = dark ? '#e2e8f0' : '#0f172a';
+    const dateColor = dark ? '#888' : '#64748b';
+
+    const data = PROGRESS_HISTORY;
+    if (data.length < 1) return;
+
+    // Grid
+    ctx.strokeStyle = gridColor; ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.t + cH - cH * (i * 25) / 100;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+        ctx.fillStyle = labelColor; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText(i * 25 + '%', pad.l - 6, y + 3);
+    }
+
+    if (data.length === 1) {
+        const x = pad.l + cW / 2, y = pad.t + cH - cH * data[0].overall / 100;
+        ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = valueColor; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(data[0].overall + '%', x, y - 12);
+        ctx.fillStyle = dateColor; ctx.font = '10px sans-serif';
+        ctx.fillText(data[0].date, x, H - 8);
+        return;
+    }
+
+    // Line
+    const stepX = cW / (data.length - 1);
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2.5; ctx.beginPath();
+    data.forEach((d, i) => {
+        const x = pad.l + stepX * i, y = pad.t + cH - cH * d.overall / 100;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Fill
+    ctx.lineTo(pad.l + stepX * (data.length - 1), pad.t + cH);
+    ctx.lineTo(pad.l, pad.t + cH);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, pad.t, 0, H);
+    grad.addColorStop(0, 'rgba(59,130,246,0.3)'); grad.addColorStop(1, 'rgba(59,130,246,0)');
+    ctx.fillStyle = grad; ctx.fill();
+
+    // Points + labels
+    data.forEach((d, i) => {
+        const x = pad.l + stepX * i, y = pad.t + cH - cH * d.overall / 100;
+        ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = valueColor; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(d.overall + '%', x, y - 10);
+        ctx.fillStyle = dateColor; ctx.font = '9px sans-serif';
+        ctx.fillText(d.date.slice(5), x, H - 8);
+    });
+}
+
+function renderDailyLog() {
+    let html = '';
+    [...PROGRESS_HISTORY].reverse().forEach(d => {
+        const pctColor = d.overall < 30 ? 'var(--pct-low)' : d.overall < 70 ? 'var(--pct-mid)' : 'var(--pct-high)';
+        html += `<div class="log-entry">
+            <div class="log-header">
+                <span class="log-date">${d.date}</span>
+                <span style="font-weight:700;font-size:16px;color:${pctColor}">${d.overall}%</span>
+            </div>
+            <div class="log-focus">${d.focus}</div>
+        </div>`;
+    });
+    document.getElementById('dailyLog').innerHTML = html;
+}
+
+// Sync: อัพเดทค่า overall และ sections ของวันล่าสุดให้ตรงกับการคำนวณจริง
+// ป้องกันปัญหา Overview กับ History แสดงค่าไม่ตรงกัน
+if (PROGRESS_HISTORY.length > 0) {
+    const latest = PROGRESS_HISTORY[PROGRESS_HISTORY.length - 1];
+    latest.overall = calcOverall();
+    // Sync sections จาก DATA
+    DATA.forEach(section => {
+        latest.sections[section.id] = phaseAvg(section);
+    });
+}
+
+// Init
+renderOverall(); renderFocus(); renderSectionBars(); renderFilters(); renderTimeline();
+</script>
+</body>
+</html>
