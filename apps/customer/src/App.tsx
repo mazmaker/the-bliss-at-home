@@ -18,7 +18,7 @@ import TransactionHistory from './pages/TransactionHistory'
 import OTPVerification from './pages/OTPVerification'
 import TermsPage from './pages/Terms'
 import PrivacyPage from './pages/Privacy'
-import { CustomerLoginPage, AuthCallback } from './pages/auth'
+import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth'
 
 function App() {
   const { t } = useTranslation('common')
@@ -30,6 +30,7 @@ function App() {
         <Route path="/login" element={<CustomerLoginPageWrapper />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/design-system" element={<ColorPalette />} />

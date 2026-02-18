@@ -100,4 +100,98 @@ router.post('/job-cancelled', async (req: Request, res: Response) => {
   }
 })
 
+/**
+ * GET /api/notifications/reminder-settings
+ * Get staff reminder preferences
+ */
+router.get('/reminder-settings', async (req: Request, res: Response) => {
+  try {
+    const { profile_id } = req.query
+
+    if (!profile_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required query: profile_id',
+      })
+    }
+
+    const { data: staff, error } = await getSupabaseClient()
+      .from('staff')
+      .select('reminders_enabled, reminder_minutes')
+      .eq('profile_id', profile_id as string)
+      .single()
+
+    if (error || !staff) {
+      // Return defaults if staff record not found
+      return res.json({
+        enabled: true,
+        minutes: [60, 120],
+      })
+    }
+
+    return res.json({
+      enabled: staff.reminders_enabled ?? true,
+      minutes: staff.reminder_minutes ?? [60, 120],
+    })
+  } catch (error: any) {
+    console.error('Get reminder settings error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get reminder settings',
+    })
+  }
+})
+
+/**
+ * POST /api/notifications/reminder-settings
+ * Save staff reminder preferences
+ */
+router.post('/reminder-settings', async (req: Request, res: Response) => {
+  try {
+    const { profile_id, enabled, minutes } = req.body
+
+    if (!profile_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: profile_id',
+      })
+    }
+
+    // Validate minutes array
+    const validMinutes = [30, 60, 120, 1440]
+    if (minutes !== undefined) {
+      if (!Array.isArray(minutes) || !minutes.every((m: number) => validMinutes.includes(m))) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid minutes values. Allowed: ${validMinutes.join(', ')}`,
+        })
+      }
+    }
+
+    const { error } = await getSupabaseClient()
+      .from('staff')
+      .update({
+        reminders_enabled: enabled ?? true,
+        reminder_minutes: minutes ?? [60, 120],
+      })
+      .eq('profile_id', profile_id)
+
+    if (error) {
+      console.error('Update reminder settings error:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update reminder settings',
+      })
+    }
+
+    return res.json({ success: true })
+  } catch (error: any) {
+    console.error('Save reminder settings error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to save reminder settings',
+    })
+  }
+})
+
 export default router
