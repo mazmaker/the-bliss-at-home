@@ -3,10 +3,14 @@ import { createPortal } from 'react-dom'
 import { Calendar, Clock, Check, X, ArrowLeft, ArrowRight, User, Users } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '@bliss/supabase/auth'
+// import { supabase } from '@bliss/supabase/auth'
+import { hotelSupabase as supabase } from '../lib/supabaseClient'
+import { secureBookingService } from '../services/secureBookingService'
 import { useBookingStore } from '../hooks/useBookingStore'
+import { useHotelContext } from '../hooks/useHotelContext'
 import { Service } from '../types/booking'
 import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
+import { createLoadingToast, notifications, showErrorByType } from '../utils/notifications'
 import ServiceModeSelector from './ServiceModeSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ServiceSelector from './ServiceSelector'
@@ -75,6 +79,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   } = useBookingStore()
 
   const navigate = useNavigate()
+  const { getHotelSlug } = useHotelContext()
 
   // Query services
   const { data: rawServices = [], isLoading: servicesLoading } = useQuery({
@@ -151,60 +156,60 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   const handleSubmit = async () => {
     if (!validation.isValid) return
 
+    // Create loading toast
+    const loadingToast = createLoadingToast(notifications.booking.createLoading)
+
     try {
       setLoading(true)
       const bookingData = getBookingData()
 
-      // Create the main booking record
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-          // Use first service's ID for single service reference
-          service_id: bookingData.serviceConfiguration.selections[0].service.id,
-          booking_date: bookingData.date,
-          booking_time: bookingData.time,
-          duration: bookingData.serviceConfiguration.totalDuration,
-          hotel_room_number: bookingData.roomNumber,
-          customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Notes: ${bookingData.notes}`,
-          base_price: bookingData.serviceConfiguration.totalPrice,
-          final_price: bookingData.serviceConfiguration.totalPrice,
-          status: 'confirmed',
-          is_hotel_booking: true
-        })
-        .select()
-        .single()
+      // Prepare booking data for secure API
+      const secureBookingData = {
+        // Use first service's ID for single service reference
+        service_id: bookingData.serviceConfiguration.selections[0].service.id,
+        booking_date: bookingData.date,
+        booking_time: bookingData.time,
+        duration: bookingData.serviceConfiguration.totalDuration,
+        hotel_room_number: bookingData.roomNumber,
+        customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Notes: ${bookingData.notes}`,
+        base_price: bookingData.serviceConfiguration.totalPrice,
+        final_price: bookingData.serviceConfiguration.totalPrice,
+        status: 'confirmed',
+        is_hotel_booking: true,
+        // Include services for booking_services table
+        services: bookingData.serviceConfiguration.selections.map(selection => ({
+          service_id: selection.service.id,
+          duration: selection.duration,
+          price: selection.price,
+          recipient_index: selection.recipientIndex,
+          sort_order: selection.sortOrder
+        }))
+      }
 
-      if (bookingError) throw bookingError
+      console.log('🏨 Submitting booking via secure API...')
+      const result = await secureBookingService.createBooking(secureBookingData)
 
-      // Create booking services records
-      const bookingServices = bookingData.serviceConfiguration.selections.map(selection => ({
-        booking_id: booking.id,
-        service_id: selection.service.id,
-        duration: selection.duration,
-        price: selection.price,
-        recipient_index: selection.recipientIndex,
-        sort_order: selection.sortOrder
-      }))
-
-      const { error: servicesError } = await supabase
-        .from('booking_services')
-        .insert(bookingServices)
-
-      if (servicesError) throw servicesError
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create booking')
+      }
 
       // Show success message
-      alert('การจองสำเร็จ!')
+      loadingToast.success(notifications.booking.createSuccess)
+
+      // Call success callback if provided
+      onSuccess?.()
 
       // Close modal and reset
       resetAll()
       onClose()
 
-      // Navigate to history page to show the booking
-      navigate('/history')
+      // Navigate to hotel's booking history page
+      navigate(`/hotel/${getHotelSlug()}/history`)
 
     } catch (err) {
       console.error('Booking failed:', err)
-      alert('เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่อีกครั้ง')
+      loadingToast.error(notifications.booking.createError)
+      showErrorByType(err)
     } finally {
       setLoading(false)
     }

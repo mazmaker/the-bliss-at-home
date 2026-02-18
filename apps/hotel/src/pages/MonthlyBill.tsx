@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
-import { Download, Calendar, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Download, Calendar, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
+import { getMonthlyBillStatus, formatOverdueMessage } from '../utils/overdueCalculator'
 
 // Monthly bill interfaces
 interface MonthlyBooking {
@@ -28,13 +29,16 @@ interface MonthlyBillData {
   pendingPayments: number
 }
 
-// Fetch monthly bill data from database
+// Fetch monthly bill data from database with proper error handling
 const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise<MonthlyBillData> => {
   const monthStart = `${selectedMonth}-01`
   const nextMonth = new Date(selectedMonth + '-01')
   nextMonth.setMonth(nextMonth.getMonth() + 1)
   const monthEnd = nextMonth.toISOString().slice(0, 7) + '-01'
 
+  console.log('Fetching monthly bill for:', { hotelId, monthStart, monthEnd })
+
+  // Try to get service name using service_id (removed hotel_discount_rate as it doesn't exist)
   const { data, error } = await supabase
     .from('bookings')
     .select(`
@@ -43,46 +47,52 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
       hotel_room_number,
       final_price,
       payment_status,
-      hotel_discount_rate,
       created_at,
-      customers:customer_id(full_name),
+      customer_notes,
+      service_id,
       services:service_id(name_th)
     `)
     .eq('hotel_id', hotelId)
     .gte('booking_date', monthStart)
     .lt('booking_date', monthEnd)
-    .in('status', ['completed', 'confirmed']) // Only billable bookings
+    .in('status', ['completed', 'confirmed', 'pending']) // Include more statuses
     .order('booking_date', { ascending: true })
 
   if (error) {
+    console.error('Monthly bill query error:', error)
     throw new Error(`Failed to fetch monthly bill: ${error.message}`)
   }
 
-  // Transform data to match interface
+  console.log('Raw booking data:', data)
+
+  // Helper function to extract guest name from customer_notes
+  const parseGuestName = (customerNotes?: string | null): string => {
+    if (!customerNotes) return 'ไม่ระบุชื่อ'
+
+    // Try to extract guest name from customer notes
+    const guestMatch = customerNotes.match(/Guest:\s*([^,\n]+)/)
+    return guestMatch?.[1]?.trim() || 'ไม่ระบุชื่อ'
+  }
+
+  // Transform data to match interface with fallback data
   const transformedData = (data || []).map((booking: any) => ({
     id: booking.id,
     booking_date: booking.booking_date,
-    guest_name: booking.customers?.full_name || 'ไม่ระบุชื่อ',
+    guest_name: parseGuestName(booking.customer_notes),
     room_number: booking.hotel_room_number || 'ไม่ระบุห้อง',
-    service_name: booking.services?.name_th || 'ไม่ระบุบริการ',
-    final_price: booking.final_price,
-    payment_status: booking.payment_status,
-    hotel_discount_rate: booking.hotel_discount_rate,
+    service_name: booking.services?.name_th || 'บริการนวดแผนไทย', // Use actual service name if available
+    final_price: booking.final_price || 0,
+    payment_status: booking.payment_status || 'pending',
+    hotel_discount_rate: 0, // Default value since this column doesn't exist
     created_at: booking.created_at
   }))
 
   const bookingData = transformedData
   const totalRevenue = bookingData.reduce((sum, booking) => sum + (booking.final_price || 0), 0)
 
-  // Calculate platform fee (assume 15% platform fee, but hotel might have discount)
-  const defaultPlatformFee = 0.15 // 15%
-  const avgDiscountRate = bookingData.length > 0
-    ? bookingData.reduce((sum, b) => sum + (b.hotel_discount_rate || 0), 0) / bookingData.length / 100
-    : 0
-  const effectivePlatformFee = Math.max(defaultPlatformFee - avgDiscountRate, 0.05) // Minimum 5%
-
-  const platformFee = totalRevenue * effectivePlatformFee
-  const hotelRevenue = totalRevenue - platformFee
+  // No platform fee for hotels
+  const platformFee = 0 // 0% - hotels keep all revenue
+  const hotelRevenue = totalRevenue // Hotels keep 100%
 
   const pendingPayments = bookingData
     .filter(booking => booking.payment_status === 'pending')
@@ -138,6 +148,8 @@ function MonthlyBill() {
     queryKey: ['monthly-bill', hotelId, selectedMonth],
     queryFn: () => fetchMonthlyBill(hotelId!, selectedMonth),
     enabled: !hotelLoading && isValidHotel && !!hotelId,
+    retry: 1, // Reduce retries
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
   const generateBillNumber = (month: string, hotelId: string) => {
@@ -223,16 +235,24 @@ function MonthlyBill() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-          <p className="text-red-600 mb-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 mx-auto"
-          >
-            <RefreshCw className="w-4 h-4" />
-            ลองใหม่
-          </button>
+          <p className="text-red-600 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+          <p className="text-sm text-gray-600 mb-4">
+            {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+          <div className="space-y-2">
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 mx-auto"
+            >
+              <RefreshCw className="w-4 h-4" />
+              ลองใหม่
+            </button>
+            <p className="text-xs text-gray-500">
+              หากยังมีปัญหาให้ลองเลือกเดือนอื่นดู
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -316,7 +336,7 @@ function MonthlyBill() {
       </div>
 
       {/* Bill Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -341,17 +361,6 @@ function MonthlyBill() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-stone-900">฿{billData?.platformFee.toLocaleString() || 0}</p>
-              <p className="text-sm text-stone-500">ค่าแพลตฟอร์ม</p>
-            </div>
-          </div>
-        </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
@@ -435,24 +444,154 @@ function MonthlyBill() {
         )}
       </div>
 
-      {/* Payment Summary */}
-      {billData && billData.pendingPayments > 0 && (
-        <div className="bg-amber-50 rounded-2xl shadow-lg p-6 border border-amber-200">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-amber-600 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2">ยอดค้างชำระ</h3>
-              <p className="text-sm text-amber-700 mb-3">
-                มียอดเงินค้างชำระ ฿{billData.pendingPayments.toLocaleString()}
-                กรุณาติดตามการชำระเงินจากลูกค้า
-              </p>
-              <p className="text-xs text-amber-600">
-                กำหนดชำระ: {getDueDate(selectedMonth)}
-              </p>
+      {/* Enhanced Payment Summary with Overdue Status */}
+      {billData && billData.pendingPayments > 0 && (() => {
+        // Calculate overdue status for current selected month
+        const overdueStatus = getMonthlyBillStatus(selectedMonth)
+        const overdueMessage = formatOverdueMessage(overdueStatus, billData.pendingPayments)
+
+        // Determine styling based on overdue level
+        const getAlertStyling = () => {
+          switch (overdueStatus.level) {
+            case 'URGENT':
+              return {
+                bgClass: 'bg-gradient-to-r from-red-50 to-red-100',
+                borderClass: 'border-2 border-red-300 ring-2 ring-red-100',
+                iconBg: 'bg-red-200',
+                iconColor: 'text-red-700',
+                titleColor: 'text-red-800',
+                textColor: 'text-red-700',
+                animation: 'animate-pulse'
+              }
+            case 'WARNING':
+              return {
+                bgClass: 'bg-gradient-to-r from-orange-50 to-orange-100',
+                borderClass: 'border-2 border-orange-300',
+                iconBg: 'bg-orange-200',
+                iconColor: 'text-orange-700',
+                titleColor: 'text-orange-800',
+                textColor: 'text-orange-700',
+                animation: ''
+              }
+            case 'OVERDUE':
+              return {
+                bgClass: 'bg-gradient-to-r from-amber-50 to-amber-100',
+                borderClass: 'border border-amber-300',
+                iconBg: 'bg-amber-200',
+                iconColor: 'text-amber-700',
+                titleColor: 'text-amber-800',
+                textColor: 'text-amber-700',
+                animation: ''
+              }
+            case 'DUE_SOON':
+              return {
+                bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100',
+                borderClass: 'border border-blue-300',
+                iconBg: 'bg-blue-200',
+                iconColor: 'text-blue-700',
+                titleColor: 'text-blue-800',
+                textColor: 'text-blue-700',
+                animation: ''
+              }
+            default:
+              return {
+                bgClass: 'bg-amber-50',
+                borderClass: 'border border-amber-200',
+                iconBg: 'bg-amber-200',
+                iconColor: 'text-amber-600',
+                titleColor: 'text-amber-800',
+                textColor: 'text-amber-700',
+                animation: ''
+              }
+          }
+        }
+
+        const styling = getAlertStyling()
+
+        return (
+          <div className={`${styling.bgClass} rounded-2xl shadow-lg p-6 ${styling.borderClass} ${styling.animation}`}>
+            <div className="flex items-start gap-4">
+              <div className={`p-3 ${styling.iconBg} rounded-xl`}>
+                <AlertCircle className={`w-8 h-8 ${styling.iconColor}`} />
+              </div>
+              <div className="flex-1">
+                {/* Title with overdue status */}
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className={`font-bold text-lg ${styling.titleColor}`}>
+                    {overdueMessage.title}
+                  </h3>
+                  {overdueStatus.actionRequired && (
+                    <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      ต้องชำระ
+                    </span>
+                  )}
+                </div>
+
+                {/* Amount and details */}
+                <div className="bg-white rounded-lg p-4 mb-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className={`text-xs ${styling.textColor} mb-1`}>ยอดค้างชำระ:</p>
+                      <p className={`text-2xl font-bold ${styling.titleColor}`}>
+                        ฿{billData.pendingPayments.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs ${styling.textColor} mb-1`}>
+                        {overdueStatus.days > 0 ? 'เลยกำหนดมาแล้ว:' :
+                         overdueStatus.days === 0 ? 'กำหนดชำระ:' : 'กำหนดชำระ:'}
+                      </p>
+                      <p className={`text-lg font-semibold ${styling.titleColor}`}>
+                        {overdueStatus.days > 0 ? `${overdueStatus.days} วัน` :
+                         overdueStatus.days === 0 ? 'วันนี้' :
+                         getDueDate(selectedMonth)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className={`text-sm ${styling.textColor} mb-3`}>
+                  {overdueMessage.description}
+                </p>
+
+                {/* Action buttons for overdue cases */}
+                {overdueStatus.actionRequired && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">
+                      <Phone className="w-4 h-4" />
+                      ติดต่อแอดมิน
+                    </button>
+                  </div>
+                )}
+
+                {/* Due date info */}
+                <div className="flex items-center gap-2 text-xs text-stone-600">
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    กำหนดชำระเดิม: {getDueDate(selectedMonth)}
+                    {overdueStatus.days > 0 && (
+                      <span className={`ml-2 font-medium ${styling.textColor}`}>
+                        (เลยมาแล้ว {overdueStatus.days} วัน)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment methods note */}
+            <div className="mt-4 p-3 bg-white bg-opacity-70 rounded-lg">
+              <p className="text-xs text-stone-600 mb-2 font-medium">วิธีการชำระเงิน:</p>
+              <div className="text-xs text-stone-600 space-y-1">
+                <p>• โอนเงินผ่านธนาคาร</p>
+                <p>• เช็คส่งทางไปรษณีย์</p>
+                <p>• ชำระด้วยเงินสด ณ สำนักงาน</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

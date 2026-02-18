@@ -3,6 +3,7 @@ import { Calendar, Clock, DollarSign, TrendingUp, Users, CheckCircle, AlertCircl
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
+import { getMonthlyBillStatus, formatOverdueMessage } from '../utils/overdueCalculator'
 
 // Types for dashboard data
 interface DashboardStats {
@@ -56,14 +57,20 @@ const fetchDashboardStats = async (hotelId: string): Promise<DashboardStats> => 
   // Unique guests this month
   const { data: guestsData, error: guestsError } = await supabase
     .from('bookings')
-    .select('customer_id')
+    .select('customer_notes')
     .eq('hotel_id', hotelId)
     .gte('booking_date', `${currentMonth}-01`)
     .lt('booking_date', `${new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 7)}-01`)
 
   if (guestsError) throw new Error(`Failed to fetch guests data: ${guestsError.message}`)
 
-  const uniqueGuests = new Set(guestsData?.map(booking => booking.customer_id) || []).size
+  // Extract unique guest names from customer_notes
+  const guestNames = guestsData?.map(booking => {
+    const match = booking.customer_notes?.match(/Guest:\s*([^,]+)/)
+    return match ? match[1].trim() : null
+  }).filter(name => name !== null) || []
+
+  const uniqueGuests = new Set(guestNames).size
 
   // Pending payments
   const { data: pendingData, error: pendingError } = await supabase
@@ -95,8 +102,8 @@ const fetchRecentBookings = async (hotelId: string): Promise<RecentBooking[]> =>
       booking_time,
       status,
       final_price,
+      customer_notes,
       created_at,
-      customers:customer_id(full_name),
       services:service_id(name_th),
       staff:staff_id(name_th)
     `)
@@ -109,16 +116,22 @@ const fetchRecentBookings = async (hotelId: string): Promise<RecentBooking[]> =>
   }
 
   // Transform data to match interface
-  const transformedData = (data || []).map((booking: any) => ({
-    id: booking.id,
-    guest_name: booking.customers?.full_name || 'ไม่ระบุชื่อ',
-    room_number: booking.hotel_room_number || 'ไม่ระบุห้อง',
-    service_name: booking.services?.name_th || 'ไม่ระบุบริการ',
-    scheduled_time: booking.booking_time,
-    staff_name: booking.staff?.name_th || null,
-    status: booking.status,
-    total_amount: booking.final_price
-  }))
+  const transformedData = (data || []).map((booking: any) => {
+    // Extract guest name from customer_notes (format: "Guest: name, Phone: xxx, Notes: xxx")
+    const guestMatch = booking.customer_notes?.match(/Guest:\s*([^,]+)/)
+    const guestName = guestMatch ? guestMatch[1].trim() : 'ไม่ระบุชื่อ'
+
+    return {
+      id: booking.id,
+      guest_name: guestName,
+      room_number: booking.hotel_room_number || 'ไม่ระบุห้อง',
+      service_name: booking.services?.name_th || 'ไม่ระบุบริการ',
+      scheduled_time: booking.booking_time,
+      staff_name: booking.staff?.name_th || null,
+      status: booking.status,
+      total_amount: booking.final_price
+    }
+  })
 
   return transformedData
 }
@@ -206,6 +219,16 @@ function Dashboard() {
     )
   }
 
+  // Calculate overdue status for pending payments
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+  const previousMonth = new Date()
+  previousMonth.setMonth(previousMonth.getMonth() - 1)
+  const prevMonthStr = previousMonth.toISOString().slice(0, 7)
+
+  // Calculate overdue status for the most recent completed month
+  const overdueStatus = getMonthlyBillStatus(prevMonthStr)
+  const overdueMessage = formatOverdueMessage(overdueStatus, stats?.pendingPayments || 0)
+
   // Stats data for display
   const statsData = [
     {
@@ -232,9 +255,12 @@ function Dashboard() {
     {
       name: 'บิลค้างชำระ',
       value: `฿${stats?.pendingPayments?.toLocaleString() || '0'}`,
-      change: 'ต้องชำระ',
-      trend: 'neutral' as const,
-      icon: AlertCircle
+      change: overdueStatus.message,
+      trend: overdueStatus.level === 'CURRENT' || overdueStatus.level === 'DUE_SOON' ? 'neutral' as const : 'warning' as const,
+      icon: AlertCircle,
+      // Add overdue-specific styling
+      overdueStatus: overdueStatus,
+      isOverdue: overdueStatus.actionRequired
     },
   ]
 
@@ -250,65 +276,104 @@ function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsData.map((stat) => {
           const Icon = stat.icon
+
+          // Special styling for overdue bills
+          const isOverdueBill = stat.name === 'บิลค้างชำระ' && (stat as any).overdueStatus
+          const overdueData = isOverdueBill ? (stat as any).overdueStatus : null
+
+          // Determine colors based on overdue status or regular trend
+          const getColors = () => {
+            if (isOverdueBill && overdueData) {
+              return {
+                bgColor: overdueData.bgColor,
+                textColor: overdueData.textColor,
+                icon: overdueData.icon
+              }
+            }
+
+            // Regular stat colors
+            return {
+              bgColor: stat.trend === 'up' ? 'bg-green-100' :
+                       stat.trend === 'down' ? 'bg-red-100' :
+                       stat.trend === 'warning' ? 'bg-red-100' :
+                       'bg-amber-100',
+              textColor: stat.trend === 'up' ? 'text-green-600' :
+                        stat.trend === 'down' ? 'text-red-600' :
+                        stat.trend === 'warning' ? 'text-red-600' :
+                        'text-amber-600',
+              icon: null
+            }
+          }
+
+          const colors = getColors()
+
           return (
-            <div key={stat.name} className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+            <div key={stat.name} className={`bg-white rounded-2xl shadow-lg p-6 border ${
+              isOverdueBill && overdueData?.level === 'URGENT' ? 'border-red-300 ring-2 ring-red-100' :
+              isOverdueBill && overdueData?.level === 'WARNING' ? 'border-orange-300' :
+              'border-stone-100'
+            }`}>
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl ${
-                  stat.trend === 'up' ? 'bg-green-100' :
-                  stat.trend === 'down' ? 'bg-red-100' :
-                  'bg-amber-100'
-                }`}>
-                  <Icon className={`w-6 h-6 ${
-                    stat.trend === 'up' ? 'text-green-600' :
-                    stat.trend === 'down' ? 'text-red-600' :
-                    'text-amber-600'
-                  }`} />
+                <div className={`p-3 rounded-xl ${colors.bgColor}`}>
+                  <Icon className={`w-6 h-6 ${colors.textColor}`} />
                 </div>
-                {stat.trend === 'up' && (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-sm font-medium">{stat.change}</span>
+
+                {/* Show overdue status with icon */}
+                {isOverdueBill && overdueData ? (
+                  <div className="text-right">
+                    <div className={`flex items-center gap-1 ${colors.textColor} text-sm font-medium`}>
+                      <span>{colors.icon}</span>
+                      <span>{stat.change}</span>
+                    </div>
+                    {overdueData.actionRequired && (
+                      <div className="text-xs text-red-600 mt-1">
+                        ต้องติดตาม
+                      </div>
+                    )}
                   </div>
-                )}
-                {stat.trend === 'neutral' && (
-                  <span className="text-sm text-amber-600 font-medium">{stat.change}</span>
+                ) : (
+                  <>
+                    {stat.trend === 'up' && (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-sm font-medium">{stat.change}</span>
+                      </div>
+                    )}
+                    {stat.trend === 'neutral' && (
+                      <span className="text-sm text-amber-600 font-medium">{stat.change}</span>
+                    )}
+                  </>
                 )}
               </div>
               <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
               <p className="text-sm text-stone-500">{stat.name}</p>
+
+              {/* Show additional overdue info */}
+              {isOverdueBill && overdueData && overdueData.actionRequired && (
+                <div className={`mt-3 text-xs ${colors.textColor} bg-opacity-20 p-2 rounded-lg ${colors.bgColor}`}>
+                  {overdueData.level === 'URGENT' ? '🚨 ติดต่อด่วนมาก' :
+                   overdueData.level === 'WARNING' ? '⚠️ ควรติดตาม' :
+                   '📋 ติดตามการชำระ'}
+                </div>
+              )}
             </div>
           )
         })}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Quick Action */}
+      <div className="max-w-md">
         <Link
-          to="book"
-          className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-6 text-white hover:shadow-xl transition group"
+          to="history"
+          className="block bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-6 text-white hover:shadow-xl transition group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold mb-1">จองบริการให้แขก</h3>
-              <p className="text-sm opacity-90">Book for Guest</p>
+              <h3 className="text-lg font-semibold mb-1">ดูการจองทั้งหมด</h3>
+              <p className="text-sm opacity-90">View All Bookings</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl group-hover:bg-white/30 transition">
-              <Calendar className="w-6 h-6" />
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          to="guests"
-          className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100 hover:shadow-xl transition group"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-stone-900 mb-1">ดูการจองทั้งหมด</h3>
-              <p className="text-sm text-stone-500">View All Bookings</p>
-            </div>
-            <div className="p-3 bg-stone-100 rounded-xl group-hover:bg-stone-200 transition">
-              <Users className="w-6 h-6 text-stone-600" />
+              <Users className="w-6 h-6" />
             </div>
           </div>
         </Link>
@@ -320,7 +385,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-stone-900">การจองล่าสุด</h2>
             <Link
-              to="guests"
+              to="history"
               className="text-amber-600 hover:text-amber-700 text-sm font-medium"
             >
               ดูทั้งหมด
