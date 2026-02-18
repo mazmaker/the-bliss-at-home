@@ -14,7 +14,7 @@ import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
 import hotelRoutes from './routes/hotel.js'
 import notificationRoutes from './routes/notification.js'
-import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders } from './services/notificationService.js'
+import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations } from './services/notificationService.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -107,6 +107,16 @@ cron.schedule('*/5 * * * *', async () => {
   }
 })
 
+// Check for unassigned jobs and escalate every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const count = await processJobEscalations()
+    if (count > 0) console.log(`[Cron] Processed ${count} job escalations`)
+  } catch (err) {
+    console.error('[Cron] Error processing job escalations:', err)
+  }
+})
+
 // Cleanup old reminder records daily at 3 AM (Thailand time)
 cron.schedule('0 20 * * *', async () => {
   // 20:00 UTC = 03:00 ICT (Thailand)
@@ -122,7 +132,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min)`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min)`)
 })
 
 export default app
