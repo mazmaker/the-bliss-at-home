@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { SOSWidget } from '../components/SOSWidget'
+import { JobEscalationWidget } from '../components/JobEscalationWidget'
 
 // Mock data
 const stats = [
@@ -183,6 +184,9 @@ function Dashboard() {
 
       {/* SOS Emergency Widget - Highest Priority */}
       <SOSWidget />
+
+      {/* Job Escalation Widget - Unassigned Jobs */}
+      <JobEscalationWidget />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

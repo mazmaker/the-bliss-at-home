@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useSOSNotifications } from '../hooks/useSOSNotifications'
 import { useBookingNotifications } from '../hooks/useBookingNotifications'
+import { useJobEscalation } from '../hooks/useJobEscalation'
 import {
   LayoutDashboard,
   Package,
@@ -26,6 +27,8 @@ import {
   TrendingUp,
   CalendarCheck,
   CheckCheck,
+  AlertTriangle,
+  UserX,
 } from 'lucide-react'
 
 const navigation = [
@@ -45,8 +48,10 @@ function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [bookingNotifOpen, setBookingNotifOpen] = useState(false)
+  const [escalationOpen, setEscalationOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
   const bookingNotifRef = useRef<HTMLDivElement>(null)
+  const escalationRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { logout, user, isLoading } = useAdminAuth()
@@ -65,6 +70,13 @@ function AdminLayout() {
     markAsRead: markBookingAsRead,
     markAllAsRead: markAllBookingAsRead,
   } = useBookingNotifications()
+  const {
+    alerts: escalationAlerts,
+    totalCount: escalationCount,
+    hasUrgent: hasEscalationUrgent,
+    markAsRead: markEscalationAsRead,
+    markAllAsRead: markAllEscalationAsRead,
+  } = useJobEscalation()
 
   // Handle click outside notification dropdowns
   useEffect(() => {
@@ -75,16 +87,19 @@ function AdminLayout() {
       if (bookingNotifRef.current && !bookingNotifRef.current.contains(event.target as Node)) {
         setBookingNotifOpen(false)
       }
+      if (escalationRef.current && !escalationRef.current.contains(event.target as Node)) {
+        setEscalationOpen(false)
+      }
     }
 
-    if (notificationOpen || bookingNotifOpen) {
+    if (notificationOpen || bookingNotifOpen || escalationOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [notificationOpen, bookingNotifOpen])
+  }, [notificationOpen, bookingNotifOpen, escalationOpen])
 
   // Handle logout
   const handleLogout = async (e: React.MouseEvent) => {
@@ -268,7 +283,7 @@ function AdminLayout() {
               {/* Booking Notification Dropdown */}
               <div className="relative" ref={bookingNotifRef}>
                 <button
-                  onClick={() => { setBookingNotifOpen(!bookingNotifOpen); setNotificationOpen(false) }}
+                  onClick={() => { setBookingNotifOpen(!bookingNotifOpen); setNotificationOpen(false); setEscalationOpen(false) }}
                   className="relative p-2 hover:bg-stone-100 rounded-lg transition"
                 >
                   <CalendarCheck className={`w-5 h-5 ${
@@ -375,10 +390,119 @@ function AdminLayout() {
                 )}
               </div>
 
+              {/* Job Escalation Dropdown */}
+              {escalationCount > 0 && (
+                <div className="relative" ref={escalationRef}>
+                  <button
+                    onClick={() => { setEscalationOpen(!escalationOpen); setBookingNotifOpen(false); setNotificationOpen(false) }}
+                    className={`relative p-2 hover:bg-stone-100 rounded-lg transition ${
+                      hasEscalationUrgent ? 'animate-pulse' : ''
+                    }`}
+                  >
+                    <UserX className={`w-5 h-5 ${
+                      hasEscalationUrgent ? 'text-red-600' : 'text-orange-600'
+                    }`} />
+                    <span className={`absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold text-white rounded-full ${
+                      hasEscalationUrgent ? 'bg-red-600 animate-pulse' : 'bg-orange-500'
+                    }`}>
+                      {escalationCount > 99 ? '99+' : escalationCount}
+                    </span>
+                  </button>
+
+                  {escalationOpen && (
+                    <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50">
+                      {/* Header */}
+                      <div className={`p-4 ${
+                        hasEscalationUrgent
+                          ? 'bg-gradient-to-r from-red-600 to-red-700'
+                          : 'bg-gradient-to-r from-orange-500 to-orange-600'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white">
+                              {hasEscalationUrgent ? '🚨' : '⚠️'} งานไม่มี Staff รับ
+                            </h3>
+                            <p className="text-xs text-white/90">Unassigned Job Alerts</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {escalationCount > 0 && (
+                              <button
+                                onClick={markAllEscalationAsRead}
+                                className="text-xs text-white/80 hover:text-white flex items-center gap-1"
+                              >
+                                <CheckCheck className="w-3.5 h-3.5" />
+                                รับทราบทั้งหมด
+                              </button>
+                            )}
+                            <div className="text-2xl font-bold text-white">{escalationCount}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* List */}
+                      <div className="max-h-96 overflow-y-auto divide-y divide-stone-100">
+                        {escalationAlerts.slice(0, 8).map((alert) => {
+                          const isUrgent = alert.type === 'job_no_staff_urgent'
+                          return (
+                            <div
+                              key={alert.id}
+                              className={`p-4 hover:bg-stone-50 cursor-pointer transition ${
+                                isUrgent
+                                  ? 'bg-red-50 border-l-4 border-l-red-500'
+                                  : 'bg-orange-50 border-l-4 border-l-orange-500'
+                              }`}
+                              onClick={() => {
+                                markEscalationAsRead(alert.id)
+                                navigate('/admin/bookings')
+                                setEscalationOpen(false)
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="text-2xl">{isUrgent ? '🚨' : '⚠️'}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2 mb-1">
+                                    <div className="font-semibold text-stone-900 truncate text-sm">
+                                      {alert.title}
+                                    </div>
+                                    <div className="flex items-center gap-1 text-xs text-stone-500 whitespace-nowrap">
+                                      <Clock className="w-3 h-3" />
+                                      <span>{getTimeAgo(alert.created_at)}</span>
+                                    </div>
+                                  </div>
+                                  <p className="text-sm text-stone-700 line-clamp-2">
+                                    {alert.message}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-3 bg-stone-50 border-t border-stone-200">
+                        <Link
+                          to="/admin/bookings"
+                          onClick={() => setEscalationOpen(false)}
+                          className={`flex items-center justify-center gap-2 w-full px-4 py-2 rounded-xl font-semibold text-white transition ${
+                            hasEscalationUrgent
+                              ? 'bg-red-600 hover:bg-red-700'
+                              : 'bg-orange-600 hover:bg-orange-700'
+                          }`}
+                        >
+                          <span>ดูการจองทั้งหมด</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* SOS Notification Dropdown */}
               <div className="relative" ref={notificationRef}>
                 <button
-                  onClick={() => { setNotificationOpen(!notificationOpen); setBookingNotifOpen(false) }}
+                  onClick={() => { setNotificationOpen(!notificationOpen); setBookingNotifOpen(false); setEscalationOpen(false) }}
                   className={`relative p-2 hover:bg-stone-100 rounded-lg transition ${
                     pendingCount > 0 && hasCriticalAlerts ? 'animate-pulse' : ''
                   }`}

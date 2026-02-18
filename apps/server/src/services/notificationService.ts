@@ -338,6 +338,29 @@ export async function sendBookingConfirmedNotifications(
         console.log(`📱 LINE sent to ${staffLineIds.length} staff`)
       }
     }
+
+    // In-app notifications for staff
+    const location = hotelName || booking.address || ''
+    const staffNotifRows = availableStaff.map(staff => ({
+      user_id: staff.profile_id,
+      type: 'new_job',
+      title: 'งานใหม่เข้ามา!',
+      message: `มีงาน "${serviceName}" ${location ? `ที่ ${location}` : ''} วันที่ ${scheduledDate} เวลา ${scheduledTime}`,
+      data: { booking_id: bookingId, job_ids: jobIds },
+      is_read: false,
+    }))
+
+    if (staffNotifRows.length > 0) {
+      const { error: staffNotifError } = await supabase
+        .from('notifications')
+        .insert(staffNotifRows)
+
+      if (staffNotifError) {
+        console.error('❌ Failed to insert staff notifications:', staffNotifError)
+      } else {
+        console.log(`🔔 In-app notification sent to ${staffNotifRows.length} staff`)
+      }
+    }
   }
 
   // === 2. Notify admins via LINE + in-app ===
@@ -634,6 +657,28 @@ export async function processJobCancelled(
         console.log(`📱 LINE re-available sent to ${staffLineIds.length} staff`)
       }
     }
+
+    // In-app notifications for staff
+    const staffNotifRows = availableStaff.map(staff => ({
+      user_id: staff.profile_id,
+      type: 'job_cancelled',
+      title: 'งานว่างเพิ่ม!',
+      message: `งาน "${job.service_name}" วันที่ ${job.scheduled_date} ว่างแล้ว เนื่องจากพนักงานยกเลิก`,
+      data: { job_id: jobId, new_job_id: newJob.id, booking_id: job.booking_id },
+      is_read: false,
+    }))
+
+    if (staffNotifRows.length > 0) {
+      const { error: staffNotifError } = await supabase
+        .from('notifications')
+        .insert(staffNotifRows)
+
+      if (staffNotifError) {
+        console.error('❌ Failed to insert staff cancellation notifications:', staffNotifError)
+      } else {
+        console.log(`🔔 Cancellation notification sent to ${staffNotifRows.length} staff`)
+      }
+    }
   }
 
   // 7. Notify admins via LINE + in-app
@@ -828,7 +873,174 @@ export async function processJobReminders(): Promise<number> {
 }
 
 /**
- * Cleanup old sent_job_reminders and sent_customer_email_reminders records (older than 3 days)
+ * Process job escalations (called by cron every 5 minutes)
+ * Detects pending jobs without staff and sends escalating notifications:
+ * Level 1 (>30min): Re-remind staff via LINE + in-app
+ * Level 2 (>2hrs): Alert admins via in-app
+ * Level 3 (<24hrs to appointment): Urgent admin alert via in-app
+ */
+export async function processJobEscalations(): Promise<number> {
+  const supabase = getSupabaseClient()
+  const now = new Date()
+  let sentCount = 0
+
+  const todayStr = now.toLocaleDateString('en-CA')
+
+  // 1. Get pending jobs without staff (only future/today)
+  const { data: pendingJobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, booking_id, service_name, scheduled_date, scheduled_time, duration_minutes, staff_earnings, address, hotel_name, room_number, customer_name, created_at')
+    .eq('status', 'pending')
+    .is('staff_id', null)
+    .gte('scheduled_date', todayStr)
+
+  if (jobsError) {
+    console.error('[Escalation] Query error:', jobsError)
+    return 0
+  }
+
+  if (!pendingJobs || pendingJobs.length === 0) return 0
+
+  // 2. Get already-sent escalations
+  const jobIds = pendingJobs.map(j => j.id)
+  const { data: sentEscalations } = await supabase
+    .from('sent_job_escalations')
+    .select('job_id, escalation_level')
+    .in('job_id', jobIds)
+
+  const sentSet = new Set(sentEscalations?.map(r => `${r.job_id}-${r.escalation_level}`) || [])
+
+  // 3. Get available staff LINE IDs (for level 1)
+  const { data: availableStaff } = await supabase
+    .from('staff')
+    .select('id, profile_id')
+    .eq('is_available', true)
+    .eq('status', 'active')
+
+  let staffLineIds: string[] = []
+  let staffProfileIds: string[] = []
+  if (availableStaff && availableStaff.length > 0) {
+    staffProfileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
+    const { data: staffProfiles } = await supabase
+      .from('profiles')
+      .select('id, line_user_id')
+      .in('id', staffProfileIds)
+      .not('line_user_id', 'is', null)
+
+    staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
+  }
+
+  // 4. Get admin profiles (for level 2 & 3)
+  const { data: adminProfiles } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .eq('role', 'ADMIN')
+
+  // 5. Get booking numbers for notifications
+  const bookingIds = [...new Set(pendingJobs.map(j => j.booking_id).filter(Boolean))]
+  let bookingNumberMap = new Map<string, string>()
+  if (bookingIds.length > 0) {
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('id, booking_number')
+      .in('id', bookingIds)
+
+    if (bookings) {
+      bookingNumberMap = new Map(bookings.map(b => [b.id, b.booking_number]))
+    }
+  }
+
+  // 6. Process each job
+  for (const job of pendingJobs) {
+    const createdAt = new Date(job.created_at || now.toISOString())
+    const minutesPending = Math.floor((now.getTime() - createdAt.getTime()) / 60000)
+
+    const rawTime = (job.scheduled_time || '00:00:00').split('.')[0]
+    const jobDateTime = new Date(`${job.scheduled_date}T${rawTime}+07:00`)
+    const minutesUntilAppointment = Math.floor((jobDateTime.getTime() - now.getTime()) / 60000)
+
+    // Skip if appointment already passed
+    if (jobDateTime <= now) continue
+
+    const bookingNumber = job.booking_id ? bookingNumberMap.get(job.booking_id) || null : null
+
+    // === Level 1: Staff re-reminder (pending > 30 min) ===
+    if (minutesPending >= 30 && !sentSet.has(`${job.id}-1`)) {
+      // LINE multicast to staff
+      if (staffLineIds.length > 0) {
+        await lineService.sendJobEscalationToStaff(staffLineIds, {
+          serviceName: job.service_name,
+          scheduledDate: job.scheduled_date,
+          scheduledTime: rawTime.substring(0, 5),
+          address: job.address || '',
+          hotelName: job.hotel_name,
+          roomNumber: job.room_number,
+          staffEarnings: Number(job.staff_earnings) || 0,
+          durationMinutes: job.duration_minutes,
+          jobId: job.id,
+          minutesPending,
+        })
+      }
+
+      // In-app for staff
+      if (availableStaff && availableStaff.length > 0) {
+        const staffNotifRows = availableStaff.map(staff => ({
+          user_id: staff.profile_id,
+          type: 'job_no_staff',
+          title: 'งานยังไม่มีคนรับ!',
+          message: `งาน "${job.service_name}" วันที่ ${job.scheduled_date} รอมาแล้ว ${minutesPending} นาที`,
+          data: { job_id: job.id, booking_id: job.booking_id, escalation_level: 1 },
+          is_read: false,
+        }))
+        await supabase.from('notifications').insert(staffNotifRows)
+      }
+
+      await supabase.from('sent_job_escalations').insert({ job_id: job.id, escalation_level: 1 })
+      sentCount++
+      console.log(`📢 Escalation L1: job=${job.id}, pending ${minutesPending}min, staff re-reminded`)
+    }
+
+    // === Level 2: Admin alert (pending > 2 hours) ===
+    if (minutesPending >= 120 && !sentSet.has(`${job.id}-2`) && adminProfiles) {
+      const adminNotifRows = adminProfiles.map(admin => ({
+        user_id: admin.id,
+        type: 'job_no_staff_warning',
+        title: '⚠️ งานยังไม่มี Staff รับ',
+        message: `งาน "${job.service_name}" (${job.customer_name}) วันที่ ${job.scheduled_date} เวลา ${rawTime.substring(0, 5)} รอมาแล้ว ${Math.floor(minutesPending / 60)} ชั่วโมง${bookingNumber ? ` (${bookingNumber})` : ''}`,
+        data: { job_id: job.id, booking_id: job.booking_id, booking_number: bookingNumber, escalation_level: 2, minutes_pending: minutesPending },
+        is_read: false,
+      }))
+      await supabase.from('notifications').insert(adminNotifRows)
+
+      await supabase.from('sent_job_escalations').insert({ job_id: job.id, escalation_level: 2 })
+      sentCount++
+      console.log(`⚠️ Escalation L2: job=${job.id}, pending ${minutesPending}min, admin alerted`)
+    }
+
+    // === Level 3: Urgent admin alert (appointment < 24 hours) ===
+    if (minutesUntilAppointment <= 1440 && !sentSet.has(`${job.id}-3`) && adminProfiles) {
+      const hoursUntil = Math.floor(minutesUntilAppointment / 60)
+      const adminNotifRows = adminProfiles.map(admin => ({
+        user_id: admin.id,
+        type: 'job_no_staff_urgent',
+        title: '🚨 ด่วน! งานใกล้ถึงเวลายังไม่มี Staff',
+        message: `งาน "${job.service_name}" (${job.customer_name}) อีก ${hoursUntil} ชั่วโมงจะถึงเวลานัด แต่ยังไม่มี Staff รับ!${bookingNumber ? ` (${bookingNumber})` : ''}`,
+        data: { job_id: job.id, booking_id: job.booking_id, booking_number: bookingNumber, escalation_level: 3, minutes_until_appointment: minutesUntilAppointment },
+        is_read: false,
+      }))
+      await supabase.from('notifications').insert(adminNotifRows)
+
+      await supabase.from('sent_job_escalations').insert({ job_id: job.id, escalation_level: 3 })
+      sentCount++
+      console.log(`🚨 Escalation L3: job=${job.id}, appointment in ${hoursUntil}hrs, URGENT admin alert`)
+    }
+  }
+
+  return sentCount
+}
+
+/**
+ * Cleanup old sent records (older than 3 days)
  * Called by daily cron job
  */
 export async function cleanupOldReminders(): Promise<void> {
@@ -845,9 +1057,15 @@ export async function cleanupOldReminders(): Promise<void> {
     .delete()
     .lt('sent_at', threeDaysAgo)
 
+  const { error: err3 } = await supabase
+    .from('sent_job_escalations')
+    .delete()
+    .lt('sent_at', threeDaysAgo)
+
   if (err1) console.error('❌ Failed to cleanup sent_job_reminders:', err1)
   if (err2) console.error('❌ Failed to cleanup sent_customer_email_reminders:', err2)
-  if (!err1 && !err2) console.log('🧹 Old reminder records cleaned up')
+  if (err3) console.error('❌ Failed to cleanup sent_job_escalations:', err3)
+  if (!err1 && !err2 && !err3) console.log('🧹 Old reminder/escalation records cleaned up')
 }
 
 /**
