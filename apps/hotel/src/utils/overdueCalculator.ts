@@ -155,35 +155,35 @@ export function formatOverdueMessage(status: OverdueStatus, amount?: number): {
       return {
         title: `${status.icon} ${status.message}`,
         description: `${amountText} - เตรียมความพร้อมสำหรับการชำระ`,
-        actionText: 'ติดตามการชำระ'
+        actionText: 'ดูวิธีการชำระ'
       }
 
     case 'OVERDUE':
       return {
         title: `${status.icon} บิลค้างชำระ`,
-        description: `${amountText} - ${status.message} แนะนำให้ติดตาม`,
-        actionText: 'ติดตามการชำระ'
+        description: `${amountText} - ${status.message} ควรจ่ายเงินโดยเร็ว`,
+        actionText: 'จ่ายเงินเดี๋ยวนี้'
       }
 
     case 'WARNING':
       return {
         title: `${status.icon} เตือน: บิลค้างชำระ`,
-        description: `${amountText} - ${status.message} ควรติดตามเร่งด่วน`,
-        actionText: 'ติดต่อเร่งด่วน'
+        description: `${amountText} - ${status.message} ควรติดต่อแอดมินเพื่อจ่ายเงิน`,
+        actionText: 'ติดต่อแอดมิน'
       }
 
     case 'URGENT':
       return {
         title: `${status.icon} ด่วน: บิลค้างชำระนาน`,
-        description: `${amountText} - ${status.message} จำเป็นต้องดำเนินการทันที`,
-        actionText: 'ติดต่อทันที'
+        description: `${amountText} - ${status.message} จำเป็นต้องจ่ายทันที`,
+        actionText: 'จ่ายด่วน'
       }
 
     default:
       return {
         title: `${status.icon} บิลค้างชำระ`,
         description: `${amountText} - ${status.message}`,
-        actionText: 'ตรวจสอบ'
+        actionText: 'ดูรายละเอียด'
       }
   }
 }

@@ -559,14 +559,14 @@ function MonthlyBill() {
                 {overdueStatus.actionRequired && (
                   <div className="flex flex-wrap gap-2 mb-2">
                     <button className={`flex items-center gap-2 px-4 py-2 ${
-                      overdueStatus.level === 'URGENT' ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
+                      overdueStatus.level === 'URGENT' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
                     } text-white rounded-lg text-sm font-medium transition`}>
-                      <Phone className="w-4 h-4" />
-                      {overdueStatus.level === 'URGENT' ? 'โทรหาทันที' : 'ติดต่อโรงแรม'}
+                      <CreditCard className="w-4 h-4" />
+                      {overdueStatus.level === 'URGENT' ? 'จ่ายด่วน' : 'จ่ายเงินเดี๋ยวนี้'}
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-orange-300 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-50 transition">
-                      <Mail className="w-4 h-4" />
-                      ส่งจดหมายเตือน
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-300 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition">
+                      <Phone className="w-4 h-4" />
+                      ติดต่อแอดมิน
                     </button>
                   </div>
                 )}
