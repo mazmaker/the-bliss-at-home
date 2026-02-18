@@ -37,6 +37,9 @@ pnpm-debug.log*
 # Testing
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
+blob-report/
 
 # Supabase
 supabase/.branches/
@@ -50,6 +53,9 @@ supabase/logs/
 
 # TypeScript
 *.tsbuildinfo
+
+# Sprint Dashboard (deployed separately via Cloudflare Pages, not part of dev repo)
+sprint-dashboard/
 
 # Misc
 .cache/
