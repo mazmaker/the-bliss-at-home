@@ -440,7 +440,7 @@ export default function BookingCancellationModal({
                   onChange={(e) => setNotifyCustomer(e.target.checked)}
                   className="w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
                 />
-                <span className="text-stone-700">แจ้งลูกค้าทางอีเมล</span>
+                <span className="text-stone-700">แจ้งลูกค้า</span>
               </label>
               {booking.staff_id && (
                 <label className="flex items-center gap-3 cursor-pointer">

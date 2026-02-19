@@ -1186,3 +1186,155 @@ export async function processCustomerEmailReminders(): Promise<number> {
 
   return sentCount
 }
+
+/**
+ * Process booking cancellation by admin
+ * Cancel all associated jobs and notify assigned staff via LINE + in-app
+ */
+export async function processBookingCancelled(
+  bookingId: string,
+  cancellationReason: string,
+  refundStatus?: string,
+  refundAmount?: number
+): Promise<{
+  success: boolean
+  jobsCancelled: number
+  staffNotified: number
+  error?: string
+}> {
+  const supabase = getSupabaseClient()
+  const result = {
+    success: false,
+    jobsCancelled: 0,
+    staffNotified: 0,
+  }
+
+  // 1. Get booking details
+  const { data: booking, error: bookingError } = await supabase
+    .from('bookings')
+    .select('id, booking_number, booking_date, booking_time, address, hotel_id')
+    .eq('id', bookingId)
+    .single()
+
+  if (bookingError || !booking) {
+    console.error('❌ Booking not found for cancellation notification:', bookingId)
+    return { ...result, error: 'Booking not found' }
+  }
+
+  // Get hotel name if applicable
+  let hotelName: string | null = null
+  if (booking.hotel_id) {
+    const { data: hotel } = await supabase
+      .from('hotels')
+      .select('name')
+      .eq('id', booking.hotel_id)
+      .single()
+    if (hotel) hotelName = hotel.name
+  }
+
+  // 2. Get all jobs associated with this booking that have assigned staff
+  const { data: jobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, staff_id, service_name, scheduled_date, scheduled_time, address, hotel_name, room_number')
+    .eq('booking_id', bookingId)
+    .not('staff_id', 'is', null)
+    .neq('status', 'cancelled')
+
+  if (jobsError) {
+    console.error('❌ Failed to fetch jobs for booking:', jobsError)
+    return { ...result, error: 'Failed to fetch jobs' }
+  }
+
+  if (!jobs || jobs.length === 0) {
+    console.log(`📋 No assigned jobs found for booking ${bookingId}, no staff to notify`)
+    result.success = true
+    return result
+  }
+
+  // 3. Get staff profiles with LINE IDs
+  // Note: jobs.staff_id IS profiles.id (profile_id), so we can query profiles directly
+  const staffIds = [...new Set(jobs.map(j => j.staff_id).filter(Boolean))] as string[]
+
+  const { data: staffProfiles } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .in('id', staffIds)
+
+  const staffLineIds = staffProfiles?.filter(p => p.line_user_id).map(p => p.line_user_id) as string[] || []
+
+  console.log(`📋 Staff IDs: ${staffIds.length}, LINE IDs found: ${staffLineIds.length}`)
+
+  // 4. Send LINE notifications to assigned staff
+  if (staffLineIds.length > 0) {
+    // Use the first job's details for notification (they should be similar for same booking)
+    const job = jobs[0]
+    const success = await lineService.sendBookingCancelledToStaff(staffLineIds, {
+      serviceName: job.service_name,
+      scheduledDate: job.scheduled_date,
+      scheduledTime: job.scheduled_time?.substring(0, 5) || '',
+      address: job.address || '',
+      hotelName: job.hotel_name || hotelName,
+      roomNumber: job.room_number,
+      cancellationReason,
+      bookingNumber: booking.booking_number,
+      refundStatus,
+      refundAmount,
+    })
+
+    if (success) {
+      result.staffNotified = staffLineIds.length
+      console.log(`📱 LINE cancellation sent to ${staffLineIds.length} staff`)
+    }
+  }
+
+  // 5. Create in-app notifications for assigned staff
+  const staffNotifRows = staffIds.map(staffProfileId => ({
+    user_id: staffProfileId,
+    type: 'booking_cancelled',
+    title: 'งานถูกยกเลิก',
+    message: `งาน "${jobs[0].service_name}" วันที่ ${jobs[0].scheduled_date} ถูกยกเลิกโดยแอดมิน เหตุผล: ${cancellationReason}`,
+    data: {
+      booking_id: bookingId,
+      booking_number: booking.booking_number,
+      cancellation_reason: cancellationReason,
+      refund_status: refundStatus,
+      refund_amount: refundAmount,
+    },
+    is_read: false,
+  }))
+
+  if (staffNotifRows.length > 0) {
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .insert(staffNotifRows)
+
+    if (notifError) {
+      console.error('❌ Failed to insert staff cancellation notifications:', notifError)
+    } else {
+      console.log(`🔔 In-app cancellation notification sent to ${staffNotifRows.length} staff`)
+    }
+  }
+
+  // 6. Cancel all jobs for this booking
+  const { error: cancelError } = await supabase
+    .from('jobs')
+    .update({
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+      cancelled_by: 'ADMIN',
+      cancellation_reason: cancellationReason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('booking_id', bookingId)
+    .neq('status', 'cancelled')
+
+  if (cancelError) {
+    console.error('❌ Failed to cancel jobs:', cancelError)
+    return { ...result, error: 'Failed to cancel jobs' }
+  }
+
+  result.jobsCancelled = jobs.length
+  result.success = true
+  console.log(`✅ Booking cancellation processed: booking=${bookingId}, jobs=${result.jobsCancelled}, staff=${result.staffNotified}`)
+  return result
+}

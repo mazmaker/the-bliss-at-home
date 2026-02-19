@@ -165,7 +165,11 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
           id,
           profile_id,
           name_th,
-          name_en
+          name_en,
+          profile:profiles(
+            id,
+            line_user_id
+          )
         ),
         hotel:hotels(
           id,
@@ -182,9 +186,12 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       .single()
 
     if (bookingError || !booking) {
+      console.error('[Cancel] Booking query error:', bookingError)
+      console.error('[Cancel] Booking ID:', id)
       return res.status(404).json({
         success: false,
         error: 'Booking not found',
+        details: bookingError?.message,
       })
     }
 
@@ -291,8 +298,9 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       customer_name: (booking.customer as any)?.full_name || '',
       customer_phone: (booking.customer as any)?.phone,
       assigned_staff_id: booking.staff_id || undefined,
+      staff_profile_id: (booking.staff as any)?.profile_id || undefined, // Profile ID for in-app notifications
       staff_email: undefined, // Staff may not have email
-      staff_line_user_id: (booking.staff as any)?.line_user_id,
+      staff_line_user_id: (booking.staff as any)?.profile?.line_user_id,
       hotel_id: booking.hotel_id || undefined,
       hotel_email: (booking.hotel as any)?.email,
       source: booking.is_hotel_booking ? 'hotel' as const : 'customer' as const,

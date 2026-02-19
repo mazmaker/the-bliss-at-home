@@ -2,7 +2,7 @@ import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign, UserX } from 'luci
 
 export interface Notification {
   id: string
-  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff'
+  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff' | 'booking_cancelled'
   title: string
   message: string
   read: boolean
@@ -33,6 +33,8 @@ export function NotificationPanel({
       case 'new_job':
         return <Bell className="w-5 h-5 text-blue-600" />
       case 'job_cancelled':
+        return <AlertCircle className="w-5 h-5 text-red-600" />
+      case 'booking_cancelled':
         return <AlertCircle className="w-5 h-5 text-red-600" />
       case 'job_updated':
         return <Info className="w-5 h-5 text-amber-600" />

@@ -5,6 +5,7 @@
 
 import { getSupabaseClient } from '../lib/supabase.js'
 import { emailService } from './emailService.js'
+import { lineService } from './lineService.js'
 import type {
   CancellationNotification,
   CreateCancellationNotificationInput,
@@ -26,6 +27,7 @@ interface BookingForNotification {
   customer_name: string
   customer_phone?: string
   assigned_staff_id?: string
+  staff_profile_id?: string // Profile ID for in-app notifications
   staff_email?: string
   staff_line_user_id?: string
   hotel_id?: string
@@ -244,36 +246,74 @@ async function notifyStaff(booking: BookingForNotification): Promise<void> {
 async function sendStaffLineNotification(
   booking: BookingForNotification
 ): Promise<void> {
-  const message = `งานของคุณถูกยกเลิก\n${booking.service_name}\nวันที่: ${formatDate(booking.scheduled_date)} ${booking.scheduled_time}\nเหตุผล: ${booking.cancellation_reason}`
+  if (!booking.staff_line_user_id) {
+    console.log('[LINE] Staff has no LINE user ID, skipping LINE notification')
+    return
+  }
 
-  console.log('[LINE] Sending notification to staff:', {
+  console.log('[LINE] Sending cancellation notification to staff:', {
     staff_id: booking.assigned_staff_id,
     line_user_id: booking.staff_line_user_id,
   })
 
-  // TODO: Integrate with LINE messaging API
-  // await lineService.sendMessage({
-  //   to: booking.staff_line_user_id,
-  //   messages: [{ type: 'text', text: message }],
-  // })
+  // Call LINE service to send push notification
+  const success = await lineService.sendBookingCancelledToStaff(
+    [booking.staff_line_user_id],
+    {
+      serviceName: booking.service_name,
+      scheduledDate: formatDate(booking.scheduled_date),
+      scheduledTime: booking.scheduled_time,
+      address: '', // Address not available in booking data
+      hotelName: null, // Could be added to BookingForNotification if needed
+      cancellationReason: booking.cancellation_reason,
+      bookingNumber: booking.booking_number,
+    }
+  )
+
+  if (success) {
+    console.log('[LINE] Staff notification sent successfully')
+  } else {
+    console.error('[LINE] Failed to send staff notification')
+    throw new Error('Failed to send LINE notification to staff')
+  }
 }
 
 async function createStaffInAppNotification(
   booking: BookingForNotification
 ): Promise<void> {
+  if (!booking.staff_profile_id) {
+    console.log('[In-App] Staff has no profile ID, skipping in-app notification')
+    return
+  }
+
   console.log('[In-App] Creating notification for staff:', {
     staff_id: booking.assigned_staff_id,
+    profile_id: booking.staff_profile_id,
   })
 
-  // TODO: Create in-app notification with sound
-  // await notificationService.create({
-  //   user_id: booking.assigned_staff_id,
-  //   type: 'job_cancelled',
-  //   title: 'งานถูกยกเลิก',
-  //   message: `งานของคุณวันที่ ${formatDate(booking.scheduled_date)} ถูกยกเลิก`,
-  //   sound: 'job_cancelled',
-  //   data: { booking_id: booking.id },
-  // })
+  // Create in-app notification in the notifications table
+  const { error } = await getSupabaseClient()
+    .from('notifications')
+    .insert({
+      user_id: booking.staff_profile_id, // Use profile_id, not staff_id
+      type: 'job_cancelled',
+      title: 'งานถูกยกเลิก',
+      message: `งานของคุณวันที่ ${formatDate(booking.scheduled_date)} เวลา ${booking.scheduled_time} ถูกยกเลิก เหตุผล: ${booking.cancellation_reason}`,
+      data: {
+        booking_id: booking.id,
+        booking_number: booking.booking_number,
+        service_name: booking.service_name,
+        cancellation_reason: booking.cancellation_reason,
+      },
+      is_read: false,
+    })
+
+  if (error) {
+    console.error('[In-App] Failed to create staff notification:', error)
+    throw error
+  }
+
+  console.log('[In-App] Staff notification created successfully')
 }
 
 // ============================================

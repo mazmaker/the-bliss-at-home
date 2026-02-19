@@ -334,6 +334,68 @@ async function sendJobCancelledToAdmin(lineUserIds: string[], data: JobCancelled
   return allSuccess
 }
 
+interface BookingCancelledStaffData {
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  cancellationReason: string
+  bookingNumber?: string | null
+  refundStatus?: string | null
+  refundAmount?: number | null
+}
+
+/**
+ * Send booking cancellation notification to assigned staff via LINE
+ * Called when Admin cancels a booking
+ */
+async function sendBookingCancelledToStaff(lineUserIds: string[], data: BookingCancelledStaffData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}`
+    : `📍 สถานที่: ${data.address}`
+
+  let refundText = ''
+  if (data.refundStatus) {
+    const statusMap: Record<string, string> = {
+      pending: 'รอดำเนินการ',
+      processing: 'กำลังดำเนินการ',
+      completed: 'คืนเงินแล้ว',
+      failed: 'คืนเงินไม่สำเร็จ',
+      not_applicable: 'ไม่มีการคืนเงิน',
+    }
+    refundText = `\n💰 สถานะคืนเงินลูกค้า: ${statusMap[data.refundStatus] || data.refundStatus}`
+    if (data.refundAmount && data.refundAmount > 0) {
+      refundText += ` (${data.refundAmount.toLocaleString()} บาท)`
+    }
+  }
+
+  const messageText =
+    `❌ งานถูกยกเลิกโดยแอดมิน\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `⏰ เวลา: ${data.scheduledTime}\n` +
+    `${locationText}\n` +
+    (data.bookingNumber ? `🔢 เลขที่จอง: ${data.bookingNumber}\n` : '') +
+    `\n📋 เหตุผล: ${data.cancellationReason}` +
+    refundText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for staff: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
 interface JobReminderData {
   serviceName: string
   scheduledDate: string
@@ -443,8 +505,9 @@ export const lineService = {
   sendNewBookingToAdmin,
   sendJobReAvailableToStaff,
   sendJobCancelledToAdmin,
+  sendBookingCancelledToStaff,
   sendJobReminderToStaff,
   sendJobEscalationToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, JobReminderData, JobEscalationStaffData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, JobReminderData, JobEscalationStaffData }
