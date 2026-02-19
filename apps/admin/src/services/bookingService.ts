@@ -52,6 +52,15 @@ export interface Booking {
   created_at: string
   updated_at: string
 
+  // Cancellation details
+  cancellation_reason?: string | null
+  cancelled_by?: string | null
+
+  // Refund details
+  refund_status?: 'none' | 'pending' | 'processing' | 'completed' | 'failed' | null
+  refund_amount?: number | null
+  refund_percentage?: number | null
+
   // Relations
   customer?: {
     id: string

@@ -11,6 +11,7 @@ import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
+import bookingsRoutes from './routes/bookings.js'
 
 const app = express()
 const PORT = process.env.PORT || 3009
@@ -46,6 +47,7 @@ app.get('/api', (req: Request, res: Response) => {
       api: '/api',
       payments: '/api/payments',
       otp: '/api/otp',
+      bookings: '/api/bookings',
     },
   })
 })
@@ -55,6 +57,9 @@ app.use('/api/payments', paymentRoutes)
 
 // OTP routes
 app.use('/api/otp', otpRoutes)
+
+// Booking routes
+app.use('/api/bookings', bookingsRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {
