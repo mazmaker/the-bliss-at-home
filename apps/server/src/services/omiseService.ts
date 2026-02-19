@@ -207,7 +207,16 @@ export async function getCharge(chargeId: string): Promise<ChargeResponse> {
 export async function createRefund(chargeId: string, amount?: number): Promise<any> {
   try {
     const omise = getOmiseClient()
-    const refund = await omise.charges.refund(chargeId, { amount })
+
+    // Use omise.charges.createRefund() - the correct SDK method
+    const refundData: any = {}
+
+    // Only add amount for partial refunds (omit for full refund)
+    if (amount !== undefined && amount > 0) {
+      refundData.amount = amount
+    }
+
+    const refund = await omise.charges.createRefund(chargeId, refundData)
 
     return {
       id: refund.id,
