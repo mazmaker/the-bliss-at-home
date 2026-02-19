@@ -27,6 +27,10 @@ export function initializeAudio(): void {
   if (!audioContext) {
     audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
   }
+  // Resume AudioContext if suspended (required by browser autoplay policies)
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch(err => console.warn('Failed to resume AudioContext:', err))
+  }
 }
 
 // Preload sounds
@@ -80,11 +84,16 @@ export async function playSound(type: SoundType): Promise<void> {
 }
 
 // Play a simple beep using Web Audio API (no external files needed)
-export function playBeep(frequency: number = 440, duration: number = 200): void {
+export async function playBeep(frequency: number = 440, duration: number = 200): Promise<void> {
   initializeAudio()
   if (!audioContext) return
 
   try {
+    // Ensure AudioContext is running before playing sound
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
+
     const oscillator = audioContext.createOscillator()
     const gainNode = audioContext.createGain()
 

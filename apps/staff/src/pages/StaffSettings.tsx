@@ -124,6 +124,9 @@ function StaffSettings() {
       console.error('Supabase logout error:', error)
     }
 
+    // Set flag to prevent auto-login on login page
+    localStorage.setItem('staff_just_logged_out', 'true')
+
     console.log('[Logout] Redirecting to login page...')
     window.location.href = '/staff/login'
   }
