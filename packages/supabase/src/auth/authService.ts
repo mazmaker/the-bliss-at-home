@@ -264,6 +264,8 @@ async function logout(): Promise<void> {
   // Clear remember me preferences
   localStorage.removeItem('rememberMe')
   sessionStorage.removeItem('sessionOnly')
+  // Clear session data
+  localStorage.removeItem('bliss-customer-auth')
 }
 
 /**
