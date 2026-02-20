@@ -1,56 +1,29 @@
-import { useState, useEffect } from 'react'
-import { Save, Bell, Lock, Palette, Globe, Loader2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
+import { useState } from 'react'
+import { Save, Bell, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
 import { createLoadingToast, notifications, showErrorByType } from '../utils/notifications'
 
 // Hotel settings interface
 interface HotelSettings {
-  language: string
   emailNotifications: boolean
   smsNotifications: boolean
   autoConfirm: boolean
   requireGuestInfo: boolean
   defaultDuration: number
-  theme: string
-  currency: string
 }
 
 // Default settings
 const defaultSettings: HotelSettings = {
-  language: 'th',
   emailNotifications: true,
   smsNotifications: false,
   autoConfirm: false,
   requireGuestInfo: true,
-  defaultDuration: 60,
-  theme: 'minimal',
-  currency: 'THB'
+  defaultDuration: 60
 }
 
-// Fetch hotel settings from database or localStorage
+// Fetch hotel settings from localStorage
 const fetchHotelSettings = async (hotelId: string): Promise<HotelSettings> => {
-  try {
-    const { data, error } = await supabase
-      .from('hotels')
-      .select('settings')
-      .eq('id', hotelId)
-      .single()
-
-    if (error) {
-      console.log('Database settings fetch failed, using localStorage fallback:', error.message)
-    }
-
-    // If we have settings from database, use them
-    if (data?.settings) {
-      return { ...defaultSettings, ...data.settings }
-    }
-  } catch (error) {
-    console.log('Database connection failed, using localStorage fallback')
-  }
-
-  // Fallback to localStorage
   const localStorageKey = `hotel_settings_${hotelId}`
   const savedSettings = localStorage.getItem(localStorageKey)
 
@@ -66,35 +39,15 @@ const fetchHotelSettings = async (hotelId: string): Promise<HotelSettings> => {
   return defaultSettings
 }
 
-// Save hotel settings to database or localStorage
+// Save hotel settings to localStorage
 const saveHotelSettings = async ({ hotelId, settings }: { hotelId: string, settings: HotelSettings }): Promise<void> => {
-  try {
-    // Try to save to database first
-    const { error } = await supabase
-      .from('hotels')
-      .update({ settings })
-      .eq('id', hotelId)
-
-    if (error) {
-      console.log('Database save failed, using localStorage:', error.message)
-      throw new Error('Database save failed')
-    }
-
-    console.log('Settings saved to database successfully')
-  } catch (error) {
-    // Fallback to localStorage
-    const localStorageKey = `hotel_settings_${hotelId}`
-    localStorage.setItem(localStorageKey, JSON.stringify(settings))
-    console.log('Settings saved to localStorage as fallback')
-
-    // Don't throw error, consider localStorage save as success
-  }
+  const localStorageKey = `hotel_settings_${hotelId}`
+  localStorage.setItem(localStorageKey, JSON.stringify(settings))
 }
 
 function HotelSettings() {
-  const [activeTab, setActiveTab] = useState('general')
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-  const { hotelId, hotelData, getHotelName, isValidHotel, isLoading: hotelLoading } = useHotelContext()
+  const [activeTab, setActiveTab] = useState('notifications')
+  const { hotelId, getHotelName, isValidHotel, isLoading: hotelLoading } = useHotelContext()
   const queryClient = useQueryClient()
 
   // Fetch hotel settings
@@ -123,9 +76,7 @@ function HotelSettings() {
   })
 
   const tabs = [
-    { id: 'general', name: 'ทั่วไป', nameEn: 'General', icon: Globe },
     { id: 'notifications', name: 'การแจ้งเตือน', nameEn: 'Notifications', icon: Bell },
-    { id: 'appearance', name: 'การแสดงผล', nameEn: 'Appearance', icon: Palette },
     { id: 'security', name: 'ความปลอดภัย', nameEn: 'Security', icon: Lock },
   ]
 
@@ -184,16 +135,6 @@ function HotelSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Success Message */}
-      {showSuccessMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-green-800">
-            <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">บันทึกการตั้งค่าเรียบร้อยแล้ว</span>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -246,48 +187,6 @@ function HotelSettings() {
         {/* Content */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
-            {activeTab === 'general' && (
-              <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-stone-900 mb-4">ตั้งค่าทั่วไป</h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">ภาษา</label>
-                    <select
-                      value={settings.language}
-                      onChange={(e) => updateSetting('language', e.target.value)}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    >
-                      <option value="th">ไทย</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">ระยะเวลาบริการเริ่มต้น (นาที)</label>
-                    <input
-                      type="number"
-                      value={settings.defaultDuration}
-                      onChange={(e) => updateSetting('defaultDuration', Number(e.target.value))}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">สกุลเงิน</label>
-                    <select
-                      value={settings.currency}
-                      onChange={(e) => updateSetting('currency', e.target.value)}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    >
-                      <option value="THB">฿ - บาท (THB)</option>
-                      <option value="USD">$ - ดอลลาร์สหรัฐ (USD)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {activeTab === 'notifications' && (
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-stone-900 mb-4">การแจ้งเตือน</h2>
@@ -302,7 +201,7 @@ function HotelSettings() {
                       type="checkbox"
                       checked={settings.emailNotifications}
                       onChange={(e) => updateSetting('emailNotifications', e.target.checked)}
-                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
+                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500 bg-white border-stone-300"
                     />
                   </label>
 
@@ -315,38 +214,9 @@ function HotelSettings() {
                       type="checkbox"
                       checked={settings.smsNotifications}
                       onChange={(e) => updateSetting('smsNotifications', e.target.checked)}
-                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
+                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500 bg-white border-stone-300"
                     />
                   </label>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'appearance' && (
-              <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-stone-900 mb-4">การแสดงผล</h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">ธีม</label>
-                    <select
-                      value={settings.theme}
-                      onChange={(e) => updateSetting('theme', e.target.value)}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 mb-2"
-                    >
-                      <option value="minimal">มินิมอล</option>
-                      <option value="elegant">หรูหรา</option>
-                      <option value="modern">โมเดิร์น</option>
-                    </select>
-                    <div className="p-4 bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 rounded-xl">
-                      <p className="text-stone-900 font-medium">
-                        {settings.theme === 'minimal' ? 'มินิมอล' :
-                         settings.theme === 'elegant' ? 'หรูหรา' :
-                         settings.theme === 'modern' ? 'โมเดิร์น' : settings.theme}
-                      </p>
-                      <p className="text-sm text-stone-500">ธีมปัจจุบัน</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -365,7 +235,7 @@ function HotelSettings() {
                       type="checkbox"
                       checked={settings.autoConfirm}
                       onChange={(e) => updateSetting('autoConfirm', e.target.checked)}
-                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
+                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500 bg-white border-stone-300"
                     />
                   </label>
 
@@ -378,7 +248,7 @@ function HotelSettings() {
                       type="checkbox"
                       checked={settings.requireGuestInfo}
                       onChange={(e) => updateSetting('requireGuestInfo', e.target.checked)}
-                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
+                      className="w-5 h-5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500 bg-white border-stone-300"
                     />
                   </label>
 
@@ -387,7 +257,7 @@ function HotelSettings() {
                     <input
                       type="password"
                       placeholder="กรอกรหัสผ่านใหม่..."
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-stone-900"
                     />
                   </div>
                   <div>
@@ -395,7 +265,7 @@ function HotelSettings() {
                     <input
                       type="password"
                       placeholder="กรอกรหัสผ่านใหม่อีกครั้ง..."
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-stone-900"
                     />
                   </div>
                 </div>
