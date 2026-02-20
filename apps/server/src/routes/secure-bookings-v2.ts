@@ -98,7 +98,7 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Request
 
     const bookingData = {
       ...bookingFields,
-      hotel_id: '550e8400-e29b-41d4-a716-446655440002', // Resort Chiang Mai (temp fix)
+      hotel_id: req.body.hotel_id, // Use hotel_id from request body (URL-based context)
       // created_by: req.user?.id       // Column doesn't exist yet
     }
 
@@ -175,7 +175,7 @@ router.get('/', authenticateSupabaseUser, requireHotelRole, async (req: Request,
         *,
         booking_services(*)
       `)
-      .eq('hotel_id', req.user?.hotel_id || 'no-hotel-id')
+      .eq('hotel_id', req.query.hotel_id as string || req.user?.hotel_id || 'no-hotel-id')
       .order('created_at', { ascending: false })
 
     if (error) {
