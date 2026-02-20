@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Calendar,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
+import { useStaffNotifications } from '@bliss/supabase/notifications'
 import { NotificationPanel, type Notification } from '../components'
 
 const navigation = [
@@ -28,49 +29,26 @@ function StaffLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
 
-  // Mock notifications - replace with actual data from database later
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'new_job',
-      title: 'งานใหม่เข้ามา!',
-      message: 'คุณมีงาน "นวดแผนไทย 2 ชั่วโมง" ที่ Grande Centre Point Terminal 21',
-      read: false,
-      created_at: new Date(Date.now() - 10 * 60000).toISOString(), // 10 minutes ago
-    },
-    {
-      id: '2',
-      type: 'payment_received',
-      title: 'รับเงินเรียบร้อย',
-      message: 'คุณได้รับเงิน ฿770 จากงาน "นวดน้ำมันหอมระเหย" พร้อมทิป ฿100',
-      read: false,
-      created_at: new Date(Date.now() - 2 * 3600000).toISOString(), // 2 hours ago
-    },
-    {
-      id: '3',
-      type: 'job_updated',
-      title: 'งานได้รับการอัพเดท',
-      message: 'งาน "นวดหินร้อน" เวลาเปลี่ยนเป็น 20:00 น.',
-      read: true,
-      created_at: new Date(Date.now() - 5 * 3600000).toISOString(), // 5 hours ago
-    },
-  ])
+  const {
+    notifications: dbNotifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+  } = useStaffNotifications()
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    )
-  }
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notif) => ({ ...notif, read: true }))
-    )
-  }
-
-  const unreadCount = notifications.filter(n => !n.read).length
+  // Map DB notifications to NotificationPanel format
+  const validTypes = ['new_job', 'job_cancelled', 'job_updated', 'payment_received', 'job_no_staff'] as const
+  const notifications: Notification[] = useMemo(() =>
+    dbNotifications.map((n) => ({
+      id: n.id,
+      type: (validTypes.includes(n.type as any) ? n.type : 'new_job') as Notification['type'],
+      title: n.title,
+      message: n.message,
+      read: n.is_read ?? false,
+      created_at: n.created_at || new Date().toISOString(),
+    })),
+    [dbNotifications]
+  )
 
   const handleLogout = async () => {
     // Close modal first
@@ -173,8 +151,8 @@ function StaffLayout() {
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
         notifications={notifications}
-        onMarkAsRead={handleMarkAsRead}
-        onMarkAllAsRead={handleMarkAllAsRead}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
       />
 
       {/* Main content */}

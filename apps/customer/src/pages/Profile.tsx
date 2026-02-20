@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { User, Bell, Lock, Globe, MapPin, CreditCard, Plus, FileText, Building2, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, Bell, Globe, MapPin, CreditCard, Plus, FileText, Building2, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation, changeAppLanguage, getStoredLanguage } from '@bliss/i18n'
 import { useCurrentCustomer, useUpdateCustomer } from '@bliss/supabase/hooks/useCustomer'
@@ -19,7 +19,7 @@ type Address = Database['public']['Tables']['addresses']['Row']
 function Profile() {
   const { t } = useTranslation(['profile', 'common'])
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'payment' | 'tax'>('profile')
-  const [expandedSetting, setExpandedSetting] = useState<'notifications' | 'privacy' | 'language' | null>(null)
+  const [expandedSetting, setExpandedSetting] = useState<'notifications' | 'language' | null>(null)
 
   // Modal control state
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
@@ -81,11 +81,7 @@ function Profile() {
     news: true,
   })
 
-  const [privacyPrefs, setPrivacyPrefs] = useState({
-    public_profile: false,
-    marketing_emails: true,
-  })
-
+  const [userEmail, setUserEmail] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState(getStoredLanguage())
 
   // Initialize forms when data loads
@@ -101,9 +97,6 @@ function Profile() {
       if (prefs.notifications) {
         setNotificationPrefs(prev => ({ ...prev, ...prefs.notifications }))
       }
-      if (prefs.privacy) {
-        setPrivacyPrefs(prev => ({ ...prev, ...prefs.privacy }))
-      }
     }
   }, [customer])
 
@@ -112,6 +105,7 @@ function Profile() {
     async function loadLanguage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        if (user.email) setUserEmail(user.email)
         const { data } = await supabase.from('profiles').select('language').eq('id', user.id).single()
         if (data?.language) {
           setSelectedLanguage(data.language)
@@ -281,6 +275,7 @@ function Profile() {
               </div>
               <div>
                 <h2 className="text-xl font-bold">{customer.full_name}</h2>
+                {userEmail && <p className="text-white/80 text-sm">{userEmail}</p>}
                 <p className="text-white/80">{customer.phone}</p>
               </div>
             </div>
@@ -437,66 +432,6 @@ function Profile() {
                                   updates: { preferences: { ...currentPrefs, notifications: notificationPrefs } },
                                 })
                                 toast.success(t('toast.notificationsSaved'))
-                              } catch {
-                                toast.error(t('toast.settingsSaveFailed'))
-                              }
-                            }}
-                            className="w-full py-2 bg-amber-700 text-white text-sm rounded-lg font-medium hover:bg-amber-800 transition"
-                          >
-                            {t('settings.save')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Privacy */}
-                    <div className="bg-stone-50 rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => setExpandedSetting(expandedSetting === 'privacy' ? null : 'privacy')}
-                        className="w-full flex items-center justify-between p-4 hover:bg-stone-100 transition"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Lock className="w-5 h-5 text-stone-600" />
-                          <span className="font-medium text-stone-900">{t('settings.privacy.title')}</span>
-                        </div>
-                        {expandedSetting === 'privacy' ? (
-                          <ChevronUp className="w-5 h-5 text-stone-400" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-stone-400" />
-                        )}
-                      </button>
-                      {expandedSetting === 'privacy' && (
-                        <div className="px-4 pb-4 space-y-4">
-                          {[
-                            { key: 'public_profile' as const, label: t('settings.privacy.publicProfile'), desc: t('settings.privacy.publicProfileDesc') },
-                            { key: 'marketing_emails' as const, label: t('settings.privacy.marketingEmails'), desc: t('settings.privacy.marketingEmailsDesc') },
-                          ].map((item) => (
-                            <label key={item.key} className="flex items-center justify-between cursor-pointer">
-                              <div>
-                                <p className="font-medium text-stone-800 text-sm">{item.label}</p>
-                                <p className="text-xs text-stone-500">{item.desc}</p>
-                              </div>
-                              <div
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setPrivacyPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))
-                                }}
-                                className={`relative w-11 h-6 rounded-full transition cursor-pointer ${privacyPrefs[item.key] ? 'bg-amber-600' : 'bg-stone-300'}`}
-                              >
-                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${privacyPrefs[item.key] ? 'translate-x-5' : ''}`} />
-                              </div>
-                            </label>
-                          ))}
-                          <button
-                            onClick={async () => {
-                              if (!customer) return
-                              try {
-                                const currentPrefs = (customer.preferences as any) || {}
-                                await updateCustomer.mutateAsync({
-                                  customerId: customer.id,
-                                  updates: { preferences: { ...currentPrefs, privacy: privacyPrefs } },
-                                })
-                                toast.success(t('toast.privacySaved'))
                               } catch {
                                 toast.error(t('toast.settingsSaveFailed'))
                               }

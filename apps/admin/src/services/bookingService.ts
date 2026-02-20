@@ -62,7 +62,6 @@ export interface Booking {
 
   // Staff earnings
   staff_earnings: number
-  tip_amount: number
 
   // Notes
   customer_notes?: string | null
@@ -76,6 +75,15 @@ export interface Booking {
   cancelled_at?: string | null
   created_at: string
   updated_at: string
+
+  // Cancellation details
+  cancellation_reason?: string | null
+  cancelled_by?: string | null
+
+  // Refund details
+  refund_status?: 'none' | 'pending' | 'processing' | 'completed' | 'failed' | null
+  refund_amount?: number | null
+  refund_percentage?: number | null
 
   // Relations
   customer?: {
@@ -337,6 +345,27 @@ class BookingService {
       if (error) {
         console.error('Error updating booking status:', error)
         throw error
+      }
+
+      // When admin manually confirms a booking, trigger job creation + notifications
+      if (status === 'confirmed') {
+        try {
+          const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+          const res = await fetch(`${serverUrl}/api/notifications/booking-confirmed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: id }),
+          })
+          const result = await res.json()
+          if (result.success) {
+            console.log(`📋 Booking ${id} notifications sent:`, result)
+          } else {
+            console.warn(`⚠️ Booking ${id} notification partial:`, result)
+          }
+        } catch (notifError) {
+          // Non-blocking: notification failure should not affect booking update
+          console.error('⚠️ Failed to send booking notifications:', notifError)
+        }
       }
 
       // Add parsed customer data

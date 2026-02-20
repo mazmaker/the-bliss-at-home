@@ -1,50 +1,47 @@
 import { useState, useEffect } from 'react'
-import { Bell, LogOut, Volume2, Check } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Bell, LogOut, Volume2, Check, Clock, Loader2 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
+import { useStaffNotifications } from '@bliss/supabase/notifications'
 import { isSoundEnabled, setSoundEnabled, NotificationSounds } from '../utils/soundNotification'
-
-// Settings storage keys
-const STORAGE_KEYS = {
-  NOTIFICATIONS: 'staff_notifications_enabled',
-  EMAIL_ALERTS: 'staff_email_alerts',
-  SMS_ALERTS: 'staff_sms_alerts',
-}
-
-// Helper functions for localStorage
-const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
-  const stored = localStorage.getItem(key)
-  if (stored === null) return defaultValue
-  return stored === 'true'
-}
-
-const setStoredBoolean = (key: string, value: boolean): void => {
-  localStorage.setItem(key, String(value))
-}
+import { REMINDER_OPTIONS } from '../utils/jobReminder'
 
 function StaffSettings() {
-  const navigate = useNavigate()
-  const { logout } = useAuth()
-  const [notifications, setNotifications] = useState(true)
+  const { logout, user } = useAuth()
+  const { enabled: notificationsEnabled, setNotificationsEnabled } = useStaffNotifications()
   const [soundEnabled, setSoundEnabledState] = useState(true)
-  const [emailAlerts, setEmailAlerts] = useState(true)
-  const [smsAlerts, setSmsAlerts] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showSaveSuccess, setShowSaveSuccess] = useState(false)
 
-  // Load all settings on mount
+  // Reminder settings state
+  const [reminderSettings, setReminderSettings] = useState({ enabled: true, times: [60, 120] })
+  const [isLoadingReminder, setIsLoadingReminder] = useState(true)
+  const [isSavingReminder, setIsSavingReminder] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
+
+  // Load sound setting on mount
   useEffect(() => {
     setSoundEnabledState(isSoundEnabled())
-    setNotifications(getStoredBoolean(STORAGE_KEYS.NOTIFICATIONS, true))
-    setEmailAlerts(getStoredBoolean(STORAGE_KEYS.EMAIL_ALERTS, true))
-    setSmsAlerts(getStoredBoolean(STORAGE_KEYS.SMS_ALERTS, false))
   }, [])
+
+  // Fetch reminder settings from server on mount
+  useEffect(() => {
+    if (!user?.id) return
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+    fetch(`${serverUrl}/api/notifications/reminder-settings?profile_id=${user.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.enabled !== undefined) {
+          setReminderSettings({ enabled: data.enabled, times: data.minutes || [60, 120] })
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingReminder(false))
+  }, [user?.id])
 
   const handleSoundToggle = (enabled: boolean) => {
     setSoundEnabledState(enabled)
     setSoundEnabled(enabled)
-    // Play test sound when enabling
     if (enabled) {
       NotificationSounds.notification()
     }
@@ -52,21 +49,41 @@ function StaffSettings() {
   }
 
   const handleNotificationsToggle = (enabled: boolean) => {
-    setNotifications(enabled)
-    setStoredBoolean(STORAGE_KEYS.NOTIFICATIONS, enabled)
+    setNotificationsEnabled(enabled)
     showSaved()
   }
 
-  const handleEmailAlertsToggle = (enabled: boolean) => {
-    setEmailAlerts(enabled)
-    setStoredBoolean(STORAGE_KEYS.EMAIL_ALERTS, enabled)
-    showSaved()
+  const handleReminderTimeToggle = (minutes: number) => {
+    const newTimes = reminderSettings.times.includes(minutes)
+      ? reminderSettings.times.filter((t) => t !== minutes)
+      : [...reminderSettings.times, minutes]
+    setReminderSettings({ ...reminderSettings, times: newTimes })
   }
 
-  const handleSmsAlertsToggle = (enabled: boolean) => {
-    setSmsAlerts(enabled)
-    setStoredBoolean(STORAGE_KEYS.SMS_ALERTS, enabled)
-    showSaved()
+  const handleSaveReminderSettings = async () => {
+    if (!user?.id) return
+    setIsSavingReminder(true)
+    setReminderError(null)
+    try {
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const res = await fetch(`${serverUrl}/api/notifications/reminder-settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile_id: user.id,
+          enabled: reminderSettings.enabled,
+          minutes: reminderSettings.times,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      showSaved()
+    } catch (err: any) {
+      console.error('Failed to save reminder settings:', err)
+      setReminderError(err.message || 'ไม่สามารถบันทึกการตั้งค่าได้')
+    } finally {
+      setIsSavingReminder(false)
+    }
   }
 
   const showSaved = () => {
@@ -78,31 +95,22 @@ function StaffSettings() {
     setShowLogoutConfirm(false)
 
     try {
-      // Check if user logged in via LIFF
       const loggedInViaLiff = localStorage.getItem('staff_logged_in_via_liff') === 'true'
 
       if (loggedInViaLiff) {
         console.log('[Logout] User logged in via LIFF, initializing LIFF for logout...')
-
-        // Get LIFF ID from environment
         const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 
         if (LIFF_ID) {
-          // Initialize LIFF if not already initialized
           if (!liffService.isInitialized()) {
             await liffService.initialize(LIFF_ID)
           }
-
-          // Logout from LIFF
           if (liffService.isLoggedIn()) {
             console.log('[Logout] Logging out from LIFF...')
             liffService.logout()
-            // Wait for LIFF logout to complete
             await new Promise(resolve => setTimeout(resolve, 500))
           }
         }
-
-        // Clear the flag
         localStorage.removeItem('staff_logged_in_via_liff')
       }
     } catch (error) {
@@ -110,56 +118,18 @@ function StaffSettings() {
     }
 
     try {
-      // Then logout from Supabase
       console.log('[Logout] Logging out from Supabase...')
       await logout()
     } catch (error) {
       console.error('Supabase logout error:', error)
     }
 
-    // Force full page reload to login page (clears all state)
+    // Set flag to prevent auto-login on login page
+    localStorage.setItem('staff_just_logged_out', 'true')
+
     console.log('[Logout] Redirecting to login page...')
     window.location.href = '/staff/login'
   }
-
-  const settings = [
-    {
-      icon: Bell,
-      title: 'การแจ้งเตือน',
-      titleEn: 'Notifications',
-      description: 'จัดการการแจ้งเตือน',
-      items: [
-        {
-          label: 'เปิดการแจ้งเตือน',
-          value: notifications,
-          onChange: handleNotificationsToggle,
-        },
-        {
-          label: 'แจ้งเตือนทางอีเมล',
-          value: emailAlerts,
-          onChange: handleEmailAlertsToggle,
-        },
-        {
-          label: 'แจ้งเตือนทาง SMS',
-          value: smsAlerts,
-          onChange: handleSmsAlertsToggle,
-        },
-      ],
-    },
-    {
-      icon: Volume2,
-      title: 'เสียงแจ้งเตือน',
-      titleEn: 'Sound Notifications',
-      description: 'เปิด/ปิดเสียงเมื่อมีงานใหม่หรือเปลี่ยนสถานะ',
-      items: [
-        {
-          label: 'เปิดเสียงแจ้งเตือน',
-          value: soundEnabled,
-          onChange: handleSoundToggle,
-        },
-      ],
-    },
-  ]
 
   return (
     <div className="space-y-4">
@@ -210,57 +180,175 @@ function StaffSettings() {
         <p className="text-stone-500">Settings</p>
       </div>
 
-      {/* Settings List */}
-      <div className="space-y-3">
-        {settings.map((setting, index) => {
-          const Icon = setting.icon
-          return (
-            <div key={index} className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-stone-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-stone-900">{setting.title}</h3>
-                    <p className="text-xs text-stone-500">{setting.titleEn}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-stone-600">{setting.description}</p>
-
-                {/* Toggle Items */}
-                {setting.items.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    {setting.items.map((item, itemIndex) => (
-                      <div
-                        key={itemIndex}
-                        className="flex items-center justify-between py-2"
-                      >
-                        <span className="text-sm text-stone-700">{item.label}</span>
-                        <button
-                          onClick={() => item.onChange(!item.value)}
-                          className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
-                            item.value ? 'bg-amber-700' : 'bg-stone-300'
-                          }`}
-                          style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
-                        >
-                          <span
-                            className="inline-block rounded-full bg-white shadow-sm transition-transform"
-                            style={{
-                              width: '20px',
-                              height: '20px',
-                              transform: item.value ? 'translateX(22px)' : 'translateX(2px)',
-                            }}
-                          />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+      {/* Notification Settings */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
+              <Bell className="w-5 h-5 text-stone-600" />
             </div>
-          )
-        })}
+            <div className="flex-1">
+              <h3 className="font-semibold text-stone-900">การแจ้งเตือน</h3>
+              <p className="text-xs text-stone-500">Notifications</p>
+            </div>
+          </div>
+          <p className="text-sm text-stone-600">จัดการการแจ้งเตือนในแอป</p>
+
+          <div className="mt-4 space-y-3">
+            {/* Notification Toggle */}
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <span className="text-sm text-stone-700">เปิดการแจ้งเตือน</span>
+                <p className="text-xs text-stone-400 mt-0.5">แสดงการแจ้งเตือนงานใหม่ การยกเลิก และอื่นๆ</p>
+              </div>
+              <button
+                onClick={() => handleNotificationsToggle(!notificationsEnabled)}
+                className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
+                  notificationsEnabled ? 'bg-amber-700' : 'bg-stone-300'
+                }`}
+                style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
+              >
+                <span
+                  className="inline-block rounded-full bg-white shadow-sm transition-transform"
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    transform: notificationsEnabled ? 'translateX(22px)' : 'translateX(2px)',
+                  }}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sound Settings */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
+              <Volume2 className="w-5 h-5 text-stone-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-stone-900">เสียงแจ้งเตือน</h3>
+              <p className="text-xs text-stone-500">Sound Notifications</p>
+            </div>
+          </div>
+          <p className="text-sm text-stone-600">เปิด/ปิดเสียงเมื่อมีงานใหม่หรือเปลี่ยนสถานะ</p>
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-stone-700">เปิดเสียงแจ้งเตือน</span>
+              <button
+                onClick={() => handleSoundToggle(!soundEnabled)}
+                className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
+                  soundEnabled ? 'bg-amber-700' : 'bg-stone-300'
+                }`}
+                style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
+              >
+                <span
+                  className="inline-block rounded-full bg-white shadow-sm transition-transform"
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    transform: soundEnabled ? 'translateX(22px)' : 'translateX(2px)',
+                  }}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reminder Settings */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-stone-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-stone-900">เตือนก่อนเริ่มงาน</h3>
+              <p className="text-xs text-stone-500">Job Reminders</p>
+            </div>
+          </div>
+          <p className="text-sm text-stone-600">ระบบจะแจ้งเตือนผ่าน LINE ก่อนเริ่มงานตามเวลาที่เลือก</p>
+
+          {isLoadingReminder ? (
+            <div className="mt-4 flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-stone-400" />
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {/* Enable/Disable Toggle */}
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-stone-700">เปิดการเตือนก่อนงาน</span>
+                <button
+                  onClick={() =>
+                    setReminderSettings({ ...reminderSettings, enabled: !reminderSettings.enabled })
+                  }
+                  className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
+                    reminderSettings.enabled ? 'bg-amber-700' : 'bg-stone-300'
+                  }`}
+                  style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
+                >
+                  <span
+                    className="inline-block rounded-full bg-white shadow-sm transition-transform"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      transform: reminderSettings.enabled ? 'translateX(22px)' : 'translateX(2px)',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Reminder Time Options */}
+              <div className="space-y-2">
+                {REMINDER_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleReminderTimeToggle(option.value)}
+                    disabled={!reminderSettings.enabled}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition ${
+                      !reminderSettings.enabled
+                        ? 'bg-stone-100 opacity-50 cursor-not-allowed'
+                        : reminderSettings.times.includes(option.value)
+                        ? 'bg-amber-50 border-2 border-amber-500'
+                        : 'bg-stone-50 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span className="text-stone-700 text-sm">{option.label}ก่อน</span>
+                    {reminderSettings.times.includes(option.value) && (
+                      <Check className="w-5 h-5 text-amber-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Save Button */}
+              <button
+                onClick={handleSaveReminderSettings}
+                disabled={isSavingReminder}
+                className="w-full py-2.5 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              >
+                {isSavingReminder ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  'บันทึกการเตือน'
+                )}
+              </button>
+
+              {/* Error */}
+              {reminderError && (
+                <p className="text-xs text-red-600">{reminderError}</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Logout Button */}

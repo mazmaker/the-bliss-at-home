@@ -32,7 +32,6 @@ function StaffHistory() {
   // Calculate stats
   const completedJobs = jobs.filter((j) => j.status === 'completed')
   const totalEarnings = completedJobs.reduce((sum, j) => sum + (j.staff_earnings || 0), 0)
-  const totalTips = completedJobs.reduce((sum, j) => sum + (j.tip_amount || 0), 0)
 
   // Group by date
   const groupedByDate = useMemo(() => {
@@ -92,10 +91,6 @@ function StaffHistory() {
         <div className="bg-white rounded-xl shadow p-3 text-center">
           <p className="text-xl font-bold text-green-600">฿{totalEarnings.toLocaleString()}</p>
           <p className="text-xs text-stone-500">รายได้</p>
-        </div>
-        <div className="bg-white rounded-xl shadow p-3 text-center">
-          <p className="text-xl font-bold text-amber-600">฿{totalTips.toLocaleString()}</p>
-          <p className="text-xs text-stone-500">ทิป</p>
         </div>
       </div>
 
@@ -185,9 +180,6 @@ function StaffHistory() {
                         >
                           {job.status === 'completed' ? '+' : ''}฿{job.staff_earnings || 0}
                         </p>
-                        {job.tip_amount > 0 && (
-                          <p className="text-xs text-amber-600">+฿{job.tip_amount} ทิป</p>
-                        )}
                       </div>
                     </div>
 

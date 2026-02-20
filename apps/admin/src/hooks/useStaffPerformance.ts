@@ -20,7 +20,6 @@ export interface StaffPerformanceMetrics {
   total_ratings: number
   avg_rating: number
   total_earnings: number
-  total_tips: number
   performance_score: number
   created_at: string
   updated_at: string

@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
-import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign } from 'lucide-react'
+import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw } from 'lucide-react'
 import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, type BookingStatus } from '../hooks/useBookings'
+import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
+import BookingCancellationModal from '../components/BookingCancellationModal'
 
 function Bookings() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -11,6 +13,8 @@ function Bookings() {
   const [bookingTypeFilter, setBookingTypeFilter] = useState<'all' | 'customer' | 'hotel'>('all')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   // Fetch bookings with filters
   const { data: bookingsData = [], isLoading: bookingsLoading } = useBookings({
@@ -34,6 +38,21 @@ function Bookings() {
   const handleCloseDetail = () => {
     setIsDetailModalOpen(false)
     setSelectedBooking(null)
+  }
+
+  const handleOpenCancellation = () => {
+    setIsDetailModalOpen(false)
+    setIsCancellationModalOpen(true)
+  }
+
+  const handleCloseCancellation = () => {
+    setIsCancellationModalOpen(false)
+    setSelectedBooking(null)
+  }
+
+  const handleCancellationComplete = () => {
+    // Refresh bookings data
+    queryClient.invalidateQueries({ queryKey: ['bookings'] })
   }
 
   const handleStatusChange = async (bookingId: string, newStatus: BookingStatus) => {
@@ -107,14 +126,14 @@ function Bookings() {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-700',
       confirmed: 'bg-blue-100 text-blue-700',
-      'in-progress': 'bg-purple-100 text-purple-700',
+      in_progress: 'bg-purple-100 text-purple-700',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
     const labels = {
       pending: 'รอดำเนินการ',
       confirmed: 'ยืนยันแล้ว',
-      'in-progress': 'กำลังดำเนินการ',
+      in_progress: 'กำลังดำเนินการ',
       completed: 'เสร็จสิ้น',
       cancelled: 'ยกเลิก',
     }
@@ -214,7 +233,7 @@ function Bookings() {
             <option value="all">สถานะทั้งหมด</option>
             <option value="pending">รอดำเนินการ</option>
             <option value="confirmed">ยืนยันแล้ว</option>
-            <option value="in-progress">กำลังดำเนินการ</option>
+            <option value="in_progress">กำลังดำเนินการ</option>
             <option value="completed">เสร็จสิ้น</option>
             <option value="cancelled">ยกเลิก</option>
           </select>
@@ -350,6 +369,17 @@ function Bookings() {
           isOpen={isDetailModalOpen}
           onClose={handleCloseDetail}
           onStatusChange={handleStatusChange}
+          onOpenCancellation={handleOpenCancellation}
+        />
+      )}
+
+      {/* Booking Cancellation Modal */}
+      {isCancellationModalOpen && selectedBooking && (
+        <BookingCancellationModal
+          booking={selectedBooking}
+          isOpen={isCancellationModalOpen}
+          onClose={handleCloseCancellation}
+          onCancelled={handleCancellationComplete}
         />
       )}
     </div>
@@ -362,15 +392,22 @@ interface BookingDetailModalProps {
   isOpen: boolean
   onClose: () => void
   onStatusChange: (bookingId: string, newStatus: BookingStatus) => void
+  onOpenCancellation: () => void
 }
 
-function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: BookingDetailModalProps) {
+function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation }: BookingDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState(booking.status)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
 
   if (!isOpen) return null
 
   const handleStatusChange = async () => {
+    // If selecting "cancelled", open cancellation modal instead
+    if (selectedStatus === 'cancelled') {
+      onOpenCancellation()
+      return
+    }
+
     setIsChangingStatus(true)
     try {
       await onStatusChange(booking.id, selectedStatus)
@@ -386,7 +423,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
     const colors = {
       pending: 'bg-yellow-100 text-yellow-700',
       confirmed: 'bg-blue-100 text-blue-700',
-      'in-progress': 'bg-purple-100 text-purple-700',
+      in_progress: 'bg-purple-100 text-purple-700',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
@@ -397,7 +434,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
     const labels = {
       pending: 'รอดำเนินการ',
       confirmed: 'ยืนยันแล้ว',
-      'in-progress': 'กำลังดำเนินการ',
+      in_progress: 'กำลังดำเนินการ',
       completed: 'เสร็จสิ้น',
       cancelled: 'ยกเลิก',
     }
@@ -729,6 +766,108 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
             </div>
           )}
 
+          {/* Cancellation Details Section - Only show for cancelled bookings */}
+          {booking.status === 'cancelled' && (
+            <div className="bg-red-50 rounded-xl p-4 space-y-3 border border-red-200">
+              <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
+                <Ban className="w-5 h-5 text-red-600" />
+                รายละเอียดการยกเลิก
+              </h3>
+
+              {/* Cancellation Time */}
+              {booking.cancelled_at && (
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-red-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-stone-500">ยกเลิกเมื่อ</p>
+                    <p className="font-medium text-stone-900">
+                      {new Date(booking.cancelled_at).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancellation Reason */}
+              {booking.cancellation_reason && (
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-red-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-stone-500">เหตุผลการยกเลิก</p>
+                    <p className="font-medium text-stone-900">{booking.cancellation_reason}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Refund Information */}
+              {booking.refund_status && booking.refund_status !== 'none' && (
+                <div className="mt-4 pt-4 border-t border-red-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <RefreshCw className="w-5 h-5 text-red-600" />
+                    <h4 className="font-semibold text-red-800">ข้อมูลการคืนเงิน</h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Refund Status */}
+                    <div>
+                      <p className="text-sm text-stone-500">สถานะการคืนเงิน</p>
+                      <p className="font-medium">
+                        {booking.refund_status === 'pending' && (
+                          <span className="text-yellow-600">⏳ รอดำเนินการ</span>
+                        )}
+                        {booking.refund_status === 'processing' && (
+                          <span className="text-blue-600">🔄 กำลังดำเนินการ</span>
+                        )}
+                        {booking.refund_status === 'completed' && (
+                          <span className="text-green-600">✅ คืนเงินแล้ว</span>
+                        )}
+                        {booking.refund_status === 'failed' && (
+                          <span className="text-red-600">❌ ล้มเหลว</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Refund Percentage */}
+                    {booking.refund_percentage !== null && booking.refund_percentage !== undefined && (
+                      <div>
+                        <p className="text-sm text-stone-500">รูปแบบการคืนเงิน</p>
+                        <p className="font-medium text-stone-900">
+                          {booking.refund_percentage === 100 ? 'คืนเต็มจำนวน (100%)' : `คืนบางส่วน (${booking.refund_percentage}%)`}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Refund Amount */}
+                    {booking.refund_amount !== null && booking.refund_amount !== undefined && booking.refund_amount > 0 && (
+                      <div>
+                        <p className="text-sm text-stone-500">จำนวนเงินคืน</p>
+                        <p className="text-xl font-bold text-green-600">
+                          ฿{Number(booking.refund_amount).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* No Refund Case */}
+              {(!booking.refund_status || booking.refund_status === 'none') && (
+                <div className="flex items-start gap-3 mt-2">
+                  <DollarSign className="w-5 h-5 text-red-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-stone-500">การคืนเงิน</p>
+                    <p className="font-medium text-stone-600">ไม่มีการคืนเงิน</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Status Change Section */}
           <div className="border-t border-stone-200 pt-6">
             <h3 className="font-semibold text-stone-900 mb-4">เปลี่ยนสถานะการจอง</h3>
@@ -740,7 +879,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange }: Bookin
               >
                 <option value="pending">รอดำเนินการ</option>
                 <option value="confirmed">ยืนยันแล้ว</option>
-                <option value="in-progress">กำลังดำเนินการ</option>
+                <option value="in_progress">กำลังดำเนินการ</option>
                 <option value="completed">เสร็จสิ้น</option>
                 <option value="cancelled">ยกเลิก</option>
               </select>

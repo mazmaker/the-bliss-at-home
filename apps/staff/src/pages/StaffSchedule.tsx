@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Calendar,
   ChevronLeft,
@@ -9,22 +10,19 @@ import {
   Phone,
   Navigation,
   X,
+  XCircle,
   Filter,
   List,
   Grid3X3,
   CalendarDays,
   Loader2,
-  Bell,
-  Check,
+  ExternalLink,
 } from 'lucide-react'
 import { useJobs, type Job, type JobStatus } from '@bliss/supabase'
-import {
-  getReminderSettings,
-  saveReminderSettings,
-  requestNotificationPermission,
-  scheduleRemindersForJobs,
-  REMINDER_OPTIONS,
-} from '../utils/jobReminder'
+import { useAuth } from '@bliss/supabase/auth'
+import { JobCancellationModal } from '../components'
+import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
+import { stopBackgroundMusic } from '../utils/backgroundMusic'
 
 type ViewMode = 'day' | 'week' | 'month'
 type FilterMode = 'all' | 'upcoming' | 'completed'
@@ -36,40 +34,52 @@ const THAI_MONTHS = [
   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
 ]
 
+// Format date to YYYY-MM-DD in local timezone (avoids UTC offset bug from toISOString)
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 function StaffSchedule() {
-  const { jobs, isLoading } = useJobs({ realtime: true })
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { jobs, isLoading, refresh } = useJobs({ realtime: true })
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [showReminderSettings, setShowReminderSettings] = useState(false)
-  const [reminderSettings, setReminderSettings] = useState(getReminderSettings)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
 
-  // Schedule reminders when jobs change
-  useEffect(() => {
-    if (jobs.length > 0 && reminderSettings.enabled) {
-      scheduleRemindersForJobs(jobs)
-    }
-  }, [jobs, reminderSettings])
-
-  // Handle reminder toggle
-  const handleReminderTimeToggle = (minutes: number) => {
-    const newTimes = reminderSettings.times.includes(minutes)
-      ? reminderSettings.times.filter((t) => t !== minutes)
-      : [...reminderSettings.times, minutes]
-    setReminderSettings({ ...reminderSettings, times: newTimes })
+  // Handle cancel job
+  const handleCancelJobClick = (job: Job) => {
+    setJobToCancel(job)
+    setShowCancelModal(true)
+    setSelectedJob(null) // Close detail modal
   }
 
-  // Save reminder settings
-  const handleSaveReminderSettings = async () => {
-    // Request notification permission if enabling reminders
-    if (reminderSettings.enabled && reminderSettings.times.length > 0) {
-      await requestNotificationPermission()
+  const handleConfirmCancel = async (reason: string, notes?: string) => {
+    if (!jobToCancel) return
+    try {
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: jobToCancel.id, reason, notes }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
+      stopBackgroundMusic()
+      if (isSoundEnabled()) NotificationSounds.jobCancelled()
+      setJobToCancel(null)
+      refresh()
+    } catch (err: any) {
+      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
     }
-    saveReminderSettings(reminderSettings)
-    // Re-schedule reminders with new settings
-    scheduleRemindersForJobs(jobs)
-    setShowReminderSettings(false)
   }
 
   // Calculate date range based on view mode
@@ -115,13 +125,14 @@ function StaffSchedule() {
         return false
       }
 
-      // Filter by date range (only for calendar view)
-      if (viewMode !== 'day' || filterMode === 'all') {
-        const jobDateOnly = new Date(job.scheduled_date)
-        return jobDateOnly >= dateRange.start && jobDateOnly <= dateRange.end
+      // Filter by date range (use string comparison to avoid timezone issues)
+      const jobDateStr = job.scheduled_date
+      if (viewMode === 'day') {
+        return jobDateStr === formatLocalDate(currentDate)
       }
-
-      return true
+      const startStr = formatLocalDate(dateRange.start)
+      const endStr = formatLocalDate(dateRange.end)
+      return jobDateStr >= startStr && jobDateStr <= endStr
     })
   }, [jobs, filterMode, dateRange, viewMode])
 
@@ -157,7 +168,9 @@ function StaffSchedule() {
     const totalEarnings = filteredJobs
       .filter((j) => j.status === 'completed')
       .reduce((sum, j) => sum + (j.staff_earnings || 0), 0)
-    const totalHours = filteredJobs.reduce((sum, j) => sum + (j.duration_minutes || 0), 0) / 60
+    const totalHours = filteredJobs
+      .filter((j) => j.status !== 'cancelled')
+      .reduce((sum, j) => sum + (j.duration_minutes || 0), 0) / 60
 
     return { totalJobs, completedJobs, upcomingJobs, totalEarnings, totalHours }
   }, [filteredJobs])
@@ -236,7 +249,7 @@ function StaffSchedule() {
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart)
       date.setDate(date.getDate() + i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = formatLocalDate(date)
       const dayJobs = jobsByDate[dateKey] || []
       const isToday = date.toDateString() === new Date().toDateString()
 
@@ -255,7 +268,7 @@ function StaffSchedule() {
             </div>
           </div>
           <div className="p-1 space-y-1 min-h-[100px]">
-            {dayJobs.slice(0, 3).map((job) => (
+            {(expandedDates.has(dateKey) ? dayJobs : dayJobs.slice(0, 3)).map((job) => (
               <button
                 key={job.id}
                 onClick={() => setSelectedJob(job)}
@@ -272,9 +285,22 @@ function StaffSchedule() {
               </button>
             ))}
             {dayJobs.length > 3 && (
-              <div className="text-xs text-center text-stone-500">
-                +{dayJobs.length - 3} งาน
-              </div>
+              <button
+                onClick={() => {
+                  setExpandedDates((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(dateKey)) {
+                      next.delete(dateKey)
+                    } else {
+                      next.add(dateKey)
+                    }
+                    return next
+                  })
+                }}
+                className="w-full text-xs text-center text-amber-700 font-medium py-1 hover:bg-amber-50 rounded transition"
+              >
+                {expandedDates.has(dateKey) ? 'ย่อ' : `+${dayJobs.length - 3} งาน`}
+              </button>
             )}
           </div>
         </div>
@@ -302,7 +328,7 @@ function StaffSchedule() {
     // Add cells for each day of the month
     for (let day = 1; day <= totalDays; day++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = formatLocalDate(date)
       const dayJobs = jobsByDate[dateKey] || []
       const isToday = date.toDateString() === new Date().toDateString()
 
@@ -373,7 +399,7 @@ function StaffSchedule() {
   // Render day view (list of jobs)
   const renderDayView = () => {
     const todayJobs = sortedJobs.filter(
-      (job) => job.scheduled_date === currentDate.toISOString().split('T')[0]
+      (job) => job.scheduled_date === formatLocalDate(currentDate)
     )
 
     if (todayJobs.length === 0) {
@@ -494,17 +520,9 @@ function StaffSchedule() {
   return (
     <div className="space-y-4 pb-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-stone-900">ตารางงาน</h1>
-          <p className="text-stone-500 text-sm">Schedule</p>
-        </div>
-        <button
-          onClick={() => setShowReminderSettings(true)}
-          className="p-2 bg-white rounded-lg shadow-sm border border-stone-200"
-        >
-          <Bell className="w-5 h-5 text-stone-600" />
-        </button>
+      <div>
+        <h1 className="text-xl font-bold text-stone-900">ตารางงาน</h1>
+        <p className="text-stone-500 text-sm">Schedule</p>
       </div>
 
       {/* View Mode Selector */}
@@ -642,33 +660,41 @@ function StaffSchedule() {
 
       {/* Job Detail Modal */}
       {selectedJob && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedJob(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - fixed */}
+            <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
               <h3 className="font-semibold text-lg text-stone-900">รายละเอียดงาน</h3>
               <button
                 onClick={() => setSelectedJob(null)}
-                className="p-2 hover:bg-stone-100 rounded-lg transition"
+                className="p-1.5 hover:bg-stone-100 rounded-lg transition"
               >
                 <X className="w-5 h-5 text-stone-600" />
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            {/* Content - scrollable */}
+            <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
               {/* Status & Service */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h4 className="text-xl font-bold text-stone-900">{selectedJob.service_name}</h4>
-                  <p className="text-sm text-stone-500">{selectedJob.service_name_en}</p>
+                  <h4 className="text-lg font-bold text-stone-900">{selectedJob.service_name}</h4>
+                  <p className="text-xs text-stone-500">{selectedJob.service_name_en}</p>
                 </div>
                 {getStatusBadge(selectedJob.status)}
               </div>
 
               {/* Date & Time */}
-              <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl">
-                <Calendar className="w-5 h-5 text-amber-700" />
+              <div className="flex items-center gap-3 px-3 py-2 bg-amber-50 rounded-xl">
+                <Calendar className="w-5 h-5 text-amber-700 shrink-0" />
                 <div>
-                  <p className="font-semibold text-amber-900">
+                  <p className="font-semibold text-amber-900 text-sm">
                     {new Date(selectedJob.scheduled_date).toLocaleDateString('th-TH', {
                       weekday: 'long',
                       day: 'numeric',
@@ -676,33 +702,33 @@ function StaffSchedule() {
                       year: 'numeric',
                     })}
                   </p>
-                  <p className="text-sm text-amber-700">
+                  <p className="text-xs text-amber-700">
                     {selectedJob.scheduled_time} • {selectedJob.duration_minutes} นาที
                   </p>
                 </div>
               </div>
 
               {/* Customer Info */}
-              <div className="space-y-3">
-                <h5 className="font-medium text-stone-900">ข้อมูลลูกค้า</h5>
+              <div className="space-y-2">
+                <h5 className="font-medium text-stone-900 text-sm">ข้อมูลลูกค้า</h5>
                 <div className="flex items-center gap-3">
                   {selectedJob.customer_avatar_url ? (
                     <img
                       src={selectedJob.customer_avatar_url}
                       alt={selectedJob.customer_name}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-stone-500" />
+                    <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-stone-500" />
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-stone-900">{selectedJob.customer_name}</p>
+                    <p className="font-medium text-stone-900 text-sm">{selectedJob.customer_name}</p>
                     {selectedJob.customer_phone && (
                       <a
                         href={`tel:${selectedJob.customer_phone}`}
-                        className="text-sm text-amber-700 flex items-center gap-1"
+                        className="text-xs text-amber-700 flex items-center gap-1"
                       >
                         <Phone className="w-3 h-3" />
                         {selectedJob.customer_phone}
@@ -713,25 +739,25 @@ function StaffSchedule() {
               </div>
 
               {/* Location */}
-              <div className="space-y-2">
-                <h5 className="font-medium text-stone-900">สถานที่</h5>
+              <div className="space-y-1.5">
+                <h5 className="font-medium text-stone-900 text-sm">สถานที่</h5>
                 {selectedJob.hotel_name && (
-                  <p className="text-stone-700">
+                  <p className="text-sm text-stone-700">
                     {selectedJob.hotel_name}
                     {selectedJob.room_number && ` ห้อง ${selectedJob.room_number}`}
                   </p>
                 )}
                 {selectedJob.address && (
-                  <p className="text-sm text-stone-600">{selectedJob.address}</p>
+                  <p className="text-xs text-stone-600">{selectedJob.address}</p>
                 )}
                 {selectedJob.latitude && selectedJob.longitude && (
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${selectedJob.latitude},${selectedJob.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-medium"
                   >
-                    <Navigation className="w-4 h-4" />
+                    <Navigation className="w-3.5 h-3.5" />
                     นำทาง
                     {selectedJob.distance_km && (
                       <span className="text-amber-600">({selectedJob.distance_km} กม.)</span>
@@ -742,101 +768,69 @@ function StaffSchedule() {
 
               {/* Notes */}
               {selectedJob.customer_notes && (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-stone-900">หมายเหตุจากลูกค้า</h5>
-                  <p className="text-sm text-stone-600 bg-stone-50 p-3 rounded-lg">
+                <div className="space-y-1">
+                  <h5 className="font-medium text-stone-900 text-sm">หมายเหตุจากลูกค้า</h5>
+                  <p className="text-xs text-stone-600 bg-stone-50 p-2 rounded-lg">
                     {selectedJob.customer_notes}
                   </p>
                 </div>
               )}
 
               {/* Earnings */}
-              <div className="bg-green-50 rounded-xl p-4">
+              <div className="bg-green-50 rounded-xl px-3 py-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-green-700">รายได้</span>
-                  <span className="text-2xl font-bold text-green-700">
+                  <span className="text-green-700 text-sm">รายได้</span>
+                  <span className="text-xl font-bold text-green-700">
                     ฿{selectedJob.staff_earnings}
                   </span>
                 </div>
-                {selectedJob.tip_amount > 0 && (
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-200">
-                    <span className="text-green-600 text-sm">ทิป</span>
-                    <span className="font-semibold text-green-600">
-                      +฿{selectedJob.tip_amount}
-                    </span>
-                  </div>
-                )}
               </div>
+            </div>
+
+            {/* Action Buttons - fixed at bottom */}
+            <div className="p-3 border-t border-stone-100 flex gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  setSelectedJob(null)
+                  navigate(`/staff/jobs/${selectedJob.id}`)
+                }}
+                className="flex-1 py-2.5 bg-amber-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                ดูรายละเอียด
+              </button>
+              {['confirmed', 'assigned', 'traveling', 'arrived'].includes(selectedJob.status) && (
+                <button
+                  onClick={() => handleCancelJobClick(selectedJob)}
+                  className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-medium flex items-center gap-2 text-sm"
+                >
+                  <XCircle className="w-4 h-4" />
+                  ยกเลิก
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Reminder Settings Modal */}
-      {showReminderSettings && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-stone-900">ตั้งค่าการแจ้งเตือน</h3>
-              <button
-                onClick={() => setShowReminderSettings(false)}
-                className="p-1 hover:bg-stone-100 rounded-lg transition"
-              >
-                <X className="w-5 h-5 text-stone-600" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              {/* Enable/Disable Toggle */}
-              <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
-                <span className="text-stone-700 font-medium">เปิดการแจ้งเตือน</span>
-                <button
-                  onClick={() =>
-                    setReminderSettings({ ...reminderSettings, enabled: !reminderSettings.enabled })
-                  }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    reminderSettings.enabled ? 'bg-amber-700' : 'bg-stone-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      reminderSettings.enabled ? 'left-7' : 'left-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <p className="text-sm text-stone-600">
-                เลือกเวลาที่ต้องการให้แจ้งเตือนก่อนเริ่มงาน
-              </p>
-              {REMINDER_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleReminderTimeToggle(option.value)}
-                  disabled={!reminderSettings.enabled}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl transition ${
-                    !reminderSettings.enabled
-                      ? 'bg-stone-100 opacity-50 cursor-not-allowed'
-                      : reminderSettings.times.includes(option.value)
-                      ? 'bg-amber-50 border-2 border-amber-500'
-                      : 'bg-stone-50 hover:bg-stone-100'
-                  }`}
-                >
-                  <span className="text-stone-700">{option.label}ก่อน</span>
-                  {reminderSettings.times.includes(option.value) && (
-                    <Check className="w-5 h-5 text-amber-600" />
-                  )}
-                </button>
-              ))}
-              <button
-                onClick={handleSaveReminderSettings}
-                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
-              >
-                บันทึก
-              </button>
-            </div>
-          </div>
+      {/* Error Message */}
+      {actionError && (
+        <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm" onClick={() => setActionError(null)}>
+          {actionError}
         </div>
       )}
+
+      {/* Cancel Modal */}
+      <JobCancellationModal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false)
+          setJobToCancel(null)
+        }}
+        onConfirm={handleConfirmCancel}
+        jobId={jobToCancel?.id || ''}
+        serviceName={jobToCancel?.service_name}
+      />
 
       {/* Custom CSS for animation */}
       <style>{`

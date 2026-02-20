@@ -21,6 +21,7 @@
       "@/*": ["./src/*"],
       "@bliss/supabase": ["../../packages/supabase/src"],
       "@bliss/supabase/auth": ["../../packages/supabase/src/auth"],
+      "@bliss/supabase/notifications": ["../../packages/supabase/src/notifications"],
       "@bliss/supabase/hooks/*": ["../../packages/supabase/src/hooks/*"],
       "@bliss/supabase/payment": ["../../packages/supabase/src/payment"],
       "@bliss/supabase/types/database.types": ["../../packages/supabase/src/types/database.types.ts"],

@@ -228,7 +228,6 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ชื่อ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">งานสำเร็จ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เทิป</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">คะแนน</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">อัตราสำเร็จ</th>
                 {showPerformanceDetails && (
@@ -246,7 +245,6 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
                     <td className="py-3 px-4"><div className="w-32 h-4 bg-stone-200 rounded animate-pulse"></div></td>
                     <td className="py-3 px-4"><div className="w-16 h-4 bg-stone-200 rounded animate-pulse"></div></td>
                     <td className="py-3 px-4"><div className="w-20 h-4 bg-stone-200 rounded animate-pulse"></div></td>
-                    <td className="py-3 px-4"><div className="w-16 h-4 bg-stone-200 rounded animate-pulse"></div></td>
                     <td className="py-3 px-4"><div className="w-12 h-4 bg-stone-200 rounded animate-pulse"></div></td>
                     <td className="py-3 px-4"><div className="w-16 h-4 bg-stone-200 rounded animate-pulse"></div></td>
                     {showPerformanceDetails && (
@@ -271,9 +269,6 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-green-600">
                       ฿{staff.base_earnings.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-sm font-medium text-amber-600">
-                      ฿{staff.tips_earned.toLocaleString()}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
@@ -318,7 +313,7 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
               )}
               {!isLoading && (!staffPerformance.data || staffPerformance.data.length === 0) && (
                 <tr>
-                  <td colSpan={showPerformanceDetails ? 8 : 6} className="py-8 text-center text-stone-500">
+                  <td colSpan={showPerformanceDetails ? 7 : 5} className="py-8 text-center text-stone-500">
                     <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>ไม่มีข้อมูลพนักงานในช่วงเวลานี้</p>
                   </td>
@@ -362,10 +357,6 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
                   <div className="flex justify-between">
                     <span className="text-stone-500">รายได้พื้นฐาน:</span>
                     <span className="font-medium text-stone-700">฿{staff.base_earnings.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">เทิป:</span>
-                    <span className="font-medium text-amber-700">฿{staff.tips_earned.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between border-t border-stone-200 pt-2">
                     <span className="text-stone-500">รวม:</span>

@@ -1,8 +1,8 @@
-import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign } from 'lucide-react'
+import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign, UserX } from 'lucide-react'
 
 export interface Notification {
   id: string
-  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received'
+  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff' | 'booking_cancelled'
   title: string
   message: string
   read: boolean
@@ -34,10 +34,14 @@ export function NotificationPanel({
         return <Bell className="w-5 h-5 text-blue-600" />
       case 'job_cancelled':
         return <AlertCircle className="w-5 h-5 text-red-600" />
+      case 'booking_cancelled':
+        return <AlertCircle className="w-5 h-5 text-red-600" />
       case 'job_updated':
         return <Info className="w-5 h-5 text-amber-600" />
       case 'payment_received':
         return <DollarSign className="w-5 h-5 text-green-600" />
+      case 'job_no_staff':
+        return <UserX className="w-5 h-5 text-orange-600" />
       default:
         return <Bell className="w-5 h-5 text-gray-600" />
     }
