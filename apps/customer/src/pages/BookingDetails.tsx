@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle, Download, FileText } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
 import { supabase } from '@bliss/supabase'
+import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 function BookingDetails() {
   const { t } = useTranslation(['booking', 'common'])
@@ -228,6 +231,110 @@ function BookingDetails() {
     await refetch()
   }
 
+  // Handle receipt download
+  const handleDownloadReceipt = async () => {
+    if (!bookingData) return
+    try {
+      // Find the successful transaction for this booking
+      const { data: txn } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('booking_id', bookingData.id)
+        .eq('status', 'successful')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (!txn) {
+        alert('ไม่พบข้อมูลธุรกรรม')
+        return
+      }
+
+      const resp = await fetch(`${API_URL}/api/receipts/${txn.id}`)
+      const result = await resp.json()
+      if (result.success) {
+        const d = result.data
+        downloadReceipt({
+          receiptNumber: d.receipt_number,
+          transactionDate: new Date(d.transaction_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingNumber: d.booking_number,
+          serviceName: d.service_name,
+          serviceNameEn: d.service_name_en,
+          bookingDate: new Date(d.booking_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingTime: d.booking_time,
+          amount: d.amount,
+          servicePrice: d.service_price,
+          paymentMethod: d.payment_method,
+          cardBrand: d.card_brand,
+          cardLastDigits: d.card_last_digits,
+          customerName: d.customer_name,
+          addons: d.addons,
+          company: {
+            name: d.company.companyName,
+            nameTh: d.company.companyNameTh,
+            address: d.company.companyAddress,
+            phone: d.company.companyPhone,
+            email: d.company.companyEmail,
+            taxId: d.company.companyTaxId,
+          },
+        } as ReceiptPdfData)
+      }
+    } catch (err) {
+      console.error('Failed to download receipt:', err)
+    }
+  }
+
+  // Handle credit note download
+  const handleDownloadCreditNote = async () => {
+    if (!bookingData) return
+    try {
+      // Find the refund transaction for this booking
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: refundTxn } = await (supabase as any)
+        .from('refund_transactions')
+        .select('id')
+        .eq('booking_id', bookingData.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (!refundTxn) {
+        alert('ไม่พบข้อมูลการคืนเงิน')
+        return
+      }
+
+      const resp = await fetch(`${API_URL}/api/receipts/credit-note/${refundTxn.id}`)
+      const result = await resp.json()
+      if (result.success) {
+        const d = result.data
+        downloadCreditNote({
+          creditNoteNumber: d.credit_note_number,
+          originalReceiptNumber: d.original_receipt_number,
+          refundDate: new Date(d.refund_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingNumber: d.booking_number,
+          serviceName: d.service_name,
+          originalAmount: d.original_amount,
+          refundAmount: d.refund_amount,
+          refundPercentage: d.refund_percentage,
+          refundReason: d.refund_reason,
+          customerName: d.customer_name,
+          paymentMethod: d.payment_method,
+          cardLastDigits: d.card_last_digits,
+          company: {
+            name: d.company.companyName,
+            nameTh: d.company.companyNameTh,
+            address: d.company.companyAddress,
+            phone: d.company.companyPhone,
+            email: d.company.companyEmail,
+            taxId: d.company.companyTaxId,
+          },
+        } as CreditNotePdfData)
+      }
+    } catch (err) {
+      console.error('Failed to download credit note:', err)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -422,6 +529,29 @@ function BookingDetails() {
                   </span>
                 </div>
               </div>
+
+              {/* Receipt & Credit Note Downloads */}
+              {booking.payment.status === 'paid' && (
+                <div className="mt-4 pt-4 border-t border-stone-100 space-y-2">
+                  <button
+                    onClick={handleDownloadReceipt}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-medium hover:bg-amber-100 transition text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    ดาวน์โหลดใบเสร็จ
+                  </button>
+
+                  {(bookingData as any)?.refund_status === 'completed' && (
+                    <button
+                      onClick={handleDownloadCreditNote}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-50 text-purple-700 rounded-xl font-medium hover:bg-purple-100 transition text-sm"
+                    >
+                      <FileText className="w-4 h-4" />
+                      ดาวน์โหลดใบลดหนี้
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Actions */}

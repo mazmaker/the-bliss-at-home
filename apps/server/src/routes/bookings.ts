@@ -8,6 +8,7 @@ import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
+import { sendCreditNoteEmailForRefund } from './receipts.js'
 import { lineService } from '../services/lineService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
 import type {
@@ -686,6 +687,13 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
         console.error('Notification error (non-blocking):', notifError)
         // Don't fail the cancellation if notifications fail
       }
+    }
+
+    // Send credit note email if refund was processed (non-blocking)
+    if (refundResult?.refundTransactionId && refundResult.refundAmount > 0) {
+      sendCreditNoteEmailForRefund(refundResult.refundTransactionId).catch(emailErr => {
+        console.error('⚠️ Credit note email failed (non-blocking):', emailErr)
+      })
     }
 
     // Prepare response

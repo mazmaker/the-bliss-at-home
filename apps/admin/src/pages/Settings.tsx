@@ -33,6 +33,8 @@ interface CancellationPolicySettings {
 interface SettingsState {
   // General Settings
   website_name_en: string
+  company_name_th: string
+  company_tax_id: string
   company_logo_url: string
   company_email: string
   company_address: string
@@ -50,6 +52,8 @@ function Settings() {
   const [activeTab, setActiveTab] = useState('general')
   const [settings, setSettings] = useState<SettingsState>({
     website_name_en: '',
+    company_name_th: '',
+    company_tax_id: '',
     company_logo_url: '',
     company_email: '',
     company_address: '',
@@ -283,6 +287,8 @@ function Settings() {
 
       setSettings({
         website_name_en: settingsMap.website_name_en || '',
+        company_name_th: settingsMap.company_name_th || '',
+        company_tax_id: settingsMap.company_tax_id || '',
         company_logo_url: settingsMap.company_logo_url || '',
         company_email: settingsMap.company_email || '',
         company_address: settingsMap.company_address || '',
@@ -311,6 +317,8 @@ function Settings() {
       // Prepare settings for update (store as JSONB objects)
       const settingsToUpdate = [
         { key: 'website_name_en', value: { value: settings.website_name_en || '' }, description: 'Website name in English' },
+        { key: 'company_name_th', value: { value: settings.company_name_th || '' }, description: 'Company name in Thai' },
+        { key: 'company_tax_id', value: { value: settings.company_tax_id || '' }, description: 'Company tax ID' },
         { key: 'company_logo_url', value: { url: settings.company_logo_url || '' }, description: 'Company logo URL' },
         { key: 'company_email', value: { value: settings.company_email || '' }, description: 'Company email address' },
         { key: 'company_address', value: { value: settings.company_address || '' }, description: 'Company address' },
@@ -472,6 +480,31 @@ function Settings() {
                     className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     placeholder="e.g. The Bliss Massage at Home"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">ชื่อบริษัท (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    value={settings.company_name_th}
+                    onChange={(e) => setSettings({ ...settings, company_name_th: e.target.value })}
+                    className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    placeholder="เช่น บริษัท เดอะบลิส แอท โฮม จำกัด"
+                  />
+                  <p className="text-xs text-stone-500 mt-1">ใช้สำหรับใบเสร็จรับเงินและใบลดหนี้</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">เลขประจำตัวผู้เสียภาษี</label>
+                  <input
+                    type="text"
+                    value={settings.company_tax_id}
+                    onChange={(e) => setSettings({ ...settings, company_tax_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    placeholder="เช่น 0123456789012"
+                    maxLength={13}
+                  />
+                  <p className="text-xs text-stone-500 mt-1">เลข 13 หลัก ใช้สำหรับใบเสร็จรับเงินและใบลดหนี้</p>
                 </div>
 
                 <div>

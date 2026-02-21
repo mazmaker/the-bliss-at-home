@@ -7,6 +7,7 @@ import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { omiseService } from '../services/omiseService.js'
 import { processBookingConfirmed } from '../services/notificationService.js'
+import { sendReceiptEmailForTransaction } from './receipts.js'
 
 const router = Router()
 
@@ -134,6 +135,13 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       } catch (notifError) {
         console.error('⚠️ Notification failed (non-blocking):', notifError)
       }
+
+      // Send receipt email (non-blocking)
+      if (transaction?.id) {
+        sendReceiptEmailForTransaction(transaction.id).catch(emailErr => {
+          console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+        })
+      }
     }
 
     return res.json({
@@ -214,6 +222,11 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
         } catch (notifError) {
           console.error('⚠️ Notification failed (non-blocking):', notifError)
         }
+
+        // Send receipt email (non-blocking)
+        sendReceiptEmailForTransaction(transaction.id).catch(emailErr => {
+          console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+        })
       } else if (charge.failure_code) {
         await getSupabaseClient()
           .from('bookings')
