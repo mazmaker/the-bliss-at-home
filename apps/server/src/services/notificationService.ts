@@ -109,7 +109,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
         const recipientLabel = bs.recipient_name || `คนที่ ${(bs.recipient_index || 0) + 1}`
         const price = Number(bs.price) || 0
         const commissionRate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * commissionRate / 100)
+        const earnings = Math.round(price * commissionRate)
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -279,7 +279,7 @@ export async function sendBookingConfirmedNotifications(
       coupleServices = bookingServices.map(bs => {
         const price = Number(bs.price) || 0
         const rate = Number((bs.service as any)?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * rate / 100)
+        const earnings = Math.round(price * rate)
         totalStaffEarnings += earnings
         return {
           recipientIndex: bs.recipient_index || 0,
@@ -296,7 +296,7 @@ export async function sendBookingConfirmedNotifications(
     const singleRate = Number(booking.service?.staff_commission_rate) || 0
     totalStaffEarnings = booking.staff_earnings
       ? Number(booking.staff_earnings)
-      : Math.round(singleAmount * singleRate / 100)
+      : Math.round(singleAmount * singleRate)
   }
 
   // === 1. Notify available staff via LINE ===

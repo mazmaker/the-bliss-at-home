@@ -116,7 +116,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
 
           // Send token to backend
           try {
-            const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-charge`, {
+            const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-charge`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
