@@ -1,6 +1,7 @@
 import { useSupabaseQuery, useSupabaseMutation } from './useSupabaseQuery';
 import { customerService } from '../services';
 import { Database } from '../types/database.types';
+import { useOptionalAuthContext } from '../auth/AuthProvider';
 
 type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
 
@@ -8,9 +9,11 @@ type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
  * Get current customer (logged in user)
  */
 export function useCurrentCustomer() {
+  const auth = useOptionalAuthContext()
   return useSupabaseQuery({
     queryKey: ['customer', 'current'],
     queryFn: (client) => customerService.getCurrentCustomer(client),
+    enabled: auth ? auth.isAuthenticated : undefined,
   });
 }
 

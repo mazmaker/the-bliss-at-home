@@ -80,7 +80,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
 
     try {
       // Call backend API to verify OTP
-      const response = await fetch('http://localhost:3000/api/otp/verify', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/otp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,7 +124,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
 
     try {
       // Call backend API to resend OTP
-      const response = await fetch('http://localhost:3000/api/otp/resend', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/otp/resend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone_number: phoneNumber }),

@@ -1,16 +1,23 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation } from '@bliss/i18n'
+import { CancelBookingModal } from '../components/CancelBookingModal'
+import { RescheduleModal } from '../components/RescheduleModal'
+import { supabase } from '@bliss/supabase'
 
 function BookingDetails() {
   const { t } = useTranslation(['booking', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
+  // Modal states
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false)
+
   // Fetch booking data from Supabase
-  const { data: bookingData, isLoading, error } = useBookingByNumber(id)
+  const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
 
   // Transform booking data to match UI format
   const booking = useMemo(() => {
@@ -160,6 +167,67 @@ function BookingDetails() {
   const totalAddOnsPrice = booking.addOns.reduce((sum: number, a: any) => sum + a.price, 0)
   const totalPrice = booking.price + totalAddOnsPrice
 
+  // Handle cancel booking
+  const handleCancelBooking = async (reason: string) => {
+    if (!bookingData) throw new Error('Booking data not available')
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bookings/${bookingData.id}/cancel`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason,
+          refund_option: 'auto', // Use auto to let policy decide
+          notify_customer: true,
+          notify_staff: true,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'ไม่สามารถยกเลิกการจองได้')
+    }
+
+    // Refetch booking data to update UI
+    await refetch()
+  }
+
+  // Handle reschedule booking - calls server API which:
+  // 1. Updates booking date/time
+  // 2. Unassigns staff (they need to re-accept based on availability)
+  // 3. Sends LINE + In-App notifications to previously assigned staff
+  const handleRescheduleBooking = async (newDate: string, newTime: string) => {
+    if (!bookingData) throw new Error('Booking data not available')
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+    const response = await fetch(`${apiUrl}/api/bookings/${bookingData.id}/reschedule`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        new_date: newDate,
+        new_time: newTime,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'ไม่สามารถเลื่อนนัดได้')
+    }
+
+    const result = await response.json()
+    console.log('[Reschedule] Success:', result)
+
+    // Refetch booking data to update UI
+    await refetch()
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -237,9 +305,12 @@ function BookingDetails() {
                   </p>
                   <p className="text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</p>
                 </div>
-                {booking.status === 'confirmed' && (
+                {(booking.status === 'confirmed' || booking.status === 'pending') && (
                   <div className="text-right">
-                    <button className="text-amber-700 hover:text-amber-900 font-medium text-sm">
+                    <button
+                      onClick={() => setShowRescheduleModal(true)}
+                      className="text-amber-700 hover:text-amber-900 font-medium text-sm"
+                    >
                       {t('details.reschedule')}
                     </button>
                   </div>
@@ -293,7 +364,7 @@ function BookingDetails() {
                     <span>{booking.provider.reviews} {t('details.reviews')}</span>
                   </div>
                 </div>
-                {booking.status === 'confirmed' && (
+                {(booking.status === 'confirmed' || booking.status === 'pending') && (
                   <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
                     <MessageCircle className="w-4 h-4" />
                     {t('details.chat')}
@@ -355,12 +426,18 @@ function BookingDetails() {
 
             {/* Actions */}
             <div className="space-y-3">
-              {booking.status === 'confirmed' && (
+              {(booking.status === 'confirmed' || booking.status === 'pending') && (
                 <>
-                  <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
-                    {t('details.editBooking')}
+                  <button
+                    onClick={() => setShowRescheduleModal(true)}
+                    className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+                  >
+                    {t('details.reschedule')}
                   </button>
-                  <button className="w-full border-2 border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition">
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="w-full border-2 border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
+                  >
                     {t('details.cancelBooking')}
                   </button>
                 </>
@@ -400,6 +477,37 @@ function BookingDetails() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Booking Modal */}
+      {bookingData && (
+        <CancelBookingModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleCancelBooking}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          bookingDate={booking.date}
+          bookingTime={booking.time}
+          totalPrice={totalPrice}
+          paymentStatus={booking.payment.status as 'pending' | 'paid' | 'refunded'}
+        />
+      )}
+
+      {/* Reschedule Modal */}
+      {bookingData && (
+        <RescheduleModal
+          isOpen={showRescheduleModal}
+          onClose={() => setShowRescheduleModal(false)}
+          onConfirm={handleRescheduleBooking}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          currentDate={booking.date}
+          currentTime={booking.time}
+          duration={booking.duration}
+        />
+      )}
     </div>
   )
 }

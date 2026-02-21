@@ -498,6 +498,65 @@ async function sendJobEscalationToStaff(lineUserIds: string[], data: JobEscalati
   return multicast(lineUserIds, [message])
 }
 
+interface BookingRescheduledStaffData {
+  serviceName: string
+  oldDate: string
+  oldTime: string
+  newDate: string
+  newTime: string
+  address: string
+  hotelName?: string | null
+  bookingNumber?: string | null
+  staffEarnings: number
+  durationMinutes: number
+  jobId?: string
+}
+
+/**
+ * Send booking rescheduled notification to assigned staff via LINE
+ * Staff needs to re-accept the job after reschedule
+ */
+async function sendBookingRescheduledToStaff(lineUserIds: string[], data: BookingRescheduledStaffData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}`
+    : `📍 สถานที่: ${data.address}`
+
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const linkText = staffLiffUrl && data.jobId
+    ? `\n👉 กดรับงานใหม่:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
+    : '\n\n⚠️ กรุณาเปิดแอปเพื่อรับงานใหม่อีกครั้ง'
+
+  const messageText =
+    `📅 ลูกค้าเลื่อนนัด!\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    (data.bookingNumber ? `🔢 เลขที่จอง: ${data.bookingNumber}\n` : '') +
+    `\n❌ กำหนดการเดิม:\n` +
+    `   📅 ${data.oldDate}\n` +
+    `   ⏰ ${data.oldTime}\n` +
+    `\n✅ กำหนดการใหม่:\n` +
+    `   📅 ${data.newDate}\n` +
+    `   ⏰ ${data.newTime}\n` +
+    `\n⏱️ ระยะเวลา: ${data.durationMinutes} นาที\n` +
+    `${locationText}\n` +
+    `💰 รายได้: ${data.staffEarnings.toLocaleString()} บาท\n` +
+    `\n⚠️ งานถูกปล่อยให้รับใหม่แล้ว` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for staff: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
 export const lineService = {
   pushMessage,
   multicast,
@@ -506,8 +565,9 @@ export const lineService = {
   sendJobReAvailableToStaff,
   sendJobCancelledToAdmin,
   sendBookingCancelledToStaff,
+  sendBookingRescheduledToStaff,
   sendJobReminderToStaff,
   sendJobEscalationToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, JobReminderData, JobEscalationStaffData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData }

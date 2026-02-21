@@ -15,6 +15,7 @@ import otpRoutes from './routes/otp.js'
 import hotelRoutes from './routes/hotel.js'
 import notificationRoutes from './routes/notification.js'
 import bookingsRoutes from './routes/bookings.js'
+import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations } from './services/notificationService.js'
 
 const app = express()
@@ -54,6 +55,7 @@ app.get('/api', (req: Request, res: Response) => {
       hotels: '/api/hotels',
       notifications: '/api/notifications',
       bookings: '/api/bookings',
+      cancellationPolicy: '/api/cancellation-policy',
     },
   })
 })
@@ -72,6 +74,9 @@ app.use('/api/notifications', notificationRoutes)
 
 // Booking routes
 app.use('/api/bookings', bookingsRoutes)
+
+// Cancellation policy routes
+app.use('/api/cancellation-policy', cancellationPolicyRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {

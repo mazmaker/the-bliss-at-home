@@ -155,13 +155,14 @@ router.post('/create-charge', async (req: Request, res: Response) => {
 
 /**
  * POST /api/payments/webhooks/omise
- * Handle Omise webhooks
+ * Handle Omise webhooks for charge and refund events
  */
 router.post('/webhooks/omise', async (req: Request, res: Response) => {
   try {
     const { key, data } = req.body
 
-    console.log('Received Omise webhook:', key)
+    console.log('📥 Received Omise webhook:', key)
+    console.log('📦 Webhook data:', JSON.stringify(data, null, 2))
 
     // Verify webhook signature (implement in production)
     // const signature = req.headers['x-omise-signature'] as string
@@ -222,12 +223,222 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
           .eq('id', transaction.booking_id)
       }
 
-      console.log(`Updated transaction ${transaction.id} to status: ${newStatus}`)
+      console.log(`✅ Updated transaction ${transaction.id} to status: ${newStatus}`)
+    }
+
+    // Handle refund.create event - refund initiated
+    if (key === 'refund.create') {
+      const refund = data
+      console.log('💰 Refund created:', refund.id, 'Amount:', refund.amount / 100, 'THB')
+
+      // Find refund transaction by omise_refund_id
+      const { data: refundTxn, error: refundError } = await getSupabaseClient()
+        .from('refund_transactions')
+        .select('*, booking:bookings(*)')
+        .eq('omise_refund_id', refund.id)
+        .single()
+
+      if (refundError || !refundTxn) {
+        // Try to find by charge ID if refund_transactions doesn't have the refund ID yet
+        const { data: transaction } = await getSupabaseClient()
+          .from('transactions')
+          .select('booking_id')
+          .eq('omise_charge_id', refund.charge)
+          .single()
+
+        if (transaction) {
+          // Update booking to show refund is processing
+          await getSupabaseClient()
+            .from('bookings')
+            .update({
+              refund_status: 'processing',
+            })
+            .eq('id', transaction.booking_id)
+
+          console.log(`💳 Refund processing started for booking via charge: ${refund.charge}`)
+        } else {
+          console.warn('⚠️ No refund_transaction or transaction found for refund:', refund.id)
+        }
+        return res.json({ received: true })
+      }
+
+      // Update refund transaction status to processing
+      await getSupabaseClient()
+        .from('refund_transactions')
+        .update({
+          status: 'processing',
+        })
+        .eq('id', refundTxn.id)
+
+      // Update booking refund status
+      await getSupabaseClient()
+        .from('bookings')
+        .update({
+          refund_status: 'processing',
+        })
+        .eq('id', refundTxn.booking_id)
+
+      console.log(`💳 Refund ${refund.id} is processing for booking ${refundTxn.booking_id}`)
+    }
+
+    // Handle refund.complete event - refund completed (success or failure)
+    if (key === 'refund.complete') {
+      const refund = data
+      const isSuccess = refund.status === 'closed' // 'closed' = successful refund in Omise
+      const refundStatus = isSuccess ? 'completed' : 'failed'
+
+      console.log(`💰 Refund ${refund.id} completed:`, refundStatus, 'Amount:', refund.amount / 100, 'THB')
+
+      // Find refund transaction by omise_refund_id
+      const { data: refundTxn, error: refundError } = await getSupabaseClient()
+        .from('refund_transactions')
+        .select('*, booking:bookings(*)')
+        .eq('omise_refund_id', refund.id)
+        .single()
+
+      if (refundError || !refundTxn) {
+        // Try to find by charge ID
+        const { data: transaction } = await getSupabaseClient()
+          .from('transactions')
+          .select('id, booking_id')
+          .eq('omise_charge_id', refund.charge)
+          .single()
+
+        if (transaction) {
+          // Find or create refund_transaction record
+          const { data: existingRefundTxn } = await getSupabaseClient()
+            .from('refund_transactions')
+            .select('id')
+            .eq('booking_id', transaction.booking_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+
+          if (existingRefundTxn) {
+            // Update existing refund transaction
+            await getSupabaseClient()
+              .from('refund_transactions')
+              .update({
+                status: refundStatus,
+                omise_refund_id: refund.id,
+                completed_at: isSuccess ? new Date().toISOString() : null,
+                error_message: !isSuccess ? (refund.failure_code || 'Refund failed') : null,
+              })
+              .eq('id', existingRefundTxn.id)
+          } else {
+            // Create new refund transaction record from webhook
+            await getSupabaseClient()
+              .from('refund_transactions')
+              .insert({
+                booking_id: transaction.booking_id,
+                payment_transaction_id: transaction.id,
+                refund_amount: refund.amount / 100,
+                status: refundStatus,
+                omise_refund_id: refund.id,
+                reason: 'Refund processed via Omise',
+                initiated_by: 'system',
+                completed_at: isSuccess ? new Date().toISOString() : null,
+              })
+          }
+
+          // Update booking status
+          await getSupabaseClient()
+            .from('bookings')
+            .update({
+              payment_status: isSuccess ? 'refunded' : 'paid',
+              refund_status: refundStatus,
+              refund_amount: isSuccess ? refund.amount / 100 : null,
+            })
+            .eq('id', transaction.booking_id)
+
+          // Update original transaction
+          if (isSuccess) {
+            await getSupabaseClient()
+              .from('transactions')
+              .update({
+                status: 'refunded',
+                refunded_at: new Date().toISOString(),
+              })
+              .eq('id', transaction.id)
+          }
+
+          console.log(`✅ Refund ${refund.id} ${refundStatus} for booking ${transaction.booking_id}`)
+        } else {
+          console.warn('⚠️ No transaction found for refund:', refund.id, 'charge:', refund.charge)
+        }
+        return res.json({ received: true })
+      }
+
+      // Update refund transaction record
+      await getSupabaseClient()
+        .from('refund_transactions')
+        .update({
+          status: refundStatus,
+          completed_at: isSuccess ? new Date().toISOString() : null,
+          error_message: !isSuccess ? (refund.failure_code || 'Refund failed') : null,
+        })
+        .eq('id', refundTxn.id)
+
+      // Update booking payment and refund status
+      await getSupabaseClient()
+        .from('bookings')
+        .update({
+          payment_status: isSuccess ? 'refunded' : 'paid',
+          refund_status: refundStatus,
+        })
+        .eq('id', refundTxn.booking_id)
+
+      // Update original transaction status if refund successful
+      if (isSuccess && refundTxn.payment_transaction_id) {
+        await getSupabaseClient()
+          .from('transactions')
+          .update({
+            status: 'refunded',
+            refunded_at: new Date().toISOString(),
+          })
+          .eq('id', refundTxn.payment_transaction_id)
+      }
+
+      // Send notification to customer about refund status (non-blocking)
+      try {
+        // Get booking with customer details for notification
+        const { data: booking } = await getSupabaseClient()
+          .from('bookings')
+          .select('*, customer:customers(*)')
+          .eq('id', refundTxn.booking_id)
+          .single()
+
+        if (booking) {
+          // Create in-app notification for customer
+          await getSupabaseClient()
+            .from('notifications')
+            .insert({
+              user_id: booking.customer?.profile_id,
+              type: isSuccess ? 'refund_completed' : 'refund_failed',
+              title: isSuccess ? 'คืนเงินสำเร็จ' : 'การคืนเงินล้มเหลว',
+              message: isSuccess
+                ? `คืนเงินจำนวน ฿${(refund.amount / 100).toLocaleString()} สำหรับการจอง ${booking.booking_number} สำเร็จแล้ว เงินจะเข้าบัญชีภายใน 5-10 วันทำการ`
+                : `การคืนเงินสำหรับการจอง ${booking.booking_number} ล้มเหลว กรุณาติดต่อฝ่ายบริการลูกค้า`,
+              data: {
+                booking_id: booking.id,
+                booking_number: booking.booking_number,
+                refund_amount: refund.amount / 100,
+                refund_status: refundStatus,
+              },
+            })
+
+          console.log(`📬 Refund notification sent to customer for booking ${booking.booking_number}`)
+        }
+      } catch (notifError) {
+        console.error('⚠️ Refund notification failed (non-blocking):', notifError)
+      }
+
+      console.log(`✅ Refund ${refund.id} ${refundStatus} - updated all records`)
     }
 
     return res.json({ received: true })
   } catch (error: any) {
-    console.error('Webhook error:', error)
+    console.error('❌ Webhook error:', error)
     return res.status(500).json({
       success: false,
       error: error.message || 'Webhook processing failed',
