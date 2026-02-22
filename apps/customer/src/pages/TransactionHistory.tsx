@@ -4,6 +4,7 @@ import { Receipt, CreditCard, Smartphone, Building2, Banknote, Download, Chevron
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerTransactions, useTransactionSummary } from '@bliss/supabase/hooks/useTransactions'
 import { downloadReceipt, type ReceiptPdfData } from '../utils/receiptPdfGenerator'
+import { getStoredLanguage } from '@bliss/i18n'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -241,17 +242,19 @@ function TransactionHistory() {
                           <button
                             onClick={async () => {
                               try {
+                                const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+                                const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
                                 const resp = await fetch(`${API_URL}/api/receipts/${transaction.id}`)
                                 const result = await resp.json()
                                 if (result.success) {
                                   const d = result.data
                                   downloadReceipt({
                                     receiptNumber: d.receipt_number,
-                                    transactionDate: new Date(d.transaction_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+                                    transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
                                     bookingNumber: d.booking_number,
                                     serviceName: d.service_name,
                                     serviceNameEn: d.service_name_en,
-                                    bookingDate: new Date(d.booking_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+                                    bookingDate: new Date(d.booking_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
                                     bookingTime: d.booking_time,
                                     amount: d.amount,
                                     paymentMethod: d.payment_method,
@@ -259,6 +262,7 @@ function TransactionHistory() {
                                     cardLastDigits: d.card_last_digits,
                                     customerName: d.customer_name,
                                     addons: d.addons,
+                                    language: lang,
                                     company: {
                                       name: d.company.companyName,
                                       nameTh: d.company.companyNameTh,

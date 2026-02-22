@@ -105,8 +105,17 @@ router.get('/:transactionId', async (req, res) => {
     const { data: transaction, error } = await supabase
       .from('transactions')
       .select(`
-        *,
-        bookings (
+        id,
+        transaction_number,
+        receipt_number,
+        amount,
+        currency,
+        payment_method,
+        card_brand,
+        card_last_digits,
+        status,
+        created_at,
+        bookings!transactions_booking_id_fkey (
           booking_number,
           booking_date,
           booking_time,
@@ -114,22 +123,22 @@ router.get('/:transactionId', async (req, res) => {
           final_price,
           status,
           payment_method,
-          services (
+          services!bookings_service_id_fkey (
             name_th,
             name_en,
-            price,
+            base_price,
             duration
           ),
-          booking_addons (
+          booking_addons!booking_addons_booking_id_fkey (
             quantity,
             total_price,
-            addons (
+            service_addons!booking_addons_addon_id_fkey (
               name_th,
               name_en,
               price
             )
           ),
-          customers (
+          customers!bookings_customer_id_fkey (
             id,
             full_name,
             phone,
@@ -141,6 +150,7 @@ router.get('/:transactionId', async (req, res) => {
       .single()
 
     if (error || !transaction) {
+      console.error('Receipt query error:', error)
       return res.status(404).json({ success: false, error: 'Transaction not found' })
     }
 
@@ -170,7 +180,7 @@ router.get('/:transactionId', async (req, res) => {
     }
 
     const addons = (booking?.booking_addons || []).map((ba: any) => ({
-      name: ba.addons?.name_th || ba.addons?.name_en || '',
+      name: ba.service_addons?.name_th || ba.service_addons?.name_en || '',
       price: ba.total_price || 0,
     }))
 
@@ -192,7 +202,7 @@ router.get('/:transactionId', async (req, res) => {
         booking_time: booking?.booking_time,
         service_name: booking?.services?.name_th || booking?.services?.name_en || '',
         service_name_en: booking?.services?.name_en || '',
-        service_price: booking?.services?.price || booking?.base_price,
+        service_price: booking?.services?.base_price || booking?.base_price,
         final_price: booking?.final_price,
         addons,
         customer_name: booking?.customers?.full_name || '',
@@ -246,6 +256,7 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
       .single()
 
     if (error || !refundTxn) {
+      console.error('Credit note query error:', error)
       return res.status(404).json({ success: false, error: 'Refund transaction not found' })
     }
 
@@ -337,25 +348,30 @@ router.post('/:transactionId/send-email', async (req, res) => {
 
     // Fetch receipt data (reuse GET logic)
     const supabase = getSupabaseClient()
-    const { data: transaction } = await supabase
+    const { data: transaction, error: txnError } = await supabase
       .from('transactions')
       .select(`
         *,
-        bookings (
+        bookings!transactions_booking_id_fkey (
           booking_number,
           booking_date,
           booking_time,
           final_price,
           payment_method,
-          services (name_th, name_en),
-          booking_addons (quantity, total_price, addons (name_th, name_en)),
-          customers (id, full_name, phone, profile_id)
+          services!bookings_service_id_fkey (name_th, name_en),
+          booking_addons!booking_addons_booking_id_fkey (
+            quantity,
+            total_price,
+            service_addons!booking_addons_addon_id_fkey (name_th, name_en)
+          ),
+          customers!bookings_customer_id_fkey (id, full_name, phone, profile_id)
         )
       `)
       .eq('id', transactionId)
       .single()
 
-    if (!transaction) {
+    if (txnError || !transaction) {
+      console.error('Send receipt email - query error:', txnError)
       return res.status(404).json({ success: false, error: 'Transaction not found' })
     }
 
@@ -378,7 +394,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
 
     const company = await getCompanySettings()
     const addons = (booking?.booking_addons || []).map((ba: any) => ({
-      name: ba.addons?.name_th || ba.addons?.name_en || '',
+      name: ba.service_addons?.name_th || ba.service_addons?.name_en || '',
       price: ba.total_price || 0,
     }))
 
@@ -404,7 +420,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
 
     const result = await sendEmail({
       to: customerEmail,
-      subject: `ใบเสร็จรับเงิน ${receiptNumber} - The Bliss at Home`,
+      subject: `ใบเสร็จรับเงิน ${receiptNumber} - ${company.companyName}`,
       html,
     })
 
@@ -498,7 +514,7 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
 
     const result = await sendEmail({
       to: customerEmail,
-      subject: `ใบลดหนี้ ${creditNoteNumber} - The Bliss at Home`,
+      subject: `ใบลดหนี้ ${creditNoteNumber} - ${company.companyName}`,
       html,
     })
 
@@ -585,7 +601,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
 
   const result = await sendEmail({
     to: customerEmail,
-    subject: `ใบเสร็จรับเงิน ${receiptNumber} - The Bliss at Home`,
+    subject: `ใบเสร็จรับเงิน ${receiptNumber} - ${company.companyName}`,
     html,
   })
 
@@ -679,7 +695,7 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
 
   const result = await sendEmail({
     to: customerEmail,
-    subject: `ใบลดหนี้ ${creditNoteNumber} - The Bliss at Home`,
+    subject: `ใบลดหนี้ ${creditNoteNumber} - ${company.companyName}`,
     html,
   })
 

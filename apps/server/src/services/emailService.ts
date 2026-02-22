@@ -26,8 +26,13 @@ export interface EmailTemplateData {
 // Configuration
 // ============================================
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'The Bliss at Home <noreply@theblissathome.com>'
-const RESEND_API_KEY = process.env.RESEND_API_KEY
+// Read at runtime (after dotenv.config) instead of module-level
+function getEmailConfig() {
+  return {
+    defaultFrom: process.env.EMAIL_FROM || 'The Bliss Massage at Home <noreply@theblissmassageathome.com>',
+    resendApiKey: process.env.RESEND_API_KEY,
+  }
+}
 
 // ============================================
 // Email Sending
@@ -38,11 +43,12 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY
  * Uses Resend API if configured, otherwise logs to console
  */
 export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; error?: string }> {
-  const { to, subject, html, text, from = DEFAULT_FROM } = params
+  const config = getEmailConfig()
+  const { to, subject, html, text, from = config.defaultFrom } = params
   const recipients = Array.isArray(to) ? to : [to]
 
   // Development mode - log email
-  if (!RESEND_API_KEY) {
+  if (!config.resendApiKey) {
     console.log('\n========== EMAIL (Development Mode) ==========')
     console.log('From:', from)
     console.log('To:', recipients.join(', '))
@@ -58,7 +64,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Authorization': `Bearer ${config.resendApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -153,20 +159,22 @@ function baseTemplate(content: string): string {
       margin: 16px 0;
     }
     .info-row {
-      display: flex;
-      justify-content: space-between;
       padding: 8px 0;
       border-bottom: 1px solid #eee;
+      overflow: hidden;
     }
     .info-row:last-child {
       border-bottom: none;
     }
     .info-label {
       color: #666;
+      float: left;
     }
     .info-value {
       font-weight: 600;
       color: #333;
+      float: right;
+      text-align: right;
     }
     .refund-box {
       background: linear-gradient(135deg, #dcfce7, #bbf7d0);
@@ -578,7 +586,7 @@ export function receiptEmailTemplate(data: {
   return baseTemplate(`
     <div class="card">
       <div class="header">
-        <h1>The Bliss at Home</h1>
+        <h1>${companyNameTh || companyName}</h1>
         <p>ใบเสร็จรับเงิน / Payment Receipt</p>
       </div>
 
@@ -642,13 +650,13 @@ export function receiptEmailTemplate(data: {
           ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">อีเมล: ${companyEmail}</p>` : ''}
         </div>
 
-        <p>ขอบคุณที่ใช้บริการ The Bliss at Home</p>
+        <p>ขอบคุณที่ใช้บริการ ${companyNameTh || companyName}</p>
       </div>
 
       <div class="footer">
         <p>
-          The Bliss at Home - บริการนวดและสปาถึงที่<br>
-          <a href="https://theblissathome.com">www.theblissathome.com</a>
+          ${companyNameTh || companyName} - บริการนวดและสปาถึงที่<br>
+          <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
         </p>
         <p style="font-size: 12px; color: #999;">
           อีเมลนี้ถูกส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
@@ -715,7 +723,7 @@ export function creditNoteEmailTemplate(data: {
   return baseTemplate(`
     <div class="card">
       <div class="header">
-        <h1>The Bliss at Home</h1>
+        <h1>${companyNameTh || companyName}</h1>
         <p>ใบลดหนี้ / Credit Note</p>
       </div>
 
@@ -787,13 +795,13 @@ export function creditNoteEmailTemplate(data: {
           ${companyEmail || 'support@theblissathome.com'}
         </p>
 
-        <p>ขอบคุณที่ใช้บริการ The Bliss at Home</p>
+        <p>ขอบคุณที่ใช้บริการ ${companyNameTh || companyName}</p>
       </div>
 
       <div class="footer">
         <p>
-          The Bliss at Home - บริการนวดและสปาถึงที่<br>
-          <a href="https://theblissathome.com">www.theblissathome.com</a>
+          ${companyNameTh || companyName} - บริการนวดและสปาถึงที่<br>
+          <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
         </p>
         <p style="font-size: 12px; color: #999;">
           อีเมลนี้ถูกส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ

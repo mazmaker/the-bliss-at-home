@@ -1,10 +1,11 @@
 /**
  * Receipt & Credit Note PDF Generator
- * Client-side PDF generation using jsPDF
- * Pattern from apps/hotel/src/utils/simplePdfGenerator.ts
+ * Client-side PDF generation using jsPDF with Sarabun font (Thai support)
  */
 
 import { jsPDF } from 'jspdf'
+import { SarabunRegular, SarabunBold } from './fonts/sarabun'
+import { getPdfLabels, type PdfLanguage } from './pdfLabels'
 
 export interface ReceiptPdfData {
   receiptNumber: string
@@ -20,7 +21,7 @@ export interface ReceiptPdfData {
   cardBrand?: string
   cardLastDigits?: string
   customerName: string
-  addons?: { name: string; price: number }[]
+  addons?: { name: string; nameEn?: string; price: number }[]
   company: {
     name: string
     nameTh: string
@@ -29,6 +30,7 @@ export interface ReceiptPdfData {
     email: string
     taxId: string
   }
+  language?: PdfLanguage
 }
 
 export interface CreditNotePdfData {
@@ -37,6 +39,7 @@ export interface CreditNotePdfData {
   refundDate: string
   bookingNumber: string
   serviceName: string
+  serviceNameEn?: string
   originalAmount: number
   refundAmount: number
   refundPercentage: number
@@ -52,6 +55,7 @@ export interface CreditNotePdfData {
     email: string
     taxId: string
   }
+  language?: PdfLanguage
 }
 
 class ReceiptPDFGenerator {
@@ -61,32 +65,45 @@ class ReceiptPDFGenerator {
   private currentY = 20
   private pageWidth = 210
   private contentWidth = 170
+  private labels: ReturnType<typeof getPdfLabels>
+  private lang: PdfLanguage
 
-  constructor() {
+  constructor(language: PdfLanguage = 'th') {
     this.doc = new jsPDF('p', 'mm', 'a4')
-    this.doc.setFont('helvetica', 'normal')
+    this.lang = language
+    this.labels = getPdfLabels(language)
+    this.registerFonts()
+    this.doc.setFont('Sarabun', 'normal')
+  }
+
+  private registerFonts() {
+    this.doc.addFileToVFS('Sarabun-Regular.ttf', SarabunRegular)
+    this.doc.addFileToVFS('Sarabun-Bold.ttf', SarabunBold)
+    this.doc.addFont('Sarabun-Regular.ttf', 'Sarabun', 'normal')
+    this.doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold')
   }
 
   private reset() {
     this.doc = new jsPDF('p', 'mm', 'a4')
-    this.doc.setFont('helvetica', 'normal')
+    this.registerFonts()
+    this.doc.setFont('Sarabun', 'normal')
     this.currentY = this.margin
   }
 
-  private addHeader(title: string, subtitle: string) {
+  private addHeader(title: string, subtitle: string, companyName?: string) {
     // Amber header bar
     this.doc.setFillColor(217, 119, 6) // amber-700
     this.doc.rect(this.margin, this.margin, this.contentWidth, 28, 'F')
 
     // Company name
     this.doc.setFontSize(18)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(255, 255, 255)
-    this.doc.text('The Bliss at Home', this.margin + 10, this.margin + 12)
+    this.doc.text(companyName || 'The Bliss Massage at Home', this.margin + 10, this.margin + 12)
 
     // Document title
     this.doc.setFontSize(12)
-    this.doc.setFont('helvetica', 'normal')
+    this.doc.setFont('Sarabun', 'normal')
     this.doc.text(title, this.margin + 10, this.margin + 20)
 
     this.currentY = this.margin + 35
@@ -97,26 +114,25 @@ class ReceiptPDFGenerator {
     this.doc.setFontSize(9)
     this.doc.setTextColor(100, 100, 100)
 
-    const companyName = company.nameTh || company.name || 'The Bliss at Home'
+    const companyName = this.lang === 'th' ? (company.nameTh || company.name) : company.name
     this.doc.text(companyName, this.margin, this.currentY)
     this.currentY += 5
 
     if (company.taxId) {
-      this.doc.text(`Tax ID: ${company.taxId}`, this.margin, this.currentY)
+      this.doc.text(`${this.labels.taxId}: ${company.taxId}`, this.margin, this.currentY)
       this.currentY += 5
     }
     if (company.address) {
-      // Split long addresses
       const lines = this.doc.splitTextToSize(company.address, this.contentWidth)
       this.doc.text(lines, this.margin, this.currentY)
       this.currentY += lines.length * 4
     }
     if (company.phone) {
-      this.doc.text(`Tel: ${company.phone}`, this.margin, this.currentY)
+      this.doc.text(`${this.labels.tel}: ${company.phone}`, this.margin, this.currentY)
       this.currentY += 5
     }
     if (company.email) {
-      this.doc.text(`Email: ${company.email}`, this.margin, this.currentY)
+      this.doc.text(`${this.labels.email}: ${company.email}`, this.margin, this.currentY)
       this.currentY += 5
     }
 
@@ -128,12 +144,12 @@ class ReceiptPDFGenerator {
     this.doc.setFontSize(10)
 
     // Label
-    this.doc.setFont('helvetica', 'normal')
+    this.doc.setFont('Sarabun', 'normal')
     this.doc.setTextColor(100, 100, 100)
     this.doc.text(label, this.margin, this.currentY)
 
     // Value
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(0, 0, 0)
     this.doc.text(value, this.margin + this.contentWidth, this.currentY, { align: 'right' })
 
@@ -148,7 +164,7 @@ class ReceiptPDFGenerator {
 
   private addSectionTitle(title: string) {
     this.doc.setFontSize(11)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(50, 50, 50)
     this.doc.text(title, this.margin, this.currentY)
     this.currentY += 8
@@ -160,12 +176,12 @@ class ReceiptPDFGenerator {
     this.doc.roundedRect(this.margin, this.currentY - 2, this.contentWidth, 18, 3, 3, 'F')
 
     this.doc.setFontSize(10)
-    this.doc.setFont('helvetica', 'normal')
+    this.doc.setFont('Sarabun', 'normal')
     this.doc.setTextColor(80, 50, 0)
     this.doc.text(label, this.margin + 8, this.currentY + 6)
 
     this.doc.setFontSize(16)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.text(
       `THB ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       this.margin + this.contentWidth - 8,
@@ -179,29 +195,35 @@ class ReceiptPDFGenerator {
 
   private formatPaymentMethod(method: string, cardBrand?: string, cardLastDigits?: string): string {
     if (method === 'credit_card') {
-      const brand = cardBrand || 'Card'
-      return cardLastDigits ? `${brand} **** ${cardLastDigits}` : 'Credit Card'
+      const brand = cardBrand || this.labels.creditCard
+      return cardLastDigits ? `${brand} **** ${cardLastDigits}` : this.labels.creditCard
     }
-    if (method === 'promptpay') return 'PromptPay'
-    if (method === 'internet_banking') return 'Bank Transfer'
+    if (method === 'promptpay') return this.labels.promptPay
+    if (method === 'internet_banking') return this.labels.bankTransfer
     return method
   }
 
-  private addFooter() {
+  private addFooter(companyName?: string) {
     this.currentY += 5
     this.doc.setFontSize(9)
-    this.doc.setFont('helvetica', 'normal')
+    this.doc.setFont('Sarabun', 'normal')
     this.doc.setTextColor(150, 150, 150)
-    this.doc.text('Thank you for choosing The Bliss at Home', this.pageWidth / 2, this.currentY, { align: 'center' })
+    const name = companyName || 'The Bliss Massage at Home'
+    const thankYou = this.lang === 'th'
+      ? `ขอบคุณที่ใช้บริการ ${name}`
+      : `Thank you for choosing ${name}`
+    this.doc.text(thankYou, this.pageWidth / 2, this.currentY, { align: 'center' })
     this.currentY += 5
-    this.doc.text('www.theblissathome.com', this.pageWidth / 2, this.currentY, { align: 'center' })
+    this.doc.text('www.theblissmassageathome.com', this.pageWidth / 2, this.currentY, { align: 'center' })
   }
 
   generateReceipt(data: ReceiptPdfData): void {
     this.reset()
 
+    const companyDisplayName = data.company.name || 'The Bliss Massage at Home'
+
     // Header
-    this.addHeader('RECEIPT', 'Payment Receipt')
+    this.addHeader(this.labels.receipt, this.labels.paymentReceipt, companyDisplayName)
 
     // Company Info
     this.addCompanyInfo(data.company)
@@ -210,26 +232,28 @@ class ReceiptPDFGenerator {
     this.addSeparator()
 
     // Receipt Info Section
-    this.addSectionTitle('Receipt Information')
-    this.addInfoRow('Receipt No.', data.receiptNumber)
-    this.addInfoRow('Date', data.transactionDate)
-    this.addInfoRow('Booking No.', data.bookingNumber)
-    this.addInfoRow('Customer', data.customerName)
+    this.addSectionTitle(this.labels.receiptInformation)
+    this.addInfoRow(this.labels.receiptNo, data.receiptNumber)
+    this.addInfoRow(this.labels.date, data.transactionDate)
+    this.addInfoRow(this.labels.bookingNo, data.bookingNumber)
+    this.addInfoRow(this.labels.customer, data.customerName)
 
     this.currentY += 3
     this.addSeparator()
 
     // Service Details Section
-    this.addSectionTitle('Service Details')
-    this.addInfoRow('Service', data.serviceNameEn || data.serviceName)
-    this.addInfoRow('Appointment Date', data.bookingDate)
-    this.addInfoRow('Time', data.bookingTime)
+    this.addSectionTitle(this.labels.serviceDetails)
+    const serviceName = this.lang === 'en' ? (data.serviceNameEn || data.serviceName) : data.serviceName
+    this.addInfoRow(this.labels.service, serviceName)
+    this.addInfoRow(this.labels.appointmentDate, data.bookingDate)
+    this.addInfoRow(this.labels.time, data.bookingTime)
 
     if (data.addons && data.addons.length > 0) {
       this.currentY += 3
       for (const addon of data.addons) {
+        const addonName = this.lang === 'en' ? (addon.nameEn || addon.name) : addon.name
         this.addInfoRow(
-          `+ ${addon.name}`,
+          `+ ${addonName}`,
           `THB ${addon.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
         )
       }
@@ -239,26 +263,28 @@ class ReceiptPDFGenerator {
     this.addSeparator()
 
     // Payment Info
-    this.addSectionTitle('Payment')
+    this.addSectionTitle(this.labels.payment)
     this.addInfoRow(
-      'Method',
+      this.labels.method,
       this.formatPaymentMethod(data.paymentMethod, data.cardBrand, data.cardLastDigits)
     )
 
     this.currentY += 3
 
     // Total amount box (amber)
-    this.addTotalBox('Total Amount', data.amount, [254, 243, 199]) // amber-100
+    this.addTotalBox(this.labels.totalAmount, data.amount, [254, 243, 199]) // amber-100
 
     // Footer
-    this.addFooter()
+    this.addFooter(companyDisplayName)
   }
 
   generateCreditNote(data: CreditNotePdfData): void {
     this.reset()
 
+    const companyDisplayName = data.company.name || 'The Bliss Massage at Home'
+
     // Header
-    this.addHeader('CREDIT NOTE', 'Refund Document')
+    this.addHeader(this.labels.creditNote, this.labels.refundDocument, companyDisplayName)
 
     // Company Info
     this.addCompanyInfo(data.company)
@@ -267,21 +293,22 @@ class ReceiptPDFGenerator {
     this.addSeparator()
 
     // Credit Note Info
-    this.addSectionTitle('Credit Note Information')
-    this.addInfoRow('Credit Note No.', data.creditNoteNumber)
-    this.addInfoRow('Date', data.refundDate)
-    this.addInfoRow('Original Receipt', data.originalReceiptNumber || '-')
-    this.addInfoRow('Booking No.', data.bookingNumber)
-    this.addInfoRow('Customer', data.customerName)
+    this.addSectionTitle(this.labels.creditNoteInformation)
+    this.addInfoRow(this.labels.creditNoteNo, data.creditNoteNumber)
+    this.addInfoRow(this.labels.date, data.refundDate)
+    this.addInfoRow(this.labels.originalReceipt, data.originalReceiptNumber || '-')
+    this.addInfoRow(this.labels.bookingNo, data.bookingNumber)
+    this.addInfoRow(this.labels.customer, data.customerName)
 
     this.currentY += 3
     this.addSeparator()
 
     // Original Booking
-    this.addSectionTitle('Original Booking')
-    this.addInfoRow('Service', data.serviceName)
+    this.addSectionTitle(this.labels.originalBooking)
+    const serviceName = this.lang === 'en' ? (data.serviceNameEn || data.serviceName) : data.serviceName
+    this.addInfoRow(this.labels.service, serviceName)
     this.addInfoRow(
-      'Original Amount',
+      this.labels.originalAmount,
       `THB ${data.originalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
     )
 
@@ -289,25 +316,25 @@ class ReceiptPDFGenerator {
     this.addSeparator()
 
     // Refund Details
-    this.addSectionTitle('Refund Details')
-    this.addInfoRow('Refund Percentage', `${data.refundPercentage}%`)
-    this.addInfoRow('Reason', data.refundReason || '-')
+    this.addSectionTitle(this.labels.refundDetails)
+    this.addInfoRow(this.labels.refundPercentage, `${data.refundPercentage}%`)
+    this.addInfoRow(this.labels.reason, data.refundReason || '-')
     this.addInfoRow(
-      'Refund Method',
+      this.labels.refundMethod,
       this.formatPaymentMethod(data.paymentMethod, undefined, data.cardLastDigits)
     )
 
     this.currentY += 3
 
     // Refund amount box (green)
-    this.addTotalBox('Refund Amount', data.refundAmount, [220, 252, 231]) // green-100
+    this.addTotalBox(this.labels.refundAmount, data.refundAmount, [220, 252, 231]) // green-100
 
     // Timeline note
     this.doc.setFontSize(9)
-    this.doc.setFont('helvetica', 'normal')
+    this.doc.setFont('Sarabun', 'normal')
     this.doc.setTextColor(100, 100, 100)
     this.doc.text(
-      'Refund will be processed within 5-10 business days',
+      this.labels.refundTimeline,
       this.pageWidth / 2,
       this.currentY,
       { align: 'center' }
@@ -315,7 +342,7 @@ class ReceiptPDFGenerator {
     this.currentY += 8
 
     // Footer
-    this.addFooter()
+    this.addFooter(companyDisplayName)
   }
 
   download(filename: string): void {
@@ -327,7 +354,8 @@ class ReceiptPDFGenerator {
  * Download a receipt PDF
  */
 export function downloadReceipt(data: ReceiptPdfData): void {
-  const generator = new ReceiptPDFGenerator()
+  const lang = data.language || 'th'
+  const generator = new ReceiptPDFGenerator(lang)
   generator.generateReceipt(data)
   generator.download(`receipt-${data.receiptNumber}.pdf`)
 }
@@ -336,7 +364,8 @@ export function downloadReceipt(data: ReceiptPdfData): void {
  * Download a credit note PDF
  */
 export function downloadCreditNote(data: CreditNotePdfData): void {
-  const generator = new ReceiptPDFGenerator()
+  const lang = data.language || 'th'
+  const generator = new ReceiptPDFGenerator(lang)
   generator.generateCreditNote(data)
   generator.download(`credit-note-${data.creditNoteNumber}.pdf`)
 }

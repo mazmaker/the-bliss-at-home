@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { CheckCircle, Download, ArrowRight, Home, Mail, Loader2 } from 'lucide-react'
 import { downloadReceipt } from '../utils/receiptPdfGenerator'
+import { getStoredLanguage } from '@bliss/i18n'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -77,6 +78,7 @@ function PaymentConfirmation() {
   const handleDownloadReceipt = () => {
     if (!receiptData) return
 
+    const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
     downloadReceipt({
       receiptNumber: receiptData.receipt_number,
       transactionDate: formatDate(receiptData.transaction_date),
@@ -92,6 +94,7 @@ function PaymentConfirmation() {
       cardLastDigits: receiptData.card_last_digits,
       customerName: receiptData.customer_name,
       addons: receiptData.addons,
+      language: lang,
       company: {
         name: receiptData.company.companyName,
         nameTh: receiptData.company.companyNameTh,
@@ -127,7 +130,9 @@ function PaymentConfirmation() {
 
   const formatDate = (dateStr: string): string => {
     try {
-      return new Date(dateStr).toLocaleDateString('th-TH', {
+      const lang = getStoredLanguage()
+      const locale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+      return new Date(dateStr).toLocaleDateString(locale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

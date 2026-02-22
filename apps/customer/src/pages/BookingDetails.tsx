@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle, Download, FileText } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
-import { useTranslation } from '@bliss/i18n'
+import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
 import { supabase } from '@bliss/supabase'
@@ -235,12 +235,12 @@ function BookingDetails() {
   const handleDownloadReceipt = async () => {
     if (!bookingData) return
     try {
-      // Find the successful transaction for this booking
+      // Find the payment transaction for this booking (successful or refunded)
       const { data: txn } = await supabase
         .from('transactions')
         .select('id')
         .eq('booking_id', bookingData.id)
-        .eq('status', 'successful')
+        .in('status', ['successful', 'refunded'])
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
@@ -254,13 +254,15 @@ function BookingDetails() {
       const result = await resp.json()
       if (result.success) {
         const d = result.data
+        const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
         downloadReceipt({
           receiptNumber: d.receipt_number,
-          transactionDate: new Date(d.transaction_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+          transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
           bookingNumber: d.booking_number,
           serviceName: d.service_name,
           serviceNameEn: d.service_name_en,
-          bookingDate: new Date(d.booking_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingDate: new Date(d.booking_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
           bookingTime: d.booking_time,
           amount: d.amount,
           servicePrice: d.service_price,
@@ -269,6 +271,7 @@ function BookingDetails() {
           cardLastDigits: d.card_last_digits,
           customerName: d.customer_name,
           addons: d.addons,
+          language: lang,
           company: {
             name: d.company.companyName,
             nameTh: d.company.companyNameTh,
@@ -307,19 +310,23 @@ function BookingDetails() {
       const result = await resp.json()
       if (result.success) {
         const d = result.data
+        const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
         downloadCreditNote({
           creditNoteNumber: d.credit_note_number,
           originalReceiptNumber: d.original_receipt_number,
-          refundDate: new Date(d.refund_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+          refundDate: new Date(d.refund_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
           bookingNumber: d.booking_number,
           serviceName: d.service_name,
+          serviceNameEn: d.service_name_en,
           originalAmount: d.original_amount,
           refundAmount: d.refund_amount,
-          refundPercentage: d.refund_percentage,
-          refundReason: d.refund_reason,
+          refundPercentage: d.refund_percentage || (d.original_amount > 0 ? Math.round((d.refund_amount / d.original_amount) * 100) : 0),
+          refundReason: d.reason || d.refund_reason,
           customerName: d.customer_name,
           paymentMethod: d.payment_method,
           cardLastDigits: d.card_last_digits,
+          language: lang,
           company: {
             name: d.company.companyName,
             nameTh: d.company.companyNameTh,
@@ -523,15 +530,17 @@ function BookingDetails() {
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     booking.payment.status === 'paid'
                       ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                      : booking.payment.status === 'refunded'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {booking.payment.status === 'paid' ? t('common:status.paid') : t('common:status.pending')}
+                    {booking.payment.status === 'paid' ? t('common:status.paid') : booking.payment.status === 'refunded' ? 'คืนเงินแล้ว' : t('common:status.pending')}
                   </span>
                 </div>
               </div>
 
               {/* Receipt & Credit Note Downloads */}
-              {booking.payment.status === 'paid' && (
+              {(booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (
                 <div className="mt-4 pt-4 border-t border-stone-100 space-y-2">
                   <button
                     onClick={handleDownloadReceipt}
