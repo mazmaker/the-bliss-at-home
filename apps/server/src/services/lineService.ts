@@ -557,6 +557,49 @@ async function sendBookingRescheduledToStaff(lineUserIds: string[], data: Bookin
   return allSuccess
 }
 
+interface PayoutCompletedData {
+  staffName: string
+  netAmount: number
+  grossEarnings: number
+  platformFee: number
+  totalJobs: number
+  periodStart: string
+  periodEnd: string
+  transferReference: string
+  transferredAt: string
+}
+
+/**
+ * Send payout completed notification to staff via LINE
+ */
+async function sendPayoutCompletedToStaff(lineUserId: string, data: PayoutCompletedData): Promise<boolean> {
+  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('th-TH', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  })
+
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const linkText = staffLiffUrl
+    ? `\n👉 ดูรายละเอียด:\n${staffLiffUrl}/staff/earnings`
+    : ''
+
+  const messageText =
+    `🎉 แจ้งเตือนการจ่ายเงิน\n\n` +
+    `เรียน คุณ${data.staffName}\n\n` +
+    `💰 ยอดเงินที่โอนเข้าบัญชี: ฿${data.netAmount.toLocaleString()}\n\n` +
+    `📅 รอบการจ่าย: ${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}\n` +
+    `📊 จำนวนงาน: ${data.totalJobs} งาน\n` +
+    `💵 รายได้รวม: ฿${data.grossEarnings.toLocaleString()}\n` +
+    `🏷️ ค่าธรรมเนียม: -฿${data.platformFee.toLocaleString()}\n` +
+    `💰 รายได้สุทธิ: ฿${data.netAmount.toLocaleString()}\n\n` +
+    `📝 หมายเลขอ้างอิง: ${data.transferReference}\n` +
+    `📆 วันที่โอน: ${formatDate(data.transferredAt)}\n\n` +
+    `ขอบคุณสำหรับการให้บริการที่ดีเสมอมา! 🙏` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+  return pushMessage(lineUserId, [message])
+}
+
 export const lineService = {
   pushMessage,
   multicast,
@@ -568,6 +611,7 @@ export const lineService = {
   sendBookingRescheduledToStaff,
   sendJobReminderToStaff,
   sendJobEscalationToStaff,
+  sendPayoutCompletedToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData }

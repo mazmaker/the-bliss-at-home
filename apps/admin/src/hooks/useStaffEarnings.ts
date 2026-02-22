@@ -38,7 +38,7 @@ export interface EarningsSummary {
   total_paid: number
 }
 
-// Get staff earnings summary
+// Get staff earnings summary (from jobs + payouts)
 export function useStaffEarningsSummary(staffId: string) {
   return useQuery({
     queryKey: ['staff', staffId, 'earnings', 'summary'],
@@ -62,34 +62,32 @@ export function useStaffEarningsSummary(staffId: string) {
 
       const profileId = staffData.profile_id
 
-      // Get all payouts
-      const { data: payouts, error } = await supabase
+      // Get total earnings from completed jobs
+      const { data: jobs } = await supabase
+        .from('jobs')
+        .select('staff_earnings')
+        .eq('staff_id', profileId)
+        .eq('status', 'completed')
+
+      const totalEarningsFromJobs = (jobs || [])
+        .reduce((sum, j) => sum + (parseFloat(j.staff_earnings) || 0), 0)
+
+      // Get payouts data
+      const { data: payouts } = await supabase
         .from('payouts')
         .select('*')
         .eq('staff_id', profileId)
         .order('period_start', { ascending: false })
 
-      if (error) throw error
-
-      if (!payouts || payouts.length === 0) {
-        return {
-          total_earnings: 0,
-          pending_payout: 0,
-          paid_this_month: 0,
-          total_paid: 0,
-        }
-      }
-
-      // Calculate summary
       const now = new Date()
       const currentMonth = now.getMonth()
       const currentYear = now.getFullYear()
 
-      const pending = payouts
-        .filter(p => p.status === 'pending')
+      const totalPaid = (payouts || [])
+        .filter(p => p.status === 'completed')
         .reduce((sum, p) => sum + parseFloat(p.net_amount || 0), 0)
 
-      const paidThisMonth = payouts
+      const paidThisMonth = (payouts || [])
         .filter(p => {
           if (p.status !== 'completed' || !p.transferred_at) return false
           const transferDate = new Date(p.transferred_at)
@@ -97,15 +95,12 @@ export function useStaffEarningsSummary(staffId: string) {
         })
         .reduce((sum, p) => sum + parseFloat(p.net_amount || 0), 0)
 
-      const totalPaid = payouts
-        .filter(p => p.status === 'completed')
-        .reduce((sum, p) => sum + parseFloat(p.net_amount || 0), 0)
-
-      const totalEarnings = pending + totalPaid
+      // Pending = total earnings from jobs - total already paid out
+      const pendingPayout = totalEarningsFromJobs - totalPaid
 
       return {
-        total_earnings: totalEarnings,
-        pending_payout: pending,
+        total_earnings: totalEarningsFromJobs,
+        pending_payout: Math.max(0, pendingPayout),
         paid_this_month: paidThisMonth,
         total_paid: totalPaid,
       }
