@@ -178,6 +178,12 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
       setLoading(true)
       const bookingData = getBookingData()
 
+      // Debug: Log service configuration before sending
+      console.log('🔍 [BOOKING DEBUG] Service Configuration:', bookingData.serviceConfiguration)
+      console.log('🔍 [BOOKING DEBUG] Service Selections:', bookingData.serviceConfiguration.selections)
+      console.log('🔍 [BOOKING DEBUG] First Service:', bookingData.serviceConfiguration.selections[0])
+      console.log('🔍 [BOOKING DEBUG] Service ID to send:', bookingData.serviceConfiguration.selections[0]?.service?.id)
+
       // Prepare booking data for secure API
       const secureBookingData = {
         // Hotel context from URL

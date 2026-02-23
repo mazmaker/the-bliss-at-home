@@ -32,7 +32,7 @@ const createUserSupabase = (token: string) => {
   )
 }
 
-// Middleware: Authenticate using Supabase's built-in verification
+// Middleware: Authenticate using Supabase's built-in verification (ORIGINAL VERSION)
 async function authenticateSupabaseUser(req: Request, res: Response, next: NextFunction) {
   try {
     console.log('🔍 Auth middleware - checking token...')
@@ -44,7 +44,7 @@ async function authenticateSupabaseUser(req: Request, res: Response, next: NextF
 
     console.log('🔍 Token length:', token.length)
 
-    // Use Supabase to verify the token (proper way)
+    // Use Supabase to verify the token (original way)
     const userSupabase = createUserSupabase(token)
     const { data: { user }, error } = await userSupabase.auth.getUser()
 
@@ -93,6 +93,12 @@ function requireHotelRole(req: Request, res: Response, next: NextFunction) {
 // POST /api/secure-bookings-v2 - Create Booking (Professional Way)
 router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Request, res: Response) => {
   try {
+    // Debug: Log incoming request data
+    console.log('🏨 [BOOKING API] Incoming request data:')
+    console.log('   hotel_id from body:', req.body.hotel_id)
+    console.log('   user role:', req.user?.role)
+    console.log('   user email:', req.user?.email)
+
     // Extract services data separately (it goes to booking_services table)
     const { services, ...bookingFields } = req.body
 
@@ -102,8 +108,10 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Request
       // created_by: req.user?.id       // Column doesn't exist yet
     }
 
-    // Validate required fields
-    const requiredFields = ['service_id', 'booking_date', 'booking_time', 'duration', 'base_price', 'final_price']
+    console.log('🔍 [BOOKING API] Final booking data hotel_id:', bookingData.hotel_id)
+
+    // Validate required fields (including hotel_id)
+    const requiredFields = ['hotel_id', 'service_id', 'booking_date', 'booking_time', 'duration', 'base_price', 'final_price']
     const missing = requiredFields.filter(field => !bookingData[field])
 
     if (missing.length > 0) {

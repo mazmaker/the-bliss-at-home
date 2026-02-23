@@ -4,7 +4,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@bliss/supabase/src/types/database.types'
+import type { Database } from '../../../../packages/types/database.types'
 
 // Declare global window type for singleton
 declare global {
@@ -45,7 +45,7 @@ function createHotelSupabaseClient(): SupabaseClient<Database> {
       detectSessionInUrl: true,
       flowType: 'pkce',
       storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      storageKey: 'bliss-customer-auth', // Use same storage key as AuthProvider for session compatibility
+      storageKey: 'bliss-customer-auth', // Use same storage key as shared client for session compatibility
       debug: false,
     },
     global: {
