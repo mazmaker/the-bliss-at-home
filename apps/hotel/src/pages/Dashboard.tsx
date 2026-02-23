@@ -610,8 +610,6 @@ function Dashboard() {
         </Link>
       </div>
 
-<<<<<<< Updated upstream
-      {/* Guest Activity Snapshot */}
       {/* Guest Activity Snapshot with Tabs */}
       <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
         <div className="p-6 border-b border-stone-100">
