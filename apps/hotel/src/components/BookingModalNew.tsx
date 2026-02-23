@@ -525,13 +525,16 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                   <label className="block text-sm font-medium text-stone-700 mb-2">
                     วันที่ <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    min={today}
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      min={today}
+                      className="w-full px-4 py-3 pr-10 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                    />
+                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-400 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div>
