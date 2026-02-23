@@ -79,6 +79,7 @@ export function EnhancedHotelLogin() {
   const { login, isLoading: authLoading, user, isAuthenticated } = useAuth()
   const { hotelId: userHotelId } = useUserHotelId()
   const [showPassword, setShowPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -613,11 +614,18 @@ export function EnhancedHotelLogin() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       {...changePasswordForm.register('currentPassword')}
-                      type="password"
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="รหัสผ่านชั่วคราว"
                       disabled={isSubmitting}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                   {changePasswordForm.formState.errors.currentPassword && (
                     <p className="mt-1 text-sm text-red-600">
