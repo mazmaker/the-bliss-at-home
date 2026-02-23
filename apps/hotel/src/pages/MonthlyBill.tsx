@@ -27,6 +27,7 @@ interface MonthlyBillData {
   platformFee: number
   hotelRevenue: number
   pendingPayments: number
+  commissionRate: number // Add commission rate to track
 }
 
 // Fetch monthly bill data from database with proper error handling
@@ -38,7 +39,19 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
 
   console.log('Fetching monthly bill for:', { hotelId, monthStart, monthEnd })
 
-  // Try to get service name using service_id (removed hotel_discount_rate as it doesn't exist)
+  // Get hotel commission rate first
+  const { data: hotelData, error: hotelError } = await supabase
+    .from('hotels')
+    .select('commission_rate')
+    .eq('id', hotelId)
+    .single()
+
+  if (hotelError) {
+    console.error('Hotel query error:', hotelError)
+    throw new Error(`Failed to fetch hotel data: ${hotelError.message}`)
+  }
+
+  // Get booking data with service names
   const { data, error } = await supabase
     .from('bookings')
     .select(`
@@ -64,6 +77,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   }
 
   console.log('Raw booking data:', data)
+  console.log('Hotel commission rate:', hotelData.commission_rate)
 
   // Helper function to extract guest name from customer_notes
   const parseGuestName = (customerNotes?: string | null): string => {
@@ -90,8 +104,9 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   const bookingData = transformedData
   const totalRevenue = bookingData.reduce((sum, booking) => sum + (booking.final_price || 0), 0)
 
-  // No platform fee for hotels
-  const platformFee = 0 // 0% - hotels keep all revenue
+  // No platform fee for hotels - they keep 100% of revenue
+  const hotelCommissionRate = 0
+  const platformFee = 0 // No platform fee
   const hotelRevenue = totalRevenue // Hotels keep 100%
 
   const pendingPayments = bookingData
@@ -113,7 +128,8 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     totalRevenue,
     platformFee,
     hotelRevenue,
-    pendingPayments
+    pendingPayments,
+    commissionRate: hotelCommissionRate
   }
 }
 
@@ -167,56 +183,57 @@ function MonthlyBill() {
   }
 
   const handleDownloadPDF = () => {
-    // Create a simple text-based bill content
-    const billContent = [
-      '='.repeat(60),
-      'ใบเรียกเก็บเงินรายเดือน - The Bliss at Home',
-      '='.repeat(60),
-      `โรงแรม: ${getHotelName()}`,
-      `ชื่อภาษาอังกฤษ: ${getHotelNameEn()}`,
-      `เดือน: ${billData?.monthLabel}`,
-      `เลขที่บิล: ${generateBillNumber(selectedMonth, hotelId!)}`,
-      `กำหนดชำระ: ${getDueDate(selectedMonth)}`,
-      '',
-      'สรุปการจอง:',
-      '-'.repeat(40),
-      `จำนวนการจอง: ${billData?.totalBookings || 0} รายการ`,
-      `รายได้รวม: ฿${billData?.totalRevenue.toLocaleString() || 0}`,
-      `ค่าแพลตฟอร์ม: ฿${billData?.platformFee.toLocaleString() || 0}`,
-      `รายได้สุทธิ: ฿${billData?.hotelRevenue.toLocaleString() || 0}`,
-      `ยอดค้างชำระ: ฿${billData?.pendingPayments.toLocaleString() || 0}`,
-      '',
-      'รายละเอียดการจอง:',
-      '-'.repeat(40),
-    ]
+    if (!billData || !billData.bookings) return
 
-    if (billData?.bookings) {
-      billData.bookings.forEach((booking, index) => {
-        billContent.push(
-          `${index + 1}. ${new Date(booking.booking_date).toLocaleDateString('th-TH')} - ${booking.guest_name}`,
-          `   ห้อง: ${booking.room_number} | บริการ: ${booking.service_name}`,
-          `   ยอดเงิน: ฿${booking.final_price.toLocaleString()} | สถานะการชำระ: ${booking.payment_status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'}`,
-          ''
-        )
-      })
-    }
+    // Generate PDF Monthly Bill using the simplified PDF generator
+    import('../utils/simplePdfGenerator').then(({ generateSimpleMonthlyBillPDF }) => {
+      const bookingData = billData.bookings.map((booking: any) => ({
+        id: booking.id || `temp-${Date.now()}`,
+        booking_number: booking.booking_number || `BK${booking.id?.slice(-6) || Math.random().toString().slice(-6)}`,
+        booking_date: booking.booking_date,
+        booking_time: booking.booking_time || '00:00',
+        service: {
+          name_th: booking.service_name || 'Unknown Service',
+          price: booking.base_price || booking.final_price
+        },
+        customer_notes: `Guest: ${booking.guest_name}, Room: ${booking.room_number}`,
+        base_price: booking.base_price || 0,
+        final_price: booking.final_price || 0,
+        status: booking.status || 'completed',
+        created_at: booking.created_at || new Date().toISOString(),
+        provider_preference: booking.provider_preference
+      }))
 
-    billContent.push(
-      '='.repeat(60),
-      'สร้างโดย The Bliss at Home System',
-      `วันที่สร้าง: ${new Date().toLocaleDateString('th-TH')}`
-    )
+      const hotelName = getHotelName()
+      const period = billData.monthLabel
 
-    // Create and download text file
-    const content = billContent.join('\n')
-    const blob = new Blob(['\uFEFF' + content], { type: 'text/plain;charset=utf-8' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `monthly-bill-${selectedMonth}.txt`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      generateSimpleMonthlyBillPDF(bookingData, hotelName, period)
+    }).catch(error => {
+      console.error('Error generating PDF:', error)
+      // Fallback to text file if PDF generation fails
+      const billContent = [
+        '='.repeat(60),
+        'ใบเรียกเก็บเงินรายเดือน - The Bliss at Home',
+        '='.repeat(60),
+        `โรงแรม: ${getHotelName()}`,
+        `เดือน: ${billData?.monthLabel}`,
+        `เลขที่บิล: ${generateBillNumber(selectedMonth, hotelId!)}`,
+        '',
+        `จำนวนการจอง: ${billData?.totalBookings || 0} รายการ`,
+        `รายได้รวม: ฿${billData?.totalRevenue?.toLocaleString() || 0}`,
+        `รายได้สุทธิ: ฿${billData?.hotelRevenue?.toLocaleString() || 0}`,
+        '='.repeat(60),
+      ]
+
+      const content = billContent.join('\n')
+      const blob = new Blob(['\uFEFF' + content], { type: 'text/plain;charset=utf-8' })
+      const link = document.createElement('a')
+      link.setAttribute('href', URL.createObjectURL(blob))
+      link.setAttribute('download', `monthly-bill-${selectedMonth}.txt`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    })
   }
 
   // Loading state
@@ -360,7 +377,6 @@ function MonthlyBill() {
             </div>
           </div>
         </div>
-
 
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">

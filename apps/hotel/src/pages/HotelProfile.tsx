@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Save, Building, MapPin, Phone, Mail, User, Edit, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Save, Building, MapPin, Phone, Mail, User, Edit, Check, Loader2, AlertCircle, RefreshCw, Globe } from 'lucide-react'
 import { useHotelContext } from '../hooks/useHotelContext'
 import { supabase } from '@bliss/supabase/auth'
 import { createLoadingToast, notifications } from '../utils/notifications'
+import { HotelMapDisplay } from '../components/HotelMapDisplay'
 
 // Extended hotel interface for profile editing (excluding read-only fields)
 interface HotelProfileData {
   contact_person: string
   email: string
   phone: string
+  website: string
   tax_id: string
   bank_name: string
   bank_account_number: string
@@ -26,6 +28,7 @@ function HotelProfile() {
     contact_person: '',
     email: '',
     phone: '',
+    website: '',
     tax_id: '',
     bank_name: '',
     bank_account_number: '',
@@ -39,6 +42,7 @@ function HotelProfile() {
         contact_person: hotelData.contact_person || '',
         email: hotelData.email || '',
         phone: hotelData.phone || '',
+        website: hotelData.website || '',
         tax_id: hotelData.tax_id || '',
         bank_name: hotelData.bank_name || '',
         bank_account_number: hotelData.bank_account_number || '',
@@ -86,6 +90,7 @@ function HotelProfile() {
         contact_person: hotelData.contact_person || '',
         email: hotelData.email || '',
         phone: hotelData.phone || '',
+        website: hotelData.website || '',
         tax_id: hotelData.tax_id || '',
         bank_name: hotelData.bank_name || '',
         bank_account_number: hotelData.bank_account_number || '',
@@ -313,6 +318,38 @@ function HotelProfile() {
                   </div>
                 )}
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-2">เว็บไซต์</label>
+                {isEditing ? (
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <input
+                      type="url"
+                      value={formData.website}
+                      onChange={(e) => updateFormData('website', e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="https://www.example.com"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-stone-400" />
+                    {formData.website ? (
+                      <a
+                        href={formData.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-amber-700 hover:text-amber-800 font-medium hover:underline"
+                      >
+                        {formData.website}
+                      </a>
+                    ) : (
+                      <p className="text-stone-900">ไม่ระบุ</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -385,6 +422,27 @@ function HotelProfile() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Hotel Map Section */}
+          <div className="mt-6 pt-6 border-t border-stone-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-stone-900">ที่ตั้งโรงแรม</h3>
+              <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">ไม่สามารถแก้ไขได้</span>
+            </div>
+            <HotelMapDisplay
+              latitude={hotelData?.latitude}
+              longitude={hotelData?.longitude}
+              hotelName={hotelData?.name_th}
+              hotelAddress={hotelData?.address}
+              height="400px"
+            />
+            <div className="mt-3">
+              <p className="text-xs text-stone-500 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                ต้องการเปลี่ยนแปลงข้อมูลนี้? กรุณาติดต่อ Admin
+              </p>
             </div>
           </div>
         </div>

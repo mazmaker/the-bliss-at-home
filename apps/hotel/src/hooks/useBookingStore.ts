@@ -136,9 +136,34 @@ export const useBookingStore = create<BookingStore>()(
               selections: [] // Reset selections when mode changes
             }
 
+            // Calculate validation with new mode and cleared selections
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 0) {
+              const serviceErrors: string[] = []
+              if (newConfig.mode === 'couple' && !newConfig.coupleFormat) {
+                serviceErrors.push('กรุณาเลือกรูปแบบการรับบริการ')
+              }
+              if (newConfig.selections.length === 0) {
+                serviceErrors.push('กรุณาเลือกบริการอย่างน้อย 1 บริการ')
+              }
+              if (newConfig.mode === 'couple' && newConfig.selections.length < 2) {
+                serviceErrors.push('กรุณาเลือกบริการสำหรับผู้รับบริการทั้ง 2 ท่าน')
+              }
+              if (serviceErrors.length > 0) {
+                errors.serviceSelection = serviceErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
             return {
               serviceConfiguration: newConfig,
-              validation: get().validateConfiguration()
+              validation: newValidation
             }
           }),
 
@@ -153,9 +178,34 @@ export const useBookingStore = create<BookingStore>()(
             const serviceFormat = format || 'single'
             newConfig.totalDuration = calculateTotalDuration(newConfig.selections, serviceFormat)
 
+            // Calculate validation with new couple format
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 0) {
+              const serviceErrors: string[] = []
+              if (newConfig.mode === 'couple' && !newConfig.coupleFormat) {
+                serviceErrors.push('กรุณาเลือกรูปแบบการรับบริการ')
+              }
+              if (newConfig.selections.length === 0) {
+                serviceErrors.push('กรุณาเลือกบริการอย่างน้อย 1 บริการ')
+              }
+              if (newConfig.mode === 'couple' && newConfig.selections.length < 2) {
+                serviceErrors.push('กรุณาเลือกบริการสำหรับผู้รับบริการทั้ง 2 ท่าน')
+              }
+              if (serviceErrors.length > 0) {
+                errors.serviceSelection = serviceErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
             return {
               serviceConfiguration: newConfig,
-              validation: get().validateConfiguration()
+              validation: newValidation
             }
           }),
 
@@ -176,9 +226,38 @@ export const useBookingStore = create<BookingStore>()(
               totalPrice: calculateTotalPrice(newSelections)
             }
 
+            // Create a temporary updated state to calculate validation with new selections
+            const tempState = { ...state, serviceConfiguration: newConfig }
+
+            // Calculate validation based on current step with the new configuration
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 0) {
+              // Step 0: Only validate service selection with new config
+              const serviceErrors: string[] = []
+              if (newConfig.mode === 'couple' && !newConfig.coupleFormat) {
+                serviceErrors.push('กรุณาเลือกรูปแบบการรับบริการ')
+              }
+              if (newConfig.selections.length === 0) {
+                serviceErrors.push('กรุณาเลือกบริการอย่างน้อย 1 บริการ')
+              }
+              if (newConfig.mode === 'couple' && newConfig.selections.length < 2) {
+                serviceErrors.push('กรุณาเลือกบริการสำหรับผู้รับบริการทั้ง 2 ท่าน')
+              }
+              if (serviceErrors.length > 0) {
+                errors.serviceSelection = serviceErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
             return {
               serviceConfiguration: newConfig,
-              validation: get().validateConfiguration()
+              validation: newValidation
             }
           }),
 
@@ -243,15 +322,44 @@ export const useBookingStore = create<BookingStore>()(
           }),
 
         clearServiceSelections: () =>
-          set((state) => ({
-            serviceConfiguration: {
+          set((state) => {
+            const newConfig = {
               ...state.serviceConfiguration,
               selections: [],
               totalDuration: 0,
               totalPrice: 0
-            },
-            validation: get().validateConfiguration()
-          })),
+            }
+
+            // Calculate validation with cleared selections
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 0) {
+              const serviceErrors: string[] = []
+              if (newConfig.mode === 'couple' && !newConfig.coupleFormat) {
+                serviceErrors.push('กรุณาเลือกรูปแบบการรับบริการ')
+              }
+              if (newConfig.selections.length === 0) {
+                serviceErrors.push('กรุณาเลือกบริการอย่างน้อย 1 บริการ')
+              }
+              if (newConfig.mode === 'couple' && newConfig.selections.length < 2) {
+                serviceErrors.push('กรุณาเลือกบริการสำหรับผู้รับบริการทั้ง 2 ท่าน')
+              }
+              if (serviceErrors.length > 0) {
+                errors.serviceSelection = serviceErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
+            return {
+              serviceConfiguration: newConfig,
+              validation: newValidation
+            }
+          }),
 
         setRecipientName: (recipientIndex, name) =>
           set((state) => {
@@ -271,40 +379,133 @@ export const useBookingStore = create<BookingStore>()(
 
         // Guest data actions
         setGuestName: (name) =>
-          set((state) => ({
-            guestName: name,
-            validation: get().validateConfiguration()
-          })),
+          set((state) => {
+            // Calculate validation with the new guest name
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 1) {
+              // Step 1: Validate guest info with new name
+              const guestErrors: string[] = []
+              if (!name.trim()) guestErrors.push('กรุณากรอกชื่อแขก')
+              if (!state.roomNumber.trim()) guestErrors.push('กรุณากรอกเลขห้อง')
+              if (!state.phoneNumber.trim()) guestErrors.push('กรุณากรอกเบอร์โทรศัพท์')
+              if (guestErrors.length > 0) {
+                errors.guestInfo = guestErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
+            return { guestName: name, validation: newValidation }
+          }),
 
         setRoomNumber: (room) =>
-          set((state) => ({
-            roomNumber: room,
-            validation: get().validateConfiguration()
-          })),
+          set((state) => {
+            // Calculate validation with the new room number
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 1) {
+              // Step 1: Validate guest info with new room number
+              const guestErrors: string[] = []
+              if (!state.guestName.trim()) guestErrors.push('กรุณากรอกชื่อแขก')
+              if (!room.trim()) guestErrors.push('กรุณากรอกเลขห้อง')
+              if (!state.phoneNumber.trim()) guestErrors.push('กรุณากรอกเบอร์โทรศัพท์')
+              if (guestErrors.length > 0) {
+                errors.guestInfo = guestErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
+            return { roomNumber: room, validation: newValidation }
+          }),
 
         setPhoneNumber: (phone) =>
-          set((state) => ({
-            phoneNumber: phone,
-            validation: get().validateConfiguration()
-          })),
+          set((state) => {
+            // Calculate validation with the new phone number
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 1) {
+              // Step 1: Validate guest info with new phone number
+              const guestErrors: string[] = []
+              if (!state.guestName.trim()) guestErrors.push('กรุณากรอกชื่อแขก')
+              if (!state.roomNumber.trim()) guestErrors.push('กรุณากรอกเลขห้อง')
+              if (!phone.trim()) guestErrors.push('กรุณากรอกเบอร์โทรศัพท์')
+              if (guestErrors.length > 0) {
+                errors.guestInfo = guestErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
+            return { phoneNumber: phone, validation: newValidation }
+          }),
 
         setDate: (date) =>
-          set((state) => ({
-            date,
-            validation: get().validateConfiguration()
-          })),
+          set((state) => {
+            // Calculate validation with the new date
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 2) {
+              // Step 2: Validate date/time with new date
+              const dateTimeErrors: string[] = []
+              if (!date) dateTimeErrors.push('กรุณาเลือกวันที่')
+              if (!state.time) dateTimeErrors.push('กรุณาเลือกเวลา')
+              if (dateTimeErrors.length > 0) {
+                errors.dateTime = dateTimeErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
+            return { date, validation: newValidation }
+          }),
 
         setTime: (time) =>
-          set((state) => ({
-            time,
-            validation: get().validateConfiguration()
-          })),
+          set((state) => {
+            // Calculate validation with the new time
+            const { currentStep } = state
+            const errors: BookingValidation['errors'] = {}
+
+            if (currentStep === 2) {
+              // Step 2: Validate date/time with new time
+              const dateTimeErrors: string[] = []
+              if (!state.date) dateTimeErrors.push('กรุณาเลือกวันที่')
+              if (!time) dateTimeErrors.push('กรุณาเลือกเวลา')
+              if (dateTimeErrors.length > 0) {
+                errors.dateTime = dateTimeErrors
+              }
+            }
+
+            const newValidation = {
+              isValid: Object.keys(errors).length === 0,
+              errors
+            }
+
+            return { time, validation: newValidation }
+          }),
 
         setNotes: (notes) =>
           set(() => ({ notes })),
 
-        setProviderPreference: (preference) =>
-          set(() => ({ providerPreference: preference })),
+        setProviderPreference: (providerPreference) =>
+          set(() => ({ providerPreference })),
 
         // Step management
         setCurrentStep: (step) =>
@@ -435,17 +636,59 @@ export const useBookingStore = create<BookingStore>()(
 
         canProceedToStep: (step) => {
           const state = get()
-          const validation = state.validation
+          const { serviceConfiguration } = state
 
           switch (step) {
             case 0: // Service configuration
               return true
-            case 1: // Guest info
-              return !validation.errors.serviceSelection
-            case 2: // Date/time
-              return !validation.errors.serviceSelection && !validation.errors.guestInfo
-            case 3: // Confirmation
-              return validation.isValid
+            case 1: // Guest info - Check service selection is complete
+              // Service selection must be complete
+              if (serviceConfiguration.mode === 'couple' && !serviceConfiguration.coupleFormat) {
+                return false
+              }
+              if (serviceConfiguration.selections.length === 0) {
+                return false
+              }
+              if (serviceConfiguration.mode === 'couple' && serviceConfiguration.selections.length < 2) {
+                return false
+              }
+              return true
+            case 2: // Date/time - Check service + guest info is complete
+              // Service selection must be complete
+              if (serviceConfiguration.mode === 'couple' && !serviceConfiguration.coupleFormat) {
+                return false
+              }
+              if (serviceConfiguration.selections.length === 0) {
+                return false
+              }
+              if (serviceConfiguration.mode === 'couple' && serviceConfiguration.selections.length < 2) {
+                return false
+              }
+              // Guest info must be complete
+              if (!state.guestName.trim() || !state.roomNumber.trim() || !state.phoneNumber.trim()) {
+                return false
+              }
+              return true
+            case 3: // Confirmation - Check all steps are complete
+              // Service selection must be complete
+              if (serviceConfiguration.mode === 'couple' && !serviceConfiguration.coupleFormat) {
+                return false
+              }
+              if (serviceConfiguration.selections.length === 0) {
+                return false
+              }
+              if (serviceConfiguration.mode === 'couple' && serviceConfiguration.selections.length < 2) {
+                return false
+              }
+              // Guest info must be complete
+              if (!state.guestName.trim() || !state.roomNumber.trim() || !state.phoneNumber.trim()) {
+                return false
+              }
+              // Date/time must be complete
+              if (!state.date || !state.time) {
+                return false
+              }
+              return true
             default:
               return false
           }

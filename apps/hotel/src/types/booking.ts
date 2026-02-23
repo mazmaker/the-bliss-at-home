@@ -39,6 +39,15 @@ export type BookingMode = 'single' | 'couple'
 export type CoupleFormat = 'simultaneous' | 'sequential'
 export type ServiceFormat = 'single' | 'simultaneous' | 'sequential'
 
+// Provider preference types (from Customer app)
+export type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference'
+
+export interface ProviderPreferenceOption {
+  value: ProviderPreference
+  label: string
+  description: string
+}
+
 export interface BookingConfiguration {
   mode: BookingMode
   coupleFormat?: CoupleFormat
@@ -57,6 +66,9 @@ export interface BookingData {
   date: string
   time: string
   notes: string
+  providerPreference: ProviderPreference
+
+  // Provider preference
   providerPreference: ProviderPreference
 
   // Legacy fields (for backward compatibility)

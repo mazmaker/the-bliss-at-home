@@ -253,7 +253,10 @@ export function EnhancedHotelLogin() {
       const hotelSlug = await getHotelSlugFromId(userHotelId)
       return `/hotel/${hotelSlug}`
     }
-    return '/hotel/resort-chiang-mai'
+    // Get current hotel context from URL instead of hard fallback
+    const currentPath = window.location.pathname
+    const urlSlug = currentPath.match(/\/hotel\/([^\/]+)/)?.[1] || 'resort-chiang-mai'
+    return `/hotel/${urlSlug}`
   }
 
   const handleLogin = async (data: LoginFormData) => {

@@ -98,7 +98,7 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Request
 
     const bookingData = {
       ...bookingFields,
-      hotel_id: req.body.hotel_id, // Use hotel_id from request body (URL-based context)
+      hotel_id: req.body.hotel_id, // ✅ Use hotel_id from request body (URL-based multi-tenant context)
       // created_by: req.user?.id       // Column doesn't exist yet
     }
 
@@ -169,13 +169,16 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Request
 // GET /api/secure-bookings-v2 - Get Hotel Bookings
 router.get('/', authenticateSupabaseUser, requireHotelRole, async (req: Request, res: Response) => {
   try {
+    // Get hotel_id from query parameter for multi-tenant support
+    const hotelId = req.query.hotel_id as string || req.user?.hotel_id || 'no-hotel-id'
+
     const { data: bookings, error } = await serviceSupabase
       .from('bookings')
       .select(`
         *,
         booking_services(*)
       `)
-      .eq('hotel_id', req.query.hotel_id as string || req.user?.hotel_id || 'no-hotel-id')
+      .eq('hotel_id', hotelId)
       .order('created_at', { ascending: false })
 
     if (error) {
