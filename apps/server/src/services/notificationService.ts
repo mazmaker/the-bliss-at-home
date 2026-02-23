@@ -109,7 +109,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
         const recipientLabel = bs.recipient_name || `คนที่ ${(bs.recipient_index || 0) + 1}`
         const price = Number(bs.price) || 0
         const commissionRate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * commissionRate / 100)
+        const earnings = Math.round(price * commissionRate)
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -279,7 +279,7 @@ export async function sendBookingConfirmedNotifications(
       coupleServices = bookingServices.map(bs => {
         const price = Number(bs.price) || 0
         const rate = Number((bs.service as any)?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * rate / 100)
+        const earnings = Math.round(price * rate)
         totalStaffEarnings += earnings
         return {
           recipientIndex: bs.recipient_index || 0,
@@ -296,7 +296,7 @@ export async function sendBookingConfirmedNotifications(
     const singleRate = Number(booking.service?.staff_commission_rate) || 0
     totalStaffEarnings = booking.staff_earnings
       ? Number(booking.staff_earnings)
-      : Math.round(singleAmount * singleRate / 100)
+      : Math.round(singleAmount * singleRate)
   }
 
   // === 1. Notify available staff via LINE ===
@@ -1336,5 +1336,107 @@ export async function processBookingCancelled(
   result.jobsCancelled = jobs.length
   result.success = true
   console.log(`✅ Booking cancellation processed: booking=${bookingId}, jobs=${result.jobsCancelled}, staff=${result.staffNotified}`)
+  return result
+}
+
+/**
+ * Send LINE + in-app notification to staff when admin completes a payout
+ */
+export async function sendPayoutCompletedNotification(
+  payoutId: string
+): Promise<{ success: boolean; lineNotified: boolean; inAppNotified: boolean; error?: string }> {
+  const supabase = getSupabaseClient()
+  const result = { success: false, lineNotified: false, inAppNotified: false }
+
+  // 1. Fetch payout details
+  const { data: payout, error: payoutError } = await supabase
+    .from('payouts')
+    .select('*')
+    .eq('id', payoutId)
+    .single()
+
+  if (payoutError || !payout) {
+    console.error('❌ Payout not found:', payoutId, payoutError)
+    return { ...result, error: 'Payout not found' }
+  }
+
+  // payouts.staff_id IS profiles.id (FK to profiles)
+  const staffProfileId = payout.staff_id
+
+  // 2. Get staff name from staff table
+  const { data: staffData } = await supabase
+    .from('staff')
+    .select('name_th')
+    .eq('profile_id', staffProfileId)
+    .single()
+
+  const staffName = staffData?.name_th || 'พนักงาน'
+
+  // 3. Get LINE user ID from profiles table
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('line_user_id')
+    .eq('id', staffProfileId)
+    .single()
+
+  // 4. Send LINE notification (if staff has LINE linked)
+  if (profile?.line_user_id) {
+    try {
+      const lineSuccess = await lineService.sendPayoutCompletedToStaff(profile.line_user_id, {
+        staffName,
+        netAmount: Number(payout.net_amount) || 0,
+        grossEarnings: Number(payout.gross_earnings) || 0,
+        platformFee: Number(payout.platform_fee) || 0,
+        totalJobs: payout.total_jobs || 0,
+        periodStart: payout.period_start,
+        periodEnd: payout.period_end,
+        transferReference: payout.transfer_reference || '',
+        transferredAt: payout.transferred_at || new Date().toISOString(),
+      })
+
+      if (lineSuccess) {
+        result.lineNotified = true
+        console.log(`📱 LINE payout notification sent to staff ${staffProfileId}`)
+      }
+    } catch (lineError) {
+      console.error('❌ LINE payout notification failed:', lineError)
+    }
+  } else {
+    console.log(`⚠️ Staff ${staffProfileId} has no LINE user ID, skipping LINE notification`)
+  }
+
+  // 5. Insert in-app notification
+  const periodStartDate = new Date(payout.period_start)
+  const periodEndDate = new Date(payout.period_end)
+  const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+                      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+  const periodText = `${monthNames[periodStartDate.getMonth()]} ${periodStartDate.getFullYear() + 543}`
+
+  const { error: notifError } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: staffProfileId,
+      type: 'payment_received',
+      title: 'ได้รับเงินเรียบร้อย!',
+      message: `โอนเงิน ฿${Number(payout.net_amount).toLocaleString()} รอบ ${periodText} (${payout.total_jobs || 0} งาน) เข้าบัญชีแล้ว`,
+      data: {
+        payout_id: payoutId,
+        net_amount: payout.net_amount,
+        transfer_reference: payout.transfer_reference,
+        period_start: payout.period_start,
+        period_end: payout.period_end,
+      },
+      is_read: false,
+    })
+
+  if (notifError) {
+    console.error('❌ Failed to insert payout notification:', notifError)
+  } else {
+    result.inAppNotified = true
+    console.log(`🔔 In-app payout notification sent to staff ${staffProfileId}`)
+  }
+
+  result.success = true
+  console.log(`✅ Payout notification processed: payout=${payoutId}, LINE=${result.lineNotified}, inApp=${result.inAppNotified}`)
   return result
 }

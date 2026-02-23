@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Calendar,
+  Home,
   Clock,
   DollarSign,
   User,
@@ -15,7 +15,7 @@ import { useStaffNotifications } from '@bliss/supabase/notifications'
 import { NotificationPanel, type Notification } from '../components'
 
 const navigation = [
-  { name: 'วันนี้', nameEn: 'Today', href: '/staff', icon: Calendar },
+  { name: 'หน้าแรก', nameEn: 'Home', href: '/staff', icon: Home },
   { name: 'ตารางงาน', nameEn: 'Schedule', href: '/staff/schedule', icon: Clock },
   { name: 'รายได้', nameEn: 'Earnings', href: '/staff/earnings', icon: DollarSign },
   { name: 'โปรไฟล์', nameEn: 'Profile', href: '/staff/profile', icon: User },

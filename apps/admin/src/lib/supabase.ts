@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'bliss-admin-auth',
     storage: window.localStorage,
     flowType: 'pkce',
-    debug: true, // Enable auth debugging
+    debug: false, // Disabled - was causing infinite log spam
     refreshInterval: 30 * 60 * 1000, // Refresh every 30 minutes instead of 1 hour
   },
   global: {

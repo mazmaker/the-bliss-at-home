@@ -48,8 +48,24 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
 
       if (error) throw error
 
-      // Send LINE notification to staff
-      await sendLineNotification(selectedPayout)
+      // Send LINE + in-app notification to staff via server
+      try {
+        const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+        const notifRes = await fetch(`${serverUrl}/api/notifications/payout-completed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payout_id: payoutId }),
+        })
+        const notifResult = await notifRes.json()
+        if (notifResult.success) {
+          console.log('Payout notification sent:', notifResult)
+        } else {
+          console.warn('Payout notification issue:', notifResult)
+        }
+      } catch (notifError) {
+        // Non-blocking: notification failure should not affect payout process
+        console.error('Failed to send payout notification:', notifError)
+      }
 
       toast.success('ดำเนินการจ่ายเงินสำเร็จ และส่งแจ้งเตือนให้พนักงานแล้ว')
       queryClient.invalidateQueries({ queryKey: ['staff', staffId, 'payouts'] })
@@ -60,63 +76,6 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
       toast.error(error.message || 'เกิดข้อผิดพลาดในการดำเนินการจ่ายเงิน')
     } finally {
       setIsProcessing(false)
-    }
-  }
-
-  const sendLineNotification = async (payout: any) => {
-    try {
-      // Get staff info
-      const { data: staffData } = await supabase
-        .from('staff')
-        .select('name_th, profile_id')
-        .eq('id', staffId)
-        .single()
-
-      if (!staffData?.profile_id) return
-
-      const totalAmount = parseFloat(payout.net_amount)
-      const periodStart = new Date(payout.period_start)
-      const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-                         'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
-      const periodText = `${monthNames[periodStart.getMonth()]} ${periodStart.getFullYear()}`
-
-      // Prepare LINE message
-      const message = `🎉 แจ้งเตือนการจ่ายเงิน
-
-เรียน คุณ${staffData.name_th}
-
-💰 ยอดเงินที่โอนเข้าบัญชี: ฿${totalAmount.toLocaleString()}
-
-📅 รอบการจ่าย: ${periodText}
-📊 จำนวนงาน: ${payout.total_jobs} งาน
-💵 รายได้สุทธิ: ฿${parseFloat(payout.net_amount).toLocaleString()}
-
-📝 หมายเลขอ้างอิง: ${transferReference}
-📆 วันที่โอน: ${new Date().toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })}
-
-ขอบคุณสำหรับการให้บริการที่ดีเสมอมา! 🙏`
-
-      // TODO: Send via LINE API
-      // For now, just log the message
-      console.log('LINE Notification:', message)
-      console.log('Send to staff profile:', staffData.profile_id)
-
-      // In production, you would call your backend API to send LINE message
-      // await fetch('/api/line/notify', {
-      //   method: 'POST',
-      //   body: JSON.stringify({
-      //     profileId: staffData.profile_id,
-      //     message: message
-      //   })
-      // })
-
-    } catch (error) {
-      console.error('Error sending LINE notification:', error)
-      // Don't throw error - notification failure shouldn't stop the payout process
     }
   }
 

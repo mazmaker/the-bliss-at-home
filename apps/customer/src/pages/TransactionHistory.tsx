@@ -1,8 +1,12 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Receipt, CreditCard, Smartphone, Building2, Banknote, Download, ChevronRight, AlertCircle } from 'lucide-react'
+import { Receipt, CreditCard, Smartphone, Building2, Banknote, Download, ChevronRight, AlertCircle, FileText } from 'lucide-react'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerTransactions, useTransactionSummary } from '@bliss/supabase/hooks/useTransactions'
+import { downloadReceipt, type ReceiptPdfData } from '../utils/receiptPdfGenerator'
+import { getStoredLanguage } from '@bliss/i18n'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 function TransactionHistory() {
   const [filter, setFilter] = useState<'all' | 'successful' | 'refunded' | 'failed' | 'pending'>('all')
@@ -234,18 +238,56 @@ function TransactionHistory() {
                       </p>
 
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => alert('Download receipt will be implemented')}
-                          className="text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
-                        >
-                          <Download className="w-4 h-4" />
-                          Receipt
-                        </button>
+                        {(transaction.status === 'successful' || transaction.status === 'refunded') && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+                                const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+                                const resp = await fetch(`${API_URL}/api/receipts/${transaction.id}`)
+                                const result = await resp.json()
+                                if (result.success) {
+                                  const d = result.data
+                                  downloadReceipt({
+                                    receiptNumber: d.receipt_number,
+                                    transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
+                                    bookingNumber: d.booking_number,
+                                    serviceName: d.service_name,
+                                    serviceNameEn: d.service_name_en,
+                                    bookingDate: new Date(d.booking_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
+                                    bookingTime: d.booking_time,
+                                    amount: d.amount,
+                                    paymentMethod: d.payment_method,
+                                    cardBrand: d.card_brand,
+                                    cardLastDigits: d.card_last_digits,
+                                    customerName: d.customer_name,
+                                    addons: d.addons,
+                                    language: lang,
+                                    company: {
+                                      name: d.company.companyName,
+                                      nameTh: d.company.companyNameTh,
+                                      address: d.company.companyAddress,
+                                      phone: d.company.companyPhone,
+                                      email: d.company.companyEmail,
+                                      taxId: d.company.companyTaxId,
+                                    },
+                                  } as ReceiptPdfData)
+                                }
+                              } catch (err) {
+                                console.error('Failed to download receipt:', err)
+                              }
+                            }}
+                            className="text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
+                          >
+                            <Download className="w-4 h-4" />
+                            ใบเสร็จ
+                          </button>
+                        )}
                         <Link
                           to={`/bookings/${transaction.booking_id}`}
                           className="text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
                         >
-                          View Booking
+                          ดูการจอง
                           <ChevronRight className="w-4 h-4" />
                         </Link>
                       </div>

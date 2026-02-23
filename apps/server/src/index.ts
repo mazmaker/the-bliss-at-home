@@ -16,6 +16,8 @@ import hotelRoutes from './routes/hotel.js'
 import secureBookingsRoutes from './routes/secure-bookings-v2.js'
 import notificationRoutes from './routes/notification.js'
 import bookingsRoutes from './routes/bookings.js'
+import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
+import receiptsRoutes from './routes/receipts.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations } from './services/notificationService.js'
 
 const app = express()
@@ -56,6 +58,8 @@ app.get('/api', (req: Request, res: Response) => {
       'secure-bookings': '/api/secure-bookings (Professional JWT Auth)',
       notifications: '/api/notifications',
       bookings: '/api/bookings',
+      cancellationPolicy: '/api/cancellation-policy',
+      receipts: '/api/receipts',
     },
   })
 })
@@ -77,6 +81,12 @@ app.use('/api/notifications', notificationRoutes)
 
 // Booking routes
 app.use('/api/bookings', bookingsRoutes)
+
+// Cancellation policy routes
+app.use('/api/cancellation-policy', cancellationPolicyRoutes)
+
+// Receipt & Credit Note routes
+app.use('/api/receipts', receiptsRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {
