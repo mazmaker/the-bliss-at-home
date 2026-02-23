@@ -3,7 +3,7 @@
  * Handles first-time login, password changes, and hotel-specific authentication
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -38,13 +38,24 @@ const changePasswordSchema = z.object({
   newPassword: z
     .string()
     .min(8, 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร')
+    .max(128, 'รหัสผ่านยาวเกินไป (สูงสุด 128 ตัวอักษร)')
     .regex(/[A-Z]/, 'ต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว')
     .regex(/[a-z]/, 'ต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว')
-    .regex(/\d/, 'ต้องมีตัวเลขอย่างน้อย 1 ตัว'),
+    .regex(/\d/, 'ต้องมีตัวเลขอย่างน้อย 1 ตัว')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'ต้องมีอักขระพิเศษอย่างน้อย 1 ตัว')
+    .refine((password) => !['password', '12345678', 'admin123', 'hotel123'].includes(password.toLowerCase()), {
+      message: 'รหัสผ่านนี้ไม่ปลอดภัย กรุณาเลือกรหัสผ่านที่แข็งแรงกว่า'
+    })
+    .refine((password) => !/(.)\1{2,}/.test(password), {
+      message: 'รหัสผ่านไม่ควรมีอักขระซ้ำติดกัน 3 ตัวขึ้นไป'
+    }),
   confirmPassword: z.string().min(1, 'กรุณายืนยันรหัสผ่าน'),
 }).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'รหัสผ่านไม่ตรงกัน',
+  message: 'รหัסผ่านยืนยันไม่ตรงกัน',
   path: ['confirmPassword'],
+}).refine((data) => data.currentPassword !== data.newPassword, {
+  message: 'รหัสผ่านใหม่ต้องแตกต่างจากรหัสผ่านเดิม',
+  path: ['newPassword'],
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -72,18 +83,137 @@ export function EnhancedHotelLogin() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+
+  // Debug logging removed - issue fixed!
   const [submitSuccess, setSubmitSuccess] = useState('')
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false)
   const [loginStep, setLoginStep] = useState<'login' | 'change-password'>('login')
+  const [isCheckingPasswordRequirement, setIsCheckingPasswordRequirement] = useState(false)
+  const [shouldForceCheck, setShouldForceCheck] = useState(0) // Counter to force useEffect re-run
 
-  // Check if user is already authenticated with HOTEL role
-  if (isAuthenticated && user?.user_metadata?.role === 'HOTEL') {
-    // For already authenticated users, redirect using DynamicHotelRedirect
-    // which handles the async slug resolution
-    return <Navigate to="/hotel" replace />
-  }
+  // Check password change requirement for authenticated users
+  useEffect(() => {
+    const checkPasswordRequirement = async () => {
+      console.log('🔍 [DEBUG] checkPasswordRequirement called:', {
+        isAuthenticated,
+        user: user,
+        userRole: user?.role,
+        userId: user?.id
+      })
 
-  // Login form
+      console.log('🔍 [DEBUG] Checking conditions:', {
+        'isAuthenticated': isAuthenticated,
+        'user exists': !!user,
+        'user.id exists': !!user?.id,
+        'user.role': user?.role,
+        'role === HOTEL': user?.role === 'HOTEL'
+      })
+
+      // WORKAROUND: Also check localStorage for session since useAuth might be delayed
+      const hasStoredSession = typeof window !== 'undefined' && !!localStorage.getItem('bliss-customer-auth')
+      console.log('🔍 [DEBUG] LocalStorage session exists:', hasStoredSession)
+
+      // Check if we have a stored session but useAuth hasn't updated yet
+      if (!isAuthenticated && hasStoredSession) {
+        console.log('🔄 [DEBUG] Found stored session but useAuth not ready, checking manually...')
+
+        try {
+          const sessionData = localStorage.getItem('bliss-customer-auth')
+          if (sessionData) {
+            const session = JSON.parse(sessionData)
+            const sessionUser = session.user || session.currentSession?.user
+
+            if (sessionUser?.id) {
+              console.log('🔍 [DEBUG] Manual session check - user ID:', sessionUser.id)
+
+              // Check hotel data directly since useAuth isn't ready
+              const { data: hotelData, error: hotelError } = await supabase
+                .from('hotels')
+                .select('password_change_required')
+                .eq('auth_user_id', sessionUser.id)
+                .single()
+
+              console.log('📊 [DEBUG] Manual hotel query result:', { hotelData, hotelError })
+
+              if (!hotelError && hotelData?.password_change_required) {
+                console.log('🔐 [DEBUG] MANUAL CHECK: Password change is REQUIRED! Setting up form...')
+                setNeedsPasswordChange(true)
+                setLoginStep('change-password')
+                return // Stop here, don't redirect
+              } else if (!hotelError && !hotelData?.password_change_required) {
+                console.log('✅ [DEBUG] MANUAL CHECK: No password change needed, waiting for useAuth...')
+                return // Let useAuth handle the redirect when ready
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ [DEBUG] Manual session check error:', error)
+        }
+      }
+
+      if (isAuthenticated && user?.role === 'HOTEL' && user.id) {
+        console.log('✅ [DEBUG] User is authenticated HOTEL, checking password requirement...')
+        setIsCheckingPasswordRequirement(true)
+
+        try {
+          // Check if password change is required
+          console.log('🔍 [DEBUG] Querying hotels table for auth_user_id:', user.id)
+          const { data: hotelData, error: hotelError } = await supabase
+            .from('hotels')
+            .select('password_change_required')
+            .eq('auth_user_id', user.id)
+            .single()
+
+          console.log('📊 [DEBUG] Hotel query result:', { hotelData, hotelError })
+
+          if (hotelError) {
+            console.error('❌ [DEBUG] Error checking password change requirement:', hotelError)
+            // If we can't check, assume no password change needed and redirect
+            const hotelUrl = await getHotelUrl()
+            console.log('🔄 [DEBUG] Redirecting to hotel URL (error case):', hotelUrl)
+            navigate(hotelUrl, { replace: true })
+          } else if (hotelData?.password_change_required) {
+            // Password change is required
+            console.log('🔐 [DEBUG] Password change is REQUIRED! Setting up change password form...')
+            setNeedsPasswordChange(true)
+            setLoginStep('change-password')
+          } else {
+            // No password change needed, redirect to hotel app
+            console.log('✅ [DEBUG] No password change needed, redirecting...')
+            const hotelUrl = await getHotelUrl()
+            console.log('🔄 [DEBUG] Redirecting to hotel URL:', hotelUrl)
+            navigate(hotelUrl, { replace: true })
+          }
+        } catch (error) {
+          console.error('❌ [DEBUG] Error checking password requirement:', error)
+          // On error, redirect to avoid infinite loop
+          const hotelUrl = await getHotelUrl()
+          console.log('🔄 [DEBUG] Redirecting to hotel URL (catch case):', hotelUrl)
+          navigate(hotelUrl, { replace: true })
+        } finally {
+          setIsCheckingPasswordRequirement(false)
+        }
+      }
+    }
+
+    checkPasswordRequirement()
+  }, [isAuthenticated, user, navigate, shouldForceCheck])
+
+  // Additional effect to handle session loading after initial mount
+  useEffect(() => {
+    // Set up a timer to re-check after session loading
+    const timer = setTimeout(() => {
+      const hasSession = typeof window !== 'undefined' && !!localStorage.getItem('bliss-customer-auth')
+      if (hasSession && !isAuthenticated && !user) {
+        console.log('⏰ [DEBUG] Timer triggered - session exists but useAuth not ready, forcing recheck...')
+        setShouldForceCheck(prev => prev + 1) // This will trigger the main useEffect
+      }
+    }, 1000) // Check after 1 second
+
+    return () => clearTimeout(timer)
+  }, [isAuthenticated, user])
+
+  // Login form - MUST be called before any early returns
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -93,7 +223,7 @@ export function EnhancedHotelLogin() {
     },
   })
 
-  // Change password form
+  // Change password form - MUST be called before any early returns
   const changePasswordForm = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
@@ -104,6 +234,18 @@ export function EnhancedHotelLogin() {
   })
 
   const watchNewPassword = changePasswordForm.watch('newPassword')
+
+  // Show loading while checking password requirements
+  if (isAuthenticated && user?.role === 'HOTEL' && isCheckingPasswordRequirement) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-amber-600 mx-auto mb-4" />
+          <p className="text-gray-600">กำลังตรวจสอบข้อมูล...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Helper function to get the correct hotel URL for navigation using slug
   const getHotelUrl = async (): Promise<string> => {
@@ -123,13 +265,32 @@ export function EnhancedHotelLogin() {
       const result = await login({ email: data.email, password: data.password })
 
       if (result.error) {
-        throw new Error(result.error.message)
+        // Handle specific login errors with more user-friendly messages
+        const errorMessage = result.error.message.toLowerCase()
+
+        if (errorMessage.includes('invalid login credentials') ||
+            errorMessage.includes('invalid email or password') ||
+            errorMessage.includes('email not confirmed') ||
+            errorMessage.includes('invalid password')) {
+          setSubmitError('ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง')
+          return
+        } else if (errorMessage.includes('too many requests')) {
+          setSubmitError('มีการพยายามเข้าสู่ระบบมากเกินไป กรุณารอสักครู่แล้วลองใหม่')
+          return
+        } else if (errorMessage.includes('email not found')) {
+          setSubmitError('ไม่พบบัญชีผู้ใช้นี้ในระบบ กรุณาตรวจสอบอีเมล')
+          return
+        } else {
+          setSubmitError(result.error.message)
+          return
+        }
       }
 
       if (result.data?.user) {
-        // Check if user has HOTEL role
-        if (result.data.user.user_metadata?.role !== 'HOTEL') {
-          throw new Error('บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานระบบโรงแรม')
+        // Check if user has HOTEL role (use profile.role from the auth response)
+        if (result.profile?.role !== 'HOTEL') {
+          setSubmitError('บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานระบบโรงแรม')
+          return
         }
 
         // Check if password change is required
@@ -154,10 +315,19 @@ export function EnhancedHotelLogin() {
             navigate(hotelUrl)
           }, 1500)
         }
+      } else {
+        setSubmitError('ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง')
       }
     } catch (error: any) {
-      console.error('Login error:', error)
-      setSubmitError(error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
+      // Handle authentication errors
+      const errorMessage = error.message || error.toString() || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
+
+      if (errorMessage.toLowerCase().includes('invalid email or password') ||
+          errorMessage.toLowerCase().includes('invalid login credentials')) {
+        setSubmitError('ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง')
+      } else {
+        setSubmitError(errorMessage)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -169,56 +339,54 @@ export function EnhancedHotelLogin() {
     setSubmitSuccess('')
 
     try {
-      // Update password via Supabase Auth
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: data.newPassword
+      // Get hotel ID first
+      if (!user?.id) {
+        throw new Error('ไม่พบข้อมูลผู้ใช้')
+      }
+
+      const { data: hotelData, error: hotelQueryError } = await supabase
+        .from('hotels')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (hotelQueryError || !hotelData) {
+        console.error('Error finding hotel by auth_user_id:', hotelQueryError)
+        throw new Error('ไม่พบข้อมูลโรงแรม')
+      }
+
+      // Use our new change-password API endpoint
+      const response = await fetch('http://localhost:3000/api/hotels/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword,
+          hotelId: hotelData.id
+        }),
       })
 
-      if (updateError) {
-        throw new Error(updateError.message)
-      }
+      const result = await response.json()
 
-      // Get hotel ID and notify server to clear temporary password
-      if (user?.id) {
-        try {
-          // First, get hotel ID from auth_user_id
-          const { data: hotelData, error: hotelQueryError } = await supabase
-            .from('hotels')
-            .select('id')
-            .eq('auth_user_id', user.id)
-            .single()
-
-          if (hotelQueryError || !hotelData) {
-            console.error('Error finding hotel by auth_user_id:', hotelQueryError)
-          } else {
-            // Notify server to clear temporary password and update status
-            try {
-              const response = await fetch('http://localhost:3000/api/hotels/password-changed', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  hotelId: hotelData.id,
-                  authToken: user.id // For future authentication
-                }),
-              })
-
-              if (response.ok) {
-                console.log('✅ Server notified: temporary password cleared')
-              } else {
-                console.error('❌ Failed to notify server about password change')
-              }
-            } catch (serverError) {
-              console.error('❌ Error notifying server:', serverError)
-              // Don't throw error - password change should still succeed even if server notification fails
-            }
-          }
-        } catch (error) {
-          console.error('Error in password change cleanup process:', error)
-          // Don't throw error - the main password change was successful
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่')
+        } else if (response.status === 400) {
+          throw new Error(result.message || 'ข้อมูลที่กรอกไม่ถูกต้อง')
+        } else if (response.status === 404) {
+          throw new Error('ไม่พบข้อมูลโรงแรม กรุณาติดต่อผู้ดูแลระบบ')
+        } else if (response.status >= 500) {
+          throw new Error('เกิดข้อผิดพลาดของระบบ กรุณาลองใหม่ภายหลัง')
+        } else {
+          throw new Error(result.message || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน')
         }
       }
+
+      console.log('✅ Password changed successfully:', result)
 
       setSubmitSuccess('เปลี่ยนรหัสผ่านสำเร็จ กำลังเข้าสู่หน้าหลัก...')
       setTimeout(async () => {
@@ -380,6 +548,28 @@ export function EnhancedHotelLogin() {
                   )}
                   {isSubmitting || authLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                 </button>
+
+                {/* Error/Success Messages - Moved inside form container */}
+                {submitError && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-red-700">
+                        <p>{submitError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submitSuccess && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-green-800">
+                      <p className="font-medium">สำเร็จ</p>
+                      <p>{submitSuccess}</p>
+                    </div>
+                  </div>
+                )}
               </form>
 
               {/* Help Text */}
@@ -530,30 +720,32 @@ export function EnhancedHotelLogin() {
                   )}
                   {isSubmitting ? 'กำลังเปลี่ยนรหัสผ่าน...' : 'เปลี่ยนรหัสผ่าน'}
                 </button>
+
+                {/* Error/Success Messages - Moved inside form container */}
+                {submitError && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-red-700">
+                        <p>{submitError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submitSuccess && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-green-800">
+                      <p className="font-medium">สำเร็จ</p>
+                      <p>{submitSuccess}</p>
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
           )}
 
-          {/* Error/Success Messages */}
-          {submitError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-red-800">
-                <p className="font-medium">เกิดข้อผิดพลาด</p>
-                <p>{submitError}</p>
-              </div>
-            </div>
-          )}
-
-          {submitSuccess && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-green-800">
-                <p className="font-medium">สำเร็จ</p>
-                <p>{submitSuccess}</p>
-              </div>
-            </div>
-          )}
 
           {/* Back to Home */}
           <div className="mt-6 text-center">
