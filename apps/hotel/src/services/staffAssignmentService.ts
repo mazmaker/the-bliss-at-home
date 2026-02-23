@@ -3,7 +3,7 @@
  * จัดการการมอบหมายหมอนวดตาม Provider Preference
  */
 
-import { hotelSupabase as supabase } from '../lib/supabaseClient'
+import { supabase } from '@bliss/supabase/auth'
 import { ProviderPreference } from '../types/booking'
 import {
   Staff,
