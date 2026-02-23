@@ -102,8 +102,11 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     throw new Error('ไม่พบงานนี้ในระบบ')
   }
 
-  // Check if job is already taken
+  // Check if job is still available
   if (currentJob.status !== 'pending' || currentJob.staff_id !== null) {
+    if (currentJob.status === 'cancelled') {
+      throw new Error('งานนี้ถูกยกเลิกแล้ว')
+    }
     throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
   }
 
@@ -137,8 +140,18 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     .single()
 
   if (error) {
-    // Handle race condition - someone else accepted between our check and update
+    // Handle race condition - job changed between our check and update
     if (error.code === 'PGRST116') {
+      // Re-fetch to determine actual reason
+      const { data: refetchedJob } = await supabase
+        .from('jobs')
+        .select('status, staff_id')
+        .eq('id', jobId)
+        .single()
+
+      if (refetchedJob?.status === 'cancelled') {
+        throw new Error('งานนี้ถูกยกเลิกแล้ว')
+      }
       throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
     }
     console.error('Error accepting job:', error)
@@ -292,7 +305,8 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
 export function subscribeToJobs(
   staffId: string,
   onJobUpdate: (job: Job) => void,
-  onNewJob?: (job: Job) => void
+  onNewJob?: (job: Job) => void,
+  onPendingJobRemoved?: (job: Job) => void
 ) {
   // Subscribe to staff's assigned jobs
   const assignedChannel = supabase
@@ -332,10 +346,31 @@ export function subscribeToJobs(
     )
     .subscribe()
 
+  // Subscribe to job status changes (for removing jobs from pending list)
+  const jobStatusChannel = supabase
+    .channel('job-status-updates')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'jobs',
+      },
+      (payload) => {
+        const newJob = payload.new as Job
+        // If job is no longer pending (accepted, cancelled, etc.), notify removal
+        if (newJob && newJob.status !== 'pending' && onPendingJobRemoved) {
+          onPendingJobRemoved(newJob)
+        }
+      }
+    )
+    .subscribe()
+
   // Return unsubscribe function
   return () => {
     supabase.removeChannel(assignedChannel)
     supabase.removeChannel(pendingChannel)
+    supabase.removeChannel(jobStatusChannel)
   }
 }
 

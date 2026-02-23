@@ -551,6 +551,17 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       }
     }
 
+    // Check for pending (unaccepted) jobs BEFORE updating booking status
+    // (because trigger sync_booking_update_to_job will cancel jobs immediately)
+    const { data: pendingUnacceptedJobs } = await supabase
+      .from('jobs')
+      .select('id')
+      .eq('booking_id', id)
+      .eq('status', 'pending')
+      .is('staff_id', null)
+
+    const hasPendingUnacceptedJobs = (pendingUnacceptedJobs && pendingUnacceptedJobs.length > 0)
+
     // Update booking status
     const updateData: any = {
       status: 'cancelled',
@@ -587,6 +598,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       customer: false,
       staff: false,
       hotel: false,
+      admin: false,
     }
 
     // === Notify job-assigned staff (for couple bookings where staff is assigned at job level) ===
@@ -608,6 +620,9 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
         .map(j => (j.profile as any)?.line_user_id)
         .filter(Boolean) as string[]
 
+      const cancelledBy = body.admin_id ? 'admin' : 'customer'
+      const cancelledByText = cancelledBy === 'customer' ? 'ลูกค้า' : 'แอดมิน'
+
       if (lineUserIds.length > 0) {
         try {
           await lineService.sendBookingCancelledToStaff(lineUserIds, {
@@ -618,6 +633,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
             hotelName: null,
             cancellationReason: body.reason,
             bookingNumber: booking.booking_number,
+            cancelledBy,
           })
           console.log(`[Cancel] LINE sent to ${lineUserIds.length} job-assigned staff`)
           notificationResults.staff = true
@@ -633,12 +649,88 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
           await supabase.from('notifications').insert({
             user_id: staffProfileId,
             type: 'job_cancelled',
-            title: 'งานถูกยกเลิก',
-            message: `งาน "${(booking.service as any)?.name_th}" วันที่ ${booking.booking_date} เวลา ${booking.booking_time} ถูกยกเลิก เหตุผล: ${body.reason}`,
+            title: `งานถูกยกเลิกโดย${cancelledByText}`,
+            message: `งาน "${(booking.service as any)?.name_th}" วันที่ ${booking.booking_date} เวลา ${booking.booking_time} ถูกยกเลิกโดย${cancelledByText} เหตุผล: ${body.reason}`,
             data: { booking_id: id, job_id: job.id },
           })
         }
       }
+    }
+
+    // === Notify all available staff if there were pending (unaccepted) jobs ===
+    // (hasPendingUnacceptedJobs was checked BEFORE booking update, since trigger cancels jobs)
+    if (hasPendingUnacceptedJobs) {
+      try {
+        // Query all available, active staff
+        const { data: availableStaff } = await supabase
+          .from('staff')
+          .select('id, profile_id')
+          .eq('is_available', true)
+          .eq('status', 'active')
+
+        if (availableStaff && availableStaff.length > 0) {
+          // Get LINE user IDs from profiles
+          const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
+          const { data: staffProfiles } = await supabase
+            .from('profiles')
+            .select('id, line_user_id')
+            .in('id', profileIds)
+
+          const staffLineIds = staffProfiles
+            ?.map(p => p.line_user_id)
+            .filter(Boolean) as string[] || []
+
+          // Send LINE notification to all available staff
+          const cancelledByPending = body.admin_id ? 'admin' : 'customer'
+          const cancelledByPendingText = cancelledByPending === 'customer' ? 'ลูกค้า' : 'แอดมิน'
+
+          if (staffLineIds.length > 0) {
+            await lineService.sendBookingCancelledToStaff(staffLineIds, {
+              serviceName: (booking.service as any)?.name_th || 'Unknown',
+              scheduledDate: booking.booking_date,
+              scheduledTime: booking.booking_time,
+              address: '',
+              hotelName: null,
+              cancellationReason: body.reason,
+              bookingNumber: booking.booking_number,
+              cancelledBy: cancelledByPending,
+            })
+            console.log(`[Cancel] LINE sent to ${staffLineIds.length} available staff (pending jobs cancelled)`)
+          }
+
+          // Send in-app notification to all available staff
+          const staffProfileIds = staffProfiles?.map(p => p.id).filter(Boolean) || []
+          if (staffProfileIds.length > 0) {
+            const inAppNotifications = staffProfileIds.map(profileId => ({
+              user_id: profileId,
+              type: 'job_cancelled',
+              title: `งานถูกยกเลิกโดย${cancelledByPendingText}`,
+              message: `งาน "${(booking.service as any)?.name_th}" วันที่ ${booking.booking_date} เวลา ${booking.booking_time} ถูกยกเลิกโดย${cancelledByPendingText} เหตุผล: ${body.reason}`,
+              data: { booking_id: id, booking_number: booking.booking_number },
+              is_read: false,
+            }))
+
+            await supabase.from('notifications').insert(inAppNotifications)
+            console.log(`[Cancel] In-app notification sent to ${staffProfileIds.length} available staff`)
+          }
+
+          notificationResults.staff = true
+        }
+      } catch (err) {
+        console.error('[Cancel] Failed to notify available staff about cancelled pending jobs:', err)
+      }
+    }
+
+    // Query customer email from profiles table
+    const customerProfileId = (booking.customer as any)?.profile_id
+    let customerEmail = ''
+    if (customerProfileId) {
+      const { data: customerProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', customerProfileId)
+        .single()
+      customerEmail = customerProfile?.email || ''
     }
 
     // Prepare booking data for notifications
@@ -649,7 +741,8 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       scheduled_date: booking.booking_date,
       scheduled_time: booking.booking_time,
       customer_id: booking.customer_id,
-      customer_email: '', // Email is in profiles table, not customers - would need separate query
+      customer_email: customerEmail,
+      customer_profile_id: customerProfileId || undefined,
       customer_name: (booking.customer as any)?.full_name || '',
       customer_phone: (booking.customer as any)?.phone,
       assigned_staff_id: booking.staff_id || undefined,
@@ -683,6 +776,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
         notificationResults.customer = results.customer
         notificationResults.staff = results.staff
         notificationResults.hotel = results.hotel
+        notificationResults.admin = results.admin
       } catch (notifError) {
         console.error('Notification error (non-blocking):', notifError)
         // Don't fail the cancellation if notifications fail
