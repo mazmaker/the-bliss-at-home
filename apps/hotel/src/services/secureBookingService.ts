@@ -3,7 +3,7 @@
  * ใช้ API endpoints แทน direct Supabase calls
  */
 
-import { hotelSupabase } from '../lib/supabaseClient'
+import { supabase } from '@bliss/supabase/auth'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
@@ -11,11 +11,11 @@ class SecureBookingService {
 
   // Get authentication token
   private async getAuthToken(): Promise<string> {
-    let { data: { session }, error } = await hotelSupabase.auth.getSession()
+    let { data: { session }, error } = await supabase.auth.getSession()
 
     // Try refreshing session if no access token
     if (!session?.access_token) {
-      const refreshResult = await hotelSupabase.auth.refreshSession()
+      const refreshResult = await supabase.auth.refreshSession()
       session = refreshResult.data.session
     }
 
