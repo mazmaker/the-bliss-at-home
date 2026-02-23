@@ -1,3 +1,4 @@
+import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@bliss/ui'
 import { useAuth } from '@bliss/supabase/auth'
@@ -15,7 +16,17 @@ import DynamicHotelRedirect from './components/DynamicHotelRedirect'
 function App() {
   const { isLoading, isAuthenticated } = useAuth()
 
-  if (isLoading) {
+  // Don't show loading screen during login attempts - this unmounts the entire route tree!
+  // Only show loading screen during initial app load
+  const [initialLoad, setInitialLoad] = React.useState(true)
+
+  React.useEffect(() => {
+    if (!isLoading) {
+      setInitialLoad(false)
+    }
+  }, [isLoading])
+
+  if (isLoading && initialLoad) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600" />

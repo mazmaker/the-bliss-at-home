@@ -15,6 +15,7 @@ import ServiceModeSelector from './ServiceModeSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ServiceSelector from './ServiceSelector'
 import PricingSummary from './PricingSummary'
+import ProviderPreferenceSelector from './ProviderPreferenceSelector'
 
 interface BookingModalNewProps {
   isOpen: boolean
@@ -51,6 +52,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     date,
     time,
     notes,
+    providerPreference,
 
     // UI state
     isLoading,
@@ -68,6 +70,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     setDate,
     setTime,
     setNotes,
+    setProviderPreference,
     setCurrentStep,
     nextStep,
     previousStep,
@@ -452,6 +455,14 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                     className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
+
+                {/* Provider Preference Selector */}
+                <div className="mt-6">
+                  <ProviderPreferenceSelector
+                    selectedPreference={providerPreference}
+                    onPreferenceChange={setProviderPreference}
+                  />
+                </div>
               </div>
             )}
 
@@ -486,6 +497,16 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                         <span className="text-stone-900">{notes}</span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">ผู้ให้บริการ:</span>
+                      <span className="text-stone-900">
+                        {providerPreference === 'female-only' ? 'ผู้หญิงเท่านั้น' :
+                         providerPreference === 'male-only' ? 'ผู้ชายเท่านั้น' :
+                         providerPreference === 'prefer-female' ? 'ต้องการผู้หญิง' :
+                         providerPreference === 'prefer-male' ? 'ต้องการผู้ชาย' :
+                         'ไม่ระบุ'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

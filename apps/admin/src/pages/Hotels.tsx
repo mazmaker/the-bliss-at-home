@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2 } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2, Key, Shield } from 'lucide-react'
 import { HotelForm } from '../components/HotelForm'
 import { useHotels, useTotalMonthlyRevenue } from '../hooks/useHotels'
 import { updateHotelStatus } from '../lib/hotelQueries'
@@ -12,6 +12,8 @@ function Hotels() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'inactive' | 'suspended' | 'banned'>('all')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingHotel, setEditingHotel] = useState<any>(null)
+  const [resetPasswordHotel, setResetPasswordHotel] = useState<any>(null)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
 
   const filteredHotels = hotels.filter((hotel) => {
     const matchesSearch =
@@ -39,6 +41,36 @@ function Hotels() {
     } catch (err) {
       console.error('Failed to reject hotel:', err)
       alert('เกิดข้อผิดพลาดในการปฏิเสธโรงแรม')
+    }
+  }
+
+  const handleResetPassword = async (hotel: any) => {
+    setIsResettingPassword(true)
+    try {
+      const response = await fetch('http://localhost:3000/api/hotels/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_ADMIN_API_TOKEN || 'admin-token'}`
+        },
+        body: JSON.stringify({
+          hotelId: hotel.id
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน')
+      }
+
+      alert(`รีเซ็ตรหัสผ่านสำเร็จ!\n\nรหัสผ่านชั่วคราว: ${result.data.temporaryPassword}\n\nกรุณาส่งรหัสผ่านใหม่ให้กับโรงแรม "${hotel.name_th}"`)
+      setResetPasswordHotel(null)
+    } catch (error: any) {
+      console.error('Reset password error:', error)
+      alert(error.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน')
+    } finally {
+      setIsResettingPassword(false)
     }
   }
 
@@ -248,6 +280,13 @@ function Hotels() {
                 <Edit className="w-4 h-4" />
                 แก้ไข
               </button>
+              <button
+                onClick={() => setResetPasswordHotel(hotel)}
+                className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-100 text-blue-700 text-sm rounded-lg hover:bg-blue-200 transition"
+                title="รีเซ็ตรหัสผ่าน"
+              >
+                <Key className="w-4 h-4" />
+              </button>
               {hotel.status === 'pending' && (
                 <>
                   <button
@@ -291,6 +330,61 @@ function Hotels() {
         }}
         editData={editingHotel}
       />
+
+      {/* Reset Password Confirmation Modal */}
+      {resetPasswordHotel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Shield className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-stone-900">รีเซ็ตรหัสผ่าน</h3>
+                <p className="text-stone-600 text-sm">
+                  {resetPasswordHotel.name_th}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-amber-800 text-sm">
+                  <strong>คำเตือน:</strong> การรีเซ็ตรหัสผ่านจะสร้างรหัสผ่านชั่วคราวใหม่
+                  และบังคับให้โรงแรมเปลี่ยนรหัสผ่านเมื่อเข้าสู่ระบบครั้งถัดไป
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setResetPasswordHotel(null)}
+                className="flex-1 px-4 py-2 text-stone-700 bg-stone-100 rounded-lg hover:bg-stone-200 transition"
+                disabled={isResettingPassword}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={() => handleResetPassword(resetPasswordHotel)}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                disabled={isResettingPassword}
+              >
+                {isResettingPassword ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    กำลังรีเซ็ต...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <Key className="w-4 h-4" />
+                    รีเซ็ตรหัสผ่าน
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

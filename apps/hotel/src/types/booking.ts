@@ -57,6 +57,7 @@ export interface BookingData {
   date: string
   time: string
   notes: string
+  providerPreference: ProviderPreference
 
   // Legacy fields (for backward compatibility)
   selectedDuration: number // will be calculated from serviceConfiguration

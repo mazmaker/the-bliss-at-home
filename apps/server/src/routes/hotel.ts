@@ -153,6 +153,98 @@ router.post('/toggle-login', requireAdmin, async (req: Request, res: Response) =
 })
 
 /**
+ * Change hotel password (for hotel users - first login)
+ * POST /api/hotels/change-password
+ */
+router.post('/change-password', async (req: Request, res: Response) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword, hotelId } = req.body
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword || !hotelId) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
+      })
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        error: 'Password mismatch',
+        message: 'รหัสผ่านยืนยันไม่ตรงกัน'
+      })
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        error: 'Weak password',
+        message: 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร'
+      })
+    }
+
+    if (newPassword.length > 128) {
+      return res.status(400).json({
+        error: 'Password too long',
+        message: 'รหัสผ่านยาวเกินไป (สูงสุด 128 ตัวอักษร)'
+      })
+    }
+
+    // Check for common weak passwords
+    const weakPasswords = ['password', '12345678', 'admin123', 'hotel123', '11111111']
+    if (weakPasswords.includes(newPassword.toLowerCase())) {
+      return res.status(400).json({
+        error: 'Weak password',
+        message: 'รหัสผ่านนี้ไม่ปลอดภัย กรุณาเลือกรหัสผ่านที่แข็งแรงกว่า'
+      })
+    }
+
+    // Check password strength
+    const hasUppercase = /[A-Z]/.test(newPassword)
+    const hasLowercase = /[a-z]/.test(newPassword)
+    const hasNumbers = /\d/.test(newPassword)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
+
+    if (!hasUppercase || !hasLowercase || !hasNumbers || !hasSpecialChar) {
+      return res.status(400).json({
+        error: 'Weak password',
+        message: 'รหัสผ่านต้องประกอบด้วย ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษ'
+      })
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        error: 'Same password',
+        message: 'รหัสผ่านใหม่ต้องแตกต่างจากรหัสผ่านเดิม'
+      })
+    }
+
+    const result = await hotelAuthService.changeHotelPassword(hotelId, currentPassword, newPassword)
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+      data: {
+        passwordChangeRequired: false
+      }
+    })
+  } catch (error) {
+    console.error('Change password error:', error)
+
+    if (error instanceof Error && error.message === 'Invalid current password') {
+      return res.status(401).json({
+        error: 'Invalid password',
+        message: 'Current password is incorrect'
+      })
+    }
+
+    res.status(500).json({
+      error: 'Failed to change password',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    })
+  }
+})
+
+/**
  * Get hotel auth status
  * GET /api/hotels/:hotelId/auth-status
  */

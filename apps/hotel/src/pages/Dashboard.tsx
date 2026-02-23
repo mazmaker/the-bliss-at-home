@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
 import { getMonthlyBillStatus, formatOverdueMessage } from '../utils/overdueCalculator'
+import GuestActivitySnapshot from '../components/GuestActivitySnapshot'
 
 // Types for dashboard data
 interface DashboardStats {
@@ -378,6 +379,9 @@ function Dashboard() {
           </div>
         </Link>
       </div>
+
+      {/* Guest Activity Snapshot */}
+      <GuestActivitySnapshot />
 
       {/* Recent Bookings */}
       <div className="bg-white rounded-2xl shadow-lg border border-stone-100">

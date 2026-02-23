@@ -215,7 +215,13 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
       return response
     } catch (error) {
       const errorMessage = error instanceof AuthError ? error.message : 'Login failed'
-      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }))
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+        isAuthenticated: false,  // ← แก้ไข: reset เป็น false เมื่อ login ผิดพลาด
+        user: null               // ← แก้ไข: clear user data
+      }))
       throw error
     }
   }, [expectedRole])

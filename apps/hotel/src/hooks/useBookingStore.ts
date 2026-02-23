@@ -7,7 +7,8 @@ import {
   CoupleFormat,
   ServiceFormat,
   BookingData,
-  BookingValidation
+  BookingValidation,
+  ProviderPreference
 } from '../types/booking'
 import { PriceCalculator } from '../utils/priceCalculator'
 import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
@@ -24,6 +25,7 @@ interface BookingStore {
   date: string
   time: string
   notes: string
+  providerPreference: ProviderPreference
 
   // UI state
   isLoading: boolean
@@ -46,6 +48,7 @@ interface BookingStore {
   setDate: (date: string) => void
   setTime: (time: string) => void
   setNotes: (notes: string) => void
+  setProviderPreference: (preference: ProviderPreference) => void
 
   // Step management
   setCurrentStep: (step: number) => void
@@ -117,6 +120,7 @@ export const useBookingStore = create<BookingStore>()(
         date: '',
         time: '',
         notes: '',
+        providerPreference: 'no-preference',
         isLoading: false,
         error: null,
         validation: defaultValidation,
@@ -299,6 +303,9 @@ export const useBookingStore = create<BookingStore>()(
         setNotes: (notes) =>
           set(() => ({ notes })),
 
+        setProviderPreference: (preference) =>
+          set(() => ({ providerPreference: preference })),
+
         // Step management
         setCurrentStep: (step) =>
           set(() => ({ currentStep: step })),
@@ -406,7 +413,8 @@ export const useBookingStore = create<BookingStore>()(
             phoneNumber: '',
             date: '',
             time: '',
-            notes: ''
+            notes: '',
+            providerPreference: 'no-preference'
           })),
 
         resetAll: () =>
@@ -419,6 +427,7 @@ export const useBookingStore = create<BookingStore>()(
             date: '',
             time: '',
             notes: '',
+            providerPreference: 'no-preference',
             isLoading: false,
             error: null,
             validation: defaultValidation
@@ -473,6 +482,7 @@ export const useBookingStore = create<BookingStore>()(
             date: state.date,
             time: state.time,
             notes: state.notes,
+            providerPreference: state.providerPreference,
             serviceConfiguration: state.serviceConfiguration
           }
         },
