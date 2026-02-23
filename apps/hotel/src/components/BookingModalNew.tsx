@@ -568,14 +568,6 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                     className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
-
-                {/* Provider Preference Selector */}
-                <div className="mt-6">
-                  <ProviderPreferenceSelector
-                    selectedPreference={providerPreference}
-                    onPreferenceChange={setProviderPreference}
-                  />
-                </div>
               </div>
             )}
 
