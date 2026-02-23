@@ -18,6 +18,7 @@ import {
   Check,
   Bell,
   BellRing,
+  X,
 } from 'lucide-react'
 import {
   useEarningsSummary,
@@ -437,19 +438,19 @@ function StaffEarnings() {
 
       {/* Payout Detail Modal */}
       {showPayoutDetail && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPayoutDetail(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
               <h3 className="font-semibold text-lg text-stone-900">รายละเอียดการโอนเงิน</h3>
               <button
                 onClick={() => setShowPayoutDetail(null)}
-                className="p-2 hover:bg-stone-100 rounded-lg transition"
+                className="p-1.5 hover:bg-stone-100 rounded-lg transition"
               >
-                ✕
+                <X className="w-5 h-5 text-stone-600" />
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
               {/* Status */}
               <div className="flex items-center justify-between">
                 <span className="text-stone-500">สถานะ</span>
