@@ -13,6 +13,11 @@ export interface HotelData {
   email?: string
   commission_rate: number
   status: 'active' | 'inactive'
+  // Banking and tax information fields
+  tax_id?: string | null
+  bank_name?: string | null
+  bank_account_number?: string | null
+  bank_account_name?: string | null
   created_at?: string
   updated_at?: string
 }
