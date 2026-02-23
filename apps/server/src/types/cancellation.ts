@@ -45,7 +45,7 @@ export interface UpdateRefundTransactionInput {
 // Cancellation Types
 // ============================================
 
-export type CancellationRecipientType = 'customer' | 'staff' | 'hotel'
+export type CancellationRecipientType = 'customer' | 'staff' | 'hotel' | 'admin'
 export type NotificationChannel = 'email' | 'in_app' | 'line'
 export type NotificationStatus = 'pending' | 'sent' | 'failed'
 
@@ -94,6 +94,7 @@ export interface BookingCancellationResponse {
     customer: boolean
     staff: boolean
     hotel: boolean
+    admin: boolean
   }
 }
 

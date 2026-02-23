@@ -24,6 +24,7 @@ interface BookingForNotification {
   scheduled_time: string
   customer_id: string
   customer_email: string
+  customer_profile_id?: string // Profile ID for in-app notifications
   customer_name: string
   customer_phone?: string
   assigned_staff_id?: string
@@ -41,6 +42,7 @@ interface NotificationResult {
   customer: boolean
   staff: boolean
   hotel: boolean
+  admin: boolean
 }
 
 // ============================================
@@ -58,6 +60,7 @@ export async function sendCancellationNotifications(
     customer: false,
     staff: false,
     hotel: false,
+    admin: false,
   }
 
   const promises: Promise<void>[] = []
@@ -98,6 +101,17 @@ export async function sendCancellationNotifications(
         })
     )
   }
+
+  // 4. Notify admins (always)
+  promises.push(
+    notifyAdmins(booking, refundInfo)
+      .then(() => {
+        results.admin = true
+      })
+      .catch((error) => {
+        console.error('[Cancellation] Failed to notify admins:', error)
+      })
+  )
 
   await Promise.allSettled(promises)
 
@@ -180,28 +194,43 @@ async function createInAppNotification(
   booking: BookingForNotification,
   refundInfo?: RefundInfo
 ): Promise<void> {
-  const message = refundInfo
-    ? `การจองของคุณถูกยกเลิก ${booking.cancellation_reason} จะได้รับเงินคืน ${refundInfo.amount} บาท`
-    : `การจองของคุณถูกยกเลิก ${booking.cancellation_reason}`
+  if (!booking.customer_profile_id) {
+    console.log('[In-App] No customer profile ID, skipping in-app notification')
+    return
+  }
 
-  // TODO: Create in-app notification using notifications table
+  const message = refundInfo
+    ? `การจองของคุณ #${booking.booking_number} ถูกยกเลิก เหตุผล: ${booking.cancellation_reason} จะได้รับเงินคืน ${refundInfo.amount?.toLocaleString()} บาท`
+    : `การจองของคุณ #${booking.booking_number} ถูกยกเลิก เหตุผล: ${booking.cancellation_reason}`
+
   console.log('[In-App] Creating notification for customer:', {
-    user_id: booking.customer_id,
+    profile_id: booking.customer_profile_id,
     message,
   })
 
-  // Placeholder for in-app notification service
-  // await notificationService.create({
-  //   user_id: booking.customer_id,
-  //   type: 'booking_cancelled',
-  //   title: 'การจองถูกยกเลิก',
-  //   message,
-  //   data: {
-  //     booking_id: booking.id,
-  //     refund_info: refundInfo,
-  //   },
-  //   priority: 'high',
-  // })
+  const { error } = await getSupabaseClient()
+    .from('notifications')
+    .insert({
+      user_id: booking.customer_profile_id,
+      type: 'booking_cancelled',
+      title: 'การจองถูกยกเลิก',
+      message,
+      data: {
+        booking_id: booking.id,
+        booking_number: booking.booking_number,
+        service_name: booking.service_name,
+        cancellation_reason: booking.cancellation_reason,
+        refund_info: refundInfo || null,
+      },
+      is_read: false,
+    })
+
+  if (error) {
+    console.error('[In-App] Failed to create customer notification:', error)
+    throw error
+  }
+
+  console.log('[In-App] Customer notification created successfully')
 }
 
 // ============================================
@@ -267,6 +296,7 @@ async function sendStaffLineNotification(
       hotelName: null, // Could be added to BookingForNotification if needed
       cancellationReason: booking.cancellation_reason,
       bookingNumber: booking.booking_number,
+      cancelledBy: booking.source === 'customer' ? 'customer' : 'admin',
     }
   )
 
@@ -292,13 +322,14 @@ async function createStaffInAppNotification(
   })
 
   // Create in-app notification in the notifications table
+  const cancelledByText = booking.source === 'customer' ? 'ลูกค้า' : 'แอดมิน'
   const { error } = await getSupabaseClient()
     .from('notifications')
     .insert({
       user_id: booking.staff_profile_id, // Use profile_id, not staff_id
       type: 'job_cancelled',
-      title: 'งานถูกยกเลิก',
-      message: `งานของคุณวันที่ ${formatDate(booking.scheduled_date)} เวลา ${booking.scheduled_time} ถูกยกเลิก เหตุผล: ${booking.cancellation_reason}`,
+      title: `งานถูกยกเลิกโดย${cancelledByText}`,
+      message: `งานของคุณวันที่ ${formatDate(booking.scheduled_date)} เวลา ${booking.scheduled_time} ถูกยกเลิกโดย${cancelledByText} เหตุผล: ${booking.cancellation_reason}`,
       data: {
         booking_id: booking.id,
         booking_number: booking.booking_number,
@@ -314,6 +345,116 @@ async function createStaffInAppNotification(
   }
 
   console.log('[In-App] Staff notification created successfully')
+}
+
+// ============================================
+// Admin Notifications
+// ============================================
+
+async function notifyAdmins(
+  booking: BookingForNotification,
+  refundInfo?: RefundInfo
+): Promise<void> {
+  const supabase = getSupabaseClient()
+
+  // Query all admin profiles
+  const { data: adminProfiles, error: adminError } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .eq('role', 'ADMIN')
+
+  if (adminError || !adminProfiles || adminProfiles.length === 0) {
+    console.log('[Admin] No admin profiles found, skipping admin notification')
+    return
+  }
+
+  console.log(`[Admin] Sending cancellation notification to ${adminProfiles.length} admins`)
+
+  const notifications: Promise<void>[] = []
+
+  // 1. LINE notification to admins with line_user_id
+  const adminLineIds = adminProfiles
+    .map(p => p.line_user_id)
+    .filter(Boolean) as string[]
+
+  if (adminLineIds.length > 0) {
+    notifications.push(
+      lineService.sendBookingCancelledToAdmin(adminLineIds, {
+        bookingNumber: booking.booking_number,
+        customerName: booking.customer_name,
+        serviceName: booking.service_name,
+        scheduledDate: formatDate(booking.scheduled_date),
+        scheduledTime: booking.scheduled_time,
+        cancellationReason: booking.cancellation_reason,
+        refundAmount: refundInfo?.amount,
+        refundPercentage: refundInfo?.percentage,
+      }).then(success => {
+        if (success) {
+          console.log(`[LINE] Admin cancellation notification sent to ${adminLineIds.length} admins`)
+        } else {
+          console.error('[LINE] Failed to send admin cancellation notification')
+        }
+      })
+    )
+  }
+
+  // 2. In-app notifications for all admins
+  const refundText = refundInfo?.amount
+    ? ` คืนเงิน ${refundInfo.amount.toLocaleString()} บาท`
+    : ''
+  const notificationRows = adminProfiles.map(admin => ({
+    user_id: admin.id,
+    type: 'booking_cancelled',
+    title: 'ลูกค้ายกเลิกการจอง',
+    message: `${booking.customer_name} ยกเลิกการจอง #${booking.booking_number} บริการ ${booking.service_name} วันที่ ${formatDate(booking.scheduled_date)} เวลา ${booking.scheduled_time} เหตุผล: ${booking.cancellation_reason}${refundText}`,
+    data: {
+      booking_id: booking.id,
+      booking_number: booking.booking_number,
+      service_name: booking.service_name,
+      cancellation_reason: booking.cancellation_reason,
+      refund_info: refundInfo || null,
+    },
+    is_read: false,
+  }))
+
+  notifications.push(
+    (async () => {
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notificationRows)
+
+      if (error) {
+        console.error('[In-App] Failed to insert admin notifications:', error)
+        throw error
+      }
+      console.log(`[In-App] Cancellation notification sent to ${adminProfiles.length} admins`)
+    })()
+  )
+
+  await Promise.all(notifications)
+
+  // Log notifications for each admin
+  const logs: CreateCancellationNotificationInput[] = []
+  for (const admin of adminProfiles) {
+    if (adminLineIds.includes(admin.line_user_id)) {
+      logs.push({
+        booking_id: booking.id,
+        recipient_type: 'admin',
+        recipient_id: admin.id,
+        channel: 'line',
+        status: 'sent',
+      })
+    }
+    logs.push({
+      booking_id: booking.id,
+      recipient_type: 'admin',
+      recipient_id: admin.id,
+      channel: 'in_app',
+      status: 'sent',
+    })
+  }
+
+  await logNotifications(booking.id, logs)
 }
 
 // ============================================

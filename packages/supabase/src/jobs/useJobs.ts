@@ -94,13 +94,26 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     }
 
     const handleNewJob = (job: Job) => {
-      setPendingJobs((prev) => [...prev, job])
+      setPendingJobs((prev) => {
+        // Duplicate protection: don't add if already exists
+        if (prev.some((j) => j.id === job.id)) return prev
+        return [...prev, job]
+      })
       if (options.onNewJob) {
         options.onNewJob(job)
       }
     }
 
-    const unsubscribe = subscribeToJobs(staffId, handleJobUpdate, handleNewJob)
+    const handlePendingJobRemoved = (job: Job) => {
+      setPendingJobs((prev) => prev.filter((j) => j.id !== job.id))
+    }
+
+    const unsubscribe = subscribeToJobs(
+      staffId,
+      handleJobUpdate,
+      handleNewJob,
+      handlePendingJobRemoved
+    )
     return unsubscribe
   }, [staffId, options.realtime, options.onNewJob])
 
