@@ -1,12 +1,13 @@
-import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign, UserX } from 'lucide-react'
+import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign, UserX, UserCheck, Star } from 'lucide-react'
 
 export interface Notification {
   id: string
-  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff' | 'booking_cancelled'
+  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff' | 'booking_cancelled' | 'job_accepted' | 'new_review'
   title: string
   message: string
   read: boolean
   created_at: string
+  data?: Record<string, any>
 }
 
 interface NotificationPanelProps {
@@ -42,9 +43,59 @@ export function NotificationPanel({
         return <DollarSign className="w-5 h-5 text-green-600" />
       case 'job_no_staff':
         return <UserX className="w-5 h-5 text-orange-600" />
+      case 'job_accepted':
+        return <UserCheck className="w-5 h-5 text-purple-600" />
+      case 'new_review':
+        return <Star className="w-5 h-5 text-yellow-500" />
       default:
         return <Bell className="w-5 h-5 text-gray-600" />
     }
+  }
+
+  const renderStars = (rating: number) => {
+    return (
+      <span className="text-yellow-500">
+        {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
+      </span>
+    )
+  }
+
+  const renderReviewDetails = (notification: Notification) => {
+    const d = notification.data
+    if (!d) return null
+
+    return (
+      <div className="mt-2 bg-amber-50 rounded-lg p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{renderStars(d.rating || 0)}</span>
+        </div>
+        {(d.cleanliness_rating || d.professionalism_rating || d.skill_rating) && (
+          <div className="grid grid-cols-3 gap-1 text-xs text-stone-500">
+            {d.cleanliness_rating && (
+              <div>
+                <span className="block text-stone-400">ความสะอาด</span>
+                <span className="text-yellow-500">{'★'.repeat(d.cleanliness_rating)}{'☆'.repeat(5 - d.cleanliness_rating)}</span>
+              </div>
+            )}
+            {d.professionalism_rating && (
+              <div>
+                <span className="block text-stone-400">มืออาชีพ</span>
+                <span className="text-yellow-500">{'★'.repeat(d.professionalism_rating)}{'☆'.repeat(5 - d.professionalism_rating)}</span>
+              </div>
+            )}
+            {d.skill_rating && (
+              <div>
+                <span className="block text-stone-400">ทักษะ</span>
+                <span className="text-yellow-500">{'★'.repeat(d.skill_rating)}{'☆'.repeat(5 - d.skill_rating)}</span>
+              </div>
+            )}
+          </div>
+        )}
+        {d.review && d.review.length > 0 && (
+          <p className="text-sm text-stone-700 italic">"{d.review}"</p>
+        )}
+      </div>
+    )
   }
 
   const getTimeAgo = (dateString: string) => {
@@ -138,7 +189,8 @@ export function NotificationPanel({
                       <p className="text-sm text-stone-600 mb-2">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-stone-400">
+                      {notification.type === 'new_review' && renderReviewDetails(notification)}
+                      <p className="text-xs text-stone-400 mt-2">
                         {getTimeAgo(notification.created_at)}
                       </p>
                     </div>

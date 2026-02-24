@@ -37,7 +37,7 @@ function StaffLayout() {
   } = useStaffNotifications()
 
   // Map DB notifications to NotificationPanel format
-  const validTypes = ['new_job', 'job_cancelled', 'job_updated', 'payment_received', 'job_no_staff'] as const
+  const validTypes = ['new_job', 'job_cancelled', 'job_updated', 'payment_received', 'job_no_staff', 'job_accepted', 'new_review'] as const
   const notifications: Notification[] = useMemo(() =>
     dbNotifications.map((n) => ({
       id: n.id,
@@ -46,6 +46,7 @@ function StaffLayout() {
       message: n.message,
       read: n.is_read ?? false,
       created_at: n.created_at || new Date().toISOString(),
+      data: n.data as Record<string, any> | undefined,
     })),
     [dbNotifications]
   )

@@ -13,6 +13,8 @@ DECLARE
   v_customer_name TEXT;
   v_service_name TEXT;
   v_booking_number TEXT;
+  v_star_display TEXT;
+  v_message TEXT;
 BEGIN
   -- Get staff profile_id (notifications.user_id uses profiles.id)
   SELECT s.profile_id INTO v_staff_profile_id
@@ -32,6 +34,20 @@ BEGIN
     FROM bookings b WHERE b.id = NEW.booking_id;
   END IF;
 
+  -- Build star display: ★★★★☆
+  v_star_display := repeat(chr(9733), NEW.rating) || repeat(chr(9734), 5 - NEW.rating);
+
+  -- Build message with stars and optional comment preview
+  v_message := format('คุณ%s %s สำหรับบริการ %s',
+    COALESCE(v_customer_name, 'ลูกค้า'),
+    v_star_display,
+    COALESCE(v_service_name, 'บริการ'));
+
+  IF NEW.review IS NOT NULL AND length(trim(NEW.review)) > 0 THEN
+    v_message := v_message || E'\n"' || left(trim(NEW.review), 100) ||
+      CASE WHEN length(trim(NEW.review)) > 100 THEN '..."' ELSE '"' END;
+  END IF;
+
   -- Create in-app notification for staff
   IF v_staff_profile_id IS NOT NULL THEN
     INSERT INTO notifications (user_id, type, title, message, data, is_read)
@@ -39,15 +55,16 @@ BEGIN
       v_staff_profile_id,
       'new_review',
       'ได้รับรีวิวใหม่',
-      format('คุณ%s ให้คะแนน %s ดาว สำหรับบริการ %s',
-        COALESCE(v_customer_name, 'ลูกค้า'),
-        NEW.rating,
-        COALESCE(v_service_name, 'บริการ')),
+      v_message,
       jsonb_build_object(
         'review_id', NEW.id,
         'booking_id', NEW.booking_id,
         'booking_number', v_booking_number,
         'rating', NEW.rating,
+        'review', COALESCE(NEW.review, ''),
+        'cleanliness_rating', NEW.cleanliness_rating,
+        'professionalism_rating', NEW.professionalism_rating,
+        'skill_rating', NEW.skill_rating,
         'customer_name', COALESCE(v_customer_name, 'ลูกค้า'),
         'service_name', COALESCE(v_service_name, 'บริการ')
       ),

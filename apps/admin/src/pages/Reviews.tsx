@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Star, MessageSquare, Search, Filter, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Star, MessageSquare, Search, Filter, Eye, EyeOff, Loader2, User, Clock } from 'lucide-react'
 import { useAdminReviews, useAdminReviewStats, useToggleReviewVisibility, useStaffList } from '../hooks/useAdminReviews'
 import type { AdminReviewFilters } from '../services/reviewService'
 
@@ -64,6 +64,23 @@ function Reviews() {
       case 'spa': return 'bg-blue-100 text-blue-700'
       default: return 'bg-stone-100 text-stone-700'
     }
+  }
+
+  const avatarColors = [
+    'bg-amber-500', 'bg-blue-500', 'bg-emerald-500', 'bg-rose-500',
+    'bg-purple-500', 'bg-cyan-500', 'bg-orange-500', 'bg-teal-500',
+  ]
+
+  const getAvatarColor = (name: string) => {
+    let hash = 0
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    return avatarColors[Math.abs(hash) % avatarColors.length]
+  }
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return name.slice(0, 2).toUpperCase()
   }
 
   return (
@@ -249,87 +266,114 @@ function Reviews() {
         <div className="space-y-4">
           <p className="text-sm text-stone-500">แสดง {reviews.length} รีวิว</p>
 
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className={`bg-white rounded-xl border p-6 transition ${
-                review.is_visible ? 'border-stone-200 hover:shadow-md' : 'border-stone-200 opacity-60'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-4">
-                {/* Left: Rating & Review */}
-                <div className="flex-1 min-w-0">
-                  {/* Rating row */}
-                  <div className="flex items-center gap-3 mb-2">
-                    {renderStars(review.rating)}
-                    <span className="font-bold text-stone-900">{review.rating}/5</span>
-                    <span className="text-sm text-stone-400">{getRelativeTime(review.created_at)}</span>
-                    {!review.is_visible && (
-                      <span className="px-2 py-0.5 bg-stone-100 text-stone-500 text-xs rounded-full">ซ่อนอยู่</span>
-                    )}
-                  </div>
-
-                  {/* Sub-ratings */}
-                  {(review.cleanliness_rating || review.professionalism_rating || review.skill_rating) && (
-                    <div className="flex flex-wrap gap-4 mb-3 text-xs text-stone-500">
-                      {review.cleanliness_rating && (
-                        <span className="flex items-center gap-1">ความสะอาด: {renderStars(review.cleanliness_rating, 'sm')}</span>
-                      )}
-                      {review.professionalism_rating && (
-                        <span className="flex items-center gap-1">มืออาชีพ: {renderStars(review.professionalism_rating, 'sm')}</span>
-                      )}
-                      {review.skill_rating && (
-                        <span className="flex items-center gap-1">ทักษะ: {renderStars(review.skill_rating, 'sm')}</span>
-                      )}
+          {reviews.map((review) => {
+            const customerName = review.customer?.full_name || 'ลูกค้า'
+            return (
+              <div
+                key={review.id}
+                className={`bg-white rounded-xl border overflow-hidden transition ${
+                  review.is_visible ? 'border-stone-200 hover:shadow-md' : 'border-stone-200 opacity-60'
+                }`}
+              >
+                {/* Header: Customer info */}
+                <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full ${getAvatarColor(customerName)} flex items-center justify-center text-white font-bold text-sm`}>
+                      {getInitials(customerName)}
                     </div>
-                  )}
-
-                  {/* Review text */}
-                  {review.review && (
-                    <p className="text-stone-700 bg-stone-50 rounded-lg p-3 mb-3 text-sm leading-relaxed">
-                      {review.review}
-                    </p>
-                  )}
-
-                  {/* Meta info */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-500">
-                    {review.customer && (
-                      <span>ลูกค้า: <span className="font-medium text-stone-700">{review.customer.full_name}</span></span>
+                    <div>
+                      <div className="font-semibold text-stone-900">{customerName}</div>
+                      <div className="flex items-center gap-2 text-xs text-stone-500 mt-0.5">
+                        {review.service && (
+                          <>
+                            <span className={`px-1.5 py-0.5 rounded font-medium ${getCategoryColor(review.service.category)}`}>
+                              {getCategoryLabel(review.service.category)}
+                            </span>
+                            <span>{review.service.name_th}</span>
+                          </>
+                        )}
+                        {review.booking && (
+                          <>
+                            <span className="text-stone-300">|</span>
+                            <span className="text-stone-400">{review.booking.booking_number}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {!review.is_visible && (
+                      <span className="px-2.5 py-1 bg-stone-100 text-stone-500 text-xs font-medium rounded-full">ซ่อนอยู่</span>
                     )}
-                    {review.staff && (
-                      <span>พนักงาน: <span className="font-medium text-stone-700">{review.staff.name_th}</span></span>
-                    )}
-                    {review.service && (
-                      <span className="flex items-center gap-1">
-                        บริการ:
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getCategoryColor(review.service.category)}`}>
-                          {getCategoryLabel(review.service.category)}
-                        </span>
-                        <span className="font-medium text-stone-700">{review.service.name_th}</span>
-                      </span>
-                    )}
-                    {review.booking && (
-                      <span>จอง: <span className="font-medium text-stone-700">{review.booking.booking_number}</span></span>
-                    )}
+                    <div className="flex items-center gap-1 text-xs text-stone-400">
+                      <Clock className="w-3.5 h-3.5" />
+                      {getRelativeTime(review.created_at)}
+                    </div>
                   </div>
                 </div>
 
-                {/* Right: Visibility toggle */}
-                <button
-                  onClick={() => toggleVisibility.mutate({ reviewId: review.id, isVisible: !review.is_visible })}
-                  disabled={toggleVisibility.isPending}
-                  className={`flex-shrink-0 p-2 rounded-lg border transition ${
-                    review.is_visible
-                      ? 'border-green-200 bg-green-50 text-green-600 hover:bg-green-100'
-                      : 'border-stone-200 bg-stone-50 text-stone-400 hover:bg-stone-100'
-                  }`}
-                  title={review.is_visible ? 'ซ่อนรีวิวนี้' : 'แสดงรีวิวนี้'}
-                >
-                  {review.is_visible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                </button>
+                {/* Rating + Staff + Toggle */}
+                <div className="flex items-center justify-between px-6 pb-3">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      {renderStars(review.rating)}
+                      <span className="text-2xl font-bold text-stone-900">{review.rating}<span className="text-base font-normal text-stone-400">/5</span></span>
+                    </div>
+                    {review.staff && (
+                      <div className="flex items-center gap-1.5 text-sm text-stone-500">
+                        <User className="w-4 h-4" />
+                        <span>พนักงาน: <span className="font-medium text-stone-700">{review.staff.name_th}</span></span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => toggleVisibility.mutate({ reviewId: review.id, isVisible: !review.is_visible })}
+                    disabled={toggleVisibility.isPending}
+                    className={`flex-shrink-0 p-2 rounded-lg border transition ${
+                      review.is_visible
+                        ? 'border-green-200 bg-green-50 text-green-600 hover:bg-green-100'
+                        : 'border-stone-200 bg-stone-50 text-stone-400 hover:bg-stone-100'
+                    }`}
+                    title={review.is_visible ? 'ซ่อนรีวิวนี้' : 'แสดงรีวิวนี้'}
+                  >
+                    {review.is_visible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                {/* Sub-ratings grid */}
+                {(review.cleanliness_rating || review.professionalism_rating || review.skill_rating) && (
+                  <div className="grid grid-cols-3 gap-3 mx-6 mb-4">
+                    {[
+                      { label: 'ความสะอาด', value: review.cleanliness_rating },
+                      { label: 'ความเป็นมืออาชีพ', value: review.professionalism_rating },
+                      { label: 'ทักษะ', value: review.skill_rating },
+                    ].map((sub) => sub.value && (
+                      <div key={sub.label} className="bg-stone-50 rounded-lg p-2.5 text-center">
+                        <div className="text-xs text-stone-500 mb-1">{sub.label}</div>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {renderStars(sub.value, 'sm')}
+                          <span className="text-sm font-semibold text-stone-700">{sub.value}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Review text */}
+                <div className="px-6 pb-5">
+                  {review.review ? (
+                    <div className="border-l-4 border-amber-300 bg-amber-50/50 rounded-r-lg py-3 px-4">
+                      <p className="text-stone-700 text-sm leading-relaxed italic">
+                        "{review.review}"
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-stone-400 italic">(ไม่มีความคิดเห็น)</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
