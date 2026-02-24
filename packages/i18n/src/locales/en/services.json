@@ -46,5 +46,15 @@
     "noDescription": "No description available for this service",
     "questions": "Have a question?",
     "askMore": "Ask Us"
+  },
+  "reviews": {
+    "title": "Customer Reviews",
+    "averageRating": "Average Rating",
+    "totalReviews": "{{count}} reviews",
+    "noReviews": "No reviews yet",
+    "showMore": "View All Reviews",
+    "cleanliness": "Cleanliness",
+    "professionalism": "Professionalism",
+    "skill": "Skill"
   }
 }

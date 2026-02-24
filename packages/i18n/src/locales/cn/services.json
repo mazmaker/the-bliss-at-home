@@ -46,5 +46,15 @@
     "noDescription": "暂无此服务的描述",
     "questions": "有问题？",
     "askMore": "咨询更多"
+  },
+  "reviews": {
+    "title": "客户评价",
+    "averageRating": "平均评分",
+    "totalReviews": "{{count}} 条评价",
+    "noReviews": "暂无评价",
+    "showMore": "查看所有评价",
+    "cleanliness": "清洁度",
+    "professionalism": "专业度",
+    "skill": "技术"
   }
 }
