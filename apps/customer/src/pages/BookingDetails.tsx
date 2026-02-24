@@ -5,6 +5,7 @@ import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
+import { ReviewModal } from '../components/ReviewModal'
 import { supabase } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 
@@ -18,6 +19,7 @@ function BookingDetails() {
   // Modal states
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showRescheduleModal, setShowRescheduleModal] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
 
   // Fetch booking data from Supabase
   const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
@@ -587,7 +589,10 @@ function BookingDetails() {
                   <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
                     {t('details.bookAgain')}
                   </button>
-                  <button className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition">
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition"
+                  >
                     {t('details.rateReview')}
                   </button>
                 </>
@@ -645,6 +650,21 @@ function BookingDetails() {
           currentDate={booking.date}
           currentTime={booking.time}
           duration={booking.duration}
+        />
+      )}
+
+      {/* Review Modal */}
+      {bookingData && booking.status === 'completed' && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          staffName={booking.provider.name}
+          staffId={bookingData.staff_id || ''}
+          serviceId={bookingData.service_id}
+          customerId={bookingData.customer_id || ''}
         />
       )}
     </div>
