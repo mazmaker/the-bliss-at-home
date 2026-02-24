@@ -68,6 +68,12 @@ docs/SUPABASE_CREDENTIALS.md
 # Claude Code local settings
 .claude/settings.local.json
 
+# MCP Configuration (contains access tokens - NEVER commit)
+.mcp.json
+.mcp.json.backup
+.mcp-config.json
+.playwright-mcp/
+
 # Debug/temporary SQL files
 check_staff_rls.sql
 debug_staff_issue.sql
