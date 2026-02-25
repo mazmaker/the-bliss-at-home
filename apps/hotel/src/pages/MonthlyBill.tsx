@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
-import { Download, Calendar, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { Download, Calendar, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock, Building2, MapPin } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
-import { getMonthlyBillStatus, formatOverdueMessage } from '../utils/overdueCalculator'
+import { useOverdueAlert } from '../hooks/useBillingSettings'
+import { getFormattedPaymentMethods } from '../services/billingSettingsService'
 
 // Monthly bill interfaces
 interface MonthlyBooking {
@@ -133,6 +134,111 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   }
 }
 
+// Payment Methods Section Component
+function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
+  const [paymentMethods, setPaymentMethods] = useState<any>(null)
+
+  useEffect(() => {
+    const loadPaymentMethods = async () => {
+      try {
+        const methods = await getFormattedPaymentMethods()
+        setPaymentMethods(methods)
+      } catch (error) {
+        console.error('Error loading payment methods:', error)
+      }
+    }
+    loadPaymentMethods()
+  }, [])
+
+  if (!paymentMethods) {
+    return (
+      <div className="mt-4 p-3 bg-white bg-opacity-70 rounded-lg">
+        <p className="text-xs text-stone-600 mb-2 font-medium">วิธีการชำระเงิน:</p>
+        <div className="text-xs text-stone-600 space-y-1">
+          <p>• กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg">
+      <p className="text-sm text-stone-700 mb-3 font-medium">💳 ช่องทางการชำระเงิน:</p>
+
+      <div className="space-y-3 text-sm">
+        {/* Bank Transfer */}
+        {paymentMethods.bankTransfer?.enabled && (
+          <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+            <CreditCard className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-medium text-blue-800 mb-1">โอนเงินผ่านธนาคาร</div>
+              {paymentMethods.bankTransfer.bankName && (
+                <div className="text-blue-700">🏦 {paymentMethods.bankTransfer.bankName}</div>
+              )}
+              {paymentMethods.bankTransfer.accountNumber && (
+                <div className="text-blue-700">📋 {paymentMethods.bankTransfer.accountNumber}</div>
+              )}
+              {paymentMethods.bankTransfer.accountName && (
+                <div className="text-blue-700">👤 {paymentMethods.bankTransfer.accountName}</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Cash Payment */}
+        {paymentMethods.cashPayment?.enabled && (
+          <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+            <Building2 className="w-5 h-5 text-green-600 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-medium text-green-800 mb-1">ชำระด้วยเงินสด</div>
+              {paymentMethods.cashPayment.address && (
+                <div className="text-green-700 flex items-start gap-1">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>{paymentMethods.cashPayment.address}</span>
+                </div>
+              )}
+              {paymentMethods.cashPayment.hours && (
+                <div className="text-green-700">🕐 {paymentMethods.cashPayment.hours}</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Check Payment */}
+        {paymentMethods.checkPayment?.enabled && (
+          <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+            <FileText className="w-5 h-5 text-amber-600 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-medium text-amber-800 mb-1">ชำระด้วยเช็ค</div>
+              {paymentMethods.checkPayment.payableTo && (
+                <div className="text-amber-700">📄 สั่งจ่าย: {paymentMethods.checkPayment.payableTo}</div>
+              )}
+              {paymentMethods.checkPayment.mailingAddress && (
+                <div className="text-amber-700 flex items-start gap-1">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>ส่งไปรษณีย์: {paymentMethods.checkPayment.mailingAddress}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Admin Contact Info */}
+        {adminContact && (
+          <div className="mt-3 pt-3 border-t border-gray-300">
+            <div className="text-xs text-stone-600 font-medium mb-2">📞 สอบถามเพิ่มเติม:</div>
+            <div className="text-xs text-stone-600 space-y-1">
+              {adminContact.phone && <div>📱 {adminContact.phone}</div>}
+              {adminContact.email && <div>✉️ {adminContact.email}</div>}
+              {adminContact.lineId && <div>💬 LINE: {adminContact.lineId}</div>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function MonthlyBill() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
@@ -167,6 +273,9 @@ function MonthlyBill() {
     retry: 1, // Reduce retries
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
+
+  // Use advanced overdue alert system with billing settings
+  const { alertData, adminContact, showAlert } = useOverdueAlert(selectedMonth, billData?.pendingPayments)
 
   const generateBillNumber = (month: string, hotelId: string) => {
     const monthCode = month.replace('-', '')
@@ -461,153 +570,115 @@ function MonthlyBill() {
       </div>
 
       {/* Enhanced Payment Summary with Overdue Status */}
-      {billData && billData.pendingPayments > 0 && (() => {
-        // Calculate overdue status for current selected month
-        const overdueStatus = getMonthlyBillStatus(selectedMonth)
-        const overdueMessage = formatOverdueMessage(overdueStatus, billData.pendingPayments)
-
-        // Determine styling based on overdue level
-        const getAlertStyling = () => {
-          switch (overdueStatus.level) {
-            case 'URGENT':
-              return {
-                bgClass: 'bg-gradient-to-r from-red-50 to-red-100',
-                borderClass: 'border-2 border-red-300 ring-2 ring-red-100',
-                iconBg: 'bg-red-200',
-                iconColor: 'text-red-700',
-                titleColor: 'text-red-800',
-                textColor: 'text-red-700',
-                animation: 'animate-pulse'
-              }
-            case 'WARNING':
-              return {
-                bgClass: 'bg-gradient-to-r from-orange-50 to-orange-100',
-                borderClass: 'border-2 border-orange-300',
-                iconBg: 'bg-orange-200',
-                iconColor: 'text-orange-700',
-                titleColor: 'text-orange-800',
-                textColor: 'text-orange-700',
-                animation: ''
-              }
-            case 'OVERDUE':
-              return {
-                bgClass: 'bg-gradient-to-r from-amber-50 to-amber-100',
-                borderClass: 'border border-amber-300',
-                iconBg: 'bg-amber-200',
-                iconColor: 'text-amber-700',
-                titleColor: 'text-amber-800',
-                textColor: 'text-amber-700',
-                animation: ''
-              }
-            case 'DUE_SOON':
-              return {
-                bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100',
-                borderClass: 'border border-blue-300',
-                iconBg: 'bg-blue-200',
-                iconColor: 'text-blue-700',
-                titleColor: 'text-blue-800',
-                textColor: 'text-blue-700',
-                animation: ''
-              }
-            default:
-              return {
-                bgClass: 'bg-amber-50',
-                borderClass: 'border border-amber-200',
-                iconBg: 'bg-amber-200',
-                iconColor: 'text-amber-600',
-                titleColor: 'text-amber-800',
-                textColor: 'text-amber-700',
-                animation: ''
-              }
-          }
-        }
-
-        const styling = getAlertStyling()
-
-        return (
-          <div className={`${styling.bgClass} rounded-2xl shadow-lg p-6 ${styling.borderClass} ${styling.animation}`}>
-            <div className="flex items-start gap-4">
-              <div className={`p-3 ${styling.iconBg} rounded-xl`}>
-                <AlertCircle className={`w-8 h-8 ${styling.iconColor}`} />
+      {showAlert && alertData && (
+        <div className={`${alertData.styling.bgClass} rounded-2xl shadow-lg p-6 ${alertData.styling.borderClass} ${alertData.styling.animation}`}>
+          <div className="flex items-start gap-4">
+            <div className={`p-3 ${alertData.styling.iconBg} rounded-xl`}>
+              <AlertCircle className={`w-8 h-8 ${alertData.styling.iconColor}`} />
+            </div>
+            <div className="flex-1">
+              {/* Title with overdue status */}
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className={`font-bold text-lg ${alertData.styling.titleColor}`}>
+                  {alertData.message.title}
+                </h3>
+                {alertData.status.actionRequired && (
+                  <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                    ต้องชำระ
+                  </span>
+                )}
               </div>
-              <div className="flex-1">
-                {/* Title with overdue status */}
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className={`font-bold text-lg ${styling.titleColor}`}>
-                    {overdueMessage.title}
-                  </h3>
-                  {overdueStatus.actionRequired && (
-                    <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      ต้องชำระ
-                    </span>
-                  )}
-                </div>
 
-                {/* Amount and details */}
-                <div className="bg-white rounded-lg p-4 mb-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Amount and details with Late Fee */}
+              <div className="bg-white rounded-lg p-4 mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className={`text-xs ${alertData.styling.textColor} mb-1`}>ยอดเดิม:</p>
+                    <p className={`text-xl font-bold ${alertData.styling.titleColor}`}>
+                      ฿{billData?.pendingPayments?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  {alertData.lateFee > 0 && (
                     <div>
-                      <p className={`text-xs ${styling.textColor} mb-1`}>ยอดค้างชำระ:</p>
-                      <p className={`text-2xl font-bold ${styling.titleColor}`}>
-                        ฿{billData.pendingPayments.toLocaleString()}
+                      <p className={`text-xs ${alertData.styling.textColor} mb-1`}>ค่าปรับล่าช้า:</p>
+                      <p className="text-xl font-bold text-red-600">
+                        ฿{alertData.lateFee.toLocaleString()}
                       </p>
                     </div>
-                    <div>
-                      <p className={`text-xs ${styling.textColor} mb-1`}>
-                        {overdueStatus.days > 0 ? 'เลยกำหนดมาแล้ว:' :
-                         overdueStatus.days === 0 ? 'กำหนดชำระ:' : 'กำหนดชำระ:'}
-                      </p>
-                      <p className={`text-lg font-semibold ${styling.titleColor}`}>
-                        {overdueStatus.days > 0 ? `${overdueStatus.days} วัน` :
-                         overdueStatus.days === 0 ? 'วันนี้' :
-                         getDueDate(selectedMonth)}
-                      </p>
-                    </div>
+                  )}
+                  <div>
+                    <p className={`text-xs ${alertData.styling.textColor} mb-1`}>
+                      {alertData.status.days > 0 ? 'เลยกำหนดมาแล้ว:' :
+                       alertData.status.days === 0 ? 'กำหนดชำระ:' : 'กำหนดชำระ:'}
+                    </p>
+                    <p className={`text-lg font-semibold ${alertData.styling.titleColor}`}>
+                      {alertData.status.days > 0 ? `${alertData.status.days} วัน` :
+                       alertData.status.days === 0 ? 'วันนี้' :
+                       getDueDate(selectedMonth)}
+                    </p>
                   </div>
                 </div>
 
-                {/* Description */}
-                <p className={`text-sm ${styling.textColor} mb-3`}>
-                  {overdueMessage.description}
-                </p>
-
-                {/* Action buttons for overdue cases */}
-                {overdueStatus.actionRequired && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">
-                      <Phone className="w-4 h-4" />
-                      ติดต่อแอดมิน
-                    </button>
+                {alertData.lateFee > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className={`font-medium ${alertData.styling.textColor}`}>ยอดรวมทั้งหมด:</span>
+                      <span className={`text-2xl font-bold ${alertData.styling.titleColor}`}>
+                        ฿{alertData.totalAmount.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 )}
-
-                {/* Due date info */}
-                <div className="flex items-center gap-2 text-xs text-stone-600">
-                  <Clock className="w-3 h-3" />
-                  <span>
-                    กำหนดชำระเดิม: {getDueDate(selectedMonth)}
-                    {overdueStatus.days > 0 && (
-                      <span className={`ml-2 font-medium ${styling.textColor}`}>
-                        (เลยมาแล้ว {overdueStatus.days} วัน)
-                      </span>
-                    )}
-                  </span>
-                </div>
               </div>
-            </div>
 
-            {/* Payment methods note */}
-            <div className="mt-4 p-3 bg-white bg-opacity-70 rounded-lg">
-              <p className="text-xs text-stone-600 mb-2 font-medium">วิธีการชำระเงิน:</p>
-              <div className="text-xs text-stone-600 space-y-1">
-                <p>• โอนเงินผ่านธนาคาร</p>
-                <p>• เช็คส่งทางไปรษณีย์</p>
-                <p>• ชำระด้วยเงินสด ณ สำนักงาน</p>
+              {/* Description */}
+              <p className={`text-sm ${alertData.styling.textColor} mb-3`}>
+                {alertData.message.description}
+              </p>
+
+              {/* Action buttons with admin contact */}
+              {alertData.status.actionRequired && adminContact && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {adminContact.phone && (
+                    <a
+                      href={`tel:${adminContact.phone}`}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
+                    >
+                      <Phone className="w-4 h-4" />
+                      โทร {adminContact.phone}
+                    </a>
+                  )}
+                  {adminContact.email && (
+                    <a
+                      href={`mailto:${adminContact.email}`}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition"
+                    >
+                      <Mail className="w-4 h-4" />
+                      อีเมล
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Due date info */}
+              <div className="flex items-center gap-2 text-xs text-stone-600">
+                <Clock className="w-3 h-3" />
+                <span>
+                  กำหนดชำระเดิม: {getDueDate(selectedMonth)}
+                  {alertData.status.days > 0 && (
+                    <span className={`ml-2 font-medium ${alertData.styling.textColor}`}>
+                      (เลยมาแล้ว {alertData.status.days} วัน)
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
           </div>
-        )
-      })()}
+
+          {/* Enhanced Payment Methods from Database */}
+          <PaymentMethodsSection adminContact={adminContact} />
+        </div>
+      )}
     </div>
   )
 }
