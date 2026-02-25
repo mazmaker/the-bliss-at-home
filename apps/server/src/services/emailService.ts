@@ -26,8 +26,13 @@ export interface EmailTemplateData {
 // Configuration
 // ============================================
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'The Bliss at Home <noreply@theblissathome.com>'
-const RESEND_API_KEY = process.env.RESEND_API_KEY
+// Read at runtime (after dotenv.config) instead of module-level
+function getEmailConfig() {
+  return {
+    defaultFrom: process.env.EMAIL_FROM || 'The Bliss Massage at Home <noreply@theblissmassageathome.com>',
+    resendApiKey: process.env.RESEND_API_KEY,
+  }
+}
 
 // ============================================
 // Email Sending
@@ -38,11 +43,12 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY
  * Uses Resend API if configured, otherwise logs to console
  */
 export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; error?: string }> {
-  const { to, subject, html, text, from = DEFAULT_FROM } = params
+  const config = getEmailConfig()
+  const { to, subject, html, text, from = config.defaultFrom } = params
   const recipients = Array.isArray(to) ? to : [to]
 
   // Development mode - log email
-  if (!RESEND_API_KEY) {
+  if (!config.resendApiKey) {
     console.log('\n========== EMAIL (Development Mode) ==========')
     console.log('From:', from)
     console.log('To:', recipients.join(', '))
@@ -58,7 +64,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Authorization': `Bearer ${config.resendApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -83,6 +89,18 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
     console.error('[Email] Send error:', error)
     return { success: false, error: error.message || 'Failed to send email' }
   }
+}
+
+export interface HotelWelcomeData {
+  hotelName: string
+  hotelNameEn: string
+  contactPerson: string
+  loginEmail: string
+  password: string
+  loginUrl: string
+  dashboardUrl: string
+  supportEmail: string
+  companyName: string
 }
 
 // ============================================
@@ -130,34 +148,33 @@ function baseTemplate(content: string): string {
       margin: 0;
       font-size: 24px;
     }
-    .header p {
-      margin: 8px 0 0;
-      opacity: 0.9;
-    }
     .content {
       padding: 24px;
     }
     .info-box {
-      background: #f8f8f8;
+      background: #fff;
+      border: 1px solid #e5e5e5;
       border-radius: 12px;
       padding: 16px;
       margin: 16px 0;
     }
     .info-row {
-      display: flex;
-      justify-content: space-between;
       padding: 8px 0;
       border-bottom: 1px solid #eee;
+      overflow: hidden;
     }
     .info-row:last-child {
       border-bottom: none;
     }
     .info-label {
       color: #666;
+      float: left;
     }
     .info-value {
       font-weight: 600;
       color: #333;
+      float: right;
+      text-align: right;
     }
     .refund-box {
       background: linear-gradient(135deg, #dcfce7, #bbf7d0);
@@ -513,11 +530,294 @@ export function staffJobCancellationTemplate(data: {
   `)
 }
 
+/**
+ * Payment receipt email template for customer
+ */
+export function receiptEmailTemplate(data: {
+  customerName: string
+  receiptNumber: string
+  bookingNumber: string
+  serviceName: string
+  bookingDate: string
+  bookingTime: string
+  amount: number
+  paymentMethod: string
+  cardLastDigits?: string
+  transactionDate: string
+  companyName: string
+  companyNameTh: string
+  companyAddress: string
+  companyPhone: string
+  companyEmail: string
+  companyTaxId: string
+  addons?: { name: string; price: number }[]
+}): string {
+  const {
+    customerName,
+    receiptNumber,
+    bookingNumber,
+    serviceName,
+    bookingDate,
+    bookingTime,
+    amount,
+    paymentMethod,
+    cardLastDigits,
+    transactionDate,
+    companyName,
+    companyNameTh,
+    companyAddress,
+    companyPhone,
+    companyEmail,
+    companyTaxId,
+    addons = [],
+  } = data
+
+  const paymentMethodDisplay = paymentMethod === 'credit_card'
+    ? `บัตรเครดิต${cardLastDigits ? ` •••• ${cardLastDigits}` : ''}`
+    : paymentMethod === 'promptpay'
+      ? 'พร้อมเพย์'
+      : paymentMethod === 'internet_banking'
+        ? 'โอนผ่านธนาคาร'
+        : paymentMethod
+
+  const addonsTotal = addons.reduce((sum, a) => sum + a.price, 0)
+  const servicePrice = amount - addonsTotal
+
+  return baseTemplate(`
+    <div class="card">
+      <div class="header">
+        <h1>${companyNameTh || companyName}</h1>
+        <p>ใบเสร็จรับเงิน / Payment Receipt</p>
+      </div>
+
+      <div class="content">
+        <p>เรียน คุณ${customerName},</p>
+
+        <p>ขอบคุณสำหรับการชำระเงิน รายละเอียดใบเสร็จของคุณมีดังนี้</p>
+
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">รายละเอียดใบเสร็จ</h3>
+          <div class="info-row">
+            <span class="info-label">เลขที่ใบเสร็จ</span>
+            <span class="info-value">${receiptNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">หมายเลขการจอง</span>
+            <span class="info-value">${bookingNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">วันที่ออกใบเสร็จ</span>
+            <span class="info-value">${transactionDate}</span>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">รายละเอียดบริการ</h3>
+          <div class="info-row">
+            <span class="info-label">บริการ</span>
+            <span class="info-value">${serviceName}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">วันที่นัดหมาย</span>
+            <span class="info-value">${bookingDate}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">เวลา</span>
+            <span class="info-value">${bookingTime}</span>
+          </div>
+          ${addons.length > 0 ? addons.map(addon => `
+          <div class="info-row">
+            <span class="info-label">${addon.name}</span>
+            <span class="info-value">฿${addon.price.toLocaleString()}</span>
+          </div>
+          `).join('') : ''}
+        </div>
+
+        <div class="refund-box" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b;">
+          <p style="margin: 0 0 8px; color: #92400e;">ยอดชำระเงินทั้งหมด</p>
+          <p style="font-size: 28px; font-weight: bold; color: #d97706; margin: 0;">฿${amount.toLocaleString()}</p>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #92400e;">
+            ชำระผ่าน: ${paymentMethodDisplay}
+          </p>
+        </div>
+
+        <div class="info-box" style="background: #f8f8f8; border-color: #e5e5e5;">
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">ข้อมูลผู้ออกใบเสร็จ</h3>
+          <p style="margin: 0; font-weight: 600;">${companyNameTh || companyName}</p>
+          ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">เลขประจำตัวผู้เสียภาษี: ${companyTaxId}</p>` : ''}
+          ${companyAddress ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${companyAddress}</p>` : ''}
+          ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">โทร: ${companyPhone}</p>` : ''}
+          ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">อีเมล: ${companyEmail}</p>` : ''}
+        </div>
+
+        <p>ขอบคุณที่ใช้บริการ ${companyNameTh || companyName}</p>
+      </div>
+
+      <div class="footer">
+        <p>
+          ${companyNameTh || companyName} - บริการนวดและสปาถึงที่<br>
+          <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
+        </p>
+        <p style="font-size: 12px; color: #999;">
+          อีเมลนี้ถูกส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+        </p>
+      </div>
+    </div>
+  `)
+}
+
+/**
+ * Credit note email template for customer (refund)
+ */
+export function creditNoteEmailTemplate(data: {
+  customerName: string
+  creditNoteNumber: string
+  originalReceiptNumber: string
+  bookingNumber: string
+  serviceName: string
+  bookingDate: string
+  originalAmount: number
+  refundAmount: number
+  refundPercentage: number
+  refundReason: string
+  refundDate: string
+  paymentMethod: string
+  cardLastDigits?: string
+  companyName: string
+  companyNameTh: string
+  companyAddress: string
+  companyPhone: string
+  companyEmail: string
+  companyTaxId: string
+}): string {
+  const {
+    customerName,
+    creditNoteNumber,
+    originalReceiptNumber,
+    bookingNumber,
+    serviceName,
+    bookingDate,
+    originalAmount,
+    refundAmount,
+    refundPercentage,
+    refundReason,
+    refundDate,
+    paymentMethod,
+    cardLastDigits,
+    companyName,
+    companyNameTh,
+    companyAddress,
+    companyPhone,
+    companyEmail,
+    companyTaxId,
+  } = data
+
+  const paymentMethodDisplay = paymentMethod === 'credit_card'
+    ? `บัตรเครดิต${cardLastDigits ? ` •••• ${cardLastDigits}` : ''}`
+    : paymentMethod === 'promptpay'
+      ? 'พร้อมเพย์'
+      : paymentMethod === 'internet_banking'
+        ? 'โอนผ่านธนาคาร'
+        : paymentMethod
+
+  return baseTemplate(`
+    <div class="card">
+      <div class="header">
+        <h1>${companyNameTh || companyName}</h1>
+        <p>ใบลดหนี้ / Credit Note</p>
+      </div>
+
+      <div class="content">
+        <p>เรียน คุณ${customerName},</p>
+
+        <p>เราขอแจ้งรายละเอียดการคืนเงินสำหรับการจองของคุณ</p>
+
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">รายละเอียดใบลดหนี้</h3>
+          <div class="info-row">
+            <span class="info-label">เลขที่ใบลดหนี้</span>
+            <span class="info-value">${creditNoteNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">อ้างอิงใบเสร็จ</span>
+            <span class="info-value">${originalReceiptNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">หมายเลขการจอง</span>
+            <span class="info-value">${bookingNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">วันที่ออกใบลดหนี้</span>
+            <span class="info-value">${refundDate}</span>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">รายละเอียดการจองเดิม</h3>
+          <div class="info-row">
+            <span class="info-label">บริการ</span>
+            <span class="info-value">${serviceName}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">วันที่นัดหมาย</span>
+            <span class="info-value">${bookingDate}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">ยอดชำระเดิม</span>
+            <span class="info-value">฿${originalAmount.toLocaleString()}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">เหตุผลการยกเลิก</span>
+            <span class="info-value">${refundReason}</span>
+          </div>
+        </div>
+
+        <div class="refund-box">
+          <p style="margin: 0 0 8px; color: #16a34a;">ยอดเงินคืน (${refundPercentage}%)</p>
+          <p class="refund-amount">฿${refundAmount.toLocaleString()}</p>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #666;">
+            คืนเงินผ่าน: ${paymentMethodDisplay}<br>
+            เงินจะเข้าบัญชีภายใน 5-10 วันทำการ
+          </p>
+        </div>
+
+        <div class="info-box" style="background: #f8f8f8; border-color: #e5e5e5;">
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">ข้อมูลผู้ออกใบลดหนี้</h3>
+          <p style="margin: 0; font-weight: 600;">${companyNameTh || companyName}</p>
+          ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">เลขประจำตัวผู้เสียภาษี: ${companyTaxId}</p>` : ''}
+          ${companyAddress ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${companyAddress}</p>` : ''}
+          ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">โทร: ${companyPhone}</p>` : ''}
+          ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">อีเมล: ${companyEmail}</p>` : ''}
+        </div>
+
+        <p>
+          หากคุณมีคำถามเกี่ยวกับการคืนเงิน กรุณาติดต่อเราได้ที่
+          ${companyEmail || 'support@theblissathome.com'}
+        </p>
+
+        <p>ขอบคุณที่ใช้บริการ ${companyNameTh || companyName}</p>
+      </div>
+
+      <div class="footer">
+        <p>
+          ${companyNameTh || companyName} - บริการนวดและสปาถึงที่<br>
+          <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
+        </p>
+        <p style="font-size: 12px; color: #999;">
+          อีเมลนี้ถูกส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+        </p>
+      </div>
+    </div>
+  `)
+}
+
 export const emailService = {
   sendEmail,
   templates: {
     bookingCancellation: bookingCancellationTemplate,
     hotelBookingCancellation: hotelBookingCancellationTemplate,
     staffJobCancellation: staffJobCancellationTemplate,
+    receipt: receiptEmailTemplate,
+    creditNote: creditNoteEmailTemplate,
   },
 }

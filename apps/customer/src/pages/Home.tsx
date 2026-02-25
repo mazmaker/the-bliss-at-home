@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, ChevronRight, Sparkles, Home, Gem, ChevronLeft, Hand, Flower2 } from 'lucide-react'
 import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
+import { useTopReviews, useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { PromotionDetailModal } from '../components/PromotionDetailModal'
 
 function HomePage() {
-  const { t, i18n } = useTranslation(['home', 'common'])
+  const { t, i18n } = useTranslation(['home', 'common', 'services'])
   const isEn = i18n.language === 'en' || i18n.language === 'cn'
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
@@ -17,6 +18,8 @@ function HomePage() {
   const isPaused = useRef(false)
   const { data: services, isLoading, error } = useServices()
   const { data: promotions } = useActivePromotions()
+  const { data: topReviews } = useTopReviews(6)
+  const { data: serviceReviewStats } = useAllServiceReviewStats()
 
   const promoCount = promotions?.length || 0
 
@@ -60,7 +63,8 @@ function HomePage() {
       name: service.name_en || service.name_th,
       price: Number(service.base_price || 0),
       category: service.category,
-      rating: 4.5, // Default rating
+      rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
+      reviewCount: serviceReviewStats?.[service.id]?.review_count || 0,
       slug: service.slug,
       image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
     })) || []
@@ -267,10 +271,15 @@ function HomePage() {
                 </div>
                 <div className="p-4">
                   <h4 className="font-medium text-stone-900 mb-2">{service.name}</h4>
-                  <div className="flex items-center gap-1 mb-2">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm text-stone-600">{service.rating}</span>
-                  </div>
+                  {service.reviewCount > 0 ? (
+                    <div className="flex items-center gap-1 mb-2">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      <span className="text-sm text-stone-600">{service.rating.toFixed(1)}</span>
+                      <span className="text-sm text-stone-400">({service.reviewCount})</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-stone-400 mb-2">{t('services:reviews.noReviews')}</p>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-semibold text-amber-700">฿{service.price}</span>
                     <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-amber-100 hover:text-amber-800 transition">
@@ -284,6 +293,42 @@ function HomePage() {
         </div>
         </div>
       </section>
+
+      {/* Customer Reviews */}
+      {topReviews && topReviews.length > 0 && (
+        <section className="mb-16 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h3 className="text-2xl font-light text-stone-900 mb-2 text-center tracking-wide">{t('home:reviews.title')}</h3>
+            <p className="text-stone-500 text-sm font-light text-center mb-8">{t('home:reviews.subtitle')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {topReviews.slice(0, 3).map((review) => (
+                <div key={review.id} className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+                  <div className="flex items-center gap-1 mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${star <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-stone-200'}`}
+                      />
+                    ))}
+                  </div>
+                  {review.review && (
+                    <p className="text-stone-600 text-sm font-light leading-relaxed mb-4 line-clamp-3">"{review.review}"</p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center">
+                      <span className="text-sm font-medium text-amber-800">{review.customer_display_name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-stone-800">{review.customer_display_name}</p>
+                      <p className="text-xs text-stone-400">{isEn ? review.service_name_en : review.service_name_th}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Why Choose Us */}
       <section className="mb-16 px-4">

@@ -48,13 +48,16 @@ export async function getStaffJobs(
   return (data || []) as Job[]
 }
 
-// Get pending jobs available for staff to accept
+// Get pending jobs available for staff to accept (from today onwards)
 export async function getPendingJobs(): Promise<Job[]> {
+  const today = new Date().toISOString().split('T')[0]
+
   const { data, error } = await supabase
     .from('jobs')
     .select('*')
     .eq('status', 'pending')
     .is('staff_id', null)
+    .gte('scheduled_date', today) // Only show jobs from today onwards
     .order('scheduled_date', { ascending: true })
     .order('scheduled_time', { ascending: true })
 
@@ -87,6 +90,41 @@ export async function getJob(jobId: string): Promise<Job | null> {
 
 // Accept a job
 export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
+  // First, check current job status and booking info
+  const { data: currentJob, error: checkError } = await supabase
+    .from('jobs')
+    .select('id, status, staff_id, booking_id, total_jobs')
+    .eq('id', jobId)
+    .single()
+
+  if (checkError) {
+    console.error('Error checking job status:', checkError)
+    throw new Error('ไม่พบงานนี้ในระบบ')
+  }
+
+  // Check if job is still available
+  if (currentJob.status !== 'pending' || currentJob.staff_id !== null) {
+    if (currentJob.status === 'cancelled') {
+      throw new Error('งานนี้ถูกยกเลิกแล้ว')
+    }
+    throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
+  }
+
+  // For couple bookings (total_jobs > 1), check if this staff already has another job from same booking
+  if (currentJob.total_jobs && currentJob.total_jobs > 1 && currentJob.booking_id) {
+    const { data: existingJobs, error: existingError } = await supabase
+      .from('jobs')
+      .select('id')
+      .eq('booking_id', currentJob.booking_id)
+      .eq('staff_id', staffId)
+      .neq('id', jobId)
+
+    if (!existingError && existingJobs && existingJobs.length > 0) {
+      throw new Error('คุณรับงานจากการจองนี้ไปแล้ว ไม่สามารถรับงานซ้ำได้ (งาน couple ต้องใช้หมอนวด 2 คน)')
+    }
+  }
+
+  // Try to accept the job
   const { data, error } = await supabase
     .from('jobs')
     .update({
@@ -97,12 +135,27 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     })
     .eq('id', jobId)
     .eq('status', 'pending') // Only accept if still pending
+    .is('staff_id', null) // Extra safety: ensure no one else took it
     .select()
     .single()
 
   if (error) {
+    // Handle race condition - job changed between our check and update
+    if (error.code === 'PGRST116') {
+      // Re-fetch to determine actual reason
+      const { data: refetchedJob } = await supabase
+        .from('jobs')
+        .select('status, staff_id')
+        .eq('id', jobId)
+        .single()
+
+      if (refetchedJob?.status === 'cancelled') {
+        throw new Error('งานนี้ถูกยกเลิกแล้ว')
+      }
+      throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
+    }
     console.error('Error accepting job:', error)
-    throw error
+    throw new Error('ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง')
   }
 
   return data as Job
@@ -252,7 +305,8 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
 export function subscribeToJobs(
   staffId: string,
   onJobUpdate: (job: Job) => void,
-  onNewJob?: (job: Job) => void
+  onNewJob?: (job: Job) => void,
+  onPendingJobRemoved?: (job: Job) => void
 ) {
   // Subscribe to staff's assigned jobs
   const assignedChannel = supabase
@@ -292,10 +346,31 @@ export function subscribeToJobs(
     )
     .subscribe()
 
+  // Subscribe to job status changes (for removing jobs from pending list)
+  const jobStatusChannel = supabase
+    .channel('job-status-updates')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'jobs',
+      },
+      (payload) => {
+        const newJob = payload.new as Job
+        // If job is no longer pending (accepted, cancelled, etc.), notify removal
+        if (newJob && newJob.status !== 'pending' && onPendingJobRemoved) {
+          onPendingJobRemoved(newJob)
+        }
+      }
+    )
+    .subscribe()
+
   // Return unsubscribe function
   return () => {
     supabase.removeChannel(assignedChannel)
     supabase.removeChannel(pendingChannel)
+    supabase.removeChannel(jobStatusChannel)
   }
 }
 

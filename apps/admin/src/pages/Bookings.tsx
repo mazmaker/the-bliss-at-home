@@ -504,7 +504,26 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <MapPin className="w-5 h-5 text-stone-400 mt-0.5" />
               <div>
                 <p className="text-sm text-stone-500">ที่อยู่</p>
-                <p className="font-medium text-stone-900">{booking.address}</p>
+                {booking.hotel && booking.is_hotel_booking ? (
+                  <div>
+                    <p className="font-medium text-stone-900">{booking.hotel.name_th}</p>
+                    <p className="text-sm text-stone-600">{booking.hotel.address}</p>
+                    {booking.hotel.phone && (
+                      <p className="text-xs text-stone-500">📞 {booking.hotel.phone}</p>
+                    )}
+                    {booking.hotel.email && (
+                      <p className="text-xs text-stone-500">✉️ {booking.hotel.email}</p>
+                    )}
+                    {booking.hotel.rating > 0 && (
+                      <p className="text-xs text-amber-600">⭐ {booking.hotel.rating.toFixed(1)}</p>
+                    )}
+                    {booking.hotel_room_number && (
+                      <p className="text-xs text-blue-600">🏠 ห้อง: {booking.hotel_room_number}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="font-medium text-stone-900">{booking.address}</p>
+                )}
               </div>
             </div>
           </div>

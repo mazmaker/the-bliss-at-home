@@ -17,6 +17,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+
 body {
   margin: 0;
   min-width: 320px;
@@ -29,6 +30,52 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+/* Style date inputs */
+input[type="date"] {
+  background-color: white;
+  color: #374151;
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  cursor: pointer;
+  position: absolute;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  opacity: 0.6;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Force light theme for date picker */
+input[type="date"]::-webkit-datetime-edit {
+  color: #374151;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  background: white;
+}
+
+input[type="date"]::-webkit-datetime-edit-text {
+  color: #374151;
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field {
+  color: #374151;
+}
+
+input[type="date"]::-webkit-datetime-edit-day-field {
+  color: #374151;
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #374151;
 }
 
 /* Custom scrollbar */
@@ -48,4 +95,17 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a29e;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #292524;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #57534e;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #78716c;
 }

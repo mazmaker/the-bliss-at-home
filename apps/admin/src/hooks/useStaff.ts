@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { staffService, Staff, CreateStaffData } from '../services/staffService'
+import { supabase } from '../lib/supabase'
 import { toast } from 'react-hot-toast'
 
 // Get all staff with filters
@@ -27,18 +28,38 @@ export function useStaffById(id: string) {
   })
 }
 
-// Get staff detail (comprehensive data)
+// Get staff detail (comprehensive data with real job stats)
 export function useStaffDetail(id: string) {
   return useQuery({
     queryKey: ['staff', 'detail', id],
     queryFn: async () => {
       const staff = await staffService.getStaffById(id)
-      // Add computed fields
+
+      // Fetch real job stats using profile_id
+      let totalJobs = staff.total_jobs || 0
+      let completedJobs = 0
+      let totalEarnings = staff.total_earnings || 0
+
+      if (staff.profile_id) {
+        const { data: jobs } = await supabase
+          .from('jobs')
+          .select('status, staff_earnings')
+          .eq('staff_id', staff.profile_id)
+
+        if (jobs && jobs.length > 0) {
+          totalJobs = jobs.length
+          completedJobs = jobs.filter(j => j.status === 'completed').length
+          totalEarnings = jobs
+            .filter(j => j.status === 'completed')
+            .reduce((sum, j) => sum + (parseFloat(j.staff_earnings) || 0), 0)
+        }
+      }
+
       return {
         ...staff,
-        completed_jobs: Math.floor((staff.total_jobs || 0) * 0.95), // Mock: 95% completion rate
-        response_rate: 95.5, // Mock
-        cancel_rate: 2.3, // Mock
+        total_jobs: totalJobs,
+        completed_jobs: completedJobs,
+        total_earnings: totalEarnings,
       }
     },
     enabled: !!id,

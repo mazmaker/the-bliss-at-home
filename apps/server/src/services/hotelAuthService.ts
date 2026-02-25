@@ -420,6 +420,61 @@ class HotelAuthService {
   }
 
   /**
+   * Change hotel password (for hotel users on first login)
+   */
+  async changeHotelPassword(hotelId: string, currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      // Get hotel data including temporary password
+      const { data: hotel, error: hotelError } = await getSupabaseClient()
+        .from('hotels')
+        .select('auth_user_id, temporary_password, password_change_required, login_email')
+        .eq('id', hotelId)
+        .single()
+
+      if (hotelError || !hotel) {
+        throw new Error('Hotel not found')
+      }
+
+      if (!hotel.auth_user_id) {
+        throw new Error('Hotel does not have an auth account')
+      }
+
+      // Verify current password matches temporary password
+      if (!hotel.temporary_password) {
+        throw new Error('ไม่พบรหัสผ่านชั่วคราว กรุณาติดต่อผู้ดูแลระบบ')
+      }
+
+      if (hotel.temporary_password !== currentPassword) {
+        throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง')
+      }
+
+      if (!hotel.password_change_required) {
+        throw new Error('บัญชีนี้ไม่ต้องเปลี่ยนรหัสผ่าน')
+      }
+
+      // Use Supabase Admin API to update password
+      const supabaseAdmin = getSupabaseClient()
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        hotel.auth_user_id,
+        { password: newPassword }
+      )
+
+      if (updateError) {
+        console.error('Update password error:', updateError)
+        throw new Error(`Failed to update password: ${updateError.message}`)
+      }
+
+      // Mark password change as completed
+      await this.markPasswordChangeCompleted(hotelId)
+
+      console.log(`✅ Hotel ${hotelId} password changed successfully`)
+    } catch (error) {
+      console.error('Change hotel password error:', error)
+      throw error
+    }
+  }
+
+  /**
    * Mark password change as completed (called after hotel changes password)
    * This clears temporary password and disables password change requirement
    */

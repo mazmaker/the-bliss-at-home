@@ -4,13 +4,18 @@ import { Calendar, Clock, Check, X, ArrowLeft, ArrowRight, User, Users } from 'l
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@bliss/supabase/auth'
+// import { hotelSupabase as supabase } from '../lib/supabaseClient'
+import { secureBookingService } from '../services/secureBookingService'
 import { useBookingStore } from '../hooks/useBookingStore'
-import { Service } from '../types/booking'
+import { useHotelContext } from '../hooks/useHotelContext'
+import { Service, ProviderPreference } from '../types/booking'
 import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
+import { createLoadingToast, notifications, showErrorByType } from '../utils/notifications'
 import ServiceModeSelector from './ServiceModeSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ServiceSelector from './ServiceSelector'
 import PricingSummary from './PricingSummary'
+import ProviderPreferenceSelector from './ProviderPreferenceSelector'
 
 interface BookingModalNewProps {
   isOpen: boolean
@@ -47,6 +52,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     date,
     time,
     notes,
+    providerPreference,
 
     // UI state
     isLoading,
@@ -64,6 +70,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     setDate,
     setTime,
     setNotes,
+    setProviderPreference,
     setCurrentStep,
     nextStep,
     previousStep,
@@ -75,6 +82,19 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   } = useBookingStore()
 
   const navigate = useNavigate()
+  const { hotelId, getHotelSlug } = useHotelContext()
+
+  // Helper function to get provider preference label (moved to component scope)
+  const getProviderPreferenceLabel = (preference: ProviderPreference): string => {
+    switch (preference) {
+      case 'female-only': return 'ผู้หญิงเท่านั้น (บังคับต้องเป็นผู้หญิง)'
+      case 'male-only': return 'ผู้ชายเท่านั้น (บังคับต้องเป็นผู้ชาย)'
+      case 'prefer-female': return 'ต้องการผู้หญิง (อยากได้ผู้หญิง แต่ถ้าไม่มีผู้ชายก็ได้)'
+      case 'prefer-male': return 'ต้องการผู้ชาย (อยากได้ผู้ชาย แต่ถ้าไม่มีผู้หญิงก็ได้)'
+      case 'no-preference': return 'ไม่ระบุ (ไม่สนใจเพศ)'
+      default: return 'ไม่ระบุ (ไม่สนใจเพศ)'
+    }
+  }
 
   // Query services
   const { data: rawServices = [], isLoading: servicesLoading } = useQuery({
@@ -151,60 +171,97 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   const handleSubmit = async () => {
     if (!validation.isValid) return
 
+    // Create loading toast
+    const loadingToast = createLoadingToast(notifications.booking.createLoading)
+
     try {
       setLoading(true)
       const bookingData = getBookingData()
 
-      // Create the main booking record
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-          // Use first service's ID for single service reference
-          service_id: bookingData.serviceConfiguration.selections[0].service.id,
-          booking_date: bookingData.date,
-          booking_time: bookingData.time,
-          duration: bookingData.serviceConfiguration.totalDuration,
-          hotel_room_number: bookingData.roomNumber,
-          customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Notes: ${bookingData.notes}`,
-          base_price: bookingData.serviceConfiguration.totalPrice,
-          final_price: bookingData.serviceConfiguration.totalPrice,
-          status: 'confirmed',
-          is_hotel_booking: true
-        })
-        .select()
-        .single()
+      // Debug: Log service configuration before sending
+      console.log('🔍 [BOOKING DEBUG] Service Configuration:', bookingData.serviceConfiguration)
+      console.log('🔍 [BOOKING DEBUG] Service Selections:', bookingData.serviceConfiguration.selections)
+      console.log('🔍 [BOOKING DEBUG] First Service:', bookingData.serviceConfiguration.selections[0])
+      console.log('🔍 [BOOKING DEBUG] Service ID to send:', bookingData.serviceConfiguration.selections[0]?.service?.id)
 
-      if (bookingError) throw bookingError
+      // Prepare booking data for secure API
+      const secureBookingData = {
+        // Hotel context from URL
+        hotel_id: hotelId,
+        // Use first service's ID for single service reference
+        service_id: bookingData.serviceConfiguration.selections[0].service.id,
+        booking_date: bookingData.date,
+        booking_time: bookingData.time,
+        duration: bookingData.serviceConfiguration.totalDuration,
+        hotel_room_number: bookingData.roomNumber,
+        // Staff assignment data
+        provider_preference: bookingData.providerPreference || 'no-preference',
+        recipient_count: bookingData.serviceConfiguration.recipientCount,
+        // Required pricing data
+        base_price: bookingData.serviceConfiguration.totalPrice,
+        final_price: bookingData.serviceConfiguration.totalPrice,
+        // Customer information
+        customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Provider: ${getProviderPreferenceLabel(bookingData.providerPreference)}${bookingData.notes ? ', Notes: ' + bookingData.notes : ''}`,
+        // Booking status
+        status: 'confirmed',
+        payment_status: 'pending',
+        is_hotel_booking: true,
+        // Include services for booking_services table
+        services: bookingData.serviceConfiguration.selections.map(selection => ({
+          service_id: selection.service.id,
+          duration: selection.duration,
+          price: selection.price,
+          recipient_index: selection.recipientIndex,
+          sort_order: selection.sortOrder
+        }))
+      }
 
-      // Create booking services records
-      const bookingServices = bookingData.serviceConfiguration.selections.map(selection => ({
-        booking_id: booking.id,
-        service_id: selection.service.id,
-        duration: selection.duration,
-        price: selection.price,
-        recipient_index: selection.recipientIndex,
-        sort_order: selection.sortOrder
-      }))
+      console.log('🏨 Submitting booking via secure API...')
+      console.log('🔍 BOOKING DATA BEING SENT:', {
+        hotel_id: hotelId,
+        hotelId_value: hotelId,
+        secureBookingData: secureBookingData
+      })
 
-      const { error: servicesError } = await supabase
-        .from('booking_services')
-        .insert(bookingServices)
+      const result = await secureBookingService.createBooking(secureBookingData)
 
-      if (servicesError) throw servicesError
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create booking')
+      }
 
-      // Show success message
-      alert('การจองสำเร็จ!')
+      // Show enhanced success message with staff assignment info
+      let successMessage = notifications.booking.createSuccess
+
+      // Add staff assignment information if available
+      if (result.staffAssignment?.success && result.staffAssignment.assignedStaff?.length > 0) {
+        const staffNames = result.staffAssignment.assignedStaff.map(staff => staff.name_th).join(', ')
+        const providerPref = getProviderPreferenceLabel(result.staffAssignment.providerPreference)
+        successMessage += `\n\n🎯 จัดสรรหมอนวดแล้ว: ${staffNames}\n✨ ตรงตามความต้องการ: ${providerPref}`
+      } else if (result.staffAssignment && !result.staffAssignment.success) {
+        successMessage += `\n\n⚠️ สร้างการจองสำเร็จ แต่ยังไม่ได้จัดสรรหมอนวด\n(จะจัดสรรภายหลัง)`
+      }
+
+      // Add warnings if any
+      if (result.warnings?.length > 0) {
+        successMessage += `\n\n⚠️ คำเตือน:\n${result.warnings.join('\n')}`
+      }
+
+      loadingToast.success(successMessage)
+
+      // Call success callback if provided
+      onSuccess?.()
 
       // Close modal and reset
       resetAll()
       onClose()
 
-      // Navigate to history page to show the booking
-      navigate('/history')
+      // Navigate to hotel's booking history page
+      navigate(`/hotel/${getHotelSlug()}/history`)
 
     } catch (err) {
       console.error('Booking failed:', err)
-      alert('เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่อีกครั้ง')
+      loadingToast.error(notifications.booking.createError)
+      showErrorByType(err)
     } finally {
       setLoading(false)
     }
@@ -354,33 +411,92 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
 
             {/* Step 1: Guest Information */}
             {currentStep === 1 && (
-              <div className="max-w-md mx-auto space-y-4">
+              <div className="max-w-2xl mx-auto space-y-6">
                 <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลผู้รับบริการ</h3>
 
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    ชื่อผู้รับบริการ <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="เช่น John Smith"
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                  />
-                </div>
+                {/* Selected Service Summary */}
+                {serviceConfiguration.selections.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-stone-700 mb-3">บริการที่เลือก</h4>
+                    <div className="space-y-3">
+                      {serviceConfiguration.selections.map((selection, index) => (
+                        <div key={selection.id} className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center">
+                                  <User className="w-3 h-3 text-white" />
+                                </div>
+                                <h5 className="font-medium text-stone-900">
+                                  {serviceConfiguration.mode === 'couple'
+                                    ? `ผู้รับบริการ ${selection.recipientIndex + 1}`
+                                    : 'ผู้รับบริการ'
+                                  }
+                                </h5>
+                              </div>
+                              <div className="pl-8 space-y-1">
+                                <p className="text-sm font-medium text-stone-800">
+                                  {selection.service.name_th}
+                                </p>
+                                <div className="flex items-center gap-4 text-xs text-stone-600">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{selection.duration} นาที</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span>฿{selection.price.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
 
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    เลขห้อง <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={roomNumber}
-                    onChange={(e) => setRoomNumber(e.target.value)}
-                    placeholder="เช่น 1505"
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                  />
+                      {/* Total Summary */}
+                      <div className="bg-stone-100 rounded-xl p-4 border-2 border-stone-200">
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-stone-600">
+                            <span>รวมทั้งหมด: {serviceConfiguration.selections.length} บริการ</span>
+                            <span className="mx-2">•</span>
+                            <span>{serviceConfiguration.totalDuration} นาที</span>
+                          </div>
+                          <div className="text-lg font-bold text-amber-700">
+                            ฿{serviceConfiguration.totalPrice.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Basic Guest Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      ชื่อผู้รับบริการ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="เช่น John Smith"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      เลขห้อง <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={roomNumber}
+                      onChange={(e) => setRoomNumber(e.target.value)}
+                      placeholder="เช่น 1505"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -395,6 +511,14 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                     className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
                   />
                 </div>
+
+                {/* Provider Preference Selection */}
+                <div className="border-t pt-6">
+                  <ProviderPreferenceSelector
+                    selectedPreference={providerPreference}
+                    onPreferenceChange={setProviderPreference}
+                  />
+                </div>
               </div>
             )}
 
@@ -407,13 +531,16 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                   <label className="block text-sm font-medium text-stone-700 mb-2">
                     วันที่ <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    min={today}
-                    className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      min={today}
+                      className="w-full px-4 py-3 pr-10 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                    />
+                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-400 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div>
@@ -475,12 +602,34 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                       <span className="text-stone-600">วันที่:</span>
                       <span className="text-stone-900">{date} {time}</span>
                     </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-stone-600">ความต้องการผู้ให้บริการ:</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        providerPreference === 'female-only' ? 'bg-pink-100 text-pink-700' :
+                        providerPreference === 'male-only' ? 'bg-blue-100 text-blue-700' :
+                        providerPreference === 'prefer-female' ? 'bg-pink-50 text-pink-600' :
+                        providerPreference === 'prefer-male' ? 'bg-blue-50 text-blue-600' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {getProviderPreferenceLabel(providerPreference)}
+                      </span>
+                    </div>
                     {notes && (
                       <div className="flex justify-between">
                         <span className="text-stone-600">หมายเหตุ:</span>
                         <span className="text-stone-900">{notes}</span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">ผู้ให้บริการ:</span>
+                      <span className="text-stone-900">
+                        {providerPreference === 'female-only' ? 'ผู้หญิงเท่านั้น' :
+                         providerPreference === 'male-only' ? 'ผู้ชายเท่านั้น' :
+                         providerPreference === 'prefer-female' ? 'ต้องการผู้หญิง' :
+                         providerPreference === 'prefer-male' ? 'ต้องการผู้ชาย' :
+                         'ไม่ระบุ'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

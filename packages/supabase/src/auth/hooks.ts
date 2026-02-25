@@ -158,7 +158,7 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
     const PROFILE_FETCH_DEBOUNCE = 2000
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         const now = Date.now()
         if (now - lastProfileFetchTime < PROFILE_FETCH_DEBOUNCE) {
           console.log('⏭️ Skipping profile fetch (debounced)', event)

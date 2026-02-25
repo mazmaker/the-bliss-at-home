@@ -76,8 +76,6 @@ function StaffDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const adminAuth = useAdminAuth()
-  console.log('🟢 StaffDetail mounted, adminAuth:', adminAuth)
-  console.log('🟢 adminAuth.user:', adminAuth?.user)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)

@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+/**
+ * Quick Rollback Fix
+ * แก้ไขปัญหาโดยให้ใช้ client เดิมก่อน แล้วค่อยแก้ไขทีละส่วน
+ */
+
+console.log('⚡ ====================================')
+console.log('   Quick Fix - Rollback Client Change')
+console.log('⚡ ====================================')
+console.log('')
+
+console.log('🎯 วิธีแก้ไขด่วน:')
+console.log('')
+console.log('1. 📁 แก้ไขไฟล์: apps/hotel/src/components/BookingModalNew.tsx')
+console.log('')
+console.log('2. 🔄 เปลี่ยนบรรทัดที่ 6-7 จาก:')
+console.log('   // import { supabase } from \'@bliss/supabase/auth\'')
+console.log('   import { hotelSupabase as supabase } from \'../lib/supabaseClient\'')
+console.log('')
+console.log('3. ✅ กลับเป็น:')
+console.log('   import { supabase } from \'@bliss/supabase/auth\'')
+console.log('   // import { hotelSupabase as supabase } from \'../lib/supabaseClient\'')
+console.log('')
+console.log('4. 💾 Save ไฟล์')
+console.log('')
+console.log('5. 🔄 Refresh Hotel App')
+console.log('')
+console.log('🔍 เหตุผล:')
+console.log('   - Client เก่าใช้งานได้ปกติ')
+console.log('   - Client ใหม่มี auth session ไม่ sync')
+console.log('   - ต้องแก้ไข auth transfer ให้ถูกต้อง')
+console.log('')
+console.log('✅ หลังจากแก้ไข:')
+console.log('   - Services จะโหลดได้ปกติ')
+console.log('   - ฟอร์มจองจะแสดงรายการบริการ')
+console.log('   - การจองจะทำงานปกติ')
+console.log('')
+console.log('💡 Note:')
+console.log('   ปัญหา RLS booking ที่แก้ไขไปแล้ว จะยังใช้ได้')
+console.log('   เพราะเราแก้ไข policies ใน database แล้ว')
+
+console.log('')
+console.log('⚡ ====================================')
+console.log('   Quick Fix Instructions')
+console.log('⚡ ====================================')

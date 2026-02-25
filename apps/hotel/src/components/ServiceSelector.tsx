@@ -33,7 +33,7 @@ function ServiceSelector({
   const [selectedDuration, setSelectedDuration] = useState<number | null>(
     selectedService?.duration || null
   )
-  const [step, setStep] = useState<'service' | 'duration'>('service')
+  const [step, setStep] = useState<'service' | 'duration' | 'completed'>('service')
 
   // Auto-select service when initialServiceId is provided
   useEffect(() => {
@@ -51,7 +51,7 @@ function ServiceSelector({
     if (selectedService) {
       setSelectedServiceId(selectedService.service.id)
       setSelectedDuration(selectedService.duration)
-      setStep('duration')
+      setStep('completed')
     } else if (!initialServiceId) {
       setSelectedServiceId(null)
       setSelectedDuration(null)
@@ -84,9 +84,33 @@ function ServiceSelector({
     setSelectedServiceId(service.id)
     const durationOptions = getDurationOptions(service)
 
-    // Don't auto-select, always go to duration step
-    setSelectedDuration(null)
-    setStep('duration')
+    // Auto-select duration if there's only one option
+    if (durationOptions.length === 1) {
+      const duration = durationOptions[0].value
+      setSelectedDuration(duration)
+
+      // Calculate price and call onServiceSelect immediately
+      const calculatedPrice = service.discount_rate && service.discount_rate > 0
+        ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, duration, service.discount_rate, 'single')
+        : PriceCalculator.calculateServicePrice(service, duration, 'single')
+
+      onServiceSelect({
+        id: `${recipientIndex}-${service.id}-${duration}`,
+        service,
+        duration,
+        recipientIndex,
+        recipientName,
+        price: calculatedPrice,
+        sortOrder: recipientIndex
+      })
+
+      // Go directly to completed state since no choice needed
+      setStep('completed')
+    } else {
+      // Multiple duration options - show duration selection step
+      setSelectedDuration(null)
+      setStep('duration')
+    }
   }
 
   const handleDurationSelect = (duration: number) => {
@@ -112,6 +136,9 @@ function ServiceSelector({
       price: calculatedPrice,
       sortOrder: recipientIndex
     })
+
+    // Go to completed state after selection
+    setStep('completed')
   }
 
   const handleBackToServices = () => {
@@ -141,7 +168,9 @@ function ServiceSelector({
               {recipientName || `ผู้รับบริการ ${recipientIndex + 1}`}
             </h4>
             <p className="text-xs text-stone-600">
-              {step === 'service' ? 'เลือกบริการ' : 'เลือกระยะเวลา'}
+              {step === 'service' ? 'เลือกบริการ' :
+               step === 'duration' ? 'เลือกระยะเวลา' :
+               'เลือกแล้ว'}
             </p>
           </div>
         </div>
@@ -295,8 +324,46 @@ function ServiceSelector({
         </div>
       )}
 
-      {/* Selection Summary */}
-      {selectedService && (
+      {/* Step 3: Completed Selection */}
+      {step === 'completed' && selectedService && selectedServiceData && (
+        <div className="space-y-4">
+          {/* Selection confirmed */}
+          <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-sm font-bold text-green-700">เลือกแล้ว</span>
+            </div>
+            <div className="text-sm font-medium text-stone-800">
+              {selectedServiceData.name_th} • {selectedService.duration} นาที • ฿{selectedService.price.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Edit options */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleBackToServices}
+              disabled={disabled}
+              className="flex-1 px-3 py-2 text-xs bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition"
+            >
+              เปลี่ยนบริการ
+            </button>
+            {getDurationOptions(selectedServiceData).length > 1 && (
+              <button
+                onClick={() => setStep('duration')}
+                disabled={disabled}
+                className="flex-1 px-3 py-2 text-xs bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
+              >
+                เปลี่ยนระยะเวลา
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Selection Summary - Only show for duration step */}
+      {selectedService && step === 'duration' && (
         <div className="p-4 bg-gradient-to-r from-[#b6d387]/20 to-[#b6d387]/10 border-2 border-[#b6d387]/30 rounded-xl shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-5 h-5 bg-[#b6d387] rounded-full flex items-center justify-center">

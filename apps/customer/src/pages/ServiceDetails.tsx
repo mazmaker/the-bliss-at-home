@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Clock, ChevronLeft, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle, Check } from 'lucide-react'
+import { Clock, ChevronLeft, Sparkles, Search, Hand, Flower2, Palette, Loader2, AlertCircle, Check, Star } from 'lucide-react'
 import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
+import { useServiceReviewStats, useServiceReviews } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
 
@@ -20,6 +21,9 @@ function ServiceDetails() {
   const [selectedDuration, setSelectedDuration] = useState<number>(0)
 
   const { data: serviceData, isLoading, error } = useServiceBySlug(slug)
+  const serviceId = serviceData?.id
+  const { data: reviewStats } = useServiceReviewStats(serviceId)
+  const { data: reviews } = useServiceReviews(serviceId, 5)
 
   const isThai = i18n.language === 'th'
 
@@ -284,6 +288,78 @@ function ServiceDetails() {
                 </div>
               </div>
             )}
+
+            {/* Customer Reviews Section */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 mt-6 border border-stone-100">
+              <h3 className="text-xl font-medium text-stone-900 mb-4">
+                {t('services:reviews.title')}
+              </h3>
+
+              {reviewStats && reviewStats.review_count > 0 ? (
+                <>
+                  {/* Aggregate Stats */}
+                  <div className="flex items-start gap-6 mb-6 p-4 bg-amber-50/60 rounded-xl">
+                    <div className="text-center flex-shrink-0">
+                      <div className="text-3xl font-bold text-amber-700">{reviewStats.avg_rating}</div>
+                      <div className="flex items-center gap-0.5 mt-1">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(Number(reviewStats.avg_rating)) ? 'text-amber-500 fill-amber-500' : 'text-stone-300'}`} />
+                        ))}
+                      </div>
+                      <div className="text-xs text-stone-500 mt-1">
+                        {t('services:reviews.totalReviews', { count: reviewStats.review_count })}
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      {[
+                        { label: t('services:reviews.cleanliness'), value: reviewStats.avg_cleanliness },
+                        { label: t('services:reviews.professionalism'), value: reviewStats.avg_professionalism },
+                        { label: t('services:reviews.skill'), value: reviewStats.avg_skill },
+                      ].map(sub => sub.value && (
+                        <div key={sub.label} className="flex items-center gap-2 text-sm">
+                          <span className="text-stone-600 w-32 flex-shrink-0">{sub.label}</span>
+                          <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+                            <div className="h-2 bg-amber-500 rounded-full" style={{ width: `${(Number(sub.value) / 5) * 100}%` }} />
+                          </div>
+                          <span className="text-stone-700 w-6 text-right font-medium">{sub.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Individual Reviews */}
+                  <div className="space-y-4">
+                    {reviews?.map(review => (
+                      <div key={review.id} className="border-b border-stone-100 last:border-0 pb-4 last:pb-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 bg-gradient-to-br from-amber-100 to-stone-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-amber-700">{review.customer_display_name.charAt(0)}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-stone-900 text-sm">{review.customer_display_name}</span>
+                              <div className="flex items-center gap-0.5">
+                                {[1,2,3,4,5].map(s => (
+                                  <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-stone-300'}`} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-xs text-stone-400">
+                            {new Date(review.created_at).toLocaleDateString(isThai ? 'th-TH' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                        {review.review && (
+                          <p className="text-stone-600 text-sm font-light leading-relaxed ml-10">{review.review}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-stone-400 text-sm italic">{t('services:reviews.noReviews')}</p>
+              )}
+            </div>
           </div>
 
           {/* Right Column - Booking Summary */}

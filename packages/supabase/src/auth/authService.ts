@@ -257,15 +257,25 @@ async function register(credentials: RegisterCredentials): Promise<AuthResponse>
  * Logout current user
  */
 async function logout(): Promise<void> {
-  const { error } = await supabase.auth.signOut()
-  if (error) {
-    throw new AuthError('Failed to logout', 'UNKNOWN')
+  try {
+    // Use local scope to avoid 403 Forbidden error with global scope
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
+    if (error) {
+      console.warn('⚠️ Supabase logout warning (continuing with local cleanup):', error.message)
+    } else {
+      console.log('✅ Supabase logout successful')
+    }
+  } catch (error) {
+    // Don't throw error - continue with local session cleanup
+    console.warn('⚠️ Supabase logout failed (continuing with local cleanup):', error)
   }
-  // Clear remember me preferences
+
+  // Clear all session-related storage (always do this regardless of Supabase result)
+  localStorage.removeItem('bliss-customer-auth')  // Main session key
   localStorage.removeItem('rememberMe')
   sessionStorage.removeItem('sessionOnly')
-  // Clear session data
-  localStorage.removeItem('bliss-customer-auth')
+
+  console.log('🔐 Logout: All session storage cleared')
 }
 
 /**

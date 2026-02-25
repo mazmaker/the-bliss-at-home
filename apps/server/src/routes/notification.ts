@@ -5,7 +5,7 @@
 
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
-import { processBookingConfirmed, processJobCancelled } from '../services/notificationService.js'
+import { processBookingConfirmed, processJobCancelled, processBookingCancelled, sendPayoutCompletedNotification } from '../services/notificationService.js'
 
 const router = Router()
 
@@ -96,6 +96,114 @@ router.post('/job-cancelled', async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: error.message || 'Failed to process job cancellation',
+    })
+  }
+})
+
+/**
+ * POST /api/notifications/booking-cancelled
+ * Cancel a booking and notify assigned staff via LINE + in-app
+ * Called when Admin cancels a booking
+ */
+router.post('/booking-cancelled', async (req: Request, res: Response) => {
+  try {
+    const { booking_id, reason, refund_status, refund_amount } = req.body
+
+    if (!booking_id || !reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: booking_id, reason',
+      })
+    }
+
+    // Verify booking exists
+    const { data: booking, error: bookingError } = await getSupabaseClient()
+      .from('bookings')
+      .select('id, status')
+      .eq('id', booking_id)
+      .single()
+
+    if (bookingError || !booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      })
+    }
+
+    // Process: cancel jobs + notify staff
+    const result = await processBookingCancelled(
+      booking_id,
+      reason,
+      refund_status,
+      refund_amount
+    )
+
+    if (!result.success) {
+      return res.status(400).json(result)
+    }
+
+    return res.json({
+      success: true,
+      jobs_cancelled: result.jobsCancelled,
+      staff_notified: result.staffNotified,
+    })
+  } catch (error: any) {
+    console.error('Booking cancellation notification error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to process booking cancellation',
+    })
+  }
+})
+
+/**
+ * POST /api/notifications/payout-completed
+ * Send LINE + in-app notification to staff when admin completes a payout
+ */
+router.post('/payout-completed', async (req: Request, res: Response) => {
+  try {
+    const { payout_id } = req.body
+
+    if (!payout_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: payout_id',
+      })
+    }
+
+    // Verify payout exists and is completed
+    const { data: payout, error: payoutError } = await getSupabaseClient()
+      .from('payouts')
+      .select('id, status')
+      .eq('id', payout_id)
+      .single()
+
+    if (payoutError || !payout) {
+      return res.status(404).json({
+        success: false,
+        error: 'Payout not found',
+      })
+    }
+
+    if (payout.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: `Payout status is '${payout.status}', expected 'completed'`,
+      })
+    }
+
+    const result = await sendPayoutCompletedNotification(payout_id)
+
+    return res.json({
+      success: result.success,
+      line_notified: result.lineNotified,
+      in_app_notified: result.inAppNotified,
+    })
+  } catch (error: any) {
+    console.error('Payout notification error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to send payout notification',
     })
   }
 })

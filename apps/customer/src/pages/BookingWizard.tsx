@@ -33,7 +33,7 @@ function BookingWizard() {
   // Fetch data from Supabase
   const { data: serviceData, isLoading: serviceLoading } = useServiceBySlug(serviceSlug)
   const { data: customer } = useCurrentCustomer()
-  const { data: addresses } = useAddresses(customer?.id)
+  const { data: addresses, isLoading: addressesLoading } = useAddresses(customer?.id)
   const { data: paymentMethods } = usePaymentMethods(customer?.id)
   const createBookingWithServices = useCreateBookingWithServices()
 
@@ -269,7 +269,7 @@ function BookingWizard() {
 
     try {
       // Create PromptPay QR payment source
-      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-source`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-source`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ function BookingWizard() {
       const sourceType = isMobile ? `mobile_banking_${bankCode}` : `internet_banking_${bankCode}`
 
       // Create banking source
-      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-source`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-source`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -346,7 +346,7 @@ function BookingWizard() {
     // Poll every 3 seconds for payment status
     const pollInterval = setInterval(async () => {
       try {
-        const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/status/${chargeId}`)
+        const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/status/${chargeId}`)
         const data = await result.json()
 
         if (data.status === 'successful') {
@@ -391,7 +391,7 @@ function BookingWizard() {
       }
 
       // Call API to create charge with saved card
-      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/payments/create-charge`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-charge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -816,8 +816,15 @@ function BookingWizard() {
             <div>
               <h2 className="text-xl font-bold text-stone-900 mb-6">{t('wizard.step4.title')}</h2>
 
-              {/* Saved Addresses */}
-              {addresses && addresses.length > 0 && !showManualAddressForm ? (
+              {/* Loading state for addresses */}
+              {addressesLoading && !addresses ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3"></div>
+                    <p className="text-stone-600 text-sm">{t('wizard.step4.loadingAddresses') || 'กำลังโหลดที่อยู่...'}</p>
+                  </div>
+                </div>
+              ) : addresses && addresses.length > 0 && !showManualAddressForm ? (
                 <div className="space-y-4">
                   <p className="text-stone-600 mb-4">{t('wizard.step4.selectSaved')}</p>
 

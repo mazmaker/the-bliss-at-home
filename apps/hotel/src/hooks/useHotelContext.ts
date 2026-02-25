@@ -11,8 +11,23 @@ export interface HotelData {
   contact_person?: string
   phone?: string
   email?: string
+  address?: string
+  website?: string
+  // เพิ่มข้อมูลแผนที่
+  latitude?: number | null
+  longitude?: number | null
+  // เพิ่มข้อมูลภาษี & การชำระเงิน
+  tax_id?: string
+  bank_name?: string
+  bank_account_number?: string
+  bank_account_name?: string
   commission_rate: number
   status: 'active' | 'inactive'
+  // Banking and tax information fields
+  tax_id?: string | null
+  bank_name?: string | null
+  bank_account_number?: string | null
+  bank_account_name?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -21,7 +36,7 @@ export interface HotelData {
 const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('*')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, status, created_at, updated_at')
     .eq('hotel_slug', slug)
     .eq('status', 'active')
     .single()
@@ -50,7 +65,7 @@ const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
 const fetchAllHotels = async (): Promise<HotelData[]> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('*')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, status, created_at, updated_at')
     .eq('status', 'active')
     .order('name_th', { ascending: true })
 

@@ -65,10 +65,23 @@ export function useUserHotelId(): UseUserHotelIdResult {
           setHotelId(foundHotelId)
         } else {
           console.warn('⚠️ No hotel found for user:', user.id)
-          // Fallback to default hotel for development (Resort Chiang Mai)
-          const fallbackHotelId = '550e8400-e29b-41d4-a716-446655440002'
-          console.log('🔄 Using fallback hotel:', fallbackHotelId, '(resort-chiang-mai)')
-          setHotelId(fallbackHotelId)
+          // Get hotel context from current URL instead of hard fallback
+          const currentPath = window.location.pathname
+          const urlSlug = currentPath.match(/\/hotel\/([^\/]+)/)?.[1]
+          console.log('🔍 Trying to get hotel from URL slug:', urlSlug)
+
+          if (urlSlug === 'dusit-thani-bangkok') {
+            const dusitHotelId = '550e8400-e29b-41d4-a716-446655440003'
+            console.log('🎯 Using Dusit Thani from URL:', dusitHotelId)
+            setHotelId(dusitHotelId)
+          } else if (urlSlug === 'resort-chiang-mai') {
+            const resortHotelId = '550e8400-e29b-41d4-a716-446655440002'
+            console.log('🎯 Using Resort from URL:', resortHotelId)
+            setHotelId(resortHotelId)
+          } else {
+            console.error('❌ Unknown hotel slug:', urlSlug)
+            setError('Unknown hotel: ' + urlSlug)
+          }
         }
       } catch (err) {
         console.error('💥 Error in fetchUserHotelId:', err)

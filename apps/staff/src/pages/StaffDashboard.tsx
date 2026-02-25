@@ -436,7 +436,7 @@ function StaffDashboard() {
                     <div>
                       <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
                       <p className="text-sm text-stone-500">
-                        {job.scheduled_time} • {job.duration_minutes} นาที
+                        {job.scheduled_date} • {job.scheduled_time} • {job.duration_minutes} นาที
                       </p>
                     </div>
                     {getStatusBadge(job.status)}

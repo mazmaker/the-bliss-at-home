@@ -109,7 +109,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
         const recipientLabel = bs.recipient_name || `คนที่ ${(bs.recipient_index || 0) + 1}`
         const price = Number(bs.price) || 0
         const commissionRate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * commissionRate / 100)
+        const earnings = Math.round(price * commissionRate)
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -279,7 +279,7 @@ export async function sendBookingConfirmedNotifications(
       coupleServices = bookingServices.map(bs => {
         const price = Number(bs.price) || 0
         const rate = Number((bs.service as any)?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * rate / 100)
+        const earnings = Math.round(price * rate)
         totalStaffEarnings += earnings
         return {
           recipientIndex: bs.recipient_index || 0,
@@ -296,7 +296,7 @@ export async function sendBookingConfirmedNotifications(
     const singleRate = Number(booking.service?.staff_commission_rate) || 0
     totalStaffEarnings = booking.staff_earnings
       ? Number(booking.staff_earnings)
-      : Math.round(singleAmount * singleRate / 100)
+      : Math.round(singleAmount * singleRate)
   }
 
   // === 1. Notify available staff via LINE ===
@@ -1185,4 +1185,258 @@ export async function processCustomerEmailReminders(): Promise<number> {
   }
 
   return sentCount
+}
+
+/**
+ * Process booking cancellation by admin
+ * Cancel all associated jobs and notify assigned staff via LINE + in-app
+ */
+export async function processBookingCancelled(
+  bookingId: string,
+  cancellationReason: string,
+  refundStatus?: string,
+  refundAmount?: number
+): Promise<{
+  success: boolean
+  jobsCancelled: number
+  staffNotified: number
+  error?: string
+}> {
+  const supabase = getSupabaseClient()
+  const result = {
+    success: false,
+    jobsCancelled: 0,
+    staffNotified: 0,
+  }
+
+  // 1. Get booking details
+  const { data: booking, error: bookingError } = await supabase
+    .from('bookings')
+    .select('id, booking_number, booking_date, booking_time, address, hotel_id')
+    .eq('id', bookingId)
+    .single()
+
+  if (bookingError || !booking) {
+    console.error('❌ Booking not found for cancellation notification:', bookingId)
+    return { ...result, error: 'Booking not found' }
+  }
+
+  // Get hotel name if applicable
+  let hotelName: string | null = null
+  if (booking.hotel_id) {
+    const { data: hotel } = await supabase
+      .from('hotels')
+      .select('name')
+      .eq('id', booking.hotel_id)
+      .single()
+    if (hotel) hotelName = hotel.name
+  }
+
+  // 2. Get all jobs associated with this booking that have assigned staff
+  const { data: jobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, staff_id, service_name, scheduled_date, scheduled_time, address, hotel_name, room_number')
+    .eq('booking_id', bookingId)
+    .not('staff_id', 'is', null)
+    .neq('status', 'cancelled')
+
+  if (jobsError) {
+    console.error('❌ Failed to fetch jobs for booking:', jobsError)
+    return { ...result, error: 'Failed to fetch jobs' }
+  }
+
+  if (!jobs || jobs.length === 0) {
+    console.log(`📋 No assigned jobs found for booking ${bookingId}, no staff to notify`)
+    result.success = true
+    return result
+  }
+
+  // 3. Get staff profiles with LINE IDs
+  // Note: jobs.staff_id IS profiles.id (profile_id), so we can query profiles directly
+  const staffIds = [...new Set(jobs.map(j => j.staff_id).filter(Boolean))] as string[]
+
+  const { data: staffProfiles } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .in('id', staffIds)
+
+  const staffLineIds = staffProfiles?.filter(p => p.line_user_id).map(p => p.line_user_id) as string[] || []
+
+  console.log(`📋 Staff IDs: ${staffIds.length}, LINE IDs found: ${staffLineIds.length}`)
+
+  // 4. Send LINE notifications to assigned staff
+  if (staffLineIds.length > 0) {
+    // Use the first job's details for notification (they should be similar for same booking)
+    const job = jobs[0]
+    const success = await lineService.sendBookingCancelledToStaff(staffLineIds, {
+      serviceName: job.service_name,
+      scheduledDate: job.scheduled_date,
+      scheduledTime: job.scheduled_time?.substring(0, 5) || '',
+      address: job.address || '',
+      hotelName: job.hotel_name || hotelName,
+      roomNumber: job.room_number,
+      cancellationReason,
+      bookingNumber: booking.booking_number,
+      refundStatus,
+      refundAmount,
+    })
+
+    if (success) {
+      result.staffNotified = staffLineIds.length
+      console.log(`📱 LINE cancellation sent to ${staffLineIds.length} staff`)
+    }
+  }
+
+  // 5. Create in-app notifications for assigned staff
+  const staffNotifRows = staffIds.map(staffProfileId => ({
+    user_id: staffProfileId,
+    type: 'booking_cancelled',
+    title: 'งานถูกยกเลิก',
+    message: `งาน "${jobs[0].service_name}" วันที่ ${jobs[0].scheduled_date} ถูกยกเลิกโดยแอดมิน เหตุผล: ${cancellationReason}`,
+    data: {
+      booking_id: bookingId,
+      booking_number: booking.booking_number,
+      cancellation_reason: cancellationReason,
+      refund_status: refundStatus,
+      refund_amount: refundAmount,
+    },
+    is_read: false,
+  }))
+
+  if (staffNotifRows.length > 0) {
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .insert(staffNotifRows)
+
+    if (notifError) {
+      console.error('❌ Failed to insert staff cancellation notifications:', notifError)
+    } else {
+      console.log(`🔔 In-app cancellation notification sent to ${staffNotifRows.length} staff`)
+    }
+  }
+
+  // 6. Cancel all jobs for this booking
+  const { error: cancelError } = await supabase
+    .from('jobs')
+    .update({
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+      cancelled_by: 'ADMIN',
+      cancellation_reason: cancellationReason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('booking_id', bookingId)
+    .neq('status', 'cancelled')
+
+  if (cancelError) {
+    console.error('❌ Failed to cancel jobs:', cancelError)
+    return { ...result, error: 'Failed to cancel jobs' }
+  }
+
+  result.jobsCancelled = jobs.length
+  result.success = true
+  console.log(`✅ Booking cancellation processed: booking=${bookingId}, jobs=${result.jobsCancelled}, staff=${result.staffNotified}`)
+  return result
+}
+
+/**
+ * Send LINE + in-app notification to staff when admin completes a payout
+ */
+export async function sendPayoutCompletedNotification(
+  payoutId: string
+): Promise<{ success: boolean; lineNotified: boolean; inAppNotified: boolean; error?: string }> {
+  const supabase = getSupabaseClient()
+  const result = { success: false, lineNotified: false, inAppNotified: false }
+
+  // 1. Fetch payout details
+  const { data: payout, error: payoutError } = await supabase
+    .from('payouts')
+    .select('*')
+    .eq('id', payoutId)
+    .single()
+
+  if (payoutError || !payout) {
+    console.error('❌ Payout not found:', payoutId, payoutError)
+    return { ...result, error: 'Payout not found' }
+  }
+
+  // payouts.staff_id IS profiles.id (FK to profiles)
+  const staffProfileId = payout.staff_id
+
+  // 2. Get staff name from staff table
+  const { data: staffData } = await supabase
+    .from('staff')
+    .select('name_th')
+    .eq('profile_id', staffProfileId)
+    .single()
+
+  const staffName = staffData?.name_th || 'พนักงาน'
+
+  // 3. Get LINE user ID from profiles table
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('line_user_id')
+    .eq('id', staffProfileId)
+    .single()
+
+  // 4. Send LINE notification (if staff has LINE linked)
+  if (profile?.line_user_id) {
+    try {
+      const lineSuccess = await lineService.sendPayoutCompletedToStaff(profile.line_user_id, {
+        staffName,
+        netAmount: Number(payout.net_amount) || 0,
+        grossEarnings: Number(payout.gross_earnings) || 0,
+        platformFee: Number(payout.platform_fee) || 0,
+        totalJobs: payout.total_jobs || 0,
+        periodStart: payout.period_start,
+        periodEnd: payout.period_end,
+        transferReference: payout.transfer_reference || '',
+        transferredAt: payout.transferred_at || new Date().toISOString(),
+      })
+
+      if (lineSuccess) {
+        result.lineNotified = true
+        console.log(`📱 LINE payout notification sent to staff ${staffProfileId}`)
+      }
+    } catch (lineError) {
+      console.error('❌ LINE payout notification failed:', lineError)
+    }
+  } else {
+    console.log(`⚠️ Staff ${staffProfileId} has no LINE user ID, skipping LINE notification`)
+  }
+
+  // 5. Insert in-app notification
+  const periodStartDate = new Date(payout.period_start)
+  const periodEndDate = new Date(payout.period_end)
+  const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+                      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+  const periodText = `${monthNames[periodStartDate.getMonth()]} ${periodStartDate.getFullYear() + 543}`
+
+  const { error: notifError } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: staffProfileId,
+      type: 'payment_received',
+      title: 'ได้รับเงินเรียบร้อย!',
+      message: `โอนเงิน ฿${Number(payout.net_amount).toLocaleString()} รอบ ${periodText} (${payout.total_jobs || 0} งาน) เข้าบัญชีแล้ว`,
+      data: {
+        payout_id: payoutId,
+        net_amount: payout.net_amount,
+        transfer_reference: payout.transfer_reference,
+        period_start: payout.period_start,
+        period_end: payout.period_end,
+      },
+      is_read: false,
+    })
+
+  if (notifError) {
+    console.error('❌ Failed to insert payout notification:', notifError)
+  } else {
+    result.inAppNotified = true
+    console.log(`🔔 In-app payout notification sent to staff ${staffProfileId}`)
+  }
+
+  result.success = true
+  console.log(`✅ Payout notification processed: payout=${payoutId}, LINE=${result.lineNotified}, inApp=${result.inAppNotified}`)
+  return result
 }

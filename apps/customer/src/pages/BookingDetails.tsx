@@ -1,16 +1,28 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle, Download, FileText } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
-import { useTranslation } from '@bliss/i18n'
+import { useTranslation, getStoredLanguage } from '@bliss/i18n'
+import { CancelBookingModal } from '../components/CancelBookingModal'
+import { RescheduleModal } from '../components/RescheduleModal'
+import { ReviewModal } from '../components/ReviewModal'
+import { supabase } from '@bliss/supabase'
+import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 function BookingDetails() {
   const { t } = useTranslation(['booking', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
+  // Modal states
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+
   // Fetch booking data from Supabase
-  const { data: bookingData, isLoading, error } = useBookingByNumber(id)
+  const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
 
   // Transform booking data to match UI format
   const booking = useMemo(() => {
@@ -160,6 +172,178 @@ function BookingDetails() {
   const totalAddOnsPrice = booking.addOns.reduce((sum: number, a: any) => sum + a.price, 0)
   const totalPrice = booking.price + totalAddOnsPrice
 
+  // Handle cancel booking
+  const handleCancelBooking = async (reason: string) => {
+    if (!bookingData) throw new Error('Booking data not available')
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bookings/${bookingData.id}/cancel`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason,
+          refund_option: 'auto', // Use auto to let policy decide
+          notify_customer: true,
+          notify_staff: true,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'ไม่สามารถยกเลิกการจองได้')
+    }
+
+    // Refetch booking data to update UI
+    await refetch()
+  }
+
+  // Handle reschedule booking - calls server API which:
+  // 1. Updates booking date/time
+  // 2. Unassigns staff (they need to re-accept based on availability)
+  // 3. Sends LINE + In-App notifications to previously assigned staff
+  const handleRescheduleBooking = async (newDate: string, newTime: string) => {
+    if (!bookingData) throw new Error('Booking data not available')
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+    const response = await fetch(`${apiUrl}/api/bookings/${bookingData.id}/reschedule`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        new_date: newDate,
+        new_time: newTime,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'ไม่สามารถเลื่อนนัดได้')
+    }
+
+    const result = await response.json()
+    console.log('[Reschedule] Success:', result)
+
+    // Refetch booking data to update UI
+    await refetch()
+  }
+
+  // Handle receipt download
+  const handleDownloadReceipt = async () => {
+    if (!bookingData) return
+    try {
+      // Find the payment transaction for this booking (successful or refunded)
+      const { data: txn } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('booking_id', bookingData.id)
+        .in('status', ['successful', 'refunded'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (!txn) {
+        alert('ไม่พบข้อมูลธุรกรรม')
+        return
+      }
+
+      const resp = await fetch(`${API_URL}/api/receipts/${txn.id}`)
+      const result = await resp.json()
+      if (result.success) {
+        const d = result.data
+        const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+        downloadReceipt({
+          receiptNumber: d.receipt_number,
+          transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingNumber: d.booking_number,
+          serviceName: d.service_name,
+          serviceNameEn: d.service_name_en,
+          bookingDate: new Date(d.booking_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingTime: d.booking_time,
+          amount: d.amount,
+          servicePrice: d.service_price,
+          paymentMethod: d.payment_method,
+          cardBrand: d.card_brand,
+          cardLastDigits: d.card_last_digits,
+          customerName: d.customer_name,
+          addons: d.addons,
+          language: lang,
+          company: {
+            name: d.company.companyName,
+            nameTh: d.company.companyNameTh,
+            address: d.company.companyAddress,
+            phone: d.company.companyPhone,
+            email: d.company.companyEmail,
+            taxId: d.company.companyTaxId,
+          },
+        } as ReceiptPdfData)
+      }
+    } catch (err) {
+      console.error('Failed to download receipt:', err)
+    }
+  }
+
+  // Handle credit note download
+  const handleDownloadCreditNote = async () => {
+    if (!bookingData) return
+    try {
+      // Find the refund transaction for this booking
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: refundTxn } = await (supabase as any)
+        .from('refund_transactions')
+        .select('id')
+        .eq('booking_id', bookingData.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (!refundTxn) {
+        alert('ไม่พบข้อมูลการคืนเงิน')
+        return
+      }
+
+      const resp = await fetch(`${API_URL}/api/receipts/credit-note/${refundTxn.id}`)
+      const result = await resp.json()
+      if (result.success) {
+        const d = result.data
+        const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+        downloadCreditNote({
+          creditNoteNumber: d.credit_note_number,
+          originalReceiptNumber: d.original_receipt_number,
+          refundDate: new Date(d.refund_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
+          bookingNumber: d.booking_number,
+          serviceName: d.service_name,
+          serviceNameEn: d.service_name_en,
+          originalAmount: d.original_amount,
+          refundAmount: d.refund_amount,
+          refundPercentage: d.refund_percentage || (d.original_amount > 0 ? Math.round((d.refund_amount / d.original_amount) * 100) : 0),
+          refundReason: d.reason || d.refund_reason,
+          customerName: d.customer_name,
+          paymentMethod: d.payment_method,
+          cardLastDigits: d.card_last_digits,
+          language: lang,
+          company: {
+            name: d.company.companyName,
+            nameTh: d.company.companyNameTh,
+            address: d.company.companyAddress,
+            phone: d.company.companyPhone,
+            email: d.company.companyEmail,
+            taxId: d.company.companyTaxId,
+          },
+        } as CreditNotePdfData)
+      }
+    } catch (err) {
+      console.error('Failed to download credit note:', err)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -237,9 +421,12 @@ function BookingDetails() {
                   </p>
                   <p className="text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</p>
                 </div>
-                {booking.status === 'confirmed' && (
+                {(booking.status === 'confirmed' || booking.status === 'pending') && (
                   <div className="text-right">
-                    <button className="text-amber-700 hover:text-amber-900 font-medium text-sm">
+                    <button
+                      onClick={() => setShowRescheduleModal(true)}
+                      className="text-amber-700 hover:text-amber-900 font-medium text-sm"
+                    >
                       {t('details.reschedule')}
                     </button>
                   </div>
@@ -293,7 +480,7 @@ function BookingDetails() {
                     <span>{booking.provider.reviews} {t('details.reviews')}</span>
                   </div>
                 </div>
-                {booking.status === 'confirmed' && (
+                {(booking.status === 'confirmed' || booking.status === 'pending') && (
                   <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
                     <MessageCircle className="w-4 h-4" />
                     {t('details.chat')}
@@ -345,22 +532,53 @@ function BookingDetails() {
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     booking.payment.status === 'paid'
                       ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                      : booking.payment.status === 'refunded'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {booking.payment.status === 'paid' ? t('common:status.paid') : t('common:status.pending')}
+                    {booking.payment.status === 'paid' ? t('common:status.paid') : booking.payment.status === 'refunded' ? 'คืนเงินแล้ว' : t('common:status.pending')}
                   </span>
                 </div>
               </div>
+
+              {/* Receipt & Credit Note Downloads */}
+              {(booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (
+                <div className="mt-4 pt-4 border-t border-stone-100 space-y-2">
+                  <button
+                    onClick={handleDownloadReceipt}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-medium hover:bg-amber-100 transition text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    ดาวน์โหลดใบเสร็จ
+                  </button>
+
+                  {(bookingData as any)?.refund_status === 'completed' && (
+                    <button
+                      onClick={handleDownloadCreditNote}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-50 text-purple-700 rounded-xl font-medium hover:bg-purple-100 transition text-sm"
+                    >
+                      <FileText className="w-4 h-4" />
+                      ดาวน์โหลดใบลดหนี้
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Actions */}
             <div className="space-y-3">
-              {booking.status === 'confirmed' && (
+              {(booking.status === 'confirmed' || booking.status === 'pending') && (
                 <>
-                  <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
-                    {t('details.editBooking')}
+                  <button
+                    onClick={() => setShowRescheduleModal(true)}
+                    className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+                  >
+                    {t('details.reschedule')}
                   </button>
-                  <button className="w-full border-2 border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition">
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="w-full border-2 border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
+                  >
                     {t('details.cancelBooking')}
                   </button>
                 </>
@@ -371,7 +589,10 @@ function BookingDetails() {
                   <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
                     {t('details.bookAgain')}
                   </button>
-                  <button className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition">
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition"
+                  >
                     {t('details.rateReview')}
                   </button>
                 </>
@@ -400,6 +621,52 @@ function BookingDetails() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Booking Modal */}
+      {bookingData && (
+        <CancelBookingModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleCancelBooking}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          bookingDate={booking.date}
+          bookingTime={booking.time}
+          totalPrice={totalPrice}
+          paymentStatus={booking.payment.status as 'pending' | 'paid' | 'refunded'}
+        />
+      )}
+
+      {/* Reschedule Modal */}
+      {bookingData && (
+        <RescheduleModal
+          isOpen={showRescheduleModal}
+          onClose={() => setShowRescheduleModal(false)}
+          onConfirm={handleRescheduleBooking}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          currentDate={booking.date}
+          currentTime={booking.time}
+          duration={booking.duration}
+        />
+      )}
+
+      {/* Review Modal */}
+      {bookingData && booking.status === 'completed' && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          staffName={booking.provider.name}
+          staffId={bookingData.staff_id || ''}
+          serviceId={bookingData.service_id}
+          customerId={bookingData.customer_id || ''}
+        />
+      )}
     </div>
   )
 }

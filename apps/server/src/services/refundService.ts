@@ -5,6 +5,7 @@
 
 import { getSupabaseClient } from '../lib/supabase.js'
 import { omiseService } from './omiseService.js'
+import { cancellationPolicyService } from './cancellationPolicyService.js'
 import type {
   RefundStatus,
   RefundOption,
@@ -46,10 +47,12 @@ export interface ProcessRefundResult {
 // ============================================
 
 /**
- * Cancellation policy rules
+ * Legacy cancellation policy rules (fallback if database policy not available)
  * - More than 24 hours before booking: Full refund (100%)
  * - 12-24 hours before booking: Partial refund (50%)
  * - Less than 12 hours: No refund (0%)
+ *
+ * @deprecated Use dynamic policy from database (cancellation_policy_tiers table)
  */
 const CANCELLATION_POLICY = {
   FULL_REFUND_HOURS: 24,      // Hours before booking for 100% refund
@@ -64,8 +67,34 @@ const CANCELLATION_POLICY = {
 
 /**
  * Calculate refund amount based on cancellation policy
+ * Uses dynamic policy from database (cancellation_policy_tiers)
  */
 export async function calculateRefund(bookingId: string): Promise<RefundCalculation> {
+  // Use the dynamic policy calculation from cancellationPolicyService
+  try {
+    const dynamicResult = await cancellationPolicyService.calculateDynamicRefund(bookingId)
+
+    return {
+      eligible: dynamicResult.eligible,
+      originalAmount: dynamicResult.originalAmount,
+      refundAmount: dynamicResult.refundAmount,
+      refundPercentage: dynamicResult.refundPercentage,
+      reason: dynamicResult.reason,
+      hoursUntilBooking: dynamicResult.hoursUntilBooking,
+    }
+  } catch (error) {
+    console.error('Error using dynamic policy, falling back to legacy:', error)
+
+    // Fallback to legacy calculation if dynamic policy fails
+    return calculateRefundLegacy(bookingId)
+  }
+}
+
+/**
+ * Legacy refund calculation (fallback)
+ * @deprecated Use calculateRefund which uses dynamic policy
+ */
+async function calculateRefundLegacy(bookingId: string): Promise<RefundCalculation> {
   const supabase = getSupabaseClient()
 
   // Get booking details with transaction
@@ -121,7 +150,7 @@ export async function calculateRefund(bookingId: string): Promise<RefundCalculat
 
   const originalAmount = Number(booking.final_price)
 
-  // Apply cancellation policy
+  // Apply cancellation policy (legacy hardcoded values)
   let refundPercentage: number
   let reason: string
 
@@ -330,9 +359,17 @@ export function createRefundInfo(
   }
 }
 
+/**
+ * Get dynamic policy from database (for API response)
+ */
+export async function getDynamicCancellationPolicy() {
+  return cancellationPolicyService.getCancellationPolicy()
+}
+
 export const refundService = {
   calculateRefund,
   processRefund,
   createRefundInfo,
-  CANCELLATION_POLICY,
+  getDynamicCancellationPolicy,
+  CANCELLATION_POLICY, // Keep for backward compatibility
 }

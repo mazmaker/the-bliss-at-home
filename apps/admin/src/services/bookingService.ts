@@ -1,5 +1,27 @@
 import { supabase } from '../lib/supabase'
 
+// Helper function to parse customer data from customer_notes
+function parseCustomerFromNotes(customerNotes?: string | null): {
+  id: string | null,
+  full_name: string,
+  phone: string
+} | null {
+  if (!customerNotes) return null
+
+  // Parse guest name
+  const guestMatch = customerNotes.match(/Guest:\s*([^,\n]+)/)
+  const phoneMatch = customerNotes.match(/Phone:\s*([^,\n]+)/)
+
+  const fullName = guestMatch?.[1]?.trim() || 'ไม่ระบุชื่อ'
+  const phone = phoneMatch?.[1]?.trim() || 'ไม่ระบุเบอร์'
+
+  return {
+    id: null,
+    full_name: fullName,
+    phone: phone
+  }
+}
+
 export type BookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
 export type PaymentStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
 export type PaymentMethod = 'cash' | 'credit_card' | 'promptpay' | 'bank_transfer' | 'other'
@@ -72,6 +94,10 @@ export interface Booking {
   hotel?: {
     id: string
     name_th: string
+    address: string
+    phone: string
+    email: string
+    rating: number
   } | null
   staff?: {
     id: string
@@ -152,8 +178,7 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
-          customer:customers(id, full_name, phone),
-          hotel:hotels(id, name_th),
+          hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price),
           promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
@@ -231,7 +256,13 @@ class BookingService {
         }))
       }
 
-      return filteredData
+      // Add parsed customer data
+      const processedData = filteredData.map(booking => ({
+        ...booking,
+        customer: parseCustomerFromNotes(booking.customer_notes)
+      }))
+
+      return processedData
     } catch (error) {
       console.error('Error in getAllBookings:', error)
       throw error
@@ -244,8 +275,7 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
-          customer:customers(id, full_name, phone),
-          hotel:hotels(id, name_th),
+          hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price),
           promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
@@ -266,7 +296,13 @@ class BookingService {
         booking.booking_services = bsMap[booking.id] || undefined
       }
 
-      return booking
+      // Add parsed customer data
+      const processedData = {
+        ...booking,
+        customer: parseCustomerFromNotes(booking.customer_notes)
+      } as Booking
+
+      return processedData
     } catch (error) {
       console.error('Error in getBookingById:', error)
       return null
@@ -299,8 +335,7 @@ class BookingService {
         .eq('id', id)
         .select(`
           *,
-          customer:customers(id, full_name, phone),
-          hotel:hotels(id, name_th),
+          hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price),
           promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
@@ -333,7 +368,13 @@ class BookingService {
         }
       }
 
-      return data as Booking
+      // Add parsed customer data
+      const processedData = {
+        ...data,
+        customer: parseCustomerFromNotes(data.customer_notes)
+      } as Booking
+
+      return processedData
     } catch (error) {
       console.error('Error in updateBookingStatus:', error)
       return null
@@ -348,8 +389,7 @@ class BookingService {
         .eq('id', id)
         .select(`
           *,
-          customer:customers(id, full_name, phone),
-          hotel:hotels(id, name_th),
+          hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price),
           promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
@@ -361,7 +401,13 @@ class BookingService {
         throw error
       }
 
-      return data as Booking
+      // Add parsed customer data
+      const processedData = {
+        ...data,
+        customer: parseCustomerFromNotes(data.customer_notes)
+      } as Booking
+
+      return processedData
     } catch (error) {
       console.error('Error in updateBookingPaymentStatus:', error)
       return null
@@ -376,8 +422,7 @@ class BookingService {
         .eq('id', bookingId)
         .select(`
           *,
-          customer:customers(id, full_name, phone),
-          hotel:hotels(id, name_th),
+          hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price),
           promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
@@ -389,7 +434,13 @@ class BookingService {
         throw error
       }
 
-      return data as Booking
+      // Add parsed customer data
+      const processedData = {
+        ...data,
+        customer: parseCustomerFromNotes(data.customer_notes)
+      } as Booking
+
+      return processedData
     } catch (error) {
       console.error('Error in assignStaff:', error)
       return null
@@ -402,13 +453,12 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
-          customer:customers(id, full_name, phone),
-          hotel:hotels(id, name_th),
+          hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price),
           promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
         `)
-        .or(`booking_number.ilike.%${query}%,customer.full_name.ilike.%${query}%,customer.phone.ilike.%${query}%`)
+        .or(`booking_number.ilike.%${query}%,customer_notes.ilike.%${query}%`)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -416,7 +466,13 @@ class BookingService {
         throw error
       }
 
-      return (data as Booking[]) || []
+      // Add parsed customer data
+      const processedData = ((data as Booking[]) || []).map(booking => ({
+        ...booking,
+        customer: parseCustomerFromNotes(booking.customer_notes)
+      }))
+
+      return processedData
     } catch (error) {
       console.error('Error in searchBookings:', error)
       return []

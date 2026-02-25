@@ -1,0 +1,33 @@
+🧹 CACHE CLEARING COMMANDS - คัดลอกทั้งหมดแปะใน Browser Console (F12)
+================================================================================
+
+// รันคำสั่งเหล่านี้ในเบราว์เซอร์ Console (กด F12 แล้วเลือก Console tab)
+
+console.log('🧹 CLEARING ALL BROWSER STORAGE...');
+
+// 1. Clear localStorage
+localStorage.clear();
+console.log('✅ localStorage cleared');
+
+// 2. Clear sessionStorage
+sessionStorage.clear();
+console.log('✅ sessionStorage cleared');
+
+// 3. Clear all cookies
+document.cookie.split(";").forEach(function(c) {
+  document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+});
+console.log('✅ Cookies cleared');
+
+// 4. Hard reload
+console.log('🔄 Performing hard refresh...');
+location.reload(true);
+
+================================================================================
+ขั้นตอน:
+1. เปิดเบราว์เซอร์ไปที่ http://localhost:3003
+2. กด F12 เพื่อเปิด Developer Tools
+3. คลิก Console tab
+4. คัดลอกคำสั่งข้างบนทั้งหมดแปะลงไป
+5. กด Enter
+6. หน้าจะ Refresh เองอัตโนมัติ

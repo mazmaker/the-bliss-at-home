@@ -334,6 +334,120 @@ async function sendJobCancelledToAdmin(lineUserIds: string[], data: JobCancelled
   return allSuccess
 }
 
+interface BookingCancelledStaffData {
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  cancellationReason: string
+  bookingNumber?: string | null
+  refundStatus?: string | null
+  refundAmount?: number | null
+  cancelledBy?: 'admin' | 'customer'
+}
+
+/**
+ * Send booking cancellation notification to assigned staff via LINE
+ * Called when Admin cancels a booking
+ */
+async function sendBookingCancelledToStaff(lineUserIds: string[], data: BookingCancelledStaffData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}`
+    : `📍 สถานที่: ${data.address}`
+
+  let refundText = ''
+  if (data.refundStatus) {
+    const statusMap: Record<string, string> = {
+      pending: 'รอดำเนินการ',
+      processing: 'กำลังดำเนินการ',
+      completed: 'คืนเงินแล้ว',
+      failed: 'คืนเงินไม่สำเร็จ',
+      not_applicable: 'ไม่มีการคืนเงิน',
+    }
+    refundText = `\n💰 สถานะคืนเงินลูกค้า: ${statusMap[data.refundStatus] || data.refundStatus}`
+    if (data.refundAmount && data.refundAmount > 0) {
+      refundText += ` (${data.refundAmount.toLocaleString()} บาท)`
+    }
+  }
+
+  const cancelledByText = data.cancelledBy === 'customer' ? 'ลูกค้า' : 'แอดมิน'
+
+  const messageText =
+    `❌ งานถูกยกเลิกโดย${cancelledByText}\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `⏰ เวลา: ${data.scheduledTime}\n` +
+    `${locationText}\n` +
+    (data.bookingNumber ? `🔢 เลขที่จอง: ${data.bookingNumber}\n` : '') +
+    `\n📋 เหตุผล: ${data.cancellationReason}` +
+    refundText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for staff: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
+interface BookingCancelledAdminData {
+  bookingNumber: string
+  customerName: string
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  cancellationReason: string
+  refundAmount?: number | null
+  refundPercentage?: number | null
+}
+
+/**
+ * Send booking cancellation notification to admins via LINE
+ * Called when a customer cancels a booking
+ */
+async function sendBookingCancelledToAdmin(lineUserIds: string[], data: BookingCancelledAdminData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  let refundText = ''
+  if (data.refundAmount && data.refundAmount > 0) {
+    refundText = `\n💰 คืนเงิน: ${data.refundAmount.toLocaleString()} บาท`
+    if (data.refundPercentage) {
+      refundText += ` (${data.refundPercentage}%)`
+    }
+  }
+
+  const messageText =
+    `❌ ลูกค้ายกเลิกการจอง\n\n` +
+    `🔢 เลขที่จอง: ${data.bookingNumber}\n` +
+    `👤 ลูกค้า: ${data.customerName}\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `⏰ เวลา: ${data.scheduledTime}\n` +
+    `\n📋 เหตุผล: ${data.cancellationReason}` +
+    refundText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for admin: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
 interface JobReminderData {
   serviceName: string
   scheduledDate: string
@@ -436,6 +550,108 @@ async function sendJobEscalationToStaff(lineUserIds: string[], data: JobEscalati
   return multicast(lineUserIds, [message])
 }
 
+interface BookingRescheduledStaffData {
+  serviceName: string
+  oldDate: string
+  oldTime: string
+  newDate: string
+  newTime: string
+  address: string
+  hotelName?: string | null
+  bookingNumber?: string | null
+  staffEarnings: number
+  durationMinutes: number
+  jobId?: string
+}
+
+/**
+ * Send booking rescheduled notification to assigned staff via LINE
+ * Staff needs to re-accept the job after reschedule
+ */
+async function sendBookingRescheduledToStaff(lineUserIds: string[], data: BookingRescheduledStaffData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}`
+    : `📍 สถานที่: ${data.address}`
+
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const linkText = staffLiffUrl && data.jobId
+    ? `\n👉 กดรับงานใหม่:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
+    : '\n\n⚠️ กรุณาเปิดแอปเพื่อรับงานใหม่อีกครั้ง'
+
+  const messageText =
+    `📅 ลูกค้าเลื่อนนัด!\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    (data.bookingNumber ? `🔢 เลขที่จอง: ${data.bookingNumber}\n` : '') +
+    `\n❌ กำหนดการเดิม:\n` +
+    `   📅 ${data.oldDate}\n` +
+    `   ⏰ ${data.oldTime}\n` +
+    `\n✅ กำหนดการใหม่:\n` +
+    `   📅 ${data.newDate}\n` +
+    `   ⏰ ${data.newTime}\n` +
+    `\n⏱️ ระยะเวลา: ${data.durationMinutes} นาที\n` +
+    `${locationText}\n` +
+    `💰 รายได้: ${data.staffEarnings.toLocaleString()} บาท\n` +
+    `\n⚠️ งานถูกปล่อยให้รับใหม่แล้ว` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for staff: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
+interface PayoutCompletedData {
+  staffName: string
+  netAmount: number
+  grossEarnings: number
+  platformFee: number
+  totalJobs: number
+  periodStart: string
+  periodEnd: string
+  transferReference: string
+  transferredAt: string
+}
+
+/**
+ * Send payout completed notification to staff via LINE
+ */
+async function sendPayoutCompletedToStaff(lineUserId: string, data: PayoutCompletedData): Promise<boolean> {
+  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('th-TH', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  })
+
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const linkText = staffLiffUrl
+    ? `\n👉 ดูรายละเอียด:\n${staffLiffUrl}/staff/earnings`
+    : ''
+
+  const messageText =
+    `🎉 แจ้งเตือนการจ่ายเงิน\n\n` +
+    `เรียน คุณ${data.staffName}\n\n` +
+    `💰 ยอดเงินที่โอนเข้าบัญชี: ฿${data.netAmount.toLocaleString()}\n\n` +
+    `📅 รอบการจ่าย: ${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}\n` +
+    `📊 จำนวนงาน: ${data.totalJobs} งาน\n` +
+    `💵 รายได้รวม: ฿${data.grossEarnings.toLocaleString()}\n` +
+    `🏷️ ค่าธรรมเนียม: -฿${data.platformFee.toLocaleString()}\n` +
+    `💰 รายได้สุทธิ: ฿${data.netAmount.toLocaleString()}\n\n` +
+    `📝 หมายเลขอ้างอิง: ${data.transferReference}\n` +
+    `📆 วันที่โอน: ${formatDate(data.transferredAt)}\n\n` +
+    `ขอบคุณสำหรับการให้บริการที่ดีเสมอมา! 🙏` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+  return pushMessage(lineUserId, [message])
+}
+
 export const lineService = {
   pushMessage,
   multicast,
@@ -443,8 +659,12 @@ export const lineService = {
   sendNewBookingToAdmin,
   sendJobReAvailableToStaff,
   sendJobCancelledToAdmin,
+  sendBookingCancelledToStaff,
+  sendBookingCancelledToAdmin,
+  sendBookingRescheduledToStaff,
   sendJobReminderToStaff,
   sendJobEscalationToStaff,
+  sendPayoutCompletedToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, JobReminderData, JobEscalationStaffData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingCancelledAdminData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData }

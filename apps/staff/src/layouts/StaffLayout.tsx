@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Calendar,
+  Home,
   Clock,
   DollarSign,
   User,
@@ -15,7 +15,7 @@ import { useStaffNotifications } from '@bliss/supabase/notifications'
 import { NotificationPanel, type Notification } from '../components'
 
 const navigation = [
-  { name: 'วันนี้', nameEn: 'Today', href: '/staff', icon: Calendar },
+  { name: 'หน้าแรก', nameEn: 'Home', href: '/staff', icon: Home },
   { name: 'ตารางงาน', nameEn: 'Schedule', href: '/staff/schedule', icon: Clock },
   { name: 'รายได้', nameEn: 'Earnings', href: '/staff/earnings', icon: DollarSign },
   { name: 'โปรไฟล์', nameEn: 'Profile', href: '/staff/profile', icon: User },
@@ -37,7 +37,7 @@ function StaffLayout() {
   } = useStaffNotifications()
 
   // Map DB notifications to NotificationPanel format
-  const validTypes = ['new_job', 'job_cancelled', 'job_updated', 'payment_received', 'job_no_staff'] as const
+  const validTypes = ['new_job', 'job_cancelled', 'job_updated', 'payment_received', 'job_no_staff', 'job_accepted', 'new_review'] as const
   const notifications: Notification[] = useMemo(() =>
     dbNotifications.map((n) => ({
       id: n.id,
@@ -46,6 +46,7 @@ function StaffLayout() {
       message: n.message,
       read: n.is_read ?? false,
       created_at: n.created_at || new Date().toISOString(),
+      data: n.data as Record<string, any> | undefined,
     })),
     [dbNotifications]
   )

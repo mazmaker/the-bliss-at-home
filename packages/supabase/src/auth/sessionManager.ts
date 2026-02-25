@@ -29,7 +29,8 @@ export function initSessionManager(): void {
       if (localStorage.getItem('rememberMe') === 'false') {
         // Clear Supabase session
         supabase.auth.signOut({ scope: 'local' })
-        // Clear storage flags
+        // Clear all session-related storage
+        localStorage.removeItem('bliss-customer-auth')  // Main session key
         localStorage.removeItem('rememberMe')
         sessionStorage.removeItem('sessionOnly')
       }
@@ -49,6 +50,9 @@ export function shouldPersistSession(): boolean {
  */
 export async function clearSession(): Promise<void> {
   await supabase.auth.signOut()
+
+  // Clear all session-related storage
+  localStorage.removeItem('bliss-customer-auth')  // Main session key
   localStorage.removeItem('rememberMe')
   sessionStorage.removeItem('sessionOnly')
 }

@@ -39,10 +39,22 @@ import {
   Clock,
 } from 'lucide-react'
 
+// Function to generate hotel slug from English name
+const generateHotelSlug = (englishName: string): string => {
+  return englishName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-')          // Replace spaces with hyphens
+    .replace(/-+/g, '-')           // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '')         // Remove leading/trailing hyphens
+}
+
 // Validation schema
 const hotelFormSchema = z.object({
   name_th: z.string().min(3, 'ชื่อภาษาไทยต้องมีอย่างน้อย 3 ตัวอักษร'),
   name_en: z.string().min(3, 'English name must be at least 3 characters'),
+  hotel_slug: z.string().min(3, 'Hotel slug must be at least 3 characters'),
   contact_person: z.string().min(2, 'ชื่อผู้ติดต่อต้องมีอย่างน้อย 2 ตัวอักษร'),
   email: z.string().email('รูปแบบอีเมลไม่ถูกต้อง'),
   phone: z.string().min(9, 'เบอร์โทรศัพท์ต้องมีอย่างน้อย 9 หลัก'),
@@ -217,6 +229,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
     defaultValues: editData || {
       name_th: '',
       name_en: '',
+      hotel_slug: '',
       contact_person: '',
       email: '',
       phone: '',
@@ -235,6 +248,15 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       website: '',
     },
   })
+
+  // Auto-generate hotel_slug from English name
+  const nameEn = watch('name_en')
+  useEffect(() => {
+    if (nameEn && nameEn.trim()) {
+      const generatedSlug = generateHotelSlug(nameEn)
+      setValue('hotel_slug', generatedSlug, { shouldValidate: true })
+    }
+  }, [nameEn, setValue])
 
   // Load hotel auth status
   const loadAuthStatusData = async (hotelId: string) => {
@@ -266,6 +288,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
         reset({
           name_th: 'โรงแรมทดสอบ กรุงเทพฯ',
           name_en: 'Test Hotel Bangkok',
+          hotel_slug: 'test-hotel-bangkok',
           contact_person: 'คุณสมชาย ใจดี',
           email: 'contact@testhotel.com',
           phone: '02-123-4567',
@@ -308,6 +331,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           .update({
             name_th: data.name_th,
             name_en: data.name_en,
+            hotel_slug: data.hotel_slug,
             contact_person: data.contact_person,
             email: data.email,
             phone: data.phone,
@@ -335,6 +359,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           {
             name_th: data.name_th,
             name_en: data.name_en,
+            hotel_slug: data.hotel_slug,
             contact_person: data.contact_person,
             email: data.email,
             phone: data.phone,
@@ -441,6 +466,27 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                       <p className="mt-1 text-sm text-red-600">{errors.name_en.message}</p>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Hotel Slug (URL สำหรับโรงแรม) *
+                  </label>
+                  <input
+                    {...register('hotel_slug')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm bg-gray-50 text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="hilton-bangkok"
+                    readOnly={!editData} // Auto-generate for new hotels, allow edit for existing ones
+                  />
+                  {errors.hotel_slug && (
+                    <p className="mt-1 text-sm text-red-600">{errors.hotel_slug.message}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    {editData
+                      ? "สามารถแก้ไขได้หากจำเป็น (จะส่งผลต่อ URL ของโรงแรม)"
+                      : "สร้างอัตโนมัติจากชื่อภาษาอังกฤษ - ใช้สำหรับ URL และระบุตัวตน"
+                    }
+                  </p>
                 </div>
 
                 <div>

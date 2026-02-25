@@ -9,7 +9,7 @@
  * and all useAuth() consumers read from the shared context.
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from './supabaseClient'
 import { authService } from './authService'
 import type { AuthState, LoginCredentials, RegisterCredentials, UserRole } from './types'
@@ -44,19 +44,12 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
     isAuthenticated: false,
   })
 
-  // Track if initial load has completed to prevent duplicate fetches
-  const initialLoadDone = useRef(false)
-
-  // Initialize auth state - runs ONCE
+  // Initialize auth state
   useEffect(() => {
     let mounted = true
     let timeoutId: NodeJS.Timeout
 
     async function loadUser() {
-      // Prevent duplicate initial loads (React StrictMode)
-      if (initialLoadDone.current) return
-      initialLoadDone.current = true
-
       try {
         const sessionData = localStorage.getItem('bliss-customer-auth')
         if (!sessionData) {
@@ -139,7 +132,7 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
     const PROFILE_FETCH_DEBOUNCE = 2000
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         const now = Date.now()
         if (now - lastProfileFetchTime < PROFILE_FETCH_DEBOUNCE) {
           console.log('⏭️ [AuthProvider] Skipping profile fetch (debounced)', event)
@@ -222,7 +215,13 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
       return response
     } catch (error) {
       const errorMessage = error instanceof AuthError ? error.message : 'Login failed'
-      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }))
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+        isAuthenticated: false,  // ← แก้ไข: reset เป็น false เมื่อ login ผิดพลาด
+        user: null               // ← แก้ไข: clear user data
+      }))
       throw error
     }
   }, [expectedRole])
