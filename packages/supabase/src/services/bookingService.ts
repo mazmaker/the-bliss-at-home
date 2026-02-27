@@ -246,6 +246,7 @@ export async function createBookingWithServices(
     discount_amount?: number;
     final_price: number;
     promotion_id?: string | null;
+    provider_preference?: 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference';
   },
   services: Array<{
     service_id: string;
@@ -277,6 +278,7 @@ export async function createBookingWithServices(
     service_format: bookingData.service_format,
     promotion_id: bookingData.promotion_id || null,
     is_multi_service: services.length > 1,
+    provider_preference: bookingData.provider_preference || 'no-preference',
     status: 'pending',
     payment_status: 'pending',
   } as any;

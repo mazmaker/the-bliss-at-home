@@ -510,6 +510,7 @@ function BookingWizard() {
           discount_amount: discountAmount,
           final_price: totalPrice,
           promotion_id: appliedPromo?.valid ? appliedPromo.promotion?.id || null : null,
+          provider_preference: providerPreference,
         },
         services,
         addons: addonsData.length > 0 ? addonsData : undefined,
