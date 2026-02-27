@@ -8,6 +8,46 @@ import { lineService } from './lineService.js'
 import { emailService } from './emailService.js'
 
 /**
+ * Get Thai label for provider preference (server-side helper)
+ */
+function getProviderPreferenceLabelServer(preference: string | null | undefined): string {
+  switch (preference) {
+    case 'female-only': return 'ผู้หญิงเท่านั้น'
+    case 'male-only': return 'ผู้ชายเท่านั้น'
+    case 'prefer-female': return 'ต้องการผู้หญิง'
+    case 'prefer-male': return 'ต้องการผู้ชาย'
+    default: return 'ไม่ระบุ'
+  }
+}
+
+/**
+ * Filter staff by provider preference (gender-based)
+ */
+function filterStaffByProviderPreference<T extends { gender?: string | null }>(
+  staff: T[],
+  preference: string | null | undefined
+): T[] {
+  if (!preference || preference === 'no-preference') return staff
+
+  switch (preference) {
+    case 'female-only':
+      return staff.filter(s => s.gender === 'female')
+    case 'male-only':
+      return staff.filter(s => s.gender === 'male')
+    case 'prefer-female': {
+      const preferred = staff.filter(s => s.gender === 'female')
+      return preferred.length > 0 ? preferred : staff
+    }
+    case 'prefer-male': {
+      const preferred = staff.filter(s => s.gender === 'male')
+      return preferred.length > 0 ? preferred : staff
+    }
+    default:
+      return staff
+  }
+}
+
+/**
  * Create job(s) from a confirmed booking (idempotent)
  * - Single booking: 1 job
  * - Couple booking (simultaneous): 1 job per recipient (each needs a separate staff)
@@ -299,14 +339,17 @@ export async function sendBookingConfirmedNotifications(
       : Math.round(singleAmount * singleRate)
   }
 
-  // === 1. Notify available staff via LINE ===
-  const { data: availableStaff } = await supabase
+  // === 1. Notify available staff via LINE (filtered by provider preference) ===
+  const { data: allAvailableStaff } = await supabase
     .from('staff')
-    .select('id, profile_id')
+    .select('id, profile_id, gender')
     .eq('is_available', true)
     .eq('status', 'active')
 
-  if (availableStaff && availableStaff.length > 0) {
+  const availableStaff = filterStaffByProviderPreference(allAvailableStaff || [], booking.provider_preference)
+  console.log(`👥 Staff filter: preference=${booking.provider_preference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, filtered=${availableStaff.length}`)
+
+  if (availableStaff.length > 0) {
     // Get LINE user IDs from profiles
     const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
     const { data: staffProfiles } = await supabase
@@ -345,8 +388,8 @@ export async function sendBookingConfirmedNotifications(
       user_id: staff.profile_id,
       type: 'new_job',
       title: 'งานใหม่เข้ามา!',
-      message: `มีงาน "${serviceName}" ${location ? `ที่ ${location}` : ''} วันที่ ${scheduledDate} เวลา ${scheduledTime}`,
-      data: { booking_id: bookingId, job_ids: jobIds },
+      message: `มีงาน "${serviceName}" ${location ? `ที่ ${location}` : ''} วันที่ ${scheduledDate} เวลา ${scheduledTime}${booking.provider_preference && booking.provider_preference !== 'no-preference' ? ` (ลูกค้าต้องการ: ${getProviderPreferenceLabelServer(booking.provider_preference)})` : ''}`,
+      data: { booking_id: bookingId, job_ids: jobIds, provider_preference: booking.provider_preference || 'no-preference' },
       is_read: false,
     }))
 
@@ -618,14 +661,28 @@ export async function processJobCancelled(
     if (match) recipientName = match[1]
   }
 
-  // 6. Notify available staff via LINE
-  const { data: availableStaff } = await supabase
+  // 6. Get provider_preference from booking
+  let providerPreference: string | null = null
+  if (job.booking_id) {
+    const { data: bookingData } = await supabase
+      .from('bookings')
+      .select('provider_preference')
+      .eq('id', job.booking_id)
+      .single()
+    providerPreference = bookingData?.provider_preference || null
+  }
+
+  // 6.1 Notify available staff via LINE (filtered by provider preference)
+  const { data: allAvailableStaff } = await supabase
     .from('staff')
-    .select('id, profile_id')
+    .select('id, profile_id, gender')
     .eq('is_available', true)
     .eq('status', 'active')
 
-  if (availableStaff && availableStaff.length > 0) {
+  const availableStaff = filterStaffByProviderPreference(allAvailableStaff || [], providerPreference)
+  console.log(`👥 Staff filter (cancelled): preference=${providerPreference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, filtered=${availableStaff.length}`)
+
+  if (availableStaff.length > 0) {
     const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
     const { data: staffProfiles } = await supabase
       .from('profiles')
@@ -910,24 +967,23 @@ export async function processJobEscalations(): Promise<number> {
 
   const sentSet = new Set(sentEscalations?.map(r => `${r.job_id}-${r.escalation_level}`) || [])
 
-  // 3. Get available staff LINE IDs (for level 1)
+  // 3. Get available staff (with gender for provider preference filtering)
   const { data: availableStaff } = await supabase
     .from('staff')
-    .select('id, profile_id')
+    .select('id, profile_id, gender')
     .eq('is_available', true)
     .eq('status', 'active')
 
-  let staffLineIds: string[] = []
-  let staffProfileIds: string[] = []
+  let staffProfiles: Array<{ id: string; line_user_id: string | null }> | null = null
   if (availableStaff && availableStaff.length > 0) {
-    staffProfileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
-    const { data: staffProfiles } = await supabase
+    const staffProfileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('id, line_user_id')
       .in('id', staffProfileIds)
       .not('line_user_id', 'is', null)
 
-    staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
+    staffProfiles = profiles
   }
 
   // 4. Get admin profiles (for level 2 & 3)
@@ -936,17 +992,19 @@ export async function processJobEscalations(): Promise<number> {
     .select('id, line_user_id')
     .eq('role', 'ADMIN')
 
-  // 5. Get booking numbers for notifications
+  // 5. Get booking numbers and provider_preference for notifications
   const bookingIds = [...new Set(pendingJobs.map(j => j.booking_id).filter(Boolean))]
   let bookingNumberMap = new Map<string, string>()
+  let providerPreferenceMap = new Map<string, string>()
   if (bookingIds.length > 0) {
     const { data: bookings } = await supabase
       .from('bookings')
-      .select('id, booking_number')
+      .select('id, booking_number, provider_preference')
       .in('id', bookingIds)
 
     if (bookings) {
       bookingNumberMap = new Map(bookings.map(b => [b.id, b.booking_number]))
+      providerPreferenceMap = new Map(bookings.map(b => [b.id, b.provider_preference || 'no-preference']))
     }
   }
 
@@ -966,9 +1024,18 @@ export async function processJobEscalations(): Promise<number> {
 
     // === Level 1: Staff re-reminder (pending > 30 min) ===
     if (minutesPending >= 30 && !sentSet.has(`${job.id}-1`)) {
-      // LINE multicast to staff
-      if (staffLineIds.length > 0) {
-        await lineService.sendJobEscalationToStaff(staffLineIds, {
+      // Filter staff by provider preference for this job
+      const jobPreference = job.booking_id ? providerPreferenceMap.get(job.booking_id) : null
+      const filteredStaff = filterStaffByProviderPreference(availableStaff || [], jobPreference)
+      const filteredProfileIds = new Set(filteredStaff.map(s => s.profile_id))
+      const filteredLineIds = staffProfiles
+        ?.filter(p => filteredProfileIds.has(p.id))
+        .map(p => p.line_user_id)
+        .filter(Boolean) as string[] || []
+
+      // LINE multicast to filtered staff
+      if (filteredLineIds.length > 0) {
+        await lineService.sendJobEscalationToStaff(filteredLineIds, {
           serviceName: job.service_name,
           scheduledDate: job.scheduled_date,
           scheduledTime: rawTime.substring(0, 5),
@@ -982,14 +1049,14 @@ export async function processJobEscalations(): Promise<number> {
         })
       }
 
-      // In-app for staff
-      if (availableStaff && availableStaff.length > 0) {
-        const staffNotifRows = availableStaff.map(staff => ({
+      // In-app for filtered staff
+      if (filteredStaff.length > 0) {
+        const staffNotifRows = filteredStaff.map(staff => ({
           user_id: staff.profile_id,
           type: 'job_no_staff',
           title: 'งานยังไม่มีคนรับ!',
-          message: `งาน "${job.service_name}" วันที่ ${job.scheduled_date} รอมาแล้ว ${minutesPending} นาที`,
-          data: { job_id: job.id, booking_id: job.booking_id, escalation_level: 1 },
+          message: `งาน "${job.service_name}" วันที่ ${job.scheduled_date} รอมาแล้ว ${minutesPending} นาที${jobPreference && jobPreference !== 'no-preference' ? ` (ลูกค้าต้องการ: ${getProviderPreferenceLabelServer(jobPreference)})` : ''}`,
+          data: { job_id: job.id, booking_id: job.booking_id, escalation_level: 1, provider_preference: jobPreference || 'no-preference' },
           is_read: false,
         }))
         await supabase.from('notifications').insert(staffNotifRows)

@@ -5,7 +5,7 @@ import {
   Banknote, FileText, CheckCircle, XCircle, Play, Loader2
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
-import { useJob, useJobs, type JobStatus } from '@bliss/supabase'
+import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { ServiceTimer, JobCancellationModal, SOSButton } from '../components'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
@@ -199,6 +199,21 @@ function StaffJobDetail() {
               <p className="text-sm text-stone-700">{formatTime(job.scheduled_time)}</p>
             </div>
           </div>
+
+          {/* Provider Preference */}
+          {isSpecificPreference(job.provider_preference) && (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                <User className="w-5 h-5 text-purple-700" />
+              </div>
+              <div>
+                <p className="text-xs text-stone-500">ความต้องการผู้ให้บริการ</p>
+                <span className={`inline-block text-xs px-2 py-1 rounded-full mt-1 ${getProviderPreferenceBadgeStyle(job.provider_preference)}`}>
+                  {getProviderPreferenceLabel(job.provider_preference)}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Customer */}
           <div className="flex items-center gap-3">

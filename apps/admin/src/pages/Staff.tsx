@@ -291,6 +291,7 @@ function StaffPage() {
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เพศ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ทักษะ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เรตติ้ง</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">งานที่เสร็จ</th>
@@ -302,7 +303,7 @@ function StaffPage() {
             <tbody>
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-stone-500">
+                  <td colSpan={8} className="py-8 text-center text-stone-500">
                     ไม่พบข้อมูลพนักงาน
                   </td>
                 </tr>
@@ -327,6 +328,15 @@ function StaffPage() {
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {staff.gender === 'female' ? (
+                        <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-medium">หญิง</span>
+                      ) : staff.gender === 'male' ? (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">ชาย</span>
+                      ) : (
+                        <span className="text-xs text-stone-400">ไม่ระบุ</span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex flex-wrap gap-1">

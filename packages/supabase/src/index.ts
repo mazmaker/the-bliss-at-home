@@ -30,6 +30,9 @@ export { createSupabaseClient, createSupabaseAdminClient, getBrowserClient } fro
 // Hooks
 export { useSupabaseQuery, useSupabaseMutation } from './hooks/useSupabaseQuery'
 
+// Utils
+export * from './utils/providerPreference'
+
 // Types
 export type { Database, Json } from './types/database.types'
 

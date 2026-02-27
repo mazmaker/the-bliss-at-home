@@ -1,5 +1,6 @@
-import { X, Calendar, Clock, User, MapPin, DollarSign, FileText, CheckCircle, XCircle, AlertCircle, Briefcase } from 'lucide-react'
+import { X, Calendar, Clock, User, MapPin, DollarSign, FileText, CheckCircle, XCircle, AlertCircle, Briefcase, Users } from 'lucide-react'
 import { Job } from '../hooks/useStaffJobs'
+import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 
 interface JobDetailModalProps {
   job: Job
@@ -71,6 +72,19 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
               </div>
             </div>
           </div>
+
+          {/* Provider Preference */}
+          {isSpecificPreference(job.provider_preference) && (
+            <div className="bg-white border border-stone-200 rounded-xl p-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-stone-600" />
+                <span className="text-sm font-medium text-stone-700">ความต้องการผู้ให้บริการ</span>
+                <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(job.provider_preference)}`}>
+                  {getProviderPreferenceLabel(job.provider_preference)}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Schedule Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
