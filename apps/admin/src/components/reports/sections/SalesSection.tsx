@@ -409,43 +409,48 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 </div>
               ))
             ) : (
-              (serviceRevenueByCategory.data || []).map((service, index) => {
-                const colors = [
-                  'from-pink-500 to-pink-600',
-                  'from-indigo-500 to-indigo-600',
-                  'from-emerald-500 to-emerald-600',
-                  'from-amber-500 to-amber-600',
-                  'from-violet-500 to-violet-600'
-                ]
-                const bgColor = colors[index % colors.length]
+              (() => {
+                const categories = serviceRevenueByCategory.data || []
+                const totalRevenue = categories.reduce((sum, s) => sum + (s.total_revenue || 0), 0)
+                return categories.map((service, index) => {
+                  const colors = [
+                    'from-pink-500 to-pink-600',
+                    'from-indigo-500 to-indigo-600',
+                    'from-emerald-500 to-emerald-600',
+                    'from-amber-500 to-amber-600',
+                    'from-violet-500 to-violet-600'
+                  ]
+                  const bgColor = colors[index % colors.length]
+                  const marketShare = totalRevenue > 0 ? (service.total_revenue || 0) / totalRevenue * 100 : 0
 
-                return (
-                  <div key={index} className="flex items-center gap-4 p-4 bg-stone-50 rounded-lg">
-                    <div className={`w-12 h-12 bg-gradient-to-r ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-lg`}>
-                      {service.service_category?.charAt(0) || '?'}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-stone-900">{service.service_category || 'Unknown'}</h4>
-                      <div className="flex items-center gap-4 text-sm text-stone-600">
-                        <span>{service.booking_count || 0} bookings</span>
-                        <span>•</span>
-                        <span>AVG: ฿{service.avg_booking_value?.toLocaleString() || 0}</span>
-                        <span>•</span>
-                        <span className={`flex items-center gap-1 ${
-                          (service.growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {(service.growth_rate || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                          {Math.abs(service.growth_rate || 0).toFixed(1)}%
-                        </span>
+                  return (
+                    <div key={index} className="flex items-center gap-4 p-4 bg-stone-50 rounded-lg">
+                      <div className={`w-12 h-12 bg-gradient-to-r ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-lg`}>
+                        {service.category?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-stone-900">{service.category_th || service.category || 'Unknown'}</h4>
+                        <div className="flex items-center gap-4 text-sm text-stone-600">
+                          <span>{service.total_bookings || 0} bookings</span>
+                          <span>•</span>
+                          <span>AVG: ฿{service.avg_price?.toLocaleString() || 0}</span>
+                          <span>•</span>
+                          <span className={`flex items-center gap-1 ${
+                            (service.growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {(service.growth_rate || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            {Math.abs(service.growth_rate || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-stone-900">฿{service.total_revenue?.toLocaleString() || 0}</div>
+                        <div className="text-xs text-stone-500">{marketShare.toFixed(1)}% share</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-stone-900">฿{service.total_revenue?.toLocaleString() || 0}</div>
-                      <div className="text-xs text-stone-500">{service.market_share_percent?.toFixed(1) || 0}% share</div>
-                    </div>
-                  </div>
-                )
-              })
+                  )
+                })
+              })()
             )}
           </div>
         </div>
@@ -556,7 +561,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                           <div className="w-full bg-stone-200 rounded-full h-2">
                             <div
                               className="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full transition-all"
-                              style={{ width: `${Math.max((hour.performance_score || 0), 10)}%` }}
+                              style={{ width: `${Math.min(Math.max((hour.performance_score || 0), 10), 100)}%` }}
                             ></div>
                           </div>
                         </div>
@@ -595,7 +600,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                           <div className="w-full bg-stone-200 rounded-full h-2">
                             <div
                               className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all"
-                              style={{ width: `${Math.max((day.performance_score || 0), 10)}%` }}
+                              style={{ width: `${Math.min(Math.max((day.performance_score || 0), 10), 100)}%` }}
                             ></div>
                           </div>
                         </div>

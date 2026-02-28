@@ -6,16 +6,11 @@ import {
   ChevronDown,
   Info,
   Users,
-  TrendingUp,
   DollarSign,
-  Award,
   Clock,
   Star,
-  AlertCircle,
-  RefreshCw,
   Trophy,
   Target,
-  CreditCard,
   Wallet,
   Calendar,
   CheckCircle,
@@ -560,58 +555,6 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
             </div>
           </div>
 
-          {/* Payment Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
-              <div className="flex items-center gap-3 mb-4">
-                <CreditCard className="w-6 h-6 text-blue-600" />
-                <h4 className="font-semibold text-blue-900">Payment Schedule</h4>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-blue-700">Weekly Payments:</span>
-                  <span className="font-semibold text-blue-900">Every Friday</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-700">Commission Rate:</span>
-                  <span className="font-semibold text-blue-900">15-25%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-700">Payment Method:</span>
-                  <span className="font-semibold text-blue-900">Bank Transfer</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-700">Processing Time:</span>
-                  <span className="font-semibold text-blue-900">1-2 Business Days</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 rounded-xl border border-emerald-200">
-              <div className="flex items-center gap-3 mb-4">
-                <Award className="w-6 h-6 text-emerald-600" />
-                <h4 className="font-semibold text-emerald-900">Performance Bonuses</h4>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-emerald-700">High Rating Bonus:</span>
-                  <span className="font-semibold text-emerald-900">+5% for 4.8+ stars</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-emerald-700">Volume Bonus:</span>
-                  <span className="font-semibold text-emerald-900">+3% for 20+ jobs/week</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-emerald-700">Retention Bonus:</span>
-                  <span className="font-semibold text-emerald-900">Monthly ฿500</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-emerald-700">Holiday Bonus:</span>
-                  <span className="font-semibold text-emerald-900">Double rate on holidays</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

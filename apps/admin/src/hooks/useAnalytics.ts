@@ -440,7 +440,7 @@ export function useMonthlyServiceTrends(monthsBack: number = 6) {
     queryKey: [...analyticsKeys.all, 'monthlyTrends', monthsBack],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_monthly_service_trends', {
-        months_back: monthsBack
+        period_days: monthsBack * 30
       })
 
       if (error) throw error
@@ -464,72 +464,12 @@ export function useCustomerBehaviorAnalytics(days: number = 30) {
   return useQuery({
     queryKey: [...analyticsKeys.all, 'customerBehavior', days],
     queryFn: async () => {
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - days)
+      const { data, error } = await supabase.rpc('get_customer_behavior_analytics', {
+        period_days: days
+      })
 
-      // Get bookings for the period
-      const { data: bookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('id, customer_id, final_price, status, created_at')
-        .gte('created_at', startDate.toISOString())
-        .not('customer_id', 'is', null)
-
-      if (bookingsError) throw bookingsError
-
-      // Get all customers
-      const { data: customers, error: customersError } = await supabase
-        .from('customers')
-        .select('id, created_at')
-
-      if (customersError) throw customersError
-
-      if (!bookings || !customers) {
-        return {
-          total_customers: 0,
-          new_customers: 0,
-          returning_customers: 0,
-          repeat_booking_rate: 0,
-          avg_customer_lifetime_value: 0,
-          avg_bookings_per_customer: 0,
-          customer_retention_rate: 0,
-          churn_rate: 0
-        }
-      }
-
-      // Calculate metrics
-      const totalCustomers = new Set(bookings.map(b => b.customer_id)).size
-      const completedBookings = bookings.filter(b => b.status === 'completed')
-      const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.final_price || 0), 0)
-
-      // Customer booking counts
-      const customerBookingCounts = bookings.reduce((acc, booking) => {
-        const customerId = booking.customer_id
-        if (customerId) {
-          acc[customerId] = (acc[customerId] || 0) + 1
-        }
-        return acc
-      }, {} as Record<string, number>)
-
-      const repeatCustomers = Object.values(customerBookingCounts).filter(count => count > 1).length
-      const repeatBookingRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0
-      const avgBookingsPerCustomer = totalCustomers > 0 ? bookings.length / totalCustomers : 0
-      const avgCLV = totalCustomers > 0 ? totalRevenue / totalCustomers : 0
-
-      return {
-        total_customers: totalCustomers,
-        new_customers: Math.floor(totalCustomers * 0.3), // Estimate 30% new customers
-        returning_customers: repeatCustomers,
-        repeat_booking_rate: Number(repeatBookingRate.toFixed(2)),
-        avg_customer_lifetime_value: Number(avgCLV.toFixed(2)),
-        avg_bookings_per_customer: Number(avgBookingsPerCustomer.toFixed(2)),
-        customer_retention_rate: Number((repeatBookingRate * 0.8).toFixed(2)), // Estimate
-        churn_rate: Number((100 - (repeatBookingRate * 0.8)).toFixed(2)),
-
-        // Additional growth metrics needed by the component
-        returning_customer_growth: Number((Math.random() * 10 - 5).toFixed(1)), // Mock growth data
-        clv_growth: Number((Math.random() * 15 - 7.5).toFixed(1)), // Mock growth data
-        avg_time_between_bookings: Number((15 + Math.random() * 30).toFixed(0)) // Mock: 15-45 days
-      }
+      if (error) throw error
+      return data?.[0] || null
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -545,85 +485,12 @@ export function useCustomerSegments(days: number = 30) {
   return useQuery({
     queryKey: [...analyticsKeys.all, 'customerSegments', days],
     queryFn: async () => {
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - days)
-
-      // Get bookings for the period
-      const { data: bookings, error } = await supabase
-        .from('bookings')
-        .select('id, customer_id, final_price, status')
-        .gte('created_at', startDate.toISOString())
-        .not('customer_id', 'is', null)
-
-      if (error) throw error
-
-      if (!bookings || bookings.length === 0) {
-        return [
-          {
-            segment_name: 'New Customers',
-            customer_count: 0,
-            avg_booking_value: 0,
-            total_revenue: 0,
-            avg_bookings_per_customer: 0,
-            percentage_of_total: 0
-          }
-        ]
-      }
-
-      // Group by customer
-      const customerStats = bookings.reduce((acc, booking) => {
-        const customerId = booking.customer_id!
-        if (!acc[customerId]) {
-          acc[customerId] = {
-            bookingCount: 0,
-            totalRevenue: 0,
-            completedBookings: []
-          }
-        }
-        acc[customerId].bookingCount++
-        if (booking.status === 'completed' && booking.final_price) {
-          acc[customerId].totalRevenue += booking.final_price
-          acc[customerId].completedBookings.push(booking)
-        }
-        return acc
-      }, {} as Record<string, { bookingCount: number, totalRevenue: number, completedBookings: any[] }>)
-
-      // Segment customers
-      const segments = {
-        'VIP Customers': [] as typeof customerStats[string][],
-        'Loyal Customers': [] as typeof customerStats[string][],
-        'Regular Customers': [] as typeof customerStats[string][],
-        'New Customers': [] as typeof customerStats[string][]
-      }
-
-      Object.values(customerStats).forEach(customer => {
-        if (customer.bookingCount >= 5 || customer.totalRevenue >= 5000) {
-          segments['VIP Customers'].push(customer)
-        } else if (customer.bookingCount >= 3 || customer.totalRevenue >= 2000) {
-          segments['Loyal Customers'].push(customer)
-        } else if (customer.bookingCount >= 2) {
-          segments['Regular Customers'].push(customer)
-        } else {
-          segments['New Customers'].push(customer)
-        }
+      const { data, error } = await supabase.rpc('get_customer_segments', {
+        period_days: days
       })
 
-      const totalCustomers = Object.keys(customerStats).length
-
-      return Object.entries(segments).map(([segmentName, customers]) => ({
-        segment_name: segmentName,
-        customer_count: customers.length,
-        avg_booking_value: customers.length > 0
-          ? Number((customers.reduce((sum, c) => sum + c.totalRevenue, 0) / customers.reduce((sum, c) => sum + c.bookingCount, 0) || 0).toFixed(2))
-          : 0,
-        total_revenue: customers.reduce((sum, c) => sum + c.totalRevenue, 0),
-        avg_bookings_per_customer: customers.length > 0
-          ? Number((customers.reduce((sum, c) => sum + c.bookingCount, 0) / customers.length).toFixed(1))
-          : 0,
-        percentage_of_total: totalCustomers > 0
-          ? Number(((customers.length / totalCustomers) * 100).toFixed(1))
-          : 0
-      })).filter(segment => segment.customer_count > 0)
+      if (error) throw error
+      return data || []
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
@@ -639,47 +506,12 @@ export function useCustomerSatisfactionMetrics(days: number = 30) {
   return useQuery({
     queryKey: [...analyticsKeys.all, 'customerSatisfaction', days],
     queryFn: async () => {
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - days)
+      const { data, error } = await supabase.rpc('get_customer_satisfaction_metrics', {
+        period_days: days
+      })
 
-      // Get reviews directly for the period (simpler and more reliable)
-      const { data: allReviews, error: reviewsError } = await supabase
-        .from('reviews')
-        .select('id, rating, booking_id, created_at')
-        .gte('created_at', startDate.toISOString())
-
-      if (reviewsError) throw reviewsError
-
-      if (!allReviews || allReviews.length === 0) {
-        // Return sample data to show the structure works
-        return {
-          avg_rating: 4.2,
-          total_reviews: 0,
-          satisfaction_rate: 0,
-          nps_score: 0,
-          review_growth: 0,
-          avg_rating_growth: 0
-        }
-      }
-
-      const totalReviews = allReviews.length
-      const avgRating = allReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / totalReviews
-      const positiveReviews = allReviews.filter(r => r.rating >= 4).length
-      const satisfactionRate = (positiveReviews / totalReviews) * 100
-
-      // Calculate NPS (simplified - treat ratings 1-6 as detractors, 7-8 as passives, 9-10 as promoters)
-      const promoters = allReviews.filter(r => r.rating >= 9).length
-      const detractors = allReviews.filter(r => r.rating <= 6).length
-      const npsScore = ((promoters - detractors) / totalReviews) * 100
-
-      return {
-        avg_rating: Number(avgRating.toFixed(2)),
-        total_reviews: totalReviews,
-        satisfaction_rate: Number(satisfactionRate.toFixed(1)),
-        nps_score: Number(npsScore.toFixed(1)),
-        review_growth: 5.2, // Sample growth data
-        avg_rating_growth: 2.1 // Sample growth data
-      }
+      if (error) throw error
+      return data?.[0] || null
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
