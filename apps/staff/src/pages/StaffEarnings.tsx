@@ -129,28 +129,13 @@ function StaffEarnings() {
     }
   }
 
-  // Get earnings for current period
+  // Get earnings for current period — aggregate from dailyEarnings which respects selected date range
   const periodEarnings = useMemo(() => {
-    if (viewPeriod === 'day') {
-      return {
-        earnings: summary?.today_earnings || 0,
-        jobs: summary?.today_jobs || 0,
-        hours: summary?.today_hours || 0,
-      }
-    } else if (viewPeriod === 'week') {
-      return {
-        earnings: summary?.week_earnings || 0,
-        jobs: summary?.week_jobs || 0,
-        hours: summary?.week_hours || 0,
-      }
-    } else {
-      return {
-        earnings: summary?.month_earnings || 0,
-        jobs: summary?.month_jobs || 0,
-        hours: summary?.month_hours || 0,
-      }
-    }
-  }, [summary, viewPeriod])
+    const earnings = dailyEarnings.reduce((sum, d) => sum + d.earnings, 0)
+    const jobs = dailyEarnings.reduce((sum, d) => sum + d.jobs, 0)
+    const hours = dailyEarnings.reduce((sum, d) => sum + d.hours, 0)
+    return { earnings, jobs, hours }
+  }, [dailyEarnings])
 
   // Get payout status badge
   const getPayoutStatusBadge = (status: PayoutStatus) => {
@@ -180,8 +165,15 @@ function StaffEarnings() {
     setTimeout(() => setCopiedRef(null), 2000)
   }
 
+  // Prepare chart data based on view period — show all days, not just 14
+  const chartData = useMemo(() => {
+    if (viewPeriod === 'day') return dailyEarnings.slice(0, 1).reverse()
+    if (viewPeriod === 'week') return dailyEarnings.slice(0, 7).reverse()
+    return [...dailyEarnings].reverse() // month: show all days
+  }, [dailyEarnings, viewPeriod])
+
   // Calculate max earnings for chart
-  const maxDailyEarning = Math.max(...dailyEarnings.map((d) => d.earnings), 1)
+  const maxDailyEarning = Math.max(...chartData.map((d) => d.earnings), 1)
 
   const isLoading = isSummaryLoading || isDailyLoading || isServicesLoading || isPayoutsLoading
 
@@ -293,24 +285,26 @@ function StaffEarnings() {
       </div>
 
       {/* Daily Earnings Chart */}
-      {dailyEarnings.length > 0 && (
+      {chartData.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-4">
           <h3 className="font-semibold text-stone-900 mb-4">รายได้รายวัน</h3>
-          <div className="flex items-end justify-between gap-1 h-32">
-            {dailyEarnings.slice(0, 14).reverse().map((day) => {
+          <div className="flex justify-between gap-0.5 h-32">
+            {chartData.map((day) => {
               const dayDate = new Date(day.date)
               return (
-                <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-                  <div
-                    className={`w-full rounded-t-lg transition-all ${
-                      day.earnings > 0
-                        ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
-                        : 'bg-stone-200'
-                    }`}
-                    style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
-                    title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
-                  />
-                  <span className="text-[10px] text-stone-500">{dayDate.getDate()}</span>
+                <div key={day.date} className="flex-1 flex flex-col items-center">
+                  <div className="flex-1 w-full flex items-end">
+                    <div
+                      className={`w-full rounded-t-lg transition-all ${
+                        day.earnings > 0
+                          ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
+                          : 'bg-stone-200'
+                      }`}
+                      style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
+                      title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500 mt-1">{dayDate.getDate()}</span>
                 </div>
               )
             })}
@@ -469,19 +463,9 @@ function StaffEarnings() {
 
               {/* Earnings breakdown */}
               <div className="bg-stone-50 rounded-xl p-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-stone-600">รายได้รวม</span>
-                  <span>฿{showPayoutDetail.gross_earnings.toLocaleString()}</span>
-                </div>
-                {showPayoutDetail.platform_fee > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">ค่าธรรมเนียมแพลตฟอร์ม</span>
-                    <span className="text-red-600">-฿{showPayoutDetail.platform_fee.toLocaleString()}</span>
-                  </div>
-                )}
-                <div className="flex justify-between pt-2 border-t border-stone-200 font-bold">
+                <div className="flex justify-between font-bold">
                   <span>ยอดโอน</span>
-                  <span className="text-amber-700">฿{showPayoutDetail.net_amount.toLocaleString()}</span>
+                  <span className="text-amber-700">฿{showPayoutDetail.gross_earnings.toLocaleString()}</span>
                 </div>
               </div>
 

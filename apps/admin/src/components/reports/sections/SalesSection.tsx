@@ -480,12 +480,19 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 </div>
               ))
             ) : (
-              (paymentMethodAnalysis.data || []).filter(m => m.payment_method !== 'cash').map((method, index) => (
+              (paymentMethodAnalysis.data || []).filter(m => m.payment_method !== 'cash').map((method, index) => {
+                const paymentLabels: Record<string, string> = {
+                  credit_card: 'บัตรเครดิต/เดบิต',
+                  promptpay: 'พร้อมเพย์',
+                  internet_banking: 'อินเทอร์เน็ตแบงก์กิ้ง',
+                  mobile_banking: 'โมบายแบงก์กิ้ง',
+                }
+                return (
                 <div key={index} className="p-4 border border-stone-200 rounded-lg hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-stone-900 flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
-                      {method.payment_method}
+                      {paymentLabels[method.payment_method] || method.payment_method}
                     </h4>
                     <span className="text-2xl font-bold text-stone-900">
                       ฿{method.total_amount?.toLocaleString() || 0}
@@ -510,7 +517,8 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                     </div>
                   </div>
                 </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>

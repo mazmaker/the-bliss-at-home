@@ -177,7 +177,10 @@ export interface StaffEarnings {
   bonus_earnings: number
   total_earnings: number
 
-  // Payout Information
+  // All-time earnings (for payment tracking)
+  alltime_earnings: number
+
+  // Payout Information (based on all-time data)
   pending_payout: number
   paid_payout: number
   last_payout_date: string
@@ -190,11 +193,6 @@ export interface StaffEarnings {
     nail: number
     facial: number
   }
-
-  // Tax & Deductions
-  tax_deductions: number
-  platform_commission: number
-  net_earnings: number
 
   // Growth
   earnings_growth: number
@@ -765,9 +763,11 @@ export async function getStaffOverview(days: number = 30): Promise<StaffOverview
     const avgEarningsPerStaff = activeStaff > 0 ? totalEarnings / activeStaff : 0
     const totalBookingsHandled = staffPerformanceData?.reduce((sum: number, staff: any) =>
       sum + (staff.bookings_completed || 0), 0) || 0
-    const avgRating = staffPerformanceData?.length > 0
-      ? staffPerformanceData.reduce((sum: number, staff: any) =>
-          sum + (Number(staff.avg_rating) || 0), 0) / staffPerformanceData.length
+    // Only average staff who actually have reviews (avoid diluting with 0s)
+    const staffWithReviews = staffPerformanceData?.filter((s: any) => (s.total_reviews || 0) > 0) || []
+    const avgRating = staffWithReviews.length > 0
+      ? staffWithReviews.reduce((sum: number, staff: any) =>
+          sum + (Number(staff.avg_rating) || 0), 0) / staffWithReviews.length
       : 0
 
     return {
@@ -885,38 +885,71 @@ export async function getStaffEarnings(days: number = 30): Promise<StaffEarnings
       return []
     }
 
+    // Get all-time earnings from staff table + paid amounts from payouts
+    // This matches the calculation in useStaffEarningsSummary (Staff Detail page)
+    const { data: staffTableData } = await supabase
+      .from('staff')
+      .select('id, profile_id, total_earnings')
+
+    const { data: payoutsData } = await supabase
+      .from('payouts')
+      .select('staff_id, net_amount')
+      .eq('status', 'completed')
+
+    // Build maps: staff.id → all-time earnings, staff.id → total paid
+    const profileToStaffId = new Map(
+      (staffTableData || []).filter(s => s.profile_id).map(s => [s.profile_id, s.id])
+    )
+    const allTimeEarningsById = new Map(
+      (staffTableData || []).map(s => [s.id, parseFloat(s.total_earnings) || 0])
+    )
+    const paidByStaffId = new Map<string, number>()
+    for (const p of payoutsData || []) {
+      const staffId = profileToStaffId.get(p.staff_id)
+      if (staffId) {
+        paidByStaffId.set(staffId, (paidByStaffId.get(staffId) || 0) + parseFloat(p.net_amount || 0))
+      }
+    }
+
     // Transform the database function result to match our interface
-    const staffEarnings: StaffEarnings[] = data.map((staff: any) => ({
-      staff_id: staff.staff_id,
-      name: staff.staff_name || 'Unknown Staff',
+    // RPC returns: id, name_th, base_earn, tips_earn, bonus_earn, total_earn,
+    //   massage_earn, spa_earn, nail_earn, facial_earn, pending, last_payout, next_payout, growth
+    const staffEarnings: StaffEarnings[] = data.map((staff: any) => {
+      const totalEarnings = Number(staff.total_earn) || 0
+      // Use all-time earnings for payment calculation (same as Staff Detail page)
+      const allTimeEarnings = allTimeEarningsById.get(staff.id) || totalEarnings
+      const paid = paidByStaffId.get(staff.id) || 0
 
-      // Current Period Earnings
-      base_earnings: Number(staff.base_earnings) || 0,
-      bonus_earnings: Number(staff.bonus_earnings) || 0,
-      total_earnings: Number(staff.total_earnings) || 0,
+      return {
+        staff_id: staff.id,
+        name: staff.name_th || 'Unknown Staff',
 
-      // Payout Information
-      pending_payout: Number(staff.pending_payout) || 0,
-      paid_payout: 0, // TODO: Get from payout records
-      last_payout_date: staff.last_payout_date || '2026-02-01',
-      next_payout_date: staff.next_payout_date || '2026-02-15',
+        // Current Period Earnings
+        base_earnings: Number(staff.base_earn) || 0,
+        bonus_earnings: Number(staff.bonus_earn) || 0,
+        total_earnings: totalEarnings,
 
-      // Earnings Breakdown by Category
-      earnings_breakdown: {
-        massage: Number(staff.massage_earnings) || 0,
-        spa: Number(staff.spa_earnings) || 0,
-        nail: Number(staff.nail_earnings) || 0,
-        facial: Number(staff.facial_earnings) || 0
-      },
+        // All-time earnings for payment tracking
+        alltime_earnings: allTimeEarnings,
 
-      // Tax & Deductions
-      tax_deductions: Number(staff.tax_deductions) || 0,
-      platform_commission: Number(staff.platform_commission) || 0,
-      net_earnings: Number(staff.net_earnings) || 0,
+        // Payout Information (based on all-time, matching Staff Detail page)
+        pending_payout: Math.max(0, allTimeEarnings - paid),
+        paid_payout: paid,
+        last_payout_date: staff.last_payout || '2026-02-01',
+        next_payout_date: staff.next_payout || '2026-02-15',
 
-      // Growth
-      earnings_growth: Number(staff.earnings_growth) || 0
-    }))
+        // Earnings Breakdown by Category
+        earnings_breakdown: {
+          massage: Number(staff.massage_earn) || 0,
+          spa: Number(staff.spa_earn) || 0,
+          nail: Number(staff.nail_earn) || 0,
+          facial: Number(staff.facial_earn) || 0
+        },
+
+        // Growth
+        earnings_growth: Number(staff.growth) || 0
+      }
+    })
 
     return staffEarnings
   } catch (error) {
