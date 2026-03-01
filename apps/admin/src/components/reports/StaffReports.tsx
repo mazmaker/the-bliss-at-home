@@ -355,16 +355,8 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
                 <h3 className="font-semibold text-stone-900 mb-3">{staff.name}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-500">รายได้พื้นฐาน:</span>
-                    <span className="font-medium text-stone-700">฿{staff.base_earnings.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-stone-200 pt-2">
-                    <span className="text-stone-500">รวม:</span>
+                    <span className="text-stone-500">รายได้:</span>
                     <span className="font-bold text-green-700">฿{staff.total_earnings.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-400 text-xs">สุทธิ:</span>
-                    <span className="font-medium text-stone-700 text-xs">฿{staff.net_earnings.toLocaleString()}</span>
                   </div>
                 </div>
               </div>

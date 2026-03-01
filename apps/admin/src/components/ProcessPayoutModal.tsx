@@ -99,7 +99,7 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
     )
   }
 
-  const totalAmount = parseFloat(selectedPayout.net_amount)
+  const totalAmount = parseFloat(selectedPayout.gross_earnings)
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -149,18 +149,6 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
                   <div className="flex justify-between">
                     <span className="text-stone-600">จำนวนงาน:</span>
                     <span className="font-medium text-stone-900">{selectedPayout.total_jobs} งาน</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">รายได้รวม:</span>
-                    <span className="font-medium text-green-700">
-                      ฿{parseFloat(selectedPayout.gross_earnings).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">ค่าธรรมเนียม (15%):</span>
-                    <span className="font-medium text-red-700">
-                      -฿{parseFloat(selectedPayout.platform_fee).toLocaleString()}
-                    </span>
                   </div>
                   <div className="border-t border-amber-300 pt-2 mt-2">
                     <div className="flex justify-between">

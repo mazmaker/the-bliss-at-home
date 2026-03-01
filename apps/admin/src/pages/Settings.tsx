@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2 } from 'lucide-react'
+import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { LogoUpload } from '../components/LogoUpload'
 
@@ -46,6 +46,16 @@ interface SettingsState {
   google_maps_api_key: string
   email_provider_api_key: string
   email_provider_domain: string
+
+  // Report Settings
+  report_monthly_target: string
+  report_cost_percentage: string
+
+  // Payment Processing Fees
+  fee_credit_card: string
+  fee_promptpay: string
+  fee_internet_banking: string
+  fee_mobile_banking: string
 }
 
 function Settings() {
@@ -63,6 +73,12 @@ function Settings() {
     google_maps_api_key: '',
     email_provider_api_key: '',
     email_provider_domain: '',
+    report_monthly_target: '500000',
+    report_cost_percentage: '30',
+    fee_credit_card: '3.65',
+    fee_promptpay: '1.65',
+    fee_internet_banking: '10',
+    fee_mobile_banking: '10',
   })
 
 
@@ -82,6 +98,7 @@ function Settings() {
     { id: 'general', name: 'ทั่วไป', nameEn: 'General Settings', icon: Globe },
     { id: 'payment', name: 'การชำระเงิน', nameEn: 'Payment Settings', icon: CreditCard },
     { id: 'cancellation', name: 'นโยบายการยกเลิก', nameEn: 'Cancellation Policy', icon: Calendar },
+    { id: 'reports', name: 'รายงาน/เป้าหมาย', nameEn: 'Reports & Targets', icon: BarChart3 },
   ]
 
   // Load settings from database
@@ -298,6 +315,12 @@ function Settings() {
         google_maps_api_key: settingsMap.google_maps_api_key || '',
         email_provider_api_key: settingsMap.email_provider_api_key || '',
         email_provider_domain: settingsMap.email_provider_domain || '',
+        report_monthly_target: settingsMap.report_monthly_target || '500000',
+        report_cost_percentage: settingsMap.report_cost_percentage || '30',
+        fee_credit_card: settingsMap.fee_credit_card || '3.65',
+        fee_promptpay: settingsMap.fee_promptpay || '1.65',
+        fee_internet_banking: settingsMap.fee_internet_banking || '10',
+        fee_mobile_banking: settingsMap.fee_mobile_banking || '10',
       })
 
     } catch (err: any) {
@@ -328,6 +351,12 @@ function Settings() {
         { key: 'google_maps_api_key', value: { key: settings.google_maps_api_key || '' }, description: 'Google Maps API key' },
         { key: 'email_provider_api_key', value: { key: settings.email_provider_api_key || '' }, description: 'Email provider API key' },
         { key: 'email_provider_domain', value: { domain: settings.email_provider_domain || '' }, description: 'Email provider domain' },
+        { key: 'report_monthly_target', value: { value: settings.report_monthly_target || '500000' }, description: 'Monthly revenue target (THB)' },
+        { key: 'report_cost_percentage', value: { value: settings.report_cost_percentage || '30' }, description: 'Estimated cost percentage (%)' },
+        { key: 'fee_credit_card', value: { value: settings.fee_credit_card || '3.65', type: 'percentage' }, description: 'Credit/Debit card processing fee (%)' },
+        { key: 'fee_promptpay', value: { value: settings.fee_promptpay || '1.65', type: 'percentage' }, description: 'PromptPay QR processing fee (%)' },
+        { key: 'fee_internet_banking', value: { value: settings.fee_internet_banking || '10', type: 'flat' }, description: 'Internet Banking processing fee (THB per transaction)' },
+        { key: 'fee_mobile_banking', value: { value: settings.fee_mobile_banking || '10', type: 'flat' }, description: 'Mobile Banking processing fee (THB per transaction)' },
       ]
 
       // Update each setting (using correct column names)
@@ -841,6 +870,168 @@ function Settings() {
               </div>
             )}
 
+            {/* Reports & Targets Tab */}
+            {activeTab === 'reports' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                  <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    ตั้งค่ารายงานและเป้าหมาย
+                  </h3>
+                  <p className="text-sm text-purple-700 mt-1">
+                    ค่าเหล่านี้ใช้คำนวณใน Dashboard รายงาน เช่น Forecast, Net Revenue, Target Achievement
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      เป้ารายได้ต่อเดือน (บาท) • Monthly Revenue Target (THB)
+                    </label>
+                    <input
+                      type="number"
+                      value={settings.report_monthly_target}
+                      onChange={(e) => setSettings({ ...settings, report_monthly_target: e.target.value })}
+                      className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="500000"
+                      min="0"
+                    />
+                    <p className="text-xs text-stone-500 mt-1">
+                      ใช้คำนวณ Target Achievement (%) และ Variance from Forecast ในหน้ารายงานยอดขาย
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      อัตราต้นทุนโดยประมาณ (%) • Estimated Cost Percentage
+                    </label>
+                    <input
+                      type="number"
+                      value={settings.report_cost_percentage}
+                      onChange={(e) => setSettings({ ...settings, report_cost_percentage: e.target.value })}
+                      className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="30"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-xs text-stone-500 mt-1">
+                      ใช้คำนวณ Net Revenue, Gross Margin และ Cash Flow โดยหักจากรายได้รวม
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                  <h4 className="font-medium text-stone-800 mb-2">ตัวอย่างการคำนวณ</h4>
+                  <div className="text-sm text-stone-600 space-y-1">
+                    <p>• <strong>Net Revenue</strong> = รายได้ completed - (รายได้รวม × {settings.report_cost_percentage || 30}%)</p>
+                    <p>• <strong>Target Achievement</strong> = (รายได้ completed ÷ ฿{Number(settings.report_monthly_target || 500000).toLocaleString()}) × 100</p>
+                    <p>• <strong>Forecast</strong> = (รายได้ completed ÷ จำนวนวัน) × 30 วัน</p>
+                  </div>
+                </div>
+
+                {/* Payment Processing Fees */}
+                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 mt-6">
+                  <h3 className="font-semibold text-green-900 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    ค่าธรรมเนียมช่องทางชำระเงิน
+                  </h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    ค่าธรรมเนียมที่ payment gateway เรียกเก็บ ใช้คำนวณ Processing Fees ในรายงานยอดขาย
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Credit Card - percentage */}
+                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-sm">💳</div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-stone-700">
+                        บัตรเครดิต/เดบิต • Credit/Debit Card
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={settings.fee_credit_card}
+                        onChange={(e) => setSettings({ ...settings, fee_credit_card: e.target.value })}
+                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        placeholder="3.65"
+                        min="0"
+                        step="0.01"
+                      />
+                      <span className="text-sm text-stone-500 w-20">% ต่อรายการ</span>
+                    </div>
+                  </div>
+
+                  {/* PromptPay - percentage */}
+                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-sm">📱</div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-stone-700">
+                        พร้อมเพย์ • PromptPay QR
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={settings.fee_promptpay}
+                        onChange={(e) => setSettings({ ...settings, fee_promptpay: e.target.value })}
+                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        placeholder="1.65"
+                        min="0"
+                        step="0.01"
+                      />
+                      <span className="text-sm text-stone-500 w-20">% ต่อรายการ</span>
+                    </div>
+                  </div>
+
+                  {/* Internet Banking - flat fee */}
+                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                    <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center text-sm">🏦</div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-stone-700">
+                        อินเทอร์เน็ตแบงก์กิ้ง • Internet Banking
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={settings.fee_internet_banking}
+                        onChange={(e) => setSettings({ ...settings, fee_internet_banking: e.target.value })}
+                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        placeholder="10"
+                        min="0"
+                        step="0.01"
+                      />
+                      <span className="text-sm text-stone-500 w-20">บาท/รายการ</span>
+                    </div>
+                  </div>
+
+                  {/* Mobile Banking - flat fee */}
+                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-sm">📲</div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-stone-700">
+                        โมบายแบงก์กิ้ง • Mobile Banking
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={settings.fee_mobile_banking}
+                        onChange={(e) => setSettings({ ...settings, fee_mobile_banking: e.target.value })}
+                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        placeholder="10"
+                        min="0"
+                        step="0.01"
+                      />
+                      <span className="text-sm text-stone-500 w-20">บาท/รายการ</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

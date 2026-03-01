@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import {
-  TrendingUp,
   DollarSign,
   BarChart3,
   AlertCircle,
@@ -314,9 +313,9 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
 
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {salesChannelAnalysis.isLoading ? (
-              Array.from({ length: 3 }).map((_, index) => (
+              Array.from({ length: 2 }).map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="bg-stone-200 h-6 w-24 rounded mb-2"></div>
                   <div className="bg-stone-200 h-8 w-32 rounded mb-2"></div>
@@ -324,18 +323,16 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 </div>
               ))
             ) : (
-              (salesChannelAnalysis.data || []).map((channel, index) => {
+              (salesChannelAnalysis.data || []).filter((channel) => channel.channel_name !== 'Walk-in').map((channel, index) => {
                 const iconMap = {
                   'Hotel Direct': Store,
                   'Customer App': Smartphone,
-                  'Walk-in': Users
                 }
                 const Icon = iconMap[channel.channel_name] || Store
 
                 const colorMap = {
                   'Hotel Direct': 'from-orange-500 to-orange-600',
                   'Customer App': 'from-blue-500 to-blue-600',
-                  'Walk-in': 'from-green-500 to-green-600'
                 }
                 const bgColor = colorMap[channel.channel_name] || 'from-gray-500 to-gray-600'
 
@@ -483,12 +480,19 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 </div>
               ))
             ) : (
-              (paymentMethodAnalysis.data || []).map((method, index) => (
+              (paymentMethodAnalysis.data || []).filter(m => m.payment_method !== 'cash').map((method, index) => {
+                const paymentLabels: Record<string, string> = {
+                  credit_card: 'บัตรเครดิต/เดบิต',
+                  promptpay: 'พร้อมเพย์',
+                  internet_banking: 'อินเทอร์เน็ตแบงก์กิ้ง',
+                  mobile_banking: 'โมบายแบงก์กิ้ง',
+                }
+                return (
                 <div key={index} className="p-4 border border-stone-200 rounded-lg hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-stone-900 flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
-                      {method.payment_method}
+                      {paymentLabels[method.payment_method] || method.payment_method}
                     </h4>
                     <span className="text-2xl font-bold text-stone-900">
                       ฿{method.total_amount?.toLocaleString() || 0}
@@ -513,7 +517,8 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                     </div>
                   </div>
                 </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>
@@ -527,7 +532,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
               <Clock className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">⏰ ช่วงเวลาเร่าร้อน • Peak Time Analysis</h3>
+              <h3 className="text-lg font-semibold text-stone-900">⏰ ช่วงเวลายอดนิยม • Peak Time Analysis</h3>
               <p className="text-sm text-stone-500">Revenue optimization by time periods • การเพิ่มประสิทธิภาพรายได้ตามช่วงเวลา</p>
             </div>
           </div>
@@ -537,7 +542,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Peak Hours */}
             <div>
-              <h4 className="font-semibold text-stone-900 mb-4">Peak Hours • ชั่วโมงเร่าร้อน</h4>
+              <h4 className="font-semibold text-stone-900 mb-4">Peak Hours • ชั่วโมงยอดนิยม</h4>
               <div className="space-y-3">
                 {timeBasedRevenueAnalysis.isLoading ? (
                   Array.from({ length: 4 }).map((_, index) => (
@@ -577,7 +582,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
 
             {/* Peak Days */}
             <div>
-              <h4 className="font-semibold text-stone-900 mb-4">Peak Days • วันเร่าร้อน</h4>
+              <h4 className="font-semibold text-stone-900 mb-4">Peak Days • วันยอดนิยม</h4>
               <div className="space-y-3">
                 {timeBasedRevenueAnalysis.isLoading ? (
                   Array.from({ length: 4 }).map((_, index) => (
@@ -617,66 +622,42 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
       </div>
 
-      {/* Financial Health Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <TrendingUp className="w-8 h-8" />
-            <div>
-              <h4 className="font-semibold">Cash Flow</h4>
-              <p className="text-xs opacity-80">กระแสเงินสด</p>
-            </div>
-          </div>
-          <div className="text-3xl font-bold mb-2">
-            {advancedSalesMetrics.isLoading ? (
-              <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
-            ) : (
-              `฿${(advancedSalesMetrics.data?.cash_flow || 0).toLocaleString()}`
-            )}
-          </div>
-          <div className="text-sm opacity-80">
-            Estimated profit after costs
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <DollarSign className="w-8 h-8" />
-            <div>
-              <h4 className="font-semibold">Accounts Receivable</h4>
-              <p className="text-xs opacity-80">ลูกหนี้การค้า</p>
-            </div>
-          </div>
-          <div className="text-3xl font-bold mb-2">
-            {advancedSalesMetrics.isLoading ? (
-              <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
-            ) : (
-              `฿${(advancedSalesMetrics.data?.accounts_receivable || 0).toLocaleString()}`
-            )}
-          </div>
-          <div className="text-sm opacity-80">
-            Collection rate: {(advancedSalesMetrics.data?.payment_collection_rate || 0).toFixed(1)}%
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
-          <div className="flex items-center gap-3 mb-4">
+      {/* Target Progress */}
+      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
             <Target className="w-8 h-8" />
             <div>
-              <h4 className="font-semibold">Target Progress</h4>
-              <p className="text-xs opacity-80">ความคืบหน้าเป้าหมาย</p>
+              <h4 className="font-semibold text-lg">Target Progress • ความคืบหน้าเป้าหมาย</h4>
+              <p className="text-xs opacity-80">
+                เป้าหมาย: ฿{((advancedSalesMetrics.data?.net_revenue || 0) - (advancedSalesMetrics.data?.variance_from_forecast || 0)).toLocaleString()}
+              </p>
             </div>
           </div>
-          <div className="text-3xl font-bold mb-2">
-            {advancedSalesMetrics.isLoading ? (
-              <div className="animate-pulse bg-white bg-opacity-20 h-8 w-16 rounded"></div>
-            ) : (
-              `${(advancedSalesMetrics.data?.target_achievement_percent || 0).toFixed(1)}%`
-            )}
+          <div className="text-right">
+            <div className="text-4xl font-bold">
+              {advancedSalesMetrics.isLoading ? (
+                <div className="animate-pulse bg-white bg-opacity-20 h-10 w-24 rounded"></div>
+              ) : (
+                `${(advancedSalesMetrics.data?.target_achievement_percent || 0).toFixed(1)}%`
+              )}
+            </div>
           </div>
-          <div className="text-sm opacity-80">
-            Variance: ฿{(advancedSalesMetrics.data?.variance_from_forecast || 0).toLocaleString()}
-          </div>
+        </div>
+        {/* Progress bar */}
+        <div className="w-full bg-white bg-opacity-20 rounded-full h-3 mb-3">
+          <div
+            className="bg-white h-3 rounded-full transition-all"
+            style={{ width: `${Math.min(advancedSalesMetrics.data?.target_achievement_percent || 0, 100)}%` }}
+          ></div>
+        </div>
+        <div className="flex items-center justify-between text-sm opacity-80">
+          <span>
+            รายได้ปัจจุบัน: ฿{(advancedSalesMetrics.data?.net_revenue || 0).toLocaleString()}
+          </span>
+          <span>
+            ส่วนต่าง: ฿{(advancedSalesMetrics.data?.variance_from_forecast || 0).toLocaleString()}
+          </span>
         </div>
       </div>
     </div>

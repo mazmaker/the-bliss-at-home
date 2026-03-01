@@ -132,6 +132,18 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
 
   const isLoading = staffOverview.isLoading || staffPerformance.isLoading || staffEarnings.isLoading
 
+  // Payment summary uses ALL-TIME data (same as Staff Detail page)
+  // Total Earnings = Paid + Pending always
+  const earningsSummary = (staffEarnings.data || []).reduce(
+    (acc, s) => {
+      acc.totalEarnings += s.alltime_earnings || 0
+      acc.totalPaid += s.paid_payout || 0
+      acc.totalPending += s.pending_payout || 0
+      return acc
+    },
+    { totalEarnings: 0, totalPaid: 0, totalPending: 0 }
+  )
+
   return (
     <div className="space-y-6">
       {/* Section Header with Export */}
@@ -214,7 +226,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
         <div className="p-6">
           {/* Top Performers Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {staffRankings.isLoading ? (
+            {staffPerformance.isLoading ? (
               Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="bg-stone-200 h-24 rounded-lg mb-3"></div>
@@ -223,7 +235,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                 </div>
               ))
             ) : (
-              (staffRankings.data || []).slice(0, 3).map((staff, index) => {
+              (staffPerformance.data || []).slice(0, 3).map((staff, index) => {
                 const rankColors = [
                   'from-yellow-400 to-yellow-500', // Gold
                   'from-gray-400 to-gray-500', // Silver
@@ -244,7 +256,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                             <UserCheck className="w-6 h-6" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-bold text-lg">{staff.staffName || 'Unknown Staff'}</h4>
+                            <h4 className="font-bold text-lg">{staff.name || 'Unknown Staff'}</h4>
                             <p className="text-xs opacity-90">Rank #{index + 1}</p>
                           </div>
                         </div>
@@ -252,22 +264,22 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="opacity-90">Revenue:</span>
-                            <span className="font-bold">฿{(staff.totalRevenue || 0).toLocaleString()}</span>
+                            <span className="font-bold">฿{(staff.total_revenue_generated || 0).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="opacity-90">Jobs:</span>
-                            <span className="font-bold">{staff.totalBookings || 0}</span>
+                            <span className="font-bold">{staff.bookings_completed || 0}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="opacity-90">Rating:</span>
                             <span className="font-bold flex items-center gap-1">
                               <Star className="w-3 h-3 fill-current" />
-                              {(staff.avgRating || 0).toFixed(1)}
+                              {(staff.avg_rating || 0).toFixed(1)}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="opacity-90">Completion:</span>
-                            <span className="font-bold">{(staff.completionRate || 0).toFixed(1)}%</span>
+                            <span className="font-bold">{(staff.completion_rate || 0).toFixed(1)}%</span>
                           </div>
                         </div>
                       </div>
@@ -324,27 +336,27 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                         <td className="py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                              {staff.staffName?.charAt(0) || '?'}
+                              {staff.name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              <div className="font-medium text-stone-900">{staff.staffName || 'Unknown Staff'}</div>
-                              <div className="text-xs text-stone-500">ID: {staff.staffId}</div>
+                              <div className="font-medium text-stone-900">{staff.name || 'Unknown Staff'}</div>
+                              {staff.email && <div className="text-xs text-stone-500">{staff.email}</div>}
                             </div>
                           </div>
                         </td>
                         <td className="py-3 text-right">
-                          <span className="font-bold text-stone-900">฿{(staff.totalRevenue || 0).toLocaleString()}</span>
+                          <span className="font-bold text-stone-900">฿{(staff.total_revenue_generated || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-center">
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                             <Target className="w-3 h-3" />
-                            {staff.totalBookings || 0}
+                            {staff.bookings_completed || 0}
                           </span>
                         </td>
                         <td className="py-3 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                            <span className="font-semibold text-stone-900">{(staff.avgRating || 0).toFixed(1)}</span>
+                            <span className="font-semibold text-stone-900">{(staff.avg_rating || 0).toFixed(1)}</span>
                           </div>
                         </td>
                         <td className="py-3 text-center">
@@ -352,22 +364,22 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                             <div className="w-16 bg-stone-200 rounded-full h-2">
                               <div
                                 className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all"
-                                style={{ width: `${Math.max(staff.completionRate || 0, 5)}%` }}
+                                style={{ width: `${Math.max(staff.completion_rate || 0, 5)}%` }}
                               ></div>
                             </div>
-                            <span className="ml-2 text-xs font-semibold text-stone-700">{(staff.completionRate || 0).toFixed(1)}%</span>
+                            <span className="ml-2 text-xs font-semibold text-stone-700">{(staff.completion_rate || 0).toFixed(1)}%</span>
                           </div>
                         </td>
                         <td className="py-3 text-center">
                           <div className={`flex items-center justify-center gap-1 ${
-                            (staff.earningsGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                            (staff.revenue_growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {(staff.earningsGrowth || 0) >= 0 ? (
+                            {(staff.revenue_growth || 0) >= 0 ? (
                               <ArrowUpRight className="w-3 h-3" />
                             ) : (
                               <ArrowDownRight className="w-3 h-3" />
                             )}
-                            <span className="text-xs font-semibold">{Math.abs(staff.earningsGrowth || 0).toFixed(1)}%</span>
+                            <span className="text-xs font-semibold">{Math.abs(staff.revenue_growth || 0).toFixed(1)}%</span>
                           </div>
                         </td>
                       </tr>
@@ -396,65 +408,50 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
 
         <div className="p-6">
           {/* Payment Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
-                <CheckCircle className="w-6 h-6" />
-                <span className="text-sm font-medium">Paid</span>
+                <DollarSign className="w-6 h-6" />
+                <span className="text-sm font-medium">รายได้รวม</span>
               </div>
               <div className="text-2xl font-bold mb-1">
                 {staffEarnings.isLoading ? (
                   <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
                 ) : (
-                  `฿${(staffEarnings.data?.totalPaid || 0).toLocaleString()}`
+                  `฿${earningsSummary.totalEarnings.toLocaleString()}`
                 )}
               </div>
-              <div className="text-xs opacity-80">Completed payments</div>
+              <div className="text-xs opacity-80">Total Earnings</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
+              <div className="flex items-center gap-3 mb-3">
+                <CheckCircle className="w-6 h-6" />
+                <span className="text-sm font-medium">จ่ายแล้ว</span>
+              </div>
+              <div className="text-2xl font-bold mb-1">
+                {staffEarnings.isLoading ? (
+                  <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                ) : (
+                  `฿${earningsSummary.totalPaid.toLocaleString()}`
+                )}
+              </div>
+              <div className="text-xs opacity-80">Paid</div>
             </div>
 
             <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <Clock className="w-6 h-6" />
-                <span className="text-sm font-medium">Pending</span>
+                <span className="text-sm font-medium">รอจ่าย</span>
               </div>
               <div className="text-2xl font-bold mb-1">
                 {staffEarnings.isLoading ? (
                   <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
                 ) : (
-                  `฿${(staffEarnings.data?.totalPending || 0).toLocaleString()}`
+                  `฿${earningsSummary.totalPending.toLocaleString()}`
                 )}
               </div>
-              <div className="text-xs opacity-80">Awaiting payment</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
-              <div className="flex items-center gap-3 mb-3">
-                <DollarSign className="w-6 h-6" />
-                <span className="text-sm font-medium">Commission</span>
-              </div>
-              <div className="text-2xl font-bold mb-1">
-                {staffEarnings.isLoading ? (
-                  <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
-                ) : (
-                  `฿${(staffEarnings.data?.totalCommission || 0).toLocaleString()}`
-                )}
-              </div>
-              <div className="text-xs opacity-80">Platform fees</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white">
-              <div className="flex items-center gap-3 mb-3">
-                <Zap className="w-6 h-6" />
-                <span className="text-sm font-medium">Net Earnings</span>
-              </div>
-              <div className="text-2xl font-bold mb-1">
-                {staffEarnings.isLoading ? (
-                  <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
-                ) : (
-                  `฿${(staffEarnings.data?.totalNetEarnings || 0).toLocaleString()}`
-                )}
-              </div>
-              <div className="text-xs opacity-80">After deductions</div>
+              <div className="text-xs opacity-80">Pending</div>
             </div>
           </div>
 
@@ -466,12 +463,11 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-stone-200 text-left">
-                    <th className="pb-3 text-sm font-semibold text-stone-700">Staff Member</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">Gross Earnings</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">Commission</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">Net Earnings</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">Status</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">Next Payment</th>
+                    <th className="pb-3 text-sm font-semibold text-stone-700">พนักงาน</th>
+                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">รายได้</th>
+                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">จ่ายแล้ว</th>
+                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">ค้างจ่าย</th>
+                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">สถานะ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -485,7 +481,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                           <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
                         </td>
                         <td className="py-3 text-right">
-                          <div className="animate-pulse bg-stone-200 h-4 w-16 rounded ml-auto"></div>
+                          <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
                         </td>
                         <td className="py-3 text-right">
                           <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
@@ -493,59 +489,48 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                         <td className="py-3 text-center">
                           <div className="animate-pulse bg-stone-200 h-6 w-16 rounded mx-auto"></div>
                         </td>
-                        <td className="py-3 text-center">
-                          <div className="animate-pulse bg-stone-200 h-4 w-20 rounded mx-auto"></div>
-                        </td>
                       </tr>
                     ))
                   ) : (
-                    (staffEarnings.data?.staffBreakdown || []).map((staff, index) => (
+                    (staffEarnings.data || []).map((staff, index) => (
                       <tr key={index} className="border-b border-stone-100 hover:bg-white transition-colors">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                              {staff.staffName?.charAt(0) || '?'}
+                              {staff.name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              <div className="font-medium text-stone-900">{staff.staffName || 'Unknown Staff'}</div>
-                              <div className="text-xs text-stone-500">{staff.bookingsCount || 0} bookings</div>
+                              <div className="font-medium text-stone-900">{staff.name || 'Unknown Staff'}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-3 text-right">
-                          <span className="font-bold text-stone-900">฿{(staff.grossEarnings || 0).toLocaleString()}</span>
+                          <span className="font-medium text-stone-900">฿{(staff.alltime_earnings || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-right">
-                          <span className="text-red-600 font-semibold">-฿{(staff.commission || 0).toLocaleString()}</span>
+                          <span className="font-medium text-green-600">฿{(staff.paid_payout || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-right">
-                          <span className="font-bold text-green-600">฿{(staff.netEarnings || 0).toLocaleString()}</span>
+                          <span className={`font-bold ${staff.pending_payout > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                            ฿{(staff.pending_payout || 0).toLocaleString()}
+                          </span>
                         </td>
                         <td className="py-3 text-center">
-                          {staff.paymentStatus === 'paid' ? (
+                          {staff.pending_payout === 0 && staff.total_earnings > 0 ? (
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                               <CheckCircle className="w-3 h-3" />
                               Paid
                             </span>
-                          ) : staff.paymentStatus === 'pending' ? (
+                          ) : staff.pending_payout > 0 ? (
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
                               <Clock className="w-3 h-3" />
                               Pending
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                              <XCircle className="w-3 h-3" />
-                              Overdue
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-stone-100 text-stone-600 text-xs rounded-full">
+                              —
                             </span>
                           )}
-                        </td>
-                        <td className="py-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Calendar className="w-3 h-3 text-stone-400" />
-                            <span className="text-xs text-stone-600">
-                              {staff.nextPaymentDate || 'TBD'}
-                            </span>
-                          </div>
                         </td>
                       </tr>
                     ))
