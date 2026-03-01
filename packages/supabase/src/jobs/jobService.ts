@@ -6,14 +6,29 @@
 import { supabase } from '../auth/supabaseClient'
 import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
 
-// Get jobs for current staff member
+// Get jobs for current staff member with hotel information
 export async function getStaffJobs(
   staffId: string,
   filter?: JobFilter
 ): Promise<Job[]> {
   let query = supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      bookings (
+        hotel_id,
+        provider_preference,
+        hotels (
+          id,
+          name_th,
+          name_en,
+          phone,
+          address,
+          latitude,
+          longitude
+        )
+      )
+    `)
     .eq('staff_id', staffId)
     .order('scheduled_date', { ascending: true })
     .order('scheduled_time', { ascending: true })
@@ -48,13 +63,28 @@ export async function getStaffJobs(
   return (data || []) as Job[]
 }
 
-// Get pending jobs available for staff to accept (from today onwards)
+// Get pending jobs available for staff to accept (from today onwards) with hotel information
 export async function getPendingJobs(): Promise<Job[]> {
   const today = new Date().toISOString().split('T')[0]
 
   const { data, error } = await supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      bookings (
+        hotel_id,
+        provider_preference,
+        hotels (
+          id,
+          name_th,
+          name_en,
+          phone,
+          address,
+          latitude,
+          longitude
+        )
+      )
+    `)
     .eq('status', 'pending')
     .is('staff_id', null)
     .gte('scheduled_date', today) // Only show jobs from today onwards
@@ -69,11 +99,26 @@ export async function getPendingJobs(): Promise<Job[]> {
   return (data || []) as Job[]
 }
 
-// Get a single job by ID
+// Get a single job by ID with hotel information
 export async function getJob(jobId: string): Promise<Job | null> {
   const { data, error } = await supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      bookings (
+        hotel_id,
+        provider_preference,
+        hotels (
+          id,
+          name_th,
+          name_en,
+          phone,
+          address,
+          latitude,
+          longitude
+        )
+      )
+    `)
     .eq('id', jobId)
     .single()
 
@@ -143,6 +188,30 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     }
     console.error('Error accepting job:', error)
     throw new Error('ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง')
+  }
+
+  // ✅ NEW: Also update the corresponding booking status to 'confirmed'
+  // When staff accepts a job, the booking should also be confirmed
+  if (data && data.booking_id) {
+    try {
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update({
+          staff_id: staffId,
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', data.booking_id)
+
+      if (bookingError) {
+        console.error('Error updating booking after job acceptance:', bookingError)
+        // Don't throw error - job acceptance was successful, booking update is secondary
+      } else {
+        console.log('✅ Booking status updated to confirmed after staff accepted job')
+      }
+    } catch (bookingUpdateError) {
+      console.error('Exception updating booking:', bookingUpdateError)
+    }
   }
 
   return data as Job

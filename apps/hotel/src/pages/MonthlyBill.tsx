@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Download, Calendar, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock, Building2, MapPin } from 'lucide-react'
+import { Download, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock, Building2, MapPin, CheckCircle, TrendingUp, AlertTriangle, Calculator, Banknote, Receipt, MessageCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
 import { useOverdueAlert } from '../hooks/useBillingSettings'
 import { getFormattedPaymentMethods } from '../services/billingSettingsService'
+import { getMonthlyBillStatus, calculateLateFee } from '../utils/overdueCalculatorV2'
 
 // Monthly bill interfaces
 interface MonthlyBooking {
@@ -15,6 +16,7 @@ interface MonthlyBooking {
   service_name: string
   final_price: number
   payment_status: string
+  status: string
   hotel_discount_rate?: number
   created_at: string
 }
@@ -29,6 +31,8 @@ interface MonthlyBillData {
   hotelRevenue: number
   pendingPayments: number
   commissionRate: number // Add commission rate to track
+  lateFee: number // Late fee for overdue payments
+  currentMonthPaid: boolean // Whether current month's bill has been paid
 }
 
 // Fetch monthly bill data from database with proper error handling
@@ -52,7 +56,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     throw new Error(`Failed to fetch hotel data: ${hotelError.message}`)
   }
 
-  // Get booking data with service names
+  // Get completed booking data for revenue calculation
   const { data, error } = await supabase
     .from('bookings')
     .select(`
@@ -61,6 +65,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
       hotel_room_number,
       final_price,
       payment_status,
+      status,
       created_at,
       customer_notes,
       service_id,
@@ -69,15 +74,58 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     .eq('hotel_id', hotelId)
     .gte('booking_date', monthStart)
     .lt('booking_date', monthEnd)
-    .in('status', ['completed', 'confirmed', 'pending']) // Include more statuses
+    .eq('status', 'completed') // Only completed bookings for monthly billing
     .order('booking_date', { ascending: true })
+
+  // Query for unpaid monthly bills from PREVIOUS months only (not current month)
+  const [currentYear, currentMonth] = selectedMonth.split('-').map(Number)
+
+  const { data: previousUnpaidBillsData, error: billsError } = await supabase
+    .from('monthly_bills')
+    .select(`
+      id,
+      month,
+      year,
+      total_amount,
+      status,
+      paid_at
+    `)
+    .eq('hotel_id', hotelId)
+    .is('paid_at', null) // Bills that haven't been paid yet
+    .neq('status', 'paid') // Exclude paid bills
+    .or(`year.lt.${currentYear},and(year.eq.${currentYear},month.lt.${currentMonth})`) // Only previous months
 
   if (error) {
     console.error('Monthly bill query error:', error)
     throw new Error(`Failed to fetch monthly bill: ${error.message}`)
   }
 
+  if (billsError) {
+    console.error('Monthly bills query error:', billsError)
+    // Continue without bills data, will default to 0
+  }
+
+  // Query for CURRENT month's bill status to check if it's been paid
+  const { data: currentMonthBillData, error: currentBillError } = await supabase
+    .from('monthly_bills')
+    .select(`
+      id,
+      paid_at,
+      status
+    `)
+    .eq('hotel_id', hotelId)
+    .eq('year', currentYear)
+    .eq('month', currentMonth)
+    .single()
+
+  if (currentBillError && currentBillError.code !== 'PGRST116') {
+    console.error('Current month bill query error:', currentBillError)
+    // Continue without current bill data
+  }
+
   console.log('Raw booking data:', data)
+  console.log('Previous unpaid bills data:', previousUnpaidBillsData)
+  console.log('Current month bill data:', currentMonthBillData)
   console.log('Hotel commission rate:', hotelData.commission_rate)
 
   // Helper function to extract guest name from customer_notes
@@ -98,6 +146,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     service_name: booking.services?.name_th || 'บริการนวดแผนไทย', // Use actual service name if available
     final_price: booking.final_price || 0,
     payment_status: booking.payment_status || 'pending',
+    status: booking.status || 'completed',
     hotel_discount_rate: 0, // Default value since this column doesn't exist
     created_at: booking.created_at
   }))
@@ -110,9 +159,30 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   const platformFee = 0 // No platform fee
   const hotelRevenue = totalRevenue // Hotels keep 100%
 
-  const pendingPayments = bookingData
-    .filter(booking => booking.payment_status === 'pending')
-    .reduce((sum, booking) => sum + (booking.final_price || 0), 0)
+  // Calculate pending payments from previous months only
+  const pendingPayments = (previousUnpaidBillsData || [])
+    .reduce((sum: number, bill: any) => sum + (bill.total_amount || 0), 0)
+
+  // Calculate late fee for this month
+  let lateFee = 0
+  try {
+    const overdueStatus = await getMonthlyBillStatus(selectedMonth)
+    if (pendingPayments > 0 && overdueStatus.days > 0) {
+      lateFee = await calculateLateFee(pendingPayments, overdueStatus.days)
+    }
+  } catch (error) {
+    console.error('Error calculating late fee:', error)
+    lateFee = 0 // Fallback to 0 if calculation fails
+  }
+
+  console.log('💰 Bill calculations:', {
+    totalBookings: bookingData.length,
+    totalRevenue,
+    pendingPayments, // ← ยอดบิลเดือนก่อนหน้าที่ค้างชำระ
+    previousUnpaidBillsCount: (previousUnpaidBillsData || []).length,
+    lateFee,
+    netRevenue: totalRevenue - lateFee
+  })
 
   // Create month label
   const monthDate = new Date(selectedMonth + '-01')
@@ -120,6 +190,11 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     year: 'numeric',
     month: 'long'
   })
+
+  // Determine if current month's bill has been paid
+  const currentMonthPaid = currentMonthBillData
+    ? (currentMonthBillData.paid_at !== null || currentMonthBillData.status === 'paid')
+    : false // No bill record means not paid
 
   return {
     month: selectedMonth,
@@ -130,7 +205,9 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     platformFee,
     hotelRevenue,
     pendingPayments,
-    commissionRate: hotelCommissionRate
+    commissionRate: hotelCommissionRate,
+    lateFee,
+    currentMonthPaid
   }
 }
 
@@ -163,23 +240,35 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
 
   return (
     <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg">
-      <p className="text-sm text-stone-700 mb-3 font-medium">💳 ช่องทางการชำระเงิน:</p>
+      <div className="flex items-center gap-2 mb-3">
+        <CreditCard className="w-4 h-4 text-stone-700" />
+        <p className="text-sm text-stone-700 font-medium">ช่องทางการชำระเงิน:</p>
+      </div>
 
       <div className="space-y-3 text-sm">
         {/* Bank Transfer */}
         {paymentMethods.bankTransfer?.enabled && (
           <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-            <CreditCard className="w-5 h-5 text-blue-600 mt-0.5" />
+            <Banknote className="w-5 h-5 text-blue-600 mt-0.5" />
             <div className="flex-1">
               <div className="font-medium text-blue-800 mb-1">โอนเงินผ่านธนาคาร</div>
               {paymentMethods.bankTransfer.bankName && (
-                <div className="text-blue-700">🏦 {paymentMethods.bankTransfer.bankName}</div>
+                <div className="text-blue-700 flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  {paymentMethods.bankTransfer.bankName}
+                </div>
               )}
               {paymentMethods.bankTransfer.accountNumber && (
-                <div className="text-blue-700">📋 {paymentMethods.bankTransfer.accountNumber}</div>
+                <div className="text-blue-700 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  {paymentMethods.bankTransfer.accountNumber}
+                </div>
               )}
               {paymentMethods.bankTransfer.accountName && (
-                <div className="text-blue-700">👤 {paymentMethods.bankTransfer.accountName}</div>
+                <div className="text-blue-700 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  {paymentMethods.bankTransfer.accountName}
+                </div>
               )}
             </div>
           </div>
@@ -188,17 +277,20 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
         {/* Cash Payment */}
         {paymentMethods.cashPayment?.enabled && (
           <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-            <Building2 className="w-5 h-5 text-green-600 mt-0.5" />
+            <Banknote className="w-5 h-5 text-green-600 mt-0.5" />
             <div className="flex-1">
               <div className="font-medium text-green-800 mb-1">ชำระด้วยเงินสด</div>
               {paymentMethods.cashPayment.address && (
-                <div className="text-green-700 flex items-start gap-1">
+                <div className="text-green-700 flex items-start gap-2">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>{paymentMethods.cashPayment.address}</span>
                 </div>
               )}
               {paymentMethods.cashPayment.hours && (
-                <div className="text-green-700">🕐 {paymentMethods.cashPayment.hours}</div>
+                <div className="text-green-700 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  {paymentMethods.cashPayment.hours}
+                </div>
               )}
             </div>
           </div>
@@ -207,14 +299,17 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
         {/* Check Payment */}
         {paymentMethods.checkPayment?.enabled && (
           <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
-            <FileText className="w-5 h-5 text-amber-600 mt-0.5" />
+            <Receipt className="w-5 h-5 text-amber-600 mt-0.5" />
             <div className="flex-1">
               <div className="font-medium text-amber-800 mb-1">ชำระด้วยเช็ค</div>
               {paymentMethods.checkPayment.payableTo && (
-                <div className="text-amber-700">📄 สั่งจ่าย: {paymentMethods.checkPayment.payableTo}</div>
+                <div className="text-amber-700 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  สั่งจ่าย: {paymentMethods.checkPayment.payableTo}
+                </div>
               )}
               {paymentMethods.checkPayment.mailingAddress && (
-                <div className="text-amber-700 flex items-start gap-1">
+                <div className="text-amber-700 flex items-start gap-2">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>ส่งไปรษณีย์: {paymentMethods.checkPayment.mailingAddress}</span>
                 </div>
@@ -226,11 +321,29 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
         {/* Admin Contact Info */}
         {adminContact && (
           <div className="mt-3 pt-3 border-t border-gray-300">
-            <div className="text-xs text-stone-600 font-medium mb-2">📞 สอบถามเพิ่มเติม:</div>
-            <div className="text-xs text-stone-600 space-y-1">
-              {adminContact.phone && <div>📱 {adminContact.phone}</div>}
-              {adminContact.email && <div>✉️ {adminContact.email}</div>}
-              {adminContact.lineId && <div>💬 LINE: {adminContact.lineId}</div>}
+            <div className="text-xs text-stone-600 font-medium mb-2 flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              สอบถามเพิ่มเติม:
+            </div>
+            <div className="text-xs text-stone-600 space-y-2">
+              {adminContact.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  {adminContact.phone}
+                </div>
+              )}
+              {adminContact.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  {adminContact.email}
+                </div>
+              )}
+              {adminContact.lineId && (
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  LINE: {adminContact.lineId}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -384,7 +497,9 @@ function MonthlyBill() {
     )
   }
 
-  const billStatus = billData?.pendingPayments ? billData.pendingPayments > 0 ? 'pending' : 'paid' : 'paid'
+  // FIXED: Use currentMonthPaid to determine current month's bill status
+  // pendingPayments is for previous months, not current month
+  const billStatus = billData?.currentMonthPaid ? 'paid' : 'pending'
 
   return (
     <div className="space-y-6">
@@ -462,23 +577,25 @@ function MonthlyBill() {
       </div>
 
       {/* Bill Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* การจองที่เสร็จสิ้น */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-blue-600" />
+              <CheckCircle className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">{billData?.totalBookings || 0}</p>
-              <p className="text-sm text-stone-500">การจองทั้งหมด</p>
+              <p className="text-sm text-stone-500">การจองเสร็จสิ้น</p>
             </div>
           </div>
         </div>
 
+        {/* รายได้รวม */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-green-600" />
+              <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">฿{billData?.totalRevenue.toLocaleString() || 0}</p>
@@ -487,13 +604,42 @@ function MonthlyBill() {
           </div>
         </div>
 
+        {/* บิลค้างชำระ */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-orange-600">฿{billData?.pendingPayments?.toLocaleString() || 0}</p>
+              <p className="text-sm text-stone-500">บิลค้างชำระ</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ค่าปรับล่าช้า */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-600">฿{billData?.lateFee?.toLocaleString() || 0}</p>
+              <p className="text-sm text-stone-500">ค่าปรับล่าช้า</p>
+            </div>
+          </div>
+        </div>
+
+        {/* รายได้สุทธิ */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Check className="w-5 h-5 text-amber-600" />
+              <Calculator className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-700">฿{billData?.hotelRevenue.toLocaleString() || 0}</p>
+              <p className="text-2xl font-bold text-amber-700">
+                ฿{((billData?.hotelRevenue || 0) - (billData?.lateFee || 0)).toLocaleString()}
+              </p>
               <p className="text-sm text-stone-500">รายได้สุทธิ</p>
             </div>
           </div>
@@ -527,6 +673,9 @@ function MonthlyBill() {
                     บริการ
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    สถานะ
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                     ยอดเงิน
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
@@ -548,6 +697,29 @@ function MonthlyBill() {
                     </td>
                     <td className="px-6 py-4 text-sm text-stone-900">
                       {booking.service_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        booking.status === 'completed'
+                          ? 'bg-green-100 text-green-700'
+                          : booking.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-700'
+                          : booking.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : booking.status === 'cancelled'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {booking.status === 'completed'
+                          ? 'เสร็จสิ้น'
+                          : booking.status === 'in_progress'
+                          ? 'กำลังดำเนินการ'
+                          : booking.status === 'pending'
+                          ? 'รอดำเนินการ'
+                          : booking.status === 'cancelled'
+                          ? 'ยกเลิก'
+                          : booking.status}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-lg font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>

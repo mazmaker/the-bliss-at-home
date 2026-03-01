@@ -10,6 +10,14 @@ interface BookingDetails extends Booking {
   staff?: Database['public']['Tables']['staff']['Row'];
   customer?: Database['public']['Tables']['customers']['Row'];
   delivery_address?: Database['public']['Tables']['addresses']['Row'];
+  jobs?: Array<{
+    id: string;
+    status: string;
+    staff_id: string | null;
+    created_at: string;
+    updated_at: string;
+    booking_id: string;
+  }>;
   addons?: Array<{
     id: string;
     quantity: number;
@@ -26,7 +34,8 @@ export async function getCustomerBookings(
   client: SupabaseClient<Database>,
   customerId: string
 ): Promise<BookingDetails[]> {
-  const { data, error } = await client
+  // Get bookings first
+  const { data: bookings, error } = await client
     .from('bookings')
     .select(`
       *,
@@ -38,7 +47,25 @@ export async function getCustomerBookings(
     .order('booking_date', { ascending: false });
 
   if (error) throw error;
-  return data as BookingDetails[];
+
+  if (!bookings || bookings.length === 0) {
+    return [];
+  }
+
+  // Get related jobs for all bookings
+  const bookingIds = bookings.map(b => b.id);
+  const { data: jobs } = await client
+    .from('jobs')
+    .select('id, status, staff_id, created_at, updated_at, booking_id')
+    .in('booking_id', bookingIds);
+
+  // Combine bookings with their jobs
+  const result = bookings.map(booking => ({
+    ...booking,
+    jobs: jobs?.filter(job => job.booking_id === booking.id) || []
+  }));
+
+  return result as BookingDetails[];
 }
 
 /**

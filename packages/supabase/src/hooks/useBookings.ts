@@ -50,6 +50,92 @@ export function useBookingByNumber(bookingNumber: string | undefined) {
 }
 
 /**
+ * Cancel booking mutation
+ */
+export function useCancelBooking() {
+  return useSupabaseMutation({
+    mutationFn: async ({
+      bookingId,
+      reason,
+      refundOption = 'auto',
+      notifyCustomer = true,
+      notifyStaff = true
+    }: {
+      bookingId: string;
+      reason: string;
+      refundOption?: string;
+      notifyCustomer?: boolean;
+      notifyStaff?: boolean;
+    }) => {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+      const response = await fetch(`${API_BASE}/bookings/${bookingId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason,
+          refund_option: refundOption,
+          notify_customer: notifyCustomer,
+          notify_staff: notifyStaff,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'ไม่สามารถยกเลิกการจองได้');
+      }
+
+      return response.json();
+    },
+    // Invalidate related queries on success
+    invalidateQueries: [['bookings']],
+  });
+}
+
+/**
+ * Reschedule booking mutation
+ */
+export function useRescheduleBooking() {
+  return useSupabaseMutation({
+    mutationFn: async ({
+      bookingId,
+      newDate,
+      newTime
+    }: {
+      bookingId: string;
+      newDate: string;
+      newTime: string;
+    }) => {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+      const response = await fetch(`${API_BASE}/bookings/${bookingId}/reschedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          new_date: newDate,
+          new_time: newTime,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'ไม่สามารถเลื่อนนัดได้');
+      }
+
+      const result = await response.json();
+      console.log('[Reschedule] Success:', result);
+      return result;
+    },
+    // Invalidate related queries on success
+    invalidateQueries: [['bookings']],
+  });
+}
+
+/**
  * Create new booking with add-ons
  */
 export function useCreateBooking() {
@@ -97,21 +183,6 @@ export function useCreateBookingWithServices() {
   });
 }
 
-/**
- * Cancel booking
- */
-export function useCancelBooking() {
-  return useSupabaseMutation({
-    mutationFn: async (client, bookingId: string) => {
-      return bookingService.cancelBooking(client, bookingId);
-    },
-    invalidateKeys: (result) => [
-      ['bookings', 'customer', result?.customer_id],
-      ['bookings', 'detail', result?.id],
-      ['bookings', 'upcoming', result?.customer_id],
-    ],
-  });
-}
 
 /**
  * Get upcoming bookings (confirmed or pending, future dates)
