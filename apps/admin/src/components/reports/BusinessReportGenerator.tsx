@@ -27,6 +27,7 @@ interface BusinessReportGeneratorProps {
 interface RealTimeBookingData {
   totalBookings: number
   completedBookings: number
+  confirmedBookings: number
   pendingBookings: number
   cancelledBookings: number
   totalRevenue: number
@@ -129,6 +130,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
       // Process current period bookings data
       const totalBookings = bookingsData?.length || 0
       const completedBookings = bookingsData?.filter(b => b.status === 'completed')?.length || 0
+      const confirmedBookings = bookingsData?.filter(b => b.status === 'confirmed')?.length || 0
       const pendingBookings = bookingsData?.filter(b => b.status === 'pending')?.length || 0
       const cancelledBookings = bookingsData?.filter(b => b.status === 'cancelled')?.length || 0
 
@@ -216,6 +218,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
       setRealTimeData({
         totalBookings,
         completedBookings,
+        confirmedBookings,
         pendingBookings,
         cancelledBookings,
         totalRevenue,
@@ -555,6 +558,16 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                     <div className="font-bold text-green-900">{realTimeData.completedBookings}</div>
                     <div className="text-xs text-green-600">
                       {realTimeData.totalBookings > 0 ? ((realTimeData.completedBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <span className="font-medium text-blue-800">ยืนยันแล้ว (Confirmed)</span>
+                  <div className="text-right">
+                    <div className="font-bold text-blue-900">{realTimeData.confirmedBookings}</div>
+                    <div className="text-xs text-blue-600">
+                      {realTimeData.totalBookings > 0 ? ((realTimeData.confirmedBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
                     </div>
                   </div>
                 </div>

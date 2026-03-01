@@ -11,7 +11,6 @@ import {
   Table,
   ChevronDown,
   Info,
-  Star,
   Building2,
   Award,
   Receipt,
@@ -60,6 +59,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
   const {
     dashboardStats,
     hotelPerformance,
+    hotelInvoiceSummary,
     isLoading,
     isError,
     error,
@@ -109,7 +109,6 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
     totalHotels: hotelPerformance.length,
     topPerformer: hotelPerformance[0]?.hotel_name || '',
     totalRevenue: hotelPerformance.reduce((sum, hotel) => sum + hotel.total_revenue, 0),
-    avgRating: hotelPerformance.reduce((sum, hotel) => sum + hotel.avg_rating, 0) / hotelPerformance.length,
     totalBookings: hotelPerformance.reduce((sum, hotel) => sum + hotel.total_bookings, 0)
   } : null
 
@@ -200,7 +199,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
       </div>
 
       {/* Hotel Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {/* Total Partners */}
         <div className="bg-gradient-to-br from-[#d29b25] to-[#c08a20] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
@@ -252,22 +251,6 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
           </div>
         </div>
 
-        {/* Average Rating */}
-        <div className="bg-gradient-to-br from-[#d29b25] to-[#b8841f] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
-          <div className="flex items-start justify-between relative z-10">
-            <div className="flex-1">
-              <p className="text-sm opacity-90">คะแนนเฉลี่ย • Avg Rating</p>
-              <p className="text-3xl font-bold mt-3 mb-2">
-                {states.hotelPerformance.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-16 rounded"></div>
-                  : (hotelStats?.avgRating || 0).toFixed(1)}
-              </p>
-              <p className="text-sm opacity-90">จาก 5.0 ดาว</p>
-            </div>
-            <Star className="w-12 h-12 opacity-80" />
-          </div>
-        </div>
       </div>
 
       {/* Hotel Performance Grid */}
@@ -338,12 +321,6 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                       </div>
                       <div>
                         <h4 className="font-semibold text-stone-900 text-sm leading-tight">{hotel.hotel_name}</h4>
-                        {hotel.avg_rating > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="w-3 h-3 text-yellow-400" />
-                            <span className="text-xs text-stone-600">{hotel.avg_rating.toFixed(1)} ({hotel.total_reviews} reviews)</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -379,10 +356,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                         <Users className="w-3 h-3" />
                         ลูกค้า:
                       </span>
-                      <div className="text-right">
-                        <span className="font-semibold text-stone-700">{hotel.unique_customers}</span>
-                        <div className="text-xs text-green-600">ใหม่ +{hotel.new_customers}</div>
-                      </div>
+                      <span className="font-semibold text-stone-700">{hotel.unique_customers} คน</span>
                     </div>
 
                     {/* Staff Count */}
@@ -409,9 +383,9 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                       </div>
                     )}
 
-                    {/* Commission */}
+                    {/* Discount */}
                     <div className="flex justify-between items-center pt-2 border-t border-stone-200">
-                      <span className="text-stone-500 text-xs">คอมมิชชั่น:</span>
+                      <span className="text-stone-500 text-xs">ส่วนลด:</span>
                       <div className="text-right">
                         <span className="font-medium text-stone-600 text-xs">{hotel.commission_rate}%</span>
                         <div className="text-xs text-stone-500">฿{hotel.commission_earned.toLocaleString()}</div>
@@ -441,7 +415,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-stone-900">💰 การชำระเงินโรงแรม • Hotel Payment Details</h3>
-              <p className="text-sm text-stone-500">Invoice management and payment tracking • การจัดการใบแจ้งหนี้และติดตามการชำระเงิน</p>
+              <p className="text-sm text-stone-500">ติดตามสถานะใบแจ้งหนี้และการชำระเงินจากโรงแรม • Invoice and payment tracking</p>
             </div>
           </div>
         </div>
@@ -452,79 +426,67 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <CheckCircle className="w-6 h-6" />
-                <span className="text-sm font-medium">Paid Hotels</span>
+                <span className="text-sm font-medium">ชำระแล้ว • Paid</span>
               </div>
               <div className="text-2xl font-bold mb-1">
-                {states.hotelPerformance.isLoading ? (
+                {states.hotelInvoiceSummary?.isLoading ? (
                   <div className="animate-pulse bg-white bg-opacity-20 h-6 w-12 rounded"></div>
                 ) : (
-                  (hotelPerformance || []).filter(h => h.payment_status === 'paid').length
+                  `${hotelInvoiceSummary?.paid_count ?? 0} รายการ`
                 )}
               </div>
               <div className="text-xs opacity-80">
-                ฿{(hotelPerformance || [])
-                  .filter(h => h.payment_status === 'paid')
-                  .reduce((sum, h) => sum + (h.amount_due || 0), 0)
-                  .toLocaleString()}
+                ฿{(hotelInvoiceSummary?.paid_amount ?? 0).toLocaleString()}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <Clock className="w-6 h-6" />
-                <span className="text-sm font-medium">Pending Payment</span>
+                <span className="text-sm font-medium">รอชำระ • Pending</span>
               </div>
               <div className="text-2xl font-bold mb-1">
-                {states.hotelPerformance.isLoading ? (
+                {states.hotelInvoiceSummary?.isLoading ? (
                   <div className="animate-pulse bg-white bg-opacity-20 h-6 w-12 rounded"></div>
                 ) : (
-                  (hotelPerformance || []).filter(h => h.payment_status === 'pending').length
+                  `${hotelInvoiceSummary?.pending_count ?? 0} รายการ`
                 )}
               </div>
               <div className="text-xs opacity-80">
-                ฿{(hotelPerformance || [])
-                  .filter(h => h.payment_status === 'pending')
-                  .reduce((sum, h) => sum + (h.amount_due || 0), 0)
-                  .toLocaleString()}
+                ฿{(hotelInvoiceSummary?.pending_amount ?? 0).toLocaleString()}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <AlertTriangle className="w-6 h-6" />
-                <span className="text-sm font-medium">Overdue</span>
+                <span className="text-sm font-medium">เกินกำหนด • Overdue</span>
               </div>
               <div className="text-2xl font-bold mb-1">
-                {states.hotelPerformance.isLoading ? (
+                {states.hotelInvoiceSummary?.isLoading ? (
                   <div className="animate-pulse bg-white bg-opacity-20 h-6 w-12 rounded"></div>
                 ) : (
-                  (hotelPerformance || []).filter(h => h.payment_status === 'overdue').length
+                  `${hotelInvoiceSummary?.overdue_count ?? 0} รายการ`
                 )}
               </div>
               <div className="text-xs opacity-80">
-                ฿{(hotelPerformance || [])
-                  .filter(h => h.payment_status === 'overdue')
-                  .reduce((sum, h) => sum + (h.amount_due || 0), 0)
-                  .toLocaleString()}
+                ฿{(hotelInvoiceSummary?.overdue_amount ?? 0).toLocaleString()}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <Calculator className="w-6 h-6" />
-                <span className="text-sm font-medium">Total Outstanding</span>
+                <span className="text-sm font-medium">ยอดค้างชำระรวม • Outstanding</span>
               </div>
               <div className="text-2xl font-bold mb-1">
-                {states.hotelPerformance.isLoading ? (
+                {states.hotelInvoiceSummary?.isLoading ? (
                   <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
                 ) : (
-                  `฿${(hotelPerformance || [])
-                    .filter(h => h.payment_status !== 'paid')
-                    .reduce((sum, h) => sum + (h.amount_due || 0), 0)
-                    .toLocaleString()}`
+                  `฿${(hotelInvoiceSummary?.total_outstanding ?? 0).toLocaleString()}`
                 )}
               </div>
-              <div className="text-xs opacity-80">Unpaid invoices</div>
+              <div className="text-xs opacity-80">ใบแจ้งหนี้ที่ยังไม่ชำระ</div>
             </div>
           </div>
         </div>

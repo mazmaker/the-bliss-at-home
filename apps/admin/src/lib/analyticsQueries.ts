@@ -88,6 +88,20 @@ export interface HotelPerformance {
 }
 
 // ============================================
+// HOTEL INVOICE SUMMARY TYPES
+// ============================================
+
+export interface HotelInvoiceSummary {
+  paid_count: number
+  paid_amount: number
+  pending_count: number
+  pending_amount: number
+  overdue_count: number
+  overdue_amount: number
+  total_outstanding: number
+}
+
+// ============================================
 // STAFF/PROVIDER ANALYTICS TYPES
 // ============================================
 
@@ -612,6 +626,53 @@ export async function getHotelPerformance(days: number = 30): Promise<HotelPerfo
   } catch (error) {
     console.error('Error in getHotelPerformance:', error)
     return []
+  }
+}
+
+/**
+ * Get aggregated hotel invoice summary from hotel_invoices table
+ */
+export async function getHotelInvoiceSummary(): Promise<HotelInvoiceSummary> {
+  try {
+    const { data, error } = await supabase
+      .from('hotel_invoices')
+      .select('status, commission_amount, due_date')
+
+    if (error) throw error
+
+    const today = new Date().toISOString().split('T')[0]
+    const invoices = data || []
+
+    const paid = invoices.filter(i => i.status === 'paid')
+    const overdue = invoices.filter(i =>
+      i.status !== 'paid' && i.status !== 'cancelled' &&
+      i.due_date && i.due_date < today
+    )
+    const pending = invoices.filter(i =>
+      i.status !== 'paid' && i.status !== 'cancelled' &&
+      (!i.due_date || i.due_date >= today)
+    )
+
+    const sumAmount = (items: typeof invoices) =>
+      items.reduce((sum, i) => sum + (Number(i.commission_amount) || 0), 0)
+
+    return {
+      paid_count: paid.length,
+      paid_amount: sumAmount(paid),
+      pending_count: pending.length,
+      pending_amount: sumAmount(pending),
+      overdue_count: overdue.length,
+      overdue_amount: sumAmount(overdue),
+      total_outstanding: sumAmount(pending) + sumAmount(overdue),
+    }
+  } catch (error) {
+    console.error('Error in getHotelInvoiceSummary:', error)
+    return {
+      paid_count: 0, paid_amount: 0,
+      pending_count: 0, pending_amount: 0,
+      overdue_count: 0, overdue_amount: 0,
+      total_outstanding: 0,
+    }
   }
 }
 

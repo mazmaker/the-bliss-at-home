@@ -17,10 +17,12 @@ import {
   getStaffPerformance,
   getStaffEarnings,
   getStaffRankings,
+  getHotelInvoiceSummary,
   type StaffOverview,
   type StaffPerformance,
   type StaffEarnings,
-  type StaffRanking
+  type StaffRanking,
+  type HotelInvoiceSummary
 } from '../lib/analyticsQueries'
 
 // ============================================
@@ -173,6 +175,20 @@ export function useHotelPerformance(days: number = 30) {
 }
 
 /**
+ * Hook for hotel invoice summary (aggregated from hotel_invoices table)
+ */
+export function useHotelInvoiceSummary() {
+  return useQuery({
+    queryKey: [...analyticsKeys.all, 'hotelInvoiceSummary'],
+    queryFn: getHotelInvoiceSummary,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+  })
+}
+
+/**
  * Hook for booking growth comparison data
  */
 export function useBookingGrowth(days: number = 30) {
@@ -295,6 +311,7 @@ export function useReportsData(period: 'daily' | 'weekly' | 'month' | '3_months'
   const categories = useServiceCategories(days)
   const topServices = useTopServices(5, days)
   const hotelPerformance = useHotelPerformance(days)
+  const hotelInvoiceSummary = useHotelInvoiceSummary()
 
   // Enable real-time updates for all analytics queries
   const refetchAll = useCallback(() => {
@@ -303,7 +320,8 @@ export function useReportsData(period: 'daily' | 'weekly' | 'month' | '3_months'
     categories.refetch()
     topServices.refetch()
     hotelPerformance.refetch()
-  }, [dashboardStats.refetch, dailyRevenue.refetch, categories.refetch, topServices.refetch, hotelPerformance.refetch])
+    hotelInvoiceSummary.refetch()
+  }, [dashboardStats.refetch, dailyRevenue.refetch, categories.refetch, topServices.refetch, hotelPerformance.refetch, hotelInvoiceSummary.refetch])
 
   useRealTimeAnalytics(refetchAll, ['bookings', 'services', 'hotels'])
 
@@ -338,6 +356,7 @@ export function useReportsData(period: 'daily' | 'weekly' | 'month' | '3_months'
     categories: categories.data,
     topServices: topServices.data,
     hotelPerformance: hotelPerformance.data,
+    hotelInvoiceSummary: hotelInvoiceSummary.data,
 
     // Combined states
     isLoading,
@@ -370,6 +389,11 @@ export function useReportsData(period: 'daily' | 'weekly' | 'month' | '3_months'
         isLoading: hotelPerformance.isLoading,
         isError: hotelPerformance.isError,
         error: hotelPerformance.error
+      },
+      hotelInvoiceSummary: {
+        isLoading: hotelInvoiceSummary.isLoading,
+        isError: hotelInvoiceSummary.isError,
+        error: hotelInvoiceSummary.error
       }
     },
 
@@ -381,6 +405,7 @@ export function useReportsData(period: 'daily' | 'weekly' | 'month' | '3_months'
       categories: categories.refetch,
       topServices: topServices.refetch,
       hotelPerformance: hotelPerformance.refetch,
+      hotelInvoiceSummary: hotelInvoiceSummary.refetch,
     }
   }
 }
