@@ -1,247 +1,195 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock nodemailer
-const mockSendMail = vi.fn().mockResolvedValue({ messageId: 'test-msg-001' })
-const mockVerify = vi.fn().mockResolvedValue(true)
+// Mock global fetch for Resend API
+const mockFetch = vi.fn()
+vi.stubGlobal('fetch', mockFetch)
 
-vi.mock('nodemailer', () => ({
-  default: {
-    createTransport: vi.fn(() => ({
-      sendMail: mockSendMail,
-      verify: mockVerify,
-    })),
-    createTestAccount: vi.fn().mockResolvedValue({
-      user: 'test@ethereal.email',
-      pass: 'testpass',
-      smtp: { host: 'smtp.ethereal.email', port: 587, secure: false },
-    }),
-  },
-}))
-
-vi.stubEnv('EMAIL_PROVIDER', 'gmail')
-vi.stubEnv('GMAIL_USER', 'test@gmail.com')
-vi.stubEnv('GMAIL_APP_PASSWORD', 'test-app-password')
-
-import { emailService } from '../emailService'
+import {
+  sendEmail,
+  emailService,
+  bookingCancellationTemplate,
+  hotelBookingCancellationTemplate,
+  staffJobCancellationTemplate,
+  receiptEmailTemplate,
+  creditNoteEmailTemplate,
+} from '../emailService'
 
 describe('emailService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllEnvs()
   })
 
-  describe('isReady', () => {
-    it('should return false before initialization', () => {
-      // Fresh instance hasn't been initialized
-      expect(typeof emailService.isReady).toBe('function')
-    })
-  })
-
-  describe('sendHotelInvitation', () => {
-    it('should send hotel invitation email', async () => {
-      await emailService.sendHotelInvitation('hotel@example.com', {
-        hotelName: 'Grand Hotel Bangkok',
-        loginEmail: 'hotel@example.com',
-        temporaryPassword: 'TempP@ss123',
-        loginUrl: 'https://app.theblissathome.com/hotel/login',
-        adminName: 'Admin',
+  describe('sendEmail - development mode (no RESEND_API_KEY)', () => {
+    it('should log email in dev mode and return success', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const result = await sendEmail({
+        to: 'test@example.com',
+        subject: 'Test Subject',
+        html: '<p>Hello</p>',
       })
-
-      expect(mockSendMail).toHaveBeenCalledTimes(1)
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.to).toBe('hotel@example.com')
-      expect(mailOptions.subject).toContain('Grand Hotel Bangkok')
-      expect(mailOptions.html).toContain('Grand Hotel Bangkok')
-      expect(mailOptions.html).toContain('TempP@ss123')
-      expect(mailOptions.html).toContain('hotel@example.com')
-      expect(mailOptions.html).toContain('https://app.theblissathome.com/hotel/login')
+      expect(result.success).toBe(true)
+      consoleSpy.mockRestore()
     })
 
-    it('should include admin name in footer when provided', async () => {
-      await emailService.sendHotelInvitation('hotel@example.com', {
-        hotelName: 'Test Hotel',
-        loginEmail: 'hotel@example.com',
-        temporaryPassword: 'Pass123',
-        loginUrl: 'https://app.example.com',
-        adminName: 'คุณสมชาย',
+    it('should handle array of recipients', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const result = await sendEmail({
+        to: ['a@test.com', 'b@test.com'],
+        subject: 'Multi',
+        html: '<p>Hi</p>',
       })
-
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.html).toContain('คุณสมชาย')
-    })
-
-    it('should generate text version of email', async () => {
-      await emailService.sendHotelInvitation('hotel@example.com', {
-        hotelName: 'Test Hotel',
-        loginEmail: 'hotel@example.com',
-        temporaryPassword: 'Pass123',
-        loginUrl: 'https://app.example.com',
-      })
-
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.text).toContain('Test Hotel')
-      expect(mailOptions.text).toContain('Pass123')
+      expect(result.success).toBe(true)
+      consoleSpy.mockRestore()
     })
   })
 
-  describe('sendPasswordReset', () => {
-    it('should send password reset email', async () => {
-      // Ensure service is initialized first
-      await emailService.sendHotelInvitation('init@test.com', {
-        hotelName: 'Init', loginEmail: 'init@test.com',
-        temporaryPassword: 'x', loginUrl: 'https://x.com',
-      })
-      vi.clearAllMocks()
+  describe('sendEmail - production mode (with RESEND_API_KEY)', () => {
+    beforeEach(() => {
+      vi.stubEnv('RESEND_API_KEY', 'test-key-123')
+    })
 
-      await emailService.sendPasswordReset('hotel@example.com', {
-        hotelName: 'Grand Hotel',
-        loginEmail: 'hotel@example.com',
-        resetUrl: 'https://app.example.com/reset?token=abc123',
-        expiresIn: '24 ชั่วโมง',
+    it('should send via Resend API and return success', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ id: 'email-001' }),
+      })
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+      const result = await sendEmail({
+        to: 'user@example.com',
+        subject: 'Hello',
+        html: '<p>World</p>',
       })
 
-      expect(mockSendMail).toHaveBeenCalledTimes(1)
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.subject).toContain('รีเซ็ตรหัสผ่าน')
-      expect(mailOptions.html).toContain('https://app.example.com/reset?token=abc123')
-      expect(mailOptions.html).toContain('24 ชั่วโมง')
+      expect(result.success).toBe(true)
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.resend.com/emails',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Authorization': 'Bearer test-key-123',
+          }),
+        })
+      )
+      consoleSpy.mockRestore()
+    })
+
+    it('should return error on API failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ message: 'Invalid API key' }),
+      })
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const result = await sendEmail({
+        to: 'user@example.com',
+        subject: 'Fail',
+        html: '<p>Test</p>',
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Invalid API key')
+      consoleSpy.mockRestore()
+    })
+
+    it('should handle fetch exception', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const result = await sendEmail({
+        to: 'user@example.com',
+        subject: 'Fail',
+        html: '<p>Test</p>',
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Network error')
+      consoleSpy.mockRestore()
     })
   })
 
-  describe('sendCustomerReminder', () => {
-    it('should send Thai language reminder', async () => {
-      // Ensure initialized
-      await emailService.sendHotelInvitation('init@test.com', {
-        hotelName: 'Init', loginEmail: 'init@test.com',
-        temporaryPassword: 'x', loginUrl: 'https://x.com',
-      })
-      vi.clearAllMocks()
-
-      await emailService.sendCustomerReminder('customer@example.com', {
+  describe('bookingCancellationTemplate', () => {
+    it('should generate cancellation email with refund', () => {
+      const html = bookingCancellationTemplate({
         customerName: 'สมชาย',
+        bookingNumber: 'BK-001',
         serviceName: 'นวดไทย',
-        scheduledDate: '20 ก.พ. 2569',
-        scheduledTime: '14:00',
-        durationMinutes: 60,
-        address: '123 ถนนสุขุมวิท',
-        minutesBefore: 120,
-      }, 'th')
+        bookingDate: '20 ก.พ. 2569',
+        bookingTime: '14:00',
+        cancellationReason: 'ลูกค้ายกเลิก',
+        refundAmount: 500,
+        refundPercentage: 50,
+      })
 
-      expect(mockSendMail).toHaveBeenCalledTimes(1)
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.subject).toContain('2 ชั่วโมง')
-      expect(mailOptions.html).toContain('สมชาย')
-      expect(mailOptions.html).toContain('นวดไทย')
-      expect(mailOptions.html).toContain('60 นาที')
+      expect(html).toContain('สมชาย')
+      expect(html).toContain('BK-001')
+      expect(html).toContain('นวดไทย')
+      expect(html).toContain('50%')
     })
 
-    it('should send English language reminder', async () => {
-      await emailService.sendHotelInvitation('init@test.com', {
-        hotelName: 'Init', loginEmail: 'init@test.com',
-        temporaryPassword: 'x', loginUrl: 'https://x.com',
+    it('should generate cancellation email without refund', () => {
+      const html = bookingCancellationTemplate({
+        customerName: 'Test',
+        bookingNumber: 'BK-002',
+        serviceName: 'Massage',
+        bookingDate: '2026-02-20',
+        bookingTime: '10:00',
+        cancellationReason: 'Late cancellation',
       })
-      vi.clearAllMocks()
 
-      await emailService.sendCustomerReminder('customer@example.com', {
+      expect(html).toContain('ไม่มีการคืนเงิน')
+    })
+  })
+
+  describe('hotelBookingCancellationTemplate', () => {
+    it('should generate hotel notification email', () => {
+      const html = hotelBookingCancellationTemplate({
+        hotelName: 'Grand Hotel',
+        bookingNumber: 'BK-003',
         customerName: 'John',
         serviceName: 'Thai Massage',
-        scheduledDate: 'Feb 20, 2026',
-        scheduledTime: '14:00',
-        durationMinutes: 60,
-        address: '123 Sukhumvit',
-        minutesBefore: 30,
-      }, 'en')
-
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.subject).toContain('30 minutes')
-      expect(mailOptions.html).toContain('John')
-      expect(mailOptions.html).toContain('60 minutes')
-    })
-
-    it('should send Chinese language reminder', async () => {
-      await emailService.sendHotelInvitation('init@test.com', {
-        hotelName: 'Init', loginEmail: 'init@test.com',
-        temporaryPassword: 'x', loginUrl: 'https://x.com',
-      })
-      vi.clearAllMocks()
-
-      await emailService.sendCustomerReminder('customer@example.com', {
-        customerName: '张三',
-        serviceName: '泰式按摩',
-        scheduledDate: '2026年2月20日',
-        scheduledTime: '14:00',
-        durationMinutes: 90,
-        address: '123 Sukhumvit',
-        minutesBefore: 1440,
-      }, 'cn')
-
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.subject).toContain('1天')
-      expect(mailOptions.html).toContain('张三')
-      expect(mailOptions.html).toContain('90 分钟')
-    })
-
-    it('should show hotel name and room in location when provided', async () => {
-      await emailService.sendHotelInvitation('init@test.com', {
-        hotelName: 'Init', loginEmail: 'init@test.com',
-        temporaryPassword: 'x', loginUrl: 'https://x.com',
-      })
-      vi.clearAllMocks()
-
-      await emailService.sendCustomerReminder('customer@example.com', {
-        customerName: 'Test',
-        serviceName: 'Massage',
-        scheduledDate: '2026-02-20',
-        scheduledTime: '14:00',
-        durationMinutes: 60,
-        address: 'default address',
-        hotelName: 'Grand Hotel',
+        bookingDate: '2026-02-20',
+        bookingTime: '14:00',
         roomNumber: '301',
-        minutesBefore: 60,
-      }, 'en')
-
-      const mailOptions = mockSendMail.mock.calls[0][0]
-      expect(mailOptions.html).toContain('Grand Hotel')
-      expect(mailOptions.html).toContain('Room 301')
-    })
-
-    it('should format time labels correctly for various durations', async () => {
-      await emailService.sendHotelInvitation('init@test.com', {
-        hotelName: 'Init', loginEmail: 'init@test.com',
-        temporaryPassword: 'x', loginUrl: 'https://x.com',
+        cancellationReason: 'Customer cancelled',
       })
 
-      // Test English time labels through different minutesBefore values
-      // 30 minutes
-      vi.clearAllMocks()
-      await emailService.sendCustomerReminder('test@test.com', {
-        customerName: 'Test', serviceName: 'Test', scheduledDate: '2026-02-20',
-        scheduledTime: '14:00', durationMinutes: 60, address: 'addr', minutesBefore: 30,
-      }, 'en')
-      expect(mockSendMail.mock.calls[0][0].subject).toContain('30 minutes')
+      expect(html).toContain('Grand Hotel')
+      expect(html).toContain('Room Number')
+      expect(html).toContain('301')
+    })
+  })
 
-      // 1 hour
-      vi.clearAllMocks()
-      await emailService.sendCustomerReminder('test@test.com', {
-        customerName: 'Test', serviceName: 'Test', scheduledDate: '2026-02-20',
-        scheduledTime: '14:00', durationMinutes: 60, address: 'addr', minutesBefore: 60,
-      }, 'en')
-      expect(mockSendMail.mock.calls[0][0].subject).toContain('1 hour')
+  describe('staffJobCancellationTemplate', () => {
+    it('should generate staff cancellation notification', () => {
+      const html = staffJobCancellationTemplate({
+        staffName: 'สมศรี',
+        bookingNumber: 'BK-004',
+        serviceName: 'นวดน้ำมัน',
+        bookingDate: '20 ก.พ.',
+        bookingTime: '15:00',
+        customerName: 'สมชาย',
+        location: 'Grand Hotel',
+        cancellationReason: 'ลูกค้ายกเลิก',
+      })
 
-      // 2 hours (plural)
-      vi.clearAllMocks()
-      await emailService.sendCustomerReminder('test@test.com', {
-        customerName: 'Test', serviceName: 'Test', scheduledDate: '2026-02-20',
-        scheduledTime: '14:00', durationMinutes: 60, address: 'addr', minutesBefore: 120,
-      }, 'en')
-      expect(mockSendMail.mock.calls[0][0].subject).toContain('2 hours')
+      expect(html).toContain('สมศรี')
+      expect(html).toContain('แจ้งยกเลิกงาน')
+    })
+  })
 
-      // 2 days (plural)
-      vi.clearAllMocks()
-      await emailService.sendCustomerReminder('test@test.com', {
-        customerName: 'Test', serviceName: 'Test', scheduledDate: '2026-02-20',
-        scheduledTime: '14:00', durationMinutes: 60, address: 'addr', minutesBefore: 2880,
-      }, 'en')
-      expect(mockSendMail.mock.calls[0][0].subject).toContain('2 days')
+  describe('emailService object', () => {
+    it('should expose sendEmail function', () => {
+      expect(typeof emailService.sendEmail).toBe('function')
+    })
+
+    it('should expose template functions', () => {
+      expect(typeof emailService.templates.bookingCancellation).toBe('function')
+      expect(typeof emailService.templates.hotelBookingCancellation).toBe('function')
+      expect(typeof emailService.templates.staffJobCancellation).toBe('function')
+      expect(typeof emailService.templates.receipt).toBe('function')
+      expect(typeof emailService.templates.creditNote).toBe('function')
     })
   })
 })

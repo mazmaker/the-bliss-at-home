@@ -42,12 +42,16 @@ describe('getCustomerBookings', () => {
       { id: 'b1', customer_id: 'c1', status: 'confirmed' },
       { id: 'b2', customer_id: 'c1', status: 'completed' },
     ]
-    const builder = createChainableBuilder({ data: mockBookings, error: null })
-    const client = { from: vi.fn().mockReturnValue(builder) } as any
+    // Source calls from('bookings') then from('jobs'), use multi-call client
+    const client = createMultiCallClient([
+      { data: mockBookings, error: null },
+      { data: [], error: null }, // jobs query returns empty
+    ])
 
     const result = await getCustomerBookings(client, 'c1')
-    expect(result).toEqual(mockBookings)
     expect(result).toHaveLength(2)
+    expect(result[0]).toMatchObject({ id: 'b1', customer_id: 'c1', status: 'confirmed', jobs: [] })
+    expect(result[1]).toMatchObject({ id: 'b2', customer_id: 'c1', status: 'completed', jobs: [] })
     expect(client.from).toHaveBeenCalledWith('bookings')
   })
 
