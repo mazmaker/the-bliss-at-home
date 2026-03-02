@@ -1,173 +1,153 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users,
   Calendar,
   Building,
-  TrendingUp,
-  TrendingDown,
   Package,
   DollarSign,
-  Star,
   ArrowRight,
   Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
+  UserPlus,
+  Briefcase,
 } from 'lucide-react'
 import { SOSWidget } from '../components/SOSWidget'
 import { JobEscalationWidget } from '../components/JobEscalationWidget'
+import {
+  useDashboardOverview,
+  useRecentBookings,
+  usePendingApprovals,
+  usePopularServices,
+  useQuickStats,
+} from '../hooks/useDashboard'
 
-// Mock data
-const stats = [
-  {
-    name: 'ยอดขายวันนี้',
-    nameEn: 'Today\'s Sales',
-    value: '฿45,200',
-    change: '+12.5%',
-    trend: 'up',
-    icon: DollarSign,
-    color: 'from-green-500 to-emerald-600',
-  },
-  {
-    name: 'การจองวันนี้',
-    nameEn: 'Today\'s Bookings',
-    value: '28',
-    change: '+8',
-    trend: 'up',
-    icon: Calendar,
-    color: 'from-blue-500 to-blue-600',
-  },
-  {
-    name: 'พนักงานทั้งหมด',
-    nameEn: 'Total Staff',
-    value: '156',
-    change: '+3',
-    trend: 'up',
-    icon: Users,
-    color: 'from-purple-500 to-purple-600',
-  },
-  {
-    name: 'โรงแรมที่ใช้งาน',
-    nameEn: 'Active Hotels',
-    value: '24',
-    change: '+2',
-    trend: 'up',
-    icon: Building,
-    color: 'from-amber-500 to-amber-600',
-  },
-]
+// ============================================
+// HELPERS
+// ============================================
 
-const recentBookings = [
-  {
-    id: 'BK20260115001',
-    customer: 'สมชาย ใจดี',
-    service: 'Thai Massage (2 hours)',
-    hotel: null,
-    date: '15 ม.ค. 2026',
-    time: '14:00',
-    amount: 800,
-    status: 'confirmed',
-  },
-  {
-    id: 'BK20260115002',
-    customer: 'วิภาดา สุขสันต์',
-    service: 'Gel Manicure',
-    hotel: 'โรงแรมฮิลตัน',
-    date: '15 ม.ค. 2026',
-    time: '10:30',
-    amount: 450,
-    status: 'completed',
-  },
-  {
-    id: 'BK20260115003',
-    customer: 'กิตติ เก่งการค้า',
-    service: 'Luxury Spa Package',
-    hotel: null,
-    date: '15 ม.ค. 2026',
-    time: '16:00',
-    amount: 2500,
-    status: 'in-progress',
-  },
-  {
-    id: 'BK20260115004',
-    customer: 'มานี มีตา',
-    service: 'Oil Massage (2 hours)',
-    hotel: 'รีสอร์ทในฝัน',
-    date: '15 ม.ค. 2026',
-    time: '13:00',
-    amount: 1000,
-    status: 'pending',
-  },
-  {
-    id: 'BK20260115005',
-    customer: 'ประยุทธ์ มั่งมี',
-    service: 'Facial Treatment',
-    hotel: null,
-    date: '15 ม.ค. 2026',
-    time: '11:00',
-    amount: 1200,
-    status: 'cancelled',
-  },
-]
+function formatCurrency(amount: number): string {
+  return `฿${amount.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+}
 
-const pendingApprovals = [
-  {
-    id: 'STF001',
-    name: 'สมหญิง นวดเก่ง',
-    skill: 'Massage',
-    experience: '5 ปี',
-    rating: 4.8,
-    appliedDate: '14 ม.ค. 2026',
-  },
-  {
-    id: 'STF002',
-    name: 'ดอกไม้ ทำเล็บเก่ง',
-    skill: 'Nail Care',
-    experience: '3 ปี',
-    rating: 4.9,
-    appliedDate: '14 ม.ค. 2026',
-  },
-  {
-    id: 'STF003',
-    name: 'แก้ว สปาชำนาญ',
-    skill: 'Spa',
-    experience: '7 ปี',
-    rating: 4.7,
-    appliedDate: '13 ม.ค. 2026',
-  },
-]
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
-const popularServices = [
-  { name: 'Thai Massage (2 hours)', bookings: 245, revenue: 196000, change: '+15%' },
-  { name: 'Oil Massage (2 hours)', bookings: 198, revenue: 198000, change: '+12%' },
-  { name: 'Gel Manicure', bookings: 156, revenue: 70200, change: '+8%' },
-  { name: 'Luxury Spa Package', bookings: 89, revenue: 222500, change: '+22%' },
-  { name: 'Facial Treatment', bookings: 78, revenue: 93600, change: '+5%' },
-]
+function formatTime(timeStr: string): string {
+  return timeStr?.slice(0, 5) || ''
+}
 
 function getStatusBadge(status: string) {
-  const badges = {
+  const badges: Record<string, string> = {
     confirmed: 'bg-blue-100 text-blue-700',
     completed: 'bg-green-100 text-green-700',
-    'in-progress': 'bg-purple-100 text-purple-700',
+    in_progress: 'bg-purple-100 text-purple-700',
     pending: 'bg-yellow-100 text-yellow-700',
     cancelled: 'bg-red-100 text-red-700',
   }
-  const labels = {
+  const labels: Record<string, string> = {
     confirmed: 'ยืนยันแล้ว',
     completed: 'เสร็จสิ้น',
-    'in-progress': 'กำลังดำเนินการ',
+    in_progress: 'กำลังดำเนินการ',
     pending: 'รอดำเนินการ',
     cancelled: 'ยกเลิก',
   }
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${badges[status as keyof typeof badges]}`}>
-      {labels[status as keyof typeof labels]}
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${badges[status] || 'bg-stone-100 text-stone-700'}`}>
+      {labels[status] || status}
     </span>
   )
 }
 
+function LoadingSkeleton({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse bg-stone-200 rounded ${className}`} />
+}
+
+// ============================================
+// DASHBOARD
+// ============================================
+
 function Dashboard() {
+  const [lastUpdated, setLastUpdated] = useState(new Date())
+  const overview = useDashboardOverview()
+  const recentBookings = useRecentBookings(10)
+  const pendingApprovals = usePendingApprovals(5)
+  const popularServices = usePopularServices(5)
+  const quickStats = useQuickStats()
+
+  // Update timestamp when data refreshes
+  useEffect(() => {
+    if (overview.dataUpdatedAt) {
+      setLastUpdated(new Date(overview.dataUpdatedAt))
+    }
+  }, [overview.dataUpdatedAt])
+
+  const data = overview.data
+
+  // Stats cards configuration
+  const statsCards = [
+    {
+      name: 'การจองวันนี้',
+      nameEn: "Today's Bookings",
+      value: data?.todayBookings ?? '-',
+      subtitle: `เดือนนี้: ${data?.monthBookings ?? '-'} รายการ`,
+      icon: Calendar,
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      name: 'รายได้วันนี้',
+      nameEn: "Today's Revenue",
+      value: data ? formatCurrency(data.todayRevenue) : '-',
+      subtitle: `เดือนนี้: ${data ? formatCurrency(data.monthRevenue) : '-'}`,
+      icon: DollarSign,
+      color: 'from-green-500 to-emerald-600',
+    },
+    {
+      name: 'ผู้ใช้ใหม่',
+      nameEn: 'New Customers',
+      value: data?.newCustomersToday ?? '-',
+      subtitle: `เดือนนี้: ${data?.newCustomersMonth ?? '-'} คน (ทั้งหมด ${data?.totalCustomers ?? '-'})`,
+      icon: UserPlus,
+      color: 'from-pink-500 to-rose-600',
+    },
+    {
+      name: 'พนักงานทั้งหมด',
+      nameEn: 'Total Staff',
+      value: data?.totalStaff ?? '-',
+      subtitle: `ใช้งาน: ${data?.activeStaff ?? '-'} คน`,
+      icon: Users,
+      color: 'from-purple-500 to-purple-600',
+    },
+    {
+      name: 'โรงแรมทั้งหมด',
+      nameEn: 'Total Hotels',
+      value: data?.totalHotels ?? '-',
+      subtitle: null,
+      icon: Building,
+      color: 'from-amber-500 to-amber-600',
+    },
+    {
+      name: 'บริการทั้งหมด',
+      nameEn: 'Total Services',
+      value: data?.totalServices ?? '-',
+      subtitle: `ใช้งาน: ${data?.activeServices ?? '-'} รายการ`,
+      icon: Briefcase,
+      color: 'from-teal-500 to-teal-600',
+    },
+    {
+      name: 'มูลค่าเฉลี่ย/การจอง',
+      nameEn: 'Avg. Booking Value',
+      value: data ? formatCurrency(data.avgBookingValue) : '-',
+      subtitle: 'เฉลี่ยเดือนนี้',
+      icon: Package,
+      color: 'from-indigo-500 to-indigo-600',
+    },
+  ]
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -178,7 +158,7 @@ function Dashboard() {
         </div>
         <div className="flex items-center gap-2 text-sm text-stone-500">
           <Clock className="w-4 h-4" />
-          <span>อัปเดตล่าสุด: 15 ม.ค. 2026, 14:30</span>
+          <span>อัปเดตล่าสุด: {lastUpdated.toLocaleString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
         </div>
       </div>
 
@@ -188,9 +168,9 @@ function Dashboard() {
       {/* Job Escalation Widget - Unassigned Jobs */}
       <JobEscalationWidget />
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Row 1: 4 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
+        {statsCards.slice(0, 4).map((stat) => {
           const Icon = stat.icon
           return (
             <div
@@ -198,25 +178,50 @@ function Dashboard() {
               className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100 hover:shadow-xl transition"
             >
               <div className="flex items-start justify-between">
-                <div className="p-3 bg-gradient-to-br rounded-xl">
+                <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl`}>
                   <Icon className="w-6 h-6 text-white" />
-                </div>
-                <div
-                  className={`flex items-center gap-1 text-sm font-medium ${
-                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {stat.trend === 'up' ? (
-                    <TrendingUp className="w-4 h-4" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4" />
-                  )}
-                  <span>{stat.change}</span>
                 </div>
               </div>
               <div className="mt-4">
-                <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
+                {overview.isLoading ? (
+                  <LoadingSkeleton className="h-8 w-20 mb-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
+                )}
                 <p className="text-sm text-stone-500">{stat.name}</p>
+                {stat.subtitle && (
+                  <p className="text-xs text-stone-400 mt-1">{overview.isLoading ? '' : stat.subtitle}</p>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Stats Grid - Row 2: 3 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {statsCards.slice(4).map((stat) => {
+          const Icon = stat.icon
+          return (
+            <div
+              key={stat.name}
+              className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100 hover:shadow-xl transition"
+            >
+              <div className="flex items-start justify-between">
+                <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                {overview.isLoading ? (
+                  <LoadingSkeleton className="h-8 w-20 mb-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
+                )}
+                <p className="text-sm text-stone-500">{stat.name}</p>
+                {stat.subtitle && (
+                  <p className="text-xs text-stone-400 mt-1">{overview.isLoading ? '' : stat.subtitle}</p>
+                )}
               </div>
             </div>
           )
@@ -253,24 +258,41 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentBookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-stone-100 hover:bg-stone-50">
-                    <td className="py-3 px-4 text-sm font-medium text-stone-900">{booking.id}</td>
-                    <td className="py-3 px-4 text-sm text-stone-600">{booking.customer}</td>
-                    <td className="py-3 px-4 text-sm text-stone-600">
-                      <div>{booking.service}</div>
-                      {booking.hotel && (
-                        <div className="text-xs text-amber-700">{booking.hotel}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-stone-600">
-                      <div>{booking.date}</div>
-                      <div className="text-xs">{booking.time}</div>
-                    </td>
-                    <td className="py-3 px-4 text-sm font-medium text-stone-900">฿{booking.amount}</td>
-                    <td className="py-3 px-4">{getStatusBadge(booking.status)}</td>
+                {recentBookings.isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="border-b border-stone-100">
+                      <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-28" /></td>
+                      <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-24" /></td>
+                      <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-32" /></td>
+                      <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-20" /></td>
+                      <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-16" /></td>
+                      <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-20" /></td>
+                    </tr>
+                  ))
+                ) : recentBookings.data?.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-stone-400">ไม่มีข้อมูลการจอง</td>
                   </tr>
-                ))}
+                ) : (
+                  recentBookings.data?.map((booking) => (
+                    <tr key={booking.id} className="border-b border-stone-100 hover:bg-stone-50">
+                      <td className="py-3 px-4 text-sm font-medium text-stone-900">{booking.booking_number}</td>
+                      <td className="py-3 px-4 text-sm text-stone-600">{booking.customer_name || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-stone-600">
+                        <div>{booking.service_name || '-'}</div>
+                        {booking.hotel_name && (
+                          <div className="text-xs text-amber-700">{booking.hotel_name}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-stone-600">
+                        <div>{formatDate(booking.booking_date)}</div>
+                        <div className="text-xs">{formatTime(booking.booking_time)}</div>
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium text-stone-900">{formatCurrency(booking.final_price)}</td>
+                      <td className="py-3 px-4">{getStatusBadge(booking.status)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -284,45 +306,52 @@ function Dashboard() {
               <p className="text-sm text-stone-500">Pending Staff Applications</p>
             </div>
             <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-              {pendingApprovals.length}
+              {pendingApprovals.isLoading ? '...' : pendingApprovals.data?.length || 0}
             </span>
           </div>
 
           <div className="space-y-4">
-            {pendingApprovals.map((staff) => (
-              <div
-                key={staff.id}
-                className="p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
-                      {staff.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-medium text-stone-900">{staff.name}</p>
-                      <p className="text-sm text-stone-500">{staff.skill}</p>
+            {pendingApprovals.isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 bg-stone-50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <LoadingSkeleton className="w-10 h-10 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <LoadingSkeleton className="h-4 w-24" />
+                      <LoadingSkeleton className="h-3 w-16" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-amber-700">
-                    <Star className="w-4 h-4 fill-amber-700" />
-                    <span className="text-sm font-medium">{staff.rating}</span>
-                  </div>
+                  <LoadingSkeleton className="h-8 w-full" />
                 </div>
-                <div className="flex items-center justify-between text-xs text-stone-500">
-                  <span>ประสบการณ์ {staff.experience}</span>
-                  <span>สมัคร {staff.appliedDate}</span>
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <button className="flex-1 px-3 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white text-sm rounded-lg hover:from-amber-800 hover:to-amber-900 transition">
-                    อนุมัติ
-                  </button>
-                  <button className="flex-1 px-3 py-2 bg-stone-200 text-stone-700 text-sm rounded-lg hover:bg-stone-300 transition">
-                    ปฏิเสธ
-                  </button>
-                </div>
+              ))
+            ) : pendingApprovals.data?.length === 0 ? (
+              <div className="py-8 text-center text-stone-400 text-sm">
+                ไม่มีคำขออนุมัติ
               </div>
-            ))}
+            ) : (
+              pendingApprovals.data?.map((staff) => (
+                <div
+                  key={staff.id}
+                  className="p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+                        {staff.full_name?.charAt(0) || '?'}
+                      </div>
+                      <div>
+                        <p className="font-medium text-stone-900">{staff.full_name}</p>
+                        <p className="text-sm text-stone-500">{staff.skills?.join(', ') || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-stone-500">
+                    <span>ประสบการณ์ {staff.experience_years} ปี</span>
+                    <span>สมัคร {staff.application_date ? formatDate(staff.application_date) : '-'}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <Link
@@ -351,33 +380,53 @@ function Dashboard() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {popularServices.map((service, index) => (
-            <div
-              key={service.name}
-              className="p-4 bg-gradient-to-br from-stone-50 to-amber-50 rounded-xl border border-stone-100"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 bg-gradient-to-r from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  {index + 1}
-                </span>
-                <Package className="w-4 h-4 text-amber-700" />
+        {popularServices.isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="p-4 bg-stone-50 rounded-xl">
+                <LoadingSkeleton className="h-6 w-6 rounded-full mb-3" />
+                <LoadingSkeleton className="h-4 w-full mb-2" />
+                <LoadingSkeleton className="h-3 w-20 mb-1" />
+                <LoadingSkeleton className="h-3 w-24" />
               </div>
-              <p className="font-medium text-stone-900 text-sm mb-2">{service.name}</p>
-              <div className="space-y-1 text-xs text-stone-500">
-                <div className="flex justify-between">
-                  <span>การจอง:</span>
-                  <span className="font-medium text-stone-700">{service.bookings}</span>
+            ))}
+          </div>
+        ) : popularServices.data?.length === 0 ? (
+          <div className="py-8 text-center text-stone-400 text-sm">
+            ไม่มีข้อมูลบริการเดือนนี้
+          </div>
+        ) : (
+          <div className={`grid grid-cols-1 gap-4 ${
+            (popularServices.data?.length || 0) >= 5 ? 'md:grid-cols-5' :
+            (popularServices.data?.length || 0) >= 3 ? 'md:grid-cols-3' :
+            'md:grid-cols-2'
+          }`}>
+            {popularServices.data?.map((service, index) => (
+              <div
+                key={service.service_id}
+                className="p-4 bg-gradient-to-br from-stone-50 to-amber-50 rounded-xl border border-stone-100"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-6 h-6 bg-gradient-to-r from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {index + 1}
+                  </span>
+                  <Package className="w-4 h-4 text-amber-700" />
                 </div>
-                <div className="flex justify-between">
-                  <span>รายได้:</span>
-                  <span className="font-medium text-stone-900">฿{service.revenue.toLocaleString()}</span>
+                <p className="font-medium text-stone-900 text-sm mb-2">{service.name}</p>
+                <div className="space-y-1 text-xs text-stone-500">
+                  <div className="flex justify-between">
+                    <span>การจอง:</span>
+                    <span className="font-medium text-stone-700">{service.bookings}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>รายได้:</span>
+                    <span className="font-medium text-stone-900">{formatCurrency(service.revenue)}</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-2 text-xs font-medium text-green-600">{service.change}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}
@@ -388,7 +437,11 @@ function Dashboard() {
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">156</p>
+              {quickStats.isLoading ? (
+                <LoadingSkeleton className="h-8 w-12 mb-1" />
+              ) : (
+                <p className="text-2xl font-bold text-stone-900">{quickStats.data?.completedToday ?? 0}</p>
+              )}
               <p className="text-sm text-stone-500">การจองสำเร็จวันนี้</p>
             </div>
           </div>
@@ -400,8 +453,12 @@ function Dashboard() {
               <AlertCircle className="w-6 h-6 text-yellow-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">12</p>
-              <p className="text-sm text-stone-500">รอติดตาม</p>
+              {quickStats.isLoading ? (
+                <LoadingSkeleton className="h-8 w-12 mb-1" />
+              ) : (
+                <p className="text-2xl font-bold text-stone-900">{quickStats.data?.pendingToday ?? 0}</p>
+              )}
+              <p className="text-sm text-stone-500">รอดำเนินการวันนี้</p>
             </div>
           </div>
         </div>
@@ -412,7 +469,11 @@ function Dashboard() {
               <XCircle className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">3</p>
+              {quickStats.isLoading ? (
+                <LoadingSkeleton className="h-8 w-12 mb-1" />
+              ) : (
+                <p className="text-2xl font-bold text-stone-900">{quickStats.data?.cancelledToday ?? 0}</p>
+              )}
               <p className="text-sm text-stone-500">การยกเลิกวันนี้</p>
             </div>
           </div>

@@ -146,7 +146,7 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
       {/* Footer */}
       <div className="p-4 bg-stone-50 border-t border-stone-200">
         <Link
-          to="/admin/bookings"
+          to="/admin/bookings?status=pending"
           className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition ${
             hasUrgent
               ? 'bg-red-600 text-white hover:bg-red-700'

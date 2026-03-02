@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users } from 'lucide-react'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, type BookingStatus } from '../hooks/useBookings'
@@ -7,8 +8,10 @@ import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
 
 function Bookings() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialStatus = searchParams.get('status') as BookingStatus | null
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>(initialStatus || 'all')
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
   const [categoryFilter, setCategoryFilter] = useState<ServiceCategory | 'all'>('all')
   const [bookingTypeFilter, setBookingTypeFilter] = useState<'all' | 'customer' | 'hotel'>('all')
@@ -16,6 +19,12 @@ function Bookings() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false)
   const queryClient = useQueryClient()
+
+  // Sync statusFilter with URL search params (e.g. when navigating from different links)
+  useEffect(() => {
+    const urlStatus = searchParams.get('status') as BookingStatus | null
+    setStatusFilter(urlStatus || 'all')
+  }, [searchParams])
 
   // Fetch bookings with filters
   const { data: bookingsData = [], isLoading: bookingsLoading } = useBookings({
