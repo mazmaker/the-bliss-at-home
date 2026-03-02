@@ -9,10 +9,10 @@ export interface DashboardStats {
   totalBookings: number
   newCustomers: number
   avgBookingValue: number
-  revenueGrowth: number
-  bookingsGrowth: number
-  newCustomersGrowth: number
-  avgValueGrowth: number
+  revenueGrowth: number | null
+  bookingsGrowth: number | null
+  newCustomersGrowth: number | null
+  avgValueGrowth: number | null
 }
 
 export interface DailyRevenueData {
@@ -71,9 +71,9 @@ export interface HotelPerformance {
   top_staff_names: string[]
 
   // Growth Metrics
-  revenue_growth: number
-  booking_growth: number
-  customer_growth: number
+  revenue_growth: number | null
+  booking_growth: number | null
+  customer_growth: number | null
 
   // Operational Metrics
   avg_service_duration: number
@@ -157,9 +157,9 @@ export interface StaffPerformance {
   availability_score: number
 
   // Comparison & Growth
-  revenue_growth: number
-  booking_growth: number
-  rating_growth: number
+  revenue_growth: number | null
+  booking_growth: number | null
+  rating_growth: number | null
   rank: number
 
   // Status & Period Info
@@ -300,10 +300,10 @@ export async function getDashboardStats(
       totalBookings: stats.total_bookings || 0,
       newCustomers: stats.new_customers || 0,
       avgBookingValue: Number(stats.avg_booking_value) || 0,
-      revenueGrowth: Number(stats.revenue_growth) || 0,
-      bookingsGrowth: Number(stats.bookings_growth) || 0,
-      newCustomersGrowth: Number(stats.new_customers_growth) || 0,
-      avgValueGrowth: Number(stats.avg_value_growth) || 0
+      revenueGrowth: stats.revenue_growth != null ? Number(stats.revenue_growth) : null,
+      bookingsGrowth: stats.bookings_growth != null ? Number(stats.bookings_growth) : null,
+      newCustomersGrowth: stats.new_customers_growth != null ? Number(stats.new_customers_growth) : null,
+      avgValueGrowth: stats.avg_value_growth != null ? Number(stats.avg_value_growth) : null
     }
   } catch (error) {
     console.error('Error in getDashboardStats:', error)
@@ -604,9 +604,9 @@ export async function getHotelPerformance(days: number = 30): Promise<HotelPerfo
       top_staff_names: hotel.top_staff_names || [],
 
       // Growth Metrics
-      revenue_growth: Number(hotel.revenue_growth) || 0,
-      booking_growth: Number(hotel.booking_growth) || 0,
-      customer_growth: Number(hotel.customer_growth) || 0,
+      revenue_growth: hotel.revenue_growth != null ? Number(hotel.revenue_growth) : null,
+      booking_growth: hotel.booking_growth != null ? Number(hotel.booking_growth) : null,
+      customer_growth: hotel.customer_growth != null ? Number(hotel.customer_growth) : null,
 
       // Operational Metrics
       avg_service_duration: hotel.avg_service_duration || 90,
@@ -849,9 +849,9 @@ export async function getStaffPerformance(days: number = 30, limit: number = 10)
       availability_score: 85 + Math.random() * 15,
 
       // Growth Metrics
-      revenue_growth: Number(staff.revenue_growth) || 0,
-      booking_growth: Number(staff.booking_growth) || 0,
-      rating_growth: Number(staff.rating_growth) || 0,
+      revenue_growth: staff.revenue_growth != null ? Number(staff.revenue_growth) : null,
+      booking_growth: staff.booking_growth != null ? Number(staff.booking_growth) : null,
+      rating_growth: staff.rating_growth != null ? Number(staff.rating_growth) : null,
       rank: staff.rank || 0,
 
       // Status & Dates

@@ -27,15 +27,46 @@ interface HotelSectionProps {
 }
 
 // Tooltip Component for better explanations
-const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => (
-  <div className="group relative inline-block">
-    {children}
-    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-      {content}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => {
+  const [show, setShow] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setPos({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setShow(true)
+  }
+
+  return (
+    <div
+      ref={triggerRef}
+      className="relative inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          style={{
+            top: pos.top,
+            left: pos.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+        </div>
+      )}
     </div>
-  </div>
-)
+  )
+}
 
 function HotelSection({ selectedPeriod }: HotelSectionProps) {
   const [showExportDropdown, setShowExportDropdown] = useState(false)
@@ -163,7 +194,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-10">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
               <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
                 <p className="text-xs font-medium text-stone-600">Export Hotel Data • ส่งออกข้อมูลโรงแรม</p>
               </div>
@@ -206,11 +237,11 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
               <p className="text-sm opacity-90">โรงแรมพาร์ทเนอร์ • Hotel Partners</p>
-              <p className="text-3xl font-bold mt-3 mb-2">
+              <div className="text-3xl font-bold mt-3 mb-2">
                 {states.hotelPerformance.isLoading
                   ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-12 rounded"></div>
                   : hotelStats?.totalHotels || 0}
-              </p>
+              </div>
               <p className="text-sm opacity-90">ทั้งหมด</p>
             </div>
             <Building2 className="w-12 h-12 opacity-80" />
@@ -223,11 +254,11 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
               <p className="text-sm opacity-70">โรงแรมอันดับ 1 • Top Hotel</p>
-              <p className="text-lg font-bold mt-3 mb-2 truncate">
+              <div className="text-lg font-bold mt-3 mb-2 truncate">
                 {states.hotelPerformance.isLoading
                   ? <div className="animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></div>
                   : hotelStats?.topPerformer || 'N/A'}
-              </p>
+              </div>
               <p className="text-sm opacity-70">ประสิทธิภาพสูงสุด</p>
             </div>
             <Award className="w-12 h-12 text-stone-700 opacity-80" />
@@ -240,11 +271,11 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
               <p className="text-sm opacity-90">รายได้จากโรงแรม • Hotel Revenue</p>
-              <p className="text-3xl font-bold mt-3 mb-2">
+              <div className="text-3xl font-bold mt-3 mb-2">
                 {states.hotelPerformance.isLoading
                   ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
                   : `฿${(hotelStats?.totalRevenue || 0).toLocaleString()}`}
-              </p>
+              </div>
               <p className="text-sm opacity-90">รวมทั้งหมด</p>
             </div>
             <DollarSign className="w-12 h-12 opacity-80" />
@@ -371,7 +402,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                     )}
 
                     {/* Growth */}
-                    {hotel.revenue_growth !== 0 && (
+                    {hotel.revenue_growth != null && hotel.revenue_growth !== 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-stone-500 text-xs">การเติบโต:</span>
                         <div className="flex items-center gap-1">

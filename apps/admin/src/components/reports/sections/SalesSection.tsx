@@ -36,15 +36,46 @@ interface SalesSectionProps {
 }
 
 // Tooltip Component for better explanations
-const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => (
-  <div className="group relative inline-block">
-    {children}
-    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-      {content}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => {
+  const [show, setShow] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setPos({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setShow(true)
+  }
+
+  return (
+    <div
+      ref={triggerRef}
+      className="relative inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          style={{
+            top: pos.top,
+            left: pos.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+        </div>
+      )}
     </div>
-  </div>
-)
+  )
+}
 
 function SalesSection({ selectedPeriod }: SalesSectionProps) {
   const [showExportDropdown, setShowExportDropdown] = useState(false)
@@ -183,7 +214,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-10">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
               <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
                 <p className="text-xs font-medium text-stone-600">Export Sales Data • ส่งออกข้อมูลยอดขาย</p>
               </div>
@@ -228,13 +259,17 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
               <p className="text-sm opacity-90">รายได้รวม • Gross Revenue</p>
               <p className="text-2xl font-bold mt-2 mb-1">
                 {advancedSalesMetrics.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                  ? <span className="block animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></span>
                   : `฿${(advancedSalesMetrics.data?.gross_revenue || 0).toLocaleString()}`}
               </p>
-              <div className="flex items-center gap-1 text-xs">
-                <ArrowUpRight className="w-3 h-3" />
-                <span>+{(advancedSalesMetrics.data?.revenue_growth_rate || 0).toFixed(1)}%</span>
-              </div>
+              {advancedSalesMetrics.data?.revenue_growth_rate != null ? (
+                <div className={`flex items-center gap-1 text-xs ${advancedSalesMetrics.data.revenue_growth_rate >= 0 ? '' : 'opacity-80'}`}>
+                  {advancedSalesMetrics.data.revenue_growth_rate >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  <span>{advancedSalesMetrics.data.revenue_growth_rate > 0 ? '+' : ''}{advancedSalesMetrics.data.revenue_growth_rate.toFixed(1)}%</span>
+                </div>
+              ) : (
+                <div className="text-xs opacity-60">ไม่มีข้อมูลเปรียบเทียบ</div>
+              )}
             </div>
             <DollarSign className="w-8 h-8 opacity-80" />
           </div>
@@ -248,7 +283,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
               <p className="text-sm opacity-90">รายได้สุทธิ • Net Revenue</p>
               <p className="text-2xl font-bold mt-2 mb-1">
                 {advancedSalesMetrics.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                  ? <span className="block animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></span>
                   : `฿${(advancedSalesMetrics.data?.net_revenue || 0).toLocaleString()}`}
               </p>
               <div className="text-xs opacity-90">
@@ -267,7 +302,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
               <p className="text-sm opacity-70">AOV • มูลค่าเฉลี่ย</p>
               <p className="text-2xl font-bold mt-2 mb-1">
                 {advancedSalesMetrics.isLoading
-                  ? <div className="animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></div>
+                  ? <span className="block animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></span>
                   : `฿${(advancedSalesMetrics.data?.average_order_value || 0).toLocaleString()}`}
               </p>
               <div className="text-xs opacity-70">
@@ -286,7 +321,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
               <p className="text-sm opacity-90">พยากรณ์ • Forecast</p>
               <p className="text-2xl font-bold mt-2 mb-1">
                 {advancedSalesMetrics.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></div>
+                  ? <span className="block animate-pulse bg-white bg-opacity-20 h-6 w-20 rounded"></span>
                   : `฿${(advancedSalesMetrics.data?.projected_revenue || 0).toLocaleString()}`}
               </p>
               <div className="text-xs opacity-90">
@@ -362,12 +397,16 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-stone-600">Growth:</span>
-                        <span className={`font-semibold flex items-center gap-1 ${
-                          (channel.growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {(channel.growth_rate || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                          {Math.abs(channel.growth_rate || 0).toFixed(1)}%
-                        </span>
+                        {channel.growth_rate != null ? (
+                          <span className={`font-semibold flex items-center gap-1 ${
+                            channel.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {channel.growth_rate >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            {Math.abs(channel.growth_rate).toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-stone-400">-</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -432,12 +471,16 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                           <span>•</span>
                           <span>AVG: ฿{service.avg_price?.toLocaleString() || 0}</span>
                           <span>•</span>
-                          <span className={`flex items-center gap-1 ${
-                            (service.growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {(service.growth_rate || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                            {Math.abs(service.growth_rate || 0).toFixed(1)}%
-                          </span>
+                          {service.growth_rate != null ? (
+                            <span className={`flex items-center gap-1 ${
+                              service.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {service.growth_rate >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                              {Math.abs(service.growth_rate).toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className="text-stone-400">-</span>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">

@@ -29,15 +29,46 @@ interface StaffSectionProps {
 }
 
 // Tooltip Component for better explanations
-const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => (
-  <div className="group relative inline-block">
-    {children}
-    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-      {content}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => {
+  const [show, setShow] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setPos({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setShow(true)
+  }
+
+  return (
+    <div
+      ref={triggerRef}
+      className="relative inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          style={{
+            top: pos.top,
+            left: pos.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+        </div>
+      )}
     </div>
-  </div>
-)
+  )
+}
 
 function StaffSection({ selectedPeriod }: StaffSectionProps) {
   const [showExportDropdown, setShowExportDropdown] = useState(false)
@@ -171,7 +202,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-10">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
               <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
                 <p className="text-xs font-medium text-stone-600">Export Staff Data • ส่งออกข้อมูลพนักงาน</p>
               </div>
@@ -371,16 +402,20 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                           </div>
                         </td>
                         <td className="py-3 text-center">
-                          <div className={`flex items-center justify-center gap-1 ${
-                            (staff.revenue_growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {(staff.revenue_growth || 0) >= 0 ? (
-                              <ArrowUpRight className="w-3 h-3" />
-                            ) : (
-                              <ArrowDownRight className="w-3 h-3" />
-                            )}
-                            <span className="text-xs font-semibold">{Math.abs(staff.revenue_growth || 0).toFixed(1)}%</span>
-                          </div>
+                          {staff.revenue_growth != null ? (
+                            <div className={`flex items-center justify-center gap-1 ${
+                              staff.revenue_growth >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {staff.revenue_growth >= 0 ? (
+                                <ArrowUpRight className="w-3 h-3" />
+                              ) : (
+                                <ArrowDownRight className="w-3 h-3" />
+                              )}
+                              <span className="text-xs font-semibold">{Math.abs(staff.revenue_growth).toFixed(1)}%</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-stone-400">-</span>
+                          )}
                         </td>
                       </tr>
                     ))

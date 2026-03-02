@@ -25,7 +25,8 @@ interface BusinessReportGeneratorProps {
 }
 
 interface RealTimeBookingData {
-  totalBookings: number
+  totalBookings: number       // ALL bookings (for status breakdown)
+  activeBookings: number      // Non-cancelled bookings (for main card, matches RPC)
   completedBookings: number
   confirmedBookings: number
   pendingBookings: number
@@ -217,6 +218,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
 
       setRealTimeData({
         totalBookings,
+        activeBookings: nonCancelledBookings.length,
         completedBookings,
         confirmedBookings,
         pendingBookings,
@@ -454,9 +456,9 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">การจองทั้งหมด</p>
+                  <p className="text-sm font-medium text-stone-500 mb-1">การจอง</p>
                   <p className="text-3xl font-bold text-blue-700">
-                    {realTimeData.totalBookings.toLocaleString()} ครั้ง
+                    {realTimeData.activeBookings.toLocaleString()} ครั้ง
                   </p>
                   <p className="text-sm text-stone-600 mt-1">
                     เฉลี่ย ฿{realTimeData.avgBookingValue.toLocaleString()}/ครั้ง
@@ -531,7 +533,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                     {realTimeData.cancellationRate.toFixed(1)}%
                   </p>
                   <p className="text-sm text-stone-600 mt-1">
-                    จาก {realTimeData.totalBookings} การจองทั้งหมด
+                    จาก {realTimeData.totalBookings} รวมทุกสถานะ
                   </p>
                 </div>
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
