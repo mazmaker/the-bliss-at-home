@@ -5,15 +5,46 @@
 
 import { supabase } from '../auth/supabaseClient'
 import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
+import { isJobMatchingStaffGender } from '../utils/providerPreference'
 
-// Get jobs for current staff member
+// Helper: batch-fetch provider_preference from bookings and attach to jobs
+async function attachProviderPreference(jobs: Job[]): Promise<Job[]> {
+  if (jobs.length === 0) return jobs
+  const bookingIds = [...new Set(jobs.map(j => j.booking_id).filter(Boolean))]
+  if (bookingIds.length === 0) return jobs
+
+  const { data: bookings } = await supabase
+    .from('bookings')
+    .select('id, provider_preference')
+    .in('id', bookingIds)
+
+  const prefMap = new Map((bookings || []).map(b => [b.id, b.provider_preference]))
+  return jobs.map(j => ({ ...j, provider_preference: prefMap.get(j.booking_id) || null }))
+}
+
+// Get jobs for current staff member with hotel information
 export async function getStaffJobs(
   staffId: string,
   filter?: JobFilter
 ): Promise<Job[]> {
   let query = supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      bookings (
+        hotel_id,
+        provider_preference,
+        hotels (
+          id,
+          name_th,
+          name_en,
+          phone,
+          address,
+          latitude,
+          longitude
+        )
+      )
+    `)
     .eq('staff_id', staffId)
     .order('scheduled_date', { ascending: true })
     .order('scheduled_time', { ascending: true })
@@ -45,16 +76,32 @@ export async function getStaffJobs(
     throw error
   }
 
-  return (data || []) as Job[]
+  return attachProviderPreference((data || []) as Job[])
 }
 
 // Get pending jobs available for staff to accept (from today onwards)
-export async function getPendingJobs(): Promise<Job[]> {
+// Filters out jobs with hard gender requirements (female-only, male-only) that don't match staff gender
+export async function getPendingJobs(staffGender?: string | null): Promise<Job[]> {
   const today = new Date().toISOString().split('T')[0]
 
   const { data, error } = await supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      bookings (
+        hotel_id,
+        provider_preference,
+        hotels (
+          id,
+          name_th,
+          name_en,
+          phone,
+          address,
+          latitude,
+          longitude
+        )
+      )
+    `)
     .eq('status', 'pending')
     .is('staff_id', null)
     .gte('scheduled_date', today) // Only show jobs from today onwards
@@ -66,14 +113,36 @@ export async function getPendingJobs(): Promise<Job[]> {
     throw error
   }
 
-  return (data || []) as Job[]
+  const jobsWithPref = await attachProviderPreference((data || []) as Job[])
+
+  // Filter by staff gender if provided
+  if (staffGender !== undefined) {
+    return jobsWithPref.filter(j => isJobMatchingStaffGender(j.provider_preference, staffGender))
+  }
+
+  return jobsWithPref
 }
 
-// Get a single job by ID
+// Get a single job by ID with hotel information
 export async function getJob(jobId: string): Promise<Job | null> {
   const { data, error } = await supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      bookings (
+        hotel_id,
+        provider_preference,
+        hotels (
+          id,
+          name_th,
+          name_en,
+          phone,
+          address,
+          latitude,
+          longitude
+        )
+      )
+    `)
     .eq('id', jobId)
     .single()
 
@@ -85,7 +154,8 @@ export async function getJob(jobId: string): Promise<Job | null> {
     throw error
   }
 
-  return data as Job
+  const [enriched] = await attachProviderPreference([data as Job])
+  return enriched || data as Job
 }
 
 // Accept a job
@@ -108,6 +178,29 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
       throw new Error('งานนี้ถูกยกเลิกแล้ว')
     }
     throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
+  }
+
+  // Check provider_preference vs staff gender (hard requirements only)
+  if (currentJob.booking_id) {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('provider_preference')
+      .eq('id', currentJob.booking_id)
+      .single()
+
+    if (booking?.provider_preference === 'female-only' || booking?.provider_preference === 'male-only') {
+      // staffId is profile_id, get staff gender
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('gender')
+        .eq('profile_id', staffId)
+        .single()
+
+      if (!isJobMatchingStaffGender(booking.provider_preference, staffData?.gender)) {
+        const label = booking.provider_preference === 'female-only' ? 'ผู้หญิงเท่านั้น' : 'ผู้ชายเท่านั้น'
+        throw new Error(`ไม่สามารถรับงานนี้ได้ ลูกค้าระบุความต้องการ "${label}"`)
+      }
+    }
   }
 
   // For couple bookings (total_jobs > 1), check if this staff already has another job from same booking
@@ -156,6 +249,30 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     }
     console.error('Error accepting job:', error)
     throw new Error('ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง')
+  }
+
+  // ✅ NEW: Also update the corresponding booking status to 'confirmed'
+  // When staff accepts a job, the booking should also be confirmed
+  if (data && data.booking_id) {
+    try {
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update({
+          staff_id: staffId,
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', data.booking_id)
+
+      if (bookingError) {
+        console.error('Error updating booking after job acceptance:', bookingError)
+        // Don't throw error - job acceptance was successful, booking update is secondary
+      } else {
+        console.log('✅ Booking status updated to confirmed after staff accepted job')
+      }
+    } catch (bookingUpdateError) {
+      console.error('Exception updating booking:', bookingUpdateError)
+    }
   }
 
   return data as Job

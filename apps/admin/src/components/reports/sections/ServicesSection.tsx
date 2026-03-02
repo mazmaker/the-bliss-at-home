@@ -28,15 +28,46 @@ interface ServicesSectionProps {
 }
 
 // Tooltip Component for better explanations
-const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => (
-  <div className="group relative inline-block">
-    {children}
-    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-      {content}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => {
+  const [show, setShow] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setPos({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setShow(true)
+  }
+
+  return (
+    <div
+      ref={triggerRef}
+      className="relative inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          style={{
+            top: pos.top,
+            left: pos.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+        </div>
+      )}
     </div>
-  </div>
-)
+  )
+}
 
 function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
   const [showExportDropdown, setShowExportDropdown] = useState(false)
@@ -184,7 +215,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-10">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
               <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
                 <p className="text-xs font-medium text-stone-600">Export Services Data • ส่งออกข้อมูลบริการ</p>
               </div>
@@ -229,7 +260,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
               <p className="text-sm opacity-90">บริการยอดนิยม • Top Services</p>
               <p className="text-3xl font-bold mt-3 mb-2">
                 {states.topServices.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-12 rounded"></div>
+                  ? <span className="block animate-pulse bg-white bg-opacity-20 h-8 w-12 rounded"></span>
                   : serviceStats.totalServices}
               </p>
               <p className="text-sm opacity-90">บริการ</p>
@@ -246,7 +277,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
               <p className="text-sm opacity-70">บริการอันดับ 1 • #1 Service</p>
               <p className="text-lg font-bold mt-3 mb-2 truncate">
                 {states.topServices.isLoading
-                  ? <div className="animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></div>
+                  ? <span className="block animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></span>
                   : serviceStats.topService || 'N/A'}
               </p>
               <p className="text-sm opacity-70">ยอดนิยมสุด</p>
@@ -263,7 +294,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
               <p className="text-sm opacity-90">รายได้บริการ • Service Revenue</p>
               <p className="text-3xl font-bold mt-3 mb-2">
                 {states.topServices.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></div>
+                  ? <span className="block animate-pulse bg-white bg-opacity-20 h-8 w-24 rounded"></span>
                   : `฿${serviceStats.totalRevenue.toLocaleString()}`}
               </p>
               <p className="text-sm opacity-90">รวมบริการยอดนิยม</p>
@@ -280,7 +311,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
               <p className="text-sm opacity-90">การจองบริการ • Service Bookings</p>
               <p className="text-3xl font-bold mt-3 mb-2">
                 {states.topServices.isLoading
-                  ? <div className="animate-pulse bg-white bg-opacity-20 h-8 w-16 rounded"></div>
+                  ? <span className="block animate-pulse bg-white bg-opacity-20 h-8 w-16 rounded"></span>
                   : serviceStats.totalBookings.toLocaleString()}
               </p>
               <p className="text-sm opacity-90">การจองทั้งหมด</p>
@@ -523,9 +554,13 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                     <p className="text-2xl font-bold">฿{item.total_revenue?.toLocaleString() || '0'}</p>
                     <div className="flex items-center justify-between mt-2 text-sm">
                       <span>{item.total_bookings || 0} การจอง</span>
-                      <span className={`font-medium ${item.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {item.growth_rate > 0 ? '+' : ''}{item.growth_rate?.toFixed(1) || '0'}%
-                      </span>
+                      {item.growth_rate != null ? (
+                        <span className={`font-medium ${item.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.growth_rate > 0 ? '+' : ''}{item.growth_rate.toFixed(1)}%
+                        </span>
+                      ) : (
+                        <span className="font-medium text-stone-400">-</span>
+                      )}
                     </div>
                     <p className="text-xs mt-1">Top: {item.top_service_name || 'N/A'}</p>
                   </div>
@@ -702,59 +737,6 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
         </div>
       </div>
 
-      {/* Service Insights */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6">
-        <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
-          💡 ข้อมูลเชิงลึกบริการ • Service Insights
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-4">
-            <h4 className="font-medium text-stone-700">Popular Trends • แนวโน้มยอดนิยม</h4>
-            <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg border border-pink-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-5 h-5 text-pink-700" />
-                <span className="font-medium text-pink-800">Most Popular</span>
-              </div>
-              <p className="text-sm text-pink-700">
-                {serviceStats.topService
-                  ? `${serviceStats.topService} is currently the most popular service`
-                  : 'Insufficient data for trend analysis'}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-medium text-stone-700">Performance Metrics • เมตริกประสิทธิภาพ</h4>
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-5 h-5 text-blue-700" />
-                <span className="font-medium text-blue-800">Service Diversity</span>
-              </div>
-              <p className="text-sm text-blue-700">
-                {serviceStats.totalServices > 0
-                  ? `Currently offering ${serviceStats.totalServices} popular services with strong booking performance`
-                  : 'No service data available'}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-medium text-stone-700">Geographical Reach • การขยายพื้นที่</h4>
-            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2 mb-2">
-                <MapPin className="w-5 h-5 text-green-700" />
-                <span className="font-medium text-green-800">Area Coverage</span>
-              </div>
-              <p className="text-sm text-green-700">
-                {geographicalData.data && geographicalData.data.length > 0
-                  ? `Operating in ${geographicalData.data.length} areas with strong regional presence`
-                  : 'Geographical data not available'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 
 export interface Job {
   id: string
+  booking_id?: string
   customer_id: string
   customer_name: string
   address: string
@@ -16,6 +17,7 @@ export interface Job {
   created_at: string
   updated_at: string
   notes?: string
+  provider_preference?: string | null
 }
 
 export interface JobsStats {
@@ -69,7 +71,20 @@ export function useStaffJobs(staffId: string, filters?: {
       const { data, error } = await query
 
       if (error) throw error
-      return data || []
+      const jobs = data || []
+
+      // Batch-fetch provider_preference from bookings
+      const bookingIds = [...new Set(jobs.map((j: any) => j.booking_id).filter(Boolean))]
+      if (bookingIds.length > 0) {
+        const { data: bookings } = await supabase
+          .from('bookings')
+          .select('id, provider_preference')
+          .in('id', bookingIds)
+        const prefMap = new Map((bookings || []).map(b => [b.id, b.provider_preference]))
+        return jobs.map((j: any) => ({ ...j, provider_preference: prefMap.get(j.booking_id) || null }))
+      }
+
+      return jobs
     },
     enabled: !!staffId,
     staleTime: 1000 * 60, // 1 minute

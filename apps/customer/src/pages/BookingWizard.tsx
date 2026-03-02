@@ -7,7 +7,7 @@ import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCreateBookingWithServices } from '@bliss/supabase/hooks/useBookings'
 import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
 import { usePaymentMethods } from '@bliss/supabase/hooks/usePaymentMethods'
-import { Database, PromoValidationResult } from '@bliss/supabase'
+import { Database, PromoValidationResult, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import PaymentForm from '../components/PaymentForm'
 import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
 import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
@@ -510,6 +510,7 @@ function BookingWizard() {
           discount_amount: discountAmount,
           final_price: totalPrice,
           promotion_id: appliedPromo?.valid ? appliedPromo.promotion?.id || null : null,
+          provider_preference: providerPreference,
         },
         services,
         addons: addonsData.length > 0 ? addonsData : undefined,
@@ -1107,6 +1108,18 @@ function BookingWizard() {
                     <p>{address.province} {address.zipcode}</p>
                   </div>
                 </div>
+
+                {/* Provider Preference */}
+                {isSpecificPreference(providerPreference) && (
+                  <div>
+                    <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4" /> {t('wizard.step5.providerPreference', 'ความต้องการผู้ให้บริการ')}
+                    </h4>
+                    <span className={`inline-block text-sm px-3 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(providerPreference)}`}>
+                      {getProviderPreferenceLabel(providerPreference)}
+                    </span>
+                  </div>
+                )}
 
                 {/* Notes */}
                 {notes && (

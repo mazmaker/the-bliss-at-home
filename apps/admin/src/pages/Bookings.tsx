@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw } from 'lucide-react'
+import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users } from 'lucide-react'
+import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, type BookingStatus } from '../hooks/useBookings'
 import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
@@ -602,6 +603,18 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                 </p>
               </div>
             </div>
+
+            {isSpecificPreference(booking.provider_preference) && (
+              <div className="flex items-start gap-3">
+                <Users className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm text-stone-500">ความต้องการผู้ให้บริการ</p>
+                  <span className={`inline-block text-xs px-2 py-1 rounded-full ${getProviderPreferenceBadgeStyle(booking.provider_preference)}`}>
+                    {getProviderPreferenceLabel(booking.provider_preference)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {booking.service_format && booking.service_format !== 'single' && (
               <div className="flex items-start gap-3">

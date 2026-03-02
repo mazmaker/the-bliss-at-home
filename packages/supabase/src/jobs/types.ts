@@ -17,6 +17,22 @@ export type JobPaymentStatus =
   | 'paid'         // ชำระแล้ว
   | 'refunded'     // คืนเงินแล้ว
 
+export interface Hotel {
+  id: string
+  name_th: string
+  name_en?: string
+  phone?: string
+  address?: string
+  latitude?: number
+  longitude?: number
+}
+
+export interface Booking {
+  hotel_id: string
+  provider_preference: 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference' | null
+  hotels?: Hotel
+}
+
 export interface Job {
   id: string
   booking_id: string
@@ -58,6 +74,9 @@ export interface Job {
   cancellation_reason: string | null
   cancelled_by: 'STAFF' | 'CUSTOMER' | 'ADMIN' | null
 
+  // Provider preference (from parent booking)
+  provider_preference?: string | null
+
   // Notes
   customer_notes: string | null
   staff_notes: string | null
@@ -65,6 +84,9 @@ export interface Job {
   // Timestamps
   created_at: string
   updated_at: string
+
+  // Related data from joins
+  bookings?: Booking      // Hotel information via booking relationship
 }
 
 export interface JobWithCustomer extends Job {

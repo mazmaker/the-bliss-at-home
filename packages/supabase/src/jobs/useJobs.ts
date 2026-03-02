@@ -4,7 +4,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../auth/hooks'
+import { supabase } from '../auth/supabaseClient'
 import type { Job, JobFilter, StaffStats } from './types'
+import { isJobMatchingStaffGender } from '../utils/providerPreference'
 import {
   getStaffJobs,
   getPendingJobs,
@@ -21,6 +23,7 @@ import {
 interface UseJobsOptions {
   filter?: JobFilter
   realtime?: boolean
+  staffGender?: string | null
   onNewJob?: (job: Job) => void
 }
 
@@ -58,7 +61,7 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     try {
       const [staffJobs, available] = await Promise.all([
         getStaffJobs(staffId, options.filter),
-        getPendingJobs(),
+        getPendingJobs(options.staffGender),
       ])
       setJobs(staffJobs)
       setPendingJobs(available)
@@ -68,7 +71,7 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [staffId, options.filter])
+  }, [staffId, options.filter, options.staffGender])
 
   // Initial load - wait for auth to complete first
   useEffect(() => {
@@ -93,7 +96,24 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
       })
     }
 
-    const handleNewJob = (job: Job) => {
+    const handleNewJob = async (job: Job) => {
+      // For realtime jobs, fetch provider_preference and check gender match
+      if (job.booking_id && options.staffGender !== undefined) {
+        try {
+          const { data: booking } = await supabase
+            .from('bookings')
+            .select('provider_preference')
+            .eq('id', job.booking_id)
+            .single()
+          job.provider_preference = booking?.provider_preference || null
+          if (!isJobMatchingStaffGender(job.provider_preference, options.staffGender)) {
+            return // Skip this job - doesn't match staff gender
+          }
+        } catch {
+          // If fetch fails, still show the job
+        }
+      }
+
       setPendingJobs((prev) => {
         // Duplicate protection: don't add if already exists
         if (prev.some((j) => j.id === job.id)) return prev
@@ -115,7 +135,7 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
       handlePendingJobRemoved
     )
     return unsubscribe
-  }, [staffId, options.realtime, options.onNewJob])
+  }, [staffId, options.realtime, options.onNewJob, options.staffGender])
 
   const handleAcceptJob = useCallback(
     async (jobId: string) => {

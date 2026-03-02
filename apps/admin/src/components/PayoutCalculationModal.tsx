@@ -36,8 +36,8 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
               ภาพรวมระบบการจ่ายเงิน
             </h3>
             <p className="text-sm text-blue-800">
-              ระบบคำนวณรายได้พนักงานจากงานที่ทำสำเร็จในแต่ละรอบ (รายสัปดาห์/รายเดือน)
-              โดยหักค่าธรรมเนียมแพลตฟอร์มและบวกทิปจากลูกค้า
+              ระบบคำนวณรายได้พนักงานจากค่าคอมมิชชั่นของงานที่ทำสำเร็จในแต่ละรอบ (รายสัปดาห์/รายเดือน)
+              โดยรายได้จากค่าคอมมิชชั่นเป็นยอดสุทธิที่พนักงานจะได้รับ ไม่มีการหักค่าใช้จ่ายเพิ่มเติม
             </p>
           </div>
 
@@ -52,19 +52,19 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
                   1
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-stone-900 mb-2">คำนวณรายได้รวม (Gross Earnings)</h4>
+                  <h4 className="font-semibold text-stone-900 mb-2">คำนวณรายได้จากค่าคอมมิชชั่น</h4>
                   <div className="bg-stone-50 rounded-lg p-3 mb-2">
                     <p className="text-sm font-mono text-stone-700">
-                      รายได้รวม = Σ (รายได้จากแต่ละงาน)
+                      รายได้ต่องาน = ราคาบริการ × อัตราคอมมิชชั่นของบริการนั้น
                     </p>
                   </div>
                   <p className="text-sm text-stone-600">
-                    รวมรายได้จากงานทั้งหมดที่สถานะเป็น "เสร็จสิ้น" ในช่วงเวลาที่กำหนด
+                    แต่ละบริการมีอัตราคอมมิชชั่นที่กำหนดไว้ พนักงานจะได้รับส่วนแบ่งตามอัตรานี้
                   </p>
                   <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-xs text-green-700 font-medium">ตัวอย่าง</p>
                     <p className="text-sm text-green-800 mt-1">
-                      งานที่ 1: ฿800 + งานที่ 2: ฿1,200 + งานที่ 3: ฿600 = <strong>฿2,600</strong>
+                      นวดไทย ฿690 × 50% = <strong>฿345</strong>
                     </p>
                   </div>
                 </div>
@@ -78,45 +78,20 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
                   2
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-stone-900 mb-2">คำนวณค่าธรรมเนียมแพลตฟอร์ม (Platform Fee)</h4>
+                  <h4 className="font-semibold text-stone-900 mb-2">รวมรายได้ทั้งหมดในรอบ</h4>
                   <div className="bg-stone-50 rounded-lg p-3 mb-2">
                     <p className="text-sm font-mono text-stone-700">
-                      ค่าธรรมเนียม = รายได้รวม × 15%
+                      รายได้รวม = Σ (รายได้จากแต่ละงานที่สำเร็จ)
                     </p>
                   </div>
                   <p className="text-sm text-stone-600">
-                    แพลตฟอร์มหักค่าธรรมเนียม 15% จากรายได้รวม เพื่อเป็นค่าบริการระบบ
-                  </p>
-                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-xs text-red-700 font-medium">ตัวอย่าง</p>
-                    <p className="text-sm text-red-800 mt-1">
-                      ฿2,600 × 15% = <strong>฿390</strong>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="border border-stone-200 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-semibold">
-                  3
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-stone-900 mb-2">คำนวณรายได้สุทธิ (Net Amount)</h4>
-                  <div className="bg-stone-50 rounded-lg p-3 mb-2">
-                    <p className="text-sm font-mono text-stone-700">
-                      รายได้สุทธิ = รายได้รวม - ค่าธรรมเนียม
-                    </p>
-                  </div>
-                  <p className="text-sm text-stone-600">
-                    รายได้ที่พนักงานจะได้รับจากการทำงาน หลังหักค่าธรรมเนียม
+                    รวมรายได้จากค่าคอมมิชชั่นของงานทั้งหมดที่สถานะเป็น "เสร็จสิ้น" ในช่วงเวลาที่กำหนด
+                    รายได้นี้เป็นยอดสุทธิที่พนักงานจะได้รับ ไม่มีการหักค่าใช้จ่ายเพิ่มเติม
                   </p>
                   <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-xs text-blue-700 font-medium">ตัวอย่าง</p>
                     <p className="text-sm text-blue-800 mt-1">
-                      ฿2,600 - ฿390 = <strong>฿2,210</strong>
+                      งานที่ 1: ฿345 + งานที่ 2: ฿300 + งานที่ 3: ฿175 = <strong>฿820</strong>
                     </p>
                   </div>
                 </div>

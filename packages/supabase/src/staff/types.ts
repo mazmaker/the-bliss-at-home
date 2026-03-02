@@ -145,11 +145,18 @@ export const THAI_PROVINCES = [
   'อุบลราชธานี',
 ]
 
+// Staff Gender
+export type StaffGender = 'male' | 'female'
+
+// Provider Preference (for bookings)
+export type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference'
+
 // Staff Eligibility (for checking if staff can start working)
 export interface StaffEligibility {
   canWork: boolean
   reasons: string[]
   status: 'active' | 'inactive' | 'pending'
+  gender: StaffGender | null
   documents: {
     id_card: { uploaded: boolean; verified: boolean; status?: string }
     bank_statement: { uploaded: boolean; verified: boolean; status?: string }

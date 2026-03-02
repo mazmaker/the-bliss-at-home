@@ -1,4 +1,5 @@
 import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign, UserX, UserCheck, Star } from 'lucide-react'
+import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 
 export interface Notification {
   id: string
@@ -189,6 +190,12 @@ export function NotificationPanel({
                       <p className="text-sm text-stone-600 mb-2">
                         {notification.message}
                       </p>
+                      {(notification.type === 'new_job' || notification.type === 'job_no_staff') &&
+                        isSpecificPreference(notification.data?.provider_preference) && (
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full mb-1 ${getProviderPreferenceBadgeStyle(notification.data?.provider_preference)}`}>
+                          {getProviderPreferenceLabel(notification.data?.provider_preference)}
+                        </span>
+                      )}
                       {notification.type === 'new_review' && renderReviewDetails(notification)}
                       <p className="text-xs text-stone-400 mt-2">
                         {getTimeAgo(notification.created_at)}

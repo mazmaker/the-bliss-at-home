@@ -14,7 +14,6 @@ export function useStaff(filters?: {
     queryFn: () => staffService.getAllStaff(filters),
     staleTime: 1000 * 60, // 1 minute
     refetchOnWindowFocus: false, // Prevent refetch on window focus to avoid input focus loss
-    refetchOnMount: false, // Prevent refetch on mount since we have staleTime
     placeholderData: keepPreviousData, // Keep previous data while fetching new data to prevent unmounting components
   })
 }

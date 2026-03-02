@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import {
   Calendar,
   ChevronLeft,
@@ -708,6 +709,16 @@ function StaffSchedule() {
                 </div>
               </div>
 
+              {/* Provider Preference */}
+              {isSpecificPreference(selectedJob.provider_preference) && (
+                <div className="space-y-1">
+                  <h5 className="font-medium text-stone-900 text-sm">ความต้องการผู้ให้บริการ</h5>
+                  <span className={`inline-block text-xs px-2 py-1 rounded-full ${getProviderPreferenceBadgeStyle(selectedJob.provider_preference)}`}>
+                    {getProviderPreferenceLabel(selectedJob.provider_preference)}
+                  </span>
+                </div>
+              )}
+
               {/* Customer Info */}
               <div className="space-y-2">
                 <h5 className="font-medium text-stone-900 text-sm">ข้อมูลลูกค้า</h5>
@@ -765,6 +776,35 @@ function StaffSchedule() {
                   </a>
                 )}
               </div>
+
+              {/* Gender Preference */}
+              {selectedJob.bookings?.provider_preference && selectedJob.bookings.provider_preference !== 'no-preference' && (
+                <div className="space-y-1">
+                  <h5 className="font-medium text-stone-900 text-sm">ความต้องการเพศของผู้ให้บริการ</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedJob.bookings.provider_preference === 'female-only' && (
+                      <span className="px-2 py-1 text-xs font-medium bg-pink-100 text-pink-700 rounded-full">
+                        ผู้หญิงเท่านั้น (บังคับ)
+                      </span>
+                    )}
+                    {selectedJob.bookings.provider_preference === 'male-only' && (
+                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                        ผู้ชายเท่านั้น (บังคับ)
+                      </span>
+                    )}
+                    {selectedJob.bookings.provider_preference === 'prefer-female' && (
+                      <span className="px-2 py-1 text-xs font-medium bg-pink-50 text-pink-600 rounded-full">
+                        ต้องการผู้หญิง (ยืดหยุ่น)
+                      </span>
+                    )}
+                    {selectedJob.bookings.provider_preference === 'prefer-male' && (
+                      <span className="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">
+                        ต้องการผู้ชาย (ยืดหยุ่น)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Notes */}
               {selectedJob.customer_notes && (

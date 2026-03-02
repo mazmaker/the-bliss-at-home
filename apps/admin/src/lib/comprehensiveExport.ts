@@ -451,66 +451,184 @@ export async function exportComprehensivePDF(days: number = 30): Promise<void> {
   try {
     const data = await fetchComprehensiveReportData(days)
 
-    // Create a formatted text report that can be copied or saved
-    let reportContent = `
-รายงานผลการดำเนินงาน - The Bliss Massage at Home
-==============================================
+    // Create HTML content for print-to-PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>รายงานผลการดำเนินงาน - The Bliss Massage at Home</title>
+        <style>
+          @page { size: A4; margin: 15mm; }
+          body { font-family: 'Sarabun', 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; color: #333; font-size: 14px; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #d97706; padding-bottom: 15px; }
+          .title { font-size: 22px; font-weight: bold; color: #d97706; margin-bottom: 5px; }
+          .subtitle { font-size: 14px; color: #666; }
+          .section { margin: 25px 0; page-break-inside: avoid; }
+          .section-title { font-size: 16px; font-weight: bold; color: #374151; border-bottom: 2px solid #d97706; padding-bottom: 5px; margin-bottom: 12px; }
+          .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 15px 0; }
+          .stat-card { padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; text-align: center; }
+          .stat-value { font-size: 20px; font-weight: bold; color: #d97706; }
+          .stat-label { font-size: 12px; color: #6b7280; margin-top: 3px; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+          th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+          th { background-color: #f3f4f6; font-weight: bold; color: #374151; }
+          .rank { display: inline-block; background: #d97706; color: white; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%; font-weight: bold; font-size: 12px; }
+          .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 11px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title">รายงานผลการดำเนินงาน</div>
+          <div class="subtitle">The Bliss Massage at Home</div>
+          <div class="subtitle">ช่วงเวลา: ${data.summary.period} | วันที่: ${data.summary.reportDate}</div>
+        </div>
 
-วันที่สร้างรายงาน: ${data.summary.reportDate}
-ช่วงเวลา: ${data.summary.period}
+        <div class="section">
+          <div class="section-title">สรุปภาพรวม</div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">฿${data.summary.totalRevenue.toLocaleString()}</div>
+              <div class="stat-label">รายได้รวม</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.summary.totalBookings.toLocaleString()}</div>
+              <div class="stat-label">การจองทั้งหมด</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.summary.completedBookings.toLocaleString()}</div>
+              <div class="stat-label">เสร็จสิ้น</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.summary.cancelledBookings.toLocaleString()}</div>
+              <div class="stat-label">ยกเลิก</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">฿${data.summary.avgBookingValue.toLocaleString()}</div>
+              <div class="stat-label">ค่าเฉลี่ย/ครั้ง</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.summary.completionRate.toFixed(1)}%</div>
+              <div class="stat-label">อัตราสำเร็จ</div>
+            </div>
+          </div>
+        </div>
 
-สรุปยอดรวม
-==========
-รายได้รวม: ฿${data.summary.totalRevenue.toLocaleString()}
-จำนวนการจองทั้งหมด: ${data.summary.totalBookings.toLocaleString()} รายการ
-การจองที่เสร็จสิ้น: ${data.summary.completedBookings.toLocaleString()} รายการ
-การจองที่ยกเลิก: ${data.summary.cancelledBookings.toLocaleString()} รายการ
-ค่าเฉลี่ยต่อการจอง: ฿${data.summary.avgBookingValue.toLocaleString()}
-อัตราการเสร็จสิ้น: ${data.summary.completionRate.toFixed(2)}%
+        ${data.services.length > 0 ? `
+        <div class="section">
+          <div class="section-title">บริการยอดนิยม (Top 5)</div>
+          <table>
+            <thead><tr><th>อันดับ</th><th>บริการ</th><th>การจอง</th><th>รายได้</th></tr></thead>
+            <tbody>
+              ${data.services.slice(0, 5).map((service, index) => `
+                <tr>
+                  <td><span class="rank">${index + 1}</span></td>
+                  <td>${service.name}</td>
+                  <td>${service.total_bookings}</td>
+                  <td>฿${service.total_revenue.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
 
-บริการยอดนิยม (Top 5)
-==================
-${data.services.slice(0, 5).map((service, index) =>
-  `${index + 1}. ${service.name} - ฿${service.total_revenue.toLocaleString()} (${service.total_bookings} การจอง)`
-).join('\n')}
+        ${data.staff.length > 0 ? `
+        <div class="section">
+          <div class="section-title">พนักงานยอดเยี่ยม (Top 5)</div>
+          <table>
+            <thead><tr><th>อันดับ</th><th>พนักงาน</th><th>การจอง</th><th>รายได้</th></tr></thead>
+            <tbody>
+              ${data.staff.slice(0, 5).map((staff, index) => `
+                <tr>
+                  <td><span class="rank">${index + 1}</span></td>
+                  <td>${staff.name}</td>
+                  <td>${staff.total_bookings}</td>
+                  <td>฿${staff.total_earnings.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
 
-พนักงานยอดเยี่ยม (Top 5)
-====================
-${data.staff.slice(0, 5).map((staff, index) =>
-  `${index + 1}. ${staff.name} - ฿${staff.total_earnings.toLocaleString()} (${staff.total_bookings} การจอง)`
-).join('\n')}
+        ${data.customers.length > 0 ? `
+        <div class="section">
+          <div class="section-title">ลูกค้า VIP (Top 10)</div>
+          <table>
+            <thead><tr><th>อันดับ</th><th>ลูกค้า</th><th>การจอง</th><th>ยอดใช้จ่าย</th></tr></thead>
+            <tbody>
+              ${data.customers.slice(0, 10).map((customer, index) => `
+                <tr>
+                  <td><span class="rank">${index + 1}</span></td>
+                  <td>${customer.name}</td>
+                  <td>${customer.total_bookings}</td>
+                  <td>฿${customer.total_spent.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
 
-ลูกค้า VIP (Top 10)
-===============
-${data.customers.slice(0, 10).map((customer, index) =>
-  `${index + 1}. ${customer.name} - ฿${customer.total_spent.toLocaleString()} (${customer.total_bookings} การจอง)`
-).join('\n')}
+        ${data.financial.revenue_breakdown.length > 0 ? `
+        <div class="section">
+          <div class="section-title">รายได้ตามหมวดบริการ</div>
+          <table>
+            <thead><tr><th>หมวดหมู่</th><th>รายได้</th><th>สัดส่วน</th></tr></thead>
+            <tbody>
+              ${data.financial.revenue_breakdown.map(item => `
+                <tr>
+                  <td>${item.category}</td>
+                  <td>฿${item.amount.toLocaleString()}</td>
+                  <td>${item.percentage.toFixed(1)}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
 
-การแบ่งรายได้ตามหมวดบริการ
-========================
-${data.financial.revenue_breakdown.map(item =>
-  `${item.category}: ฿${item.amount.toLocaleString()} (${item.percentage.toFixed(1)}%)`
-).join('\n')}
+        ${data.financial.monthly_trend.length > 0 ? `
+        <div class="section">
+          <div class="section-title">แนวโน้มรายได้รายเดือน</div>
+          <table>
+            <thead><tr><th>เดือน</th><th>รายได้</th><th>การจอง</th></tr></thead>
+            <tbody>
+              ${data.financial.monthly_trend.map(month => `
+                <tr>
+                  <td>${month.month}</td>
+                  <td>฿${month.revenue.toLocaleString()}</td>
+                  <td>${month.bookings}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
 
-แนวโน้มรายได้รายเดือน
-==================
-${data.financial.monthly_trend.map(month =>
-  `${month.month}: ฿${month.revenue.toLocaleString()} (${month.bookings} การจอง)`
-).join('\n')}
+        <div class="footer">
+          <p>รายงานนี้สร้างขึ้นอัตโนมัติโดยระบบ The Bliss Massage at Home</p>
+          <p>วันที่: ${data.summary.reportDate}</p>
+        </div>
+      </body>
+      </html>
+    `
 
---------------------------------------------------
-รายงานนี้สร้างโดยระบบ The Bliss Massage at Home Admin
-`
+    // Use browser print dialog to save as PDF
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      throw new Error('Popup blocked. Please allow popups for this site. • กรุณาอนุญาต Popup สำหรับเว็บไซต์นี้')
+    }
 
-    // Create and download as text file (can be converted to PDF)
-    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `รายงานธุรกิจ_${new Date().toISOString().split('T')[0]}.txt`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+
+    // Wait for content to render, then trigger print dialog
+    setTimeout(() => {
+      printWindow.print()
+    }, 500)
 
     console.log('Comprehensive PDF export completed successfully')
 

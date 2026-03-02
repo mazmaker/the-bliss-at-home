@@ -5,7 +5,7 @@ import {
   Banknote, FileText, CheckCircle, XCircle, Play, Loader2
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
-import { useJob, useJobs, type JobStatus } from '@bliss/supabase'
+import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { ServiceTimer, JobCancellationModal, SOSButton } from '../components'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
@@ -200,6 +200,21 @@ function StaffJobDetail() {
             </div>
           </div>
 
+          {/* Provider Preference */}
+          {isSpecificPreference(job.provider_preference) && (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                <User className="w-5 h-5 text-purple-700" />
+              </div>
+              <div>
+                <p className="text-xs text-stone-500">ความต้องการผู้ให้บริการ</p>
+                <span className={`inline-block text-xs px-2 py-1 rounded-full mt-1 ${getProviderPreferenceBadgeStyle(job.provider_preference)}`}>
+                  {getProviderPreferenceLabel(job.provider_preference)}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Customer */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -260,6 +275,40 @@ function StaffJobDetail() {
               <p className="text-xl font-bold text-amber-700">฿{Number(job.staff_earnings).toLocaleString()}</p>
             </div>
           </div>
+
+          {/* Gender Preference */}
+          {job.bookings?.provider_preference && job.bookings.provider_preference !== 'no-preference' && (
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-stone-500">ความต้องการเพศของผู้ให้บริการ</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {job.bookings.provider_preference === 'female-only' && (
+                    <span className="px-2 py-1 text-xs font-medium bg-pink-100 text-pink-700 rounded-full">
+                      ผู้หญิงเท่านั้น (บังคับ)
+                    </span>
+                  )}
+                  {job.bookings.provider_preference === 'male-only' && (
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                      ผู้ชายเท่านั้น (บังคับ)
+                    </span>
+                  )}
+                  {job.bookings.provider_preference === 'prefer-female' && (
+                    <span className="px-2 py-1 text-xs font-medium bg-pink-50 text-pink-600 rounded-full">
+                      ต้องการผู้หญิง (ยืดหยุ่น)
+                    </span>
+                  )}
+                  {job.bookings.provider_preference === 'prefer-male' && (
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">
+                      ต้องการผู้ชาย (ยืดหยุ่น)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Customer Notes */}
           {job.customer_notes && (

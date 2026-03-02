@@ -1,5 +1,6 @@
-import { X, Calendar, Clock, User, MapPin, DollarSign, FileText, CheckCircle, XCircle, AlertCircle, Briefcase } from 'lucide-react'
+import { X, Calendar, Clock, User, MapPin, DollarSign, FileText, CheckCircle, XCircle, AlertCircle, Briefcase, Users } from 'lucide-react'
 import { Job } from '../hooks/useStaffJobs'
+import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 
 interface JobDetailModalProps {
   job: Job
@@ -72,6 +73,19 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
             </div>
           </div>
 
+          {/* Provider Preference */}
+          {isSpecificPreference(job.provider_preference) && (
+            <div className="bg-white border border-stone-200 rounded-xl p-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-stone-600" />
+                <span className="text-sm font-medium text-stone-700">ความต้องการผู้ให้บริการ</span>
+                <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(job.provider_preference)}`}>
+                  {getProviderPreferenceLabel(job.provider_preference)}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Schedule Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -128,12 +142,8 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
                 <span className="font-semibold text-green-900">฿{job.amount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between border-t border-green-200 pt-2">
-                <span className="text-sm text-green-700">รายได้พนักงาน (85%)</span>
+                <span className="text-sm text-green-700">รายได้พนักงาน</span>
                 <span className="font-bold text-lg text-green-900">฿{job.staff_earnings.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-green-600">ค่าแพลตฟอร์ม (15%)</span>
-                <span className="text-green-600">฿{(job.amount - job.staff_earnings).toLocaleString()}</span>
               </div>
             </div>
           </div>

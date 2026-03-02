@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../auth/hooks'
 import { staffService } from './staffService'
-import type { StaffDocument, ServiceArea, StaffSkill, DocumentType, StaffEligibility } from './types'
+import type { StaffDocument, ServiceArea, StaffSkill, DocumentType, StaffEligibility, StaffGender } from './types'
 
 // ============================================
 // useDocuments Hook
@@ -343,6 +343,7 @@ export function useProfileUpdate() {
     address?: string
     bio_th?: string
     bio_en?: string
+    gender?: StaffGender
   }) => {
     if (!user?.id) throw new Error('Not authenticated')
 
