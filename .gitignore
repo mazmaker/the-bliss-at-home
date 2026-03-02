@@ -74,10 +74,15 @@ docs/SUPABASE_CREDENTIALS.md
 .mcp-config.json
 .playwright-mcp/
 
-# Debug/temporary SQL files
-check_staff_rls.sql
-debug_staff_issue.sql
-fix_staff_rls_now.sql
+# Prevent one-off scripts/SQL at root (use scripts/ or supabase/migrations/ instead)
+/*.sql
+/*.js
+!vitest.config.js
+
+# Prevent macOS duplicate files ("file 2.ext", "file 3.ext")
+*\ 2.*
+*\ 3.*
+*\ 2
 
 # Windows null file
 nul
