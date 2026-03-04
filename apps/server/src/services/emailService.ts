@@ -61,7 +61,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
 
   // Production mode - send via Resend API
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const res: any = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${config.resendApiKey}`,
@@ -76,13 +76,13 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
       }),
     })
 
-    if (!response.ok) {
-      const errorData = await response.json() as { message?: string }
+    if (!res.ok) {
+      const errorData = await res.json() as { message?: string }
       console.error('Resend API error:', errorData)
       return { success: false, error: errorData.message || 'Failed to send email' }
     }
 
-    const data = await response.json() as { id: string }
+    const data = await res.json() as { id: string }
     console.log('[Email] Sent successfully:', data.id)
     return { success: true }
   } catch (error: any) {
