@@ -811,8 +811,178 @@ export function creditNoteEmailTemplate(data: {
   `)
 }
 
+/**
+ * Send hotel invitation email
+ */
+async function sendHotelInvitation(
+  email: string,
+  data: {
+    hotelName: string
+    loginEmail: string
+    temporaryPassword: string
+    loginUrl: string
+    adminName?: string
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const html = baseTemplate(`
+    <div class="card">
+      <div class="header">
+        <h1>The Bliss at Home</h1>
+        <p>Hotel Partner Invitation</p>
+      </div>
+      <div class="content">
+        <p>Dear ${data.hotelName},</p>
+        <p>You have been invited to join The Bliss at Home as a hotel partner.</p>
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">Your Login Details</h3>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">${data.loginEmail}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Temporary Password</span>
+            <span class="info-value">${data.temporaryPassword}</span>
+          </div>
+        </div>
+        <p style="text-align: center;">
+          <a href="${data.loginUrl}" class="btn">Login to Dashboard</a>
+        </p>
+        <div class="warning-box">
+          <p style="margin: 0; color: #92400e;">
+            Please change your password after first login for security.
+          </p>
+        </div>
+      </div>
+      <div class="footer">
+        <p>The Bliss at Home - In-room Massage & Spa Services</p>
+      </div>
+    </div>
+  `)
+
+  return sendEmail({
+    to: email,
+    subject: 'Welcome to The Bliss at Home - Hotel Partner Invitation',
+    html,
+  })
+}
+
+/**
+ * Send password reset email
+ */
+async function sendPasswordReset(
+  email: string,
+  data: {
+    hotelName: string
+    loginEmail: string
+    resetUrl: string
+    expiresIn: string
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const html = baseTemplate(`
+    <div class="card">
+      <div class="header">
+        <h1>The Bliss at Home</h1>
+        <p>Password Reset</p>
+      </div>
+      <div class="content">
+        <p>Dear ${data.hotelName},</p>
+        <p>We received a password reset request for your account.</p>
+        <p style="text-align: center;">
+          <a href="${data.resetUrl}" class="btn">Reset Password</a>
+        </p>
+        <div class="warning-box">
+          <p style="margin: 0; color: #92400e;">
+            This link will expire in ${data.expiresIn}. If you did not request a password reset, please ignore this email.
+          </p>
+        </div>
+      </div>
+      <div class="footer">
+        <p>The Bliss at Home - In-room Massage & Spa Services</p>
+      </div>
+    </div>
+  `)
+
+  return sendEmail({
+    to: email,
+    subject: 'Password Reset - The Bliss at Home',
+    html,
+  })
+}
+
+/**
+ * Send customer reminder email
+ */
+async function sendCustomerReminder(
+  email: string,
+  data: {
+    customerName: string
+    serviceName: string
+    scheduledDate: string
+    scheduledTime: string
+    durationMinutes: number
+    address?: string
+    hotelName?: string
+    roomNumber?: string
+    minutesBefore: number
+  },
+  _language?: string
+): Promise<{ success: boolean; error?: string }> {
+  const html = baseTemplate(`
+    <div class="card">
+      <div class="header">
+        <h1>The Bliss at Home</h1>
+        <p>Booking Reminder</p>
+      </div>
+      <div class="content">
+        <p>เรียน คุณ${data.customerName},</p>
+        <p>ขอแจ้งเตือนการนัดหมายของคุณที่กำลังจะถึง</p>
+        <div class="info-box">
+          <div class="info-row">
+            <span class="info-label">บริการ</span>
+            <span class="info-value">${data.serviceName}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">วันที่</span>
+            <span class="info-value">${data.scheduledDate}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">เวลา</span>
+            <span class="info-value">${data.scheduledTime}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">ระยะเวลา</span>
+            <span class="info-value">${data.durationMinutes} นาที</span>
+          </div>
+          ${data.hotelName ? `<div class="info-row"><span class="info-label">สถานที่</span><span class="info-value">${data.hotelName}</span></div>` : ''}
+          ${data.address ? `<div class="info-row"><span class="info-label">ที่อยู่</span><span class="info-value">${data.address}</span></div>` : ''}
+        </div>
+      </div>
+      <div class="footer">
+        <p>The Bliss at Home - บริการนวดและสปาถึงที่</p>
+      </div>
+    </div>
+  `)
+
+  return sendEmail({
+    to: email,
+    subject: `แจ้งเตือน: นัดหมายของคุณอีก ${data.minutesBefore} นาที - The Bliss at Home`,
+    html,
+  })
+}
+
+/**
+ * Check if email service is ready (Resend API key configured)
+ */
+function isReady(): boolean {
+  return !!getEmailConfig().resendApiKey
+}
+
 export const emailService = {
   sendEmail,
+  sendHotelInvitation,
+  sendPasswordReset,
+  sendCustomerReminder,
+  isReady,
   templates: {
     bookingCancellation: bookingCancellationTemplate,
     hotelBookingCancellation: hotelBookingCancellationTemplate,

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock supabase
 const mockInsert = vi.fn().mockResolvedValue({ data: null, error: null })
-const mockFrom = vi.fn(() => ({
+const mockFrom = vi.fn((_table?: string) => ({
   select: vi.fn().mockReturnThis(),
   eq: vi.fn().mockReturnThis(),
   insert: vi.fn().mockResolvedValue({ data: null, error: null }),

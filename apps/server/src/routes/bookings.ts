@@ -276,11 +276,14 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
     // Build staffToNotify list from jobs with assigned staff
     const staffToNotify = (assignedJobs || [])
       .filter(j => j.staff_id && staffInfoMap[j.staff_id])
-      .map(j => ({
-        job_id: j.id,
-        profile_id: j.staff_id as string,
-        ...staffInfoMap[j.staff_id],
-      }))
+      .map(j => {
+        const { profile_id: _pid, ...rest } = staffInfoMap[j.staff_id]
+        return {
+          job_id: j.id,
+          profile_id: j.staff_id as string,
+          ...rest,
+        }
+      })
 
     console.log('[Reschedule] Processing reschedule:', {
       bookingId: id,
@@ -358,7 +361,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
           staff_earnings: Math.round(Number(booking.final_price) * (Number((booking.service as any)?.staff_commission_rate) || 0.3) / (assignedJobs?.length || 1)),
           assigned_staff_id: staffInfo.staff_id,
           staff_profile_id: staffInfo.profile_id,
-          staff_line_user_id: staffInfo.line_user_id,
+          staff_line_user_id: staffInfo.line_user_id ?? undefined,
           hotel_name: (booking.hotel as any)?.name_th || (booking.hotel as any)?.name_en,
           address: booking.address || '',
           new_job_id: staffInfo.job_id || updatedJobIds[0],
@@ -535,7 +538,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
           refundOption: body.refund_option,
           refundPercentage: body.refund_percentage,
           reason: body.reason,
-          initiatedBy: body.admin_id || null,
+          initiatedBy: body.admin_id || '',
         })
 
         if (!refundResult.success) {
@@ -784,7 +787,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
     }
 
     // Send credit note email if refund was processed (non-blocking)
-    if (refundResult?.refundTransactionId && refundResult.refundAmount > 0) {
+    if (refundResult?.refundTransactionId && (refundResult.refundAmount ?? 0) > 0) {
       sendCreditNoteEmailForRefund(refundResult.refundTransactionId).catch(emailErr => {
         console.error('⚠️ Credit note email failed (non-blocking):', emailErr)
       })

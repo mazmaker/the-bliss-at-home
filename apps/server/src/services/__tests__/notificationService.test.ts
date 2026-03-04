@@ -132,7 +132,7 @@ describe('notificationService', () => {
         createChainMock({ data: null, error: { message: 'Not found' } })
       )
 
-      const result = await processJobCancelled('nonexistent-job', 'reason', null)
+      const result = await processJobCancelled('nonexistent-job', 'reason', undefined)
 
       expect(result.success).toBe(false)
       expect(result).toHaveProperty('error')
@@ -151,7 +151,7 @@ describe('notificationService', () => {
         })
       )
 
-      const result = await processJobCancelled('job-1', 'reason', null)
+      const result = await processJobCancelled('job-1', 'reason', undefined)
 
       expect(result.success).toBe(false)
     })
@@ -172,7 +172,7 @@ describe('notificationService', () => {
         return createChainMock({ data: null, error: null })
       })
 
-      const result = await processBookingCancelled('booking-1', 'reason', null, null)
+      const result = await processBookingCancelled('booking-1', 'reason', undefined, undefined)
 
       expect(result).toHaveProperty('success')
     })
