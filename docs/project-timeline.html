@@ -972,26 +972,30 @@ const PROGRESS_HISTORY = [
     { date: "2026-03-02", overall: 73, focus: "Hotel billing overhaul! Staff gender preference + profile CRUD เสร็จ Testing 51 files", sections: { infra:69, db:99, auth:83, ui:92, customer:68, hotel:55, provider:84, admin:84, payment:48, integrations:75, i18n:78, testing:35 } },
     { date: "2026-03-02b", overall: 78, focus: "Testing 100%! 138 files/2292 tests/0 fail + Admin Dashboard real data + Booking filters", sections: { infra:70, db:99, auth:85, ui:92, customer:70, hotel:60, provider:85, admin:88, payment:50, integrations:78, i18n:78, testing:95 } },
     { date: "2026-03-04", overall: 80, focus: "Scope aligned to SRS v1.0 — removed scope creep, CI/CD pipeline updated pct 25→75", sections: { infra:94, db:99, auth:85, ui:92, customer:72, hotel:60, provider:82, admin:88, payment:50, integrations:78, i18n:78, testing:54 } },
+    { date: "2026-03-04b", overall: 78, focus: "ตรวจสอบโค้ดจริง พบงานทำเสร็จแล้วแต่ pct ผิด — Customer Cancel/Reschedule, Hotel Book/Activity, PromptPay, Refund อัปเดตให้ถูก", sections: { infra:94, db:100, auth:85, ui:92, customer:78, hotel:66, provider:80, admin:79, payment:63, integrations:75, i18n:78, testing:54 } },
 ];
 /*__PROGRESS_DATA_END__*/
 
 /*__FOCUS_DATA_START__*/
 const WEEKLY_FOCUS = {
     week: "4 - 10 มี.ค. 2569",
-    sprint: "สปรินต์ K: Payment Flow + Cancel/Reschedule + Staff Change Password",
+    sprint: "สปรินต์ K: Invoice PDF + Hotel Cancel/Reschedule + Change Password + Webhook Sig + PaymentConfirmation",
     items: [
-        "✅ Scope aligned to SRS v1.0 — removed DB Scripts, Staging/Production Deploy, DB Indexes, FAQ, Integration Tests, Security Audit",
-        "✅ CI/CD Pipeline อัปเกรด pct 25→75 (GitHub Actions: typecheck, lint, build, test ผ่าน)",
-        "✅ Staff Change Password เพิ่มเข้า scope ตาม SRS 3.3 (pct: 0%)",
-        "📋 Payment: PromptPay + Bank Transfer + Refund System (payment: 50%)",
-        "📋 Cancel/Reschedule flow ทั้ง Customer + Hotel (pct: 0%)",
+        "✅ Customer Cancel/Reschedule เสร็จแล้ว (CancelBookingModal + RescheduleModal — พบตอนสแกน)",
+        "✅ PromptPay backend เสร็จแล้ว (create-source + QR) — ต้องเชื่อม frontend",
+        "✅ Refund System เสร็จแล้ว (full/partial + webhook refund.create/complete)",
+        "📋 Hotel Cancel/Reschedule ยังไม่มี (pct:0%)",
+        "📋 Invoice PDF จริง (ตอนนี้เป็น text file fallback, pct:20%)",
+        "📋 Hotel + Staff Change Password backend (pct:15%)",
+        "📋 Webhook signature verification เปิดใน production (pct:55%)",
+        "📋 PromptPay frontend integration + PaymentConfirmation real data (pct:40%)",
     ],
     blockers: [
-        "Customer Cancel/Reschedule ยังไม่ได้ทำ (pct:0%)",
         "Hotel Cancel/Reschedule ยังไม่ได้ทำ (pct:0%)",
-        "Payment PromptPay/BankTransfer/Refund ยังไม่ได้เชื่อม (payment: 50%)",
-        "Staff Change Password ยังไม่ได้ทำ (pct:0%)",
-        "E2E Tests มีแค่ 4 specs ต้องเพิ่ม (pct:25%)",
+        "Invoice PDF ยังเป็น text file — ต้องใช้ PDF library (pct:20%)",
+        "Hotel + Staff Change Password ยังไม่มี backend (pct:15%)",
+        "Webhook signature verification ถูก disable ใน production (pct:55%)",
+        "PromptPay frontend ยังไม่เชื่อมกับ PaymentForm (pct:75% backend only)",
     ]
 };
 /*__FOCUS_DATA_END__*/
@@ -1050,7 +1054,7 @@ const DATA = [
         {name:'Service Detail',detail:'useServiceBySlug + addons + ServiceDurationPicker',pct:75},
         {name:'Booking Wizard (5 Steps)',detail:'Couple booking, duration picker, VoucherCode, payment!',pct:85},
         {name:'Booking Summary',detail:'useBookingByNumber + full detail',pct:70},
-        {name:'Cancel/Reschedule (3hr)',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Cancel/Reschedule (3hr)',detail:'CancelBookingModal 432 lines + RescheduleModal 472 lines — policy-based, time windows, refund calc',pct:85},
         {name:'Booking History',detail:'useCustomerBookings + pagination + filter',pct:75},
         {name:'Booking Detail',detail:'useBookingByNumber + provider info',pct:75},
         {name:'Profile Management',detail:'useCurrentCustomer CRUD + preferences + language!',pct:80},
@@ -1067,9 +1071,9 @@ const DATA = [
         {name:'Billing Summary',detail:'MonthlyBill + overdueCalculatorV2 + useBillingSettings + late fees!',pct:82},
         {name:'Recent Bookings',detail:'GuestBookings: real data + search + filter!',pct:80},
         {name:'Upcoming Appointments',detail:'รวมใน GuestBookings (pending/confirmed)',pct:65},
-        {name:'Guest Activity Snapshot',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Guest Activity Snapshot',detail:'GuestActivitySnapshot.tsx 326 lines — today guests, unique, avg spend, repeat guests, popular service',pct:85},
         {name:'Service Catalog',detail:'Services.tsx: real services + hotel discount pricing!',pct:75},
-        {name:'Book for Guest',detail:'UI form + hardcoded services ยังไม่เชื่อม DB',pct:25},
+        {name:'Book for Guest',detail:'BookingModalNew.tsx 727 lines — 4-step wizard, Supabase real data, secureBookingService.createBooking()',pct:85},
         {name:'Guest Bookings List',detail:'BookingHistory: completed/cancelled + CSV export',pct:75},
         {name:'Cancel/Reschedule',detail:'ยังไม่ได้ทำ',pct:0},
         {name:'Auto Invoice Generation',detail:'MonthlyBill: platform fee + hotel split + commission rate',pct:72},
@@ -1077,7 +1081,7 @@ const DATA = [
         {name:'Invoice Download PDF',detail:'Text file only ยังไม่ใช่ PDF',pct:20},
         {name:'Bill Status Display',detail:'5 severity levels: CURRENT/DUE_SOON/OVERDUE/WARNING/URGENT',pct:75},
         {name:'Hotel Profile + Map',detail:'HotelProfile.tsx เชื่อม Supabase CRUD จริง!',pct:60},
-        {name:'Change Password',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Change Password',detail:'HotelSettings.tsx — UI inputs มีแล้ว แต่ยังไม่มี submit logic / backend',pct:15},
     ]},
     { id:'provider', title:'Staff/Provider App (SRS 3.3)', icon:'&#128170;', color:'#a855f7', filter:'frontend', tasks:[
         {name:'LINE LIFF Auth',detail:'Invite token + auto-login + LIFF profile!',pct:90},
@@ -1143,12 +1147,12 @@ const DATA = [
         {name:'Payment Routes',detail:'routes/payment.ts 7 endpoints!',pct:85},
         {name:'Credit/Debit Card',detail:'CreditCardForm + charge working',pct:80},
         {name:'Saved Card Support',detail:'omise_customer_id + card tokens',pct:75},
-        {name:'PromptPay',detail:'ยังไม่ได้เชื่อม',pct:0},
-        {name:'Bank Transfer',detail:'ยังไม่ได้เชื่อม',pct:0},
-        {name:'Webhook Handler',detail:'Basic handler, ยังไม่ verify signature',pct:40},
+        {name:'PromptPay',detail:'create-source endpoint + QR code + scannable_code — backend done, frontend integration needed',pct:75},
+        {name:'Bank Transfer',detail:'Manual bank details display in MonthlyBill — no automated transfer',pct:15},
+        {name:'Webhook Handler',detail:'verifyWebhookSignature() exists (HMAC-SHA256) แต่ถูก disable ใน production',pct:55},
         {name:'Customer PaymentForm',detail:'PaymentForm + PaymentMethodModal',pct:75},
         {name:'PaymentConfirmation Page',detail:'UI complete แต่ใช้ mock data',pct:40},
-        {name:'Refund System',detail:'ยังไม่ได้ทำ',pct:0},
+        {name:'Refund System',detail:'POST /api/payments/refund — full/partial + webhook refund.create/complete + notifications',pct:80},
         {name:'Invoice PDF',detail:'ยังไม่ได้ทำ',pct:0},
     ]},
     { id:'integrations', title:'External Integrations', icon:'&#128268;', color:'#f97316', filter:'integration', tasks:[

@@ -1,6 +1,6 @@
 # The Bliss at Home - Development Checklist
 
-> **Last updated:** 2026-03-04 | **Overall: 78%** | **Scope: SRS v1.0 only** | **Dashboard:** https://sprint.lightepic.com/
+> **Last updated:** 2026-03-04 | **Overall: ~78%** | **Scope: SRS v1.0 only** | **Dashboard:** https://sprint.lightepic.com/
 >
 > **How to use:** ให้ Claude Code อ่านไฟล์นี้เพื่อรู้ว่าต้องทำอะไรต่อ
 > ```
@@ -11,18 +11,28 @@
 
 ## Current Sprint
 
-**Sprint J: Payment Flow + Cancel/Reschedule + E2E Testing** (3 - 9 มี.ค. 2569)
+**Sprint K: Invoice PDF + Hotel Cancel/Reschedule + Change Password + Webhook Sig** (4 - 10 มี.ค. 2569)
+
+### ✅ พบว่าทำเสร็จแล้ว (จากสแกนโค้ดจริง)
+- Customer Cancel/Reschedule — CancelBookingModal (432 lines) + RescheduleModal (472 lines) **[85%]**
+- Hotel Guest Activity Snapshot — GuestActivitySnapshot.tsx (326 lines, real data) **[85%]**
+- Hotel Book for Guest — BookingModalNew.tsx (727 lines, Supabase real data) **[85%]**
+- Payment PromptPay — backend done (create-source + QR) **[75%]**
+- Payment Refund System — full/partial refund + webhook complete **[80%]**
 
 ### Priorities (ทำก่อน)
-1. Payment: PromptPay + Bank Transfer + Refund System (50%)
-2. Cancel/Reschedule flow ทั้ง Customer + Hotel (0%)
-3. E2E Tests เพิ่มจาก 4 specs (25%)
+1. Hotel Cancel/Reschedule (0%) — ยังไม่มีเลย
+2. Invoice PDF จริง — ตอนนี้เป็น text file fallback (20%)
+3. Hotel + Staff Change Password backend (15%)
+4. Webhook signature verification เปิดใน production (55%)
+5. PromptPay frontend integration (backend 75%, frontend 0%)
 
 ### Blockers
-- Customer Cancel/Reschedule ยังไม่ได้ทำ (0%)
 - Hotel Cancel/Reschedule ยังไม่ได้ทำ (0%)
-- Payment PromptPay/BankTransfer/Refund ยังไม่ได้เชื่อม (50%)
-- E2E Tests มีแค่ 4 specs ต้องเพิ่ม (25%)
+- Invoice PDF ยังเป็น text file — ต้องใช้ PDF library (20%)
+- Hotel + Staff Change Password ยังไม่มี backend (15%)
+- Webhook signature verification ถูก disable ใน production (55%)
+- PromptPay frontend ยังไม่เชื่อมกับ PaymentForm (backend 75% only)
 
 ---
 
@@ -131,7 +141,7 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
   - Remaining: ทดสอบ tablet breakpoint, touch-friendly table on mobile, print stylesheet, landscape orientation
   - Files: ทุก app
 
-## 5. Customer App - SRS 3.1 (avg ~65%)
+## 5. Customer App - SRS 3.1 (avg ~78%)
 
 - [ ] **Home Page** (70%)
   - Remaining: Hero section design, popular services section, testimonials section, CTA buttons, SEO meta tags
@@ -148,9 +158,9 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Booking Summary** (70%)
   - Remaining: PDF receipt download, share booking link, add to calendar (iCal), QR code for booking reference
   - Files: `apps/customer/src/pages/BookingSummary.tsx`
-- [ ] **Cancel/Reschedule (3hr rule)** (0%) <<<< HIGH PRIORITY
-  - Remaining: ทั้งหมด - UI ยกเลิก/เลื่อนนัด, 3-hour rule enforcement, cancellation policy display, refund calculation, confirmation dialog, notification to staff, booking status update
-  - Files: `apps/customer/src/pages/BookingDetail.tsx` (ต้องสร้างใหม่หรือเพิ่ม)
+- [ ] **Cancel/Reschedule (3hr rule)** (85%) ✅ พบว่าทำเสร็จแล้ว
+  - Remaining: Integration ใน BookingDetail page (ปุ่ม cancel/reschedule), ทดสอบ 3-hour window enforcement จริง
+  - Files: `apps/customer/src/components/CancelBookingModal.tsx`, `apps/customer/src/components/RescheduleModal.tsx`
 - [ ] **Booking History** (75%)
   - Remaining: Date range filter, export booking history, rebook button, status filter chips
   - Files: `apps/customer/src/pages/BookingHistory.tsx`
@@ -179,7 +189,7 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
   - Remaining: Promotion detail page, coupon code input, apply coupon in booking wizard, promotion expiry countdown, terms & conditions display
   - Files: `apps/customer/src/pages/Home.tsx`, `apps/customer/src/components/PromotionCarousel.tsx`
 
-## 6. Hotel/B2B App - SRS 3.2 (avg ~56%)
+## 6. Hotel/B2B App - SRS 3.2 (avg ~66%)
 
 - [ ] **Hotel Auth System** (85%)
   - Remaining: Remember me, forgot password for hotel users, session timeout warning, multi-device login management
@@ -196,15 +206,15 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Upcoming Appointments** (65%)
   - Remaining: Calendar view (day/week), time slot visualization, staff assignment preview, auto-reminder to guests
   - Files: `apps/hotel/src/pages/GuestBookings.tsx`
-- [ ] **Guest Activity Snapshot** (0%)
-  - Remaining: ทั้งหมด - Widget แสดง recent check-ins, active services, completed today, revenue today
-  - Files: ต้องสร้างใหม่ `apps/hotel/src/components/GuestActivitySnapshot.tsx`
+- [ ] **Guest Activity Snapshot** (85%) ✅ พบว่าทำเสร็จแล้ว
+  - Remaining: Wire to Dashboard page (ยังไม่แน่ใจว่าแสดงใน Dashboard หรือเปล่า), last 7 days filter customization
+  - Files: `apps/hotel/src/components/GuestActivitySnapshot.tsx`
 - [ ] **Service Catalog** (75%)
   - Remaining: Hotel-specific pricing override, service availability toggle, seasonal pricing, bulk price update
   - Files: `apps/hotel/src/pages/Services.tsx`
-- [ ] **Book for Guest** (25%)
-  - Remaining: เชื่อม real services จาก DB, staff assignment (auto/manual), payment method selection, guest info form, booking confirmation, notification to guest
-  - Files: `apps/hotel/src/pages/BookForGuest.tsx`
+- [ ] **Book for Guest** (85%) ✅ พบว่าทำเสร็จแล้ว
+  - Remaining: Payment method selection ใน wizard, notification to guest after booking
+  - Files: `apps/hotel/src/components/BookingModalNew.tsx`
 - [ ] **Guest Bookings List** (75%)
   - Remaining: Advanced filter (date range, status, guest name), bulk actions (cancel, export), booking statistics summary
   - Files: `apps/hotel/src/pages/BookingHistory.tsx`
@@ -226,9 +236,9 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Hotel Profile + Map** (60%)
   - Remaining: Photo gallery upload, amenities list, operating hours, contact information, Google Maps embed (display mode), description editor
   - Files: `apps/hotel/src/pages/HotelProfile.tsx`
-- [ ] **Change Password** (0%)
-  - Remaining: ทั้งหมด - Change password form, current password verification, password strength meter, Supabase updateUser() call
-  - Files: ต้องสร้างใหม่ `apps/hotel/src/pages/ChangePassword.tsx`
+- [ ] **Change Password** (15%)
+  - Remaining: Submit handler, current password verification, Supabase updateUser() call, password strength meter, success/error feedback
+  - Files: `apps/hotel/src/pages/HotelSettings.tsx` (UI inputs มีแล้ว)
 
 ## 7. Staff/Provider App - SRS 3.3 (avg ~85%)
 
@@ -398,7 +408,7 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
   - Remaining: Notification settings (email templates), system maintenance mode, audit log viewer, backup management
   - Files: `apps/admin/src/pages/Settings.tsx`
 
-## 9. Payment - Omise (avg ~48%) <<<< HIGH PRIORITY
+## 9. Payment - Omise (avg ~63%) <<<< HIGH PRIORITY
 
 - [ ] **Omise Service (Frontend)** (90%)
   - Remaining: Error handling for network failures, retry logic, payment timeout handling
@@ -415,24 +425,24 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Saved Card Support** (75%)
   - Remaining: Card expiry check before charge, update default card, delete card with confirmation, PCI compliance check
   - Files: `apps/customer/src/pages/PaymentMethods.tsx`
-- [ ] **PromptPay** (0%) <<<< DO THIS
-  - Remaining: ทั้งหมด - Omise PromptPay source creation, QR code generation + display, polling for payment status, webhook for confirmation, timeout handling, UI flow
-  - Files: `apps/server/src/services/omiseService.ts`, `apps/customer/src/components/payment/PromptPayForm.tsx` (ต้องสร้างใหม่)
-- [ ] **Bank Transfer** (0%) <<<< DO THIS
-  - Remaining: ทั้งหมด - Bank account display (company bank info), transfer instruction UI, payment proof upload, manual confirmation flow (admin), notification on confirm
-  - Files: `apps/customer/src/components/payment/BankTransferForm.tsx` (ต้องสร้างใหม่)
-- [ ] **Webhook Handler** (40%)
-  - Remaining: Verify Omise webhook signature, handle charge.complete event, handle charge.expired event, handle refund events, idempotent processing, error recovery
-  - Files: `apps/server/src/routes/payment.ts`
+- [ ] **PromptPay** (75%) ✅ Backend พร้อมแล้ว — ต้องเชื่อม frontend
+  - Remaining: PromptPayForm component (แสดง QR code จาก backend), polling payment status, timeout UI, เชื่อมกับ PaymentForm
+  - Files: `apps/server/src/routes/payment.ts` (done), `apps/customer/src/components/payment/PromptPayForm.tsx` (ต้องสร้าง)
+- [ ] **Bank Transfer** (15%)
+  - Remaining: Bank Transfer form UI, payment proof upload (customer), manual confirmation flow (admin), notification on confirm
+  - Files: `apps/customer/src/components/payment/BankTransferForm.tsx` (ต้องสร้าง), `apps/hotel/src/pages/MonthlyBill.tsx` (display only)
+- [ ] **Webhook Handler** (55%)
+  - Remaining: เปิด signature verification ใน production (verifyWebhookSignature() มีแล้วแต่ถูก disable), handle charge.expired, idempotent processing
+  - Files: `apps/server/src/routes/payment.ts`, `apps/server/src/services/omiseService.ts`
 - [ ] **Customer PaymentForm** (75%)
   - Remaining: Payment method selector (card/PromptPay/transfer), payment summary display, loading state, error recovery UI
   - Files: `apps/customer/src/components/payment/PaymentForm.tsx`
 - [ ] **PaymentConfirmation Page** (40%)
   - Remaining: เชื่อม real payment status จาก Omise, auto-refresh status, receipt display, booking confirmation link, download receipt PDF
   - Files: `apps/customer/src/pages/PaymentConfirmation.tsx`
-- [ ] **Refund System** (0%) <<<< DO THIS
-  - Remaining: ทั้งหมด - Omise refund API integration, refund request form (admin), refund amount calculation (full/partial), refund status tracking, refund notification to customer, refund receipt
-  - Files: `apps/server/src/services/refundService.ts` (exists but incomplete), `apps/admin/src/components/RefundModal.tsx` (ต้องสร้างใหม่)
+- [ ] **Refund System** (80%) ✅ Backend พร้อมแล้ว
+  - Remaining: RefundModal ใน Admin UI (ต้องสร้าง), refund receipt PDF, refund status display ใน customer transaction history
+  - Files: `apps/server/src/routes/payment.ts` (done), `apps/admin/src/components/RefundModal.tsx` (ต้องสร้าง)
 - [ ] **Invoice PDF** (0%)
   - Remaining: ทั้งหมด - jsPDF invoice template, company header + logo, Thai tax invoice format (ใบกำกับภาษี), line items + pricing, payment info, customer/hotel info, running number
   - Files: ต้องสร้างใหม่ `apps/server/src/services/invoicePdfService.ts`
