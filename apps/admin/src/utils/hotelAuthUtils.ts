@@ -32,7 +32,9 @@ export interface APIResponse<T = any> {
   error?: string
 }
 
-const API_BASE_URL = 'http://localhost:3000/api/hotels'
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/hotels`
+  : 'http://localhost:3000/api/hotels'
 const ADMIN_TOKEN = 'admin-secret-token-2026' // Should match server .env
 
 /**
