@@ -113,14 +113,15 @@ function App() {
         <Route path="settings" element={<StaffSettings />} />
       </Route>
 
-      {/* Default redirect - preserve LIFF callback params */}
+      {/* Default redirect - handle LIFF callback at root (LIFF Endpoint URL) */}
       <Route path="/" element={
         (() => {
-          const search = window.location.search
-          const params = new URLSearchParams(search)
+          const params = new URLSearchParams(window.location.search)
           const isLiffCallback = params.has('liffClientId') || params.has('code')
           if (isLiffCallback) {
-            return <Navigate to={`/staff/login${search}`} replace />
+            // Render callback handler directly at root URL so liff.init()
+            // can process the OAuth code on the LIFF Endpoint URL
+            return <StaffAuthCallback />
           }
           return <Navigate to="/staff" replace />
         })()
