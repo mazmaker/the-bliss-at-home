@@ -46,10 +46,8 @@
     "vitest": "^4.0.18"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
+    "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@8.14.0",
   "dependencies": {
     "@line/liff": "^2.27.3",
     "omise": "^1.1.0",
