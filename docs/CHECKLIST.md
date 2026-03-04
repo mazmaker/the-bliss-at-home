@@ -1,6 +1,6 @@
 # The Bliss at Home - Development Checklist
 
-> **Last updated:** 2026-03-02 | **Overall: 78%** | **Dashboard:** https://sprint.lightepic.com/
+> **Last updated:** 2026-03-04 | **Overall: 78%** | **Scope: SRS v1.0 only** | **Dashboard:** https://sprint.lightepic.com/
 >
 > **How to use:** ให้ Claude Code อ่านไฟล์นี้เพื่อรู้ว่าต้องทำอะไรต่อ
 > ```
@@ -49,28 +49,21 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 
 ---
 
-## 1. Infrastructure & Setup (avg ~69%)
+## 1. Infrastructure & Setup (avg ~93%)
 
 - [x] **Supabase Cloud Project** (100%)
 - [x] **Monorepo Structure** (100%)
 - [x] **4 Frontend Apps Scaffolding** (100%)
 - [ ] **Node.js Server Setup** (90%)
-  - Remaining: Error handling middleware ยังไม่ครบทุก route, rate limiting ยังไม่มี, request validation (Zod) ยังไม่ครบ
+  - Remaining: Error handling middleware ยังไม่ครบทุก route, request validation (Zod) ยังไม่ครบ
   - Files: `apps/server/src/routes/*.ts`, `apps/server/src/middleware/`
 - [x] **Environment Configuration** (100%)
 - [ ] **Shared Packages Structure** (90%)
-  - Remaining: types package ยังขาดบาง type definitions (cancellation, refund), barrel exports ยังไม่ครบ
+  - Remaining: types package ยังขาดบาง type definitions (cancellation, refund)
   - Files: `packages/types/src/`
-- [ ] **DB Scripts** (80%)
-  - Remaining: seed script สำหรับ test data ยังไม่ครบ, migration rollback script ยังไม่มี
-  - Files: `supabase/seed_customer_data.sql`
-- [ ] **CI/CD Pipeline** (25%)
-  - Remaining: เพิ่ม deploy step (staging → production), เพิ่ม E2E test step, เพิ่ม migration check, เพิ่ม environment secrets
+- [ ] **CI/CD Pipeline** (75%)
+  - Remaining: เพิ่ม E2E test step, environment secrets สำหรับ staging
   - Files: `.github/workflows/ci.yml`
-- [ ] **Staging Deployment** (0%)
-  - Remaining: เลือก platform (Vercel/Cloudflare), setup project, configure domains, environment variables, auto-deploy on PR merge
-- [ ] **Production Deployment** (0%)
-  - Remaining: Production Supabase project, production domain, SSL, CDN, monitoring, alerting
 
 ## 2. Database & Schema (avg ~98%)
 
@@ -87,9 +80,6 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **RLS Policies** (95%)
   - Remaining: แก้ VULN-001 (promotions ใช้ email LIKE), แก้ VULN-002 (app_settings lowercase admin), แก้ VULN-003 (profiles open INSERT), แก้ VULN-005 (monthly_bills open SELECT)
   - Files: `supabase/migrations/000000000000_create_promotions_complete.sql`, `supabase/migrations/20260210050000_create_app_settings.sql`
-- [ ] **Database Indexes** (85%)
-  - Remaining: เพิ่ม composite index สำหรับ booking search (customer_id + status + date), staff availability index, hotel billing date range index
-  - Files: `supabase/migrations/`
 
 ## 3. Authentication (avg ~83%)
 
@@ -188,9 +178,6 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Promotions Display** (60%)
   - Remaining: Promotion detail page, coupon code input, apply coupon in booking wizard, promotion expiry countdown, terms & conditions display
   - Files: `apps/customer/src/pages/Home.tsx`, `apps/customer/src/components/PromotionCarousel.tsx`
-- [ ] **FAQ & Help Center** (15%)
-  - Remaining: FAQ page with categories, search FAQ, contact form, LINE chat link, help articles, tutorial videos
-  - Files: ต้องสร้างใหม่ `apps/customer/src/pages/FAQ.tsx`, `apps/customer/src/pages/Help.tsx`
 
 ## 6. Hotel/B2B App - SRS 3.2 (avg ~56%)
 
@@ -299,6 +286,9 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Settings** (75%)
   - Remaining: Notification preferences (toggle per type), language setting, availability schedule, auto-accept rules, dark mode
   - Files: `apps/staff/src/pages/StaffSettings.tsx`
+- [ ] **Change Password** (0%) <<<< SRS 3.3
+  - Remaining: ทั้งหมด — Change password form, current password verify, Supabase updateUser() call
+  - Files: ต้องสร้างใหม่ `apps/staff/src/pages/ChangePassword.tsx`
 
 ## 8. Admin App - SRS 3.4 (avg ~79%)
 
@@ -504,7 +494,7 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
   - Remaining: Detect browser language on first visit, save to profiles.language, prompt user to confirm, fallback chain (browser → profile → default TH)
   - Files: `packages/i18n/src/config.ts`
 
-## 12. Testing & QA (avg ~39%)
+## 12. Testing & QA (avg ~68%)
 
 - [ ] **E2E Tests (Playwright)** (25%)
   - Remaining: Booking flow E2E (search → select → book → pay → confirm), payment E2E, staff job acceptance E2E, hotel booking E2E, admin CRUD E2E, mobile viewport tests
@@ -513,15 +503,9 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **RLS Policy Tests** (80%)
   - Remaining: เพิ่ม live DB tests (ทดสอบ policy จริงกับ Supabase), test with different user roles, test cross-tenant data isolation
   - Files: `packages/supabase/src/rls/__tests__/rlsPolicies.test.ts`
-- [ ] **Integration Tests** (0%)
-  - Remaining: ทั้งหมด - API endpoint tests with supertest, Supabase query tests with test DB, payment flow integration, notification delivery tests
-  - Files: ต้องสร้างใหม่ `apps/server/src/__tests__/integration/`
-- [ ] **PDPA Compliance** (10%)
-  - Remaining: Cookie consent banner, data deletion request flow, privacy policy review by lawyer, data processing agreement, consent logging, data export for user
+- [ ] **PDPA Compliance** (10%) <<<< SRS requirement
+  - Remaining: Cookie consent banner, data deletion request flow, privacy policy page, consent logging, data export for user (per PDPA law)
   - Files: `apps/customer/src/components/CookieConsent.tsx` (ต้องสร้างใหม่)
-- [ ] **Security Audit** (0%)
-  - Remaining: ทั้งหมด - OWASP top 10 review, fix RLS vulnerabilities (VULN-001~005), XSS prevention audit, CSRF protection, rate limiting, input sanitization, dependency vulnerability scan
-  - Files: ทุก app
 
 ---
 
