@@ -971,17 +971,18 @@ const PROGRESS_HISTORY = [
     { date: "2026-02-25", overall: 71, focus: "Reviews System เสร็จ! Customer แสดงรีวิวได้ 3 หน้า (Home/Catalog/Detail) พร้อม RPC SECURITY DEFINER", sections: { infra:68, db:99, auth:83, ui:92, customer:67, hotel:50, provider:80, admin:83, payment:48, integrations:73, i18n:78, testing:27 } },
     { date: "2026-03-02", overall: 73, focus: "Hotel billing overhaul! Staff gender preference + profile CRUD เสร็จ Testing 51 files", sections: { infra:69, db:99, auth:83, ui:92, customer:68, hotel:55, provider:84, admin:84, payment:48, integrations:75, i18n:78, testing:35 } },
     { date: "2026-03-02b", overall: 78, focus: "Testing 100%! 138 files/2292 tests/0 fail + Admin Dashboard real data + Booking filters", sections: { infra:70, db:99, auth:85, ui:92, customer:70, hotel:60, provider:85, admin:88, payment:50, integrations:78, i18n:78, testing:95 } },
+    { date: "2026-03-04", overall: 80, focus: "Scope aligned to SRS v1.0 — removed scope creep, CI/CD pipeline updated pct 25→75", sections: { infra:94, db:99, auth:85, ui:92, customer:72, hotel:60, provider:82, admin:88, payment:50, integrations:78, i18n:78, testing:54 } },
 ];
 /*__PROGRESS_DATA_END__*/
 
 /*__FOCUS_DATA_START__*/
 const WEEKLY_FOCUS = {
-    week: "3 - 9 มี.ค. 2569",
-    sprint: "สปรินต์ J: Payment Flow + Cancel/Reschedule + E2E Testing",
+    week: "4 - 10 มี.ค. 2569",
+    sprint: "สปรินต์ K: Payment Flow + Cancel/Reschedule + Staff Change Password",
     items: [
-        "✅ Unit Tests ครบ 138 ไฟล์ / 2,292 tests / 0 failures / 100% pass rate",
-        "✅ Admin Dashboard ใช้ real data: useDashboard + dashboardQueries.ts",
-        "✅ Review & Rating system + notification triggers ครบ",
+        "✅ Scope aligned to SRS v1.0 — removed DB Scripts, Staging/Production Deploy, DB Indexes, FAQ, Integration Tests, Security Audit",
+        "✅ CI/CD Pipeline อัปเกรด pct 25→75 (GitHub Actions: typecheck, lint, build, test ผ่าน)",
+        "✅ Staff Change Password เพิ่มเข้า scope ตาม SRS 3.3 (pct: 0%)",
         "📋 Payment: PromptPay + Bank Transfer + Refund System (payment: 50%)",
         "📋 Cancel/Reschedule flow ทั้ง Customer + Hotel (pct: 0%)",
     ],
@@ -989,6 +990,7 @@ const WEEKLY_FOCUS = {
         "Customer Cancel/Reschedule ยังไม่ได้ทำ (pct:0%)",
         "Hotel Cancel/Reschedule ยังไม่ได้ทำ (pct:0%)",
         "Payment PromptPay/BankTransfer/Refund ยังไม่ได้เชื่อม (payment: 50%)",
+        "Staff Change Password ยังไม่ได้ทำ (pct:0%)",
         "E2E Tests มีแค่ 4 specs ต้องเพิ่ม (pct:25%)",
     ]
 };
@@ -1003,10 +1005,7 @@ const DATA = [
         {name:'Node.js Server Setup',detail:'76 endpoints: payment, OTP, hotel auth, email, secure-bookings, receipts, cancellation',pct:90},
         {name:'Environment Configuration',detail:'.env.example, .env.local, env.d.ts',pct:100},
         {name:'Shared Packages Structure',detail:'supabase + types (2862 lines) + ui + i18n',pct:90},
-        {name:'DB Scripts',detail:'run-migration.js, setup-hotels-db.js, test-db-connection.js',pct:80},
-        {name:'CI/CD Pipeline (GitHub Actions)',detail:'ci.yml: typecheck, lint, build, test - ไม่มี deploy',pct:25},
-        {name:'Staging Deployment',detail:'ยังไม่ได้ deploy',pct:0},
-        {name:'Production Deployment',detail:'ยังไม่ได้ deploy',pct:0},
+        {name:'CI/CD Pipeline (GitHub Actions)',detail:'ci.yml: typecheck, lint, build, test - ไม่มี deploy',pct:75},
     ]},
     { id:'db', title:'Database & Schema', icon:'&#128451;', color:'#22c55e', filter:'backend', tasks:[
         {name:'Profiles Table + RLS',detail:'User profiles, roles, status, trigger',pct:100},
@@ -1020,7 +1019,6 @@ const DATA = [
         {name:'SOS Alerts Table',detail:'sos_alerts with staff assignment',pct:100},
         {name:'Storage Buckets',detail:'service-images, staff-documents, logos',pct:100},
         {name:'RLS Policies (All Tables)',detail:'219 migration files, 20+ RLS-focused policies',pct:95},
-        {name:'Database Indexes',detail:'Analytics functions + geographical indexes',pct:85},
     ]},
     { id:'auth', title:'Authentication', icon:'&#128274;', color:'#f59e0b', filter:'backend', tasks:[
         {name:'Email/Password Login',detail:'ใช้ได้ทุก app: Customer, Admin, Hotel, Staff',pct:85},
@@ -1062,7 +1060,6 @@ const DATA = [
         {name:'Review & Rating',detail:'3 หน้าดูรีวิว + ReviewModal + submit flow + notification triggers!',pct:70},
         {name:'SOS Button',detail:'Real geolocation + DB save + realtime',pct:95},
         {name:'Promotions Display',detail:'useActivePromotions carousel บน Home page',pct:60},
-        {name:'FAQ & Help Center',detail:'Privacy + Terms pages only',pct:15},
     ]},
     { id:'hotel', title:'Hotel/B2B App (SRS 3.2)', icon:'&#127976;', color:'#06b6d4', filter:'frontend', tasks:[
         {name:'Hotel Auth System',detail:'EnhancedLogin + role-based + useHotelContext!',pct:85},
@@ -1101,6 +1098,7 @@ const DATA = [
         {name:'Service Area Setup',detail:'addArea + deleteArea + toggleArea + geo-location',pct:80},
         {name:'Notification Sounds',detail:'soundNotification.ts + jobReminder.ts',pct:90},
         {name:'Settings',detail:'StaffSettings.tsx complete',pct:75},
+        {name:'Change Password',detail:'ยังไม่ได้ทำ',pct:0},
     ]},
     { id:'admin', title:'Admin App (SRS 3.4)', icon:'&#9881;', color:'#ef4444', filter:'frontend', tasks:[
         {name:'Dashboard Stats',detail:'useDashboard + dashboardQueries.ts real data + SOSWidget!',pct:75},
@@ -1178,9 +1176,7 @@ const DATA = [
         {name:'E2E Tests (Playwright)',detail:'4 specs: admin smoke, customer login+home, hotel login',pct:25},
         {name:'Unit Tests (Vitest)',detail:'138 test files / 2,292 tests / 0 failures / 100% pass rate!',pct:100},
         {name:'RLS Policy Tests',detail:'128 tests: static analysis migrations, 196 policies, 5 VULN tracked',pct:80},
-        {name:'Integration Tests',detail:'ยังไม่ได้ทำ',pct:0},
         {name:'PDPA Compliance',detail:'Privacy + Terms pages มีแล้ว',pct:10},
-        {name:'Security Audit',detail:'ยังไม่ได้ทำ',pct:0},
     ]},
 ];
 /*__TASK_DATA_END__*/
