@@ -113,8 +113,18 @@ function App() {
         <Route path="settings" element={<StaffSettings />} />
       </Route>
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/staff" replace />} />
+      {/* Default redirect - preserve LIFF callback params */}
+      <Route path="/" element={
+        (() => {
+          const search = window.location.search
+          const params = new URLSearchParams(search)
+          const isLiffCallback = params.has('liffClientId') || params.has('code')
+          if (isLiffCallback) {
+            return <Navigate to={`/staff/login${search}`} replace />
+          }
+          return <Navigate to="/staff" replace />
+        })()
+      } />
     </Routes>
   )
 }
