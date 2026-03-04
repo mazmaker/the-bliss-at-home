@@ -68,7 +68,7 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
   if (!token) return false
 
   try {
-    const response = await fetch(`${API_URL}/push`, {
+    const res: any = await fetch(`${API_URL}/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,8 +77,8 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
       body: JSON.stringify({ to: lineUserId, messages }),
     })
 
-    if (!response.ok) {
-      const error = await response.json()
+    if (!res.ok) {
+      const error = await res.json()
       console.error('LINE push error:', JSON.stringify(error))
       return false
     }
@@ -106,7 +106,7 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
 
     let allSuccess = true
     for (const batch of batches) {
-      const response = await fetch(`${API_URL}/multicast`, {
+      const res: any = await fetch(`${API_URL}/multicast`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,8 +115,8 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
         body: JSON.stringify({ to: batch, messages }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
+      if (!res.ok) {
+        const error = await res.json()
         console.error('LINE multicast error:', JSON.stringify(error))
         allSuccess = false
       }
