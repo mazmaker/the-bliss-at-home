@@ -5,7 +5,8 @@
 
 import { supabase } from '@bliss/supabase/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+// Use relative path for Vercel Serverless Functions
+const API_BASE_URL = '/api'
 
 class SecureBookingService {
 
