@@ -56,18 +56,7 @@ function filterStaffByProviderPreference<T extends { gender?: string | null }>(
 export async function createJobsFromBooking(bookingId: string): Promise<string[]> {
   const supabase = getSupabaseClient()
 
-  // Check if jobs already exist for this booking (idempotency)
-  const { data: existingJobs } = await supabase
-    .from('jobs')
-    .select('id')
-    .eq('booking_id', bookingId)
-
-  if (existingJobs && existingJobs.length > 0) {
-    console.log(`📋 Jobs already exist for booking ${bookingId}: ${existingJobs.map(j => j.id).join(', ')}`)
-    return existingJobs.map(j => j.id)
-  }
-
-  // Fetch booking with related data
+  // Fetch booking with related data (needed for couple-aware idempotency check)
   const { data: booking, error: bookingError } = await supabase
     .from('bookings')
     .select('*, service:services(*)')
@@ -77,6 +66,36 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
   if (bookingError || !booking) {
     console.error('❌ Booking not found for job creation:', bookingId, bookingError)
     return []
+  }
+
+  const expectedJobCount = booking.recipient_count || 1
+
+  // Couple-aware idempotency check
+  const { data: existingJobs } = await supabase
+    .from('jobs')
+    .select('id')
+    .eq('booking_id', bookingId)
+
+  if (existingJobs && existingJobs.length > 0) {
+    if (existingJobs.length >= expectedJobCount) {
+      // Correct number of jobs already exist
+      console.log(`📋 Jobs already exist for booking ${bookingId} (${existingJobs.length}/${expectedJobCount}): ${existingJobs.map(j => j.id).join(', ')}`)
+      return existingJobs.map(j => j.id)
+    }
+    // Couple booking with fewer jobs than needed (trigger created 1 but need more)
+    // Delete incomplete set and recreate properly below
+    console.log(`📋 Couple booking ${bookingId} has ${existingJobs.length} jobs but needs ${expectedJobCount}. Deleting and recreating...`)
+    const { error: deleteError } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('booking_id', bookingId)
+      .is('staff_id', null) // Only delete unassigned jobs
+
+    if (deleteError) {
+      console.error(`❌ Failed to delete incomplete jobs for booking ${bookingId}:`, deleteError)
+      return existingJobs.map(j => j.id)
+    }
+    // Fall through to create proper jobs below
   }
 
   // Get customer profile_id (jobs.customer_id FK → profiles.id)
