@@ -177,6 +177,8 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
           duration_minutes: bs.duration || booking.duration || 60,
           amount: price,
           staff_earnings: earnings,
+          job_index: (bs.recipient_index || 0) + 1,
+          total_jobs: recipientCount,
         }
 
         const { data: job, error: jobError } = await supabase
@@ -206,6 +208,8 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
           duration_minutes: booking.duration || 60,
           amount: fallbackAmount,
           staff_earnings: fallbackEarnings,
+          job_index: i + 1,
+          total_jobs: recipientCount,
         }
 
         const { data: job, error: jobError } = await supabase

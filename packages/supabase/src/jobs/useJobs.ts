@@ -141,7 +141,15 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     async (jobId: string) => {
       if (!staffId) throw new Error('Not authenticated')
       const job = await acceptJob(jobId, staffId)
-      setJobs((prev) => [...prev, job])
+      setJobs((prev) => {
+        const index = prev.findIndex((j) => j.id === job.id)
+        if (index >= 0) {
+          const updated = [...prev]
+          updated[index] = job
+          return updated
+        }
+        return [...prev, job]
+      })
       setPendingJobs((prev) => prev.filter((j) => j.id !== jobId))
     },
     [staffId]
