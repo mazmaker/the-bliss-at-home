@@ -251,24 +251,49 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     throw new Error('ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง')
   }
 
-  // ✅ NEW: Also update the corresponding booking status to 'confirmed'
-  // When staff accepts a job, the booking should also be confirmed
+  // Sync booking status after job acceptance
+  // bookings.staff_id FK → staff.id (not profile_id), so we must look up the correct ID
   if (data && data.booking_id) {
     try {
+      // Look up staff table ID from profile_id
+      const { data: staffRecord } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('profile_id', staffId)
+        .single()
+
+      const staffTableId = staffRecord?.id || null
+
+      // For couple bookings, check if ALL jobs are now confirmed
+      const { data: siblingJobs } = await supabase
+        .from('jobs')
+        .select('id, status')
+        .eq('booking_id', data.booking_id)
+
+      const totalJobs = siblingJobs?.length || 1
+      const allConfirmed = siblingJobs?.every(j => j.status === 'confirmed')
+
+      const updateData: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      }
+
+      // Only set booking status to confirmed when all jobs are confirmed
+      if (allConfirmed) {
+        updateData.status = 'confirmed'
+      }
+
+      // Only set staff_id for single bookings (1 job)
+      if (totalJobs === 1 && staffTableId) {
+        updateData.staff_id = staffTableId
+      }
+
       const { error: bookingError } = await supabase
         .from('bookings')
-        .update({
-          staff_id: staffId,
-          status: 'confirmed',
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', data.booking_id)
 
       if (bookingError) {
         console.error('Error updating booking after job acceptance:', bookingError)
-        // Don't throw error - job acceptance was successful, booking update is secondary
-      } else {
-        console.log('✅ Booking status updated to confirmed after staff accepted job')
       }
     } catch (bookingUpdateError) {
       console.error('Exception updating booking:', bookingUpdateError)
