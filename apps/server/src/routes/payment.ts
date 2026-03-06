@@ -7,7 +7,7 @@ import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { omiseService } from '../services/omiseService.js'
 import { processBookingConfirmed } from '../services/notificationService.js'
-import { sendReceiptEmailForTransaction } from './receipts.js'
+import { sendReceiptEmailForTransaction, sendCreditNoteEmailForRefund } from './receipts.js'
 
 const router = Router()
 
@@ -375,6 +375,13 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
               .eq('id', transaction.id)
           }
 
+          // Send credit note email if refund was successful (non-blocking)
+          if (isSuccess && existingRefundTxn) {
+            sendCreditNoteEmailForRefund(existingRefundTxn.id).catch(emailErr => {
+              console.error('⚠️ Credit note email failed (non-blocking):', emailErr)
+            })
+          }
+
           console.log(`✅ Refund ${refund.id} ${refundStatus} for booking ${transaction.booking_id}`)
         } else {
           console.warn('⚠️ No transaction found for refund:', refund.id, 'charge:', refund.charge)
@@ -444,6 +451,13 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
         }
       } catch (notifError) {
         console.error('⚠️ Refund notification failed (non-blocking):', notifError)
+      }
+
+      // Send credit note email if refund was successful (non-blocking)
+      if (isSuccess) {
+        sendCreditNoteEmailForRefund(refundTxn.id).catch(emailErr => {
+          console.error('⚠️ Credit note email failed (non-blocking):', emailErr)
+        })
       }
 
       console.log(`✅ Refund ${refund.id} ${refundStatus} - updated all records`)
@@ -728,6 +742,11 @@ router.get('/status/:chargeId', async (req: Request, res: Response) => {
         } catch (notifError) {
           console.error('⚠️ Notification failed (non-blocking):', notifError)
         }
+
+        // Send receipt email (non-blocking)
+        sendReceiptEmailForTransaction(transaction.id).catch(emailErr => {
+          console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+        })
       }
     }
 
