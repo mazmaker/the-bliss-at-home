@@ -113,7 +113,8 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
     // Extract services data separately (it goes to booking_services table)
     const { services, ...bookingFields } = req.body
 
-    // Determine service_format from recipient_count and services
+    // Determine service_format from recipient_count
+    // Valid values: 'single', 'simultaneous', 'sequential'
     const recipientCount = bookingFields.recipient_count || 1
     const isCoupleBooking = recipientCount > 1
 
@@ -122,7 +123,7 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       hotel_id: req.body.hotel_id,
       customer_id: null, // Hotel guests don't have accounts
       is_hotel_booking: true,
-      service_format: isCoupleBooking ? 'couple' : 'single',
+      service_format: isCoupleBooking ? 'simultaneous' : 'single',
     }
 
     console.log('🏨 [HOTEL BOOKING] is_hotel_booking: true, service_format:', bookingData.service_format)
