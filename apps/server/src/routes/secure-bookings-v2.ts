@@ -113,45 +113,30 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
     // Extract services data separately (it goes to booking_services table)
     const { services, ...bookingFields } = req.body
 
-    // 🏨 HOTEL BOOKING FIX: Disable automatic job creation trigger
-    // The trigger is causing duplicate email conflicts when trying to create customer records
-    // Since we want manual staff acceptance, we'll disable the auto-job creation
+    // Determine service_format from recipient_count and services
+    const recipientCount = bookingFields.recipient_count || 1
+    const isCoupleBooking = recipientCount > 1
+
     const bookingData = {
       ...bookingFields,
-      hotel_id: req.body.hotel_id, // ✅ Use hotel_id from request body (URL-based multi-tenant context)
-      customer_id: null, // ✅ Explicitly set to null for hotel bookings
-      is_hotel_booking: false, // ✅ Disable trigger to prevent customer creation conflicts
-      // created_by: req.user?.id       // Column doesn't exist yet
+      hotel_id: req.body.hotel_id,
+      customer_id: null, // Hotel guests don't have accounts
+      is_hotel_booking: true,
+      service_format: isCoupleBooking ? 'couple' : 'single',
     }
 
-    console.log('🏨 [HOTEL BOOKING] Disabled auto-job creation to prevent conflicts')
+    console.log('🏨 [HOTEL BOOKING] is_hotel_booking: true, service_format:', bookingData.service_format)
 
-    console.log('🔍 [BOOKING API] Final booking data hotel_id:', bookingData.hotel_id)
-    console.log('🔍 [BOOKING API] All booking data:', JSON.stringify(bookingData, null, 2))
-
-    // Validate required fields (including hotel_id)
+    // Validate required fields
     const requiredFields = ['hotel_id', 'service_id', 'booking_date', 'booking_time', 'duration', 'base_price', 'final_price']
     const missing = requiredFields.filter(field => !bookingData[field])
 
-    console.log('🔍 [VALIDATION] Required fields check:')
-    requiredFields.forEach(field => {
-      console.log(`  ${field}: ${bookingData[field]} ${bookingData[field] ? '✅' : '❌'}`)
-    })
-
     if (missing.length > 0) {
       console.log('❌ [VALIDATION] Missing required fields:', missing)
-      return res.status(400).json({
-        error: 'Missing required fields',
-        missing
-      })
+      return res.status(400).json({ error: 'Missing required fields', missing })
     }
 
-    console.log('✅ [VALIDATION] All required fields present')
-
-    // Use service role to insert (proper way to bypass RLS)
-    console.log('🔍 [DATABASE] Attempting to insert booking into database...')
-    console.log('🔍 [DATABASE] Using service role Supabase client')
-
+    // Insert booking
     const { data: booking, error: bookingError } = await serviceSupabase
       .from('bookings')
       .insert(bookingData)
@@ -159,18 +144,16 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       .single()
 
     if (bookingError) {
-      console.log('❌ [DATABASE] Booking insertion failed!')
-      console.log('❌ [DATABASE] Error details:', JSON.stringify(bookingError, null, 2))
+      console.log('❌ [DATABASE] Booking insertion failed:', bookingError.message)
       return res.status(500).json({
         error: 'Failed to create booking',
         details: bookingError.message
       })
     }
 
-    console.log('✅ [DATABASE] Booking inserted successfully!')
-    console.log('✅ [DATABASE] Booking ID:', booking.id)
+    console.log('✅ [DATABASE] Booking created:', booking.id, booking.booking_number)
 
-    // Handle booking services if provided
+    // Insert booking_services
     if (services && services.length > 0) {
       const bookingServices = services.map((service: any) => ({
         booking_id: booking.id,
@@ -186,7 +169,6 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
         .insert(bookingServices)
 
       if (servicesError) {
-        // Rollback booking if services fail
         await serviceSupabase.from('bookings').delete().eq('id', booking.id)
         return res.status(500).json({
           error: 'Failed to create booking services',
@@ -195,132 +177,83 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       }
     }
 
-    // 🔄 MANUAL STAFF ACCEPTANCE - Create job record for staff to see
-    console.log('📋 Booking created successfully - creating job for staff to accept')
+    // Create job records — one per booking_service (therapist)
+    console.log('📋 [JOBS] Creating job records for staff assignment...')
 
-    // Get service and hotel details for job creation
-    const { data: service, error: serviceError } = await serviceSupabase
-      .from('services')
-      .select('name_th, name_en')
-      .eq('id', booking.service_id)
-      .single()
+    // Extract guest info from customer_notes
+    const guestNameMatch = booking.customer_notes?.match(/Guest:\s*([^,]+)/)
+    const guestPhoneMatch = booking.customer_notes?.match(/Phone:\s*([^,]+)/)
+    const guestName = guestNameMatch ? guestNameMatch[1].trim() : 'Hotel Guest'
+    const guestPhone = guestPhoneMatch ? guestPhoneMatch[1].trim() : '0000000000'
 
-    const { data: hotel, error: hotelError } = await serviceSupabase
+    // Get hotel details
+    const { data: hotel } = await serviceSupabase
       .from('hotels')
       .select('name_th')
       .eq('id', booking.hotel_id)
       .single()
 
-    if (!serviceError && !hotelError && service && hotel) {
-      // Extract guest name and phone from customer_notes
-      const guestNameMatch = booking.customer_notes?.match(/Guest:\s*([^,]+)/)
-      const guestPhoneMatch = booking.customer_notes?.match(/Phone:\s*([^,]+)/)
+    const hotelName = hotel?.name_th || 'Hotel'
 
-      const guestName = guestNameMatch ? guestNameMatch[1].trim() : 'Hotel Guest'
-      const guestPhone = guestPhoneMatch ? guestPhoneMatch[1].trim() : '0000000000'
+    // Determine how many jobs to create from booking_services
+    const jobSources = (services && services.length > 0)
+      ? services
+      : [{ service_id: booking.service_id, duration: booking.duration, price: booking.final_price, recipient_index: 0 }]
 
-      // Create temporary profile for hotel guest (jobs table needs profiles.id)
-      console.log('🏨 [GUEST PROFILE] Creating temporary profile for hotel guest...')
+    const totalJobs = jobSources.length
 
-      // First check if a guest profile already exists by phone
-      let guestProfile = null
-      const { data: existingProfile } = await serviceSupabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('phone', guestPhone)
-        .eq('role', 'GUEST')
-        .single()
-
-      if (existingProfile) {
-        console.log('✅ [GUEST PROFILE] Found existing guest profile:', existingProfile.id)
-        guestProfile = existingProfile
-      } else {
-        // Create new temporary profile for hotel guest
-        const { data: newProfile, error: profileError } = await serviceSupabase
-          .from('profiles')
-          .insert({
-            full_name: guestName,
-            phone: guestPhone,
-            role: 'GUEST',
-            email: `guest-${Date.now()}@hotel-temp.com`, // Temporary email
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select('id, full_name')
+    const jobInserts = await Promise.all(
+      jobSources.map(async (svc: any, index: number) => {
+        // Get service name for each job
+        const { data: svcDetail } = await serviceSupabase
+          .from('services')
+          .select('name_th, name_en')
+          .eq('id', svc.service_id)
           .single()
 
-        if (profileError) {
-          console.log('❌ [GUEST PROFILE] Failed to create profile:', profileError.message)
-          console.log('❌ Cannot create job without guest profile')
-          return
-        }
-
-        console.log('✅ [GUEST PROFILE] Created new profile:', newProfile.id)
-        guestProfile = newProfile
-      }
-
-      // For hotel bookings, we store guest info directly in job (no profiles needed)
-      console.log('✅ [HOTEL GUEST] Ready to create job for hotel guest')
-
-      // Create job record with guest profile ID
-      console.log('📋 [JOB] Creating job record for staff assignment...')
-      const { data: job, error: jobError } = await serviceSupabase
-        .from('jobs')
-        .insert({
+        return {
           booking_id: booking.id,
-          customer_id: null, // Hotel guests don't need customer profiles
+          customer_id: null, // Hotel guests don't have accounts
           hotel_id: booking.hotel_id,
           customer_name: guestName,
           customer_phone: guestPhone,
-          hotel_name: hotel.name_th,
+          hotel_name: hotelName,
           room_number: booking.hotel_room_number,
-          address: `โรงแรม ${hotel.name_th}`,
+          address: `โรงแรม ${hotelName}`,
           latitude: booking.latitude,
           longitude: booking.longitude,
-          service_name: service.name_th,
-          service_name_en: service.name_en,
-          duration_minutes: booking.duration,
+          service_name: svcDetail?.name_th || 'บริการนวด',
+          service_name_en: svcDetail?.name_en || 'Massage Service',
+          duration_minutes: svc.duration,
           scheduled_date: booking.booking_date,
           scheduled_time: booking.booking_time,
-          amount: booking.final_price,
-          staff_earnings: booking.staff_earnings || 0,
-          status: 'pending',
+          amount: svc.price,
+          staff_earnings: 0,
+          status: 'pending' as const,
           customer_notes: booking.customer_notes,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single()
-
-      if (jobError) {
-        console.log('⚠️ Failed to create job record:', jobError.message)
-      } else {
-        console.log('✅ Job created successfully for staff to accept!')
-        console.log(`🎯 Job ID: ${job.id}`)
-        console.log(`👤 Guest: ${guestName}, Phone: ${guestPhone}`)
-        console.log(`🏨 Hotel: ${hotel.name_th}`)
-        console.log(`💰 Amount: ${booking.final_price} บาท`)
-      }
-    }
-
-    // Keep booking in 'pending' status - staff will accept via staff app
-    const { error: statusUpdateError } = await serviceSupabase
-      .from('bookings')
-      .update({
-        status: 'pending', // Keep in pending status for staff to accept
+          job_index: index + 1,
+          total_jobs: totalJobs,
+        }
       })
-      .eq('id', booking.id)
+    )
 
-    if (statusUpdateError) {
-      console.log('⚠️ Failed to set pending status:', statusUpdateError.message)
+    const { data: jobs, error: jobError } = await serviceSupabase
+      .from('jobs')
+      .insert(jobInserts)
+      .select()
+
+    if (jobError) {
+      console.log('⚠️ [JOBS] Failed to create jobs:', jobError.message)
     } else {
-      console.log('✅ Booking set to pending status for manual staff acceptance')
+      console.log(`✅ [JOBS] Created ${jobs.length} job(s) for booking ${booking.booking_number}`)
+      jobs.forEach((j: any) => console.log(`   🎯 Job ${j.job_index}/${j.total_jobs}: ${j.id}`))
     }
 
     res.status(201).json({
       success: true,
       data: booking,
       message: 'Booking created successfully - waiting for staff to accept',
+      jobs: jobs || [],
       staffAssignment: {
         success: false,
         message: 'Manual staff acceptance required - booking is pending',
