@@ -43,6 +43,7 @@ const getEmptyFormData = (): CreateStaffData => ({
   phone: '',
   id_card: '',
   address: '',
+  gender: undefined,
   bio_th: '',
   bio_en: '',
   skills: [],
@@ -216,6 +217,37 @@ export default function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
                     className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     placeholder="เช่น 1234567890123"
                   />
+                </div>
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-2">
+                  เพศ
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, gender: 'female' }))}
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+                      formData.gender === 'female'
+                        ? 'bg-pink-100 text-pink-700 border-2 border-pink-400'
+                        : 'bg-stone-100 text-stone-600 border-2 border-transparent hover:bg-stone-200'
+                    }`}
+                  >
+                    หญิง
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, gender: 'male' }))}
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+                      formData.gender === 'male'
+                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-400'
+                        : 'bg-stone-100 text-stone-600 border-2 border-transparent hover:bg-stone-200'
+                    }`}
+                  >
+                    ชาย
+                  </button>
                 </div>
               </div>
 

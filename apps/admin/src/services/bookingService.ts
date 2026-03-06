@@ -63,6 +63,9 @@ export interface Booking {
   // Staff earnings
   staff_earnings: number
 
+  // Provider preference
+  provider_preference?: string | null
+
   // Notes
   customer_notes?: string | null
   staff_notes?: string | null

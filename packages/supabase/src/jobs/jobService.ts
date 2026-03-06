@@ -5,6 +5,22 @@
 
 import { supabase } from '../auth/supabaseClient'
 import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
+import { isJobMatchingStaffGender } from '../utils/providerPreference'
+
+// Helper: batch-fetch provider_preference from bookings and attach to jobs
+async function attachProviderPreference(jobs: Job[]): Promise<Job[]> {
+  if (jobs.length === 0) return jobs
+  const bookingIds = [...new Set(jobs.map(j => j.booking_id).filter(Boolean))]
+  if (bookingIds.length === 0) return jobs
+
+  const { data: bookings } = await supabase
+    .from('bookings')
+    .select('id, provider_preference')
+    .in('id', bookingIds)
+
+  const prefMap = new Map((bookings || []).map(b => [b.id, b.provider_preference]))
+  return jobs.map(j => ({ ...j, provider_preference: prefMap.get(j.booking_id) || null }))
+}
 
 // Get jobs for current staff member with hotel information
 export async function getStaffJobs(
@@ -60,11 +76,12 @@ export async function getStaffJobs(
     throw error
   }
 
-  return (data || []) as Job[]
+  return attachProviderPreference((data || []) as Job[])
 }
 
-// Get pending jobs available for staff to accept (from today onwards) with hotel information
-export async function getPendingJobs(): Promise<Job[]> {
+// Get pending jobs available for staff to accept (from today onwards)
+// Filters out jobs with hard gender requirements (female-only, male-only) that don't match staff gender
+export async function getPendingJobs(staffGender?: string | null): Promise<Job[]> {
   const today = new Date().toISOString().split('T')[0]
 
   const { data, error } = await supabase
@@ -96,7 +113,14 @@ export async function getPendingJobs(): Promise<Job[]> {
     throw error
   }
 
-  return (data || []) as Job[]
+  const jobsWithPref = await attachProviderPreference((data || []) as Job[])
+
+  // Filter by staff gender if provided
+  if (staffGender !== undefined) {
+    return jobsWithPref.filter(j => isJobMatchingStaffGender(j.provider_preference, staffGender))
+  }
+
+  return jobsWithPref
 }
 
 // Get a single job by ID with hotel information
@@ -130,7 +154,8 @@ export async function getJob(jobId: string): Promise<Job | null> {
     throw error
   }
 
-  return data as Job
+  const [enriched] = await attachProviderPreference([data as Job])
+  return enriched || data as Job
 }
 
 // Accept a job
@@ -147,9 +172,35 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     throw new Error('ไม่พบงานนี้ในระบบ')
   }
 
-  // Check if job is already taken
+  // Check if job is still available
   if (currentJob.status !== 'pending' || currentJob.staff_id !== null) {
+    if (currentJob.status === 'cancelled') {
+      throw new Error('งานนี้ถูกยกเลิกแล้ว')
+    }
     throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
+  }
+
+  // Check provider_preference vs staff gender (hard requirements only)
+  if (currentJob.booking_id) {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('provider_preference')
+      .eq('id', currentJob.booking_id)
+      .single()
+
+    if (booking?.provider_preference === 'female-only' || booking?.provider_preference === 'male-only') {
+      // staffId is profile_id, get staff gender
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('gender')
+        .eq('profile_id', staffId)
+        .single()
+
+      if (!isJobMatchingStaffGender(booking.provider_preference, staffData?.gender)) {
+        const label = booking.provider_preference === 'female-only' ? 'ผู้หญิงเท่านั้น' : 'ผู้ชายเท่านั้น'
+        throw new Error(`ไม่สามารถรับงานนี้ได้ ลูกค้าระบุความต้องการ "${label}"`)
+      }
+    }
   }
 
   // For couple bookings (total_jobs > 1), check if this staff already has another job from same booking
@@ -182,37 +233,26 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     .single()
 
   if (error) {
-    // Handle race condition - someone else accepted between our check and update
+    // Handle race condition - job changed between our check and update
     if (error.code === 'PGRST116') {
+      // Re-fetch to determine actual reason
+      const { data: refetchedJob } = await supabase
+        .from('jobs')
+        .select('status, staff_id')
+        .eq('id', jobId)
+        .single()
+
+      if (refetchedJob?.status === 'cancelled') {
+        throw new Error('งานนี้ถูกยกเลิกแล้ว')
+      }
       throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
     }
     console.error('Error accepting job:', error)
     throw new Error('ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง')
   }
 
-  // ✅ NEW: Also update the corresponding booking status to 'confirmed'
-  // When staff accepts a job, the booking should also be confirmed
-  if (data && data.booking_id) {
-    try {
-      const { error: bookingError } = await supabase
-        .from('bookings')
-        .update({
-          staff_id: staffId,
-          status: 'confirmed',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', data.booking_id)
-
-      if (bookingError) {
-        console.error('Error updating booking after job acceptance:', bookingError)
-        // Don't throw error - job acceptance was successful, booking update is secondary
-      } else {
-        console.log('✅ Booking status updated to confirmed after staff accepted job')
-      }
-    } catch (bookingUpdateError) {
-      console.error('Exception updating booking:', bookingUpdateError)
-    }
-  }
+  // Booking sync is handled by DB trigger sync_job_status_to_booking()
+  // which fires automatically when job status/staff_id changes
 
   return data as Job
 }
@@ -361,7 +401,8 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
 export function subscribeToJobs(
   staffId: string,
   onJobUpdate: (job: Job) => void,
-  onNewJob?: (job: Job) => void
+  onNewJob?: (job: Job) => void,
+  onPendingJobRemoved?: (job: Job) => void
 ) {
   // Subscribe to staff's assigned jobs
   const assignedChannel = supabase
@@ -401,10 +442,31 @@ export function subscribeToJobs(
     )
     .subscribe()
 
+  // Subscribe to job status changes (for removing jobs from pending list)
+  const jobStatusChannel = supabase
+    .channel('job-status-updates')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'jobs',
+      },
+      (payload) => {
+        const newJob = payload.new as Job
+        // If job is no longer pending (accepted, cancelled, etc.), notify removal
+        if (newJob && newJob.status !== 'pending' && onPendingJobRemoved) {
+          onPendingJobRemoved(newJob)
+        }
+      }
+    )
+    .subscribe()
+
   // Return unsubscribe function
   return () => {
     supabase.removeChannel(assignedChannel)
     supabase.removeChannel(pendingChannel)
+    supabase.removeChannel(jobStatusChannel)
   }
 }
 

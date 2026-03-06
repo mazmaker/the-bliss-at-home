@@ -18,6 +18,7 @@ import {
   Bell,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAdminAuth } from '../hooks/useAdminAuth'
 import type { Booking } from '../hooks/useBookings'
 
 // ============================================
@@ -60,7 +61,7 @@ async function getRefundPreview(bookingId: string): Promise<{
   policy?: CancellationPolicy
   error?: string
 }> {
-  const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/refund-preview`)
+  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/refund-preview`)
   return response.json()
 }
 
@@ -76,7 +77,7 @@ async function cancelBooking(
     admin_id?: string
   }
 ): Promise<{ success: boolean; data?: any; error?: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
+  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -109,6 +110,7 @@ export default function BookingCancellationModal({
   onClose,
   onCancelled,
 }: BookingCancellationModalProps) {
+  const { user } = useAdminAuth()
   // Check if booking has been paid
   const isPaid = booking.payment_status === 'paid'
 
@@ -195,6 +197,7 @@ export default function BookingCancellationModal({
         notify_customer: notifyCustomer,
         notify_staff: notifyStaff,
         notify_hotel: notifyHotel,
+        admin_id: user?.id,
       })
 
       if (result.success) {

@@ -9,10 +9,10 @@ export interface DashboardStats {
   totalBookings: number
   newCustomers: number
   avgBookingValue: number
-  revenueGrowth: number
-  bookingsGrowth: number
-  newCustomersGrowth: number
-  avgValueGrowth: number
+  revenueGrowth: number | null
+  bookingsGrowth: number | null
+  newCustomersGrowth: number | null
+  avgValueGrowth: number | null
 }
 
 export interface DailyRevenueData {
@@ -71,9 +71,9 @@ export interface HotelPerformance {
   top_staff_names: string[]
 
   // Growth Metrics
-  revenue_growth: number
-  booking_growth: number
-  customer_growth: number
+  revenue_growth: number | null
+  booking_growth: number | null
+  customer_growth: number | null
 
   // Operational Metrics
   avg_service_duration: number
@@ -85,6 +85,20 @@ export interface HotelPerformance {
   address: string
 
   rank: number
+}
+
+// ============================================
+// HOTEL INVOICE SUMMARY TYPES
+// ============================================
+
+export interface HotelInvoiceSummary {
+  paid_count: number
+  paid_amount: number
+  pending_count: number
+  pending_amount: number
+  overdue_count: number
+  overdue_amount: number
+  total_outstanding: number
 }
 
 // ============================================
@@ -143,9 +157,9 @@ export interface StaffPerformance {
   availability_score: number
 
   // Comparison & Growth
-  revenue_growth: number
-  booking_growth: number
-  rating_growth: number
+  revenue_growth: number | null
+  booking_growth: number | null
+  rating_growth: number | null
   rank: number
 
   // Status & Period Info
@@ -163,7 +177,10 @@ export interface StaffEarnings {
   bonus_earnings: number
   total_earnings: number
 
-  // Payout Information
+  // All-time earnings (for payment tracking)
+  alltime_earnings: number
+
+  // Payout Information (based on all-time data)
   pending_payout: number
   paid_payout: number
   last_payout_date: string
@@ -176,11 +193,6 @@ export interface StaffEarnings {
     nail: number
     facial: number
   }
-
-  // Tax & Deductions
-  tax_deductions: number
-  platform_commission: number
-  net_earnings: number
 
   // Growth
   earnings_growth: number
@@ -288,10 +300,10 @@ export async function getDashboardStats(
       totalBookings: stats.total_bookings || 0,
       newCustomers: stats.new_customers || 0,
       avgBookingValue: Number(stats.avg_booking_value) || 0,
-      revenueGrowth: Number(stats.revenue_growth) || 0,
-      bookingsGrowth: Number(stats.bookings_growth) || 0,
-      newCustomersGrowth: Number(stats.new_customers_growth) || 0,
-      avgValueGrowth: Number(stats.avg_value_growth) || 0
+      revenueGrowth: stats.revenue_growth != null ? Number(stats.revenue_growth) : null,
+      bookingsGrowth: stats.bookings_growth != null ? Number(stats.bookings_growth) : null,
+      newCustomersGrowth: stats.new_customers_growth != null ? Number(stats.new_customers_growth) : null,
+      avgValueGrowth: stats.avg_value_growth != null ? Number(stats.avg_value_growth) : null
     }
   } catch (error) {
     console.error('Error in getDashboardStats:', error)
@@ -592,9 +604,9 @@ export async function getHotelPerformance(days: number = 30): Promise<HotelPerfo
       top_staff_names: hotel.top_staff_names || [],
 
       // Growth Metrics
-      revenue_growth: Number(hotel.revenue_growth) || 0,
-      booking_growth: Number(hotel.booking_growth) || 0,
-      customer_growth: Number(hotel.customer_growth) || 0,
+      revenue_growth: hotel.revenue_growth != null ? Number(hotel.revenue_growth) : null,
+      booking_growth: hotel.booking_growth != null ? Number(hotel.booking_growth) : null,
+      customer_growth: hotel.customer_growth != null ? Number(hotel.customer_growth) : null,
 
       // Operational Metrics
       avg_service_duration: hotel.avg_service_duration || 90,
@@ -612,6 +624,53 @@ export async function getHotelPerformance(days: number = 30): Promise<HotelPerfo
   } catch (error) {
     console.error('Error in getHotelPerformance:', error)
     return []
+  }
+}
+
+/**
+ * Get aggregated hotel invoice summary from hotel_invoices table
+ */
+export async function getHotelInvoiceSummary(): Promise<HotelInvoiceSummary> {
+  try {
+    const { data, error } = await supabase
+      .from('hotel_invoices')
+      .select('status, commission_amount, due_date')
+
+    if (error) throw error
+
+    const today = new Date().toISOString().split('T')[0]
+    const invoices = data || []
+
+    const paid = invoices.filter(i => i.status === 'paid')
+    const overdue = invoices.filter(i =>
+      i.status !== 'paid' && i.status !== 'cancelled' &&
+      i.due_date && i.due_date < today
+    )
+    const pending = invoices.filter(i =>
+      i.status !== 'paid' && i.status !== 'cancelled' &&
+      (!i.due_date || i.due_date >= today)
+    )
+
+    const sumAmount = (items: typeof invoices) =>
+      items.reduce((sum, i) => sum + (Number(i.commission_amount) || 0), 0)
+
+    return {
+      paid_count: paid.length,
+      paid_amount: sumAmount(paid),
+      pending_count: pending.length,
+      pending_amount: sumAmount(pending),
+      overdue_count: overdue.length,
+      overdue_amount: sumAmount(overdue),
+      total_outstanding: sumAmount(pending) + sumAmount(overdue),
+    }
+  } catch (error) {
+    console.error('Error in getHotelInvoiceSummary:', error)
+    return {
+      paid_count: 0, paid_amount: 0,
+      pending_count: 0, pending_amount: 0,
+      overdue_count: 0, overdue_amount: 0,
+      total_outstanding: 0,
+    }
   }
 }
 
@@ -704,9 +763,11 @@ export async function getStaffOverview(days: number = 30): Promise<StaffOverview
     const avgEarningsPerStaff = activeStaff > 0 ? totalEarnings / activeStaff : 0
     const totalBookingsHandled = staffPerformanceData?.reduce((sum: number, staff: any) =>
       sum + (staff.bookings_completed || 0), 0) || 0
-    const avgRating = staffPerformanceData?.length > 0
-      ? staffPerformanceData.reduce((sum: number, staff: any) =>
-          sum + (Number(staff.avg_rating) || 0), 0) / staffPerformanceData.length
+    // Only average staff who actually have reviews (avoid diluting with 0s)
+    const staffWithReviews = staffPerformanceData?.filter((s: any) => (s.total_reviews || 0) > 0) || []
+    const avgRating = staffWithReviews.length > 0
+      ? staffWithReviews.reduce((sum: number, staff: any) =>
+          sum + (Number(staff.avg_rating) || 0), 0) / staffWithReviews.length
       : 0
 
     return {
@@ -788,9 +849,9 @@ export async function getStaffPerformance(days: number = 30, limit: number = 10)
       availability_score: 85 + Math.random() * 15,
 
       // Growth Metrics
-      revenue_growth: Number(staff.revenue_growth) || 0,
-      booking_growth: Number(staff.booking_growth) || 0,
-      rating_growth: Number(staff.rating_growth) || 0,
+      revenue_growth: staff.revenue_growth != null ? Number(staff.revenue_growth) : null,
+      booking_growth: staff.booking_growth != null ? Number(staff.booking_growth) : null,
+      rating_growth: staff.rating_growth != null ? Number(staff.rating_growth) : null,
       rank: staff.rank || 0,
 
       // Status & Dates
@@ -824,38 +885,71 @@ export async function getStaffEarnings(days: number = 30): Promise<StaffEarnings
       return []
     }
 
+    // Get all-time earnings from staff table + paid amounts from payouts
+    // This matches the calculation in useStaffEarningsSummary (Staff Detail page)
+    const { data: staffTableData } = await supabase
+      .from('staff')
+      .select('id, profile_id, total_earnings')
+
+    const { data: payoutsData } = await supabase
+      .from('payouts')
+      .select('staff_id, net_amount')
+      .eq('status', 'completed')
+
+    // Build maps: staff.id → all-time earnings, staff.id → total paid
+    const profileToStaffId = new Map(
+      (staffTableData || []).filter(s => s.profile_id).map(s => [s.profile_id, s.id])
+    )
+    const allTimeEarningsById = new Map(
+      (staffTableData || []).map(s => [s.id, parseFloat(s.total_earnings) || 0])
+    )
+    const paidByStaffId = new Map<string, number>()
+    for (const p of payoutsData || []) {
+      const staffId = profileToStaffId.get(p.staff_id)
+      if (staffId) {
+        paidByStaffId.set(staffId, (paidByStaffId.get(staffId) || 0) + parseFloat(p.net_amount || 0))
+      }
+    }
+
     // Transform the database function result to match our interface
-    const staffEarnings: StaffEarnings[] = data.map((staff: any) => ({
-      staff_id: staff.staff_id,
-      name: staff.staff_name || 'Unknown Staff',
+    // RPC returns: id, name_th, base_earn, tips_earn, bonus_earn, total_earn,
+    //   massage_earn, spa_earn, nail_earn, facial_earn, pending, last_payout, next_payout, growth
+    const staffEarnings: StaffEarnings[] = data.map((staff: any) => {
+      const totalEarnings = Number(staff.total_earn) || 0
+      // Use all-time earnings for payment calculation (same as Staff Detail page)
+      const allTimeEarnings = allTimeEarningsById.get(staff.id) || totalEarnings
+      const paid = paidByStaffId.get(staff.id) || 0
 
-      // Current Period Earnings
-      base_earnings: Number(staff.base_earnings) || 0,
-      bonus_earnings: Number(staff.bonus_earnings) || 0,
-      total_earnings: Number(staff.total_earnings) || 0,
+      return {
+        staff_id: staff.id,
+        name: staff.name_th || 'Unknown Staff',
 
-      // Payout Information
-      pending_payout: Number(staff.pending_payout) || 0,
-      paid_payout: 0, // TODO: Get from payout records
-      last_payout_date: staff.last_payout_date || '2026-02-01',
-      next_payout_date: staff.next_payout_date || '2026-02-15',
+        // Current Period Earnings
+        base_earnings: Number(staff.base_earn) || 0,
+        bonus_earnings: Number(staff.bonus_earn) || 0,
+        total_earnings: totalEarnings,
 
-      // Earnings Breakdown by Category
-      earnings_breakdown: {
-        massage: Number(staff.massage_earnings) || 0,
-        spa: Number(staff.spa_earnings) || 0,
-        nail: Number(staff.nail_earnings) || 0,
-        facial: Number(staff.facial_earnings) || 0
-      },
+        // All-time earnings for payment tracking
+        alltime_earnings: allTimeEarnings,
 
-      // Tax & Deductions
-      tax_deductions: Number(staff.tax_deductions) || 0,
-      platform_commission: Number(staff.platform_commission) || 0,
-      net_earnings: Number(staff.net_earnings) || 0,
+        // Payout Information (based on all-time, matching Staff Detail page)
+        pending_payout: Math.max(0, allTimeEarnings - paid),
+        paid_payout: paid,
+        last_payout_date: staff.last_payout || '2026-02-01',
+        next_payout_date: staff.next_payout || '2026-02-15',
 
-      // Growth
-      earnings_growth: Number(staff.earnings_growth) || 0
-    }))
+        // Earnings Breakdown by Category
+        earnings_breakdown: {
+          massage: Number(staff.massage_earn) || 0,
+          spa: Number(staff.spa_earn) || 0,
+          nail: Number(staff.nail_earn) || 0,
+          facial: Number(staff.facial_earn) || 0
+        },
+
+        // Growth
+        earnings_growth: Number(staff.growth) || 0
+      }
+    })
 
     return staffEarnings
   } catch (error) {

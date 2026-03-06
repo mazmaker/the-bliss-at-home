@@ -57,6 +57,10 @@
     "premiumQuality": "Premium Quality",
     "premiumQualityDesc": "Luxury products & service"
   },
+  "reviews": {
+    "title": "WHAT OUR CLIENTS SAY",
+    "subtitle": "Real feedback from our valued customers"
+  },
   "cta": {
     "title": "Ready to Indulge?",
     "subtitle1": "Book your massage, spa or nail service today",

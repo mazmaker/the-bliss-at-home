@@ -25,6 +25,10 @@ export default defineConfig({
         'packages/*/src/services/**',
         'packages/*/src/components/**',
       ],
+      exclude: [
+        '**/* 2.ts',
+        '**/index.ts',
+      ],
     },
   },
   resolve: {

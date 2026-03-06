@@ -2,19 +2,20 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loader2, AlertTriangle, ChevronRight } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
-import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus } from '@bliss/supabase'
+import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { SOSButton, JobCancellationModal, ServiceTimer } from '../components'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
 
 function StaffDashboard() {
   const { user } = useAuth()
+  const { eligibility, isLoading: isEligibilityLoading } = useStaffEligibility()
   const { jobs, pendingJobs, isLoading, error, refresh, acceptJob, startJob, completeJob } = useJobs({
     realtime: true,
+    staffGender: eligibility?.gender,
     onNewJob: handleNewJob,
   })
   const { stats } = useStaffStats()
-  const { eligibility, isLoading: isEligibilityLoading } = useStaffEligibility()
 
   const [currentJob, setCurrentJob] = useState<Job | null>(null)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
@@ -221,6 +222,11 @@ function StaffDashboard() {
               <ul className="text-sm text-amber-800 space-y-1 ml-4">
                 {!eligibility.requirements?.status && (
                   <li className="list-disc">รอการอนุมัติจากผู้ดูแลระบบ</li>
+                )}
+                {!eligibility.gender && (
+                  <li className="list-disc">
+                    <Link to="/profile" className="underline hover:text-amber-900">ระบุเพศในข้อมูลส่วนตัว</Link>
+                  </li>
                 )}
                 {!eligibility.requirements?.hasIdCard && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบบัตรประชาชน</li>
@@ -441,6 +447,12 @@ function StaffDashboard() {
                     </div>
                     {getStatusBadge(job.status)}
                   </div>
+
+                  {isSpecificPreference(job.provider_preference) && (
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full mb-2 ${getProviderPreferenceBadgeStyle(job.provider_preference)}`}>
+                      {getProviderPreferenceLabel(job.provider_preference)}
+                    </span>
+                  )}
 
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-stone-600">

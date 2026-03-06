@@ -25,8 +25,10 @@ interface BusinessReportGeneratorProps {
 }
 
 interface RealTimeBookingData {
-  totalBookings: number
+  totalBookings: number       // ALL bookings (for status breakdown)
+  activeBookings: number      // Non-cancelled bookings (for main card, matches RPC)
   completedBookings: number
+  confirmedBookings: number
   pendingBookings: number
   cancelledBookings: number
   totalRevenue: number
@@ -78,28 +80,17 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
       const now = new Date()
       let startDate: Date
 
-      switch (selectedPeriod) {
-        case 'daily':
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-          break
-        case 'weekly':
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          break
-        case '3_months':
-          startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1)
-          break
-        case '6_months':
-          startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1)
-          break
-        case 'year':
-          startDate = new Date(now.getFullYear(), 0, 1)
-          break
-        default:
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+      // Use rolling window to match RPC functions (period_days)
+      const periodDaysMap: Record<string, number> = {
+        daily: 1,
+        weekly: 7,
+        month: 30,
+        '3_months': 90,
+        '6_months': 180,
+        year: 365
       }
+      const days = periodDaysMap[selectedPeriod] || 30
+      startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
 
       // Get current period booking statistics
       const { data: bookingsData, error: bookingsError } = await supabase
@@ -110,12 +101,12 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
 
       if (bookingsError) throw bookingsError
 
-      // Get selected period booking statistics (for KPIs) - only completed bookings
+      // Get selected period booking statistics (for KPIs) - non-cancelled bookings (matches RPC logic)
       const { data: yearlyBookingsData, error: yearlyBookingsError } = await supabase
         .from('bookings')
         .select('status, final_price, is_hotel_booking, hotel_id, customer_id, created_at')
         .gte('created_at', startDate.toISOString())
-        .eq('status', 'completed')
+        .neq('status', 'cancelled')
 
       if (yearlyBookingsError) throw yearlyBookingsError
 
@@ -140,14 +131,15 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
       // Process current period bookings data
       const totalBookings = bookingsData?.length || 0
       const completedBookings = bookingsData?.filter(b => b.status === 'completed')?.length || 0
+      const confirmedBookings = bookingsData?.filter(b => b.status === 'confirmed')?.length || 0
       const pendingBookings = bookingsData?.filter(b => b.status === 'pending')?.length || 0
       const cancelledBookings = bookingsData?.filter(b => b.status === 'cancelled')?.length || 0
 
-      const totalRevenue = bookingsData
-        ?.filter(b => b.status === 'completed')
-        ?.reduce((sum, b) => sum + (b.final_price || 0), 0) || 0
+      // Revenue from non-cancelled bookings (matches RPC get_dashboard_stats logic)
+      const nonCancelledBookings = bookingsData?.filter(b => b.status !== 'cancelled') || []
+      const totalRevenue = nonCancelledBookings.reduce((sum, b) => sum + (b.final_price || 0), 0)
 
-      const avgBookingValue = completedBookings > 0 ? totalRevenue / completedBookings : 0
+      const avgBookingValue = nonCancelledBookings.length > 0 ? totalRevenue / nonCancelledBookings.length : 0
 
       // Calculate new KPI metrics for selected period
 
@@ -218,14 +210,17 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
 
       // Process staff data
       const totalActiveStaff = staffData?.length || 0
-      const avgRating = staffData?.length > 0
-        ? staffData.reduce((sum, s) => sum + (s.rating || 0), 0) / staffData.length
+      const ratedStaff = staffData?.filter(s => s.rating && s.rating > 0) || []
+      const avgRating = ratedStaff.length > 0
+        ? ratedStaff.reduce((sum, s) => sum + s.rating, 0) / ratedStaff.length
         : 0
       const totalEarnings = staffData?.reduce((sum, s) => sum + (s.total_earnings || 0), 0) || 0
 
       setRealTimeData({
         totalBookings,
+        activeBookings: nonCancelledBookings.length,
         completedBookings,
+        confirmedBookings,
         pendingBookings,
         cancelledBookings,
         totalRevenue,
@@ -461,9 +456,9 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">การจองทั้งหมด</p>
+                  <p className="text-sm font-medium text-stone-500 mb-1">การจอง</p>
                   <p className="text-3xl font-bold text-blue-700">
-                    {realTimeData.totalBookings.toLocaleString()} ครั้ง
+                    {realTimeData.activeBookings.toLocaleString()} ครั้ง
                   </p>
                   <p className="text-sm text-stone-600 mt-1">
                     เฉลี่ย ฿{realTimeData.avgBookingValue.toLocaleString()}/ครั้ง
@@ -538,7 +533,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                     {realTimeData.cancellationRate.toFixed(1)}%
                   </p>
                   <p className="text-sm text-stone-600 mt-1">
-                    จาก {realTimeData.totalBookings} การจองทั้งหมด
+                    จาก {realTimeData.totalBookings} รวมทุกสถานะ
                   </p>
                 </div>
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
@@ -564,7 +559,17 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                   <div className="text-right">
                     <div className="font-bold text-green-900">{realTimeData.completedBookings}</div>
                     <div className="text-xs text-green-600">
-                      {((realTimeData.completedBookings / realTimeData.totalBookings) * 100).toFixed(1)}%
+                      {realTimeData.totalBookings > 0 ? ((realTimeData.completedBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <span className="font-medium text-blue-800">ยืนยันแล้ว (Confirmed)</span>
+                  <div className="text-right">
+                    <div className="font-bold text-blue-900">{realTimeData.confirmedBookings}</div>
+                    <div className="text-xs text-blue-600">
+                      {realTimeData.totalBookings > 0 ? ((realTimeData.confirmedBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
                     </div>
                   </div>
                 </div>
@@ -574,7 +579,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                   <div className="text-right">
                     <div className="font-bold text-yellow-900">{realTimeData.pendingBookings}</div>
                     <div className="text-xs text-yellow-600">
-                      {((realTimeData.pendingBookings / realTimeData.totalBookings) * 100).toFixed(1)}%
+                      {realTimeData.totalBookings > 0 ? ((realTimeData.pendingBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
                     </div>
                   </div>
                 </div>
@@ -584,7 +589,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                   <div className="text-right">
                     <div className="font-bold text-red-900">{realTimeData.cancelledBookings}</div>
                     <div className="text-xs text-red-600">
-                      {((realTimeData.cancelledBookings / realTimeData.totalBookings) * 100).toFixed(1)}%
+                      {realTimeData.totalBookings > 0 ? ((realTimeData.cancelledBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
                     </div>
                   </div>
                 </div>
@@ -618,42 +623,6 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             </div>
           </div>
 
-          {/* Business Insights */}
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-4 border-b">
-              <h3 className="font-semibold text-stone-900 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-                ข้อมูลเชิงลึกทางธุรกิจ • Business Insights
-              </h3>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">💰 ประสิทธิภาพรายได้</h4>
-                <p className="text-sm text-blue-800">
-                  ค่าเฉลี่ยต่อการจอง: <strong>฿{realTimeData.avgBookingValue.toLocaleString()}</strong><br />
-                  รายได้ต่อพนักงาน: <strong>฿{(realTimeData.staffStats.totalEarnings / Math.max(realTimeData.staffStats.totalActiveStaff, 1)).toLocaleString()}</strong>
-                </p>
-              </div>
-
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h4 className="font-semibold text-green-900 mb-2">👥 ความสัมพันธ์ลูกค้า</h4>
-                <p className="text-sm text-green-800">
-                  ลูกค้าใหม่: <strong>{realTimeData.customerStats.newCustomers} คน</strong><br />
-                  ลูกค้าเก่า: <strong>{realTimeData.customerStats.repeatCustomers} คน</strong><br />
-                  อัตราการกลับมา: <strong>{customerRetentionRate.toFixed(1)}%</strong>
-                </p>
-              </div>
-
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <h4 className="font-semibold text-purple-900 mb-2">⭐ คุณภาพการบริการ</h4>
-                <p className="text-sm text-purple-800">
-                  คะแนนเฉลี่ย: <strong>{realTimeData.staffStats.avgRating.toFixed(1)}/5.0</strong><br />
-                  พนักงานที่ใช้งาน: <strong>{realTimeData.staffStats.totalActiveStaff} คน</strong><br />
-                  อัตราสำเร็จ: <strong>{completionRate.toFixed(1)}%</strong>
-                </p>
-              </div>
-            </div>
-          </div>
         </>
       )}
     </div>

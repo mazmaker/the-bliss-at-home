@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, Star, Clock, List, Sparkles, Hand, Flower2 } from 'lucide-react'
 import { useServices } from '@bliss/supabase/hooks/useServices'
+import { useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 
 // Map category to icon
@@ -19,6 +20,7 @@ function ServiceCatalog() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const { data: services, isLoading, error } = useServices()
+  const { data: serviceReviewStats } = useAllServiceReviewStats()
 
   const categories = [
     { id: 'all', name: t('services:catalog.all'), icon: List },
@@ -48,13 +50,13 @@ function ServiceCatalog() {
       name: service.name_en || service.name_th,
       price: Number(service.base_price || 0),
       category: service.category,
-      rating: 4.5, // Default rating since we don't have rating field yet
-      reviews: 0, // Default reviews since we don't have reviews field yet
+      rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
+      reviews: serviceReviewStats?.[service.id]?.review_count || 0,
       duration: service.duration || 60,
       slug: service.slug,
       image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
     })) || []
-  }, [services])
+  }, [services, serviceReviewStats])
 
   // Filter and sort services
   const filteredServices = useMemo(() => {
@@ -181,11 +183,15 @@ function ServiceCatalog() {
                 <div className="p-5">
                   <h3 className="font-medium text-lg text-stone-900 mb-2">{service.name}</h3>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm font-medium text-stone-700">{service.rating}</span>
-                    <span className="text-sm text-stone-400">({service.reviews} {t('services:catalog.reviews')})</span>
-                  </div>
+                  {service.reviews > 0 ? (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      <span className="text-sm font-medium text-stone-700">{service.rating.toFixed(1)}</span>
+                      <span className="text-sm text-stone-400">({service.reviews} {t('services:catalog.reviews')})</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-stone-400 mb-3">{t('services:reviews.noReviews')}</p>
+                  )}
 
                   <div className="flex items-center justify-between text-sm text-stone-500 mb-4">
                     <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('services:catalog.min')}</span>

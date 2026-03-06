@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle, Download, FileText } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle, Download, FileText, Users } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
-import { supabase } from '@bliss/supabase'
+import { ReviewModal } from '../components/ReviewModal'
+import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -18,6 +19,7 @@ function BookingDetails() {
   // Modal states
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showRescheduleModal, setShowRescheduleModal] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
 
   // Fetch booking data from Supabase
   const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
@@ -66,6 +68,7 @@ function BookingDetails() {
       },
       createdAt: new Date(bookingData.created_at!).toISOString().split('T')[0],
       image: bookingData.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      providerPreference: (bookingData as any).provider_preference || null,
     }
   }, [bookingData])
 
@@ -477,6 +480,14 @@ function BookingDetails() {
                     <span>•</span>
                     <span>{booking.provider.reviews} {t('details.reviews')}</span>
                   </div>
+                  {isSpecificPreference(booking.providerPreference) && (
+                    <div className="mt-2">
+                      <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(booking.providerPreference)}`}>
+                        <Users className="w-3 h-3" />
+                        {getProviderPreferenceLabel(booking.providerPreference)}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {(booking.status === 'confirmed' || booking.status === 'pending') && (
                   <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
@@ -587,7 +598,10 @@ function BookingDetails() {
                   <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
                     {t('details.bookAgain')}
                   </button>
-                  <button className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition">
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition"
+                  >
                     {t('details.rateReview')}
                   </button>
                 </>
@@ -645,6 +659,21 @@ function BookingDetails() {
           currentDate={booking.date}
           currentTime={booking.time}
           duration={booking.duration}
+        />
+      )}
+
+      {/* Review Modal */}
+      {bookingData && booking.status === 'completed' && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          bookingId={bookingData.id}
+          bookingNumber={bookingData.booking_number}
+          serviceName={booking.serviceName}
+          staffName={booking.provider.name}
+          staffId={bookingData.staff_id || ''}
+          serviceId={bookingData.service_id}
+          customerId={bookingData.customer_id || ''}
         />
       )}
     </div>

@@ -31,7 +31,7 @@ export interface ProcessRefundParams {
   refundOption: RefundOption
   refundPercentage?: number // For partial refunds
   reason: string
-  initiatedBy: string
+  initiatedBy: string | null
 }
 
 export interface ProcessRefundResult {
@@ -223,18 +223,22 @@ export async function processRefund(params: ProcessRefundParams): Promise<Proces
 
     // Calculate refund amount based on option
     let refundAmount: number
+    let calculatedPercentage: number | undefined
 
     if (refundOption === 'none') {
       // No refund - just cancel without refunding
       return { success: true, refundAmount: 0 }
     } else if (refundOption === 'full') {
       refundAmount = Number(transaction.amount)
+      calculatedPercentage = 100
     } else if (refundOption === 'partial' && refundPercentage) {
       refundAmount = Math.round((Number(transaction.amount) * refundPercentage) / 100 * 100) / 100
+      calculatedPercentage = refundPercentage
     } else {
       // Use automatic calculation based on policy
       const calculation = await calculateRefund(bookingId)
       refundAmount = calculation.refundAmount
+      calculatedPercentage = calculation.refundPercentage
     }
 
     if (refundAmount <= 0) {
@@ -248,10 +252,10 @@ export async function processRefund(params: ProcessRefundParams): Promise<Proces
         booking_id: bookingId,
         payment_transaction_id: transaction.id,
         refund_amount: refundAmount,
-        refund_percentage: refundOption === 'full' ? 100 : (refundPercentage || 0),
+        refund_percentage: calculatedPercentage ?? 0,
         status: 'processing' as RefundStatus,
         reason,
-        initiated_by: initiatedBy,
+        initiated_by: initiatedBy || null,
       })
       .select()
       .single()

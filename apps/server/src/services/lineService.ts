@@ -68,7 +68,7 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
   if (!token) return false
 
   try {
-    const response = await fetch(`${API_URL}/push`, {
+    const res: any = await fetch(`${API_URL}/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,8 +77,8 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
       body: JSON.stringify({ to: lineUserId, messages }),
     })
 
-    if (!response.ok) {
-      const error = await response.json()
+    if (!res.ok) {
+      const error = await res.json()
       console.error('LINE push error:', JSON.stringify(error))
       return false
     }
@@ -106,7 +106,7 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
 
     let allSuccess = true
     for (const batch of batches) {
-      const response = await fetch(`${API_URL}/multicast`, {
+      const res: any = await fetch(`${API_URL}/multicast`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,8 +115,8 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
         body: JSON.stringify({ to: batch, messages }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
+      if (!res.ok) {
+        const error = await res.json()
         console.error('LINE multicast error:', JSON.stringify(error))
         allSuccess = false
       }
@@ -345,6 +345,7 @@ interface BookingCancelledStaffData {
   bookingNumber?: string | null
   refundStatus?: string | null
   refundAmount?: number | null
+  cancelledBy?: 'admin' | 'customer'
 }
 
 /**
@@ -373,8 +374,10 @@ async function sendBookingCancelledToStaff(lineUserIds: string[], data: BookingC
     }
   }
 
+  const cancelledByText = data.cancelledBy === 'customer' ? 'ลูกค้า' : 'แอดมิน'
+
   const messageText =
-    `❌ งานถูกยกเลิกโดยแอดมิน\n\n` +
+    `❌ งานถูกยกเลิกโดย${cancelledByText}\n\n` +
     `💆 บริการ: ${data.serviceName}\n` +
     `📅 วันที่: ${data.scheduledDate}\n` +
     `⏰ เวลา: ${data.scheduledTime}\n` +
@@ -390,6 +393,55 @@ async function sendBookingCancelledToStaff(lineUserIds: string[], data: BookingC
     const success = await pushMessage(lineUserId, [message])
     if (!success) {
       console.error(`LINE push failed for staff: ${lineUserId}`)
+      allSuccess = false
+    }
+  }
+  return allSuccess
+}
+
+interface BookingCancelledAdminData {
+  bookingNumber: string
+  customerName: string
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  cancellationReason: string
+  refundAmount?: number | null
+  refundPercentage?: number | null
+}
+
+/**
+ * Send booking cancellation notification to admins via LINE
+ * Called when a customer cancels a booking
+ */
+async function sendBookingCancelledToAdmin(lineUserIds: string[], data: BookingCancelledAdminData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  let refundText = ''
+  if (data.refundAmount && data.refundAmount > 0) {
+    refundText = `\n💰 คืนเงิน: ${data.refundAmount.toLocaleString()} บาท`
+    if (data.refundPercentage) {
+      refundText += ` (${data.refundPercentage}%)`
+    }
+  }
+
+  const messageText =
+    `❌ ลูกค้ายกเลิกการจอง\n\n` +
+    `🔢 เลขที่จอง: ${data.bookingNumber}\n` +
+    `👤 ลูกค้า: ${data.customerName}\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `⏰ เวลา: ${data.scheduledTime}\n` +
+    `\n📋 เหตุผล: ${data.cancellationReason}` +
+    refundText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) {
+      console.error(`LINE push failed for admin: ${lineUserId}`)
       allSuccess = false
     }
   }
@@ -608,10 +660,11 @@ export const lineService = {
   sendJobReAvailableToStaff,
   sendJobCancelledToAdmin,
   sendBookingCancelledToStaff,
+  sendBookingCancelledToAdmin,
   sendBookingRescheduledToStaff,
   sendJobReminderToStaff,
   sendJobEscalationToStaff,
   sendPayoutCompletedToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingCancelledAdminData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData }

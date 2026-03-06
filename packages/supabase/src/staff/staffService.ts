@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../auth/supabaseClient'
-import type { StaffDocument, ServiceArea, StaffSkill, DocumentType } from './types'
+import type { StaffDocument, ServiceArea, StaffSkill, DocumentType, StaffGender, StaffEligibility } from './types'
 
 // ============================================
 // Profile Operations
@@ -46,17 +46,45 @@ export async function updateStaffData(
     address?: string
     bio_th?: string
     bio_en?: string
+    gender?: StaffGender
   }
 ): Promise<void> {
-  // First, get the staff ID from profile ID
+  // First, get the staff ID and current gender from profile ID
   const { data: staffData, error: staffError } = await supabase
     .from('staff')
-    .select('id')
+    .select('id, gender')
     .eq('profile_id', profileId)
     .single()
 
   if (staffError) throw staffError
   if (!staffData) throw new Error('Staff record not found')
+
+  // Validate gender change: block if staff has active jobs with hard gender requirement
+  if (data.gender && staffData.gender && data.gender !== staffData.gender) {
+    const { data: activeJobs } = await supabase
+      .from('jobs')
+      .select('id, booking_id')
+      .eq('staff_id', profileId)
+      .in('status', ['confirmed', 'in_progress'])
+
+    if (activeJobs && activeJobs.length > 0) {
+      const bookingIds = [...new Set(activeJobs.map(j => j.booking_id).filter(Boolean))]
+      if (bookingIds.length > 0) {
+        const { data: bookings } = await supabase
+          .from('bookings')
+          .select('id, provider_preference')
+          .in('id', bookingIds)
+
+        const hasGenderSpecificJob = bookings?.some(
+          b => b.provider_preference === 'female-only' || b.provider_preference === 'male-only'
+        )
+
+        if (hasGenderSpecificJob) {
+          throw new Error('ไม่สามารถเปลี่ยนเพศได้ เนื่องจากมีงานที่ลูกค้าระบุเพศผู้ให้บริการค้างอยู่ กรุณารอให้งานเสร็จสิ้นก่อน')
+        }
+      }
+    }
+  }
 
   // Update staff table
   const { error } = await supabase
@@ -473,16 +501,6 @@ export async function deleteSkill(
 // Eligibility Check
 // ============================================
 
-export interface StaffEligibility {
-  canWork: boolean
-  reasons: string[]
-  status: 'active' | 'inactive' | 'pending'
-  documents: {
-    id_card: { uploaded: boolean; verified: boolean; status?: string }
-    bank_statement: { uploaded: boolean; verified: boolean; status?: string }
-  }
-}
-
 /**
  * Check if staff is eligible to start working
  * Requires: staff.status='active' + id_card verified + bank_statement verified
@@ -491,7 +509,7 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
   // Get staff record
   const { data: staffData, error: staffError } = await supabase
     .from('staff')
-    .select('id, status')
+    .select('id, status, gender')
     .eq('profile_id', profileId)
     .single()
 
@@ -500,6 +518,7 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
       canWork: false,
       reasons: ['ไม่พบข้อมูลพนักงาน'],
       status: 'pending',
+      gender: null,
       documents: {
         id_card: { uploaded: false, verified: false },
         bank_statement: { uploaded: false, verified: false },
@@ -512,6 +531,11 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
   // Check 1: Staff status must be 'active'
   if (staffData.status !== 'active') {
     reasons.push('บัญชียังไม่ได้รับการอนุมัติจากแอดมิน')
+  }
+
+  // Check 2: Gender must be specified
+  if (!staffData.gender) {
+    reasons.push('กรุณาระบุเพศในข้อมูลส่วนตัว')
   }
 
   // Check 2: Get documents
@@ -558,6 +582,7 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
 
   const canWork =
     staffData.status === 'active' &&
+    !!staffData.gender &&
     idCardVerified &&
     bankStatementVerified
 
@@ -565,6 +590,7 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     canWork,
     reasons,
     status: staffData.status as 'active' | 'inactive' | 'pending',
+    gender: (staffData.gender as StaffGender) || null,
     documents: {
       id_card: {
         uploaded: idCardUploaded,

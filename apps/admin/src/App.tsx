@@ -18,6 +18,7 @@ import Bookings from './pages/Bookings'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import Promotions from './pages/Promotions'
+import Reviews from './pages/Reviews'
 import { AdminLoginPage } from './pages/auth'
 
 function App() {
@@ -123,6 +124,7 @@ function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
         <Route path="promotions" element={<Promotions />} />
+        <Route path="reviews" element={<Reviews />} />
         <Route path="*" element={<Dashboard />} />
       </Route>
 

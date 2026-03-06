@@ -2,9 +2,11 @@
  * React Hooks for Job Management
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../auth/hooks'
+import { supabase } from '../auth/supabaseClient'
 import type { Job, JobFilter, StaffStats } from './types'
+import { isJobMatchingStaffGender } from '../utils/providerPreference'
 import {
   getStaffJobs,
   getPendingJobs,
@@ -21,6 +23,7 @@ import {
 interface UseJobsOptions {
   filter?: JobFilter
   realtime?: boolean
+  staffGender?: string | null
   onNewJob?: (job: Job) => void
 }
 
@@ -46,6 +49,9 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
 
   const staffId = user?.id
 
+  // Track job IDs currently being accepted to prevent realtime race condition
+  const acceptingJobIds = useRef(new Set<string>())
+
   const refresh = useCallback(async () => {
     if (!staffId) {
       setIsLoading(false)
@@ -58,7 +64,7 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     try {
       const [staffJobs, available] = await Promise.all([
         getStaffJobs(staffId, options.filter),
-        getPendingJobs(),
+        getPendingJobs(options.staffGender),
       ])
       setJobs(staffJobs)
       setPendingJobs(available)
@@ -68,7 +74,7 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [staffId, options.filter])
+  }, [staffId, options.filter, options.staffGender])
 
   // Initial load - wait for auth to complete first
   useEffect(() => {
@@ -82,6 +88,9 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     if (!staffId || !options.realtime) return
 
     const handleJobUpdate = (job: Job) => {
+      // Skip if this job is currently being accepted via handleAcceptJob
+      if (acceptingJobIds.current.has(job.id)) return
+
       setJobs((prev) => {
         const index = prev.findIndex((j) => j.id === job.id)
         if (index >= 0) {
@@ -93,23 +102,67 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
       })
     }
 
-    const handleNewJob = (job: Job) => {
-      setPendingJobs((prev) => [...prev, job])
+    const handleNewJob = async (job: Job) => {
+      // For realtime jobs, fetch provider_preference and check gender match
+      if (job.booking_id && options.staffGender !== undefined) {
+        try {
+          const { data: booking } = await supabase
+            .from('bookings')
+            .select('provider_preference')
+            .eq('id', job.booking_id)
+            .single()
+          job.provider_preference = booking?.provider_preference || null
+          if (!isJobMatchingStaffGender(job.provider_preference, options.staffGender)) {
+            return // Skip this job - doesn't match staff gender
+          }
+        } catch {
+          // If fetch fails, still show the job
+        }
+      }
+
+      setPendingJobs((prev) => {
+        // Duplicate protection: don't add if already exists
+        if (prev.some((j) => j.id === job.id)) return prev
+        return [...prev, job]
+      })
       if (options.onNewJob) {
         options.onNewJob(job)
       }
     }
 
-    const unsubscribe = subscribeToJobs(staffId, handleJobUpdate, handleNewJob)
+    const handlePendingJobRemoved = (job: Job) => {
+      setPendingJobs((prev) => prev.filter((j) => j.id !== job.id))
+    }
+
+    const unsubscribe = subscribeToJobs(
+      staffId,
+      handleJobUpdate,
+      handleNewJob,
+      handlePendingJobRemoved
+    )
     return unsubscribe
-  }, [staffId, options.realtime, options.onNewJob])
+  }, [staffId, options.realtime, options.onNewJob, options.staffGender])
 
   const handleAcceptJob = useCallback(
     async (jobId: string) => {
       if (!staffId) throw new Error('Not authenticated')
-      const job = await acceptJob(jobId, staffId)
-      setJobs((prev) => [...prev, job])
-      setPendingJobs((prev) => prev.filter((j) => j.id !== jobId))
+      acceptingJobIds.current.add(jobId)
+      try {
+        const job = await acceptJob(jobId, staffId)
+        setJobs((prev) => {
+          const index = prev.findIndex((j) => j.id === job.id)
+          if (index >= 0) {
+            const updated = [...prev]
+            updated[index] = job
+            return updated
+          }
+          return [...prev, job]
+        })
+        setPendingJobs((prev) => prev.filter((j) => j.id !== jobId))
+      } finally {
+        // Remove lock after delay to catch late realtime events
+        setTimeout(() => acceptingJobIds.current.delete(jobId), 3000)
+      }
     },
     [staffId]
   )

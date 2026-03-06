@@ -1,67 +1,57 @@
-# The Bliss Massage at Home
+# The Bliss at Home
 
-> Massage/Spa/Nail services booking platform - Supabase-First Monorepo
-
-## Team & Work Distribution
-
-| Member | Apps | Branches |
-|--------|------|----------|
-| **คนที่ 1** | Admin, Hotel | `feature/admin-*`, `feature/hotel-*` |
-| **คนที่ 2** | Customer, Staff | `feature/customer-*`, `feature-staff-*` |
+> On-demand massage, spa, and nail services booking platform
 
 ## Project Structure
 
 ```
 the-bliss-at-home/
 ├── apps/
-│   ├── admin/        # Admin dashboard (Port 3001)
-│   ├── customer/     # Customer booking app (Port 3002)
-│   ├── hotel/        # Hotel staff portal (Port 3003)
-│   ├── staff/        # Staff LINE LIFF (Port 3004)
-│   └── server/       # Node.js API server (Port 3000)
+│   ├── admin/          # Admin dashboard (port 3001)
+│   ├── customer/       # Customer booking app (port 3002)
+│   ├── hotel/          # Hotel partner portal (port 3003)
+│   ├── staff/          # Staff LINE LIFF app (port 3004)
+│   └── server/         # Express API server (port 3000)
 ├── packages/
-│   ├── supabase/     # Shared Supabase client
-│   ├── ui/           # Shared UI components
-│   ├── types/        # Shared TypeScript types
-│   └── i18n/         # Internationalization
+│   ├── supabase/       # Shared Supabase client, hooks, services
+│   ├── ui/             # Shared UI components
+│   ├── types/          # Shared TypeScript types
+│   └── i18n/           # Internationalization (TH/EN)
 ├── supabase/
-│   ├── migrations/   # Database migrations
-│   └── config.toml   # Supabase config
-└── .specify/
-    └── templates/    # Project documentation
+│   └── migrations/     # Database migrations (219 files)
+├── scripts/            # Utility scripts (seeding, migrations)
+├── docs/               # Project documentation
+│   ├── CHECKLIST.md    # Dev task checklist
+│   └── project-timeline.html  # Sprint dashboard
+├── e2e/                # Playwright E2E tests
+└── .github/workflows/  # CI/CD pipeline
 ```
 
 ## Tech Stack
 
-### Frontend
-- React 18 + TypeScript 5
-- Vite 5
-- TanStack Query 5
-- Zustand
-- React Router 6
-- Tailwind CSS
-
-### Backend
-- Supabase (PostgreSQL + Auth + Storage + Realtime)
-- Node.js 20 + Express 4
-
-### External Integrations
-- Omise (Payment)
-- LINE API (Messaging + LIFF)
-- Google Maps
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript 5, Vite 5 |
+| Styling | Tailwind CSS, shadcn/ui |
+| State | TanStack Query 5, Zustand |
+| Routing | React Router 6 |
+| Backend | Supabase (PostgreSQL, Auth, Storage, Realtime) |
+| API Server | Node.js 20, Express 4 |
+| Payment | Omise |
+| Messaging | LINE API, LINE LIFF |
+| Maps | Google Maps |
+| Testing | Vitest (2,420 unit tests), Playwright (E2E) |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js >= 20.0.0
-- pnpm >= 8.0.0
-- Docker Desktop (for local Supabase)
+- Node.js >= 20
+- pnpm >= 8
 
 ### Installation
 
 ```bash
-# Install dependencies
 pnpm install
 ```
 
@@ -70,23 +60,12 @@ pnpm install
 Copy `.env.example` to `.env.local` for each app:
 
 ```bash
-# Admin
 cp apps/admin/.env.example apps/admin/.env.local
-
-# Customer
 cp apps/customer/.env.example apps/customer/.env.local
-
-# Hotel
 cp apps/hotel/.env.example apps/hotel/.env.local
-
-# Provider
-cp apps/provider/.env.example apps/provider/.env.local
-
-# Server
+cp apps/staff/.env.example apps/staff/.env.local
 cp apps/server/.env.example apps/server/.env
 ```
-
-Fill in your Supabase credentials.
 
 ### Development
 
@@ -95,73 +74,47 @@ Fill in your Supabase credentials.
 pnpm dev
 
 # Start individual apps
-pnpm dev:admin       # Admin dashboard
-pnpm dev:customer    # Customer app
-pnpm dev:hotel       # Hotel app
-pnpm dev:provider    # Provider app
-pnpm dev:server      # API server
+pnpm dev:admin       # port 3001
+pnpm dev:customer    # port 3002
+pnpm dev:hotel       # port 3003
+pnpm dev:staff       # port 3004
+pnpm dev:server      # port 3000
 ```
 
-### Supabase Local Development
+### Testing
 
 ```bash
-# Start local Supabase (requires Docker Desktop)
-supabase start
-
-# Stop local Supabase
-supabase stop
-
-# Reset database
-supabase db reset
-
-# Generate types
-pnpm --filter @bliss/supabase gen:types
+pnpm test            # Run unit tests (watch mode)
+pnpm test:run        # Run once
+pnpm test:coverage   # With coverage report
+pnpm e2e             # Playwright E2E tests
 ```
 
-## Port Assignments
-
-| App | Port |
-|-----|------|
-| Server | 3000 |
-| Admin | 3001 |
-| Customer | 3002 |
-| Hotel | 3003 |
-| Staff | 3004 |
-
-## Available Scripts
+### Other Commands
 
 ```bash
-pnpm dev          # Start all apps
-pnpm build        # Build all apps
-pnpm test         # Run tests
-pnpm lint         # Lint code
-pnpm typecheck    # Check TypeScript
-pnpm clean        # Clean build artifacts
+pnpm build           # Build all apps
+pnpm lint            # Lint code
+pnpm typecheck       # TypeScript check
+pnpm format          # Prettier format
+pnpm clean           # Clean build artifacts
 ```
+
+## Sprint Dashboard
+
+Live at **https://sprint.lightepic.com/**
 
 ## Documentation
 
-- [CONSTITUTION.md](.specify/templates/constitution.md) - Architecture principles
-- [IMPLEMENTATION_PLAN.md](.specify/templates/implementation-plan.md) - 12-week roadmap
-- [TASKS.md](.specify/templates/tasks.md) - Incremental tasks
-- [claude.md](claude.md) - Project orchestrator
+See the [`docs/`](docs/) folder:
 
-## Progress
-
-### Phase 1: Backend Infrastructure & Data Persistence
-
-- [x] Sprint 1.1: Supabase Project Setup
-- [x] Sprint 1.2: Core Data Models (In Progress)
-- [ ] Sprint 1.3: Additional Data Models
-- [ ] Sprint 1.4: Storage & Files
-
-### Phase 2: Authentication & Security
-
-- [ ] Sprint 2.1: Supabase Auth Setup
-- [ ] Sprint 2.2: Auth UI Components
-- [ ] Sprint 2.3: Protected Routes
-- [ ] Sprint 2.4: Role-Based Access
+- [CHECKLIST.md](docs/CHECKLIST.md) — Current task status and remaining work
+- [TECHNICAL_SPECIFICATION.md](docs/TECHNICAL_SPECIFICATION.md) — Architecture details
+- [CODE_PATTERNS.md](docs/CODE_PATTERNS.md) — Code conventions
+- [GOOGLE_MAPS_SETUP.md](docs/GOOGLE_MAPS_SETUP.md) — Google Maps integration
+- [GOOGLE_OAUTH_SETUP.md](docs/GOOGLE_OAUTH_SETUP.md) — Google OAuth setup
+- [PAYMENT_INTEGRATION.md](docs/PAYMENT_INTEGRATION.md) — Omise payment integration
 
 ## License
 
-Copyright © 2026 The Bliss Massage at Home
+Copyright 2026 The Bliss at Home

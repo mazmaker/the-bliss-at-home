@@ -57,6 +57,10 @@
     "premiumQuality": "优质品质",
     "premiumQualityDesc": "奢华产品与服务"
   },
+  "reviews": {
+    "title": "客户评价",
+    "subtitle": "来自真实客户的反馈"
+  },
   "cta": {
     "title": "准备好享受了吗？",
     "subtitle1": "立即预约按摩、水疗或美甲服务",

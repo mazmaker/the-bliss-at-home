@@ -132,6 +132,7 @@ function StaffProfile() {
     address: '',
     bio_th: '',
     bio_en: '',
+    gender: '' as '' | 'male' | 'female',
   })
 
   // Fetch staff data once on mount
@@ -143,7 +144,7 @@ function StaffProfile() {
       try {
         const { data, error } = await (await import('@bliss/supabase/auth')).supabase
           .from('staff')
-          .select('name_th, name_en, phone, id_card, address, bio_th, bio_en')
+          .select('name_th, name_en, phone, id_card, address, bio_th, bio_en, gender')
           .eq('profile_id', user.id)
           .single()
 
@@ -158,6 +159,7 @@ function StaffProfile() {
             address: data.address || '',
             bio_th: data.bio_th || '',
             bio_en: data.bio_en || '',
+            gender: data.gender || '',
           }))
         }
       } catch (err) {
@@ -179,6 +181,7 @@ function StaffProfile() {
         address: profile.address,
         bio_th: profile.bio_th,
         bio_en: profile.bio_en,
+        gender: profile.gender || undefined,
       })
       setSuccess('บันทึกข้อมูลเรียบร้อย')
       setIsEditing(false)
@@ -542,6 +545,25 @@ function StaffProfile() {
             </div>
           )}
 
+          {/* Gender Warning Banner */}
+          {!profile.gender && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-red-800">กรุณาระบุเพศ</p>
+                <p className="text-sm text-red-600 mt-1">
+                  คุณยังไม่ได้ระบุเพศ ซึ่งอาจทำให้พลาดงานที่ลูกค้าระบุความต้องการเพศผู้ให้บริการ
+                </p>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="mt-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition"
+                >
+                  ระบุเพศตอนนี้
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Personal Info */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -594,6 +616,43 @@ function StaffProfile() {
                   />
                 ) : (
                   <p className="text-sm font-medium text-stone-900">{profile.name_en || '-'}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-stone-400" />
+              <div className="flex-1">
+                <p className="text-xs text-stone-500">เพศ *</p>
+                {isEditing ? (
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setProfile({ ...profile, gender: 'female' })}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        profile.gender === 'female'
+                          ? 'bg-pink-50 border-pink-400 text-pink-700'
+                          : 'bg-white border-stone-300 text-stone-600 hover:border-stone-400'
+                      }`}
+                    >
+                      หญิง
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfile({ ...profile, gender: 'male' })}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        profile.gender === 'male'
+                          ? 'bg-blue-50 border-blue-400 text-blue-700'
+                          : 'bg-white border-stone-300 text-stone-600 hover:border-stone-400'
+                      }`}
+                    >
+                      ชาย
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium text-stone-900">
+                    {profile.gender === 'female' ? 'หญิง' : profile.gender === 'male' ? 'ชาย' : <span className="text-red-500">ยังไม่ได้ระบุ</span>}
+                  </p>
                 )}
               </div>
             </div>

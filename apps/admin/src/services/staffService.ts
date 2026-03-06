@@ -122,6 +122,7 @@ export interface Staff {
   phone: string
   id_card?: string
   address?: string
+  gender?: 'male' | 'female' | null
   bank_name?: string
   bank_account?: string
   bank_account_name?: string
@@ -173,6 +174,7 @@ export interface CreateStaffData {
   phone: string
   id_card?: string
   address?: string
+  gender?: 'male' | 'female'
   bio_th?: string
   bio_en?: string
   skills?: string[] // skill IDs
@@ -311,6 +313,7 @@ export const staffService = {
         phone: staffData.phone,
         id_card: staffData.id_card,
         address: staffData.address,
+        gender: staffData.gender || null,
         bio_th: staffData.bio_th,
         bio_en: staffData.bio_en,
         status: 'pending'

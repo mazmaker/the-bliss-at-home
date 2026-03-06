@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "YOUR_SUPABASE_ACCESS_TOKEN",
+        "--project-ref",
+        "YOUR_PROJECT_REF"
+      ]
+    },
+    "context7": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "node",
+        "C:\\Users\\YOUR_USERNAME\\AppData\\Roaming\\nvm\\v25.1.0\\node_modules\\@upstash\\context7-mcp\\dist\\index.js"
+      ]
+    },
+    "shadcn-ui": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "node",
+        "C:\\Users\\YOUR_USERNAME\\AppData\\Roaming\\nvm\\v25.1.0\\node_modules\\@jpisnice\\shadcn-ui-mcp-server\\build\\index.js"
+      ]
+    },
+    "playwright": {
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@executeautomation/playwright-mcp-server@latest"
+      ],
+      "env": {
+        "PLAYWRIGHT_MCP_DATA_DIR": ".playwright-mcp"
+      }
+    }
+  }
+}

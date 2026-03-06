@@ -24,24 +24,52 @@ import {
 } from '../../../hooks/useAnalytics'
 import { quickExportPDF, quickExportExcel } from '../../../lib/exportUtils'
 import BusinessReportGenerator from '../BusinessReportGenerator'
-import BusinessInsightsAnalyzer from '../BusinessInsightsAnalyzer'
 
 interface OverviewSectionProps {
   selectedPeriod: 'daily' | 'weekly' | 'month' | '3_months' | '6_months' | 'year'
 }
 
 // Tooltip Component for better explanations
-const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => (
-  <div className="group relative inline-block">
-    {children}
-    <div className="absolute bottom-full left-0 mb-2 px-4 py-3 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 w-80">
-      <div className="text-left leading-relaxed whitespace-normal">
-        {content}
-      </div>
-      <div className="absolute top-full left-6 border-4 border-transparent border-t-stone-800"></div>
+const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => {
+  const [show, setShow] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setPos({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setShow(true)
+  }
+
+  return (
+    <div
+      ref={triggerRef}
+      className="relative inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          style={{
+            top: pos.top,
+            left: pos.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+        </div>
+      )}
     </div>
-  </div>
-)
+  )
+}
 
 function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
   const [showExportDropdown, setShowExportDropdown] = useState(false)
@@ -176,7 +204,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-10">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
               <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
                 <p className="text-xs font-medium text-stone-600">Export Overview • ส่งออกภาพรวม</p>
               </div>
@@ -226,7 +254,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : `฿${(dashboardStats?.totalRevenue || 0).toLocaleString()}`}
               </div>
-              {dashboardStats?.revenueGrowth && (
+              {dashboardStats?.revenueGrowth != null && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.revenueGrowth >= 0
                     ? 'bg-green-100 text-green-700'
@@ -255,7 +283,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : (dashboardStats?.totalBookings || 0).toLocaleString()}
               </div>
-              {dashboardStats?.bookingsGrowth && (
+              {dashboardStats?.bookingsGrowth != null && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.bookingsGrowth >= 0
                     ? 'bg-green-100 text-green-700'
@@ -284,7 +312,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : (dashboardStats?.newCustomers || 0).toLocaleString()}
               </div>
-              {dashboardStats?.newCustomersGrowth && (
+              {dashboardStats?.newCustomersGrowth != null && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.newCustomersGrowth >= 0
                     ? 'bg-green-100 text-green-700'
@@ -313,7 +341,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                   ? <AlertCircle className="w-8 h-8 text-red-500" />
                   : `฿${(dashboardStats?.avgBookingValue || 0).toLocaleString()}`}
               </div>
-              {dashboardStats?.avgValueGrowth && (
+              {dashboardStats?.avgValueGrowth != null && (
                 <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
                   dashboardStats.avgValueGrowth >= 0
                     ? 'bg-green-100 text-green-700'
@@ -570,46 +598,6 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
         </div>
       </div>
 
-      {/* Additional insights section */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6">
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลเชิงลึกธุรกิจ • Business Insights</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-stone-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <h4 className="font-medium text-stone-900">การเติบโตของธุรกิจ</h4>
-                <p className="text-sm text-stone-600">
-                  {dashboardStats?.revenueGrowth && dashboardStats.revenueGrowth > 0
-                    ? `ธุรกิจเติบโตดีขึ้น ${dashboardStats.revenueGrowth.toFixed(1)}% เมื่อเทียบกับช่วงก่อนหน้า`
-                    : 'ยังไม่มีข้อมูลการเติบโตเพียงพอ'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 border border-stone-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <h4 className="font-medium text-stone-900">ฐานลูกค้า</h4>
-                <p className="text-sm text-stone-600">
-                  {dashboardStats?.newCustomers
-                    ? `มีลูกค้าใหม่ ${dashboardStats.newCustomers} คนในช่วงเวลานี้`
-                    : 'ยังไม่มีข้อมูลลูกค้าใหม่'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Business Insights Analyzer */}
-      <BusinessInsightsAnalyzer selectedPeriod={selectedPeriod} />
     </div>
   )
 }

@@ -10,6 +10,7 @@ import {
   Users,
   Building,
   Calendar,
+  Star,
   BarChart3,
   Settings,
   Menu,
@@ -40,6 +41,7 @@ const navigation = [
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },
   { name: 'การจอง', nameEn: 'Bookings', href: '/admin/bookings', icon: Calendar },
   { name: 'โปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
+  { name: 'รีวิว', nameEn: 'Reviews', href: '/admin/reviews', icon: Star },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { name: 'ตั้งค้า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]

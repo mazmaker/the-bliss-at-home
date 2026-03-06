@@ -74,6 +74,9 @@ export interface Job {
   cancellation_reason: string | null
   cancelled_by: 'STAFF' | 'CUSTOMER' | 'ADMIN' | null
 
+  // Provider preference (from parent booking)
+  provider_preference?: string | null
+
   // Notes
   customer_notes: string | null
   staff_notes: string | null

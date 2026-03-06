@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import {
   Calendar,
   ChevronLeft,
@@ -707,6 +708,16 @@ function StaffSchedule() {
                   </p>
                 </div>
               </div>
+
+              {/* Provider Preference */}
+              {isSpecificPreference(selectedJob.provider_preference) && (
+                <div className="space-y-1">
+                  <h5 className="font-medium text-stone-900 text-sm">ความต้องการผู้ให้บริการ</h5>
+                  <span className={`inline-block text-xs px-2 py-1 rounded-full ${getProviderPreferenceBadgeStyle(selectedJob.provider_preference)}`}>
+                    {getProviderPreferenceLabel(selectedJob.provider_preference)}
+                  </span>
+                </div>
+              )}
 
               {/* Customer Info */}
               <div className="space-y-2">

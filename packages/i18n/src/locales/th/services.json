@@ -46,5 +46,15 @@
     "noDescription": "ยังไม่มีรายละเอียดบริการนี้",
     "questions": "มีคำถาม?",
     "askMore": "สอบถามเพิ่มเติม"
+  },
+  "reviews": {
+    "title": "รีวิวจากลูกค้า",
+    "averageRating": "คะแนนเฉลี่ย",
+    "totalReviews": "{{count}} รีวิว",
+    "noReviews": "ยังไม่มีรีวิว",
+    "showMore": "ดูรีวิวทั้งหมด",
+    "cleanliness": "ความสะอาด",
+    "professionalism": "ความเป็นมืออาชีพ",
+    "skill": "ทักษะ"
   }
 }

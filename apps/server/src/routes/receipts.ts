@@ -532,26 +532,30 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
 export async function sendReceiptEmailForTransaction(transactionId: string): Promise<void> {
   const supabase = getSupabaseClient()
 
-  const { data: transaction } = await supabase
+  const { data: transaction, error: txnError } = await supabase
     .from('transactions')
     .select(`
       *,
-      bookings (
+      bookings!transactions_booking_id_fkey (
         booking_number,
         booking_date,
         booking_time,
         final_price,
         payment_method,
-        services (name_th, name_en),
-        booking_addons (quantity, total_price, addons (name_th, name_en)),
-        customers (id, full_name, phone, profile_id)
+        services!bookings_service_id_fkey (name_th, name_en),
+        booking_addons!booking_addons_booking_id_fkey (
+          quantity,
+          total_price,
+          service_addons!booking_addons_addon_id_fkey (name_th, name_en)
+        ),
+        customers!bookings_customer_id_fkey (id, full_name, phone, profile_id)
       )
     `)
     .eq('id', transactionId)
     .single()
 
-  if (!transaction) {
-    console.warn('[Receipt] Transaction not found:', transactionId)
+  if (txnError || !transaction) {
+    console.warn('[Receipt] Transaction not found:', transactionId, txnError?.message)
     return
   }
 
@@ -575,7 +579,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
 
   const company = await getCompanySettings()
   const addons = (booking?.booking_addons || []).map((ba: any) => ({
-    name: ba.addons?.name_th || ba.addons?.name_en || '',
+    name: ba.service_addons?.name_th || ba.service_addons?.name_en || '',
     price: ba.total_price || 0,
   }))
 
@@ -619,7 +623,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
 export async function sendCreditNoteEmailForRefund(refundTransactionId: string): Promise<void> {
   const supabase = getSupabaseClient()
 
-  const { data: refundTxn } = await supabase
+  const { data: refundTxn, error: refundError } = await supabase
     .from('refund_transactions')
     .select(`
       *,
@@ -629,15 +633,15 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
         final_price,
         cancellation_reason,
         payment_method,
-        services (name_th, name_en),
-        customers (id, full_name, profile_id)
+        services!bookings_service_id_fkey (name_th, name_en),
+        customers!bookings_customer_id_fkey (id, full_name, profile_id)
       )
     `)
     .eq('id', refundTransactionId)
     .single()
 
-  if (!refundTxn) {
-    console.warn('[CreditNote] Refund transaction not found:', refundTransactionId)
+  if (refundError || !refundTxn) {
+    console.warn('[CreditNote] Refund transaction not found:', refundTransactionId, refundError?.message)
     return
   }
 
