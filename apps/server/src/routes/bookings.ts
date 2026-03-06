@@ -790,11 +790,14 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       }
     }
 
-    // Send credit note email if refund was processed (non-blocking)
+    // Send credit note email if refund was processed
+    // Must await to prevent Vercel serverless from terminating before email is sent
     if (refundResult?.refundTransactionId && (refundResult.refundAmount ?? 0) > 0) {
-      sendCreditNoteEmailForRefund(refundResult.refundTransactionId).catch(emailErr => {
+      try {
+        await sendCreditNoteEmailForRefund(refundResult.refundTransactionId)
+      } catch (emailErr) {
         console.error('⚠️ Credit note email failed (non-blocking):', emailErr)
-      })
+      }
     }
 
     // Prepare response

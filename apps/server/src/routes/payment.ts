@@ -136,11 +136,13 @@ router.post('/create-charge', async (req: Request, res: Response) => {
         console.error('⚠️ Notification failed (non-blocking):', notifError)
       }
 
-      // Send receipt email (non-blocking)
+      // Send receipt email - must await to prevent Vercel serverless from terminating early
       if (transaction?.id) {
-        sendReceiptEmailForTransaction(transaction.id).catch(emailErr => {
+        try {
+          await sendReceiptEmailForTransaction(transaction.id)
+        } catch (emailErr) {
           console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
-        })
+        }
       }
     }
 
@@ -223,10 +225,12 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
           console.error('⚠️ Notification failed (non-blocking):', notifError)
         }
 
-        // Send receipt email (non-blocking)
-        sendReceiptEmailForTransaction(transaction.id).catch(emailErr => {
+        // Send receipt email - must await to prevent Vercel serverless from terminating early
+        try {
+          await sendReceiptEmailForTransaction(transaction.id)
+        } catch (emailErr) {
           console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
-        })
+        }
       } else if (charge.failure_code) {
         await getSupabaseClient()
           .from('bookings')
@@ -743,10 +747,12 @@ router.get('/status/:chargeId', async (req: Request, res: Response) => {
           console.error('⚠️ Notification failed (non-blocking):', notifError)
         }
 
-        // Send receipt email (non-blocking)
-        sendReceiptEmailForTransaction(transaction.id).catch(emailErr => {
+        // Send receipt email - must await to prevent Vercel serverless from terminating early
+        try {
+          await sendReceiptEmailForTransaction(transaction.id)
+        } catch (emailErr) {
           console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
-        })
+        }
       }
     }
 
