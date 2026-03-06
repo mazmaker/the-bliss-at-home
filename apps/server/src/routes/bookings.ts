@@ -616,6 +616,8 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       .not('staff_id', 'is', null)
 
     const jobStaffToNotify = assignedJobs?.filter(j => j.staff_id && j.profile) || []
+    // Track notified staff profile IDs to avoid duplicate notifications in Block 2
+    const notifiedStaffProfileIds = new Set(jobStaffToNotify.map(j => j.staff_id).filter(Boolean))
 
     if (jobStaffToNotify.length > 0) {
       // Send LINE to each assigned staff
@@ -674,6 +676,8 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
         if (availableStaff && availableStaff.length > 0) {
           // Get LINE user IDs from profiles
           const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
+            // Exclude staff already notified in Block 1 (assigned staff)
+            .filter(pid => !notifiedStaffProfileIds.has(pid))
           const { data: staffProfiles } = await supabase
             .from('profiles')
             .select('id, line_user_id')

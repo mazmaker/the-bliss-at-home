@@ -18,6 +18,7 @@ import {
   Bell,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAdminAuth } from '../hooks/useAdminAuth'
 import type { Booking } from '../hooks/useBookings'
 
 // ============================================
@@ -109,6 +110,7 @@ export default function BookingCancellationModal({
   onClose,
   onCancelled,
 }: BookingCancellationModalProps) {
+  const { user } = useAdminAuth()
   // Check if booking has been paid
   const isPaid = booking.payment_status === 'paid'
 
@@ -195,6 +197,7 @@ export default function BookingCancellationModal({
         notify_customer: notifyCustomer,
         notify_staff: notifyStaff,
         notify_hotel: notifyHotel,
+        admin_id: user?.id,
       })
 
       if (result.success) {
