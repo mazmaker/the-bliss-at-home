@@ -6,7 +6,7 @@ import { useCustomerTransactions, useTransactionSummary } from '@bliss/supabase/
 import { downloadReceipt, type ReceiptPdfData } from '../utils/receiptPdfGenerator'
 import { getStoredLanguage } from '@bliss/i18n'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
 function TransactionHistory() {
   const [filter, setFilter] = useState<'all' | 'successful' | 'refunded' | 'failed' | 'pending'>('all')

@@ -27,7 +27,7 @@ function StaffSettings() {
   // Fetch reminder settings from server on mount
   useEffect(() => {
     if (!user?.id) return
-    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+    const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
     fetch(`${serverUrl}/api/notifications/reminder-settings?profile_id=${user.id}`)
       .then(res => res.json())
       .then(data => {
@@ -65,7 +65,7 @@ function StaffSettings() {
     setIsSavingReminder(true)
     setReminderError(null)
     try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
       const res = await fetch(`${serverUrl}/api/notifications/reminder-settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

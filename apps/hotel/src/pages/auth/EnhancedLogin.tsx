@@ -360,7 +360,8 @@ export function EnhancedHotelLogin() {
       }
 
       // Use our new change-password API endpoint
-      const response = await fetch('http://localhost:3000/api/hotels/change-password', {
+      const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api')
+      const response = await fetch(`${apiUrl}/hotels/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

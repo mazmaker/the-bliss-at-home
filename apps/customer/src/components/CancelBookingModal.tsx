@@ -103,7 +103,7 @@ export function CancelBookingModal({
 
     try {
       // Fetch cancellation policy
-      const policyRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/cancellation-policy`)
+      const policyRes = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/cancellation-policy`)
       if (policyRes.ok) {
         const policyData = await policyRes.json()
         setPolicy(policyData.data)
@@ -111,7 +111,7 @@ export function CancelBookingModal({
 
       // Check booking eligibility
       const checkRes = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/cancellation-policy/check/${bookingId}`
+        `${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/cancellation-policy/check/${bookingId}`
       )
 
       if (!checkRes.ok) {

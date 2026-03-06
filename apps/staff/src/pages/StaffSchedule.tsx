@@ -66,7 +66,7 @@ function StaffSchedule() {
   const handleConfirmCancel = async (reason: string, notes?: string) => {
     if (!jobToCancel) return
     try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+      const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
       const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

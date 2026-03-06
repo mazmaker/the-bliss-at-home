@@ -50,7 +50,7 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
 
       // Send LINE + in-app notification to staff via server
       try {
-        const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+        const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
         const notifRes = await fetch(`${serverUrl}/api/notifications/payout-completed`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

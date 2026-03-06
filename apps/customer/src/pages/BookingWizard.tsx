@@ -269,7 +269,7 @@ function BookingWizard() {
 
     try {
       // Create PromptPay QR payment source
-      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-source`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/payments/create-source`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ function BookingWizard() {
       const sourceType = isMobile ? `mobile_banking_${bankCode}` : `internet_banking_${bankCode}`
 
       // Create banking source
-      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-source`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/payments/create-source`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -346,7 +346,7 @@ function BookingWizard() {
     // Poll every 3 seconds for payment status
     const pollInterval = setInterval(async () => {
       try {
-        const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/status/${chargeId}`)
+        const result = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/payments/status/${chargeId}`)
         const data = await result.json()
 
         if (data.status === 'successful') {
@@ -391,7 +391,7 @@ function BookingWizard() {
       }
 
       // Call API to create charge with saved card
-      const result = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-charge`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/payments/create-charge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

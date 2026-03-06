@@ -53,7 +53,7 @@ interface CancellationPolicy {
 // API Functions
 // ============================================
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009'
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
 async function getRefundPreview(bookingId: string): Promise<{
   success: boolean

@@ -9,7 +9,7 @@ import { ReviewModal } from '../components/ReviewModal'
 import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
 function BookingDetails() {
   const { t } = useTranslation(['booking', 'common'])
@@ -178,7 +178,7 @@ function BookingDetails() {
     if (!bookingData) throw new Error('Booking data not available')
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bookings/${bookingData.id}/cancel`,
+      `${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/bookings/${bookingData.id}/cancel`,
       {
         method: 'POST',
         headers: {
@@ -209,7 +209,7 @@ function BookingDetails() {
   const handleRescheduleBooking = async (newDate: string, newTime: string) => {
     if (!bookingData) throw new Error('Booking data not available')
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
     const response = await fetch(`${apiUrl}/api/bookings/${bookingData.id}/reschedule`, {
       method: 'POST',

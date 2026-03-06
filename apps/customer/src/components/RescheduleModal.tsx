@@ -92,7 +92,7 @@ export function RescheduleModal({
     try {
       // Check booking eligibility
       const checkRes = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/cancellation-policy/check/${bookingId}`
+        `${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/cancellation-policy/check/${bookingId}`
       )
 
       if (!checkRes.ok) {

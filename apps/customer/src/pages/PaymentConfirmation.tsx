@@ -4,7 +4,7 @@ import { CheckCircle, Download, ArrowRight, Home, Mail, Loader2 } from 'lucide-r
 import { downloadReceipt } from '../utils/receiptPdfGenerator'
 import { getStoredLanguage } from '@bliss/i18n'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
 interface ReceiptData {
   transaction_id: string
