@@ -378,6 +378,47 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
 
     const hasAssignedStaff = staffToNotify.length > 0 || !!previousStaffId
 
+    // 5. Notify admins via LINE + in-app
+    let adminsNotified = 0
+    try {
+      const { data: adminProfiles } = await supabase
+        .from('profiles')
+        .select('id, line_user_id')
+        .eq('role', 'ADMIN')
+
+      if (adminProfiles && adminProfiles.length > 0) {
+        const serviceName = (booking.service as any)?.name_th || 'Unknown Service'
+
+        // Admin in-app notifications
+        const adminNotifRows = adminProfiles.map(admin => ({
+          user_id: admin.id,
+          type: 'booking_rescheduled',
+          title: 'การจองถูกเลื่อน',
+          message: `การจอง ${booking.booking_number} บริการ "${serviceName}" เลื่อนจาก ${oldDate} ${oldTime} เป็น ${body.new_date} ${body.new_time}`,
+          data: {
+            booking_id: id,
+            booking_number: booking.booking_number,
+            old_date: oldDate,
+            old_time: oldTime,
+            new_date: body.new_date,
+            new_time: body.new_time,
+          },
+          is_read: false,
+        }))
+
+        const { error: adminNotifError } = await supabase
+          .from('notifications')
+          .insert(adminNotifRows)
+
+        if (!adminNotifError) {
+          adminsNotified = adminProfiles.length
+          console.log(`[Reschedule] Admin notifications sent to ${adminsNotified} admin(s)`)
+        }
+      }
+    } catch (adminNotifError) {
+      console.error('[Reschedule] Admin notification error (non-blocking):', adminNotifError)
+    }
+
     return res.json({
       success: true,
       data: {
@@ -388,7 +429,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
         new_time: body.new_time,
         staff_unassigned: hasAssignedStaff,
         jobs_reset: updatedJobIds.length,
-        notifications_sent: notificationResults,
+        notifications_sent: { ...notificationResults, admins: adminsNotified },
       },
       message: hasAssignedStaff
         ? 'Booking rescheduled. Staff has been notified and needs to re-accept.'

@@ -9,6 +9,7 @@ dotenv.config()
 import { Router, Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { staffAssignmentService } from '../services/staffAssignmentService'
+import { sendBookingConfirmedNotifications } from '../services/notificationService.js'
 
 // Extend Request interface to include user property
 interface AuthenticatedRequest extends Request {
@@ -250,11 +251,24 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       jobs.forEach((j: any) => console.log(`   🎯 Job ${j.job_index}/${j.total_jobs}: ${j.id}`))
     }
 
+    // Send notifications to available staff + admins (same as customer booking flow)
+    let notificationResult = { staffNotified: 0, adminsNotified: 0 }
+    if (jobs && jobs.length > 0) {
+      try {
+        const jobIds = jobs.map((j: any) => j.id)
+        notificationResult = await sendBookingConfirmedNotifications(booking.id, jobIds)
+        console.log(`📱 [NOTIFICATIONS] Hotel booking notifications sent: staff=${notificationResult.staffNotified}, admins=${notificationResult.adminsNotified}`)
+      } catch (notifError: any) {
+        console.error('⚠️ [NOTIFICATIONS] Failed (non-blocking):', notifError.message)
+      }
+    }
+
     res.status(201).json({
       success: true,
       data: booking,
       message: 'Booking created successfully - waiting for staff to accept',
       jobs: jobs || [],
+      notifications: notificationResult,
       staffAssignment: {
         success: false,
         message: 'Manual staff acceptance required - booking is pending',

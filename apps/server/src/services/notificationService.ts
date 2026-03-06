@@ -301,6 +301,12 @@ export async function sendBookingConfirmedNotifications(
     if (customer) {
       customerName = customer.full_name || 'ลูกค้า'
     }
+  } else if (booking.is_hotel_booking && booking.customer_notes) {
+    // Hotel bookings store guest name in customer_notes: "Guest: name, Phone: xxx"
+    const guestMatch = booking.customer_notes.match(/Guest:\s*([^,]+)/)
+    if (guestMatch) {
+      customerName = guestMatch[1].trim()
+    }
   }
 
   // Get hotel name
@@ -308,11 +314,11 @@ export async function sendBookingConfirmedNotifications(
   if (booking.hotel_id) {
     const { data: hotel } = await supabase
       .from('hotels')
-      .select('name')
+      .select('name_th, name_en')
       .eq('id', booking.hotel_id)
       .single()
 
-    if (hotel) hotelName = hotel.name
+    if (hotel) hotelName = hotel.name_th || hotel.name_en
   }
 
   const serviceName = booking.service?.name_th || 'บริการ'
@@ -824,6 +830,39 @@ export async function processJobCancelled(
     } else {
       result.adminsNotified = adminProfiles.length
       console.log(`🔔 Cancellation notification sent to ${adminProfiles.length} admins`)
+    }
+  }
+
+  // 8. Notify hotel users if this is a hotel booking
+  if (job.hotel_id) {
+    try {
+      const { data: hotelProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('hotel_id', job.hotel_id)
+        .eq('role', 'HOTEL')
+
+      if (hotelProfiles && hotelProfiles.length > 0) {
+        const hotelNotifRows = hotelProfiles.map(profile => ({
+          user_id: profile.id,
+          type: 'staff_cancelled',
+          title: 'พนักงานยกเลิกงาน',
+          message: `พนักงาน ${staffName} ยกเลิกงาน "${job.service_name}" วันที่ ${job.scheduled_date} เวลา ${job.scheduled_time} เหตุผล: ${reason} ระบบกำลังหาพนักงานใหม่`,
+          data: {
+            booking_id: job.booking_id,
+            job_id: jobId,
+            new_job_id: newJob.id,
+            staff_name: staffName,
+            reason,
+          },
+          is_read: false,
+        }))
+
+        await supabase.from('notifications').insert(hotelNotifRows)
+        console.log(`[Hotel] Staff cancellation notification sent to ${hotelProfiles.length} hotel user(s)`)
+      }
+    } catch (hotelNotifError) {
+      console.error('[Hotel] Notification error (non-blocking):', hotelNotifError)
     }
   }
 

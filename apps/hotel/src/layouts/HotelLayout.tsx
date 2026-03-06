@@ -12,16 +12,36 @@ import {
   X,
   AlertTriangle,
   Loader2,
+  Bell,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useHotelContext } from '../hooks/useHotelContext'
 import { useAuth } from '@bliss/supabase/auth'
+import { supabase } from '@bliss/supabase/auth'
+import { useQuery } from '@tanstack/react-query'
 
 function HotelLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
   const { hotelId, hotelSlug, hotelData, isValidHotel, isLoading, getHotelName, getHotelNameEn, getHotelSlug } = useHotelContext()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+
+  // Unread notification count
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['hotel-unread-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+      if (error) return 0
+      return count || 0
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  })
 
   const handleLogout = async () => {
     try {
@@ -71,6 +91,7 @@ function HotelLayout() {
     { name: 'ภาพรวม', nameEn: 'Dashboard', href: `/hotel/${currentSlug}`, icon: LayoutDashboard },
     { name: 'บริการ', nameEn: 'Services', href: `/hotel/${currentSlug}/services`, icon: Calendar },
     { name: 'ประวัติการจอง', nameEn: 'Booking History', href: `/hotel/${currentSlug}/history`, icon: FileText },
+    { name: 'การแจ้งเตือน', nameEn: 'Notifications', href: `/hotel/${currentSlug}/notifications`, icon: Bell },
     { name: 'บิลรายเดือน', nameEn: 'Monthly Bill', href: `/hotel/${currentSlug}/bill`, icon: CreditCard },
     { name: 'ข้อมูลโรงแรม', nameEn: 'Hotel Profile', href: `/hotel/${currentSlug}/profile`, icon: Building },
     { name: 'ตั้งค่า', nameEn: 'Settings', href: `/hotel/${currentSlug}/settings`, icon: Settings },
@@ -115,6 +136,7 @@ function HotelLayout() {
             {navigation.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.href
+              const isNotifications = item.icon === Bell
               return (
                 <Link
                   key={item.name}
@@ -126,8 +148,15 @@ function HotelLayout() {
                       : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <div>
+                  <div className="relative">
+                    <Icon className="w-5 h-5" />
+                    {isNotifications && unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1">
                     <p className="font-medium text-sm">{item.name}</p>
                     <p className="text-xs opacity-70">{item.nameEn}</p>
                   </div>
@@ -171,6 +200,17 @@ function HotelLayout() {
             </button>
             <div className="flex-1" />
             <div className="flex items-center gap-4">
+              <Link
+                to={`/hotel/${currentSlug}/notifications`}
+                className="relative p-2 text-stone-600 hover:bg-stone-100 rounded-lg transition"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-stone-900">{getHotelName()}</p>
                 <p className="text-xs text-stone-500">{getHotelNameEn()}</p>

@@ -3,8 +3,10 @@ import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
   Filter, MapPin, Clock, User, CheckCircle, XCircle, List, Grid3X3, X,
   Phone, FileText, Edit, Image, History, RotateCcw, Save,
-  Briefcase, DollarSign, CreditCard, Check, ArrowRight
+  Briefcase, DollarSign, CreditCard, Check, ArrowRight, CalendarClock
 } from 'lucide-react'
+import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
+import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
@@ -165,8 +167,12 @@ function BookingHistory() {
   const [dateTo, setDateTo] = useState('')
   const [hasSelectedDate, setHasSelectedDate] = useState(false) // Track if user has actually selected a date
 
-  // Cancel state
+  // Cancel/Reschedule states
   const [cancelModal, setCancelModal] = useState<{ isOpen: boolean; booking: SimpleBooking | null }>({
+    isOpen: false,
+    booking: null
+  })
+  const [rescheduleModal, setRescheduleModal] = useState<{ isOpen: boolean; booking: SimpleBooking | null }>({
     isOpen: false,
     booking: null
   })
@@ -196,23 +202,9 @@ function BookingHistory() {
 
   const { hotelId, isValidHotel, isLoading: hotelLoading } = useHotelContext()
 
-  // Cancel/Reschedule functions
-  const handleCancelBooking = async (bookingId: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: 'cancelled' })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      // Refresh data
-      refetch()
-      setCancelModal({ isOpen: false, booking: null })
-    } catch (error) {
-      console.error('Error cancelling booking:', error)
-      alert('เกิดข้อผิดพลาดในการยกเลิกการจอง')
-    }
+  // Cancel/Reschedule success handler
+  const handleCancelRescheduleSuccess = () => {
+    refetch()
   }
 
 
@@ -1393,6 +1385,13 @@ function BookingHistory() {
                   {(selectedBooking.status === 'pending' || selectedBooking.status === 'confirmed') && (
                     <>
                       <button
+                        onClick={() => setRescheduleModal({ isOpen: true, booking: selectedBooking })}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition text-sm"
+                      >
+                        <CalendarClock className="w-4 h-4" />
+                        เลื่อนนัด
+                      </button>
+                      <button
                         onClick={() => setCancelModal({ isOpen: true, booking: selectedBooking })}
                         className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition text-sm"
                       >
@@ -1419,53 +1418,35 @@ function BookingHistory() {
       )}
 
       {/* Cancel Modal */}
-      {cancelModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <X className="w-5 h-5 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-stone-900">ยกเลิกการจอง</h3>
-            </div>
+      {cancelModal.booking && (
+        <HotelCancelBookingModal
+          isOpen={cancelModal.isOpen}
+          onClose={() => setCancelModal({ isOpen: false, booking: null })}
+          onSuccess={handleCancelRescheduleSuccess}
+          bookingId={cancelModal.booking.id}
+          bookingNumber={cancelModal.booking.booking_number}
+          guestName={cancelModal.booking.guest_name}
+          serviceName={cancelModal.booking.service_name || ''}
+          roomNumber={cancelModal.booking.room_number}
+          bookingDate={cancelModal.booking.booking_date}
+          bookingTime={cancelModal.booking.booking_time}
+        />
+      )}
 
-            <div className="mb-6">
-              <p className="text-stone-600 mb-2">คุณต้องการยกเลิกการจองนี้หรือไม่?</p>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium text-stone-900">{cancelModal.booking?.guest_name}</p>
-                <p className="text-sm text-stone-600">{cancelModal.booking?.service_name}</p>
-                <p className="text-sm text-stone-600">ห้อง {cancelModal.booking?.room_number}</p>
-                <p className="text-sm text-stone-600">
-                  {cancelModal.booking && new Date(cancelModal.booking.booking_date).toLocaleDateString('th-TH')}
-                  {' '}
-                  {cancelModal.booking && new Date(cancelModal.booking.booking_time).toLocaleTimeString('th-TH', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setCancelModal({ isOpen: false, booking: null })}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={() => {
-                  if (cancelModal.booking) {
-                    handleCancelBooking(cancelModal.booking.id)
-                  }
-                }}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-              >
-                ยืนยันการยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Reschedule Modal */}
+      {rescheduleModal.booking && (
+        <HotelRescheduleModal
+          isOpen={rescheduleModal.isOpen}
+          onClose={() => setRescheduleModal({ isOpen: false, booking: null })}
+          onSuccess={handleCancelRescheduleSuccess}
+          bookingId={rescheduleModal.booking.id}
+          bookingNumber={rescheduleModal.booking.booking_number}
+          guestName={rescheduleModal.booking.guest_name}
+          serviceName={rescheduleModal.booking.service_name || ''}
+          roomNumber={rescheduleModal.booking.room_number}
+          currentDate={rescheduleModal.booking.booking_date}
+          currentTime={rescheduleModal.booking.booking_time}
+        />
       )}
 
 

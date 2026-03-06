@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Clock, DollarSign, TrendingUp, Users, CheckCircle, AlertCircle, Loader2, RefreshCw, BarChart3, ShoppingBag, TrendingDown, Star, Sparkles, Hand, Flower, X, Edit3, CalendarClock } from 'lucide-react'
+import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
+import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
@@ -40,9 +42,11 @@ interface DashboardStats {
 
 interface RecentBooking {
   id: string
+  booking_number: string
   guest_name: string
   room_number: string
   service_name: string
+  booking_date: string
   scheduled_time: string
   staff_name: string | null
   status: string
@@ -284,7 +288,9 @@ const fetchRecentBookings = async (hotelId: string): Promise<RecentBooking[]> =>
     .from('bookings')
     .select(`
       id,
+      booking_number,
       hotel_room_number,
+      booking_date,
       booking_time,
       status,
       final_price,
@@ -309,9 +315,11 @@ const fetchRecentBookings = async (hotelId: string): Promise<RecentBooking[]> =>
 
     return {
       id: booking.id,
+      booking_number: booking.booking_number || '',
       guest_name: guestName,
       room_number: booking.hotel_room_number || 'ไม่ระบุห้อง',
       service_name: booking.services?.name_th || 'ไม่ระบุบริการ',
+      booking_date: booking.booking_date || '',
       scheduled_time: booking.booking_time,
       staff_name: booking.staff?.name_th || null,
       status: booking.status,
@@ -336,42 +344,10 @@ function Dashboard() {
     booking: null
   })
 
-  // Cancel/Reschedule functions
-  const handleCancelBooking = async (bookingId: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: 'cancelled' })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      // Refresh data
-      window.location.reload()
-    } catch (error) {
-      console.error('Error cancelling booking:', error)
-      alert('เกิดข้อผิดพลาดในการยกเลิกการจอง')
-    }
-  }
-
-  const handleRescheduleBooking = async (bookingId: string, newDateTime: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({
-          booking_time: newDateTime,
-          booking_date: newDateTime.split('T')[0]
-        })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      // Refresh data
-      window.location.reload()
-    } catch (error) {
-      console.error('Error rescheduling booking:', error)
-      alert('เกิดข้อผิดพลาดในการเปลี่ยนเวลาการจอง')
-    }
+  // Cancel/Reschedule success handler
+  const handleCancelRescheduleSuccess = () => {
+    refetchBookings()
+    refetchStats()
   }
 
   // Fetch dashboard stats
@@ -1060,99 +1036,35 @@ function Dashboard() {
       </div>
 
       {/* Cancel Modal */}
-      {cancelModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <X className="w-5 h-5 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-stone-900">ยืนยันการยกเลิก</h3>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-stone-600 mb-2">คุณต้องการยกเลิกการจองนี้หรือไม่?</p>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium text-stone-900">{cancelModal.booking?.guest_name}</p>
-                <p className="text-sm text-stone-600">{cancelModal.booking?.service_name}</p>
-                <p className="text-sm text-stone-600">ห้อง {cancelModal.booking?.room_number}</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setCancelModal({ isOpen: false, booking: null })}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={() => {
-                  if (cancelModal.booking) {
-                    handleCancelBooking(cancelModal.booking.id)
-                    setCancelModal({ isOpen: false, booking: null })
-                  }
-                }}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-              >
-                ยืนยันการยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>
+      {cancelModal.booking && (
+        <HotelCancelBookingModal
+          isOpen={cancelModal.isOpen}
+          onClose={() => setCancelModal({ isOpen: false, booking: null })}
+          onSuccess={handleCancelRescheduleSuccess}
+          bookingId={cancelModal.booking.id}
+          bookingNumber={cancelModal.booking.booking_number || ''}
+          guestName={cancelModal.booking.guest_name}
+          serviceName={cancelModal.booking.service_name}
+          roomNumber={cancelModal.booking.room_number}
+          bookingDate={cancelModal.booking.booking_date || ''}
+          bookingTime={cancelModal.booking.scheduled_time || ''}
+        />
       )}
 
       {/* Reschedule Modal */}
-      {rescheduleModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-100 rounded-full">
-                <CalendarClock className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-stone-900">เปลี่ยนเวลาการจอง</h3>
-            </div>
-
-            <div className="mb-6">
-              <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                <p className="font-medium text-stone-900">{rescheduleModal.booking?.guest_name}</p>
-                <p className="text-sm text-stone-600">{rescheduleModal.booking?.service_name}</p>
-                <p className="text-sm text-stone-600">ห้อง {rescheduleModal.booking?.room_number}</p>
-              </div>
-
-              <label className="block text-sm font-medium text-stone-700 mb-2">
-                เวลาใหม่
-              </label>
-              <input
-                type="datetime-local"
-                id="newDateTime"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                defaultValue={rescheduleModal.booking?.scheduled_time ? new Date(rescheduleModal.booking.scheduled_time).toISOString().slice(0, 16) : ''}
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setRescheduleModal({ isOpen: false, booking: null })}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={() => {
-                  const newDateTime = (document.getElementById('newDateTime') as HTMLInputElement)?.value
-                  if (rescheduleModal.booking && newDateTime) {
-                    handleRescheduleBooking(rescheduleModal.booking.id, newDateTime)
-                    setRescheduleModal({ isOpen: false, booking: null })
-                  }
-                }}
-                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-              >
-                ยืนยันการเปลี่ยน
-              </button>
-            </div>
-          </div>
-        </div>
+      {rescheduleModal.booking && (
+        <HotelRescheduleModal
+          isOpen={rescheduleModal.isOpen}
+          onClose={() => setRescheduleModal({ isOpen: false, booking: null })}
+          onSuccess={handleCancelRescheduleSuccess}
+          bookingId={rescheduleModal.booking.id}
+          bookingNumber={rescheduleModal.booking.booking_number || ''}
+          guestName={rescheduleModal.booking.guest_name}
+          serviceName={rescheduleModal.booking.service_name}
+          roomNumber={rescheduleModal.booking.room_number}
+          currentDate={rescheduleModal.booking.booking_date || ''}
+          currentTime={rescheduleModal.booking.scheduled_time || ''}
+        />
       )}
     </div>
   )

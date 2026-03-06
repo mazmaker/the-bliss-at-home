@@ -10,6 +10,7 @@ import BookingHistory from './pages/BookingHistory'
 import MonthlyBill from './pages/MonthlyBill'
 import HotelProfile from './pages/HotelProfile'
 import HotelSettings from './pages/HotelSettings'
+import HotelNotifications from './pages/HotelNotifications'
 import { EnhancedHotelLogin } from './pages/auth'
 import DynamicHotelRedirect from './components/DynamicHotelRedirect'
 
@@ -64,6 +65,7 @@ function App() {
           <Route path="history" element={<BookingHistory />} />
           <Route path="bill" element={<MonthlyBill />} />
           <Route path="profile" element={<HotelProfile />} />
+          <Route path="notifications" element={<HotelNotifications />} />
           <Route path="settings" element={<HotelSettings />} />
         </Route>
 

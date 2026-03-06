@@ -101,6 +101,104 @@ router.post('/job-cancelled', async (req: Request, res: Response) => {
 })
 
 /**
+ * POST /api/notifications/job-accepted
+ * Notify hotel when staff accepts a job from hotel booking
+ */
+router.post('/job-accepted', async (req: Request, res: Response) => {
+  try {
+    const { job_id } = req.body
+
+    if (!job_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: job_id',
+      })
+    }
+
+    const supabase = getSupabaseClient()
+
+    // Get job details
+    const { data: job, error: jobError } = await supabase
+      .from('jobs')
+      .select('id, booking_id, hotel_id, service_name, scheduled_date, scheduled_time, staff_id')
+      .eq('id', job_id)
+      .single()
+
+    if (jobError || !job) {
+      return res.status(404).json({ success: false, error: 'Job not found' })
+    }
+
+    // Only notify for hotel bookings
+    if (!job.hotel_id) {
+      return res.json({ success: true, message: 'Not a hotel booking, no hotel notification needed' })
+    }
+
+    // Get staff name
+    let staffName = 'พนักงาน'
+    if (job.staff_id) {
+      const { data: staffProfile } = await supabase
+        .from('staff')
+        .select('name_th')
+        .eq('profile_id', job.staff_id)
+        .single()
+      if (staffProfile) staffName = staffProfile.name_th || 'พนักงาน'
+    }
+
+    // Find hotel user profiles
+    const { data: hotelProfiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('hotel_id', job.hotel_id)
+      .eq('role', 'HOTEL')
+
+    if (!hotelProfiles || hotelProfiles.length === 0) {
+      return res.json({ success: true, message: 'No hotel profiles found' })
+    }
+
+    // Get booking number
+    let bookingNumber = ''
+    if (job.booking_id) {
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('booking_number')
+        .eq('id', job.booking_id)
+        .single()
+      bookingNumber = booking?.booking_number || ''
+    }
+
+    // Create hotel notifications
+    const notifRows = hotelProfiles.map(profile => ({
+      user_id: profile.id,
+      type: 'staff_assigned',
+      title: 'พนักงานรับงานแล้ว',
+      message: `${staffName} รับงาน "${job.service_name}" วันที่ ${job.scheduled_date} เวลา ${job.scheduled_time}`,
+      data: {
+        booking_id: job.booking_id,
+        booking_number: bookingNumber,
+        job_id: job.id,
+        staff_name: staffName,
+      },
+      is_read: false,
+    }))
+
+    await supabase.from('notifications').insert(notifRows)
+
+    console.log(`[Job Accepted] Hotel notification sent to ${hotelProfiles.length} hotel user(s)`)
+
+    return res.json({
+      success: true,
+      hotel_users_notified: hotelProfiles.length,
+    })
+  } catch (error: any) {
+    console.error('Job accepted notification error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to send job accepted notification',
+    })
+  }
+})
+
+/**
  * POST /api/notifications/booking-cancelled
  * Cancel a booking and notify assigned staff via LINE + in-app
  * Called when Admin cancels a booking

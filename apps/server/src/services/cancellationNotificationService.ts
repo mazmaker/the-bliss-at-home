@@ -528,18 +528,49 @@ async function sendHotelEmail(booking: BookingForNotification): Promise<void> {
 async function createHotelInAppNotification(
   booking: BookingForNotification
 ): Promise<void> {
+  if (!booking.hotel_id) {
+    console.log('[In-App] No hotel_id, skipping hotel in-app notification')
+    return
+  }
+
   console.log('[In-App] Creating notification for hotel:', {
     hotel_id: booking.hotel_id,
   })
 
-  // TODO: Create in-app notification
-  // await notificationService.create({
-  //   user_id: booking.hotel_id,
-  //   type: 'booking_cancelled',
-  //   title: 'Booking Cancelled',
-  //   message: `Booking #${booking.booking_number} has been cancelled`,
-  //   data: { booking_id: booking.id },
-  // })
+  // Find hotel user profiles (profiles with hotel_id matching this hotel)
+  const { data: hotelProfiles } = await getSupabaseClient()
+    .from('profiles')
+    .select('id')
+    .eq('hotel_id', booking.hotel_id)
+    .eq('role', 'HOTEL')
+
+  if (!hotelProfiles || hotelProfiles.length === 0) {
+    console.log('[In-App] No hotel user profiles found for hotel:', booking.hotel_id)
+    return
+  }
+
+  const notificationRows = hotelProfiles.map(profile => ({
+    user_id: profile.id,
+    type: 'booking_cancelled',
+    title: 'การจองถูกยกเลิก',
+    message: `การจอง ${booking.booking_number} บริการ "${booking.service_name}" วันที่ ${formatDate(booking.scheduled_date)} เวลา ${booking.scheduled_time} ถูกยกเลิก เหตุผล: ${booking.cancellation_reason || 'ไม่ระบุ'}`,
+    data: {
+      booking_id: booking.id,
+      booking_number: booking.booking_number,
+      service_name: booking.service_name,
+    },
+    is_read: false,
+  }))
+
+  const { error } = await getSupabaseClient()
+    .from('notifications')
+    .insert(notificationRows)
+
+  if (error) {
+    console.error('[In-App] Failed to create hotel notification:', error)
+  } else {
+    console.log(`[In-App] Hotel cancellation notification sent to ${hotelProfiles.length} hotel user(s)`)
+  }
 }
 
 // ============================================

@@ -54,6 +54,15 @@ function StaffDashboard() {
       if (isSoundEnabled()) {
         NotificationSounds.jobAccepted()
       }
+      // Notify hotel if this is a hotel booking (non-blocking)
+      try {
+        const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+        fetch(`${serverUrl}/api/notifications/job-accepted`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: jobId }),
+        }).catch(() => {})
+      } catch {}
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถรับงานได้')
     } finally {
