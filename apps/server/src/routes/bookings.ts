@@ -538,7 +538,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
           refundOption: body.refund_option,
           refundPercentage: body.refund_percentage,
           reason: body.reason,
-          initiatedBy: body.admin_id || '',
+          initiatedBy: body.admin_id || null,
         })
 
         if (!refundResult.success) {
