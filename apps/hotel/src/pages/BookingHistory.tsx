@@ -1,4 +1,4 @@
-// Hotel booking history - status is view-only (auto-updated by booking flow)
+// Hotel booking history - read-only status (auto-updated by booking flow)
 import { useState, useMemo } from 'react'
 import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
