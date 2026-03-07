@@ -157,6 +157,9 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
         address,
         reschedule_count,
         provider_preference,
+        service_format,
+        recipient_count,
+        hotel_room_number,
         staff:staff(
           id,
           profile_id,
@@ -444,9 +447,48 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
 
         const staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
         if (staffLineIds.length > 0) {
-          const singleAmount = Number(booking.final_price) || 0
-          const singleRate = Number((booking.service as any)?.staff_commission_rate) || 0
-          const staffEarnings = Math.round(singleAmount * singleRate)
+          const recipientCount = (booking as any).recipient_count || 1
+          const isCouple = recipientCount > 1
+
+          // For couple bookings, fetch booking_services for per-job details
+          let coupleServices: Array<{
+            recipientIndex: number
+            recipientName: string | null
+            serviceName: string
+            durationMinutes: number
+            staffEarnings: number
+          }> = []
+          let totalStaffEarnings = 0
+
+          if (isCouple) {
+            const { data: bookingServices } = await supabase
+              .from('booking_services')
+              .select('recipient_index, recipient_name, duration, price, service:services(name_th, staff_commission_rate)')
+              .eq('booking_id', id)
+              .order('recipient_index', { ascending: true })
+
+            if (bookingServices && bookingServices.length > 0) {
+              coupleServices = bookingServices.map(bs => {
+                const price = Number(bs.price) || 0
+                const rate = Number((bs.service as any)?.staff_commission_rate || (booking.service as any)?.staff_commission_rate) || 0
+                const earnings = Math.round(price * rate)
+                totalStaffEarnings += earnings
+                return {
+                  recipientIndex: bs.recipient_index || 0,
+                  recipientName: bs.recipient_name,
+                  serviceName: (bs.service as any)?.name_th || serviceName,
+                  durationMinutes: bs.duration || booking.duration || 60,
+                  staffEarnings: earnings,
+                }
+              })
+            }
+          }
+
+          if (!isCouple) {
+            const singleAmount = Number(booking.final_price) || 0
+            const singleRate = Number((booking.service as any)?.staff_commission_rate) || 0
+            totalStaffEarnings = Math.round(singleAmount * singleRate)
+          }
 
           await lineService.sendNewJobToStaff(staffLineIds, {
             serviceName,
@@ -454,11 +496,15 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
             scheduledTime: body.new_time,
             address: booking.address || '',
             hotelName: hotelName || undefined,
-            staffEarnings,
+            roomNumber: (booking as any).hotel_room_number || undefined,
+            staffEarnings: totalStaffEarnings,
             durationMinutes: booking.duration || 60,
             jobIds: updatedJobIds,
+            isCouple,
+            totalRecipients: recipientCount,
+            coupleServices,
           })
-          console.log(`[Reschedule] LINE new_job sent to ${staffLineIds.length} staff`)
+          console.log(`[Reschedule] LINE new_job sent to ${staffLineIds.length} staff (couple=${isCouple})`)
         }
       }
     } catch (newJobError) {
