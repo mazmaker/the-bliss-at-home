@@ -777,41 +777,41 @@ function BookingHistory() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full table-fixed">
                 <thead className="bg-stone-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[15%]">
                       เลขที่จอง & วันที่
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[14%]">
                       แขก
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[16%]">
                       บริการ
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[10%]">
                       ความต้องการ
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[10%]">
                       ยอดเงิน
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[12%]">
                       สถานะ
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[12%]">
                       การชำระ
                     </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase tracking-wider">
-                      รายละเอียด
+                    <th className="px-3 py-3 text-center text-xs font-medium text-stone-500 uppercase tracking-wider w-[6%]">
+                      ดู
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-stone-200">
                   {filteredBookings.map((booking) => (
                     <tr key={booking.id} className="hover:bg-stone-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm">
-                          <div className="font-medium text-stone-900">
+                      <td className="px-3 py-3">
+                        <div className="text-sm truncate">
+                          <div className="font-medium text-stone-900 truncate">
                             #{booking.booking_number}
                           </div>
                           <div className="text-stone-500">
@@ -825,18 +825,18 @@ function BookingHistory() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         <div className="text-sm">
-                          <div className="font-medium text-stone-900">{booking.guest_name}</div>
+                          <div className="font-medium text-stone-900 truncate">{booking.guest_name}</div>
                           <div className="text-stone-500">ห้อง {booking.room_number}</div>
                           {booking.staff_name && (
-                            <div className="text-xs text-stone-400">เจ้าหน้าที่: {booking.staff_name}</div>
+                            <div className="text-xs text-stone-400 truncate">เจ้าหน้าที่: {booking.staff_name}</div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3">
                         <div className="text-sm text-stone-900">
-                          <div className="font-medium">
+                          <div className="font-medium truncate">
                             {booking.service_name || 'ไม่ระบุบริการ'}
                             {booking.recipient_count > 1 && (
                               <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">
@@ -847,21 +847,21 @@ function BookingHistory() {
                           <div className="text-xs text-stone-500">ระยะเวลา: {booking.duration} นาที</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         <span className={`text-xs px-2 py-1 rounded-full ${getProviderPreferenceBadgeStyle(booking.provider_preference)}`}>
                           {getProviderPreferenceLabel(booking.provider_preference)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-lg font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
+                      <td className="px-3 py-3">
+                        <div className="text-sm font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         {getStatusBadge(booking.status)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         {getPaymentBadge(booking.payment_status)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-3 py-3 text-center">
                         <button
                           onClick={() => setSelectedBooking(booking)}
                           className="text-amber-600 hover:text-amber-700 transition"
