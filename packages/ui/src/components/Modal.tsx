@@ -50,13 +50,13 @@ export default function Modal({
       {/* Modal */}
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden',
+          'relative w-full bg-white rounded-2xl shadow-2xl max-h-[90vh] flex flex-col',
           sizes[size]
         )}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-stone-200">
+          <div className="flex items-center justify-between p-6 border-b border-stone-200 flex-shrink-0">
             {title && (
               <h2 className="text-xl font-semibold text-stone-900">{title}</h2>
             )}
@@ -72,7 +72,7 @@ export default function Modal({
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {children}
         </div>
       </div>
