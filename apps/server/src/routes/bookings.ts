@@ -156,6 +156,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
         customer_id,
         address,
         reschedule_count,
+        provider_preference,
         staff:staff(
           id,
           profile_id,
@@ -378,6 +379,92 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
 
     const hasAssignedStaff = staffToNotify.length > 0 || !!previousStaffId
 
+    // 4b. Send new_job notifications to all eligible staff (so they can accept the rescheduled job)
+    let newJobStaffNotified = 0
+    try {
+      const { data: allAvailableStaff } = await supabase
+        .from('staff')
+        .select('id, profile_id, gender')
+        .eq('is_available', true)
+        .eq('status', 'active')
+
+      // Filter by provider_preference (e.g., female-only)
+      const providerPref = (booking as any).provider_preference
+      let eligibleStaff = allAvailableStaff || []
+      if (providerPref === 'female-only') {
+        eligibleStaff = eligibleStaff.filter(s => s.gender === 'female')
+      } else if (providerPref === 'male-only') {
+        eligibleStaff = eligibleStaff.filter(s => s.gender === 'male')
+      } else if (providerPref === 'prefer-female') {
+        const preferred = eligibleStaff.filter(s => s.gender === 'female')
+        if (preferred.length > 0) eligibleStaff = preferred
+      } else if (providerPref === 'prefer-male') {
+        const preferred = eligibleStaff.filter(s => s.gender === 'male')
+        if (preferred.length > 0) eligibleStaff = preferred
+      }
+
+      if (eligibleStaff.length > 0) {
+        const serviceName = (booking.service as any)?.name_th || (booking.service as any)?.name_en || 'Unknown Service'
+        const hotelName = (booking.hotel as any)?.name_th || (booking.hotel as any)?.name_en || ''
+        const location = hotelName || booking.address || ''
+        const prefLabel = providerPref === 'female-only' ? 'ผู้หญิงเท่านั้น'
+          : providerPref === 'male-only' ? 'ผู้ชายเท่านั้น'
+          : providerPref === 'prefer-female' ? 'ต้องการผู้หญิง'
+          : providerPref === 'prefer-male' ? 'ต้องการผู้ชาย'
+          : ''
+
+        // In-app new_job notifications
+        const staffNotifRows = eligibleStaff.map(staff => ({
+          user_id: staff.profile_id,
+          type: 'new_job',
+          title: 'งานใหม่เข้ามา!',
+          message: `มีงาน "${serviceName}" ${location ? `ที่ ${location}` : ''} วันที่ ${body.new_date} เวลา ${body.new_time}${prefLabel ? ` (ลูกค้าต้องการ: ${prefLabel})` : ''} (เลื่อนนัดจากวันเดิม)`,
+          data: { booking_id: id, job_ids: updatedJobIds, provider_preference: providerPref || 'no-preference' },
+          is_read: false,
+        }))
+
+        const { error: newJobNotifError } = await supabase
+          .from('notifications')
+          .insert(staffNotifRows)
+
+        if (!newJobNotifError) {
+          newJobStaffNotified = staffNotifRows.length
+          console.log(`[Reschedule] new_job notifications sent to ${newJobStaffNotified} eligible staff`)
+        } else {
+          console.error('[Reschedule] Failed to insert new_job notifications:', newJobNotifError)
+        }
+
+        // LINE notifications to eligible staff
+        const profileIds = eligibleStaff.map(s => s.profile_id).filter(Boolean)
+        const { data: staffProfiles } = await supabase
+          .from('profiles')
+          .select('id, line_user_id')
+          .in('id', profileIds)
+          .not('line_user_id', 'is', null)
+
+        const staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
+        if (staffLineIds.length > 0) {
+          const singleAmount = Number(booking.final_price) || 0
+          const singleRate = Number((booking.service as any)?.staff_commission_rate) || 0
+          const staffEarnings = Math.round(singleAmount * singleRate)
+
+          await lineService.sendNewJobToStaff(staffLineIds, {
+            serviceName,
+            scheduledDate: body.new_date,
+            scheduledTime: body.new_time,
+            address: booking.address || '',
+            hotelName: hotelName || undefined,
+            staffEarnings,
+            durationMinutes: booking.duration || 60,
+            jobIds: updatedJobIds,
+          })
+          console.log(`[Reschedule] LINE new_job sent to ${staffLineIds.length} staff`)
+        }
+      }
+    } catch (newJobError) {
+      console.error('[Reschedule] new_job notification error (non-blocking):', newJobError)
+    }
+
     // 5. Notify admins via LINE + in-app
     let adminsNotified = 0
     try {
@@ -429,7 +516,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
         new_time: body.new_time,
         staff_unassigned: hasAssignedStaff,
         jobs_reset: updatedJobIds.length,
-        notifications_sent: { ...notificationResults, admins: adminsNotified },
+        notifications_sent: { ...notificationResults, admins: adminsNotified, new_job_staff: newJobStaffNotified },
       },
       message: hasAssignedStaff
         ? 'Booking rescheduled. Staff has been notified and needs to re-accept.'
