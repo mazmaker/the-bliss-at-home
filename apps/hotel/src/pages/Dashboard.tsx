@@ -990,10 +990,9 @@ function Dashboard() {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1 text-xs text-stone-500">
                           <Clock className="w-3 h-3" />
-                          {new Date(booking.scheduled_time).toLocaleTimeString('th-TH', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          {booking.scheduled_time
+                            ? booking.scheduled_time.substring(0, 5)
+                            : '--:--'}
                         </div>
                         {booking.staff_name && (
                           <div className="flex items-center gap-1 text-xs text-stone-500">

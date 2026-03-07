@@ -265,7 +265,7 @@ function BookingHistory() {
             <p><strong>ชื่อแขก:</strong> ${booking.guest_name}</p>
             <p><strong>ห้อง:</strong> ${booking.room_number}</p>
             <p><strong>วันที่:</strong> ${new Date(booking.booking_date).toLocaleDateString('th-TH')}</p>
-            <p><strong>เวลา:</strong> ${new Date(booking.booking_time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
+            <p><strong>เวลา:</strong> ${(booking.booking_time || '--:--').substring(0, 5)}</p>
             <p><strong>บริการ:</strong> ${booking.service_name}</p>
             <p><strong>จำนวน:</strong> ${booking.recipient_count} คน</p>
             <p><strong>ระยะเวลา:</strong> ${booking.duration} นาที</p>
@@ -492,7 +492,7 @@ function BookingHistory() {
       const csvHeaders = ['วันที่', 'เวลา', 'เลขที่จอง', 'ชื่อแขก', 'ห้อง', 'บริการ', 'ยอดเงิน', 'สถานะ']
       const csvData = filteredBookings.map(booking => [
         new Date(booking.booking_date).toLocaleDateString('th-TH'),
-        new Date(booking.booking_time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        (booking.booking_time || '--:--').substring(0, 5),
         booking.booking_number,
         booking.guest_name,
         booking.room_number,
@@ -818,10 +818,7 @@ function BookingHistory() {
                             {new Date(booking.booking_date).toLocaleDateString('th-TH')}
                           </div>
                           <div className="text-xs text-stone-400">
-                            {new Date(booking.booking_time).toLocaleTimeString('th-TH', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {(booking.booking_time || '--:--').substring(0, 5)}
                           </div>
                         </div>
                       </td>
@@ -953,10 +950,7 @@ function BookingHistory() {
                             <div className="flex items-center gap-4 text-xs text-stone-500">
                               <div className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {new Date(booking.booking_time).toLocaleTimeString('th-TH', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
+                                {(booking.booking_time || '--:--').substring(0, 5)}
                               </div>
                               {booking.staff_name && (
                                 <div className="flex items-center gap-1">
