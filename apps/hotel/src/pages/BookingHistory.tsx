@@ -2,15 +2,14 @@ import { useState, useMemo } from 'react'
 import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
   Filter, MapPin, Clock, User, CheckCircle, XCircle, List, Grid3X3, X,
-  Phone, FileText, Edit, Image, History, RotateCcw, Save,
-  Briefcase, DollarSign, CreditCard, Check, ArrowRight, CalendarClock
+  Phone, FileText, Edit, Image, History, Save,
+  Briefcase, DollarSign, CreditCard, Check, CalendarClock
 } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
-import { showLoading, updateToast } from '../utils/notifications'
 
 // Provider preference type
 type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference'
@@ -191,13 +190,6 @@ function BookingHistory() {
     booking: null
   })
 
-  // Status change state management
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    bookingId: string;
-    originalStatus: string;
-    newStatus: string;
-  } | null>(null)
-  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false)
 
 
   const { hotelId, isValidHotel, isLoading: hotelLoading } = useHotelContext()
@@ -221,22 +213,6 @@ function BookingHistory() {
 
 
   // Additional functions
-  const handleStatusUpdate = async (bookingId: string, newStatus: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled') => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: newStatus })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      refetch()
-    } catch (error) {
-      console.error('Error updating status:', error)
-      throw error // Re-throw for calling function to handle
-    }
-  }
-
   const handleNotesUpdate = async (bookingId: string, newNotes: string) => {
     try {
       const { error } = await supabase
@@ -262,40 +238,6 @@ function BookingHistory() {
     }
   }
 
-  // New status change handlers
-  const handleStatusSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value
-    if (newStatus !== selectedBooking?.status) {
-      setPendingStatusChange({
-        bookingId: selectedBooking!.id,
-        originalStatus: selectedBooking!.status,
-        newStatus: newStatus
-      })
-    } else {
-      setPendingStatusChange(null)
-    }
-  }
-
-  const handleCancelStatusChange = () => {
-    setPendingStatusChange(null)
-  }
-
-  const handleConfirmStatusChange = async () => {
-    if (!pendingStatusChange) return
-
-    setStatusUpdateLoading(true)
-    const loadingToast = showLoading('กำลังอัปเดตสถานะ...')
-
-    try {
-      await handleStatusUpdate(pendingStatusChange.bookingId, pendingStatusChange.newStatus as any)
-      updateToast(loadingToast, 'success', 'อัปเดตสถานะเรียบร้อยแล้ว ✅')
-      setPendingStatusChange(null)
-    } catch (error) {
-      updateToast(loadingToast, 'error', 'ไม่สามารถอัปเดตสถานะได้ ❌')
-    } finally {
-      setStatusUpdateLoading(false)
-    }
-  }
 
 
 
@@ -1253,99 +1195,6 @@ function BookingHistory() {
                   </div>
                 </div>
               )}
-
-              {/* Status Change Section */}
-              <div className="bg-purple-50 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <RotateCcw className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900">เปลี่ยนสถานะการจอง</h3>
-                </div>
-                <div className="space-y-4">
-                  {!pendingStatusChange ? (
-                    // Default state - no changes pending
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <select
-                          value={selectedBooking.status}
-                          onChange={handleStatusSelect}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white font-medium"
-                        >
-                          <option value="pending">รอดำเนินการ</option>
-                          <option value="confirmed">ยืนยันแล้ว</option>
-                          <option value="in_progress">กำลังดำเนินการ</option>
-                          <option value="completed">เสร็จสิ้น</option>
-                          <option value="cancelled">ยกเลิก</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span>สถานะปัจจุบัน:</span>
-                        {getStatusBadge(selectedBooking.status)}
-                      </div>
-                    </div>
-                  ) : (
-                    // Pending change state - show confirmation
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <select
-                            value={pendingStatusChange.newStatus}
-                            onChange={handleStatusSelect}
-                            disabled={statusUpdateLoading}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <option value="pending">รอดำเนินการ</option>
-                            <option value="confirmed">ยืนยันแล้ว</option>
-                            <option value="in_progress">กำลังดำเนินการ</option>
-                            <option value="completed">เสร็จสิ้น</option>
-                            <option value="cancelled">ยกเลิก</option>
-                          </select>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          {getStatusBadge(pendingStatusChange.originalStatus)}
-                          <ArrowRight className="w-4 h-4 text-gray-400" />
-                          {getStatusBadge(pendingStatusChange.newStatus)}
-                        </div>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-3 justify-end">
-                        <button
-                          onClick={handleCancelStatusChange}
-                          disabled={statusUpdateLoading}
-                          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          ยกเลิก
-                        </button>
-                        <button
-                          onClick={handleConfirmStatusChange}
-                          disabled={statusUpdateLoading}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {statusUpdateLoading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              กำลังบันทึก...
-                            </>
-                          ) : (
-                            <>
-                              <Check className="w-4 h-4" />
-                              บันทึกการเปลี่ยนแปลง
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="bg-purple-100/50 rounded-lg p-3">
-                    <p className="text-xs text-purple-700">
-                      💡 เลือกสถานะใหม่แล้วกดปุ่ม "บันทึกการเปลี่ยนแปลง" เพื่อยืนยัน
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* Action Buttons */}
               <div className="border-t border-gray-100 pt-6">
