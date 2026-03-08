@@ -691,6 +691,14 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
       })
     }
 
+    // Check if booking is in_progress - only admin can cancel mid-service bookings
+    if (booking.status === 'in_progress' && !body.admin_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถยกเลิกได้ บริการกำลังดำเนินการอยู่ กรุณาติดต่อ Admin',
+      })
+    }
+
     // Process refund if payment was made and refund is requested
     let refundResult = null
     const shouldProcessRefund = booking.payment_status === 'paid' && body.refund_option !== 'none'

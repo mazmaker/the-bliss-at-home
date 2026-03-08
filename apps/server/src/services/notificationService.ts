@@ -554,6 +554,16 @@ export async function processJobCancelled(
     return { ...result, error: 'Job has no assigned staff' }
   }
 
+  // Detect mid-service cancellation
+  const isMidService = job.status === 'in_progress' && job.started_at
+  let serviceElapsedMinutes: number | null = null
+  if (isMidService) {
+    serviceElapsedMinutes = Math.floor((Date.now() - new Date(job.started_at).getTime()) / 60000)
+  }
+  const cancellationType = isMidService ? 'mid_service' : 'pre_service'
+
+  console.log(`[Cancel] type=${cancellationType}${isMidService ? ` elapsed=${serviceElapsedMinutes}min` : ''}`)
+
   // 2. Get staff name for admin notification
   const { data: staffProfile } = await supabase
     .from('profiles')
@@ -571,6 +581,8 @@ export async function processJobCancelled(
       cancelled_at: new Date().toISOString(),
       cancelled_by: 'STAFF',
       cancellation_reason: reason,
+      cancellation_type: cancellationType,
+      service_elapsed_minutes: serviceElapsedMinutes,
       staff_notes: notes || null,
       updated_at: new Date().toISOString(),
     })
@@ -581,56 +593,64 @@ export async function processJobCancelled(
     return { ...result, error: 'Failed to cancel job' }
   }
 
-  console.log(`🚫 Job ${jobId} cancelled by ${staffName} (${reason})`)
+  console.log(`🚫 Job ${jobId} cancelled by ${staffName} (${reason}) [${cancellationType}]`)
 
-  // 4. Clone to new pending job
-  const newJobData = {
-    booking_id: job.booking_id,
-    customer_id: job.customer_id,
-    hotel_id: job.hotel_id,
-    staff_id: null,
-    customer_name: job.customer_name,
-    customer_phone: job.customer_phone,
-    hotel_name: job.hotel_name,
-    room_number: job.room_number,
-    address: job.address,
-    latitude: job.latitude,
-    longitude: job.longitude,
-    distance_km: job.distance_km,
-    service_name: job.service_name,
-    service_name_en: job.service_name_en,
-    duration_minutes: job.duration_minutes,
-    scheduled_date: job.scheduled_date,
-    scheduled_time: job.scheduled_time,
-    amount: job.amount,
-    staff_earnings: job.staff_earnings,
-    payment_status: job.payment_status,
-    status: 'pending',
-    customer_notes: job.customer_notes,
+  // 4. For pre-service: clone to new pending job so other staff can accept
+  //    For mid-service: do NOT create replacement job (service already started)
+  let newJob: { id: string } | null = null
+
+  if (!isMidService) {
+    const newJobData = {
+      booking_id: job.booking_id,
+      customer_id: job.customer_id,
+      hotel_id: job.hotel_id,
+      staff_id: null,
+      customer_name: job.customer_name,
+      customer_phone: job.customer_phone,
+      hotel_name: job.hotel_name,
+      room_number: job.room_number,
+      address: job.address,
+      latitude: job.latitude,
+      longitude: job.longitude,
+      distance_km: job.distance_km,
+      service_name: job.service_name,
+      service_name_en: job.service_name_en,
+      duration_minutes: job.duration_minutes,
+      scheduled_date: job.scheduled_date,
+      scheduled_time: job.scheduled_time,
+      amount: job.amount,
+      staff_earnings: job.staff_earnings,
+      payment_status: job.payment_status,
+      status: 'pending',
+      customer_notes: job.customer_notes,
+    }
+
+    const { data: clonedJob, error: cloneError } = await supabase
+      .from('jobs')
+      .insert(newJobData)
+      .select('id')
+      .single()
+
+    if (cloneError || !clonedJob) {
+      console.error('❌ Failed to clone job:', cloneError)
+      return { ...result, error: 'Failed to create replacement job' }
+    }
+
+    newJob = clonedJob
+    result.newJobId = clonedJob.id
+    console.log(`✅ New pending job created: ${clonedJob.id} (replacing ${jobId})`)
+  } else {
+    console.log(`⚠️ Mid-service cancellation — no replacement job created`)
   }
 
-  const { data: newJob, error: cloneError } = await supabase
-    .from('jobs')
-    .insert(newJobData)
-    .select('id')
-    .single()
-
-  if (cloneError || !newJob) {
-    console.error('❌ Failed to clone job:', cloneError)
-    return { ...result, error: 'Failed to create replacement job' }
-  }
-
-  result.newJobId = newJob.id
-  console.log(`✅ New pending job created: ${newJob.id} (replacing ${jobId})`)
-
-  // 4.5 Update staff performance metrics (cancelled_jobs count)
+  // 4.5 Update staff performance metrics
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth() + 1
 
   const { data: existingMetrics } = await supabase
     .from('staff_performance_metrics')
-    .select('id, cancelled_jobs, total_jobs, completed_jobs, cancel_rate')
+    .select('id, cancelled_jobs, mid_service_cancellations, total_jobs, completed_jobs, cancel_rate')
     .eq('staff_id', job.staff_id)
     .eq('year', year)
     .eq('month', month)
@@ -638,19 +658,20 @@ export async function processJobCancelled(
 
   if (existingMetrics) {
     const cancelledJobs = (existingMetrics.cancelled_jobs || 0) + 1
+    const midServiceCount = (existingMetrics.mid_service_cancellations || 0) + (isMidService ? 1 : 0)
     const totalJobs = existingMetrics.total_jobs || 1
     const cancelRate = totalJobs > 0 ? Math.round((cancelledJobs / totalJobs) * 100) : 0
     await supabase
       .from('staff_performance_metrics')
       .update({
         cancelled_jobs: cancelledJobs,
+        mid_service_cancellations: midServiceCount,
         cancel_rate: cancelRate,
         updated_at: new Date().toISOString(),
       })
       .eq('id', existingMetrics.id)
-    console.log(`📊 Staff metrics updated: cancelled_jobs=${cancelledJobs}, cancel_rate=${cancelRate}%`)
+    console.log(`📊 Staff metrics updated: cancelled_jobs=${cancelledJobs}, mid_service=${midServiceCount}, cancel_rate=${cancelRate}%`)
   } else {
-    // Create initial metrics row for this month
     await supabase
       .from('staff_performance_metrics')
       .insert({
@@ -660,6 +681,7 @@ export async function processJobCancelled(
         total_jobs: 1,
         completed_jobs: 0,
         cancelled_jobs: 1,
+        mid_service_cancellations: isMidService ? 1 : 0,
         cancel_rate: 100,
       })
     console.log(`📊 Staff metrics created for ${year}-${month}`)
@@ -670,204 +692,382 @@ export async function processJobCancelled(
   let totalRecipients = 1
   let activeStaffCount = 0
   let recipientName: string | null = null
+  let couplePartnerJobs: any[] = []
 
   if (job.booking_id) {
+    const excludeIds = [jobId]
+    if (newJob) excludeIds.push(newJob.id)
+
     const { data: siblingJobs } = await supabase
       .from('jobs')
       .select('id, status, staff_id, service_name')
       .eq('booking_id', job.booking_id)
-      .neq('id', jobId)           // exclude the cancelled job
-      .neq('id', newJob.id)       // exclude the new job
+      .not('id', 'in', `(${excludeIds.join(',')})`)
 
     if (siblingJobs && siblingJobs.length > 0) {
       isCouple = true
-      totalRecipients = siblingJobs.length + 1  // siblings + this one
+      totalRecipients = siblingJobs.length + 1
       activeStaffCount = siblingJobs.filter(j => j.staff_id && j.status !== 'cancelled').length
+      couplePartnerJobs = siblingJobs.filter(j => j.staff_id && j.status !== 'cancelled')
     }
 
-    // Extract recipient name from service_name if it contains parenthetical
     const match = job.service_name?.match(/\((.+?)\)$/)
     if (match) recipientName = match[1]
   }
 
-  // 6. Get provider_preference from booking
+  // 6. Get provider_preference + booking number from booking
   let providerPreference: string | null = null
+  let bookingNumber: string | null = null
   if (job.booking_id) {
     const { data: bookingData } = await supabase
       .from('bookings')
-      .select('provider_preference')
+      .select('provider_preference, booking_number')
       .eq('id', job.booking_id)
       .single()
     providerPreference = bookingData?.provider_preference || null
+    bookingNumber = bookingData?.booking_number || null
   }
 
-  // 6.1 Notify available staff via LINE (filtered by provider preference)
-  const { data: allAvailableStaff } = await supabase
-    .from('staff')
-    .select('id, profile_id, gender')
-    .eq('is_available', true)
-    .eq('status', 'active')
+  // === NOTIFICATION BRANCHING: mid-service vs pre-service ===
 
-  const availableStaff = filterStaffByProviderPreference(allAvailableStaff || [], providerPreference)
-  console.log(`👥 Staff filter (cancelled): preference=${providerPreference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, filtered=${availableStaff.length}`)
+  if (isMidService) {
+    // ─── MID-SERVICE: Urgent notifications to Admin, Hotel, Couple partner ───
+    // Do NOT notify all available staff (no replacement job)
 
-  if (availableStaff.length > 0) {
-    const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
-    const { data: staffProfiles } = await supabase
+    const midServiceLabel = `ยกเลิกระหว่างให้บริการ (ทำไปแล้ว ${serviceElapsedMinutes} นาที จาก ${job.duration_minutes} นาที)`
+    const coupleText = isCouple ? ` [Couple ${totalRecipients} คน — เหลือ ${activeStaffCount} ตำแหน่งที่มี Staff]` : ''
+
+    // 7a. Notify admins (urgent)
+    const { data: adminProfiles } = await supabase
       .from('profiles')
       .select('id, line_user_id')
-      .in('id', profileIds)
-      .not('line_user_id', 'is', null)
+      .eq('role', 'ADMIN')
 
-    const staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
+    if (adminProfiles && adminProfiles.length > 0) {
+      const adminLineIds = adminProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
+      if (adminLineIds.length > 0) {
+        await lineService.sendJobCancelledToAdmin(adminLineIds, {
+          staffName,
+          reason,
+          notes,
+          serviceName: job.service_name,
+          scheduledDate: job.scheduled_date,
+          scheduledTime: job.scheduled_time,
+          customerName: job.customer_name,
+          bookingNumber,
+          isCouple,
+          totalRecipients,
+          activeStaffCount,
+        })
+      }
 
-    if (staffLineIds.length > 0) {
-      const success = await lineService.sendJobReAvailableToStaff(staffLineIds, {
-        serviceName: job.service_name,
-        scheduledDate: job.scheduled_date,
-        scheduledTime: job.scheduled_time,
-        address: job.address || '',
-        hotelName: job.hotel_name,
-        roomNumber: job.room_number,
-        staffEarnings: Number(job.staff_earnings) || 0,
-        durationMinutes: job.duration_minutes,
-        newJobId: newJob.id,
-        isCouple,
-        recipientName,
-        totalRecipients,
-        activeStaffCount,
-      })
+      const adminNotifRows = adminProfiles.map(admin => ({
+        user_id: admin.id,
+        type: 'job_cancelled',
+        title: 'Staff ยกเลิกระหว่างให้บริการ',
+        message: `${staffName} ${midServiceLabel} งาน ${job.service_name} วันที่ ${job.scheduled_date} เหตุผล: ${reason}${coupleText}`,
+        data: {
+          job_id: jobId,
+          booking_id: job.booking_id,
+          booking_number: bookingNumber,
+          staff_name: staffName,
+          reason,
+          cancellation_type: 'mid_service',
+          service_elapsed_minutes: serviceElapsedMinutes,
+        },
+        is_read: false,
+      }))
 
-      if (success) {
-        result.staffNotified = staffLineIds.length
-        console.log(`📱 LINE re-available sent to ${staffLineIds.length} staff`)
+      const { error: notifError } = await supabase.from('notifications').insert(adminNotifRows)
+      if (!notifError) {
+        result.adminsNotified = adminProfiles.length
+        console.log(`🔴 [MidService] Admin notification sent to ${adminProfiles.length} admins`)
       }
     }
 
-    // In-app notifications for staff
-    const staffNotifRows = availableStaff.map(staff => ({
-      user_id: staff.profile_id,
-      type: 'job_cancelled',
-      title: 'งานว่างเพิ่ม!',
-      message: `งาน "${job.service_name}" วันที่ ${job.scheduled_date} ว่างแล้ว เนื่องจากพนักงานยกเลิก`,
-      data: { job_id: jobId, new_job_id: newJob.id, booking_id: job.booking_id },
-      is_read: false,
-    }))
+    // 7b. Notify hotel (urgent)
+    if (job.hotel_id) {
+      try {
+        const { data: hotelProfiles } = await supabase
+          .from('profiles')
+          .select('id, line_user_id')
+          .eq('hotel_id', job.hotel_id)
+          .eq('role', 'HOTEL')
 
-    if (staffNotifRows.length > 0) {
-      const { error: staffNotifError } = await supabase
-        .from('notifications')
-        .insert(staffNotifRows)
+        if (hotelProfiles && hotelProfiles.length > 0) {
+          // LINE to hotel
+          const hotelLineIds = hotelProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
+          if (hotelLineIds.length > 0) {
+            await lineService.sendBookingCancelledToStaff(hotelLineIds, {
+              serviceName: job.service_name,
+              scheduledDate: job.scheduled_date,
+              scheduledTime: job.scheduled_time,
+              address: '',
+              hotelName: job.hotel_name,
+              cancellationReason: `${staffName} ${midServiceLabel} เหตุผล: ${reason}`,
+              bookingNumber,
+              cancelledBy: 'admin',
+            })
+          }
 
-      if (staffNotifError) {
-        console.error('❌ Failed to insert staff cancellation notifications:', staffNotifError)
-      } else {
-        console.log(`🔔 Cancellation notification sent to ${staffNotifRows.length} staff`)
+          // In-app to hotel
+          const hotelNotifRows = hotelProfiles.map(profile => ({
+            user_id: profile.id,
+            type: 'staff_cancelled',
+            title: 'พนักงานยกเลิกระหว่างให้บริการ',
+            message: `พนักงาน ${staffName} ${midServiceLabel} งาน "${job.service_name}" เหตุผล: ${reason} กรุณาติดต่อแขก Admin ได้รับแจ้งแล้ว`,
+            data: {
+              booking_id: job.booking_id,
+              job_id: jobId,
+              staff_name: staffName,
+              reason,
+              cancellation_type: 'mid_service',
+              service_elapsed_minutes: serviceElapsedMinutes,
+            },
+            is_read: false,
+          }))
+
+          await supabase.from('notifications').insert(hotelNotifRows)
+          console.log(`🔴 [MidService] Hotel notification sent to ${hotelProfiles.length} hotel user(s)`)
+        }
+      } catch (hotelNotifError) {
+        console.error('[Hotel] Mid-service notification error (non-blocking):', hotelNotifError)
       }
     }
-  }
 
-  // 7. Notify admins via LINE + in-app
-  const { data: adminProfiles } = await supabase
-    .from('profiles')
-    .select('id, line_user_id')
-    .eq('role', 'ADMIN')
+    // 7c. Notify couple partner staff (if couple booking)
+    if (isCouple && couplePartnerJobs.length > 0) {
+      const partnerStaffIds = couplePartnerJobs.map(j => j.staff_id).filter(Boolean)
+      if (partnerStaffIds.length > 0) {
+        // Get partner LINE user IDs
+        const { data: partnerProfiles } = await supabase
+          .from('profiles')
+          .select('id, line_user_id')
+          .in('id', partnerStaffIds)
 
-  if (adminProfiles && adminProfiles.length > 0) {
-    // Get booking number
-    let bookingNumber: string | null = null
-    if (job.booking_id) {
-      const { data: booking } = await supabase
-        .from('bookings')
-        .select('booking_number')
-        .eq('id', job.booking_id)
+        if (partnerProfiles && partnerProfiles.length > 0) {
+          // LINE to couple partner
+          const partnerLineIds = partnerProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
+          if (partnerLineIds.length > 0) {
+            await lineService.sendBookingCancelledToStaff(partnerLineIds, {
+              serviceName: job.service_name,
+              scheduledDate: job.scheduled_date,
+              scheduledTime: job.scheduled_time,
+              address: '',
+              hotelName: job.hotel_name,
+              cancellationReason: `พนักงานอีกคนในงาน Couple ยกเลิกระหว่างให้บริการ Admin ได้รับแจ้งแล้ว กรุณาทำงานของคุณต่อตามปกติ`,
+              bookingNumber,
+              cancelledBy: 'admin',
+            })
+          }
+
+          // In-app to couple partner
+          const partnerNotifRows = partnerProfiles.map(profile => ({
+            user_id: profile.id,
+            type: 'job_cancelled',
+            title: 'พนักงานคู่ยกเลิกงาน',
+            message: `พนักงานอีกคนในงาน Couple ยกเลิกระหว่างให้บริการ เหตุผล: ${reason} Admin ได้รับแจ้งแล้ว กรุณาทำงานของคุณต่อตามปกติ`,
+            data: {
+              booking_id: job.booking_id,
+              job_id: jobId,
+              cancellation_type: 'mid_service',
+            },
+            is_read: false,
+          }))
+
+          await supabase.from('notifications').insert(partnerNotifRows)
+          console.log(`🔴 [MidService] Couple partner notification sent to ${partnerProfiles.length} staff`)
+        }
+      }
+    }
+
+    // 7d. Notify customer (in-app only, if customer booking)
+    if (!job.hotel_id && job.customer_id) {
+      const { data: customerProfile } = await supabase
+        .from('customers')
+        .select('profile_id')
+        .eq('id', job.customer_id)
         .single()
-      bookingNumber = booking?.booking_number || null
-    }
 
-    // LINE push to admins
-    const adminLineIds = adminProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
-    if (adminLineIds.length > 0) {
-      await lineService.sendJobCancelledToAdmin(adminLineIds, {
-        staffName,
-        reason,
-        notes,
-        serviceName: job.service_name,
-        scheduledDate: job.scheduled_date,
-        scheduledTime: job.scheduled_time,
-        customerName: job.customer_name,
-        bookingNumber,
-        isCouple,
-        totalRecipients,
-        activeStaffCount,
-      })
-    }
-
-    // In-app notifications
-    const coupleText = isCouple ? ` (Couple ${totalRecipients} คน — เหลือ ${activeStaffCount} ตำแหน่งที่มี Staff)` : ''
-    const notificationRows = adminProfiles.map(admin => ({
-      user_id: admin.id,
-      type: 'job_cancelled',
-      title: 'Staff ยกเลิกงาน',
-      message: `${staffName} ยกเลิกงาน ${job.service_name} วันที่ ${job.scheduled_date} เหตุผล: ${reason}${coupleText}`,
-      data: {
-        job_id: jobId,
-        new_job_id: newJob.id,
-        booking_id: job.booking_id,
-        booking_number: bookingNumber,
-        staff_name: staffName,
-        reason,
-      },
-      is_read: false,
-    }))
-
-    const { error: notifError } = await supabase
-      .from('notifications')
-      .insert(notificationRows)
-
-    if (notifError) {
-      console.error('❌ Failed to insert admin notifications:', notifError)
-    } else {
-      result.adminsNotified = adminProfiles.length
-      console.log(`🔔 Cancellation notification sent to ${adminProfiles.length} admins`)
-    }
-  }
-
-  // 8. Notify hotel users if this is a hotel booking
-  if (job.hotel_id) {
-    try {
-      const { data: hotelProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('hotel_id', job.hotel_id)
-        .eq('role', 'HOTEL')
-
-      if (hotelProfiles && hotelProfiles.length > 0) {
-        const hotelNotifRows = hotelProfiles.map(profile => ({
-          user_id: profile.id,
-          type: 'staff_cancelled',
-          title: 'พนักงานยกเลิกงาน',
-          message: `พนักงาน ${staffName} ยกเลิกงาน "${job.service_name}" วันที่ ${job.scheduled_date} เวลา ${job.scheduled_time} เหตุผล: ${reason} ระบบกำลังหาพนักงานใหม่`,
+      if (customerProfile?.profile_id) {
+        await supabase.from('notifications').insert({
+          user_id: customerProfile.profile_id,
+          type: 'booking_cancelled',
+          title: 'การให้บริการถูกหยุดชั่วคราว',
+          message: `บริการ "${job.service_name}" ถูกหยุดระหว่างให้บริการ Admin กำลังดำเนินการติดต่อกลับ`,
           data: {
             booking_id: job.booking_id,
-            job_id: jobId,
-            new_job_id: newJob.id,
-            staff_name: staffName,
-            reason,
+            booking_number: bookingNumber,
+            cancellation_type: 'mid_service',
           },
           is_read: false,
-        }))
-
-        await supabase.from('notifications').insert(hotelNotifRows)
-        console.log(`[Hotel] Staff cancellation notification sent to ${hotelProfiles.length} hotel user(s)`)
+        })
+        console.log(`🔴 [MidService] Customer notification sent`)
       }
-    } catch (hotelNotifError) {
-      console.error('[Hotel] Notification error (non-blocking):', hotelNotifError)
+    }
+
+  } else {
+    // ─── PRE-SERVICE: Original flow — notify available staff + admin + hotel ───
+
+    // 6.1 Notify available staff via LINE (filtered by provider preference)
+    const { data: allAvailableStaff } = await supabase
+      .from('staff')
+      .select('id, profile_id, gender')
+      .eq('is_available', true)
+      .eq('status', 'active')
+
+    const availableStaff = filterStaffByProviderPreference(allAvailableStaff || [], providerPreference)
+    console.log(`👥 Staff filter (cancelled): preference=${providerPreference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, filtered=${availableStaff.length}`)
+
+    if (availableStaff.length > 0 && newJob) {
+      const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
+      const { data: staffProfiles } = await supabase
+        .from('profiles')
+        .select('id, line_user_id')
+        .in('id', profileIds)
+        .not('line_user_id', 'is', null)
+
+      const staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
+
+      if (staffLineIds.length > 0) {
+        const success = await lineService.sendJobReAvailableToStaff(staffLineIds, {
+          serviceName: job.service_name,
+          scheduledDate: job.scheduled_date,
+          scheduledTime: job.scheduled_time,
+          address: job.address || '',
+          hotelName: job.hotel_name,
+          roomNumber: job.room_number,
+          staffEarnings: Number(job.staff_earnings) || 0,
+          durationMinutes: job.duration_minutes,
+          newJobId: newJob.id,
+          isCouple,
+          recipientName,
+          totalRecipients,
+          activeStaffCount,
+        })
+
+        if (success) {
+          result.staffNotified = staffLineIds.length
+          console.log(`📱 LINE re-available sent to ${staffLineIds.length} staff`)
+        }
+      }
+
+      // In-app notifications for staff
+      const staffNotifRows = availableStaff.map(staff => ({
+        user_id: staff.profile_id,
+        type: 'job_cancelled',
+        title: 'งานว่างเพิ่ม!',
+        message: `งาน "${job.service_name}" วันที่ ${job.scheduled_date} ว่างแล้ว เนื่องจากพนักงานยกเลิก`,
+        data: { job_id: jobId, new_job_id: newJob.id, booking_id: job.booking_id },
+        is_read: false,
+      }))
+
+      if (staffNotifRows.length > 0) {
+        const { error: staffNotifError } = await supabase
+          .from('notifications')
+          .insert(staffNotifRows)
+
+        if (staffNotifError) {
+          console.error('❌ Failed to insert staff cancellation notifications:', staffNotifError)
+        } else {
+          console.log(`🔔 Cancellation notification sent to ${staffNotifRows.length} staff`)
+        }
+      }
+    }
+
+    // 7. Notify admins via LINE + in-app
+    const { data: adminProfiles } = await supabase
+      .from('profiles')
+      .select('id, line_user_id')
+      .eq('role', 'ADMIN')
+
+    if (adminProfiles && adminProfiles.length > 0) {
+      // LINE push to admins
+      const adminLineIds = adminProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
+      if (adminLineIds.length > 0) {
+        await lineService.sendJobCancelledToAdmin(adminLineIds, {
+          staffName,
+          reason,
+          notes,
+          serviceName: job.service_name,
+          scheduledDate: job.scheduled_date,
+          scheduledTime: job.scheduled_time,
+          customerName: job.customer_name,
+          bookingNumber,
+          isCouple,
+          totalRecipients,
+          activeStaffCount,
+        })
+      }
+
+      // In-app notifications
+      const coupleText = isCouple ? ` (Couple ${totalRecipients} คน — เหลือ ${activeStaffCount} ตำแหน่งที่มี Staff)` : ''
+      const notificationRows = adminProfiles.map(admin => ({
+        user_id: admin.id,
+        type: 'job_cancelled',
+        title: 'Staff ยกเลิกงาน',
+        message: `${staffName} ยกเลิกงาน ${job.service_name} วันที่ ${job.scheduled_date} เหตุผล: ${reason}${coupleText}`,
+        data: {
+          job_id: jobId,
+          new_job_id: newJob?.id || null,
+          booking_id: job.booking_id,
+          booking_number: bookingNumber,
+          staff_name: staffName,
+          reason,
+          cancellation_type: 'pre_service',
+        },
+        is_read: false,
+      }))
+
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert(notificationRows)
+
+      if (notifError) {
+        console.error('❌ Failed to insert admin notifications:', notifError)
+      } else {
+        result.adminsNotified = adminProfiles.length
+        console.log(`🔔 Cancellation notification sent to ${adminProfiles.length} admins`)
+      }
+    }
+
+    // 8. Notify hotel users if this is a hotel booking
+    if (job.hotel_id) {
+      try {
+        const { data: hotelProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('hotel_id', job.hotel_id)
+          .eq('role', 'HOTEL')
+
+        if (hotelProfiles && hotelProfiles.length > 0) {
+          const hotelNotifRows = hotelProfiles.map(profile => ({
+            user_id: profile.id,
+            type: 'staff_cancelled',
+            title: 'พนักงานยกเลิกงาน',
+            message: `พนักงาน ${staffName} ยกเลิกงาน "${job.service_name}" วันที่ ${job.scheduled_date} เวลา ${job.scheduled_time} เหตุผล: ${reason} ระบบกำลังหาพนักงานใหม่`,
+            data: {
+              booking_id: job.booking_id,
+              job_id: jobId,
+              new_job_id: newJob?.id || null,
+              staff_name: staffName,
+              reason,
+            },
+            is_read: false,
+          }))
+
+          await supabase.from('notifications').insert(hotelNotifRows)
+          console.log(`[Hotel] Staff cancellation notification sent to ${hotelProfiles.length} hotel user(s)`)
+        }
+      } catch (hotelNotifError) {
+        console.error('[Hotel] Notification error (non-blocking):', hotelNotifError)
+      }
     }
   }
 
   result.success = true
-  console.log(`✅ Job cancellation processed: cancelled=${jobId}, new=${newJob.id}, staff=${result.staffNotified}, admins=${result.adminsNotified}`)
+  const newJobLog = newJob ? `new=${newJob.id}` : 'no-replacement'
+  console.log(`✅ Job cancellation [${cancellationType}] processed: cancelled=${jobId}, ${newJobLog}, staff=${result.staffNotified}, admins=${result.adminsNotified}`)
   return result
 }
 

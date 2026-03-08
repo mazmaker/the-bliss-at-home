@@ -73,6 +73,8 @@ export interface Job {
   cancelled_at: string | null
   cancellation_reason: string | null
   cancelled_by: 'STAFF' | 'CUSTOMER' | 'ADMIN' | null
+  cancellation_type: 'pre_service' | 'mid_service' | null
+  service_elapsed_minutes: number | null
 
   // Provider preference (from parent booking)
   provider_preference?: string | null
@@ -138,5 +140,14 @@ export const CANCELLATION_REASONS: CancellationReason[] = [
   { code: 'CUSTOMER_REQUEST', label_th: 'ลูกค้าขอยกเลิก', label_en: 'Customer Requested' },
   { code: 'WRONG_ADDRESS', label_th: 'ที่อยู่ไม่ถูกต้อง', label_en: 'Wrong Address' },
   { code: 'SAFETY_CONCERN', label_th: 'ความปลอดภัย', label_en: 'Safety Concern' },
+  { code: 'OTHER', label_th: 'อื่นๆ', label_en: 'Other' },
+]
+
+// Reasons available during mid-service cancellation (excludes irrelevant ones)
+export const MID_SERVICE_CANCELLATION_REASONS: CancellationReason[] = [
+  { code: 'EMERGENCY', label_th: 'เหตุฉุกเฉิน', label_en: 'Emergency' },
+  { code: 'SICK', label_th: 'ป่วย/ไม่สบายกะทันหัน', label_en: 'Sudden Illness' },
+  { code: 'SAFETY_CONCERN', label_th: 'ความปลอดภัย', label_en: 'Safety Concern' },
+  { code: 'CUSTOMER_REQUEST', label_th: 'ลูกค้าขอยกเลิก', label_en: 'Customer Requested' },
   { code: 'OTHER', label_th: 'อื่นๆ', label_en: 'Other' },
 ]

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimer, JobCancellationModal, SOSButton } from '../components'
+import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton } from '../components'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -427,14 +427,26 @@ function StaffJobDetail() {
       {/* SOS Button */}
       {isMyJob && !isFinished && <SOSButton currentJobId={job.id} />}
 
-      {/* Cancel Modal */}
-      <JobCancellationModal
-        isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        onConfirm={handleConfirmCancel}
-        jobId={job.id}
-        serviceName={job.service_name}
-      />
+      {/* Cancel Modal — use mid-service variant when job is in_progress */}
+      {job.status === 'in_progress' && job.started_at ? (
+        <MidServiceCancellationModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleConfirmCancel}
+          jobId={job.id}
+          serviceName={job.service_name}
+          startedAt={job.started_at}
+          durationMinutes={job.duration_minutes}
+        />
+      ) : (
+        <JobCancellationModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleConfirmCancel}
+          jobId={job.id}
+          serviceName={job.service_name}
+        />
+      )}
     </div>
   )
 }
