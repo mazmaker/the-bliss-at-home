@@ -15,7 +15,7 @@ function StaffJobDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { job, isLoading, error } = useJob(id || null)
+  const { job, isLoading, error, refetch } = useJob(id || null)
   const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
 
@@ -37,6 +37,7 @@ function StaffJobDetail() {
     setActionError(null)
     try {
       await acceptJob(job.id)
+      await refetch()
       if (isSoundEnabled()) NotificationSounds.jobAccepted()
       // Notify hotel if this is a hotel booking (non-blocking)
       try {
@@ -60,6 +61,7 @@ function StaffJobDetail() {
     setActionError(null)
     try {
       await startJob(job.id)
+      await refetch()
       if (isSoundEnabled()) NotificationSounds.jobStarted()
       await playBackgroundMusic()
     } catch (err: any) {
@@ -75,6 +77,7 @@ function StaffJobDetail() {
     setActionError(null)
     try {
       await completeJob(job.id)
+      await refetch()
       stopBackgroundMusic()
       if (isSoundEnabled()) NotificationSounds.jobCompleted()
     } catch (err: any) {

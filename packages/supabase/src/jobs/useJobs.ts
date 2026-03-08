@@ -214,6 +214,16 @@ export function useJob(jobId: string | null) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
+  const refetch = useCallback(async () => {
+    if (!jobId) return
+    try {
+      const updated = await getJob(jobId)
+      setJob(updated)
+    } catch (err) {
+      setError(err as Error)
+    }
+  }, [jobId])
+
   useEffect(() => {
     if (!jobId) {
       setJob(null)
@@ -228,7 +238,7 @@ export function useJob(jobId: string | null) {
       .finally(() => setIsLoading(false))
   }, [jobId])
 
-  return { job, isLoading, error }
+  return { job, isLoading, error, refetch }
 }
 
 export function useStaffStats() {
