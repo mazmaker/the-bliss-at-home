@@ -379,6 +379,7 @@ function Dashboard() {
       pending: 'bg-yellow-100 text-yellow-700',
       confirmed: 'bg-blue-100 text-blue-700',
       'in-progress': 'bg-purple-100 text-purple-700',
+      in_progress: 'bg-purple-100 text-purple-700',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
@@ -386,6 +387,7 @@ function Dashboard() {
       pending: 'รอดำเนินการ',
       confirmed: 'ยืนยันแล้ว',
       'in-progress': 'กำลังดำเนินการ',
+      in_progress: 'กำลังดำเนินการ',
       completed: 'เสร็จสิ้น',
       cancelled: 'ยกเลิก',
     }

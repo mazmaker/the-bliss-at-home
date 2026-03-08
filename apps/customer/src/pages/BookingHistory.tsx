@@ -44,6 +44,8 @@ function BookingHistory() {
     switch (status) {
       case 'confirmed':
         return 'bg-blue-100 text-blue-700'
+      case 'in_progress':
+        return 'bg-purple-100 text-purple-700'
       case 'completed':
         return 'bg-green-100 text-green-700'
       case 'pending':
@@ -59,6 +61,8 @@ function BookingHistory() {
     switch (status) {
       case 'confirmed':
         return t('common:status.confirmed')
+      case 'in_progress':
+        return 'กำลังให้บริการ'
       case 'completed':
         return t('common:status.completed')
       case 'pending':

@@ -160,6 +160,7 @@ export default function GuestActivitySnapshot() {
       pending: 'text-yellow-600 bg-yellow-100',
       confirmed: 'text-blue-600 bg-blue-100',
       'in-progress': 'text-purple-600 bg-purple-100',
+      in_progress: 'text-purple-600 bg-purple-100',
       completed: 'text-green-600 bg-green-100',
       cancelled: 'text-red-600 bg-red-100',
     }
@@ -302,7 +303,7 @@ export default function GuestActivitySnapshot() {
                   <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(activity.status)}`}>
                     {activity.status === 'completed' ? 'เสร็จสิ้น' :
                      activity.status === 'confirmed' ? 'ยืนยันแล้ว' :
-                     activity.status === 'in-progress' ? 'กำลังดำเนินการ' :
+                     (activity.status === 'in-progress' || activity.status === 'in_progress') ? 'กำลังดำเนินการ' :
                      activity.status === 'pending' ? 'รอดำเนินการ' : 'ยกเลิก'}
                   </span>
                 </div>
