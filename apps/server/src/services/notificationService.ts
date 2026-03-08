@@ -413,11 +413,17 @@ export async function sendBookingConfirmedNotifications(
 
     // In-app notifications for staff
     const location = hotelName || booking.address || ''
+    // Build service description for couple bookings
+    let serviceDesc = `"${serviceName}"`
+    if (isCouple && coupleServices.length > 0) {
+      const serviceList = coupleServices.map(s => s.serviceName).join(' + ')
+      serviceDesc = `Couple ${recipientCount} คน: ${serviceList}`
+    }
     const staffNotifRows = availableStaff.map(staff => ({
       user_id: staff.profile_id,
       type: 'new_job',
-      title: 'งานใหม่เข้ามา!',
-      message: `มีงาน "${serviceName}" ${location ? `ที่ ${location}` : ''} วันที่ ${scheduledDate} เวลา ${scheduledTime}${booking.provider_preference && booking.provider_preference !== 'no-preference' ? ` (ลูกค้าต้องการ: ${getProviderPreferenceLabelServer(booking.provider_preference)})` : ''}`,
+      title: isCouple ? 'งาน Couple ใหม่เข้ามา!' : 'งานใหม่เข้ามา!',
+      message: `มีงาน ${serviceDesc} ${location ? `ที่ ${location}` : ''} วันที่ ${scheduledDate} เวลา ${scheduledTime}${booking.provider_preference && booking.provider_preference !== 'no-preference' ? ` (ลูกค้าต้องการ: ${getProviderPreferenceLabelServer(booking.provider_preference)})` : ''}`,
       data: { booking_id: bookingId, job_ids: jobIds, provider_preference: booking.provider_preference || 'no-preference' },
       is_read: false,
     }))
