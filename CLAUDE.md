@@ -88,6 +88,23 @@ resolve-library-id → query-docs
 - `deploy_edge_function` — Deploy serverless functions
 - `generate_typescript_types` — Generate types from schema
 
+### Vercel (Deployment Management)
+**Auto-use** whenever working with deployments, builds, or production issues.
+- `getDeployments` — List recent deployments, check build status
+- `getDeployment` — Get deployment details (build logs, errors, state)
+- `getDeploymentEvents` — View build/runtime events and logs
+- `listDeploymentFiles` / `getDeploymentFileContents` — Inspect deployed files
+- `cancelDeployment` / `deleteDeployment` — Manage deployments
+
+**Vercel Projects:**
+| App | Vercel Project Name |
+|-----|-------------------|
+| Admin | `the-bliss-at-home-admin` |
+| Customer | `the-bliss-at-home-customer` |
+| Hotel | `the-bliss-at-home-hotel` |
+| Staff | `the-bliss-at-home-staff` |
+| Server | `the-bliss-at-home-server` |
+
 ### Playwright (Browser Automation)
 Always use `browser_snapshot` first to understand page structure before interacting.
 
@@ -100,9 +117,14 @@ Always use `browser_snapshot` first to understand page structure before interact
 | Debug API errors | Supabase (logs) | - |
 | Test UI flow | Playwright | - |
 | Implement auth | Supabase (docs) | Context7 |
+| Check deploy status | Vercel | - |
+| Debug build errors | Vercel (events/logs) | Supabase (logs) |
+| View production files | Vercel | - |
+| Cancel/manage deploys | Vercel | - |
 
 ## Rules
 1. **Always search docs first** when implementing new features
 2. **Use Supabase MCP** for database questions (don't guess schema)
 3. **Use Playwright snapshot** before browser interactions
 4. **Check `docs/CHECKLIST.md`** to see current task status and remaining work
+5. **Use Vercel MCP automatically** when tasks involve: deploy status, build errors, production debugging, deployment management, or any Vercel-related operations
