@@ -5,23 +5,6 @@ import { authService } from '@bliss/supabase/auth'
 import type { RegisterCredentials } from '@bliss/supabase/auth'
 import { useTranslation } from '@bliss/i18n'
 
-function generateTestData() {
-  const firstNames = ['สมชาย', 'สมหญิง', 'วิชัย', 'สุดา', 'ประเสริฐ', 'นภา', 'ธนา', 'พิมพ์', 'กิตติ', 'อรุณ']
-  const lastNames = ['ใจดี', 'สุขสันต์', 'มีชัย', 'รักไทย', 'แสนดี', 'วงษ์สวัสดิ์', 'พงศ์พันธ์', 'ศรีสุข']
-  const id = Math.random().toString(36).slice(2, 7)
-  const name = firstNames[Math.floor(Math.random() * firstNames.length)]
-  const surname = lastNames[Math.floor(Math.random() * lastNames.length)]
-  const phone = `08${Math.floor(Math.random() * 2) + 1}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`
-  return {
-    name: `${name} ${surname}`,
-    email: `test.${id}@example.com`,
-    phone,
-    password: 'Test1234!',
-    confirmPassword: 'Test1234!',
-    agreeToTerms: true,
-  }
-}
-
 function Register() {
   const { t } = useTranslation('auth')
   const navigate = useNavigate()
@@ -29,7 +12,14 @@ function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState(generateTestData)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    agreeToTerms: false,
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
