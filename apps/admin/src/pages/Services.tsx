@@ -32,6 +32,9 @@ interface Service {
   duration: number
   duration_options?: number[] // New multiple duration options
   base_price: number
+  price_60?: number
+  price_90?: number
+  price_120?: number
   hotel_price: number
   staff_commission_rate: number
   image_url?: string
@@ -450,7 +453,7 @@ function Services() {
               <div className="space-y-2 mb-4 p-3 bg-stone-50 rounded-xl">
                 <div className="flex justify-between text-sm">
                   <span className="text-stone-600">ราคาบริการ:</span>
-                  <span className="font-semibold text-amber-700">฿{service.base_price.toLocaleString()}</span>
+                  <span className="font-semibold text-amber-700">฿{(service.price_60 ?? service.base_price).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs text-blue-600">
                   <span>คอมมิชชั่น Staff:</span>

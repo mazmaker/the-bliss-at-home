@@ -43,7 +43,7 @@ const navigation = [
   { name: 'โปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'รีวิว', nameEn: 'Reviews', href: '/admin/reviews', icon: Star },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'ตั้งค้า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'ตั้งค่า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 function AdminLayout() {
