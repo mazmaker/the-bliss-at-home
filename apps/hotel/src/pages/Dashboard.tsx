@@ -201,12 +201,14 @@ const fetchDashboardStats = async (hotelId: string): Promise<DashboardStats> => 
     s.name.includes('เล็บ') || s.nameEn.toLowerCase().includes('nail')
   ).reduce((sum, s) => sum + s.percentage, 0)
 
-  const otherServices = 100 - massageServices - nailServices
+  const otherServices = Math.max(0, 100 - massageServices - nailServices)
+  const totalRaw = massageServices + nailServices + otherServices
+  const normalize = (v: number) => totalRaw > 0 ? Math.round(v / totalRaw * 100) : 0
 
   const serviceCategories = [
-    { category: 'Massage Services', percentage: massageServices, count: topServices.filter(s => s.name.includes('นวด')).length },
-    { category: 'Nail Services', percentage: nailServices, count: topServices.filter(s => s.name.includes('เล็บ')).length },
-    { category: 'Wellness & Spa', percentage: Math.max(0, otherServices), count: topServices.length - 2 }
+    { category: 'Massage Services', percentage: normalize(massageServices), count: topServices.filter(s => s.name.includes('นวด')).length },
+    { category: 'Nail Services', percentage: normalize(nailServices), count: topServices.filter(s => s.name.includes('เล็บ')).length },
+    { category: 'Wellness & Spa', percentage: normalize(otherServices), count: topServices.length - 2 }
   ]
 
   // Spending behavior analysis

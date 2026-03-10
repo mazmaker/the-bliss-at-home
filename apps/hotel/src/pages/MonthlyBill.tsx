@@ -116,9 +116,9 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     .eq('hotel_id', hotelId)
     .eq('year', currentYear)
     .eq('month', currentMonth)
-    .single()
+    .maybeSingle()
 
-  if (currentBillError && currentBillError.code !== 'PGRST116') {
+  if (currentBillError) {
     console.error('Current month bill query error:', currentBillError)
     // Continue without current bill data
   }
