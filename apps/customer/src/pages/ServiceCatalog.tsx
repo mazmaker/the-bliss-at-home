@@ -48,6 +48,8 @@ function ServiceCatalog() {
     return services?.map(service => ({
       id: service.id,
       name: service.name_en || service.name_th,
+      name_th: service.name_th || '',
+      name_en: service.name_en || '',
       price: Number(service.base_price || 0),
       category: service.category,
       rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
@@ -62,7 +64,10 @@ function ServiceCatalog() {
   const filteredServices = useMemo(() => {
     let filtered = transformedServices.filter(service => {
       const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory
-      const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const q = searchQuery.toLowerCase()
+      const matchesSearch = !q ||
+        service.name_th.toLowerCase().includes(q) ||
+        service.name_en.toLowerCase().includes(q)
       return matchesCategory && matchesSearch
     })
 
