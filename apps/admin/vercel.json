@@ -1,5 +1,6 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "ignoreCommand": "[ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ] && exit 1; git diff --quiet $VERCEL_GIT_PREVIOUS_SHA HEAD -- apps/admin packages/ 2>/dev/null; code=$?; [ $code -eq 128 ] && exit 1 || exit $code"
 }
