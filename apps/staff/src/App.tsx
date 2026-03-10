@@ -1,4 +1,4 @@
-// test: path filter verification v2
+// test: path filter verification v3 — staff only
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { ProtectedRoute } from '@bliss/ui'
