@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, MessageCircle, XCircle, Download, FileText, Users } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, XCircle, Download, FileText, Users } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
@@ -493,12 +493,6 @@ function BookingDetails() {
                     </div>
                   )}
                 </div>
-                {(booking.status === 'confirmed' || booking.status === 'pending') && (
-                  <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
-                    <MessageCircle className="w-4 h-4" />
-                    {t('details.chat')}
-                  </button>
-                )}
               </div>
             </div>
           </div>
