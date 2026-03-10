@@ -454,7 +454,13 @@ function BookingDetails() {
                 </p>
               </div>
               <div className="mt-4 pt-4 border-t border-stone-100">
-                <button className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    const addr = [booking.address.address, booking.address.subdistrict, booking.address.district, booking.address.province, booking.address.zipcode].filter(Boolean).join(' ')
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`)
+                  }}
+                  className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1"
+                >
                   <Map className="w-4 h-4" />
                   {t('details.viewMap')}
                 </button>
@@ -612,7 +618,10 @@ function BookingDetails() {
                 {t('details.viewService')}
               </button>
 
-              <button className="w-full text-stone-500 py-2 text-sm hover:text-stone-700">
+              <button
+                onClick={() => window.open('mailto:support@theblissathome.com')}
+                className="w-full text-stone-500 py-2 text-sm hover:text-stone-700"
+              >
                 {t('details.contactSupport')}
               </button>
             </div>

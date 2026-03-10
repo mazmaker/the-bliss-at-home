@@ -403,7 +403,10 @@ function ServiceDetails() {
 
               <div className="mt-6 pt-6 border-t border-stone-200 text-center">
                 <p className="text-sm text-stone-500">{t('services:details.questions')}</p>
-                <button className="text-amber-700 font-medium text-sm hover:underline mt-1">
+                <button
+                  onClick={() => window.open('mailto:support@theblissathome.com')}
+                  className="text-amber-700 font-medium text-sm hover:underline mt-1"
+                >
                   {t('services:details.askMore')}
                 </button>
               </div>
