@@ -477,14 +477,14 @@ export async function reportSOS(
   location: { latitude: number; longitude: number } | null,
   message?: string
 ): Promise<void> {
-  const { error } = await supabase.from('sos_reports').insert({
+  const { error } = await supabase.from('sos_alerts').insert({
     staff_id: staffId,
-    job_id: jobId,
+    booking_id: jobId,
     latitude: location?.latitude || null,
     longitude: location?.longitude || null,
-    message: message || 'SOS Emergency',
-    status: 'active',
-    created_at: new Date().toISOString(),
+    message: message || 'SOS Emergency from Staff',
+    status: 'pending',
+    priority: 'high',
   })
 
   if (error) {
