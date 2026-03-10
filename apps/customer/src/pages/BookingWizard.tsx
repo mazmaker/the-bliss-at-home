@@ -712,9 +712,9 @@ function BookingWizard() {
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {availableDates.map((date) => {
                     const dateObj = new Date(date)
-                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' })
+                    const dayName = dateObj.toLocaleDateString('th-TH', { weekday: 'short' })
                     const dayNum = dateObj.getDate()
-                    const monthName = dateObj.toLocaleDateString('en-US', { month: 'short' })
+                    const monthName = dateObj.toLocaleDateString('th-TH', { month: 'short' })
 
                     return (
                       <button
@@ -762,7 +762,7 @@ function BookingWizard() {
               ) : (
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  {t('wizard.step2.selectedDateTime', { date: new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'long' }), time: selectedTime })}
+                  {t('wizard.step2.selectedDateTime', { date: new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' }), time: selectedTime })}
                 </div>
               )}
             </div>
@@ -1092,7 +1092,7 @@ function BookingWizard() {
                 <div>
                   <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2"><Calendar className="w-4 h-4" /> {t('wizard.step5.dateTime')}</h4>
                   <p className="text-stone-600">
-                    {new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'long' })}
+                    {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' })}
                   </p>
                   <p className="text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {selectedTime}</p>
                 </div>

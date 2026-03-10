@@ -417,7 +417,7 @@ function BookingDetails() {
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <p className="text-stone-900 font-semibold">
-                    {new Date(booking.date).toLocaleDateString('en-US', {
+                    {new Date(booking.date).toLocaleDateString('th-TH', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -629,7 +629,7 @@ function BookingDetails() {
             {/* Booking Info */}
             <div className="bg-stone-50 rounded-xl p-4 text-sm">
               <p className="text-stone-600">
-                {t('details.bookedOn', { date: new Date(booking.createdAt).toLocaleDateString('en-US', {
+                {t('details.bookedOn', { date: new Date(booking.createdAt).toLocaleDateString('th-TH', {
                   dateStyle: 'long',
                 }) })}
               </p>
