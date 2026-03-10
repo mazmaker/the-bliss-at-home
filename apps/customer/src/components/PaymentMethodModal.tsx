@@ -46,7 +46,7 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
         queryKey: ['paymentMethods', 'customer', customerId],
       })
 
-      toast.success('Payment method added successfully')
+      toast.success('เพิ่มวิธีชำระเงินสำเร็จ')
       onClose()
       // Reset form
       setIsDefault(false)
@@ -62,14 +62,14 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Payment Method"
+      title="เพิ่มวิธีชำระเงิน"
       size="md"
     >
       <div className="space-y-4">
         <CreditCardForm
           onSubmit={handleCardSubmit}
           isLoading={isProcessing}
-          submitButtonText="Add Payment Method"
+          submitButtonText="เพิ่มวิธีชำระเงิน"
         />
 
         {/* Set as Default Checkbox */}
@@ -86,7 +86,7 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
             htmlFor="is-default-payment"
             className="text-sm text-stone-700 cursor-pointer"
           >
-            Set as default payment method
+            ตั้งเป็นวิธีชำระเงินหลัก
           </label>
         </div>
       </div>

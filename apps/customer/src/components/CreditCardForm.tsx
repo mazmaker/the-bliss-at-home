@@ -8,7 +8,7 @@ interface CreditCardFormProps {
   submitButtonText?: string
 }
 
-function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely' }: CreditCardFormProps) {
+function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระเงินอย่างปลอดภัย' }: CreditCardFormProps) {
   const [cardDetails, setCardDetails] = useState<CardDetails>({
     name: '',
     number: '',
@@ -64,31 +64,31 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
 
     // Name validation
     if (!cardDetails.name.trim()) {
-      newErrors.name = 'Cardholder name is required'
+      newErrors.name = 'กรุณากรอกชื่อบนบัตร'
     }
 
     // Card number validation (simple check for 13-19 digits)
     const cardNumberClean = cardDetails.number.replace(/\s/g, '')
     if (cardNumberClean.length < 13 || cardNumberClean.length > 19) {
-      newErrors.number = 'Invalid card number'
+      newErrors.number = 'หมายเลขบัตรไม่ถูกต้อง'
     }
 
     // Expiry month validation
     const month = parseInt(cardDetails.expiration_month)
     if (!cardDetails.expiration_month || month < 1 || month > 12) {
-      newErrors.expiration_month = 'Invalid month'
+      newErrors.expiration_month = 'เดือนไม่ถูกต้อง'
     }
 
     // Expiry year validation
     const currentYear = new Date().getFullYear()
     const year = parseInt(cardDetails.expiration_year)
     if (!cardDetails.expiration_year || year < currentYear || year > currentYear + 20) {
-      newErrors.expiration_year = 'Invalid year'
+      newErrors.expiration_year = 'ปีไม่ถูกต้อง'
     }
 
     // CVV validation
     if (!cardDetails.security_code || cardDetails.security_code.length < 3) {
-      newErrors.security_code = 'Invalid CVV'
+      newErrors.security_code = 'CVV ไม่ถูกต้อง'
     }
 
     setErrors(newErrors)
@@ -107,7 +107,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
       {/* Cardholder Name */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          Cardholder Name <span className="text-red-500">*</span>
+          ชื่อบนบัตร <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -128,7 +128,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
       {/* Card Number */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          Card Number <span className="text-red-500">*</span>
+          หมายเลขบัตร <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
@@ -150,7 +150,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            Month <span className="text-red-500">*</span>
+            เดือน <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -168,7 +168,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
 
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            Year <span className="text-red-500">*</span>
+            ปี <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -207,7 +207,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
       <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
         <Lock className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <p>
-          Your payment information is secure. We use Omise payment gateway with industry-standard encryption.
+          ข้อมูลบัตรของคุณได้รับการรักษาความปลอดภัย เราใช้บริการ Omise ระบบชำระเงินที่ได้มาตรฐานสากล
         </p>
       </div>
 
@@ -220,7 +220,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'Pay Securely'
         {isLoading ? (
           <>
             <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>Processing...</span>
+            <span>กำลังประมวลผล...</span>
           </>
         ) : (
           <>

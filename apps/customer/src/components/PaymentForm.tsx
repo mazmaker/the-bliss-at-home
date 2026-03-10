@@ -180,7 +180,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       {/* Cardholder Name */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          Cardholder Name <span className="text-red-500">*</span>
+          ชื่อบนบัตร <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -196,7 +196,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       {/* Card Number */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          Card Number <span className="text-red-500">*</span>
+          หมายเลขบัตร <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
@@ -216,7 +216,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            Month <span className="text-red-500">*</span>
+            เดือน <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -230,7 +230,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            Year <span className="text-red-500">*</span>
+            ปี <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -269,7 +269,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
           disabled={isLoading}
         />
         <label htmlFor="saveCard" className="text-sm text-stone-700">
-          Save this card for future payments
+          บันทึกบัตรนี้สำหรับการชำระเงินครั้งต่อไป
         </label>
       </div>
 
@@ -282,12 +282,12 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
         {isLoading ? (
           <>
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            Processing...
+            กำลังประมวลผล...
           </>
         ) : (
           <>
             <Lock className="w-4 h-4" />
-            Pay ฿{amount.toLocaleString()}
+            ชำระเงิน ฿{amount.toLocaleString()}
           </>
         )}
       </button>
