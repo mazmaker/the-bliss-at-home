@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from '@bliss/i18n'
 import Button from '../Button'
 import Input from '../Input'
 import Loader from '../Loader'
@@ -27,6 +28,7 @@ export function PasswordResetForm({
   onBackToLogin,
 }: PasswordResetFormProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation('auth')
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +46,7 @@ export function PasswordResetForm({
         if (redirectTo) navigate(redirectTo)
       }, 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send reset email')
+      setError(err instanceof Error ? err.message : t('forgotPassword.sendButton'))
     } finally {
       setIsLoading(false)
     }
@@ -69,17 +71,17 @@ export function PasswordResetForm({
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Check your email
+          {t('forgotPassword.successTitle')}
         </h3>
         <p className="text-gray-600 mb-4">
-          We've sent a password reset link to {email}
+          {t('forgotPassword.successMessage', { email })}
         </p>
         {showBackLink && (
           <button
             onClick={onBackToLogin || (() => navigate(redirectTo))}
             className="text-sm font-medium text-gray-600 hover:text-gray-900"
           >
-            Back to login
+            {t('forgotPassword.backToLogin')}
           </button>
         )}
       </div>
@@ -90,11 +92,10 @@ export function PasswordResetForm({
     <div className="w-full">
       <div className="text-center mb-6">
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Reset your password
+          {t('forgotPassword.title')}
         </h3>
         <p className="text-sm text-gray-600">
-          Enter your email address and we'll send you a link to reset your
-          password.
+          {t('forgotPassword.subtitle')}
         </p>
       </div>
 
@@ -113,7 +114,7 @@ export function PasswordResetForm({
             htmlFor="reset-email"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Email Address
+            {t('forgotPassword.emailLabel')}
           </label>
           <Input
             id="reset-email"
@@ -135,10 +136,10 @@ export function PasswordResetForm({
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
               <Loader size="sm" />
-              Sending...
+              {t('forgotPassword.sending')}
             </span>
           ) : (
-            'Send Reset Link'
+            t('forgotPassword.sendButton')
           )}
         </Button>
       </form>
@@ -150,7 +151,7 @@ export function PasswordResetForm({
             disabled={isLoading}
             className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
           >
-            Back to login
+            {t('forgotPassword.backToLogin')}
           </button>
         </div>
       )}
