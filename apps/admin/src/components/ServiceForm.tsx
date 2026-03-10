@@ -34,7 +34,8 @@ const serviceFormSchema = z.object({
   base_price: z.coerce
     .number({ required_error: 'ระบุราคาเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
-    .max(50000, 'ราคาสูงสุด 50,000 บาท'),
+    .max(50000, 'ราคาสูงสุด 50,000 บาท')
+    .optional(),
   price_60: z.coerce
     .number({ required_error: 'ระบุราคา 60 นาทีเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
@@ -164,7 +165,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         price_60: editData.price_60 || undefined,
         price_90: editData.price_90 || undefined,
         price_120: editData.price_120 || undefined,
-        staff_commission_rate: editData.staff_commission_rate || 25.00,
+        staff_commission_rate: editData.staff_commission_rate != null ? editData.staff_commission_rate * 100 : 25.00,
         image_url: editData.image_url || '',
         is_active: editData.is_active !== undefined ? editData.is_active : true,
         sort_order: editData.sort_order || 0,
@@ -240,6 +241,10 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         slug: data.slug || generateSlug(data.name_en),
         image_url: data.image_url || null,
         sort_order: data.sort_order || 0,
+        // Set base_price from first available per-duration price
+        base_price: data.base_price ?? data.price_60 ?? data.price_90 ?? data.price_120,
+        // Convert commission from percentage (25) to fraction (0.25) for DB storage
+        staff_commission_rate: data.staff_commission_rate / 100,
         // Set duration from the first selected option for backward compatibility
         duration: data.duration_options[0], // Primary duration for backward compatibility
         // duration_options is now included since database column exists
@@ -349,7 +354,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                     <button
                       key={cat.id}
                       type="button"
-                      onClick={() => setValue('category', cat.id as any)}
+                      onClick={() => setValue('category', cat.id as any, { shouldValidate: true })}
                       className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition ${
                         isSelected
                           ? 'border-amber-500 bg-amber-50'
@@ -671,7 +676,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                     type="number"
                     min="0"
                     max="100"
-                    step="0.5"
+                    step="0.01"
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     placeholder="25.00"
                   />

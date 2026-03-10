@@ -457,7 +457,7 @@ function Services() {
                 </div>
                 <div className="flex justify-between text-xs text-blue-600">
                   <span>คอมมิชชั่น Staff:</span>
-                  <span className="font-medium">{service.staff_commission_rate}%</span>
+                  <span className="font-medium">{((service.staff_commission_rate ?? 0) * 100).toFixed(0)}%</span>
                 </div>
                 <div className="flex justify-between text-xs text-stone-600">
                   <span>ระยะเวลาที่มี:</span>
