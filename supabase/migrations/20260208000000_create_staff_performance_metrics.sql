@@ -186,13 +186,13 @@ CREATE OR REPLACE FUNCTION get_platform_averages(
 BEGIN
     RETURN QUERY
     SELECT
-        COALESCE(AVG(completion_rate), 88.5)::DECIMAL(5, 2),
-        COALESCE(AVG(response_rate), 89.2)::DECIMAL(5, 2),
-        COALESCE(AVG(cancel_rate), 5.8)::DECIMAL(5, 2),
-        COALESCE(AVG(avg_rating), 4.3)::DECIMAL(3, 2)
-    FROM staff_performance_metrics
-    WHERE (p_year IS NULL OR year = p_year)
-        AND (p_month IS NULL OR month = p_month);
+        COALESCE(AVG(spm.completion_rate), 88.5)::DECIMAL(5, 2),
+        COALESCE(AVG(spm.response_rate), 89.2)::DECIMAL(5, 2),
+        COALESCE(AVG(spm.cancel_rate), 5.8)::DECIMAL(5, 2),
+        COALESCE(AVG(spm.avg_rating), 4.3)::DECIMAL(3, 2)
+    FROM staff_performance_metrics spm
+    WHERE (p_year IS NULL OR spm.year = p_year)
+        AND (p_month IS NULL OR spm.month = p_month);
 END;
 $$ LANGUAGE plpgsql;
 
