@@ -88,7 +88,7 @@ export function AuthLayout({
       {/* Footer */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <p className="text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} {appTitle}. All rights reserved.
+          © {new Date().getFullYear()} {appTitle}. สงวนลิขสิทธิ์
         </p>
       </div>
     </div>

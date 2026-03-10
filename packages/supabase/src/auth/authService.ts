@@ -112,7 +112,7 @@ async function login(
   })
 
   if (authError) {
-    throw new AuthError('Invalid email or password', 'INVALID_CREDENTIALS')
+    throw new AuthError('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'INVALID_CREDENTIALS')
   }
 
   // Get user profile
@@ -123,25 +123,19 @@ async function login(
     .single()
 
   if (profileError || !profile) {
-    throw new AuthError('Profile not found', 'UNKNOWN')
+    throw new AuthError('ไม่พบโปรไฟล์ผู้ใช้', 'UNKNOWN')
   }
 
   // Check account status
   if (profile.status !== 'ACTIVE') {
     await supabase.auth.signOut()
-    throw new AuthError(
-      `Account is ${profile.status.toLowerCase().replace('_', ' ')}`,
-      'ACCOUNT_DISABLED'
-    )
+    throw new AuthError('บัญชีนี้ถูกระงับการใช้งาน', 'ACCOUNT_DISABLED')
   }
 
   // Validate role if expectedRole is provided
   if (expectedRole && profile.role !== expectedRole) {
     await supabase.auth.signOut()
-    throw new AuthError(
-      `This account is not authorized as ${expectedRole.toLowerCase()}`,
-      'INVALID_ROLE'
-    )
+    throw new AuthError('บัญชีนี้ไม่มีสิทธิ์เข้าถึง', 'INVALID_ROLE')
   }
 
   // Update last login
@@ -192,17 +186,17 @@ async function register(credentials: RegisterCredentials): Promise<AuthResponse>
   if (authError) {
     // Check if email already exists
     if (authError.message.includes('already registered')) {
-      throw new AuthError('Email already registered', 'INVALID_CREDENTIALS')
+      throw new AuthError('อีเมลนี้ถูกใช้งานแล้ว', 'INVALID_CREDENTIALS')
     }
     throw new AuthError(authError.message, 'UNKNOWN')
   }
 
   if (!authData.user) {
-    throw new AuthError('Registration failed', 'UNKNOWN')
+    throw new AuthError('การลงทะเบียนล้มเหลว', 'UNKNOWN')
   }
 
   if (!authData.session) {
-    throw new AuthError('Registration failed - no session created', 'UNKNOWN')
+    throw new AuthError('การลงทะเบียนล้มเหลว - ไม่สามารถสร้างเซสชันได้', 'UNKNOWN')
   }
 
   // Create profile manually
@@ -297,7 +291,7 @@ async function resetPassword(email: string): Promise<void> {
   })
 
   if (error) {
-    throw new AuthError('Failed to send reset email', 'UNKNOWN')
+    throw new AuthError('ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้', 'UNKNOWN')
   }
 }
 
@@ -310,7 +304,7 @@ async function updatePassword(newPassword: string): Promise<void> {
   })
 
   if (error) {
-    throw new AuthError('Failed to update password', 'UNKNOWN')
+    throw new AuthError('ไม่สามารถอัปเดตรหัสผ่านได้', 'UNKNOWN')
   }
 }
 
@@ -330,7 +324,7 @@ async function signInWithGoogle(): Promise<void> {
   })
 
   if (error) {
-    throw new AuthError('Failed to sign in with Google', 'OAUTH_ERROR')
+    throw new AuthError('ไม่สามารถเข้าสู่ระบบด้วย Google ได้', 'OAUTH_ERROR')
   }
 }
 
@@ -348,7 +342,7 @@ async function signInWithFacebook(): Promise<void> {
   })
 
   if (error) {
-    throw new AuthError('Failed to sign in with Facebook', 'OAUTH_ERROR')
+    throw new AuthError('ไม่สามารถเข้าสู่ระบบด้วย Facebook ได้', 'OAUTH_ERROR')
   }
 }
 
@@ -588,7 +582,7 @@ async function loginWithLine(
   if (authError) {
     // Check for rate limit error
     if (authError.message?.toLowerCase().includes('rate limit')) {
-      throw new AuthError('Too many login attempts. Please wait a moment and try again.', 'RATE_LIMIT')
+      throw new AuthError('เข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่', 'RATE_LIMIT')
     }
     console.error('🔴 [LINE Login] Signup failed:', authError)
     throw new AuthError('Failed to create LINE account: ' + authError.message, 'SIGNUP_FAILED')
