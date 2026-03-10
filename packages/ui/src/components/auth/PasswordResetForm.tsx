@@ -46,7 +46,7 @@ export function PasswordResetForm({
         if (redirectTo) navigate(redirectTo)
       }, 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('forgotPassword.sendButton'))
+      setError(t('forgotPassword.error'))
     } finally {
       setIsLoading(false)
     }
