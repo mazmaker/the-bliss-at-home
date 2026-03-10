@@ -230,7 +230,7 @@ function TransactionHistory() {
 
                     <div className="flex items-center justify-between text-sm">
                       <p className="text-stone-500">
-                        {new Date(transaction.created_at!).toLocaleDateString('en-US', {
+                        {new Date(transaction.created_at!).toLocaleDateString('th-TH', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
