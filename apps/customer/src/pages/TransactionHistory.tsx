@@ -75,13 +75,13 @@ function TransactionHistory() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'successful':
-        return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Successful</span>
+        return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">สำเร็จ</span>
       case 'refunded':
-        return <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">Refunded</span>
+        return <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">คืนเงิน</span>
       case 'failed':
-        return <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Failed</span>
+        return <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">ล้มเหลว</span>
       case 'pending':
-        return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">Pending</span>
+        return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">รอดำเนินการ</span>
       default:
         return <span className="px-3 py-1 bg-stone-100 text-stone-700 text-xs font-medium rounded-full">{status}</span>
     }
@@ -93,7 +93,7 @@ function TransactionHistory() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-amber-700 mb-4"></div>
-            <p className="text-stone-600">Loading transactions...</p>
+            <p className="text-stone-600">กำลังโหลดธุรกรรม...</p>
           </div>
         </div>
       </div>
@@ -106,13 +106,13 @@ function TransactionHistory() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">Error Loading Transactions</h2>
+            <h2 className="text-2xl font-bold text-stone-900 mb-2">เกิดข้อผิดพลาดในการโหลดธุรกรรม</h2>
             <p className="text-stone-600 mb-6">{error.message}</p>
             <button
               onClick={() => window.location.reload()}
               className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
             >
-              Retry
+              ลองใหม่
             </button>
           </div>
         </div>
@@ -125,8 +125,8 @@ function TransactionHistory() {
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">Transaction History</h1>
-          <p className="text-stone-600">View all your payment transactions and receipts</p>
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">ประวัติธุรกรรม</h1>
+          <p className="text-stone-600">ดูธุรกรรมการชำระเงินและใบเสร็จทั้งหมดของคุณ</p>
         </div>
 
         {/* Filter Tabs */}
@@ -139,7 +139,7 @@ function TransactionHistory() {
                 : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
             }`}
           >
-            All Transactions
+            ทั้งหมด
           </button>
           <button
             onClick={() => setFilter('successful')}
@@ -149,7 +149,7 @@ function TransactionHistory() {
                 : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
             }`}
           >
-            Successful
+            สำเร็จ
           </button>
           <button
             onClick={() => setFilter('pending')}
@@ -159,7 +159,7 @@ function TransactionHistory() {
                 : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
             }`}
           >
-            Pending
+            รอดำเนินการ
           </button>
           <button
             onClick={() => setFilter('refunded')}
@@ -169,7 +169,7 @@ function TransactionHistory() {
                 : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
             }`}
           >
-            Refunded
+            คืนเงิน
           </button>
           <button
             onClick={() => setFilter('failed')}
@@ -179,7 +179,7 @@ function TransactionHistory() {
                 : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
             }`}
           >
-            Failed
+            ล้มเหลว
           </button>
         </div>
 
@@ -187,13 +187,13 @@ function TransactionHistory() {
         {filteredTransactions.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <Receipt className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-stone-900 mb-2">No transactions found</h3>
-            <p className="text-stone-600 mb-6">You don't have any transactions yet</p>
+            <h3 className="text-lg font-semibold text-stone-900 mb-2">ไม่พบธุรกรรม</h3>
+            <p className="text-stone-600 mb-6">คุณยังไม่มีธุรกรรม</p>
             <Link
               to="/services"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800"
             >
-              Browse Services
+              ดูบริการ
             </Link>
           </div>
         ) : (
@@ -296,7 +296,7 @@ function TransactionHistory() {
                     {transaction.status === 'refunded' && (
                       <div className="mt-3 p-2 bg-purple-50 border border-purple-200 rounded-lg flex items-center gap-2 text-sm text-purple-800">
                         <AlertCircle className="w-4 h-4" />
-                        This transaction has been refunded to your original payment method
+                        ธุรกรรมนี้ได้รับการคืนเงินไปยังวิธีการชำระเงินเดิมของคุณ
                       </div>
                     )}
                   </div>
@@ -309,28 +309,28 @@ function TransactionHistory() {
         {/* Summary */}
         {transactions.length > 0 && (
           <div className="mt-6 bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold text-stone-900 mb-4">Summary</h3>
+            <h3 className="font-semibold text-stone-900 mb-4">สรุป</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm text-stone-500 mb-1">Total Transactions</p>
+                <p className="text-sm text-stone-500 mb-1">ธุรกรรมทั้งหมด</p>
                 <p className="text-xl font-bold text-stone-900">
                   {summary?.total_transactions || transactions.length}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">Total Spent</p>
+                <p className="text-sm text-stone-500 mb-1">ยอดใช้จ่ายทั้งหมด</p>
                 <p className="text-xl font-bold text-amber-700">
                   ฿{summary?.total_spent || transactions.filter(t => t.status === 'successful').reduce((sum, t) => sum + t.amount, 0)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">Successful</p>
+                <p className="text-sm text-stone-500 mb-1">สำเร็จ</p>
                 <p className="text-xl font-bold text-green-600">
                   {summary?.successful_transactions || transactions.filter((t) => t.status === 'successful').length}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">Refunded</p>
+                <p className="text-sm text-stone-500 mb-1">คืนเงิน</p>
                 <p className="text-xl font-bold text-purple-600">
                   {transactions.filter((t) => t.status === 'refunded').length}
                 </p>
