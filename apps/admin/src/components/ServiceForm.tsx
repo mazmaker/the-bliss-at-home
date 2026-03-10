@@ -243,6 +243,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         sort_order: data.sort_order || 0,
         // Set base_price from first available per-duration price
         base_price: data.base_price ?? data.price_60 ?? data.price_90 ?? data.price_120,
+        // hotel_price defaults to base_price if not set (required column)
+        hotel_price: data.base_price ?? data.price_60 ?? data.price_90 ?? data.price_120,
         // Convert commission from percentage (25) to fraction (0.25) for DB storage
         staff_commission_rate: data.staff_commission_rate / 100,
         // Set duration from the first selected option for backward compatibility
