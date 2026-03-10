@@ -111,6 +111,8 @@ function App() {
         <Route path="earnings" element={<StaffEarnings />} />
         <Route path="profile" element={<StaffProfile />} />
         <Route path="settings" element={<StaffSettings />} />
+        {/* Notifications is handled via panel in header, redirect to dashboard */}
+        <Route path="notifications" element={<Navigate to="/staff" replace />} />
       </Route>
 
       {/* Default redirect - handle LIFF callback at root (LIFF Endpoint URL) */}
