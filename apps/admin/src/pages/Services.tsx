@@ -243,7 +243,7 @@ function Services() {
     }
 
     // Open Customer app service page in new tab
-    const customerBaseUrl = import.meta.env.VITE_CUSTOMER_APP_URL || 'https://www.theblissmassageathome.com'
+    const customerBaseUrl = import.meta.env.VITE_CUSTOMER_APP_URL || 'https://the-bliss-at-home-customer.vercel.app'
     const previewUrl = `${customerBaseUrl}/services/${slug}`
     window.open(previewUrl, '_blank', 'noopener,noreferrer')
   }
