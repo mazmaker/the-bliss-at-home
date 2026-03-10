@@ -472,13 +472,20 @@ export function subscribeToJobs(
 
 // Report SOS emergency
 export async function reportSOS(
-  staffId: string,
+  profileId: string,
   jobId: string | null,
   location: { latitude: number; longitude: number } | null,
   message?: string
 ): Promise<void> {
+  // sos_alerts.staff_id FK references staff(id), not profiles(id)
+  const { data: staffRecord } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
   const { error } = await supabase.from('sos_alerts').insert({
-    staff_id: staffId,
+    staff_id: staffRecord?.id || null,
     booking_id: jobId,
     latitude: location?.latitude || null,
     longitude: location?.longitude || null,
