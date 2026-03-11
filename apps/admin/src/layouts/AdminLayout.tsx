@@ -1,5 +1,6 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useAdminAuth } from '../hooks/useAdminAuth'
 import {
   LayoutDashboard,
   Package,
@@ -30,6 +31,24 @@ const navigation = [
 function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout, user, isLoading } = useAdminAuth()
+
+  // Handle logout
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    try {
+      await logout()
+      // Add small delay to ensure state is updated
+      setTimeout(() => {
+        navigate('/admin/login', { replace: true })
+      }, 100)
+    } catch (error) {
+      console.error("Logout failed", error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
@@ -93,11 +112,15 @@ function AdminLayout() {
           <div className="p-4 border-t border-stone-200">
             <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
-                A
+                {user?.full_name?.[0]?.toUpperCase() || 'A'}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-stone-900">Admin</p>
-                <p className="text-xs text-stone-500">admin@bliss.com</p>
+                <p className="text-sm font-medium text-stone-900">
+                  {user?.full_name || 'Admin'}
+                </p>
+                <p className="text-xs text-stone-500">
+                  {user?.email || 'admin@theblissathome.com'}
+                </p>
               </div>
             </div>
           </div>
@@ -131,13 +154,16 @@ function AdminLayout() {
                 <Bell className="w-5 h-5 text-stone-600" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <Link
-                to="/"
-                className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition"
+              <button
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <LogOut className="w-5 h-5" />
-                <span className="hidden sm:inline">ออกจากระบบ</span>
-              </Link>
+                <span className="hidden sm:inline">
+                  {isLoading ? 'กำลังออก...' : 'ออกจากระบบ'}
+                </span>
+              </button>
             </div>
           </div>
         </header>

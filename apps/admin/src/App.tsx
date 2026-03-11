@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { ProtectedRoute } from '@bliss/ui'
-import { useAuth } from '@bliss/supabase/auth'
+import { AdminProtectedRoute } from './components/AdminProtectedRoute'
+import { useAdminAuth } from './hooks/useAdminAuth'
 import AdminLayout from './layouts/AdminLayout'
 import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
@@ -13,7 +13,7 @@ import Settings from './pages/Settings'
 import { AdminLoginPage } from './pages/auth'
 
 function App() {
-  const { isLoading, isAuthenticated } = useAuth()
+  const { isLoading, isAuthenticated } = useAdminAuth()
 
   if (isLoading) {
     return (
@@ -41,12 +41,11 @@ function App() {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute
-            allowedRoles={['ADMIN']}
+          <AdminProtectedRoute
             redirectTo="/admin/login"
           >
             <AdminLayout />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       >
         <Route index element={<Dashboard />} />
