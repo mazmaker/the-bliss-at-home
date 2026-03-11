@@ -193,7 +193,7 @@ function BookingHistory() {
 
 
 
-  const { hotelId, isValidHotel, isLoading: hotelLoading } = useHotelContext()
+  const { hotelId, getHotelName, isValidHotel, isLoading: hotelLoading } = useHotelContext()
 
   // Cancel/Reschedule success handler
   const handleCancelRescheduleSuccess = () => {
@@ -484,7 +484,7 @@ function BookingHistory() {
         provider_preference: booking.provider_preference
       }))
 
-      const hotelName = hotel?.name || 'Hotel Partner'
+      const hotelName = getHotelName()
       generateBookingInvoicePDF(bookingData, hotelName)
     }).catch(error => {
       console.error('Error generating PDF:', error)
