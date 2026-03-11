@@ -428,6 +428,8 @@ async function loginWithLine(
       .update({
         full_name: nameToUse,
         avatar_url: pictureUrl,
+        line_user_id: lineUserId,
+        line_display_name: displayName,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile.id)
