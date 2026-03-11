@@ -310,6 +310,23 @@ export async function createBookingWithServices(
     payment_status: 'pending',
   } as any;
 
+  // Check for duplicate customer booking (same customer + date + time)
+  const { data: existing } = await client
+    .from('bookings')
+    .select('id, booking_number')
+    .eq('customer_id', bookingData.customer_id)
+    .eq('booking_date', bookingData.booking_date)
+    .eq('booking_time', bookingData.booking_time)
+    .neq('status', 'completed')
+    .neq('status', 'cancelled')
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    throw new Error(
+      `คุณมีการจองในวันและเวลานี้อยู่แล้ว (${existing[0].booking_number}) กรุณาตรวจสอบประวัติการจองของคุณ`
+    );
+  }
+
   const { data, error } = await client
     .from('bookings')
     .insert(bookingInsert)

@@ -138,6 +138,28 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       return res.status(400).json({ error: 'Missing required fields', missing })
     }
 
+    // Check for duplicate hotel room booking (same room + date + time)
+    if (bookingData.hotel_room_number) {
+      const { data: roomConflict } = await serviceSupabase
+        .from('bookings')
+        .select('id, booking_number')
+        .eq('hotel_id', bookingData.hotel_id)
+        .eq('hotel_room_number', bookingData.hotel_room_number)
+        .eq('booking_date', bookingData.booking_date)
+        .eq('booking_time', bookingData.booking_time)
+        .neq('status', 'completed')
+        .neq('status', 'cancelled')
+        .limit(1)
+
+      if (roomConflict && roomConflict.length > 0) {
+        console.log('❌ [DUPLICATE] Room conflict:', roomConflict[0].booking_number)
+        return res.status(409).json({
+          error: 'DUPLICATE_BOOKING',
+          message: `ห้อง ${bookingData.hotel_room_number} มีการจองในวันและเวลาเดียวกันอยู่แล้ว (${roomConflict[0].booking_number}) กรุณาเลือกเวลาอื่น`,
+        })
+      }
+    }
+
     // Insert booking
     const { data: booking, error: bookingError } = await serviceSupabase
       .from('bookings')
