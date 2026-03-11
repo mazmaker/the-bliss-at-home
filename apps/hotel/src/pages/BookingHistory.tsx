@@ -1,10 +1,10 @@
 // Hotel booking history - read-only status (auto-updated by booking flow)
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
   Filter, MapPin, Clock, User, CheckCircle, XCircle, List, Grid3X3, X,
   Phone, FileText, Edit, Image, History, Save,
-  Briefcase, DollarSign, CreditCard, Check, CalendarClock, ChevronDown
+  Briefcase, DollarSign, CreditCard, Check, CalendarClock
 } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
@@ -527,18 +527,6 @@ function BookingHistory() {
     document.body.removeChild(link)
   }
 
-  const [showExportMenu, setShowExportMenu] = useState(false)
-  const exportMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
-        setShowExportMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
 
   // Loading state
   if (hotelLoading || isLoading) {
@@ -584,43 +572,23 @@ function BookingHistory() {
             <p className="text-2xl font-bold text-amber-700">{filteredBookings.length}</p>
             <p className="text-sm text-stone-500">รายการทั้งหมด</p>
           </div>
-          <div ref={exportMenuRef} className="relative">
-            <div className="flex items-center rounded-lg overflow-hidden shadow-sm">
-              <button
-                onClick={handleExport}
-                disabled={filteredBookings.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="w-4 h-4" />
-                Export PDF
-              </button>
-              <div className="w-px h-8 bg-amber-500/60" />
-              <button
-                onClick={() => setShowExportMenu(v => !v)}
-                disabled={filteredBookings.length === 0}
-                className="flex items-center px-2 py-2 bg-amber-600 text-white hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
-            {showExportMenu && (
-              <div className="absolute right-0 mt-1 w-44 bg-white border border-stone-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                <button
-                  onClick={() => { handleExport(); setShowExportMenu(false) }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-amber-50 hover:text-amber-700 transition"
-                >
-                  <FileText className="w-4 h-4" />
-                  Export PDF
-                </button>
-                <button
-                  onClick={() => { handleExportCSV(); setShowExportMenu(false) }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-amber-50 hover:text-amber-700 transition"
-                >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </button>
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCSV}
+              disabled={filteredBookings.length === 0}
+              className="flex items-center gap-2 px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={filteredBookings.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              Export PDF
+            </button>
           </div>
         </div>
       </div>
