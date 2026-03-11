@@ -4,6 +4,7 @@
  */
 
 import crypto from 'crypto'
+import { createClient } from '@supabase/supabase-js'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { emailService } from './emailService.js'
 
@@ -420,11 +421,12 @@ class HotelAuthService {
   }
 
   /**
-   * Change hotel password (for hotel users on first login)
+   * Change hotel password
+   * Supports both first-login (temporary password) and regular change from Settings
    */
   async changeHotelPassword(hotelId: string, currentPassword: string, newPassword: string): Promise<void> {
     try {
-      // Get hotel data including temporary password
+      // Get hotel data
       const { data: hotel, error: hotelError } = await getSupabaseClient()
         .from('hotels')
         .select('auth_user_id, temporary_password, password_change_required, login_email')
@@ -439,17 +441,34 @@ class HotelAuthService {
         throw new Error('Hotel does not have an auth account')
       }
 
-      // Verify current password matches temporary password
-      if (!hotel.temporary_password) {
-        throw new Error('ไม่พบรหัสผ่านชั่วคราว กรุณาติดต่อผู้ดูแลระบบ')
-      }
+      if (hotel.password_change_required && hotel.temporary_password) {
+        // First-login flow: verify against temporary password
+        if (hotel.temporary_password !== currentPassword) {
+          throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง')
+        }
+      } else {
+        // Regular change from Settings: verify via Supabase auth
+        if (!hotel.login_email) {
+          throw new Error('ไม่พบอีเมลสำหรับเข้าสู่ระบบ')
+        }
 
-      if (hotel.temporary_password !== currentPassword) {
-        throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง')
-      }
+        const supabaseUrl = process.env.SUPABASE_URL
+        const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 
-      if (!hotel.password_change_required) {
-        throw new Error('บัญชีนี้ไม่ต้องเปลี่ยนรหัสผ่าน')
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error('Server configuration error')
+        }
+
+        // Create a temporary client with anon key to verify current password
+        const anonClient = createClient(supabaseUrl, supabaseAnonKey)
+        const { error: signInError } = await anonClient.auth.signInWithPassword({
+          email: hotel.login_email,
+          password: currentPassword,
+        })
+
+        if (signInError) {
+          throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง')
+        }
       }
 
       // Use Supabase Admin API to update password
@@ -464,8 +483,10 @@ class HotelAuthService {
         throw new Error(`Failed to update password: ${updateError.message}`)
       }
 
-      // Mark password change as completed
-      await this.markPasswordChangeCompleted(hotelId)
+      // If first-login flow, mark password change as completed
+      if (hotel.password_change_required) {
+        await this.markPasswordChangeCompleted(hotelId)
+      }
 
       console.log(`✅ Hotel ${hotelId} password changed successfully`)
     } catch (error) {

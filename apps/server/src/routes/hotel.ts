@@ -230,10 +230,10 @@ router.post('/change-password', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Change password error:', error)
 
-    if (error instanceof Error && error.message === 'Invalid current password') {
+    if (error instanceof Error && (error.message === 'Invalid current password' || error.message === 'รหัสผ่านปัจจุบันไม่ถูกต้อง')) {
       return res.status(401).json({
         error: 'Invalid password',
-        message: 'Current password is incorrect'
+        message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง'
       })
     }
 

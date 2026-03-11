@@ -21,14 +21,13 @@
 - Payment Refund System — full/partial refund + webhook complete **[80%]**
 
 ### Priorities (ทำก่อน)
-1. Hotel Cancel/Reschedule (0%) — ยังไม่มีเลย
+1. ~~Hotel Cancel/Reschedule (0%)~~ → ✅ พบว่าทำเสร็จแล้ว (85%)
 2. Invoice PDF จริง — ตอนนี้เป็น text file fallback (20%)
 3. Hotel + Staff Change Password backend (15%)
 4. Webhook signature verification เปิดใน production (55%)
 5. PromptPay frontend integration (backend 75%, frontend 0%)
 
 ### Blockers
-- Hotel Cancel/Reschedule ยังไม่ได้ทำ (0%)
 - Invoice PDF ยังเป็น text file — ต้องใช้ PDF library (20%)
 - Hotel + Staff Change Password ยังไม่มี backend (15%)
 - Webhook signature verification ถูก disable ใน production (55%)
@@ -218,9 +217,9 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Guest Bookings List** (75%)
   - Remaining: Advanced filter (date range, status, guest name), bulk actions (cancel, export), booking statistics summary
   - Files: `apps/hotel/src/pages/BookingHistory.tsx`
-- [ ] **Cancel/Reschedule** (0%) <<<< HIGH PRIORITY
-  - Remaining: ทั้งหมด - Hotel-side cancellation UI, reason selection, guest notification, refund trigger, reschedule date picker, policy enforcement
-  - Files: ต้องสร้างใหม่ `apps/hotel/src/components/CancelBookingModal.tsx`
+- [ ] **Cancel/Reschedule** (85%) ✅ พบว่าทำเสร็จแล้ว
+  - Remaining: Guest notification after cancel, refund trigger integration, ทดสอบ E2E flow ครบ
+  - Files: `apps/hotel/src/components/HotelCancelBookingModal.tsx`, `apps/hotel/src/components/HotelRescheduleModal.tsx`
 - [ ] **Auto Invoice Generation** (72%)
   - Remaining: Tax invoice format (ใบกำกับภาษี), withholding tax calculation, credit note for refunds, auto-send invoice email
   - Files: `apps/hotel/src/pages/Billing.tsx`
