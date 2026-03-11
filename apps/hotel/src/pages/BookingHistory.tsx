@@ -465,8 +465,12 @@ function BookingHistory() {
   }
 
   const handleExport = () => {
-    // Generate PDF Invoice using the new PDF generator
+    console.log('[Export PDF] Starting PDF generation...')
+    console.log('[Export PDF] Filtered bookings count:', filteredBookings.length)
+
     import('../utils/pdfInvoiceGenerator').then(({ generateBookingInvoicePDF }) => {
+      console.log('[Export PDF] Module loaded successfully')
+
       const bookingData = filteredBookings.map(booking => ({
         id: booking.id,
         booking_number: booking.booking_number,
@@ -474,20 +478,34 @@ function BookingHistory() {
         booking_time: booking.booking_time,
         service: {
           name_th: booking.service_name || 'ไม่ระบุบริการ',
-          price: booking.base_price
+          price: booking.final_price
         },
         customer_notes: `Guest: ${booking.guest_name}, Room: ${booking.room_number}`,
-        base_price: booking.base_price,
+        base_price: booking.final_price,
         final_price: booking.final_price,
         status: booking.status,
         created_at: booking.created_at,
         provider_preference: booking.provider_preference
       }))
 
+      console.log('[Export PDF] Booking data prepared, generating PDF...')
       const hotelName = getHotelName()
-      generateBookingInvoicePDF(bookingData, hotelName)
+      console.log('[Export PDF] Hotel name:', hotelName)
+
+      try {
+        generateBookingInvoicePDF(bookingData, hotelName)
+        console.log('[Export PDF] PDF generated and downloaded successfully')
+      } catch (pdfError) {
+        console.error('[Export PDF] Error during PDF generation:', pdfError)
+        console.error('[Export PDF] Error stack:', (pdfError as Error).stack)
+        throw pdfError
+      }
     }).catch(error => {
-      console.error('Error generating PDF:', error)
+      console.error('[Export PDF] Failed - falling back to CSV')
+      console.error('[Export PDF] Error type:', error?.constructor?.name)
+      console.error('[Export PDF] Error message:', error?.message)
+      console.error('[Export PDF] Error stack:', error?.stack)
+
       // Fallback to CSV if PDF generation fails
       const csvHeaders = ['วันที่', 'เวลา', 'เลขที่จอง', 'ชื่อแขก', 'ห้อง', 'บริการ', 'ยอดเงิน', 'สถานะ']
       const csvData = filteredBookings.map(booking => [
