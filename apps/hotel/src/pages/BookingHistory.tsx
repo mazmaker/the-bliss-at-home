@@ -4,7 +4,7 @@ import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
   Filter, MapPin, Clock, User, CheckCircle, XCircle, List, Grid3X3, X,
   Phone, FileText, Edit, Image, History, Save,
-  Briefcase, DollarSign, CreditCard, Check, CalendarClock
+  Briefcase, DollarSign, CreditCard, CalendarClock
 } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
@@ -193,7 +193,7 @@ function BookingHistory() {
 
 
 
-  const { hotelId, getHotelName, isValidHotel, isLoading: hotelLoading } = useHotelContext()
+  const { hotelId, hotelData, getHotelName, isValidHotel, isLoading: hotelLoading } = useHotelContext()
 
   // Cancel/Reschedule success handler
   const handleCancelRescheduleSuccess = () => {
@@ -243,48 +243,35 @@ function BookingHistory() {
 
 
   const handleExportPDF = (booking: SimpleBooking) => {
-    // เตรียม HTML สำหรับ PDF
-    const receiptHTML = `
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>ใบเสร็จการจอง</title>
-          <style>
-            body { font-family: 'Sarabun', Arial, sans-serif; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .details { margin-bottom: 15px; }
-            .total { font-weight: bold; font-size: 18px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h2>ใบเสร็จการจอง</h2>
-            <p>เลขที่จอง: #${booking.booking_number}</p>
-          </div>
-          <div class="details">
-            <p><strong>ชื่อแขก:</strong> ${booking.guest_name}</p>
-            <p><strong>ห้อง:</strong> ${booking.room_number}</p>
-            <p><strong>วันที่:</strong> ${new Date(booking.booking_date).toLocaleDateString('th-TH')}</p>
-            <p><strong>เวลา:</strong> ${(booking.booking_time || '--:--').substring(0, 5)}</p>
-            <p><strong>บริการ:</strong> ${booking.service_name}</p>
-            <p><strong>จำนวน:</strong> ${booking.recipient_count} คน</p>
-            <p><strong>ระยะเวลา:</strong> ${booking.duration} นาที</p>
-            <p><strong>สถานะ:</strong> ${booking.status}</p>
-          </div>
-          <div class="total">
-            <p>ยอดรวม: ฿${booking.final_price.toLocaleString()}</p>
-          </div>
-        </body>
-      </html>
-    `
-
-    // สร้าง window ใหม่สำหรับพิมพ์
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(receiptHTML)
-      printWindow.document.close()
-      printWindow.print()
-    }
+    import('../utils/pdfInvoiceGenerator').then(({ generateSingleBookingReceiptPDF }) => {
+      generateSingleBookingReceiptPDF({
+        booking_number: booking.booking_number,
+        booking_date: booking.booking_date,
+        booking_time: booking.booking_time,
+        guest_name: booking.guest_name,
+        room_number: booking.room_number,
+        service_name: booking.service_name,
+        duration: booking.duration,
+        recipient_count: booking.recipient_count,
+        final_price: booking.final_price,
+        payment_status: booking.payment_status,
+        status: booking.status,
+        customer_notes: booking.customer_notes,
+        staff_name: booking.staff_name,
+        provider_preference: booking.provider_preference,
+        created_at: booking.created_at,
+        hotel: hotelData ? {
+          name_th: hotelData.name_th,
+          address: hotelData.address,
+          phone: hotelData.phone,
+          email: hotelData.email,
+          tax_id: hotelData.tax_id ?? undefined,
+          bank_name: hotelData.bank_name ?? undefined,
+          bank_account_number: hotelData.bank_account_number ?? undefined,
+          bank_account_name: hotelData.bank_account_name ?? undefined,
+        } : null,
+      })
+    })
   }
 
   // Fetch simple bookings
@@ -485,7 +472,7 @@ function BookingHistory() {
         final_price: booking.final_price,
         status: booking.status,
         created_at: booking.created_at,
-        provider_preference: booking.provider_preference
+        provider_preference: booking.provider_preference ?? undefined
       }))
 
       console.log('[Export PDF] Booking data prepared, generating PDF...')
@@ -1250,7 +1237,7 @@ function BookingHistory() {
                     className="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition text-sm"
                   >
                     <FileText className="w-4 h-4" />
-                    ออกใบเสร็จ
+                    {selectedBooking.payment_status === 'paid' ? 'ออกใบเสร็จรับเงิน' : 'ออกใบแจ้งหนี้'}
                   </button>
 
                   {(selectedBooking.status === 'pending' || selectedBooking.status === 'confirmed') && (

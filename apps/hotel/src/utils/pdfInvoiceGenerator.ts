@@ -31,6 +31,34 @@ interface InvoiceData {
   invoiceNumber: string
 }
 
+export interface SingleBookingReceiptData {
+  booking_number: string
+  booking_date: string
+  booking_time: string
+  guest_name: string
+  room_number: string
+  service_name: string | null
+  duration: number
+  recipient_count: number
+  final_price: number
+  payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
+  status: string
+  customer_notes: string | null
+  staff_name: string | null
+  provider_preference: string | null
+  created_at: string
+  hotel?: {
+    name_th?: string
+    address?: string
+    phone?: string
+    email?: string
+    tax_id?: string
+    bank_name?: string
+    bank_account_number?: string
+    bank_account_name?: string
+  } | null
+}
+
 export class PDFInvoiceGenerator {
   private doc: jsPDF
   private margin = 20
@@ -103,28 +131,34 @@ export class PDFInvoiceGenerator {
     this.doc.setFont('Sarabun', 'normal')
     this.doc.text('บริการนวด สปา และเล็บ ถึงที่พัก', this.margin + 10, this.margin + 20)
 
-    // Invoice Title (right side)
-    this.doc.setFontSize(22)
+    // Title (right side)
+    this.doc.setFontSize(18)
     this.doc.setFont('Sarabun', 'bold')
-    this.doc.text('ใบแจ้งหนี้', this.margin + this.contentWidth - 10, this.margin + 14, { align: 'right' })
+    this.doc.text('ประวัติการจอง', this.margin + this.contentWidth - 10, this.margin + 14, { align: 'right' })
 
     this.currentY = this.margin + 35
     this.doc.setTextColor(0, 0, 0)
 
-    // Invoice info section
+    // Info section
     this.doc.setFontSize(11)
     this.doc.setFont('Sarabun', 'bold')
     this.doc.text('ข้อมูลโรงแรม', this.margin, this.currentY)
-    this.doc.text('รายละเอียดใบแจ้งหนี้', this.margin + 100, this.currentY)
+    this.doc.text('รายละเอียด', this.margin + 100, this.currentY)
     this.currentY += this.lineHeight
 
     this.doc.setFont('Sarabun', 'normal')
     this.doc.setFontSize(10)
     this.doc.text(data.hotelName, this.margin, this.currentY)
-    this.doc.text(`เลขที่: ${data.invoiceNumber}`, this.margin + 100, this.currentY)
-    this.currentY += 5
 
-    this.doc.text(`วันที่: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`, this.margin + 100, this.currentY)
+    // Compute date range from bookings
+    const bookingDates = data.bookings.map(b => b.booking_date).filter(Boolean).sort()
+    const dateRangeText = bookingDates.length > 0
+      ? bookingDates.length === 1 || bookingDates[0] === bookingDates[bookingDates.length - 1]
+        ? this.formatDateLong(bookingDates[0])
+        : `${this.formatDateLong(bookingDates[0])} - ${this.formatDateLong(bookingDates[bookingDates.length - 1])}`
+      : '-'
+
+    this.doc.text(`ช่วงเวลา: ${dateRangeText}`, this.margin + 100, this.currentY)
     this.currentY += 5
 
     this.doc.text(`จำนวนรายการ: ${data.bookings.length} รายการ`, this.margin + 100, this.currentY)
@@ -305,6 +339,14 @@ export class PDFInvoiceGenerator {
   }
 
   private addSummary(data: InvoiceData): void {
+    // Add new page if not enough space for summary box (needs 35mm above footer at 274)
+    if (this.currentY > 239) {
+      this.doc.addPage()
+      this.registerFonts()
+      this.doc.setFont('Sarabun', 'normal')
+      this.currentY = this.margin
+    }
+
     // Summary box on the right side
     const boxX = this.margin + 90
     const boxW = 80
@@ -377,7 +419,7 @@ export class PDFInvoiceGenerator {
 
     this.doc.text('ขอบคุณที่ใช้บริการ The Bliss Massage at Home', this.margin, footerY + 6)
     this.doc.text(
-      `สร้างโดยระบบ The Bliss at Home — ${new Date().toLocaleString('th-TH')}`,
+      `สร้างโดยระบบ The Bliss Massage at Home — ${new Date().toLocaleString('th-TH')}`,
       this.margin + this.contentWidth,
       footerY + 6,
       { align: 'right' }
@@ -390,6 +432,331 @@ export class PDFInvoiceGenerator {
     } catch {
       return dateStr
     }
+  }
+
+  private formatDateLong(dateStr: string): string {
+    try {
+      return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+    } catch {
+      return dateStr
+    }
+  }
+
+  // ─── Single Booking Receipt / Invoice ──────────────────────────────────────
+
+  generateSingleReceipt(data: SingleBookingReceiptData): void {
+    this.resetDocument()
+
+    const isPaid = data.payment_status === 'paid'
+    const docType = isPaid ? 'ใบเสร็จรับเงิน' : 'ใบแจ้งหนี้'
+
+    this.addReceiptHeader(docType)
+    this.addReceiptInfoSection(data, docType)
+    this.addReceiptGuestSection(data)
+    this.addReceiptServiceTable(data)
+    this.addReceiptSummary(data, isPaid)
+    this.addReceiptSignatureSection(data, isPaid)
+    this.addFooter()
+  }
+
+  private addReceiptHeader(docType: string): void {
+    this.doc.setFillColor(217, 119, 6)
+    this.doc.rect(this.margin, this.margin, this.contentWidth, 28, 'F')
+
+    this.doc.setFontSize(16)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setTextColor(255, 255, 255)
+    this.doc.text('The Bliss Massage at Home', this.margin + 5, this.margin + 12)
+
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.text('บริการนวด สปา และเล็บ ถึงที่พัก', this.margin + 5, this.margin + 20)
+
+    this.doc.setFontSize(18)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text(docType, this.margin + this.contentWidth - 5, this.margin + 16, { align: 'right' })
+
+    this.currentY = this.margin + 35
+    this.doc.setTextColor(0, 0, 0)
+  }
+
+  private addReceiptInfoSection(data: SingleBookingReceiptData, docType: string): void {
+    const leftX = this.margin
+    const rightX = this.margin + 95
+
+    // Column headers
+    this.doc.setFontSize(10)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('ข้อมูลผู้ให้บริการ', leftX, this.currentY)
+    this.doc.text('ข้อมูลเอกสาร', rightX, this.currentY)
+    this.currentY += 6
+
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'normal')
+
+    // Track Y separately for each column
+    let leftY = this.currentY
+    let rightY = this.currentY
+
+    // Left column — hotel/provider info
+    const hotelName = data.hotel?.name_th || 'The Bliss Massage at Home'
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text(hotelName, leftX, leftY)
+    this.doc.setFont('Sarabun', 'normal')
+    leftY += 5
+
+    if (data.hotel?.address) {
+      const addrLines = this.doc.splitTextToSize(data.hotel.address, 85) as string[]
+      addrLines.forEach((line: string) => {
+        this.doc.text(line, leftX, leftY)
+        leftY += 4.5
+      })
+    }
+    if (data.hotel?.phone) {
+      this.doc.text(`โทร: ${data.hotel.phone}`, leftX, leftY)
+      leftY += 4.5
+    }
+    if (data.hotel?.tax_id) {
+      this.doc.text(`เลขผู้เสียภาษี: ${data.hotel.tax_id}`, leftX, leftY)
+      leftY += 4.5
+    }
+
+    // Right column — document info
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text(`ประเภท: ${docType}`, rightX, rightY)
+    this.doc.setFont('Sarabun', 'normal')
+    rightY += 5
+    this.doc.text(`เลขที่: ${data.booking_number}`, rightX, rightY)
+    rightY += 5
+    this.doc.text(`วันที่ออก: ${this.formatDateLong(new Date().toISOString().slice(0, 10))}`, rightX, rightY)
+    rightY += 5
+    this.doc.text(`วันที่บริการ: ${this.formatDateLong(data.booking_date)}`, rightX, rightY)
+    rightY += 5
+
+    // Payment status badge
+    const statusLabel = data.payment_status === 'paid' ? 'ชำระแล้ว ✓'
+      : data.payment_status === 'processing' ? 'กำลังดำเนินการ'
+      : data.payment_status === 'failed' ? 'ชำระไม่สำเร็จ'
+      : data.payment_status === 'refunded' ? 'คืนเงินแล้ว'
+      : 'รอชำระเงิน'
+    this.doc.text(`สถานะ: ${statusLabel}`, rightX, rightY)
+    rightY += 5
+
+    this.currentY = Math.max(leftY, rightY) + 4
+
+    // Divider
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.5)
+    this.doc.line(this.margin, this.currentY, this.margin + this.contentWidth, this.currentY)
+    this.currentY += 6
+  }
+
+  private addReceiptGuestSection(data: SingleBookingReceiptData): void {
+    this.doc.setFontSize(10)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('ข้อมูลผู้รับบริการ', this.margin, this.currentY)
+    this.currentY += 6
+
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'normal')
+
+    const leftX = this.margin
+    const rightX = this.margin + 90
+
+    this.doc.text(`ชื่อแขก: ${data.guest_name}`, leftX, this.currentY)
+    this.doc.text(`เลขห้อง: ${data.room_number}`, rightX, this.currentY)
+    this.currentY += 5
+
+    if (data.customer_notes) {
+      // Extract phone if present
+      const phoneMatch = data.customer_notes.match(/Phone:\s*([^\n,]+)/)
+      if (phoneMatch) {
+        this.doc.text(`โทรศัพท์: ${phoneMatch[1].trim()}`, leftX, this.currentY)
+        this.currentY += 5
+      }
+      // Show remaining notes (without Phone: line)
+      const notes = data.customer_notes.replace(/Phone:\s*[^\n,]+[,\n]?/g, '').replace(/Guest:.*?(\n|$)/g, '').trim()
+      if (notes) {
+        const noteLines = this.doc.splitTextToSize(`หมายเหตุ: ${notes}`, this.contentWidth) as string[]
+        noteLines.slice(0, 2).forEach((line: string) => {
+          this.doc.text(line, leftX, this.currentY)
+          this.currentY += 4.5
+        })
+      }
+    }
+
+    if (data.provider_preference && data.provider_preference !== 'no-preference') {
+      const prefLabel: Record<string, string> = {
+        'female-only': 'หญิงเท่านั้น',
+        'male-only': 'ชายเท่านั้น',
+        'prefer-female': 'ต้องการหญิง',
+        'prefer-male': 'ต้องการชาย',
+      }
+      this.doc.text(`ความต้องการ: ${prefLabel[data.provider_preference] || data.provider_preference}`, leftX, this.currentY)
+      this.currentY += 5
+    }
+
+    this.currentY += 3
+
+    // Divider
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.3)
+    this.doc.line(this.margin, this.currentY, this.margin + this.contentWidth, this.currentY)
+    this.currentY += 6
+  }
+
+  private addReceiptServiceTable(data: SingleBookingReceiptData): void {
+    this.doc.setFontSize(10)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('รายการบริการ', this.margin, this.currentY)
+    this.currentY += 5
+
+    // Table header
+    const col = { num: this.margin + 2, desc: this.margin + 10, qty: this.margin + 105, price: this.margin + 130, total: this.margin + 158 }
+
+    this.doc.setFillColor(245, 245, 245)
+    this.doc.rect(this.margin, this.currentY, this.contentWidth, 8, 'F')
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('#', col.num, this.currentY + 6)
+    this.doc.text('รายการบริการ', col.desc, this.currentY + 6)
+    this.doc.text('จำนวน', col.qty, this.currentY + 6)
+    this.doc.text('ราคา/หน่วย', col.price, this.currentY + 6)
+    this.doc.text('รวม (บาท)', col.total, this.currentY + 6)
+    this.currentY += 10
+
+    // Row
+    this.doc.setFillColor(252, 252, 252)
+    this.doc.rect(this.margin, this.currentY - 1, this.contentWidth, 8, 'F')
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFontSize(9)
+
+    const serviceName = `${data.service_name || 'บริการ'} (${data.duration} นาที)`
+    const qty = data.recipient_count
+    const pricePerUnit = qty > 0 ? Math.round(data.final_price / qty) : data.final_price
+
+    this.doc.text('1', col.num, this.currentY + 5)
+    this.doc.text(serviceName.slice(0, 45), col.desc, this.currentY + 5)
+    this.doc.text(`${qty} คน`, col.qty, this.currentY + 5)
+    this.doc.text(pricePerUnit.toLocaleString(), col.price, this.currentY + 5)
+    this.doc.text(data.final_price.toLocaleString(), col.total, this.currentY + 5)
+    this.currentY += 10
+
+    if (data.staff_name) {
+      this.doc.setFontSize(8)
+      this.doc.setTextColor(100, 100, 100)
+      this.doc.text(`พนักงานให้บริการ: ${data.staff_name}`, col.desc, this.currentY)
+      this.doc.setTextColor(0, 0, 0)
+      this.currentY += 5
+    }
+
+    // Bottom line of table
+    this.doc.setDrawColor(200, 200, 200)
+    this.doc.setLineWidth(0.3)
+    this.doc.line(this.margin, this.currentY, this.margin + this.contentWidth, this.currentY)
+    this.currentY += 6
+  }
+
+  private addReceiptSummary(data: SingleBookingReceiptData, isPaid: boolean): void {
+    const boxX = this.margin + 90
+    const boxW = 80
+    const summaryY = this.currentY
+
+    // Total box
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.5)
+    this.doc.rect(boxX, summaryY, boxW, 22)
+
+    this.doc.setFillColor(217, 119, 6)
+    this.doc.rect(boxX, summaryY, boxW, 10, 'F')
+
+    this.doc.setFontSize(10)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setTextColor(255, 255, 255)
+    this.doc.text('ยอดชำระทั้งหมด', boxX + boxW / 2, summaryY + 7, { align: 'center' })
+
+    this.doc.setFontSize(15)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setTextColor(217, 119, 6)
+    this.doc.text(`${data.final_price.toLocaleString()} บาท`, boxX + boxW / 2, summaryY + 18, { align: 'center' })
+
+    // Payment remark (left side of summary row)
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setTextColor(0, 0, 0)
+
+    if (isPaid) {
+      this.doc.setTextColor(22, 163, 74) // green-600
+      this.doc.setFont('Sarabun', 'bold')
+      this.doc.text('✓ ได้รับชำระเงินเรียบร้อยแล้ว', this.margin, summaryY + 10)
+      this.doc.setFont('Sarabun', 'normal')
+      this.doc.setFontSize(8)
+      this.doc.text('เอกสารนี้ใช้เป็นหลักฐานการชำระเงิน', this.margin, summaryY + 16)
+    } else {
+      this.doc.setTextColor(220, 38, 38) // red-600
+      this.doc.setFont('Sarabun', 'bold')
+      this.doc.text('⚠ กรุณาชำระเงินก่อนรับบริการ', this.margin, summaryY + 10)
+      this.doc.setFont('Sarabun', 'normal')
+      this.doc.setFontSize(8)
+      this.doc.text('เอกสารนี้ยังไม่ใช่ใบเสร็จรับเงิน', this.margin, summaryY + 16)
+    }
+
+    this.doc.setTextColor(0, 0, 0)
+    this.currentY = summaryY + 28
+  }
+
+  private addReceiptSignatureSection(data: SingleBookingReceiptData, isPaid: boolean): void {
+    this.currentY += 6
+    this.doc.setDrawColor(200, 200, 200)
+    this.doc.setLineWidth(0.3)
+    this.doc.line(this.margin, this.currentY, this.margin + this.contentWidth, this.currentY)
+    this.currentY += 8
+
+    this.doc.setFontSize(8)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setTextColor(100, 100, 100)
+
+    // Booking time info
+    const bookingTime = (data.booking_time || '--:--').substring(0, 5)
+    const bookingDateFormatted = this.formatDateLong(data.booking_date)
+    this.doc.text(`วันที่นัดหมาย: ${bookingDateFormatted} เวลา ${bookingTime} น.`, this.margin, this.currentY)
+    this.currentY += 5
+
+    // Booking created
+    this.doc.text(`วันที่สร้างการจอง: ${this.formatDateLong(data.created_at.slice(0, 10))}`, this.margin, this.currentY)
+    this.currentY += 12
+
+    // Signature lines
+    this.doc.setTextColor(0, 0, 0)
+    this.doc.setFontSize(9)
+
+    const sig1X = this.margin + 10
+    const sig2X = this.margin + 100
+
+    // Signature lines
+    this.doc.setDrawColor(0, 0, 0)
+    this.doc.line(sig1X, this.currentY, sig1X + 55, this.currentY)
+    this.doc.line(sig2X, this.currentY, sig2X + 55, this.currentY)
+    this.currentY += 5
+
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFontSize(8)
+    this.doc.setTextColor(80, 80, 80)
+    const sig1Label = isPaid ? 'ผู้รับชำระเงิน / พนักงาน' : 'ผู้ออกเอกสาร / พนักงาน'
+    this.doc.text(sig1Label, sig1X + 28, this.currentY, { align: 'center' })
+    this.doc.text('ผู้รับบริการ / แขก', sig2X + 28, this.currentY, { align: 'center' })
+    this.currentY += 4
+
+    this.doc.text(`(${data.staff_name || '.....................................'})`, sig1X + 28, this.currentY, { align: 'center' })
+    this.doc.text(`(${data.guest_name})`, sig2X + 28, this.currentY, { align: 'center' })
+    this.currentY += 10
+
+    this.doc.setTextColor(130, 130, 130)
+    this.doc.text('วันที่ ..................................................', sig1X + 28, this.currentY, { align: 'center' })
+    this.doc.text('วันที่ ..................................................', sig2X + 28, this.currentY, { align: 'center' })
+
+    this.doc.setTextColor(0, 0, 0)
+    this.currentY += 8
   }
 
 }
@@ -414,7 +781,7 @@ export function generateBookingInvoicePDF(
   const generator = new PDFInvoiceGenerator()
   generator.generateBookingInvoice(invoiceData)
 
-  const filename = `invoice-${new Date().toISOString().slice(0, 10)}.pdf`
+  const filename = `booking-history-${new Date().toISOString().slice(0, 10)}.pdf`
   generator.downloadPDF(filename)
 }
 
@@ -441,5 +808,20 @@ export function generateMonthlyBillPDF(
   generator.generateMonthlyBill(invoiceData)
 
   const filename = `monthly-bill-${period}.pdf`
+  generator.downloadPDF(filename)
+}
+
+/**
+ * Generate and download a single booking receipt (ใบเสร็จรับเงิน) or invoice (ใบแจ้งหนี้)
+ * - payment_status === 'paid'  → ใบเสร็จรับเงิน
+ * - otherwise                 → ใบแจ้งหนี้
+ */
+export function generateSingleBookingReceiptPDF(data: SingleBookingReceiptData): void {
+  const generator = new PDFInvoiceGenerator()
+  generator.generateSingleReceipt(data)
+
+  const isPaid = data.payment_status === 'paid'
+  const prefix = isPaid ? 'receipt' : 'invoice'
+  const filename = `${prefix}-${data.booking_number}.pdf`
   generator.downloadPDF(filename)
 }
