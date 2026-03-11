@@ -23,13 +23,13 @@
 ### Priorities (ทำก่อน)
 1. ~~Hotel Cancel/Reschedule (0%)~~ → ✅ พบว่าทำเสร็จแล้ว (85%)
 2. Invoice PDF จริง — ตอนนี้เป็น text file fallback (20%)
-3. Hotel + Staff Change Password backend (15%)
+3. ~~Hotel + Staff Change Password backend (15%)~~ → ✅ Hotel เสร็จ 100% / Staff ไม่ต้องทำ (ใช้ LINE login)
 4. Webhook signature verification เปิดใน production (55%)
 5. PromptPay frontend integration (backend 75%, frontend 0%)
 
 ### Blockers
 - Invoice PDF ยังเป็น text file — ต้องใช้ PDF library (20%)
-- Hotel + Staff Change Password ยังไม่มี backend (15%)
+- ~~Hotel + Staff Change Password ยังไม่มี backend (15%)~~ → ✅ เสร็จแล้ว
 - Webhook signature verification ถูก disable ใน production (55%)
 - PromptPay frontend ยังไม่เชื่อมกับ PaymentForm (backend 75% only)
 
@@ -235,9 +235,10 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Hotel Profile + Map** (60%)
   - Remaining: Photo gallery upload, amenities list, operating hours, contact information, Google Maps embed (display mode), description editor
   - Files: `apps/hotel/src/pages/HotelProfile.tsx`
-- [ ] **Change Password** (15%)
-  - Remaining: Submit handler, current password verification, Supabase updateUser() call, password strength meter, success/error feedback
-  - Files: `apps/hotel/src/pages/HotelSettings.tsx` (UI inputs มีแล้ว)
+- [x] **Change Password** (100%) ✅ ทดสอบผ่านบน production แล้ว
+  - Frontend: ฟอร์ม 3 ช่อง + password strength indicators + show/hide toggle
+  - Backend: รองรับทั้ง first-login (temporary password) และ regular change (signInWithPassword)
+  - Files: `apps/hotel/src/pages/HotelSettings.tsx`, `apps/server/src/services/hotelAuthService.ts`
 
 ## 7. Staff/Provider App - SRS 3.3 (avg ~85%)
 
@@ -295,9 +296,7 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Settings** (75%)
   - Remaining: Notification preferences (toggle per type), language setting, availability schedule, auto-accept rules, dark mode
   - Files: `apps/staff/src/pages/StaffSettings.tsx`
-- [ ] **Change Password** (0%) <<<< SRS 3.3
-  - Remaining: ทั้งหมด — Change password form, current password verify, Supabase updateUser() call
-  - Files: ต้องสร้างใหม่ `apps/staff/src/pages/ChangePassword.tsx`
+- [x] **Change Password** — ไม่ต้องทำ (Staff ใช้ LINE LIFF login ไม่มี password)
 
 ## 8. Admin App - SRS 3.4 (avg ~79%)
 

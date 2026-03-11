@@ -407,15 +407,15 @@ function MonthlyBill() {
   const handleDownloadPDF = () => {
     if (!billData || !billData.bookings) return
 
-    // Generate PDF Monthly Bill using the simplified PDF generator
-    import('../utils/simplePdfGenerator').then(({ generateSimpleMonthlyBillPDF }) => {
+    // Generate PDF Monthly Bill with Thai font support
+    import('../utils/pdfInvoiceGenerator').then(({ generateMonthlyBillPDF }) => {
       const bookingData = billData.bookings.map((booking: any) => ({
         id: booking.id || `temp-${Date.now()}`,
         booking_number: booking.booking_number || `BK${booking.id?.slice(-6) || Math.random().toString().slice(-6)}`,
         booking_date: booking.booking_date,
         booking_time: booking.booking_time || '00:00',
         service: {
-          name_th: booking.service_name || 'Unknown Service',
+          name_th: booking.service_name || 'ไม่ระบุบริการ',
           price: booking.base_price || booking.final_price
         },
         customer_notes: `Guest: ${booking.guest_name}, Room: ${booking.room_number}`,
@@ -429,7 +429,7 @@ function MonthlyBill() {
       const hotelName = getHotelName()
       const period = billData.monthLabel
 
-      generateSimpleMonthlyBillPDF(bookingData, hotelName, period)
+      generateMonthlyBillPDF(bookingData, hotelName, period)
     }).catch(error => {
       console.error('Error generating PDF:', error)
       // Fallback to text file if PDF generation fails

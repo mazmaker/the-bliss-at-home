@@ -1,9 +1,10 @@
 /**
  * PDF Invoice Generator for Hotel App
- * Generate professional PDF invoices from booking data
+ * Generate professional PDF invoices with Thai font support (Sarabun)
  */
 
 import { jsPDF } from 'jspdf'
+import { SarabunRegular, SarabunBold } from './fonts/sarabun'
 
 interface BookingData {
   id: string
@@ -32,15 +33,22 @@ interface InvoiceData {
 
 export class PDFInvoiceGenerator {
   private doc: jsPDF
-  private margin: number = 20
-  private lineHeight: number = 6
-  private currentY: number = this.margin
+  private margin = 20
+  private lineHeight = 7
+  private currentY = 20
+  private contentWidth = 170
 
   constructor() {
     this.doc = new jsPDF('p', 'mm', 'a4')
-    // Add support for Thai text
-    this.doc.setFont('helvetica')
-    this.doc.setLanguage('th')
+    this.registerFonts()
+    this.doc.setFont('Sarabun', 'normal')
+  }
+
+  private registerFonts(): void {
+    this.doc.addFileToVFS('Sarabun-Regular.ttf', SarabunRegular)
+    this.doc.addFileToVFS('Sarabun-Bold.ttf', SarabunBold)
+    this.doc.addFont('Sarabun-Regular.ttf', 'Sarabun', 'normal')
+    this.doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold')
   }
 
   /**
@@ -60,7 +68,8 @@ export class PDFInvoiceGenerator {
   generateMonthlyBill(data: InvoiceData): void {
     this.resetDocument()
     this.addMonthlyHeader(data)
-    this.addMonthlyBookings(data)
+    this.addMonthlyBookingTable(data)
+    this.addMonthlyServiceBreakdown(data)
     this.addMonthlySummary(data)
     this.addFooter()
   }
@@ -74,132 +83,180 @@ export class PDFInvoiceGenerator {
 
   private resetDocument(): void {
     this.doc = new jsPDF('p', 'mm', 'a4')
+    this.registerFonts()
+    this.doc.setFont('Sarabun', 'normal')
     this.currentY = this.margin
   }
 
   private addHeader(data: InvoiceData): void {
-    // Company Logo Area (placeholder)
-    this.doc.setFillColor(245, 158, 11) // Amber color
-    this.doc.rect(this.margin, this.margin, 50, 20, 'F')
+    // Amber header bar
+    this.doc.setFillColor(217, 119, 6) // amber-700
+    this.doc.rect(this.margin, this.margin, this.contentWidth, 28, 'F')
 
     // Company Name
-    this.doc.setFontSize(16)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFontSize(18)
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(255, 255, 255)
-    this.doc.text('The Bliss at Home', this.margin + 5, this.margin + 8)
-    this.doc.text('Massage Service', this.margin + 5, this.margin + 15)
+    this.doc.text('The Bliss Massage at Home', this.margin + 10, this.margin + 12)
 
-    // Invoice Title
-    this.doc.setFontSize(24)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFontSize(11)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.text('บริการนวด สปา และเล็บ ถึงที่พัก', this.margin + 10, this.margin + 20)
+
+    // Invoice Title (right side)
+    this.doc.setFontSize(22)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('ใบแจ้งหนี้', this.margin + this.contentWidth - 10, this.margin + 14, { align: 'right' })
+
+    this.currentY = this.margin + 35
     this.doc.setTextColor(0, 0, 0)
-    this.doc.text('INVOICE', 150, this.margin + 15, { align: 'right' })
 
-    this.currentY = this.margin + 30
-
-    // Hotel Information
-    this.doc.setFontSize(12)
-    this.doc.setFont('helvetica', 'normal')
-    this.doc.text(`Hotel: ${data.hotelName}`, this.margin, this.currentY)
+    // Invoice info section
+    this.doc.setFontSize(11)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('ข้อมูลโรงแรม', this.margin, this.currentY)
+    this.doc.text('รายละเอียดใบแจ้งหนี้', this.margin + 100, this.currentY)
     this.currentY += this.lineHeight
 
-    this.doc.text(`Invoice No: ${data.invoiceNumber}`, this.margin, this.currentY)
-    this.currentY += this.lineHeight
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFontSize(10)
+    this.doc.text(data.hotelName, this.margin, this.currentY)
+    this.doc.text(`เลขที่: ${data.invoiceNumber}`, this.margin + 100, this.currentY)
+    this.currentY += 5
 
-    this.doc.text(`Date: ${new Date().toLocaleDateString('th-TH')}`, this.margin, this.currentY)
-    this.currentY += this.lineHeight * 2
+    this.doc.text(`วันที่: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`, this.margin + 100, this.currentY)
+    this.currentY += 5
+
+    this.doc.text(`จำนวนรายการ: ${data.bookings.length} รายการ`, this.margin + 100, this.currentY)
+    this.currentY += this.lineHeight + 3
+
+    // Divider line
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.5)
+    this.doc.line(this.margin, this.currentY, this.margin + this.contentWidth, this.currentY)
+    this.currentY += 5
   }
 
   private addMonthlyHeader(data: InvoiceData): void {
-    // Company Header
-    this.doc.setFillColor(245, 158, 11)
-    this.doc.rect(this.margin, this.margin, 170, 25, 'F')
+    // Amber header bar
+    this.doc.setFillColor(217, 119, 6)
+    this.doc.rect(this.margin, this.margin, this.contentWidth, 28, 'F')
 
     this.doc.setFontSize(18)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(255, 255, 255)
-    this.doc.text('The Bliss at Home - Monthly Bill', this.margin + 5, this.margin + 10)
-    this.doc.text(`${data.hotelName}`, this.margin + 5, this.margin + 20)
+    this.doc.text('The Bliss Massage at Home', this.margin + 10, this.margin + 12)
+
+    this.doc.setFontSize(11)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.text('ใบเรียกเก็บเงินรายเดือน', this.margin + 10, this.margin + 20)
+
+    // Monthly Bill label (right side)
+    this.doc.setFontSize(22)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('บิลรายเดือน', this.margin + this.contentWidth - 10, this.margin + 14, { align: 'right' })
 
     this.currentY = this.margin + 35
-
-    // Period Info
-    this.doc.setFontSize(12)
-    this.doc.setFont('helvetica', 'normal')
     this.doc.setTextColor(0, 0, 0)
-    this.doc.text(`Period: ${data.period}`, this.margin, this.currentY)
+
+    // Hotel & Period info
+    this.doc.setFontSize(11)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('ข้อมูลโรงแรม', this.margin, this.currentY)
+    this.doc.text('รายละเอียดบิล', this.margin + 100, this.currentY)
     this.currentY += this.lineHeight
 
-    this.doc.text(`Generated: ${new Date().toLocaleDateString('th-TH')}`, this.margin, this.currentY)
-    this.currentY += this.lineHeight * 2
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFontSize(10)
+    this.doc.text(data.hotelName, this.margin, this.currentY)
+    this.doc.text(`เลขที่: ${data.invoiceNumber}`, this.margin + 100, this.currentY)
+    this.currentY += 5
+    this.doc.text(`รอบบิล: ${data.period}`, this.margin + 100, this.currentY)
+    this.currentY += 5
+    this.doc.text(`วันที่ออกบิล: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`, this.margin + 100, this.currentY)
+    this.currentY += this.lineHeight + 3
+
+    // Divider
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.5)
+    this.doc.line(this.margin, this.currentY, this.margin + this.contentWidth, this.currentY)
+    this.currentY += 5
   }
 
   private addBookingDetails(data: InvoiceData): void {
     // Table Header
-    const tableStartY = this.currentY
+    const colX = {
+      num: this.margin + 2,
+      booking: this.margin + 12,
+      date: this.margin + 45,
+      service: this.margin + 75,
+      pref: this.margin + 115,
+      amount: this.margin + 148,
+    }
+
     this.doc.setFillColor(245, 245, 245)
-    this.doc.rect(this.margin, tableStartY, 170, 8, 'F')
+    this.doc.rect(this.margin, this.currentY, this.contentWidth, 8, 'F')
 
-    this.doc.setFontSize(10)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('#', colX.num, this.currentY + 6)
+    this.doc.text('เลขที่จอง', colX.booking, this.currentY + 6)
+    this.doc.text('วันที่', colX.date, this.currentY + 6)
+    this.doc.text('บริการ', colX.service, this.currentY + 6)
+    this.doc.text('ความต้องการ', colX.pref, this.currentY + 6)
+    this.doc.text('ยอดเงิน', colX.amount, this.currentY + 6)
 
-    // Column headers
-    this.doc.text('Booking #', this.margin + 2, tableStartY + 6)
-    this.doc.text('Date', this.margin + 35, tableStartY + 6)
-    this.doc.text('Service', this.margin + 65, tableStartY + 6)
-    this.doc.text('Provider Pref.', this.margin + 105, tableStartY + 6)
-    this.doc.text('Amount', this.margin + 140, tableStartY + 6)
-
-    this.currentY = tableStartY + 10
+    this.currentY += 10
 
     // Table rows
-    this.doc.setFont('helvetica', 'normal')
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFontSize(9)
+
     data.bookings.forEach((booking, index) => {
-      if (this.currentY > 270) {
+      if (this.currentY > 265) {
         this.doc.addPage()
+        this.registerFonts()
+        this.doc.setFont('Sarabun', 'normal')
         this.currentY = this.margin
       }
 
       const rowY = this.currentY
 
-      // Alternating row colors
       if (index % 2 === 0) {
-        this.doc.setFillColor(250, 250, 250)
-        this.doc.rect(this.margin, rowY - 2, 170, 8, 'F')
+        this.doc.setFillColor(252, 252, 252)
+        this.doc.rect(this.margin, rowY - 1, this.contentWidth, 7, 'F')
       }
 
-      // Booking data
-      this.doc.text(booking.booking_number.slice(-8), this.margin + 2, rowY + 4)
-      this.doc.text(booking.booking_date, this.margin + 35, rowY + 4)
-      this.doc.text(booking.service?.name_th?.slice(0, 15) || 'N/A', this.margin + 65, rowY + 4)
-      this.doc.text(this.getProviderPreferenceText(booking.provider_preference), this.margin + 105, rowY + 4)
-      this.doc.text(`฿${booking.final_price.toLocaleString()}`, this.margin + 140, rowY + 4)
+      this.doc.setTextColor(0, 0, 0)
+      this.doc.text(`${index + 1}`, colX.num, rowY + 4)
+      this.doc.text(booking.booking_number.slice(-8), colX.booking, rowY + 4)
+      this.doc.text(this.formatDate(booking.booking_date), colX.date, rowY + 4)
+      this.doc.text((booking.service?.name_th || 'ไม่ระบุ').slice(0, 18), colX.service, rowY + 4)
+      this.doc.text(this.getProviderPreferenceText(booking.provider_preference), colX.pref, rowY + 4)
+      this.doc.text(`฿${booking.final_price.toLocaleString()}`, colX.amount, rowY + 4)
 
-      this.currentY += 8
+      this.currentY += 7
     })
 
     this.currentY += 5
   }
 
-  private addMonthlyBookings(data: InvoiceData): void {
-    // Summary Table for Monthly Bill
-    this.doc.setFillColor(245, 245, 245)
-    this.doc.rect(this.margin, this.currentY, 170, 8, 'F')
+  private addMonthlyBookingTable(data: InvoiceData): void {
+    // Section title
+    this.doc.setFontSize(12)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('รายการจองทั้งหมด', this.margin, this.currentY)
+    this.currentY += 5
 
-    this.doc.setFontSize(10)
-    this.doc.setFont('helvetica', 'bold')
-    this.doc.text('Summary', this.margin + 2, this.currentY + 6)
+    // Reuse booking details table
+    this.addBookingDetails(data)
+  }
 
-    this.currentY += 15
-
-    this.doc.setFont('helvetica', 'normal')
-    this.doc.text(`Total Bookings: ${data.bookings.length}`, this.margin, this.currentY)
-    this.currentY += this.lineHeight
-
+  private addMonthlyServiceBreakdown(data: InvoiceData): void {
     // Group by service
     const serviceGroups: { [key: string]: { count: number; amount: number } } = {}
     data.bookings.forEach(booking => {
-      const serviceName = booking.service?.name_th || 'Unknown Service'
+      const serviceName = booking.service?.name_th || 'ไม่ระบุบริการ'
       if (!serviceGroups[serviceName]) {
         serviceGroups[serviceName] = { count: 0, amount: 0 }
       }
@@ -207,82 +264,145 @@ export class PDFInvoiceGenerator {
       serviceGroups[serviceName].amount += booking.final_price
     })
 
-    // Display service breakdown
-    Object.entries(serviceGroups).forEach(([service, data]) => {
-      this.doc.text(`• ${service}: ${data.count} bookings (฿${data.amount.toLocaleString()})`,
-        this.margin + 5, this.currentY)
-      this.currentY += this.lineHeight
+    if (this.currentY > 240) {
+      this.doc.addPage()
+      this.registerFonts()
+      this.doc.setFont('Sarabun', 'normal')
+      this.currentY = this.margin
+    }
+
+    // Section title
+    this.doc.setFontSize(12)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setTextColor(0, 0, 0)
+    this.doc.text('สรุปตามประเภทบริการ', this.margin, this.currentY)
+    this.currentY += 5
+
+    // Table header
+    this.doc.setFillColor(245, 245, 245)
+    this.doc.rect(this.margin, this.currentY, this.contentWidth, 8, 'F')
+
+    this.doc.setFontSize(9)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.text('บริการ', this.margin + 2, this.currentY + 6)
+    this.doc.text('จำนวน (ครั้ง)', this.margin + 90, this.currentY + 6)
+    this.doc.text('ยอดรวม', this.margin + 135, this.currentY + 6)
+    this.currentY += 10
+
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFontSize(9)
+
+    Object.entries(serviceGroups).forEach(([service, group], idx) => {
+      const rowY = this.currentY
+      if (idx % 2 === 0) {
+        this.doc.setFillColor(252, 252, 252)
+        this.doc.rect(this.margin, rowY - 1, this.contentWidth, 7, 'F')
+      }
+      this.doc.text(service, this.margin + 2, rowY + 4)
+      this.doc.text(`${group.count}`, this.margin + 90, rowY + 4)
+      this.doc.text(`฿${group.amount.toLocaleString()}`, this.margin + 135, rowY + 4)
+      this.currentY += 7
     })
 
-    this.currentY += 10
+    this.currentY += 5
   }
 
   private addSummary(data: InvoiceData): void {
-    // Summary box
+    // Summary box on the right side
+    const boxX = this.margin + 90
+    const boxW = 80
     const summaryY = this.currentY
-    this.doc.setDrawColor(200, 200, 200)
-    this.doc.rect(120, summaryY, 70, 25)
 
-    this.doc.setFontSize(12)
-    this.doc.setFont('helvetica', 'bold')
-    this.doc.text('TOTAL AMOUNT', 125, summaryY + 8)
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.5)
+    this.doc.rect(boxX, summaryY, boxW, 22)
+
+    this.doc.setFillColor(217, 119, 6)
+    this.doc.rect(boxX, summaryY, boxW, 10, 'F')
+
+    this.doc.setFontSize(11)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setTextColor(255, 255, 255)
+    this.doc.text('ยอดรวมทั้งหมด', boxX + boxW / 2, summaryY + 7, { align: 'center' })
 
     this.doc.setFontSize(16)
-    this.doc.setTextColor(245, 158, 11)
-    this.doc.text(`฿${data.totalAmount.toLocaleString()}`, 125, summaryY + 20)
+    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setTextColor(217, 119, 6)
+    this.doc.text(`฿${data.totalAmount.toLocaleString()}`, boxX + boxW / 2, summaryY + 18, { align: 'center' })
 
-    this.currentY = summaryY + 35
+    this.doc.setTextColor(0, 0, 0)
+    this.currentY = summaryY + 30
   }
 
   private addMonthlySummary(data: InvoiceData): void {
-    // Monthly summary with more details
+    if (this.currentY > 250) {
+      this.doc.addPage()
+      this.registerFonts()
+      this.doc.setFont('Sarabun', 'normal')
+      this.currentY = this.margin
+    }
+
     const summaryY = this.currentY
 
-    // Summary section background
-    this.doc.setFillColor(245, 158, 11)
-    this.doc.rect(this.margin, summaryY, 170, 30, 'F')
+    // Summary box
+    this.doc.setFillColor(217, 119, 6)
+    this.doc.rect(this.margin, summaryY, this.contentWidth, 30, 'F')
 
-    this.doc.setFontSize(14)
-    this.doc.setFont('helvetica', 'bold')
+    this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(255, 255, 255)
-    this.doc.text('MONTHLY TOTAL', this.margin + 5, summaryY + 10)
 
-    this.doc.setFontSize(20)
-    this.doc.text(`฿${data.totalAmount.toLocaleString()}`, this.margin + 5, summaryY + 22)
+    this.doc.setFontSize(13)
+    this.doc.text('ยอดเรียกเก็บรวม', this.margin + 10, summaryY + 12)
 
-    // Additional info
+    this.doc.setFontSize(22)
+    this.doc.text(`฿${data.totalAmount.toLocaleString()}`, this.margin + 10, summaryY + 24)
+
+    // Right side info
     this.doc.setFontSize(10)
-    this.doc.setTextColor(255, 255, 255)
-    this.doc.text(`Total Bookings: ${data.bookings.length}`, 120, summaryY + 10)
-    this.doc.text(`Period: ${data.period}`, 120, summaryY + 18)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.text(`จำนวนการจอง: ${data.bookings.length} รายการ`, this.margin + 110, summaryY + 12)
+    this.doc.text(`รอบบิล: ${data.period}`, this.margin + 110, summaryY + 20)
 
+    this.doc.setTextColor(0, 0, 0)
     this.currentY = summaryY + 40
   }
 
   private addFooter(): void {
     const footerY = 280
 
-    // Footer line
-    this.doc.setDrawColor(245, 158, 11)
-    this.doc.line(this.margin, footerY, 190, footerY)
+    this.doc.setDrawColor(217, 119, 6)
+    this.doc.setLineWidth(0.3)
+    this.doc.line(this.margin, footerY, this.margin + this.contentWidth, footerY)
 
     this.doc.setFontSize(8)
-    this.doc.setFont('helvetica', 'normal')
-    this.doc.setTextColor(100, 100, 100)
+    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setTextColor(130, 130, 130)
 
-    this.doc.text('Thank you for your business!', this.margin, footerY + 8)
-    this.doc.text(`Generated by The Bliss at Home System - ${new Date().toLocaleString('th-TH')}`,
-      190, footerY + 8, { align: 'right' })
+    this.doc.text('ขอบคุณที่ใช้บริการ The Bliss Massage at Home', this.margin, footerY + 6)
+    this.doc.text(
+      `สร้างโดยระบบ The Bliss at Home — ${new Date().toLocaleString('th-TH')}`,
+      this.margin + this.contentWidth,
+      footerY + 6,
+      { align: 'right' }
+    )
+  }
+
+  private formatDate(dateStr: string): string {
+    try {
+      return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+    } catch {
+      return dateStr
+    }
   }
 
   private getProviderPreferenceText(preference?: string): string {
     switch (preference) {
-      case 'female-only': return 'Female Only'
-      case 'male-only': return 'Male Only'
-      case 'prefer-female': return 'Prefer Female'
-      case 'prefer-male': return 'Prefer Male'
-      case 'no-preference': return 'No Preference'
-      default: return 'Not Set'
+      case 'female-only': return 'หญิงเท่านั้น'
+      case 'male-only': return 'ชายเท่านั้น'
+      case 'prefer-female': return 'ต้องการหญิง'
+      case 'prefer-male': return 'ต้องการชาย'
+      case 'no-preference': return 'ไม่ระบุ'
+      default: return '-'
     }
   }
 }
