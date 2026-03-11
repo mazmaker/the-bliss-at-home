@@ -190,8 +190,7 @@ export class PDFInvoiceGenerator {
       booking: this.margin + 12,
       date: this.margin + 45,
       service: this.margin + 75,
-      pref: this.margin + 115,
-      amount: this.margin + 148,
+      amount: this.margin + 140,
     }
 
     this.doc.setFillColor(245, 245, 245)
@@ -203,8 +202,7 @@ export class PDFInvoiceGenerator {
     this.doc.text('เลขที่จอง', colX.booking, this.currentY + 6)
     this.doc.text('วันที่', colX.date, this.currentY + 6)
     this.doc.text('บริการ', colX.service, this.currentY + 6)
-    this.doc.text('ความต้องการ', colX.pref, this.currentY + 6)
-    this.doc.text('ยอดเงิน', colX.amount, this.currentY + 6)
+    this.doc.text('ยอดเงิน (บาท)', colX.amount, this.currentY + 6)
 
     this.currentY += 10
 
@@ -231,9 +229,8 @@ export class PDFInvoiceGenerator {
       this.doc.text(`${index + 1}`, colX.num, rowY + 4)
       this.doc.text(booking.booking_number.slice(-8), colX.booking, rowY + 4)
       this.doc.text(this.formatDate(booking.booking_date), colX.date, rowY + 4)
-      this.doc.text((booking.service?.name_th || 'ไม่ระบุ').slice(0, 18), colX.service, rowY + 4)
-      this.doc.text(this.getProviderPreferenceText(booking.provider_preference), colX.pref, rowY + 4)
-      this.doc.text(`฿${booking.final_price.toLocaleString()}`, colX.amount, rowY + 4)
+      this.doc.text((booking.service?.name_th || 'ไม่ระบุ').slice(0, 30), colX.service, rowY + 4)
+      this.doc.text(booking.final_price.toLocaleString(), colX.amount, rowY + 4)
 
       this.currentY += 7
     })
@@ -286,7 +283,7 @@ export class PDFInvoiceGenerator {
     this.doc.setFont('Sarabun', 'bold')
     this.doc.text('บริการ', this.margin + 2, this.currentY + 6)
     this.doc.text('จำนวน (ครั้ง)', this.margin + 90, this.currentY + 6)
-    this.doc.text('ยอดรวม', this.margin + 135, this.currentY + 6)
+    this.doc.text('ยอดรวม (บาท)', this.margin + 135, this.currentY + 6)
     this.currentY += 10
 
     this.doc.setFont('Sarabun', 'normal')
@@ -300,7 +297,7 @@ export class PDFInvoiceGenerator {
       }
       this.doc.text(service, this.margin + 2, rowY + 4)
       this.doc.text(`${group.count}`, this.margin + 90, rowY + 4)
-      this.doc.text(`฿${group.amount.toLocaleString()}`, this.margin + 135, rowY + 4)
+      this.doc.text(group.amount.toLocaleString(), this.margin + 135, rowY + 4)
       this.currentY += 7
     })
 
@@ -328,7 +325,7 @@ export class PDFInvoiceGenerator {
     this.doc.setFontSize(16)
     this.doc.setFont('Sarabun', 'bold')
     this.doc.setTextColor(217, 119, 6)
-    this.doc.text(`฿${data.totalAmount.toLocaleString()}`, boxX + boxW / 2, summaryY + 18, { align: 'center' })
+    this.doc.text(`${data.totalAmount.toLocaleString()} บาท`, boxX + boxW / 2, summaryY + 18, { align: 'center' })
 
     this.doc.setTextColor(0, 0, 0)
     this.currentY = summaryY + 30
@@ -355,7 +352,7 @@ export class PDFInvoiceGenerator {
     this.doc.text('ยอดเรียกเก็บรวม', this.margin + 10, summaryY + 12)
 
     this.doc.setFontSize(22)
-    this.doc.text(`฿${data.totalAmount.toLocaleString()}`, this.margin + 10, summaryY + 24)
+    this.doc.text(`${data.totalAmount.toLocaleString()} บาท`, this.margin + 10, summaryY + 24)
 
     // Right side info
     this.doc.setFontSize(10)
@@ -395,16 +392,6 @@ export class PDFInvoiceGenerator {
     }
   }
 
-  private getProviderPreferenceText(preference?: string): string {
-    switch (preference) {
-      case 'female-only': return 'หญิงเท่านั้น'
-      case 'male-only': return 'ชายเท่านั้น'
-      case 'prefer-female': return 'ต้องการหญิง'
-      case 'prefer-male': return 'ต้องการชาย'
-      case 'no-preference': return 'ไม่ระบุ'
-      default: return '-'
-    }
-  }
 }
 
 /**
