@@ -585,19 +585,20 @@ function BookingHistory() {
             <p className="text-sm text-stone-500">รายการทั้งหมด</p>
           </div>
           <div ref={exportMenuRef} className="relative">
-            <div className="flex items-center">
+            <div className="flex items-center rounded-lg overflow-hidden shadow-sm">
               <button
                 onClick={handleExport}
                 disabled={filteredBookings.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-l-lg hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
                 Export PDF
               </button>
+              <div className="w-px h-8 bg-amber-500/60" />
               <button
                 onClick={() => setShowExportMenu(v => !v)}
                 disabled={filteredBookings.length === 0}
-                className="flex items-center px-2 py-2 bg-amber-700 text-white rounded-r-lg hover:bg-amber-800 transition border-l border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-2 py-2 bg-amber-600 text-white hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>
