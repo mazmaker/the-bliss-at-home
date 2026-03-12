@@ -32,8 +32,8 @@ export interface APIResponse<T = any> {
   error?: string
 }
 
-const API_BASE_URL = 'http://localhost:3000/api/hotels'
-const ADMIN_TOKEN = 'admin-secret-token-2026' // Should match server .env
+const API_BASE_URL = `${import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/hotels`
+const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_API_TOKEN || 'admin-secret-token-2026'
 
 /**
  * สร้างบัญชีผู้ใช้สำหรับโรงแรม
