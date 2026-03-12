@@ -42,13 +42,13 @@ export function StaffLoginPage() {
   const config = APP_CONFIGS.STAFF
 
   // Get redirect path from ProtectedRoute's state or sessionStorage
-  const redirectPath = (location.state as any)?.from || sessionStorage.getItem('staff_redirect_after_login') || config.defaultPath
+  const redirectPath = (location.state as any)?.from || localStorage.getItem('staff_redirect_after_login') || config.defaultPath
 
   // Save redirect path to sessionStorage so it survives page reloads
   useEffect(() => {
     const fromState = (location.state as any)?.from
     if (fromState) {
-      sessionStorage.setItem('staff_redirect_after_login', fromState)
+      localStorage.setItem('staff_redirect_after_login', fromState)
     }
   }, [location.state])
   const [isLoading, setIsLoading] = useState(false)
@@ -140,7 +140,7 @@ export function StaffLoginPage() {
     const urlParams = new URLSearchParams(window.location.search)
     const liffState = urlParams.get('liff.state')
     if (liffState && liffState.startsWith('/')) {
-      sessionStorage.setItem('staff_redirect_after_login', liffState)
+      localStorage.setItem('staff_redirect_after_login', liffState)
       console.log('[Login] Saved deep link path before LIFF init:', liffState)
     }
 
@@ -217,8 +217,8 @@ export function StaffLoginPage() {
       window.history.replaceState({}, '', window.location.pathname)
 
       // Clean up redirect path from sessionStorage
-      const targetPath = sessionStorage.getItem('staff_redirect_after_login') || redirectPath
-      sessionStorage.removeItem('staff_redirect_after_login')
+      const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
+      localStorage.removeItem('staff_redirect_after_login')
 
       // Use window.location to force a full page reload with updated auth state
       console.log('[Auto-login] Redirecting to:', targetPath)
@@ -282,8 +282,8 @@ export function StaffLoginPage() {
         window.history.replaceState({}, '', window.location.pathname)
 
         // Clean up redirect path from sessionStorage
-        const targetPath = sessionStorage.getItem('staff_redirect_after_login') || redirectPath
-        sessionStorage.removeItem('staff_redirect_after_login')
+        const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
+        localStorage.removeItem('staff_redirect_after_login')
 
         // Use window.location to force a full page reload with updated auth state
         console.log('[LINE Login] Redirecting to:', targetPath)

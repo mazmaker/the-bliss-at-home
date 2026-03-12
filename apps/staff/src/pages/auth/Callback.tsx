@@ -38,7 +38,7 @@ export function StaffAuthCallback() {
         // and clear URL params, losing the deep link path
         const liffState = urlParams.get('liff.state')
         if (liffState && liffState.startsWith('/')) {
-          sessionStorage.setItem('staff_redirect_after_login', liffState)
+          localStorage.setItem('staff_redirect_after_login', liffState)
           console.log('[Callback] Saved deep link path before init:', liffState)
         }
 
@@ -126,8 +126,8 @@ export function StaffAuthCallback() {
             localStorage.removeItem('staff_invite_name')
 
             // Redirect to saved deep link path (from LIFF liff.state) or dashboard
-            const targetPath = sessionStorage.getItem('staff_redirect_after_login') || config.defaultPath
-            sessionStorage.removeItem('staff_redirect_after_login')
+            const targetPath = localStorage.getItem('staff_redirect_after_login') || config.defaultPath
+            localStorage.removeItem('staff_redirect_after_login')
             console.log('[Callback] Redirecting to:', targetPath)
             // Use window.location.href for full page reload to ensure auth state propagates
             window.location.href = targetPath
@@ -219,8 +219,8 @@ export function StaffAuthCallback() {
           window.history.replaceState({}, '', window.location.pathname)
 
           // Redirect to saved deep link path or dashboard
-          const targetPath = sessionStorage.getItem('staff_redirect_after_login') || config.defaultPath
-          sessionStorage.removeItem('staff_redirect_after_login')
+          const targetPath = localStorage.getItem('staff_redirect_after_login') || config.defaultPath
+          localStorage.removeItem('staff_redirect_after_login')
           console.log('[Callback] Redirecting to:', targetPath)
           window.location.href = targetPath
         }

@@ -33,7 +33,9 @@ function useLiffStateRedirect() {
       handled.current = true
 
       // Always save the deep link path so login/callback can restore it
-      sessionStorage.setItem('staff_redirect_after_login', liffState)
+      // Use localStorage (not sessionStorage) — LINE's in-app browser may clear
+      // sessionStorage between LIFF redirects
+      localStorage.setItem('staff_redirect_after_login', liffState)
 
       // If LIFF callback params are present (code, liffClientId), do NOT navigate.
       // The callback handler at "/" must process the auth code first.
