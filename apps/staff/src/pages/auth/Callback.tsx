@@ -34,12 +34,21 @@ export function StaffAuthCallback() {
         const hasLiffParams = urlParams.has('liffClientId') && urlParams.has('liffRedirectUri')
         const isLiffCallback = LIFF_ID && hasLiffParams
 
+        // Save liff.state IMMEDIATELY before liff.init() — the SDK may redirect
+        // and clear URL params, losing the deep link path
+        const liffState = urlParams.get('liff.state')
+        if (liffState && liffState.startsWith('/')) {
+          sessionStorage.setItem('staff_redirect_after_login', liffState)
+          console.log('[Callback] Saved deep link path before init:', liffState)
+        }
+
         console.log('[Callback] Debug:', {
           LIFF_ID,
           hasLiffClientId: urlParams.has('liffClientId'),
           hasLiffRedirectUri: urlParams.has('liffRedirectUri'),
           hasLiffParams,
           isLiffCallback,
+          liffState,
           url: window.location.href,
         })
 

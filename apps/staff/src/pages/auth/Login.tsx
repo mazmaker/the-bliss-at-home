@@ -136,6 +136,14 @@ export function StaffLoginPage() {
 
   // Initialize LIFF on mount
   useEffect(() => {
+    // Save liff.state BEFORE liff.init() — the SDK may redirect and clear URL params
+    const urlParams = new URLSearchParams(window.location.search)
+    const liffState = urlParams.get('liff.state')
+    if (liffState && liffState.startsWith('/')) {
+      sessionStorage.setItem('staff_redirect_after_login', liffState)
+      console.log('[Login] Saved deep link path before LIFF init:', liffState)
+    }
+
     async function initLiff() {
       if (!LIFF_ID) {
         console.warn('LIFF ID not configured')
