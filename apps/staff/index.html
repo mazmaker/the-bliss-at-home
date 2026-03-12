@@ -58,7 +58,8 @@
             }
           }
 
-          if (deepLink) {
+          // Only save valid deep links (not login/auth pages)
+          if (deepLink && deepLink.indexOf('/staff/login') !== 0 && deepLink.indexOf('/staff/auth') !== 0) {
             localStorage.setItem('staff_redirect_after_login', deepLink);
           }
 

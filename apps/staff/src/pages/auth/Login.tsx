@@ -36,19 +36,39 @@ function clearSkipAutoLogin() {
   sessionStorage.removeItem('staff_skip_auto_login')
 }
 
+// Validate that a saved redirect path is a valid deep link (not login page, not external URL)
+function isValidDeepLink(path: string | null): path is string {
+  if (!path) return false
+  if (!path.startsWith('/staff/')) return false
+  if (path.startsWith('/staff/login')) return false
+  if (path.startsWith('/staff/auth')) return false
+  if (path.startsWith('/staff/callback')) return false
+  if (path.startsWith('/staff/register')) return false
+  return true
+}
+
 export function StaffLoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const config = APP_CONFIGS.STAFF
 
-  // Get redirect path from ProtectedRoute's state or sessionStorage
-  const redirectPath = (location.state as any)?.from || localStorage.getItem('staff_redirect_after_login') || config.defaultPath
+  // Clean up invalid redirect paths on mount (e.g. stale "/staff/login?liff.hback=2")
+  const storedRedirect = localStorage.getItem('staff_redirect_after_login')
+  if (storedRedirect && !isValidDeepLink(storedRedirect)) {
+    localStorage.removeItem('staff_redirect_after_login')
+  }
 
-  // Save redirect path to sessionStorage so it survives page reloads
+  // Get redirect path from ProtectedRoute's state or localStorage
+  const fromState = (location.state as any)?.from
+  const redirectPath = (isValidDeepLink(fromState) ? fromState : null)
+    || (isValidDeepLink(storedRedirect) ? storedRedirect : null)
+    || config.defaultPath
+
+  // Save redirect path to localStorage so it survives page reloads
   useEffect(() => {
-    const fromState = (location.state as any)?.from
-    if (fromState) {
-      localStorage.setItem('staff_redirect_after_login', fromState)
+    const from = (location.state as any)?.from
+    if (isValidDeepLink(from)) {
+      localStorage.setItem('staff_redirect_after_login', from)
     }
   }, [location.state])
   const [isLoading, setIsLoading] = useState(false)
