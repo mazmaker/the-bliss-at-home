@@ -14,6 +14,31 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Capture liff.state IMMEDIATELY before any JS framework loads.
+      // LIFF SDK or LINE's in-app browser may strip this parameter very early.
+      (function() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var liffState = params.get('liff.state');
+          if (liffState && liffState.indexOf('/') === 0) {
+            localStorage.setItem('staff_redirect_after_login', liffState);
+            // Debug log
+            var logs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]');
+            logs.push({ t: Date.now(), step: 'INDEX_HTML_CAPTURE', data: { liffState: liffState }, url: window.location.href });
+            localStorage.setItem('_debug_liff_log', JSON.stringify(logs));
+          }
+          // Also capture from hash fragment (some LIFF configs use hash)
+          if (window.location.hash) {
+            var hashParams = new URLSearchParams(window.location.hash.substring(1));
+            var hashState = hashParams.get('liff.state');
+            if (hashState && hashState.indexOf('/') === 0) {
+              localStorage.setItem('staff_redirect_after_login', hashState);
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
