@@ -391,6 +391,8 @@ async function loginWithLine(
           role: expectedRole,
           status: 'ACTIVE',
           language: 'th',
+          line_user_id: lineUserId,
+          line_display_name: displayName,
         })
         .select()
         .single()
@@ -605,6 +607,8 @@ async function loginWithLine(
       role: expectedRole,
       status: 'ACTIVE',
       language: 'th',
+      line_user_id: lineUserId,
+      line_display_name: displayName,
     })
     .select()
     .single()
