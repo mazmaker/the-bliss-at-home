@@ -85,10 +85,24 @@ function App() {
               return <StaffAuthCallback />
             }
 
-            // Normal login page
-            return isAuthenticated ? (
-              <Navigate to="/staff/jobs" replace />
-            ) : (
+            // Save liff.state before any Navigate strips query params
+            const liffState = urlParams.get('liff.state')
+            if (liffState && liffState.startsWith('/')) {
+              localStorage.setItem('staff_redirect_after_login', liffState)
+            }
+
+            // If already authenticated, redirect to deep link path or dashboard
+            if (isAuthenticated) {
+              const savedPath = localStorage.getItem('staff_redirect_after_login')
+              if (savedPath) {
+                localStorage.removeItem('staff_redirect_after_login')
+                return <Navigate to={savedPath} replace />
+              }
+              return <Navigate to="/staff/jobs" replace />
+            }
+
+            // Normal login page (liff.state already saved to localStorage above)
+            return (
               <StaffLoginPage />
             )
           })()
@@ -144,6 +158,16 @@ function App() {
             // can process the OAuth code on the LIFF Endpoint URL
             return <StaffAuthCallback />
           }
+
+          // Save liff.state BEFORE Navigate strips query params (Navigate runs during render,
+          // before useEffects). Then navigate directly to the deep link path.
+          const liffState = params.get('liff.state')
+          if (liffState && liffState.startsWith('/')) {
+            localStorage.setItem('staff_redirect_after_login', liffState)
+            console.log('[Root] Saved deep link path and navigating to:', liffState)
+            return <Navigate to={liffState} replace />
+          }
+
           return <Navigate to="/staff" replace />
         })()
       } />
