@@ -845,7 +845,7 @@ async function sendHotelInvitation(
           </div>
         </div>
         <p style="text-align: center;">
-          <a href="${data.loginUrl}" class="btn">Login to Dashboard</a>
+          <a href="${data.loginUrl}" class="btn" style="color: #ffffff !important; text-decoration: none;">Login to Dashboard</a>
         </p>
         <div class="warning-box">
           <p style="margin: 0; color: #92400e;">
@@ -874,7 +874,8 @@ async function sendPasswordReset(
   data: {
     hotelName: string
     loginEmail: string
-    resetUrl: string
+    temporaryPassword?: string
+    loginUrl: string
     expiresIn: string
   }
 ): Promise<{ success: boolean; error?: string }> {
@@ -886,13 +887,26 @@ async function sendPasswordReset(
       </div>
       <div class="content">
         <p>Dear ${data.hotelName},</p>
-        <p>We received a password reset request for your account.</p>
+        <p>Your password has been reset by the administrator. Please use the new credentials below to log in.</p>
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">Your New Login Details</h3>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">${data.loginEmail}</span>
+          </div>
+          ${data.temporaryPassword ? `
+          <div class="info-row">
+            <span class="info-label">New Password</span>
+            <span class="info-value">${data.temporaryPassword}</span>
+          </div>
+          ` : ''}
+        </div>
         <p style="text-align: center;">
-          <a href="${data.resetUrl}" class="btn">Reset Password</a>
+          <a href="${data.loginUrl}" class="btn" style="color: #ffffff !important; text-decoration: none;">Login to Dashboard</a>
         </p>
         <div class="warning-box">
           <p style="margin: 0; color: #92400e;">
-            This link will expire in ${data.expiresIn}. If you did not request a password reset, please ignore this email.
+            Please change your password after logging in for security. If you did not request a password reset, please contact the administrator immediately.
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -121,7 +122,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
   // Login Account Management Functions
   const generateTemporaryPassword = async () => {
     if (!editData?.id) {
-      alert('กรุณาบันทึกข้อมูลโรงแรมก่อนสร้างบัญชีผู้ใช้')
+      toast.error('กรุณาบันทึกข้อมูลโรงแรมก่อนสร้างบัญชีผู้ใช้')
       return
     }
 
@@ -140,13 +141,13 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           loginEmail: result.loginEmail,
         })
         setLoginEnabled(true)
-        alert('สร้างบัญชีผู้ใช้สำเร็จ!')
+        toast.success('สร้างบัญชีผู้ใช้สำเร็จ!')
       } else {
-        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถสร้างบัญชีได้'))
+        toast.error(result.error || 'ไม่สามารถสร้างบัญชีได้')
       }
     } catch (error: any) {
       console.error('Error creating account:', error)
-      alert('เกิดข้อผิดพลาด: ' + error.message)
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการสร้างบัญชี')
     } finally {
       setIsGeneratingPassword(false)
     }
@@ -159,13 +160,13 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
     try {
       const result = await sendHotelInvitation(editData.id)
       if (result.success) {
-        alert('ส่งอีเมลเชิญใช้งานสำเร็จ!')
+        toast.success('ส่งอีเมลเชิญใช้งานสำเร็จ!')
       } else {
-        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถส่งอีเมลได้'))
+        toast.error(result.error || 'ไม่สามารถส่งอีเมลได้')
       }
     } catch (error: any) {
       console.error('Error sending invitation:', error)
-      alert('เกิดข้อผิดพลาด: ' + error.message)
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการส่งอีเมล')
     } finally {
       setIsSendingInvitation(false)
     }
@@ -179,13 +180,13 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       const result = await resetHotelPassword(editData.id)
       if (result.success && result.data?.temporaryPassword) {
         setTemporaryPassword(result.data.temporaryPassword)
-        alert('รีเซ็ตรหัสผ่านสำเร็จ! รหัสผ่านชั่วคราวใหม่ถูกสร้างแล้ว')
+        toast.success('รีเซ็ตรหัสผ่านสำเร็จ! รหัสผ่านชั่วคราวใหม่ถูกสร้างแล้ว')
       } else {
-        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้'))
+        toast.error(result.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้')
       }
     } catch (error: any) {
       console.error('Error resetting password:', error)
-      alert('เกิดข้อผิดพลาด: ' + error.message)
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน')
     } finally {
       setIsResettingPassword(false)
     }
@@ -198,22 +199,22 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       const result = await toggleHotelLoginAccess(editData.id, enabled)
       if (result.success) {
         setLoginEnabled(enabled)
-        alert(enabled ? 'เปิดใช้งานการเข้าสู่ระบบแล้ว' : 'ปิดใช้งานการเข้าสู่ระบบแล้ว')
+        toast.success(enabled ? 'เปิดใช้งานการเข้าสู่ระบบแล้ว' : 'ปิดใช้งานการเข้าสู่ระบบแล้ว')
       } else {
-        alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถเปลี่ยนสถานะได้'))
+        toast.error(result.error || 'ไม่สามารถเปลี่ยนสถานะได้')
       }
     } catch (error: any) {
       console.error('Error toggling login access:', error)
-      alert('เกิดข้อผิดพลาด: ' + error.message)
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ')
     }
   }
 
   const copyPassword = async () => {
     const success = await copyToClipboard(temporaryPassword)
     if (success) {
-      alert('คัดลอกรหัสผ่านแล้ว!')
+      toast.success('คัดลอกรหัสผ่านแล้ว!')
     } else {
-      alert('ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง')
+      toast.error('ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง')
     }
   }
 

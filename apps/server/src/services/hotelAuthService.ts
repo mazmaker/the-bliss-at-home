@@ -233,11 +233,12 @@ class HotelAuthService {
         throw new Error(`Failed to update hotel: ${updateError.message}`)
       }
 
-      // Send password reset email
+      // Send password reset email with new credentials
       await emailService.sendPasswordReset(hotel.login_email, {
         hotelName: hotel.name_th,
         loginEmail: hotel.login_email,
-        resetUrl: this.getPasswordResetUrl(resetToken),
+        temporaryPassword,
+        loginUrl: this.getHotelLoginUrl(),
         expiresIn: '24 ชั่วโมง'
       })
 
@@ -341,7 +342,7 @@ class HotelAuthService {
       await emailService.sendPasswordReset(email, {
         hotelName: hotel.name_th,
         loginEmail: email,
-        resetUrl: this.getPasswordResetUrl(resetToken),
+        loginUrl: this.getHotelLoginUrl(),
         expiresIn: '2 ชั่วโมง'
       })
     } catch (error) {
@@ -408,7 +409,7 @@ class HotelAuthService {
    * Get hotel login URL
    */
   private getHotelLoginUrl(): string {
-    const baseUrl = process.env.HOTEL_APP_URL || 'http://localhost:3006'
+    const baseUrl = process.env.HOTEL_APP_URL || 'http://localhost:3003'
     return `${baseUrl}/login`
   }
 
@@ -416,7 +417,7 @@ class HotelAuthService {
    * Get password reset URL
    */
   private getPasswordResetUrl(token: string): string {
-    const baseUrl = process.env.HOTEL_APP_URL || 'http://localhost:3006'
+    const baseUrl = process.env.HOTEL_APP_URL || 'http://localhost:3003'
     return `${baseUrl}/reset-password?token=${token}`
   }
 

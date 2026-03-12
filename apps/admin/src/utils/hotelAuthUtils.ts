@@ -129,7 +129,7 @@ export async function resetHotelPassword(hotelId: string): Promise<APIResponse<{
     if (response.ok) {
       return {
         success: true,
-        data: { temporaryPassword: result.temporaryPassword }
+        data: { temporaryPassword: result.data?.temporaryPassword || result.temporaryPassword }
       }
     } else {
       return {

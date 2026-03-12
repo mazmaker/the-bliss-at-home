@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2, Key, Shield } from 'lucide-react'
 import { HotelForm } from '../components/HotelForm'
 import { useHotels, useTotalMonthlyRevenue } from '../hooks/useHotels'
 import { updateHotelStatus } from '../lib/hotelQueries'
+import { resetHotelPassword } from '../utils/hotelAuthUtils'
 
 function Hotels() {
   const { hotels, loading, error, refetch } = useHotels()
@@ -30,7 +32,7 @@ function Hotels() {
       refetch()
     } catch (err) {
       console.error('Failed to approve hotel:', err)
-      alert('เกิดข้อผิดพลาดในการอนุมัติโรงแรม')
+      toast.error('เกิดข้อผิดพลาดในการอนุมัติโรงแรม')
     }
   }
 
@@ -40,35 +42,24 @@ function Hotels() {
       refetch()
     } catch (err) {
       console.error('Failed to reject hotel:', err)
-      alert('เกิดข้อผิดพลาดในการปฏิเสธโรงแรม')
+      toast.error('เกิดข้อผิดพลาดในการปฏิเสธโรงแรม')
     }
   }
 
   const handleResetPassword = async (hotel: any) => {
     setIsResettingPassword(true)
     try {
-      const response = await fetch('http://localhost:3000/api/hotels/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.REACT_APP_ADMIN_API_TOKEN || 'admin-token'}`
-        },
-        body: JSON.stringify({
-          hotelId: hotel.id
-        }),
-      })
+      const result = await resetHotelPassword(hotel.id)
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน')
+      if (result.success && result.data?.temporaryPassword) {
+        toast.success(`รีเซ็ตรหัสผ่านสำเร็จ! รหัสผ่านชั่วคราวใหม่: ${result.data.temporaryPassword}`)
+        setResetPasswordHotel(null)
+      } else {
+        toast.error(result.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้')
       }
-
-      alert(`รีเซ็ตรหัสผ่านสำเร็จ!\n\nรหัสผ่านชั่วคราว: ${result.data.temporaryPassword}\n\nกรุณาส่งรหัสผ่านใหม่ให้กับโรงแรม "${hotel.name_th}"`)
-      setResetPasswordHotel(null)
     } catch (error: any) {
       console.error('Reset password error:', error)
-      alert(error.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน')
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน')
     } finally {
       setIsResettingPassword(false)
     }
