@@ -1,17 +1,31 @@
-// Build: 2026-03-12
-// Capture the FULL initial URL before any imports run — LIFF SDK may modify URL on import
+// Build: 2026-03-12b
+// Capture deep link path before any imports run — LIFF SDK may modify URL on import
 const _initialUrl = window.location.href
 const _initialSearch = window.location.search
-// Save liff.state if present (backup — index.html also tries to capture it)
 try {
   const _params = new URLSearchParams(_initialSearch)
+  let _deepLink: string | null = null
+
+  // Strategy 1: Direct liff.state
   const _liffState = _params.get('liff.state')
-  if (_liffState && _liffState.startsWith('/')) {
-    localStorage.setItem('staff_redirect_after_login', _liffState)
+  if (_liffState && _liffState.startsWith('/')) _deepLink = _liffState
+
+  // Strategy 2: Extract from liffRedirectUri
+  if (!_deepLink) {
+    const _redir = _params.get('liffRedirectUri')
+    if (_redir) {
+      try {
+        const _u = new URL(decodeURIComponent(_redir))
+        const _s = _u.searchParams.get('liff.state')
+        if (_s && _s.startsWith('/')) _deepLink = _s
+      } catch(e2) {}
+    }
   }
-  // Always log the initial URL for debugging
+
+  if (_deepLink) localStorage.setItem('staff_redirect_after_login', _deepLink)
+
   const _logs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
-  _logs.push({ t: Date.now(), step: 'MAIN_TSX_INIT', data: { initialUrl: _initialUrl, liffState: _liffState, search: _initialSearch }, url: _initialUrl })
+  _logs.push({ t: Date.now(), step: 'MAIN_TSX_INIT', data: { deepLink: _deepLink, search: _initialSearch }, url: _initialUrl })
   if (_logs.length > 20) _logs.splice(0, _logs.length - 20)
   localStorage.setItem('_debug_liff_log', JSON.stringify(_logs))
 } catch(e) {}

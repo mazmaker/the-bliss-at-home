@@ -136,13 +136,58 @@ export function StaffLoginPage() {
 
   // Initialize LIFF on mount
   useEffect(() => {
-    // Save liff.state BEFORE liff.init() — the SDK may redirect and clear URL params
+    // Extract deep link path from multiple sources before liff.init()
     const urlParams = new URLSearchParams(window.location.search)
-    const liffState = urlParams.get('liff.state')
-    if (liffState && liffState.startsWith('/')) {
-      localStorage.setItem('staff_redirect_after_login', liffState)
-      console.log('[Login] Saved deep link path before LIFF init:', liffState)
+
+    // Strategy 1: Direct liff.state param
+    let deepLinkPath = urlParams.get('liff.state')
+    if (deepLinkPath && deepLinkPath.startsWith('/')) {
+      localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+      console.log('[Login] Got deep link from liff.state:', deepLinkPath)
     }
+
+    // Strategy 2: Extract from liffRedirectUri (when coming from OAuth callback)
+    if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+      const liffRedirectUri = urlParams.get('liffRedirectUri')
+      if (liffRedirectUri) {
+        try {
+          const redirectUrl = new URL(decodeURIComponent(liffRedirectUri))
+          const stateFromRedirect = redirectUrl.searchParams.get('liff.state')
+          if (stateFromRedirect && stateFromRedirect.startsWith('/')) {
+            deepLinkPath = stateFromRedirect
+            localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+            console.log('[Login] Got deep link from liffRedirectUri:', deepLinkPath)
+          }
+        } catch (e) { /* ignore parse errors */ }
+      }
+    }
+
+    // Strategy 3: Try OAuth state parameter
+    if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+      const oauthState = urlParams.get('state')
+      if (oauthState) {
+        try {
+          const decoded = decodeURIComponent(oauthState)
+          const stateMatch = decoded.match(/liff\.state=([^&;]+)/)
+          if (stateMatch) {
+            const pathFromState = decodeURIComponent(stateMatch[1])
+            if (pathFromState.startsWith('/')) {
+              deepLinkPath = pathFromState
+              localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+              console.log('[Login] Got deep link from OAuth state:', deepLinkPath)
+            }
+          }
+        } catch (e) { /* ignore */ }
+      }
+    }
+
+    // DEBUG: Log all URL params at Login mount
+    const allLoginParams: Record<string, string> = {}
+    urlParams.forEach((v, k) => { allLoginParams[k] = v.substring(0, 200) })
+    const loginDebugLogs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
+    loginDebugLogs.push({ t: Date.now(), step: 'LOGIN_MOUNT_PARAMS', data: { deepLinkPath, allParams: allLoginParams }, url: window.location.href })
+    if (loginDebugLogs.length > 20) loginDebugLogs.splice(0, loginDebugLogs.length - 20)
+    localStorage.setItem('_debug_liff_log', JSON.stringify(loginDebugLogs))
 
     async function initLiff() {
       if (!LIFF_ID) {
@@ -154,6 +199,16 @@ export function StaffLoginPage() {
       try {
         await liffService.initialize(LIFF_ID)
         setIsLiffReady(true)
+
+        // Strategy 4: After liff.init(), check if SDK added liff.state to URL
+        if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+          const postInitParams = new URLSearchParams(window.location.search)
+          const postInitLiffState = postInitParams.get('liff.state')
+          if (postInitLiffState && postInitLiffState.startsWith('/')) {
+            localStorage.setItem('staff_redirect_after_login', postInitLiffState)
+            console.log('[Login] Got deep link after liff.init():', postInitLiffState)
+          }
+        }
 
         // Check if user just logged out - skip auto-login to prevent loop
         // Use both localStorage flag, sessionStorage flag, AND module-level guard

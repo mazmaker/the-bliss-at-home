@@ -34,21 +34,70 @@ export function StaffAuthCallback() {
         const hasLiffParams = urlParams.has('liffClientId') && urlParams.has('liffRedirectUri')
         const isLiffCallback = LIFF_ID && hasLiffParams
 
-        // Save liff.state IMMEDIATELY before liff.init() — the SDK may redirect
-        // and clear URL params, losing the deep link path
-        const liffState = urlParams.get('liff.state')
-        if (liffState && liffState.startsWith('/')) {
-          localStorage.setItem('staff_redirect_after_login', liffState)
-          console.log('[Callback] Saved deep link path before init:', liffState)
+        // === Extract deep link path from multiple sources ===
+        // Strategy 1: Direct liff.state param (present when user is already LINE-logged-in)
+        let deepLinkPath: string | null = urlParams.get('liff.state')
+        if (deepLinkPath && deepLinkPath.startsWith('/')) {
+          localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+          console.log('[Callback] Got deep link from liff.state param:', deepLinkPath)
         }
+
+        // Strategy 2: Extract liff.state from liffRedirectUri param
+        // When NOT logged in, LIFF encodes the deep link path inside liffRedirectUri
+        // e.g. liffRedirectUri=https://example.com/login?liff.state=%2Fstaff%2Fjobs%2Fxxx
+        if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+          const liffRedirectUri = urlParams.get('liffRedirectUri')
+          if (liffRedirectUri) {
+            try {
+              const redirectUrl = new URL(decodeURIComponent(liffRedirectUri))
+              const stateFromRedirect = redirectUrl.searchParams.get('liff.state')
+              if (stateFromRedirect && stateFromRedirect.startsWith('/')) {
+                deepLinkPath = stateFromRedirect
+                localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+                console.log('[Callback] Got deep link from liffRedirectUri:', deepLinkPath)
+              }
+            } catch (e) {
+              console.log('[Callback] Could not parse liffRedirectUri:', liffRedirectUri)
+            }
+          }
+        }
+
+        // Strategy 3: Try to decode OAuth state parameter (may contain liff.state)
+        if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+          const oauthState = urlParams.get('state')
+          if (oauthState) {
+            try {
+              const decoded = decodeURIComponent(oauthState)
+              // Format could be: {token};liff.state={path} or contain it URL-encoded
+              const stateMatch = decoded.match(/liff\.state=([^&;]+)/)
+              if (stateMatch) {
+                const pathFromState = decodeURIComponent(stateMatch[1])
+                if (pathFromState.startsWith('/')) {
+                  deepLinkPath = pathFromState
+                  localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+                  console.log('[Callback] Got deep link from OAuth state:', deepLinkPath)
+                }
+              }
+            } catch (e) {
+              // ignore decode errors
+            }
+          }
+        }
+
+        // DEBUG: Log all URL params for diagnosis
+        const allParams: Record<string, string> = {}
+        urlParams.forEach((v, k) => { allParams[k] = v.substring(0, 200) })
+        const debugLogs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
+        debugLogs.push({ t: Date.now(), step: 'CALLBACK_PARAMS', data: { deepLinkPath, allParams }, url: window.location.href })
+        if (debugLogs.length > 20) debugLogs.splice(0, debugLogs.length - 20)
+        localStorage.setItem('_debug_liff_log', JSON.stringify(debugLogs))
 
         console.log('[Callback] Debug:', {
           LIFF_ID,
-          hasLiffClientId: urlParams.has('liffClientId'),
-          hasLiffRedirectUri: urlParams.has('liffRedirectUri'),
           hasLiffParams,
           isLiffCallback,
-          liffState,
+          deepLinkPath,
+          allParams,
           url: window.location.href,
         })
 
@@ -62,6 +111,17 @@ export function StaffAuthCallback() {
               throw new Error('LIFF ID not configured')
             }
             await liffService.initialize(LIFF_ID)
+          }
+
+          // Strategy 4: After liff.init(), SDK may have added liff.state to URL
+          if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+            const postInitParams = new URLSearchParams(window.location.search)
+            const postInitLiffState = postInitParams.get('liff.state')
+            if (postInitLiffState && postInitLiffState.startsWith('/')) {
+              deepLinkPath = postInitLiffState
+              localStorage.setItem('staff_redirect_after_login', deepLinkPath)
+              console.log('[Callback] Got deep link after liff.init():', deepLinkPath)
+            }
           }
 
           // Check if user is logged in
