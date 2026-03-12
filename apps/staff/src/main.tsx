@@ -1,4 +1,4 @@
-// Build: 2026-03-12b
+// Build: 2026-03-12c
 // Capture deep link path before any imports run — LIFF SDK may modify URL on import
 const _initialUrl = window.location.href
 const _initialSearch = window.location.search
