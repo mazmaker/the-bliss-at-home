@@ -95,24 +95,11 @@ function StaffSettings() {
     setShowLogoutConfirm(false)
 
     try {
-      const loggedInViaLiff = localStorage.getItem('staff_logged_in_via_liff') === 'true'
-
-      if (loggedInViaLiff) {
-        console.log('[Logout] User logged in via LIFF, initializing LIFF for logout...')
-        const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
-
-        if (LIFF_ID) {
-          if (!liffService.isInitialized()) {
-            await liffService.initialize(LIFF_ID)
-          }
-          if (liffService.isLoggedIn()) {
-            console.log('[Logout] Logging out from LIFF...')
-            liffService.logout()
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-        }
-        localStorage.removeItem('staff_logged_in_via_liff')
-      }
+      // Don't call liff.logout() — it forces LIFF SDK to re-authenticate on next
+      // LIFF URL open, which loses liff.state (deep link path). The auto-login
+      // guards (staff_just_logged_out, staff_skip_auto_login) prevent unwanted
+      // auto-re-login without needing to destroy the LIFF session.
+      localStorage.removeItem('staff_logged_in_via_liff')
     } catch (error) {
       console.error('LIFF logout error:', error)
     }

@@ -211,14 +211,21 @@ export function StaffLoginPage() {
         }
 
         // Check if user just logged out - skip auto-login to prevent loop
-        // Use both localStorage flag, sessionStorage flag, AND module-level guard
+        // BUT: if there's a deep link saved, allow auto-login so the user
+        // gets redirected to the correct page (e.g. opened LIFF URL after logout)
+        const hasDeepLink = !!localStorage.getItem('staff_redirect_after_login')
         const justLoggedOut = localStorage.getItem('staff_just_logged_out')
-        if (justLoggedOut || shouldSkipAutoLogin()) {
-          console.log('[LIFF] User just logged out or auto-login already failed, skipping auto-login')
+        if (!hasDeepLink && (justLoggedOut || shouldSkipAutoLogin())) {
+          console.log('[LIFF] User just logged out, no deep link, skipping auto-login')
           localStorage.removeItem('staff_just_logged_out')
           markSkipAutoLogin() // Persist across re-mounts AND page reloads
           setIsLoading(false)
           return
+        }
+        // Clear the logout flag even if we proceed (deep link case)
+        if (justLoggedOut) {
+          localStorage.removeItem('staff_just_logged_out')
+          clearSkipAutoLogin()
         }
 
         // Auto-login if already logged in via LIFF (only try once per session)
