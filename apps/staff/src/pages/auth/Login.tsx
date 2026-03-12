@@ -18,9 +18,23 @@ const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 
 // Module-level flag to prevent auto-login across re-mounts within the same page load
 let skipAutoLoginForSession = false
-// Track auto-login attempts to prevent infinite retry
-let autoLoginAttempts = 0
-const MAX_AUTO_LOGIN_ATTEMPTS = 1
+
+// Check sessionStorage for persistent skip flag (survives full page reload)
+function shouldSkipAutoLogin(): boolean {
+  if (skipAutoLoginForSession) return true
+  if (sessionStorage.getItem('staff_skip_auto_login')) return true
+  return false
+}
+
+function markSkipAutoLogin() {
+  skipAutoLoginForSession = true
+  sessionStorage.setItem('staff_skip_auto_login', 'true')
+}
+
+function clearSkipAutoLogin() {
+  skipAutoLoginForSession = false
+  sessionStorage.removeItem('staff_skip_auto_login')
+}
 
 export function StaffLoginPage() {
   const navigate = useNavigate()
@@ -134,26 +148,18 @@ export function StaffLoginPage() {
         setIsLiffReady(true)
 
         // Check if user just logged out - skip auto-login to prevent loop
-        // Use both localStorage flag AND module-level guard (for React StrictMode double-mount)
+        // Use both localStorage flag, sessionStorage flag, AND module-level guard
         const justLoggedOut = localStorage.getItem('staff_just_logged_out')
-        if (justLoggedOut || skipAutoLoginForSession) {
+        if (justLoggedOut || shouldSkipAutoLogin()) {
           console.log('[LIFF] User just logged out or auto-login already failed, skipping auto-login')
           localStorage.removeItem('staff_just_logged_out')
-          skipAutoLoginForSession = true // Keep guard active for subsequent re-mounts
+          markSkipAutoLogin() // Persist across re-mounts AND page reloads
           setIsLoading(false)
           return
         }
 
-        // Prevent infinite auto-login retry loop
-        if (autoLoginAttempts >= MAX_AUTO_LOGIN_ATTEMPTS) {
-          console.log('[LIFF] Max auto-login attempts reached, skipping')
-          setIsLoading(false)
-          return
-        }
-
-        // Auto-login if already logged in via LIFF
+        // Auto-login if already logged in via LIFF (only try once per session)
         if (liffService.isLoggedIn()) {
-          autoLoginAttempts++
           await handleLiffAutoLogin()
         }
       } catch (err) {
@@ -213,8 +219,8 @@ export function StaffLoginPage() {
       // If auto-login fails (e.g., expired token), silently fail and show login button
       console.error('[Auto-login] Error:', err)
       console.log('[Auto-login] Falling back to manual login')
-      // Prevent retry loop: mark auto-login as failed for this session
-      skipAutoLoginForSession = true
+      // Prevent retry loop: mark auto-login as failed (persists across page reloads)
+      markSkipAutoLogin()
       setIsLoading(false)
       // Don't set error - just let user click the login button
     }
@@ -227,9 +233,8 @@ export function StaffLoginPage() {
       return
     }
 
-    // User explicitly clicked login - clear the skip guard and retry counter
-    skipAutoLoginForSession = false
-    autoLoginAttempts = 0
+    // User explicitly clicked login - clear all skip guards
+    clearSkipAutoLogin()
 
     setIsLoading(true)
     setError(null)

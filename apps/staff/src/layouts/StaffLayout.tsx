@@ -70,12 +70,18 @@ function StaffLayout() {
     localStorage.removeItem('bliss-customer-auth')
     localStorage.removeItem('staff_logged_in_via_liff')
 
-    // Logout from LIFF only if already initialized (don't re-initialize just to logout)
-    // Re-initializing LIFF from a non-endpoint URL causes warnings and issues
+    // Logout from LIFF - initialize first if needed so the token gets cleared
     try {
-      if (liffService.isInitialized() && liffService.isLoggedIn()) {
-        console.log('[Logout] Logging out from LIFF...')
-        liffService.logout()
+      const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
+      if (LIFF_ID) {
+        if (!liffService.isInitialized()) {
+          console.log('[Logout] Initializing LIFF for logout...')
+          await liffService.initialize(LIFF_ID)
+        }
+        if (liffService.isLoggedIn()) {
+          console.log('[Logout] Logging out from LIFF...')
+          liffService.logout()
+        }
       }
     } catch (error) {
       console.error('LIFF logout error:', error)
