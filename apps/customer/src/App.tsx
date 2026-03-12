@@ -15,6 +15,7 @@ import ColorPalette from './pages/ColorPalette'
 import Register from './pages/Register'
 import PaymentConfirmation from './pages/PaymentConfirmation'
 import TransactionHistory from './pages/TransactionHistory'
+import Notifications from './pages/Notifications'
 import OTPVerification from './pages/OTPVerification'
 import TermsPage from './pages/Terms'
 import PrivacyPage from './pages/Privacy'
@@ -94,6 +95,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
               <TransactionHistoryWrapper />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <NotificationsWrapper />
             </ProtectedRoute>
           }
         />
@@ -218,6 +228,15 @@ function TransactionHistoryWrapper() {
     <>
       <Header />
       <TransactionHistory />
+    </>
+  )
+}
+
+function NotificationsWrapper() {
+  return (
+    <>
+      <Header />
+      <Notifications />
     </>
   )
 }

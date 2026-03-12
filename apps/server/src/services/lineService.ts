@@ -20,6 +20,8 @@ interface JobNotificationData {
   staffEarnings: number
   durationMinutes: number
   jobIds?: string[]
+  // Reschedule flag
+  isRescheduled?: boolean
   // Couple booking fields
   isCouple?: boolean
   recipientIndex?: number
@@ -164,16 +166,20 @@ async function sendNewJobToStaff(lineUserIds: string[], data: JobNotificationDat
       })
       .join('\n')
 
+    const coupleHeader = data.isRescheduled
+      ? `📅 งาน Couple เลื่อนนัด! (ต้องการ ${data.totalRecipients} คน)`
+      : `🔔 มีงาน Couple ใหม่! (ต้องการ ${data.totalRecipients} คน)`
     messageText =
-      `🔔 มีงาน Couple ใหม่! (ต้องการ ${data.totalRecipients} คน)\n\n` +
+      `${coupleHeader}\n\n` +
       `📅 วันที่: ${data.scheduledDate}\n` +
       `⏰ เวลา: ${data.scheduledTime}\n` +
       `${locationText}\n\n` +
       `💆 รายละเอียดงาน:\n${recipientDetails}`
   } else {
     // Single booking
+    const singleHeader = data.isRescheduled ? '📅 งานเลื่อนนัด — รับงานใหม่!' : '🔔 มีงานใหม่!'
     messageText =
-      `🔔 มีงานใหม่!\n\n` +
+      `${singleHeader}\n\n` +
       `💆 บริการ: ${data.serviceName}\n` +
       `📅 วันที่: ${data.scheduledDate}\n` +
       `⏰ เวลา: ${data.scheduledTime}\n` +

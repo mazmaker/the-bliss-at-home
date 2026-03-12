@@ -420,7 +420,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
         const staffNotifRows = eligibleStaff.map(staff => ({
           user_id: staff.profile_id,
           type: 'new_job',
-          title: 'งานใหม่เข้ามา!',
+          title: 'งานเลื่อนนัด — รับงานใหม่!',
           message: `มีงาน "${serviceName}" ${location ? `ที่ ${location}` : ''} วันที่ ${body.new_date} เวลา ${body.new_time}${prefLabel ? ` (ลูกค้าต้องการ: ${prefLabel})` : ''} (เลื่อนนัดจากวันเดิม)`,
           data: { booking_id: id, job_ids: updatedJobIds, provider_preference: providerPref || 'no-preference' },
           is_read: false,
@@ -500,6 +500,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
             staffEarnings: totalStaffEarnings,
             durationMinutes: booking.duration || 60,
             jobIds: updatedJobIds,
+            isRescheduled: true,
             isCouple,
             totalRecipients: recipientCount,
             coupleServices,

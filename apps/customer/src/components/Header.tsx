@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown } from 'lucide-react'
+import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown, Bell } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { useNotifications, useNotificationSubscription } from '@bliss/supabase/hooks/useNotifications'
 import { useTranslation } from '@bliss/i18n'
 import SOSButton from './SOSButton'
 
@@ -17,6 +18,12 @@ function Header() {
 
   // Fetch customer data from customers table
   const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
+
+  // Notifications
+  const userId = customer?.profile_id ?? undefined
+  const { data: notifications = [] } = useNotifications(userId)
+  useNotificationSubscription(userId)
+  const unreadCount = notifications.filter((n) => !n.is_read).length
 
   useEffect(() => {
     checkAuth()
@@ -116,6 +123,19 @@ function Header() {
           <div className="hidden md:flex items-center gap-3">
             {!isLoading && isLoggedIn ? (
               <>
+                {/* Notification Bell */}
+                <Link
+                  to="/notifications"
+                  className="relative p-2 text-stone-600 hover:text-amber-700 transition rounded-lg hover:bg-stone-50"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
                 {/* SOS Button */}
                 <SOSButton />
 
@@ -206,6 +226,27 @@ function Header() {
                   <span>{item.label}</span>
                 </Link>
               ))}
+
+              {/* Notification - Mobile */}
+              {!isLoading && isLoggedIn && (
+                <Link
+                  to="/notifications"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
+                    isActive('/notifications')
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'text-stone-700 hover:bg-stone-100'
+                  }`}
+                >
+                  <Bell className="w-5 h-5" />
+                  <span>การแจ้งเตือน</span>
+                  {unreadCount > 0 && (
+                    <span className="ml-auto min-w-[20px] h-[20px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               {/* SOS Button - Mobile */}
               {!isLoading && isLoggedIn && (
