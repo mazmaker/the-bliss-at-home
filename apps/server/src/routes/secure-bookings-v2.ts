@@ -228,12 +228,15 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
 
     const jobInserts = await Promise.all(
       jobSources.map(async (svc: any, index: number) => {
-        // Get service name for each job
+        // Get service name and commission rate for each job
         const { data: svcDetail } = await serviceSupabase
           .from('services')
-          .select('name_th, name_en')
+          .select('name_th, name_en, staff_commission_rate')
           .eq('id', svc.service_id)
           .single()
+
+        const commissionRate = Number(svcDetail?.staff_commission_rate) || 0.3
+        const earnings = Math.round(Number(svc.price) * commissionRate)
 
         return {
           booking_id: booking.id,
@@ -252,7 +255,7 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
           scheduled_date: booking.booking_date,
           scheduled_time: booking.booking_time,
           amount: svc.price,
-          staff_earnings: 0,
+          staff_earnings: earnings,
           status: 'pending' as const,
           customer_notes: booking.customer_notes,
           job_index: index + 1,
