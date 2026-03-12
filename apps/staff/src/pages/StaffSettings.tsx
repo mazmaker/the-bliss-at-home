@@ -104,15 +104,17 @@ function StaffSettings() {
       console.error('LIFF logout error:', error)
     }
 
+    // Set flag to prevent auto-login on login page
+    localStorage.setItem('staff_just_logged_out', 'true')
+    // Clear deep link redirect — user explicitly logged out, don't auto-redirect back
+    localStorage.removeItem('staff_redirect_after_login')
+
     try {
       console.log('[Logout] Logging out from Supabase...')
       await logout()
     } catch (error) {
       console.error('Supabase logout error:', error)
     }
-
-    // Set flag to prevent auto-login on login page
-    localStorage.setItem('staff_just_logged_out', 'true')
 
     console.log('[Logout] Redirecting to login page...')
     window.location.href = '/staff/login'

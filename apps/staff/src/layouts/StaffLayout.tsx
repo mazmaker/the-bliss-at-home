@@ -57,6 +57,8 @@ function StaffLayout() {
 
     // Set flag BEFORE logout to prevent Login page from auto-login
     localStorage.setItem('staff_just_logged_out', 'true')
+    // Clear deep link redirect — user explicitly logged out, don't auto-redirect back
+    localStorage.removeItem('staff_redirect_after_login')
 
     try {
       // Logout from Supabase first (invalidate session)
