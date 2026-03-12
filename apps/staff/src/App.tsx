@@ -31,16 +31,25 @@ function useLiffStateRedirect() {
     const liffState = params.get('liff.state')
     if (liffState && liffState.startsWith('/')) {
       handled.current = true
-      // Clean liff.state from URL
+
+      // Always save the deep link path so login/callback can restore it
+      sessionStorage.setItem('staff_redirect_after_login', liffState)
+
+      // If LIFF callback params are present (code, liffClientId), do NOT navigate.
+      // The callback handler at "/" must process the auth code first.
+      // After auth completes, it will redirect to the saved path.
+      const isLiffCallback = params.has('liffClientId') || params.has('code')
+      if (isLiffCallback) {
+        console.log('[LiffState] LIFF callback detected, saving deep link path but NOT navigating:', liffState)
+        return
+      }
+
+      // No callback params — safe to navigate to the deep link path
       params.delete('liff.state')
       const cleanSearch = params.toString()
       const cleanUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '')
       window.history.replaceState({}, '', cleanUrl)
 
-      // Always save the deep link path so login can restore it
-      sessionStorage.setItem('staff_redirect_after_login', liffState)
-
-      // Navigate to the deep link path
       navigate(liffState, { replace: true })
     }
   }, [location.search, navigate, isAuthenticated])

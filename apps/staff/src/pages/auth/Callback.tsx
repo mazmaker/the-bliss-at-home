@@ -116,8 +116,12 @@ export function StaffAuthCallback() {
             localStorage.removeItem('staff_invite_staff_id')
             localStorage.removeItem('staff_invite_name')
 
-            // Redirect to dashboard
-            navigate(config.defaultPath, { replace: true })
+            // Redirect to saved deep link path (from LIFF liff.state) or dashboard
+            const targetPath = sessionStorage.getItem('staff_redirect_after_login') || config.defaultPath
+            sessionStorage.removeItem('staff_redirect_after_login')
+            console.log('[Callback] Redirecting to:', targetPath)
+            // Use window.location.href for full page reload to ensure auth state propagates
+            window.location.href = targetPath
           }
         } else {
           // Handle Google OAuth callback
@@ -205,8 +209,11 @@ export function StaffAuthCallback() {
           // Clear OAuth parameters from URL
           window.history.replaceState({}, '', window.location.pathname)
 
-          // Redirect to dashboard
-          navigate(config.defaultPath, { replace: true })
+          // Redirect to saved deep link path or dashboard
+          const targetPath = sessionStorage.getItem('staff_redirect_after_login') || config.defaultPath
+          sessionStorage.removeItem('staff_redirect_after_login')
+          console.log('[Callback] Redirecting to:', targetPath)
+          window.location.href = targetPath
         }
       } catch (err: any) {
         console.error('[Callback] Error:', err)
