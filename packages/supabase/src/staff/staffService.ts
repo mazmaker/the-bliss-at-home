@@ -506,6 +506,8 @@ export async function deleteSkill(
  * Requires: staff.status='active' + id_card verified + bank_statement verified
  */
 export async function canStaffStartWork(profileId: string): Promise<StaffEligibility> {
+  console.log('[Eligibility] Checking for profileId:', profileId)
+
   // Get staff record
   const { data: staffData, error: staffError } = await supabase
     .from('staff')
@@ -513,7 +515,10 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     .eq('profile_id', profileId)
     .single()
 
+  console.log('[Eligibility] Staff query result:', { staffData, staffError: staffError?.message })
+
   if (staffError || !staffData) {
+    console.warn('[Eligibility] Staff not found! profileId:', profileId, 'error:', staffError?.message)
     return {
       canWork: false,
       reasons: ['ไม่พบข้อมูลพนักงาน'],
@@ -538,11 +543,13 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     reasons.push('กรุณาระบุเพศในข้อมูลส่วนตัว')
   }
 
-  // Check 2: Get documents
+  // Check 3: Get documents
   const { data: documents, error: docsError } = await supabase
     .from('staff_documents')
     .select('document_type, verification_status')
     .eq('staff_id', staffData.id)
+
+  console.log('[Eligibility] Documents query:', { docs: documents, docsError: docsError?.message, staffId: staffData.id })
 
   const docs = documents || []
 
@@ -585,6 +592,8 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     !!staffData.gender &&
     idCardVerified &&
     bankStatementVerified
+
+  console.log('[Eligibility] Result:', { canWork, status: staffData.status, gender: staffData.gender, idCardVerified, bankStatementVerified, reasons })
 
   return {
     canWork,

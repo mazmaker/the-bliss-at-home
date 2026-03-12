@@ -291,14 +291,7 @@ export function StaffLoginPage() {
       // Mark that user logged in via LIFF (for logout later)
       localStorage.setItem('staff_logged_in_via_liff', 'true')
 
-      // Wait for auth state to update (onAuthStateChange event)
-      console.log('[Auto-login] Waiting for auth state update...')
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Clear LIFF parameters from URL before navigating
-      window.history.replaceState({}, '', window.location.pathname)
-
-      // Read redirect path
+      // Read redirect path BEFORE redirect (loginWithLine already set the session)
       const savedPath = localStorage.getItem('staff_redirect_after_login')
       const targetPath = savedPath || redirectPath
       localStorage.removeItem('staff_redirect_after_login')
@@ -308,6 +301,8 @@ export function StaffLoginPage() {
       debugLogs.push({ t: Date.now(), step: 'AUTO_LOGIN_REDIRECT', data: { savedPath, redirectPath, targetPath }, url: window.location.href })
       localStorage.setItem('_debug_liff_log', JSON.stringify(debugLogs))
 
+      // Redirect immediately — no need to wait for React state update since
+      // window.location.href triggers a full page reload which re-initializes auth
       console.log('[Auto-login] Redirecting to:', targetPath, '(saved:', savedPath, 'redirect:', redirectPath, ')')
       window.location.href = targetPath
     } catch (err: any) {

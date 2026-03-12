@@ -229,7 +229,7 @@ function StaffDashboard() {
                 คุณต้องดำเนินการให้ครบก่อนจึงจะสามารถรับงานได้:
               </p>
               <ul className="text-sm text-amber-800 space-y-1 ml-4">
-                {!eligibility.requirements?.status && (
+                {eligibility.status !== 'active' && (
                   <li className="list-disc">รอการอนุมัติจากผู้ดูแลระบบ</li>
                 )}
                 {!eligibility.gender && (
@@ -237,10 +237,10 @@ function StaffDashboard() {
                     <Link to="/profile" className="underline hover:text-amber-900">ระบุเพศในข้อมูลส่วนตัว</Link>
                   </li>
                 )}
-                {!eligibility.requirements?.hasIdCard && (
+                {!eligibility.documents?.id_card?.verified && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบบัตรประชาชน</li>
                 )}
-                {!eligibility.requirements?.hasBankStatement && (
+                {!eligibility.documents?.bank_statement?.verified && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบสำเนาบัญชีธนาคาร</li>
                 )}
               </ul>
