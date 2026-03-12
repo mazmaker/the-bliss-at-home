@@ -62,6 +62,7 @@ import { DocumentViewerModal } from '../components/DocumentViewerModal'
 import { UploadDocumentModal } from '../components/UploadDocumentModal'
 import { PayoutDetailModal } from '../components/PayoutDetailModal'
 import { ProcessPayoutModal } from '../components/ProcessPayoutModal'
+import { CreatePayoutModal } from '../components/CreatePayoutModal'
 import { PayoutCalculationModal } from '../components/PayoutCalculationModal'
 import { EditBankModal } from '../components/EditBankModal'
 import { StatusManagementModal } from '../components/StatusManagementModal'
@@ -880,6 +881,7 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                   <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานที่</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ราคา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้พนักงาน</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
                 </tr>
               </thead>
@@ -916,10 +918,25 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                     <td className="py-3 px-4 text-sm font-medium text-amber-700">
                       ฿{job.amount.toLocaleString()}
                     </td>
+                    <td className="py-3 px-4 text-sm font-medium text-purple-700">
+                      ฿{Number(job.staff_earnings).toLocaleString()}
+                    </td>
                     <td className="py-3 px-4">{getStatusBadge(job.status)}</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="bg-stone-50 border-t-2 border-stone-300">
+                  <td colSpan={5} className="py-3 px-4 text-sm font-bold text-stone-900 text-right">รวม</td>
+                  <td className="py-3 px-4 text-sm font-bold text-amber-700">
+                    ฿{jobs.reduce((sum, j) => sum + Number(j.amount), 0).toLocaleString()}
+                  </td>
+                  <td className="py-3 px-4 text-sm font-bold text-purple-700">
+                    ฿{jobs.reduce((sum, j) => sum + Number(j.staff_earnings), 0).toLocaleString()}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         ) : (
@@ -1312,6 +1329,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
   const [showBankModal, setShowBankModal] = useState(false)
   const [showPayoutDetailModal, setShowPayoutDetailModal] = useState(false)
   const [showCalculationModal, setShowCalculationModal] = useState(false)
+  const [showCreatePayoutModal, setShowCreatePayoutModal] = useState(false)
   const [showDeleteBankConfirm, setShowDeleteBankConfirm] = useState(false)
   const [showAddBankModal, setShowAddBankModal] = useState(false)
   const [newBankForm, setNewBankForm] = useState({ bank_code: '', account_number: '', account_name: '' })
@@ -1714,6 +1732,13 @@ function EarningsTab({ staff }: { staff: Staff }) {
             </p>
             <div className="flex flex-wrap gap-2">
               <button
+                onClick={() => setShowCreatePayoutModal(true)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                สร้างรอบจ่ายเงิน
+              </button>
+              <button
                 onClick={() => {
                   // Find first pending payout
                   const firstPending = payoutHistory.find(p => p.status === 'pending')
@@ -1766,6 +1791,15 @@ function EarningsTab({ staff }: { staff: Staff }) {
       {showCalculationModal && (
         <PayoutCalculationModal
           onClose={() => setShowCalculationModal(false)}
+        />
+      )}
+
+      {/* Create Payout Modal */}
+      {showCreatePayoutModal && (
+        <CreatePayoutModal
+          staffId={staff.id}
+          staffName={staff.name_th || staff.name_en || ''}
+          onClose={() => setShowCreatePayoutModal(false)}
         />
       )}
 

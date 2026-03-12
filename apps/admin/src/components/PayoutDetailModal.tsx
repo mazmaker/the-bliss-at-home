@@ -11,9 +11,9 @@ export function PayoutDetailModal({ payoutId, onClose }: PayoutDetailModalProps)
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
+        <div className="flex items-center justify-between p-6 border-b border-stone-200 flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-stone-900">รายละเอียดการจ่ายเงิน</h2>
             <p className="text-sm text-stone-500 mt-1">รายการงานทั้งหมดในรอบนี้</p>
@@ -27,7 +27,7 @@ export function PayoutDetailModal({ payoutId, onClose }: PayoutDetailModalProps)
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
@@ -113,7 +113,7 @@ export function PayoutDetailModal({ payoutId, onClose }: PayoutDetailModalProps)
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50 flex-shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"

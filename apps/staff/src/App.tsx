@@ -15,10 +15,14 @@ import { StaffLoginPage, StaffRegisterPage, StaffAuthCallback } from './pages/au
 /**
  * Handle LIFF deep link: liff.state query param contains the target path
  * e.g. ?liff.state=%2Fstaff%2Fjobs%2Fxxx → navigate to /staff/jobs/xxx
+ *
+ * If user is not authenticated, saves path to sessionStorage so Login.tsx
+ * can redirect there after successful login (prevents infinite loop).
  */
 function useLiffStateRedirect() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAuthenticated } = useAuth()
   const handled = useRef(false)
 
   useEffect(() => {
@@ -32,10 +36,14 @@ function useLiffStateRedirect() {
       const cleanSearch = params.toString()
       const cleanUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '')
       window.history.replaceState({}, '', cleanUrl)
+
+      // Always save the deep link path so login can restore it
+      sessionStorage.setItem('staff_redirect_after_login', liffState)
+
       // Navigate to the deep link path
       navigate(liffState, { replace: true })
     }
-  }, [location.search, navigate])
+  }, [location.search, navigate, isAuthenticated])
 }
 
 function App() {

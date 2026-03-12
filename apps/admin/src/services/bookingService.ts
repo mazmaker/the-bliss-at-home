@@ -137,6 +137,16 @@ export interface Booking {
       category: string
     }
   }>
+  jobs?: Array<{
+    id: string
+    staff_id: string
+    job_index: number
+    total_jobs: number
+    status: string
+    service_name: string
+    staff_name?: string
+    staff_earnings?: number
+  }>
 }
 
 export interface BookingFilters {
@@ -149,6 +159,48 @@ export interface BookingFilters {
 }
 
 class BookingService {
+  private async fetchJobsForBookings(bookingIds: string[]): Promise<Record<string, Booking['jobs']>> {
+    if (bookingIds.length === 0) return {}
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('id, booking_id, staff_id, job_index, total_jobs, status, service_name, staff_earnings')
+        .in('booking_id', bookingIds)
+        .order('job_index', { ascending: true })
+
+      if (error) {
+        console.warn('jobs not available:', error.message)
+        return {}
+      }
+
+      // Get unique staff_ids to fetch names from profiles
+      const staffIds = [...new Set((data || []).map(j => j.staff_id).filter(Boolean))]
+      let staffNames: Record<string, string> = {}
+      if (staffIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', staffIds)
+        if (profiles) {
+          staffNames = Object.fromEntries(profiles.map(p => [p.id, p.full_name]))
+        }
+      }
+
+      const map: Record<string, Booking['jobs']> = {}
+      for (const row of data || []) {
+        const bid = (row as any).booking_id
+        if (!map[bid]) map[bid] = []
+        map[bid]!.push({
+          ...row,
+          staff_name: staffNames[row.staff_id] || undefined,
+        } as any)
+      }
+      return map
+    } catch {
+      return {}
+    }
+  }
+
   private async fetchBookingServices(bookingIds: string[]): Promise<Record<string, Booking['booking_services']>> {
     if (bookingIds.length === 0) return {}
     try {
@@ -259,6 +311,16 @@ class BookingService {
         }))
       }
 
+      // Fetch jobs for all bookings (staff_earnings is stored in jobs table)
+      const allBookingIds = filteredData.map(b => b.id)
+      if (allBookingIds.length > 0) {
+        const jobsMap = await this.fetchJobsForBookings(allBookingIds)
+        filteredData = filteredData.map(b => ({
+          ...b,
+          jobs: jobsMap[b.id] || undefined,
+        }))
+      }
+
       // Add parsed customer data
       const processedData = filteredData.map(booking => ({
         ...booking,
@@ -298,6 +360,10 @@ class BookingService {
         const bsMap = await this.fetchBookingServices([booking.id])
         booking.booking_services = bsMap[booking.id] || undefined
       }
+
+      // Always fetch jobs (staff_earnings is stored in jobs table)
+      const jobsMap = await this.fetchJobsForBookings([booking.id])
+      booking.jobs = jobsMap[booking.id] || undefined
 
       // Add parsed customer data
       const processedData = {

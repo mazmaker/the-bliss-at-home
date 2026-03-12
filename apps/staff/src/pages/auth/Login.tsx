@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout, Button } from '@bliss/ui'
 import { APP_CONFIGS, authService, liffService, supabase } from '@bliss/supabase/auth'
 import { AlertCircle, UserCheck, Loader2 } from 'lucide-react'
@@ -18,10 +18,25 @@ const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 
 // Module-level flag to prevent auto-login across re-mounts within the same page load
 let skipAutoLoginForSession = false
+// Track auto-login attempts to prevent infinite retry
+let autoLoginAttempts = 0
+const MAX_AUTO_LOGIN_ATTEMPTS = 1
 
 export function StaffLoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const config = APP_CONFIGS.STAFF
+
+  // Get redirect path from ProtectedRoute's state or sessionStorage
+  const redirectPath = (location.state as any)?.from || sessionStorage.getItem('staff_redirect_after_login') || config.defaultPath
+
+  // Save redirect path to sessionStorage so it survives page reloads
+  useEffect(() => {
+    const fromState = (location.state as any)?.from
+    if (fromState) {
+      sessionStorage.setItem('staff_redirect_after_login', fromState)
+    }
+  }, [location.state])
   const [isLoading, setIsLoading] = useState(false)
   const [isLiffReady, setIsLiffReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -122,15 +137,23 @@ export function StaffLoginPage() {
         // Use both localStorage flag AND module-level guard (for React StrictMode double-mount)
         const justLoggedOut = localStorage.getItem('staff_just_logged_out')
         if (justLoggedOut || skipAutoLoginForSession) {
-          console.log('[LIFF] User just logged out, skipping auto-login')
+          console.log('[LIFF] User just logged out or auto-login already failed, skipping auto-login')
           localStorage.removeItem('staff_just_logged_out')
           skipAutoLoginForSession = true // Keep guard active for subsequent re-mounts
           setIsLoading(false)
           return
         }
 
+        // Prevent infinite auto-login retry loop
+        if (autoLoginAttempts >= MAX_AUTO_LOGIN_ATTEMPTS) {
+          console.log('[LIFF] Max auto-login attempts reached, skipping')
+          setIsLoading(false)
+          return
+        }
+
         // Auto-login if already logged in via LIFF
         if (liffService.isLoggedIn()) {
+          autoLoginAttempts++
           await handleLiffAutoLogin()
         }
       } catch (err) {
@@ -179,13 +202,19 @@ export function StaffLoginPage() {
       // Clear LIFF parameters from URL before navigating
       window.history.replaceState({}, '', window.location.pathname)
 
+      // Clean up redirect path from sessionStorage
+      const targetPath = sessionStorage.getItem('staff_redirect_after_login') || redirectPath
+      sessionStorage.removeItem('staff_redirect_after_login')
+
       // Use window.location to force a full page reload with updated auth state
-      console.log('[Auto-login] Redirecting to:', config.defaultPath)
-      window.location.href = config.defaultPath
+      console.log('[Auto-login] Redirecting to:', targetPath)
+      window.location.href = targetPath
     } catch (err: any) {
       // If auto-login fails (e.g., expired token), silently fail and show login button
       console.error('[Auto-login] Error:', err)
       console.log('[Auto-login] Falling back to manual login')
+      // Prevent retry loop: mark auto-login as failed for this session
+      skipAutoLoginForSession = true
       setIsLoading(false)
       // Don't set error - just let user click the login button
     }
@@ -198,8 +227,9 @@ export function StaffLoginPage() {
       return
     }
 
-    // User explicitly clicked login - clear the skip guard
+    // User explicitly clicked login - clear the skip guard and retry counter
     skipAutoLoginForSession = false
+    autoLoginAttempts = 0
 
     setIsLoading(true)
     setError(null)
@@ -238,9 +268,13 @@ export function StaffLoginPage() {
         // Clear LIFF parameters from URL before navigating
         window.history.replaceState({}, '', window.location.pathname)
 
+        // Clean up redirect path from sessionStorage
+        const targetPath = sessionStorage.getItem('staff_redirect_after_login') || redirectPath
+        sessionStorage.removeItem('staff_redirect_after_login')
+
         // Use window.location to force a full page reload with updated auth state
-        console.log('[LINE Login] Redirecting to:', config.defaultPath)
-        window.location.href = config.defaultPath
+        console.log('[LINE Login] Redirecting to:', targetPath)
+        window.location.href = targetPath
       } else {
         console.log('[LINE Login] Not logged in, redirecting to LINE authorization...')
         // Not logged in, redirect to LINE authorization

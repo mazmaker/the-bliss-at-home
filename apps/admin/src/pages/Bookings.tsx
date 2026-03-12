@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users } from 'lucide-react'
+import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users, TrendingUp } from 'lucide-react'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, type BookingStatus } from '../hooks/useBookings'
 import { useQueryClient } from '@tanstack/react-query'
@@ -292,6 +292,8 @@ function Bookings() {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่/เวลา</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จำนวน</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้พนักงาน</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้สุทธิ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การชำระ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จัดการ</th>
@@ -300,13 +302,13 @@ function Bookings() {
             <tbody>
               {bookingsLoading ? (
                 <tr>
-                  <td colSpan={10} className="py-8 text-center text-stone-500">
+                  <td colSpan={12} className="py-8 text-center text-stone-500">
                     กำลังโหลดข้อมูล...
                   </td>
                 </tr>
               ) : filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-8 text-center text-stone-500">
+                  <td colSpan={12} className="py-8 text-center text-stone-500">
                     ไม่พบข้อมูลการจอง
                   </td>
                 </tr>
@@ -341,7 +343,22 @@ function Bookings() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-sm text-amber-700">{booking.hotel?.name_th || '-'}</td>
-                    <td className="py-3 px-4 text-sm text-stone-600">{booking.staff?.name_th || 'รอมอบหมาย'}</td>
+                    <td className="py-3 px-4 text-sm text-stone-600">
+                      {booking.jobs && booking.jobs.length > 1 ? (
+                        <div className="space-y-0.5">
+                          {booking.jobs
+                            .sort((a, b) => a.job_index - b.job_index)
+                            .map((job) => (
+                              <p key={job.id} className="text-xs">
+                                <span className="text-stone-400">คนที่ {job.job_index}:</span>{' '}
+                                {job.staff_name || 'รอมอบหมาย'}
+                              </p>
+                            ))}
+                        </div>
+                      ) : (
+                        booking.staff?.name_th || 'รอมอบหมาย'
+                      )}
+                    </td>
                     <td className="py-3 px-4 text-sm text-stone-600">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
@@ -353,6 +370,23 @@ function Bookings() {
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-stone-900">฿{Number(booking.final_price).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-sm text-red-600">
+                      {(() => {
+                        const earnings = booking.jobs && booking.jobs.length > 0
+                          ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
+                          : Number(booking.staff_earnings)
+                        return earnings > 0 ? `-฿${earnings.toLocaleString()}` : '-'
+                      })()}
+                    </td>
+                    <td className="py-3 px-4 text-sm font-medium text-purple-700">
+                      {(() => {
+                        const earnings = booking.jobs && booking.jobs.length > 0
+                          ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
+                          : Number(booking.staff_earnings)
+                        const net = Number(booking.final_price) - earnings
+                        return `฿${net.toLocaleString()}`
+                      })()}
+                    </td>
                     <td className="py-3 px-4">{getStatusBadge(booking.status)}</td>
                     <td className="py-3 px-4">{getPaymentBadge(booking.payment_status)}</td>
                     <td className="py-3 px-4">
@@ -653,9 +687,25 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
 
             <div className="flex items-start gap-3">
               <User className="w-5 h-5 text-amber-600 mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-stone-500">พนักงาน</p>
-                <p className="font-medium text-stone-900">{booking.staff?.name_th || 'รอมอบหมาย'}</p>
+                {booking.jobs && booking.jobs.length > 1 ? (
+                  <div className="space-y-2 mt-1">
+                    {booking.jobs
+                      .sort((a, b) => a.job_index - b.job_index)
+                      .map((job) => (
+                        <div key={job.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-amber-200">
+                          <div>
+                            <span className="text-xs text-amber-600 font-medium">คนที่ {job.job_index}</span>
+                            <p className="font-medium text-stone-900">{job.staff_name || 'รอมอบหมาย'}</p>
+                          </div>
+                          <span className="text-xs text-stone-500">{job.service_name}</span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="font-medium text-stone-900">{booking.staff?.name_th || 'รอมอบหมาย'}</p>
+                )}
               </div>
             </div>
           </div>
@@ -725,6 +775,53 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               </div>
             )}
           </div>
+
+          {/* Revenue Info */}
+          {(() => {
+            const totalStaffEarnings = booking.jobs && booking.jobs.length > 0
+              ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
+              : Number(booking.staff_earnings)
+            const revenue = Number(booking.final_price)
+            const netRevenue = revenue - totalStaffEarnings
+            return (
+              <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+                <h3 className="font-semibold text-stone-900 mb-3">ข้อมูลรายได้</h3>
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="w-5 h-5 text-purple-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-stone-600">รายได้</span>
+                        <span className="text-stone-900">฿{revenue.toLocaleString()}</span>
+                      </div>
+                      {booking.jobs && booking.jobs.length > 1 ? (
+                        <>
+                          <p className="text-xs text-stone-500 mt-1">หักค่าคอมพนักงาน</p>
+                          {booking.jobs
+                            .sort((a, b) => a.job_index - b.job_index)
+                            .map((job) => (
+                              <div key={job.id} className="flex justify-between text-sm pl-2">
+                                <span className="text-red-600">คนที่ {job.job_index}: {job.staff_name || 'รอมอบหมาย'}</span>
+                                <span className="text-red-600">-฿{Number(job.staff_earnings || 0).toLocaleString()}</span>
+                              </div>
+                            ))}
+                        </>
+                      ) : (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-red-600">หักค่าคอมพนักงาน</span>
+                          <span className="text-red-600">-฿{totalStaffEarnings.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="border-t border-purple-200 pt-2 mt-2 flex justify-between">
+                        <span className="font-semibold text-stone-900">รายได้สุทธิ</span>
+                        <span className="text-xl font-bold text-purple-600">฿{netRevenue.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Location Map */}
           <div className="bg-blue-50 rounded-xl p-4">

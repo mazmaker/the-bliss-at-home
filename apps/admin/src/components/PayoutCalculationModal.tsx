@@ -1,4 +1,4 @@
-import { X, Calculator, DollarSign, Percent, TrendingUp } from 'lucide-react'
+import { X, Calculator, TrendingUp } from 'lucide-react'
 
 interface PayoutCalculationModalProps {
   onClose: () => void
@@ -37,7 +37,7 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
             </h3>
             <p className="text-sm text-blue-800">
               ระบบคำนวณรายได้พนักงานจากค่าคอมมิชชั่นของงานที่ทำสำเร็จในแต่ละรอบ (รายสัปดาห์/รายเดือน)
-              โดยรายได้จากค่าคอมมิชชั่นเป็นยอดสุทธิที่พนักงานจะได้รับ ไม่มีการหักค่าใช้จ่ายเพิ่มเติม
+              โดยรายได้จากค่าคอมมิชชั่นเป็นยอดสุทธิที่พนักงานจะได้รับ <strong>ไม่มีการหักค่าธรรมเนียมแพลตฟอร์มเพิ่มเติม</strong>
             </p>
           </div>
 
@@ -86,7 +86,6 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
                   </div>
                   <p className="text-sm text-stone-600">
                     รวมรายได้จากค่าคอมมิชชั่นของงานทั้งหมดที่สถานะเป็น "เสร็จสิ้น" ในช่วงเวลาที่กำหนด
-                    รายได้นี้เป็นยอดสุทธิที่พนักงานจะได้รับ ไม่มีการหักค่าใช้จ่ายเพิ่มเติม
                   </p>
                   <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-xs text-blue-700 font-medium">ตัวอย่าง</p>
@@ -98,26 +97,26 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
               </div>
             </div>
 
-            {/* Step 4 */}
+            {/* Step 3 */}
             <div className="border-2 border-amber-300 bg-amber-50 rounded-xl p-4 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  4
+                  3
                 </div>
                 <div className="flex-1">
                   <h4 className="font-semibold text-amber-900 mb-2">ยอดโอนทั้งหมด (Total Payout)</h4>
                   <div className="bg-white rounded-lg p-3 mb-2 border border-amber-200">
                     <p className="text-sm font-mono text-amber-900 font-semibold">
-                      ยอดโอน = รายได้สุทธิ
+                      ยอดโอน = รายได้รวมจากค่าคอมมิชชั่น
                     </p>
                   </div>
                   <p className="text-sm text-amber-800">
-                    ยอดเงินสุทธิที่พนักงานจะได้รับโอนเข้าบัญชี
+                    ยอดเงินที่พนักงานจะได้รับโอนเข้าบัญชี เท่ากับรายได้รวมจากค่าคอมมิชชั่นทั้งหมด ไม่มีการหักค่าธรรมเนียมเพิ่มเติม
                   </p>
                   <div className="mt-2 bg-amber-100 border border-amber-300 rounded-lg p-3">
                     <p className="text-xs text-amber-700 font-medium">ตัวอย่าง</p>
                     <p className="text-lg text-amber-900 mt-1 font-bold">
-                      <span className="text-2xl">฿2,210</span>
+                      <span className="text-2xl">฿820</span>
                     </p>
                   </div>
                 </div>
@@ -131,16 +130,12 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
             <table className="w-full text-sm">
               <tbody className="divide-y divide-stone-200">
                 <tr>
-                  <td className="py-2 text-stone-600">รายได้รวมจากงาน</td>
-                  <td className="py-2 text-right font-medium text-green-700">+฿2,600</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-stone-600">ค่าธรรมเนียมแพลตฟอร์ม (15%)</td>
-                  <td className="py-2 text-right font-medium text-red-700">-฿390</td>
+                  <td className="py-2 text-stone-600">รายได้รวมจากค่าคอมมิชชั่น</td>
+                  <td className="py-2 text-right font-medium text-green-700">+฿820</td>
                 </tr>
                 <tr className="bg-amber-100 border-t-2 border-amber-300">
-                  <td className="py-2 font-semibold text-amber-900">รายได้สุทธิ / ยอดโอนทั้งหมด</td>
-                  <td className="py-2 text-right font-bold text-xl text-amber-900">฿2,210</td>
+                  <td className="py-2 font-semibold text-amber-900">ยอดโอนทั้งหมด</td>
+                  <td className="py-2 text-right font-bold text-xl text-amber-900">฿820</td>
                 </tr>
               </tbody>
             </table>
