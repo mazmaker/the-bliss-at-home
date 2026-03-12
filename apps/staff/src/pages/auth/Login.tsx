@@ -216,12 +216,17 @@ export function StaffLoginPage() {
       // Clear LIFF parameters from URL before navigating
       window.history.replaceState({}, '', window.location.pathname)
 
-      // Clean up redirect path from sessionStorage
-      const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
+      // Read redirect path
+      const savedPath = localStorage.getItem('staff_redirect_after_login')
+      const targetPath = savedPath || redirectPath
       localStorage.removeItem('staff_redirect_after_login')
 
-      // Use window.location to force a full page reload with updated auth state
-      console.log('[Auto-login] Redirecting to:', targetPath)
+      // DEBUG: Log what we're doing
+      const debugLogs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
+      debugLogs.push({ t: Date.now(), step: 'AUTO_LOGIN_REDIRECT', data: { savedPath, redirectPath, targetPath }, url: window.location.href })
+      localStorage.setItem('_debug_liff_log', JSON.stringify(debugLogs))
+
+      console.log('[Auto-login] Redirecting to:', targetPath, '(saved:', savedPath, 'redirect:', redirectPath, ')')
       window.location.href = targetPath
     } catch (err: any) {
       // If auto-login fails (e.g., expired token), silently fail and show login button

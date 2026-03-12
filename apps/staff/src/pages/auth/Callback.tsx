@@ -126,10 +126,14 @@ export function StaffAuthCallback() {
             localStorage.removeItem('staff_invite_name')
 
             // Redirect to saved deep link path (from LIFF liff.state) or dashboard
-            const targetPath = localStorage.getItem('staff_redirect_after_login') || config.defaultPath
+            const savedPath = localStorage.getItem('staff_redirect_after_login')
+            const targetPath = savedPath || config.defaultPath
             localStorage.removeItem('staff_redirect_after_login')
-            console.log('[Callback] Redirecting to:', targetPath)
-            // Use window.location.href for full page reload to ensure auth state propagates
+            // DEBUG
+            const debugLogs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
+            debugLogs.push({ t: Date.now(), step: 'CALLBACK_REDIRECT', data: { savedPath, targetPath }, url: window.location.href })
+            localStorage.setItem('_debug_liff_log', JSON.stringify(debugLogs))
+            console.log('[Callback] Redirecting to:', targetPath, '(saved:', savedPath, ')')
             window.location.href = targetPath
           }
         } else {

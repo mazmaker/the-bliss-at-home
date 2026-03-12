@@ -1,7 +1,53 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ProtectedRoute } from '@bliss/ui'
 import { useAuth } from '@bliss/supabase/auth'
+
+// TEMPORARY DEBUG: Track deep link flow - remove after debugging
+function debugLog(step: string, data?: any) {
+  const logs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
+  logs.push({ t: Date.now(), step, data, url: window.location.href })
+  // Keep last 20 entries
+  if (logs.length > 20) logs.splice(0, logs.length - 20)
+  localStorage.setItem('_debug_liff_log', JSON.stringify(logs))
+}
+
+// TEMPORARY: Debug overlay component
+function DebugOverlay() {
+  const [show, setShow] = useState(false)
+  const [logs, setLogs] = useState<any[]>([])
+  useEffect(() => {
+    const stored = localStorage.getItem('_debug_liff_log')
+    if (stored) setLogs(JSON.parse(stored))
+  }, [show])
+  const savedPath = localStorage.getItem('staff_redirect_after_login')
+  return (
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 99999 }}>
+      {!show ? (
+        <button onClick={() => setShow(true)} style={{ background: '#f59e0b', color: '#fff', padding: '4px 12px', fontSize: '11px', borderRadius: '8px 8px 0 0', border: 'none' }}>
+          DEBUG (saved: {savedPath || 'none'})
+        </button>
+      ) : (
+        <div style={{ background: '#1e293b', color: '#e2e8f0', padding: '8px', maxHeight: '50vh', overflow: 'auto', fontSize: '10px', fontFamily: 'monospace' }}>
+          <button onClick={() => setShow(false)} style={{ float: 'right', background: '#ef4444', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '10px' }}>Close</button>
+          <button onClick={() => { localStorage.removeItem('_debug_liff_log'); setLogs([]) }} style={{ float: 'right', background: '#6b7280', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', marginRight: '4px' }}>Clear</button>
+          <div style={{ marginBottom: '4px', color: '#fbbf24' }}>saved_path: {savedPath || 'NULL'}</div>
+          <div style={{ marginBottom: '4px', color: '#fbbf24' }}>current_url: {window.location.href}</div>
+          <hr style={{ borderColor: '#475569', margin: '4px 0' }} />
+          {logs.map((l, i) => (
+            <div key={i} style={{ marginBottom: '2px', borderBottom: '1px solid #334155', paddingBottom: '2px' }}>
+              <span style={{ color: '#38bdf8' }}>{new Date(l.t).toLocaleTimeString()}</span>{' '}
+              <span style={{ color: '#4ade80' }}>{l.step}</span>{' '}
+              {l.data && <span style={{ color: '#cbd5e1' }}>{JSON.stringify(l.data)}</span>}
+              <div style={{ color: '#64748b', fontSize: '9px' }}>{l.url}</div>
+            </div>
+          ))}
+          {logs.length === 0 && <div style={{ color: '#64748b' }}>No logs yet</div>}
+        </div>
+      )}
+    </div>
+  )
+}
 import StaffLayout from './layouts/StaffLayout'
 import StaffDashboard from './pages/StaffDashboard'
 import StaffJobDetail from './pages/StaffJobDetail'
@@ -29,29 +75,25 @@ function useLiffStateRedirect() {
     if (handled.current) return
     const params = new URLSearchParams(window.location.search)
     const liffState = params.get('liff.state')
+    debugLog('useLiffStateRedirect', { liffState, search: window.location.search, path: window.location.pathname })
     if (liffState && liffState.startsWith('/')) {
       handled.current = true
 
-      // Always save the deep link path so login/callback can restore it
-      // Use localStorage (not sessionStorage) — LINE's in-app browser may clear
-      // sessionStorage between LIFF redirects
       localStorage.setItem('staff_redirect_after_login', liffState)
+      debugLog('SAVED_PATH', { liffState, source: 'useLiffStateRedirect' })
 
-      // If LIFF callback params are present (code, liffClientId), do NOT navigate.
-      // The callback handler at "/" must process the auth code first.
-      // After auth completes, it will redirect to the saved path.
       const isLiffCallback = params.has('liffClientId') || params.has('code')
       if (isLiffCallback) {
-        console.log('[LiffState] LIFF callback detected, saving deep link path but NOT navigating:', liffState)
+        debugLog('SKIP_NAV_CALLBACK', { liffState })
         return
       }
 
-      // No callback params — safe to navigate to the deep link path
       params.delete('liff.state')
       const cleanSearch = params.toString()
       const cleanUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '')
       window.history.replaceState({}, '', cleanUrl)
 
+      debugLog('NAVIGATE_TO', { liffState })
       navigate(liffState, { replace: true })
     }
   }, [location.search, navigate, isAuthenticated])
@@ -61,15 +103,21 @@ function App() {
   const { isLoading, isAuthenticated } = useAuth()
   useLiffStateRedirect()
 
+  // TEMPORARY: Log initial URL on every render
+  debugLog('APP_RENDER', { isLoading, isAuthenticated, path: window.location.pathname, search: window.location.search })
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+        <DebugOverlay />
       </div>
     )
   }
 
   return (
+    <>
+    <DebugOverlay />
     <Routes>
       {/* Public login route */}
       <Route
@@ -153,18 +201,15 @@ function App() {
         (() => {
           const params = new URLSearchParams(window.location.search)
           const isLiffCallback = params.has('liffClientId') || params.has('code')
+          debugLog('ROOT_IIFE', { isLiffCallback, search: window.location.search, liffState: params.get('liff.state') })
           if (isLiffCallback) {
-            // Render callback handler directly at root URL so liff.init()
-            // can process the OAuth code on the LIFF Endpoint URL
             return <StaffAuthCallback />
           }
 
-          // Save liff.state BEFORE Navigate strips query params (Navigate runs during render,
-          // before useEffects). Then navigate directly to the deep link path.
           const liffState = params.get('liff.state')
           if (liffState && liffState.startsWith('/')) {
             localStorage.setItem('staff_redirect_after_login', liffState)
-            console.log('[Root] Saved deep link path and navigating to:', liffState)
+            debugLog('ROOT_SAVE_NAV', { liffState })
             return <Navigate to={liffState} replace />
           }
 
@@ -172,6 +217,7 @@ function App() {
         })()
       } />
     </Routes>
+    </>
   )
 }
 
