@@ -58,18 +58,30 @@
             }
           }
 
-          // Only save valid deep links (not login/auth pages)
-          if (deepLink && deepLink.indexOf('/staff/login') !== 0 && deepLink.indexOf('/staff/auth') !== 0) {
-            localStorage.setItem('staff_redirect_after_login', deepLink);
+          // Strategy 4: Extract from URL pathname (LIFF secondary redirect URL format)
+          // When LIFF concatenates: /staff/login + /staff/jobs/xxx → /staff/login/staff/jobs/xxx
+          if (!deepLink) {
+            var pathname = window.location.pathname;
+            if (pathname.indexOf('/staff/login/staff/') === 0) {
+              deepLink = pathname.substring('/staff/login'.length);
+            }
           }
 
-          // Debug log — capture ALL params for diagnosis
-          var allParams = {};
-          params.forEach(function(v, k) { allParams[k] = v.substring(0, 200); });
-          var logs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]');
-          logs.push({ t: Date.now(), step: 'INDEX_HTML_CAPTURE', data: { deepLink: deepLink, allParams: allParams }, url: window.location.href });
-          if (logs.length > 20) logs.splice(0, logs.length - 20);
-          localStorage.setItem('_debug_liff_log', JSON.stringify(logs));
+          // Strategy 5: Direct deep link path — LIFF SDK may navigate directly to the deep link
+          // URL (e.g., /staff/jobs/xxx) instead of using liff.state query param.
+          // Only capture paths with a sub-path (has more than 3 segments like /staff/jobs/UUID).
+          if (!deepLink) {
+            var pathname = window.location.pathname;
+            var segments = pathname.split('/').filter(Boolean); // ['staff', 'jobs', 'uuid']
+            if (segments.length >= 3 && segments[0] === 'staff' && pathname.indexOf('/staff/login') !== 0 && pathname.indexOf('/staff/auth') !== 0 && pathname.indexOf('/staff/callback') !== 0 && pathname.indexOf('/staff/register') !== 0) {
+              deepLink = pathname;
+            }
+          }
+
+          // Only save valid deep links (not login/auth pages)
+          if (deepLink && deepLink.indexOf('/staff/login') !== 0 && deepLink.indexOf('/staff/auth') !== 0 && deepLink.indexOf('/staff/callback') !== 0) {
+            localStorage.setItem('staff_redirect_after_login', deepLink);
+          }
 
           // Also capture from hash fragment (some LIFF configs use hash)
           if (window.location.hash) {

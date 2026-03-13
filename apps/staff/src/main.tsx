@@ -22,12 +22,29 @@ try {
     }
   }
 
-  if (_deepLink) localStorage.setItem('staff_redirect_after_login', _deepLink)
+  // Strategy 3: Extract from URL pathname (LIFF secondary redirect URL format)
+  if (!_deepLink) {
+    const _pathname = new URL(_initialUrl).pathname
+    if (_pathname.startsWith('/staff/login/staff/')) {
+      _deepLink = _pathname.substring('/staff/login'.length)
+    }
+  }
 
-  const _logs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
-  _logs.push({ t: Date.now(), step: 'MAIN_TSX_INIT', data: { deepLink: _deepLink, search: _initialSearch }, url: _initialUrl })
-  if (_logs.length > 20) _logs.splice(0, _logs.length - 20)
-  localStorage.setItem('_debug_liff_log', JSON.stringify(_logs))
+  // Strategy 4: Direct deep link path — LIFF SDK may navigate directly to the deep link URL
+  if (!_deepLink) {
+    const _pathname = new URL(_initialUrl).pathname
+    const _segments = _pathname.split('/').filter(Boolean)
+    if (_segments.length >= 3 && _segments[0] === 'staff' &&
+        !_pathname.startsWith('/staff/login') && !_pathname.startsWith('/staff/auth') &&
+        !_pathname.startsWith('/staff/callback') && !_pathname.startsWith('/staff/register')) {
+      _deepLink = _pathname
+    }
+  }
+
+  if (_deepLink && !_deepLink.startsWith('/staff/login') && !_deepLink.startsWith('/staff/callback')) {
+    localStorage.setItem('staff_redirect_after_login', _deepLink)
+  }
+
 } catch(e) {}
 
 import React from 'react'

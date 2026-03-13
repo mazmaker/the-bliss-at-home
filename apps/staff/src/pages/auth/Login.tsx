@@ -19,21 +19,27 @@ const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 // Module-level flag to prevent auto-login across re-mounts within the same page load
 let skipAutoLoginForSession = false
 
-// Check sessionStorage for persistent skip flag (survives full page reload)
+// Check if auto-login should be skipped (uses localStorage with timestamp for cross-tab support)
 function shouldSkipAutoLogin(): boolean {
   if (skipAutoLoginForSession) return true
   if (sessionStorage.getItem('staff_skip_auto_login')) return true
+  // Check localStorage timestamp (survives new LINE in-app browser contexts)
+  const skipTs = localStorage.getItem('staff_skip_auto_login_until')
+  if (skipTs && Date.now() < parseInt(skipTs, 10)) return true
   return false
 }
 
 function markSkipAutoLogin() {
   skipAutoLoginForSession = true
   sessionStorage.setItem('staff_skip_auto_login', 'true')
+  // Also set in localStorage with 2-minute TTL (survives new browsing contexts)
+  localStorage.setItem('staff_skip_auto_login_until', String(Date.now() + 120_000))
 }
 
 function clearSkipAutoLogin() {
   skipAutoLoginForSession = false
   sessionStorage.removeItem('staff_skip_auto_login')
+  localStorage.removeItem('staff_skip_auto_login_until')
 }
 
 // Validate that a saved redirect path is a valid deep link (not login page, not external URL)
@@ -65,9 +71,10 @@ export function StaffLoginPage() {
     || config.defaultPath
 
   // Save redirect path to localStorage so it survives page reloads
+  // BUT: don't save if user just logged out (this path is stale from ProtectedRoute's re-render)
   useEffect(() => {
     const from = (location.state as any)?.from
-    if (isValidDeepLink(from)) {
+    if (isValidDeepLink(from) && !localStorage.getItem('staff_just_logged_out')) {
       localStorage.setItem('staff_redirect_after_login', from)
     }
   }, [location.state])
@@ -156,14 +163,21 @@ export function StaffLoginPage() {
 
   // Initialize LIFF on mount
   useEffect(() => {
+    // Helper: only save deep link if valid AND doesn't overwrite existing valid one
+    function saveDeepLinkIfBetter(path: string) {
+      if (!isValidDeepLink(path)) return
+      const existing = localStorage.getItem('staff_redirect_after_login')
+      if (isValidDeepLink(existing)) return
+      localStorage.setItem('staff_redirect_after_login', path)
+    }
+
     // Extract deep link path from multiple sources before liff.init()
     const urlParams = new URLSearchParams(window.location.search)
 
     // Strategy 1: Direct liff.state param
     let deepLinkPath = urlParams.get('liff.state')
     if (deepLinkPath && deepLinkPath.startsWith('/')) {
-      localStorage.setItem('staff_redirect_after_login', deepLinkPath)
-      console.log('[Login] Got deep link from liff.state:', deepLinkPath)
+      saveDeepLinkIfBetter(deepLinkPath)
     }
 
     // Strategy 2: Extract from liffRedirectUri (when coming from OAuth callback)
@@ -175,14 +189,23 @@ export function StaffLoginPage() {
           const stateFromRedirect = redirectUrl.searchParams.get('liff.state')
           if (stateFromRedirect && stateFromRedirect.startsWith('/')) {
             deepLinkPath = stateFromRedirect
-            localStorage.setItem('staff_redirect_after_login', deepLinkPath)
-            console.log('[Login] Got deep link from liffRedirectUri:', deepLinkPath)
+            saveDeepLinkIfBetter(deepLinkPath)
           }
         } catch (e) { /* ignore parse errors */ }
       }
     }
 
-    // Strategy 3: Try OAuth state parameter
+    // Strategy 3: Extract from URL pathname (LIFF secondary redirect URL format)
+    // When LIFF concatenates: /staff/login + /staff/jobs/xxx → /staff/login/staff/jobs/xxx
+    if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+      const pathname = window.location.pathname
+      if (pathname.startsWith('/staff/login/staff/')) {
+        deepLinkPath = pathname.substring('/staff/login'.length)
+        saveDeepLinkIfBetter(deepLinkPath)
+      }
+    }
+
+    // Strategy 4: Try OAuth state parameter
     if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
       const oauthState = urlParams.get('state')
       if (oauthState) {
@@ -193,21 +216,12 @@ export function StaffLoginPage() {
             const pathFromState = decodeURIComponent(stateMatch[1])
             if (pathFromState.startsWith('/')) {
               deepLinkPath = pathFromState
-              localStorage.setItem('staff_redirect_after_login', deepLinkPath)
-              console.log('[Login] Got deep link from OAuth state:', deepLinkPath)
+              saveDeepLinkIfBetter(deepLinkPath)
             }
           }
         } catch (e) { /* ignore */ }
       }
     }
-
-    // DEBUG: Log all URL params at Login mount
-    const allLoginParams: Record<string, string> = {}
-    urlParams.forEach((v, k) => { allLoginParams[k] = v.substring(0, 200) })
-    const loginDebugLogs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
-    loginDebugLogs.push({ t: Date.now(), step: 'LOGIN_MOUNT_PARAMS', data: { deepLinkPath, allParams: allLoginParams }, url: window.location.href })
-    if (loginDebugLogs.length > 20) loginDebugLogs.splice(0, loginDebugLogs.length - 20)
-    localStorage.setItem('_debug_liff_log', JSON.stringify(loginDebugLogs))
 
     async function initLiff() {
       if (!LIFF_ID) {
@@ -220,27 +234,24 @@ export function StaffLoginPage() {
         await liffService.initialize(LIFF_ID)
         setIsLiffReady(true)
 
-        // Strategy 4: After liff.init(), check if SDK added liff.state to URL
+        // Strategy 5: After liff.init(), check if SDK added liff.state to URL
         if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
           const postInitParams = new URLSearchParams(window.location.search)
           const postInitLiffState = postInitParams.get('liff.state')
           if (postInitLiffState && postInitLiffState.startsWith('/')) {
-            localStorage.setItem('staff_redirect_after_login', postInitLiffState)
-            console.log('[Login] Got deep link after liff.init():', postInitLiffState)
+            saveDeepLinkIfBetter(postInitLiffState)
           }
         }
 
         // Check if user just logged out - ALWAYS skip auto-login
-        // (ProtectedRoute may have re-saved the current path to localStorage
-        // between signOut and window.location.href, so hasDeepLink can't be trusted)
-        // When user opens a LIFF deep link later (new LINE browser tab),
-        // staff_just_logged_out will already be cleared and sessionStorage is fresh.
+        // Do NOT clear staff_redirect_after_login here — it might be a fresh deep link
+        // from a new LIFF URL open (not the stale path from ProtectedRoute's re-render).
+        // The stale path is prevented by the useEffect guard above (checks staff_just_logged_out).
         const justLoggedOut = localStorage.getItem('staff_just_logged_out')
         if (justLoggedOut || shouldSkipAutoLogin()) {
           console.log('[LIFF] Skipping auto-login (justLoggedOut or skipFlag)')
           localStorage.removeItem('staff_just_logged_out')
-          localStorage.removeItem('staff_redirect_after_login') // Clear stale path from ProtectedRoute
-          markSkipAutoLogin() // Persist across re-mounts AND page reloads
+          markSkipAutoLogin() // Persist across re-mounts, page reloads, AND new browsing contexts
           setIsLoading(false)
           return
         }
@@ -263,6 +274,13 @@ export function StaffLoginPage() {
   async function handleLiffAutoLogin() {
     setIsLoading(true)
     setError(null)
+
+    // IMPORTANT: Read redirect path BEFORE loginWithLine()!
+    // loginWithLine() sets the Supabase session → triggers onAuthStateChange →
+    // React re-renders → App.tsx Login IIFE reads & removes savedPath from localStorage.
+    // By reading it first, we avoid losing it to this race condition.
+    const savedPath = localStorage.getItem('staff_redirect_after_login')
+    const targetPath = savedPath || redirectPath
 
     try {
       console.log('[Auto-login] Getting LIFF profile...')
@@ -288,15 +306,8 @@ export function StaffLoginPage() {
       // Mark that user logged in via LIFF (for logout later)
       localStorage.setItem('staff_logged_in_via_liff', 'true')
 
-      // Read redirect path BEFORE redirect (loginWithLine already set the session)
-      const savedPath = localStorage.getItem('staff_redirect_after_login')
-      const targetPath = savedPath || redirectPath
-      localStorage.removeItem('staff_redirect_after_login')
-
-      // DEBUG: Log what we're doing
-      const debugLogs = JSON.parse(localStorage.getItem('_debug_liff_log') || '[]')
-      debugLogs.push({ t: Date.now(), step: 'AUTO_LOGIN_REDIRECT', data: { savedPath, redirectPath, targetPath }, url: window.location.href })
-      localStorage.setItem('_debug_liff_log', JSON.stringify(debugLogs))
+      // Don't remove staff_redirect_after_login here — StaffLayout will clean it up
+      // after the user successfully lands on a protected page.
 
       // Redirect immediately — no need to wait for React state update since
       // window.location.href triggers a full page reload which re-initializes auth
@@ -337,6 +348,10 @@ export function StaffLoginPage() {
         // Check for invite data from admin invitation flow
         const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
 
+        // IMPORTANT: Read redirect path BEFORE loginWithLine() to avoid race condition
+        // (loginWithLine sets session → auth state change → App.tsx IIFE steals savedPath)
+        const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
+
         console.log('[LINE Login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
         const result = await authService.loginWithLine({
           lineUserId: profile.userId,
@@ -360,9 +375,7 @@ export function StaffLoginPage() {
         // Clear LIFF parameters from URL before navigating
         window.history.replaceState({}, '', window.location.pathname)
 
-        // Clean up redirect path from sessionStorage
-        const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
-        localStorage.removeItem('staff_redirect_after_login')
+        // Don't remove staff_redirect_after_login here — StaffLayout will clean it up.
 
         // Use window.location to force a full page reload with updated auth state
         console.log('[LINE Login] Redirecting to:', targetPath)
