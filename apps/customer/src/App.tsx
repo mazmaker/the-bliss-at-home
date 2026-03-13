@@ -18,6 +18,7 @@ import TransactionHistory from './pages/TransactionHistory'
 import OTPVerification from './pages/OTPVerification'
 import TermsPage from './pages/Terms'
 import PrivacyPage from './pages/Privacy'
+import PromotionsPage from './pages/Promotions'
 import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth'
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
         <Route path="/" element={<HomePageWrapper />} />
         <Route path="/services" element={<ServiceCatalogWrapper />} />
         <Route path="/services/:slug" element={<ServiceDetailsWrapper />} />
+        <Route path="/promotions" element={<PromotionsPageWrapper />} />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
@@ -155,6 +157,15 @@ function ServiceDetailsWrapper() {
     <>
       <Header />
       <ServiceDetails />
+    </>
+  )
+}
+
+function PromotionsPageWrapper() {
+  return (
+    <>
+      <Header />
+      <PromotionsPage />
     </>
   )
 }
