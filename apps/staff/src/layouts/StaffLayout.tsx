@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home,
@@ -29,6 +29,14 @@ function StaffLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
 
+  // Clean up deep link redirect after successfully reaching a protected page.
+  // This is the ONLY place where staff_redirect_after_login should be removed
+  // (not in App.tsx IIFE or Login.tsx auto-login, because liff.init() may cause
+  // intermediate redirects that lose the value).
+  useEffect(() => {
+    localStorage.removeItem('staff_redirect_after_login')
+  }, [])
+
   const {
     notifications: dbNotifications,
     unreadCount,
@@ -55,8 +63,10 @@ function StaffLayout() {
     // Close modal first
     setShowLogoutConfirm(false)
 
-    // Set flag BEFORE logout to prevent Login page from auto-login
+    // Set flags BEFORE logout to prevent Login page from auto-login
     localStorage.setItem('staff_just_logged_out', 'true')
+    // Set skip timestamp in localStorage (survives new LINE in-app browser contexts, 2 min TTL)
+    localStorage.setItem('staff_skip_auto_login_until', String(Date.now() + 120_000))
     // Clear deep link redirect — user explicitly logged out, don't auto-redirect back
     localStorage.removeItem('staff_redirect_after_login')
 

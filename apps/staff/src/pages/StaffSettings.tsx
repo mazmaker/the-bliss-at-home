@@ -104,8 +104,10 @@ function StaffSettings() {
       console.error('LIFF logout error:', error)
     }
 
-    // Set flag to prevent auto-login on login page
+    // Set flags to prevent auto-login on login page
     localStorage.setItem('staff_just_logged_out', 'true')
+    // Set skip timestamp in localStorage (survives new LINE in-app browser contexts, 2 min TTL)
+    localStorage.setItem('staff_skip_auto_login_until', String(Date.now() + 120_000))
     // Clear deep link redirect — user explicitly logged out, don't auto-redirect back
     localStorage.removeItem('staff_redirect_after_login')
 
