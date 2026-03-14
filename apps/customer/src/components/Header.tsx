@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown, Bell } from 'lucide-react'
+import { Home, Briefcase, ClipboardList, User, Menu, X, Sparkles, LogOut, ChevronDown, Bell, Tag } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useNotifications, useNotificationSubscription } from '@bliss/supabase/hooks/useNotifications'
@@ -80,6 +80,7 @@ function Header() {
   const navItems = [
     { path: '/', label: t('nav.home'), icon: Home },
     { path: '/services', label: t('nav.services'), icon: Briefcase },
+    { path: '/promotions', label: 'โปรโมชั่น', icon: Tag },
     { path: '/bookings', label: t('nav.bookings'), icon: ClipboardList },
     { path: '/profile', label: t('nav.profile'), icon: User },
   ]
