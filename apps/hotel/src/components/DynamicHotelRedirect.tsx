@@ -10,7 +10,7 @@ import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
 import { useUserHotelId } from '../hooks/useUserHotelId'
 import { getHotelSlugFromId } from '../utils/hotelUtils'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertTriangle, LogOut } from 'lucide-react'
 import { EnhancedHotelLogin } from '../pages/auth'
 
 interface DynamicHotelRedirectProps {
@@ -20,12 +20,13 @@ interface DynamicHotelRedirectProps {
 export function DynamicHotelRedirect({
   fallbackTo = "/login"
 }: DynamicHotelRedirectProps) {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
   const { hotelId, isLoading, error } = useUserHotelId()
   const [hotelSlug, setHotelSlug] = useState<string | null>(null)
   const [slugLoading, setSlugLoading] = useState(false)
   const [passwordChangeRequired, setPasswordChangeRequired] = useState<boolean | null>(null)
   const [checkingPassword, setCheckingPassword] = useState(false)
+  const [hotelStatus, setHotelStatus] = useState<string | null>(null)
 
   // Check password change requirement first
   useEffect(() => {
@@ -37,19 +38,26 @@ export function DynamicHotelRedirect({
         try {
           const { data: hotelData, error: hotelError } = await supabase
             .from('hotels')
-            .select('password_change_required')
+            .select('password_change_required, status')
             .eq('auth_user_id', user.id)
             .single()
 
           if (!hotelError && hotelData) {
-            console.log('🔍 [DynamicRedirect] Password change required:', hotelData.password_change_required)
+            // Check hotel status first
+            if (hotelData.status === 'suspended' || hotelData.status === 'banned') {
+              console.log('[DynamicRedirect] Hotel is blocked:', hotelData.status)
+              setHotelStatus(hotelData.status)
+              setPasswordChangeRequired(false)
+              return
+            }
+            setHotelStatus(hotelData.status || 'active')
             setPasswordChangeRequired(hotelData.password_change_required)
           } else {
-            console.error('❌ [DynamicRedirect] Error checking password requirement:', hotelError)
-            setPasswordChangeRequired(false) // Default to allow access
+            console.error('[DynamicRedirect] Error checking hotel:', hotelError)
+            setPasswordChangeRequired(false)
           }
         } catch (error) {
-          console.error('❌ [DynamicRedirect] Exception checking password:', error)
+          console.error('[DynamicRedirect] Exception checking hotel:', error)
           setPasswordChangeRequired(false)
         } finally {
           setCheckingPassword(false)
@@ -96,9 +104,44 @@ export function DynamicHotelRedirect({
     )
   }
 
+  // Hotel is suspended or banned — block access
+  if (hotelStatus === 'suspended' || hotelStatus === 'banned') {
+    const handleLogout = async () => {
+      try {
+        await logout()
+      } catch (err) {
+        console.error('Logout error:', err)
+      }
+    }
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className={`w-16 h-16 ${hotelStatus === 'banned' ? 'bg-red-100' : 'bg-orange-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+            <AlertTriangle className={`w-8 h-8 ${hotelStatus === 'banned' ? 'text-red-500' : 'text-orange-500'}`} />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">
+            {hotelStatus === 'banned' ? 'บัญชีถูกแบนถาวร' : 'บัญชีถูกระงับการใช้งาน'}
+          </h1>
+          <p className="text-stone-600 mb-6">
+            {hotelStatus === 'banned'
+              ? 'บัญชีโรงแรมของท่านถูกแบนถาวร ไม่สามารถเข้าใช้งานระบบได้ กรุณาติดต่อผู้ดูแลระบบ'
+              : 'บัญชีโรงแรมของท่านถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบเพื่อขอเปิดใช้งานอีกครั้ง'}
+          </p>
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-700 text-white rounded-lg hover:bg-stone-800 transition"
+          >
+            <LogOut className="w-4 h-4" />
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // If password change is required, show the login page for password change
   if (passwordChangeRequired === true) {
-    console.log('🔐 [DynamicRedirect] Password change required - showing login page')
     return <EnhancedHotelLogin />
   }
 

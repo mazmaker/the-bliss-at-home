@@ -70,17 +70,24 @@ export function useUserHotelId(): UseUserHotelIdResult {
           const urlSlug = currentPath.match(/\/hotel\/([^\/]+)/)?.[1]
           console.log('🔍 Trying to get hotel from URL slug:', urlSlug)
 
-          if (urlSlug === 'dusit-thani-bangkok') {
-            const dusitHotelId = '550e8400-e29b-41d4-a716-446655440003'
-            console.log('🎯 Using Dusit Thani from URL:', dusitHotelId)
-            setHotelId(dusitHotelId)
-          } else if (urlSlug === 'resort-chiang-mai') {
-            const resortHotelId = '550e8400-e29b-41d4-a716-446655440002'
-            console.log('🎯 Using Resort from URL:', resortHotelId)
-            setHotelId(resortHotelId)
+          if (urlSlug) {
+            // Look up hotel ID from slug dynamically
+            const { data: hotelBySlug, error: slugError } = await supabase
+              .from('hotels')
+              .select('id, name_th')
+              .eq('hotel_slug', urlSlug)
+              .single()
+
+            if (!slugError && hotelBySlug) {
+              console.log('Found hotel from URL slug:', { hotelId: hotelBySlug.id, name: hotelBySlug.name_th })
+              setHotelId(hotelBySlug.id)
+            } else {
+              console.error('Unknown hotel slug:', urlSlug)
+              setError('Unknown hotel: ' + urlSlug)
+            }
           } else {
-            console.error('❌ Unknown hotel slug:', urlSlug)
-            setError('Unknown hotel: ' + urlSlug)
+            console.error('No hotel slug in URL')
+            setError('ไม่พบข้อมูลโรงแรม')
           }
         }
       } catch (err) {

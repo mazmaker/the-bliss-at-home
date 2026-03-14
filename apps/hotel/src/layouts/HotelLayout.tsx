@@ -23,7 +23,7 @@ import { useQuery } from '@tanstack/react-query'
 function HotelLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const { hotelId, hotelSlug, hotelData, isValidHotel, isLoading, getHotelName, getHotelNameEn, getHotelSlug } = useHotelContext()
+  const { hotelId, hotelSlug, hotelData, isValidHotel, isLoading, isBlocked, hotelStatus, getHotelName, getHotelNameEn, getHotelSlug } = useHotelContext()
   const { logout, user } = useAuth()
 
   // Unread notification count
@@ -59,6 +59,34 @@ function HotelLayout() {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
           <p className="text-stone-600">กำลังโหลดข้อมูลโรงแรม...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Hotel is suspended or banned
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className={`w-16 h-16 ${hotelStatus === 'banned' ? 'bg-red-100' : 'bg-orange-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+            <AlertTriangle className={`w-8 h-8 ${hotelStatus === 'banned' ? 'text-red-500' : 'text-orange-500'}`} />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">
+            {hotelStatus === 'banned' ? 'บัญชีถูกแบนถาวร' : 'บัญชีถูกระงับการใช้งาน'}
+          </h1>
+          <p className="text-stone-600 mb-6">
+            {hotelStatus === 'banned'
+              ? 'บัญชีโรงแรมของท่านถูกแบนถาวร ไม่สามารถเข้าใช้งานระบบได้ กรุณาติดต่อผู้ดูแลระบบ'
+              : 'บัญชีโรงแรมของท่านถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบเพื่อขอเปิดใช้งานอีกครั้ง'}
+          </p>
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-700 text-white rounded-lg hover:bg-stone-800 transition"
+          >
+            <LogOut className="w-4 h-4" />
+            ออกจากระบบ
+          </button>
         </div>
       </div>
     )
