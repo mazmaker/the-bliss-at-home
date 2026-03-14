@@ -62,10 +62,6 @@ const hotelFormSchema = z.object({
   address: z.string().min(10, 'ที่อยู่ต้องมีอย่างน้อย 10 ตัวอักษร'),
   latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
   longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
-  commission_rate: z.coerce
-    .number({ required_error: 'ระบุเปอร์เซ็นต์เป็นตัวเลข' })
-    .min(0, 'เปอร์เซ็นต์ขั้นต่ำ 0%')
-    .max(100, 'เปอร์เซ็นต์สูงสุด 100%'),
   discount_rate: z.coerce
     .number({ required_error: 'ระบุเปอร์เซ็นต์ส่วนลดเป็นตัวเลข' })
     .min(0, 'เปอร์เซ็นต์ส่วนลดขั้นต่ำ 0%')
@@ -237,7 +233,6 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       address: '',
       latitude: null,
       longitude: null,
-      commission_rate: 20,
       discount_rate: 20,
       rating: 0,
       status: 'pending',
@@ -339,7 +334,6 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             address: data.address,
             latitude: data.latitude,
             longitude: data.longitude,
-            commission_rate: data.commission_rate,
             discount_rate: data.discount_rate,
             rating: data.rating,
             status: data.status,
@@ -367,7 +361,6 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             address: data.address,
             latitude: data.latitude,
             longitude: data.longitude,
-            commission_rate: data.commission_rate,
             discount_rate: data.discount_rate,
             rating: data.rating,
             status: data.status,
@@ -620,44 +613,23 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   ข้อมูลทางธุรกิจ
                 </h3>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      อัตราค่าคอมมิชชั่น (%) *
-                    </label>
-                    <div className="relative mt-1">
-                      <Percent className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                      <input
-                        {...register('commission_rate')}
-                        type="number"
-                        step="0.01"
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="20"
-                      />
-                    </div>
-                    {errors.commission_rate && (
-                      <p className="mt-1 text-sm text-red-600">{errors.commission_rate.message}</p>
-                    )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    อัตราค่าส่วนลด (%) *
+                  </label>
+                  <div className="relative mt-1">
+                    <Percent className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <input
+                      {...register('discount_rate')}
+                      type="number"
+                      step="0.01"
+                      className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="20"
+                    />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      อัตราค่าส่วนลด (%) *
-                    </label>
-                    <div className="relative mt-1">
-                      <Percent className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                      <input
-                        {...register('discount_rate')}
-                        type="number"
-                        step="0.01"
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="20"
-                      />
-                    </div>
-                    {errors.discount_rate && (
-                      <p className="mt-1 text-sm text-red-600">{errors.discount_rate.message}</p>
-                    )}
-                  </div>
+                  {errors.discount_rate && (
+                    <p className="mt-1 text-sm text-red-600">{errors.discount_rate.message}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

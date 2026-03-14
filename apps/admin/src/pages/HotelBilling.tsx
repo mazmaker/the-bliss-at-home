@@ -18,6 +18,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { exportToCSV, exportToExcel, exportToPDF, formatInvoicesForExport } from '../utils/exportUtils'
+import { downloadInvoicePDF } from '../utils/invoicePdfGenerator'
 import { useHotel, useHotelInvoices, useHotelBookings } from '../hooks/useHotels'
 import { InvoiceForm } from '../components/InvoiceForm'
 import { InvoiceDetailModal } from '../components/InvoiceDetailModal'
@@ -76,10 +77,10 @@ export default function HotelBilling() {
   const totalCommission = filteredInvoices.reduce((sum, inv) => sum + Number(inv.commission_amount), 0)
   const paidAmount = filteredInvoices
     .filter((inv) => inv.status === 'paid')
-    .reduce((sum, inv) => sum + Number(inv.commission_amount), 0)
+    .reduce((sum, inv) => sum + Number(inv.total_revenue), 0)
   const pendingAmount = filteredInvoices
     .filter((inv) => inv.status === 'pending')
-    .reduce((sum, inv) => sum + Number(inv.commission_amount), 0)
+    .reduce((sum, inv) => sum + Number(inv.total_revenue), 0)
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     const formattedData = formatInvoicesForExport(filteredInvoices)
@@ -104,17 +105,52 @@ export default function HotelBilling() {
   }
 
   const handleDownloadInvoicePDF = (invoice: HotelInvoice) => {
-    const data = formatInvoicesForExport([invoice])
-    const filename = `invoice-${invoice.invoice_number}`
-    exportToPDF(data, filename, 'ใบแจ้งหนี้')
+    downloadInvoicePDF(invoice, hotel?.name_th || hotel?.name_en || 'โรงแรม')
   }
 
   const handlePrintInvoice = (invoice: HotelInvoice) => {
-    // Open detail modal and trigger print
-    setSelectedInvoice(invoice)
-    setTimeout(() => {
-      window.print()
-    }, 300)
+    const name = hotel?.name_th || hotel?.name_en || 'โรงแรม'
+    const formatDate = (d: string) => new Date(d).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
+    const statusLabel = { draft: 'ร่าง', pending: 'รอชำระ', paid: 'จ่ายแล้ว', overdue: 'เกินกำหนด', cancelled: 'ยกเลิก' }[invoice.status] || invoice.status
+    const printContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบแจ้งหนี้ ${invoice.invoice_number}</title>
+      <style>
+        @page { size: A4; margin: 2cm; }
+        body { font-family: 'Sarabun', 'TH Sarabun New', sans-serif; font-size: 14px; color: #333; }
+        h1 { text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+        .section { margin-bottom: 20px; }
+        .section-title { font-weight: bold; font-size: 16px; border-bottom: 2px solid #2563EB; padding-bottom: 5px; margin-bottom: 10px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-item label { color: #666; font-size: 12px; display: block; }
+        .info-item span { font-weight: bold; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .summary-highlight { background: #DCFCE7; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: bold; color: #166534; font-size: 18px; }
+        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; }
+      </style></head><body>
+      <h1>ใบแจ้งหนี้ / Invoice</h1>
+      <p class="subtitle">${invoice.invoice_number}</p>
+      <div class="section">
+        <div class="info-grid">
+          <div class="info-item"><label>โรงแรม</label><span>${name}</span></div>
+          <div class="info-item"><label>สถานะ</label><span>${statusLabel}</span></div>
+          <div class="info-item"><label>ช่วงเวลา</label><span>${formatDate(invoice.period_start)} - ${formatDate(invoice.period_end)}</span></div>
+          <div class="info-item"><label>วันครบกำหนด</label><span>${formatDate(invoice.due_date)}</span></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">สรุปยอด</div>
+        <div class="summary-row"><span>จำนวนการจอง</span><span>${invoice.total_bookings} รายการ</span></div>
+        <div class="summary-highlight"><span>ยอดเรียกเก็บรวม</span><span>฿${Number(invoice.total_revenue).toLocaleString()}</span></div>
+      </div>
+      <div class="footer"><p>สร้างโดยระบบ The Bliss Massage at Home</p></div>
+      </body></html>`
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => printWindow.print(), 300)
+    }
   }
 
   if (loading) {
@@ -216,7 +252,7 @@ export default function HotelBilling() {
         <div className="rounded-lg bg-white p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">รายได้ทั้งหมด</p>
+              <p className="text-sm text-gray-500">ยอดเรียกเก็บทั้งหมด</p>
               <p className="text-2xl font-bold text-gray-900">
                 ฿{totalRevenue.toLocaleString()}
               </p>
@@ -228,7 +264,7 @@ export default function HotelBilling() {
         <div className="rounded-lg bg-white p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">คอมมิชชั่นทั้งหมด</p>
+              <p className="text-sm text-gray-500">ส่วนลดทั้งหมด</p>
               <p className="text-2xl font-bold text-blue-600">
                 ฿{totalCommission.toLocaleString()}
               </p>
@@ -301,8 +337,8 @@ export default function HotelBilling() {
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">ช่วงเวลา</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">ประเภท</th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">จำนวนการจอง</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">รายได้</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">คอมมิชชั่น</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">ยอดเรียกเก็บ</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">ส่วนลด</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">สถานะ</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">วันที่ครบกำหนด</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">การกระทำ</th>
@@ -398,7 +434,7 @@ export default function HotelBilling() {
             refetch()
           }}
           hotelId={id!}
-          commissionRate={Number(hotel.commission_rate)}
+          commissionRate={Number(hotel.discount_rate || hotel.commission_rate)}
           invoices={invoices || []}
           bookings={bookings || []}
         />

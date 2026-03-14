@@ -267,13 +267,13 @@ export function InvoiceForm({
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-blue-700">รายได้รวม</p>
+                      <p className="text-xs text-blue-700">ยอดเรียกเก็บรวม</p>
                       <p className="text-2xl font-bold text-blue-900">
                         ฿{periodSummary.totalRevenue.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-blue-700">คอมมิชชั่น ({commissionRate}%)</p>
+                      <p className="text-xs text-blue-700">ส่วนลด ({commissionRate}%)</p>
                       <p className="text-2xl font-bold text-amber-700">
                         ฿{periodSummary.commissionAmount.toLocaleString()}
                       </p>

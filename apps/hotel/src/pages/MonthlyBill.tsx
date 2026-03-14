@@ -44,10 +44,10 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
 
   console.log('Fetching monthly bill for:', { hotelId, monthStart, monthEnd })
 
-  // Get hotel commission rate first
+  // Get hotel discount rate first
   const { data: hotelData, error: hotelError } = await supabase
     .from('hotels')
-    .select('commission_rate')
+    .select('discount_rate, commission_rate')
     .eq('id', hotelId)
     .single()
 
@@ -126,7 +126,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   console.log('Raw booking data:', data)
   console.log('Previous unpaid bills data:', previousUnpaidBillsData)
   console.log('Current month bill data:', currentMonthBillData)
-  console.log('Hotel commission rate:', hotelData.commission_rate)
+  console.log('Hotel discount rate:', hotelData.discount_rate || hotelData.commission_rate)
 
   // Helper function to extract guest name from customer_notes
   const parseGuestName = (customerNotes?: string | null): string => {
@@ -442,8 +442,8 @@ function MonthlyBill() {
         `เลขที่บิล: ${generateBillNumber(selectedMonth, hotelId!)}`,
         '',
         `จำนวนการจอง: ${billData?.totalBookings || 0} รายการ`,
-        `รายได้รวม: ฿${billData?.totalRevenue?.toLocaleString() || 0}`,
-        `รายได้สุทธิ: ฿${billData?.hotelRevenue?.toLocaleString() || 0}`,
+        `ยอดเรียกเก็บรวม: ฿${billData?.totalRevenue?.toLocaleString() || 0}`,
+        `ยอดชำระสุทธิ: ฿${billData?.hotelRevenue?.toLocaleString() || 0}`,
         '='.repeat(60),
       ]
 
@@ -591,7 +591,7 @@ function MonthlyBill() {
           </div>
         </div>
 
-        {/* รายได้รวม */}
+        {/* ยอดเรียกเก็บรวม */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -599,7 +599,7 @@ function MonthlyBill() {
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">฿{billData?.totalRevenue.toLocaleString() || 0}</p>
-              <p className="text-sm text-stone-500">รายได้รวม</p>
+              <p className="text-sm text-stone-500">ยอดเรียกเก็บรวม</p>
             </div>
           </div>
         </div>
@@ -630,7 +630,7 @@ function MonthlyBill() {
           </div>
         </div>
 
-        {/* รายได้สุทธิ */}
+        {/* ยอดชำระสุทธิ */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -640,7 +640,7 @@ function MonthlyBill() {
               <p className="text-2xl font-bold text-amber-700">
                 ฿{((billData?.hotelRevenue || 0) - (billData?.lateFee || 0)).toLocaleString()}
               </p>
-              <p className="text-sm text-stone-500">รายได้สุทธิ</p>
+              <p className="text-sm text-stone-500">ยอดชำระสุทธิ</p>
             </div>
           </div>
         </div>

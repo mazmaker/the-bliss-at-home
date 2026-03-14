@@ -95,7 +95,7 @@ export function PaymentForm({ isOpen, onClose, onSuccess, hotelId, invoices }: P
       if (selectedInvoice) {
         reset((prev) => ({
           ...prev,
-          amount: Number(selectedInvoice.commission_amount),
+          amount: Number(selectedInvoice.total_revenue),
         }))
       }
     }
@@ -189,7 +189,7 @@ export function PaymentForm({ isOpen, onClose, onSuccess, hotelId, invoices }: P
                   <option value="">ไม่เลือกบิล</option>
                   {pendingInvoices.map((invoice) => (
                     <option key={invoice.id} value={invoice.id}>
-                      {invoice.invoice_number} - ฿{Number(invoice.commission_amount).toLocaleString()} ({invoice.status === 'pending' ? 'รอชำระ' : 'เกินกำหนด'})
+                      {invoice.invoice_number} - ฿{Number(invoice.total_revenue).toLocaleString()} ({invoice.status === 'pending' ? 'รอชำระ' : 'เกินกำหนด'})
                     </option>
                   ))}
                 </select>

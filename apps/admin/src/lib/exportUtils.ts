@@ -115,12 +115,12 @@ export async function exportToExcel(data: ReportExportData): Promise<void> {
     // Add hotel performance sheet
     if (hotelPerformance.length > 0) {
       const hotelData = [
-        ['โรงแรม', 'การจอง', 'รายได้', 'ค่าคอมมิชชั่น (%)'],
+        ['โรงแรม', 'การจอง', 'รายได้', 'อัตราส่วนลด (%)'],
         ...hotelPerformance.map(hotel => [
           hotel.name,
           hotel.bookings,
           hotel.revenue,
-          hotel.commission_rate
+          hotel.discount_rate || hotel.commission_rate
         ])
       ]
       sheets.push({ name: 'ประสิทธิภาพโรงแรม', data: hotelData })
@@ -324,7 +324,7 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
                 <th>โรงแรม</th>
                 <th>การจอง</th>
                 <th>รายได้</th>
-                <th>ค่าคอมมิชชั่น</th>
+                <th>อัตราส่วนลด</th>
               </tr>
             </thead>
             <tbody>
@@ -333,7 +333,7 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
                   <td>${hotel.name}</td>
                   <td>${hotel.bookings}</td>
                   <td>฿${hotel.revenue.toLocaleString()}</td>
-                  <td>${hotel.commission_rate}%</td>
+                  <td>${hotel.discount_rate || hotel.commission_rate}%</td>
                 </tr>
               `).join('')}
             </tbody>

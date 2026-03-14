@@ -25,7 +25,8 @@ import {
 import { HotelForm } from '../components/HotelForm'
 import { useHotel, useHotelInvoices } from '../hooks/useHotels'
 import { updateHotelStatus } from '../lib/hotelQueries'
-import type { Hotel } from '../lib/hotelQueries'
+import type { Hotel, HotelInvoice } from '../lib/hotelQueries'
+import { downloadInvoicePDF } from '../utils/invoicePdfGenerator'
 
 
 export default function HotelDetail() {
@@ -306,14 +307,6 @@ export default function HotelDetail() {
                 <p className="text-sm text-gray-500">รายได้/เดือน</p>
               </div>
 
-              {/* คอมมิชชั่น */}
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {hotel.commission_rate}%
-                </div>
-                <p className="text-sm text-gray-500">คอมมิชชั่น</p>
-              </div>
-
               {/* ส่วนลด */}
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
@@ -406,7 +399,7 @@ export default function HotelDetail() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">เลขที่บิล</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">ช่วงเวลา</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">ยอดรวม</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">คอมมิชชั่น</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">ส่วนลด</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">สถานะ</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">วันที่จ่าย</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">การกระทำ</th>
@@ -458,7 +451,10 @@ export default function HotelDetail() {
                       {invoice.paid_date ? new Date(invoice.paid_date).toLocaleDateString('th-TH') : '-'}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
+                      <button
+                        onClick={() => downloadInvoicePDF(invoice, hotel?.name_th || hotel?.name_en || 'โรงแรม')}
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                      >
                         <Download className="h-4 w-4" />
                         ดาวน์โหลด
                       </button>

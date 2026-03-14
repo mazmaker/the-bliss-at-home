@@ -585,7 +585,7 @@ export async function getHotelPerformance(days: number = 30): Promise<HotelPerfo
       total_revenue: Number(hotel.total_revenue) || 0,
       avg_booking_value: Number(hotel.avg_booking_value) || 0,
       commission_earned: Number(hotel.commission_earned) || 0,
-      commission_rate: Number(hotel.commission_rate) || 0,
+      commission_rate: Number(hotel.discount_rate || hotel.commission_rate) || 0,
 
       // Customer Metrics
       unique_customers: hotel.unique_customers || 0,

@@ -418,7 +418,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                     <div className="flex justify-between items-center pt-2 border-t border-stone-200">
                       <span className="text-stone-500 text-xs">ส่วนลด:</span>
                       <div className="text-right">
-                        <span className="font-medium text-stone-600 text-xs">{hotel.commission_rate}%</span>
+                        <span className="font-medium text-stone-600 text-xs">{hotel.discount_rate || hotel.commission_rate}%</span>
                         <div className="text-xs text-stone-500">฿{hotel.commission_earned.toLocaleString()}</div>
                       </div>
                     </div>

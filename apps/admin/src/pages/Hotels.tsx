@@ -241,10 +241,6 @@ function Hotels() {
                 <p className="text-xs text-stone-500">รายได้/เดือน</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-bold text-stone-900">{Number(hotel.commission_rate)}%</p>
-                <p className="text-xs text-stone-500">คอมมิชชั่น</p>
-              </div>
-              <div className="text-center">
                 <p className="text-lg font-bold text-green-700">{Number((hotel as any).discount_rate || 0)}%</p>
                 <p className="text-xs text-stone-500">ส่วนลด</p>
               </div>

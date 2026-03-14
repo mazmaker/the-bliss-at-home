@@ -1,5 +1,6 @@
 import { X, Calendar, FileText, DollarSign, TrendingUp, CheckCircle, AlertTriangle, Download, Printer } from 'lucide-react'
 import type { HotelInvoice } from '../lib/hotelQueries'
+import { downloadInvoicePDF } from '../utils/invoicePdfGenerator'
 
 interface InvoiceDetailModalProps {
   isOpen: boolean
@@ -38,12 +39,67 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
   }
 
   const handlePrint = () => {
-    window.print()
+    // Build print-friendly HTML with only invoice content
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>ใบแจ้งหนี้ ${invoice.invoice_number}</title>
+          <style>
+            @page { size: A4; margin: 2cm; }
+            body { font-family: 'Sarabun', 'TH Sarabun New', sans-serif; font-size: 14px; color: #333; }
+            h1 { text-align: center; margin-bottom: 5px; }
+            .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+            .section { margin-bottom: 20px; }
+            .section-title { font-weight: bold; font-size: 16px; border-bottom: 2px solid #4472C4; padding-bottom: 5px; margin-bottom: 10px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .info-item label { color: #666; font-size: 12px; display: block; }
+            .info-item span { font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #4472C4; color: white; padding: 8px; text-align: left; }
+            td { padding: 8px; border-bottom: 1px solid #ddd; }
+            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+            .summary-highlight { background: #EBF5FF; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: bold; color: #1E40AF; font-size: 18px; }
+            .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; }
+          </style>
+        </head>
+        <body>
+          <h1>ใบแจ้งหนี้ / Invoice</h1>
+          <p class="subtitle">${invoice.invoice_number}</p>
+
+          <div class="section">
+            <div class="info-grid">
+              <div class="info-item"><label>โรงแรม</label><span>${hotelName || 'โรงแรม'}</span></div>
+              <div class="info-item"><label>สถานะ</label><span>${invoice.status === 'pending' ? 'รอชำระ' : invoice.status === 'paid' ? 'จ่ายแล้ว' : invoice.status}</span></div>
+              <div class="info-item"><label>ช่วงเวลา</label><span>${formatDate(invoice.period_start)} - ${formatDate(invoice.period_end)}</span></div>
+              <div class="info-item"><label>วันครบกำหนด</label><span>${formatDate(invoice.due_date)}</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">สรุปยอด</div>
+            <div class="summary-row"><span>จำนวนการจอง</span><span>${invoice.total_bookings} รายการ</span></div>
+            <div class="summary-highlight"><span>ยอดเรียกเก็บรวม</span><span>฿${Number(invoice.total_revenue).toLocaleString()}</span></div>
+          </div>
+
+          <div class="footer">
+            <p>สร้างโดยระบบ The Bliss Massage at Home</p>
+          </div>
+        </body>
+      </html>
+    `
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => printWindow.print(), 300)
+    }
   }
 
   const handleDownloadPDF = () => {
-    // This will be handled by the parent component
-    alert('ดาวน์โหลด PDF: ' + invoice.invoice_number)
+    downloadInvoicePDF(invoice, hotelName || 'โรงแรม')
   }
 
   return (
@@ -128,19 +184,19 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
                 </div>
 
                 <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-3">
-                  <span className="text-gray-600">รายได้รวม</span>
+                  <span className="text-gray-600">ยอดเรียกเก็บรวม</span>
                   <span className="text-lg font-semibold text-gray-900">
                     ฿{Number(invoice.total_revenue).toLocaleString()}
                   </span>
                 </div>
 
                 <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-3">
-                  <span className="text-gray-600">อัตราคอมมิชชั่น</span>
+                  <span className="text-gray-600">อัตราส่วนลด</span>
                   <span className="text-lg font-semibold text-blue-600">{Number(invoice.commission_rate)}%</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                  <span className="text-lg font-semibold text-blue-900">คอมมิชชั่นที่ต้องชำระ</span>
+                  <span className="text-lg font-semibold text-blue-900">ส่วนลดที่ได้รับ</span>
                   <span className="text-2xl font-bold text-blue-700">
                     ฿{Number(invoice.commission_amount).toLocaleString()}
                   </span>
@@ -152,7 +208,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
             <div className="rounded-lg bg-gray-50 p-4">
               <h4 className="mb-2 text-sm font-medium text-gray-700">การคำนวณ</h4>
               <p className="text-sm text-gray-600">
-                คอมมิชชั่น = รายได้รวม × อัตราคอมมิชชั่น
+                ส่วนลด = ยอดเรียกเก็บรวม × อัตราส่วนลด
               </p>
               <p className="text-sm text-gray-600">
                 = ฿{Number(invoice.total_revenue).toLocaleString()} × {Number(invoice.commission_rate)}%

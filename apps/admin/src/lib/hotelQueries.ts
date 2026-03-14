@@ -155,7 +155,7 @@ export const getHotelInvoices = async (hotelId: string) => {
   // ✅ If no bills exist, generate from actual bookings data
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('booking_date, final_price, status, created_at, hotels!inner(commission_rate)')
+    .select('booking_date, final_price, status, created_at, hotels!inner(commission_rate, discount_rate)')
     .eq('hotel_id', hotelId)
     .eq('is_hotel_booking', true)
     .in('status', ['confirmed', 'completed'])
@@ -179,16 +179,30 @@ export const getHotelInvoices = async (hotelId: string) => {
     monthlyGroups[monthKey].push(booking)
   })
 
+  // Fetch completed payments to cross-check invoice status and get payment dates
+  const { data: completedPayments } = await supabase
+    .from('hotel_payments')
+    .select('invoice_number, payment_date')
+    .eq('hotel_id', hotelId)
+    .eq('status', 'completed')
+
+  const paidPaymentMap = new Map(
+    (completedPayments || [])
+      .filter(p => p.invoice_number)
+      .map(p => [p.invoice_number, p.payment_date])
+  )
+
   // Convert to invoice format
   const invoices = Object.entries(monthlyGroups).map(([monthKey, monthBookings]) => {
     const [year, month] = monthKey.split('-')
     const totalRevenue = monthBookings.reduce((sum, booking) => sum + Number(booking.final_price), 0)
-    const commissionRate = monthBookings[0].hotels?.commission_rate || 20
+    const commissionRate = monthBookings[0].hotels?.discount_rate || monthBookings[0].hotels?.commission_rate || 20
     const commissionAmount = totalRevenue * (commissionRate / 100)
+    const invoiceNumber = `INV-${year}${month}-${hotelId.slice(-4)}`
 
     return {
       id: `generated-${hotelId}-${monthKey}`,
-      invoice_number: `INV-${year}${month}-${hotelId.slice(-4)}`,
+      invoice_number: invoiceNumber,
       hotel_id: hotelId,
       period_start: `${year}-${month}-01`,
       period_end: new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0],
@@ -197,7 +211,8 @@ export const getHotelInvoices = async (hotelId: string) => {
       total_revenue: totalRevenue,
       commission_rate: commissionRate,
       commission_amount: commissionAmount,
-      status: 'pending' as const,
+      status: paidPaymentMap.has(invoiceNumber) ? 'paid' as const : 'pending' as const,
+      paid_date: paidPaymentMap.get(invoiceNumber) || null,
       issued_date: new Date().toISOString(),
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: new Date().toISOString()
@@ -250,50 +265,30 @@ export const updateInvoice = async (id: string, invoiceData: Partial<HotelInvoic
 // ==================== PAYMENTS (Using bookings payment data) ====================
 
 export const getHotelPayments = async (hotelId: string) => {
-  // ใช้ข้อมูล payment จาก bookings table
   const { data, error } = await supabase
-    .from('bookings') // ✅ ใช้ existing table
-    .select(`
-      id,
-      booking_number,
-      final_price,
-      payment_status,
-      payment_method,
-      created_at,
-      completed_at,
-      customer_id
-    `)
+    .from('hotel_payments')
+    .select('*')
     .eq('hotel_id', hotelId)
-    .eq('payment_status', 'paid')
-    .order('completed_at', { ascending: false })
+    .order('payment_date', { ascending: false })
 
   if (error) throw error
-
-  // แปลงข้อมูลให้เข้ากับ HotelPayment interface
-  const payments = data?.map(booking => ({
-    id: booking.id,
-    hotel_id: hotelId,
-    transaction_ref: booking.booking_number,
-    amount: booking.final_price,
-    payment_method: booking.payment_method || 'cash',
-    status: 'completed',
-    payment_date: booking.completed_at || booking.created_at,
-    created_at: booking.created_at
-  })) || []
-
-  return payments as HotelPayment[]
+  return (data || []) as HotelPayment[]
 }
 
 export const createPayment = async (paymentData: Partial<HotelPayment>) => {
-  // สำหรับการสร้าง payment ใหม่ - อัพเดตผ่าน bookings
   const { data, error } = await supabase
-    .from('bookings') // ✅ ใช้ existing table
-    .update({
-      payment_status: 'paid',
-      completed_at: new Date().toISOString()
-    })
-    .eq('booking_number', paymentData.transaction_ref)
-    .eq('hotel_id', paymentData.hotel_id)
+    .from('hotel_payments')
+    .insert([{
+      hotel_id: paymentData.hotel_id,
+      invoice_id: paymentData.invoice_id && !paymentData.invoice_id.startsWith('generated-') ? paymentData.invoice_id : null,
+      invoice_number: paymentData.invoice_number || null,
+      transaction_ref: paymentData.transaction_ref,
+      amount: paymentData.amount,
+      payment_method: paymentData.payment_method,
+      status: paymentData.status || 'completed',
+      payment_date: paymentData.payment_date,
+      notes: paymentData.notes || null,
+    }])
     .select()
     .single()
 
@@ -303,9 +298,13 @@ export const createPayment = async (paymentData: Partial<HotelPayment>) => {
 
 export const updatePayment = async (id: string, paymentData: Partial<HotelPayment>) => {
   const { data, error } = await supabase
-    .from('bookings') // ✅ ใช้ existing table
+    .from('hotel_payments')
     .update({
-      payment_status: paymentData.status === 'completed' ? 'paid' : 'pending'
+      status: paymentData.status,
+      amount: paymentData.amount,
+      payment_method: paymentData.payment_method,
+      notes: paymentData.notes,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
     .select()
