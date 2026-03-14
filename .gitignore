@@ -86,3 +86,12 @@ docs/SUPABASE_CREDENTIALS.md
 
 # Windows null file
 nul
+
+# Screenshots (Playwright test captures, debugging)
+/*.png
+
+# Session context files (AI conversation handoff — ephemeral)
+SESSION-CONTEXT-*.md
+
+# Temporary task/prompt files
+REPORTS-TASK-PROMPT.md
