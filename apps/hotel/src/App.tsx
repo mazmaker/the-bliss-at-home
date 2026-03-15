@@ -30,16 +30,16 @@ function App() {
         path="/hotel/login"
         element={
           isAuthenticated ? (
-            <Navigate to="/hotel/bookings" replace />
+            <Navigate to="/hotel/resort-chiang-mai" replace />
           ) : (
             <HotelLoginPage />
           )
         }
       />
 
-      {/* Protected hotel routes - require HOTEL role */}
+      {/* Protected hotel routes with dynamic slug - require HOTEL role */}
       <Route
-        path="/hotel"
+        path="/hotel/:hotelSlug"
         element={
           <ProtectedRoute allowedRoles={['HOTEL']} redirectTo="/hotel/login">
             <HotelLayout />
@@ -47,7 +47,6 @@ function App() {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="bookings" element={<Dashboard />} />
         <Route path="services" element={<Services />} />
         <Route path="book" element={<BookForGuest />} />
         <Route path="guests" element={<GuestBookings />} />
@@ -57,8 +56,14 @@ function App() {
         <Route path="settings" element={<HotelSettings />} />
       </Route>
 
+      {/* Legacy routes - redirect to slug-based routing */}
+      <Route
+        path="/hotel"
+        element={<Navigate to="/hotel/resort-chiang-mai" replace />}
+      />
+
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/hotel" replace />} />
+      <Route path="/" element={<Navigate to="/hotel/resort-chiang-mai" replace />} />
     </Routes>
   )
 }
