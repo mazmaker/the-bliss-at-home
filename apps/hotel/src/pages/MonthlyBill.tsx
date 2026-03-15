@@ -25,6 +25,8 @@ function MonthlyBill() {
       regularPrice: 800,
       hotelPrice: 640,
       discount: 160,
+      staffCommission: 480,
+      hotelRevenue: 320, // price_charged - staff_commission
     },
     {
       id: 'BK002',
@@ -35,6 +37,8 @@ function MonthlyBill() {
       regularPrice: 450,
       hotelPrice: 360,
       discount: 90,
+      staffCommission: 270,
+      hotelRevenue: 180,
     },
     {
       id: 'BK003',
@@ -45,6 +49,8 @@ function MonthlyBill() {
       regularPrice: 1000,
       hotelPrice: 800,
       discount: 200,
+      staffCommission: 600,
+      hotelRevenue: 400,
     },
     {
       id: 'BK004',
@@ -55,6 +61,8 @@ function MonthlyBill() {
       regularPrice: 2500,
       hotelPrice: 2000,
       discount: 500,
+      staffCommission: 1500,
+      hotelRevenue: 1000,
     },
     {
       id: 'BK005',
@@ -65,6 +73,8 @@ function MonthlyBill() {
       regularPrice: 1200,
       hotelPrice: 960,
       discount: 240,
+      staffCommission: 720,
+      hotelRevenue: 480,
     },
     {
       id: 'BK006',
@@ -75,6 +85,8 @@ function MonthlyBill() {
       regularPrice: 400,
       hotelPrice: 320,
       discount: 80,
+      staffCommission: 240,
+      hotelRevenue: 160,
     },
     {
       id: 'BK007',
@@ -85,6 +97,8 @@ function MonthlyBill() {
       regularPrice: 800,
       hotelPrice: 640,
       discount: 160,
+      staffCommission: 480,
+      hotelRevenue: 320,
     },
     {
       id: 'BK008',
@@ -95,6 +109,8 @@ function MonthlyBill() {
       regularPrice: 450,
       hotelPrice: 360,
       discount: 90,
+      staffCommission: 270,
+      hotelRevenue: 180,
     },
   ]
 
@@ -102,6 +118,8 @@ function MonthlyBill() {
   const totalRegularPrice = bookings.reduce((sum, b) => sum + b.regularPrice, 0)
   const totalHotelPrice = bookings.reduce((sum, b) => sum + b.hotelPrice, 0)
   const totalSavings = bookings.reduce((sum, b) => sum + b.discount, 0)
+  const totalHotelRevenue = bookings.reduce((sum, b) => sum + b.hotelRevenue, 0)
+  const totalStaffCommission = bookings.reduce((sum, b) => sum + b.staffCommission, 0)
   const totalBookings = bookings.length
 
   return (
@@ -171,7 +189,7 @@ function MonthlyBill() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl shadow-lg p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-white/20 rounded-xl">
@@ -207,6 +225,18 @@ function MonthlyBill() {
             </div>
           </div>
         </div>
+
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm opacity-90">รายได้โรงแรม</p>
+              <p className="text-2xl font-bold">฿{totalHotelRevenue.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Booking Details */}
@@ -225,6 +255,7 @@ function MonthlyBill() {
                 <th className="text-right py-3 px-4 text-sm font-semibold text-stone-700">ราคาปกติ</th>
                 <th className="text-right py-3 px-4 text-sm font-semibold text-stone-700">ส่วนลด</th>
                 <th className="text-right py-3 px-4 text-sm font-semibold text-stone-700">ราคาจ่ายจริง</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-blue-700">รายได้โรงแรม</th>
               </tr>
             </thead>
             <tbody>
@@ -240,6 +271,9 @@ function MonthlyBill() {
                   <td className="py-3 px-4 text-sm text-green-600 text-right">-฿{booking.discount}</td>
                   <td className="py-3 px-4 text-sm font-bold text-amber-700 text-right">
                     ฿{booking.hotelPrice}
+                  </td>
+                  <td className="py-3 px-4 text-sm font-bold text-blue-700 text-right">
+                    ฿{booking.hotelRevenue}
                   </td>
                 </tr>
               ))}
@@ -257,6 +291,9 @@ function MonthlyBill() {
                 </td>
                 <td className="py-4 px-4 text-right text-lg font-bold text-amber-700">
                   ฿{totalHotelPrice.toLocaleString()}
+                </td>
+                <td className="py-4 px-4 text-right text-lg font-bold text-blue-700">
+                  ฿{totalHotelRevenue.toLocaleString()}
                 </td>
               </tr>
             </tfoot>
