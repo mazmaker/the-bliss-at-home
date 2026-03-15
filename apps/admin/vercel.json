@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- . ../../packages/ 2>/dev/null; code=$?; [ $code -eq 128 ] && exit 1 || exit $code"
+}

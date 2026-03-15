@@ -4,20 +4,25 @@
  */
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout, LoginForm, PasswordResetForm } from '@bliss/ui'
-import { APP_CONFIGS } from '@bliss/supabase/auth'
+import { APP_CONFIGS, authService } from '@bliss/supabase/auth'
+import { useTranslation } from '@bliss/i18n'
 
 type AuthView = 'login' | 'register' | 'forgot-password'
 
 export function CustomerLoginPage() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
+  const location = useLocation()
   const config = APP_CONFIGS.CUSTOMER
+  const redirectAfterLogin = (location.state as any)?.from || '/'
   const [view, setView] = useState<AuthView>('login')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleRegisterClick = () => {
-    // TODO: Navigate to registration page
-    console.log('Navigate to register')
+    navigate('/register')
   }
 
   const handleForgotPasswordClick = () => {
@@ -26,26 +31,52 @@ export function CustomerLoginPage() {
 
   const handleBackToLogin = () => {
     setView('login')
+    setError(null)
+  }
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      if (provider === 'google') {
+        await authService.signInWithGoogle()
+      } else {
+        await authService.signInWithFacebook()
+      }
+      // OAuth will redirect to callback URL
+    } catch (err) {
+      console.error('Social login error:', err)
+      setError(t('login.socialLoginError', { provider: provider === 'google' ? 'Google' : 'Facebook' }))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <AuthLayout
       appTitle={config.name}
-      appLogo={config.logoUrl}
+      appLogo="/logo.svg"
       backgroundVariant="default"
-      backLinkText="Back to Home"
-      backLinkTo="/"
+      showBackLink={false}
     >
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
       {view === 'login' && (
         <LoginForm
-          appTitle={config.name}
-          appLogo={config.logoUrl}
+          appTitle=""
           primaryColor={config.primaryColor}
-          redirectTo={config.defaultPath}
+          expectedRole={config.allowedRole}
+          redirectTo={redirectAfterLogin}
           showRegister={true}
           showForgotPassword={true}
+          showSocialLogin={true}
           onRegisterClick={handleRegisterClick}
           onForgotPasswordClick={handleForgotPasswordClick}
+          onSocialLogin={handleSocialLogin}
           showRememberMe={true}
         />
       )}

@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "bookings": "Bookings",
+    "profile": "Profile"
+  },
+  "footer": {
+    "copyright": "© 2026 The Bliss Massage at Home. All rights reserved.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "contact": "Contact Us"
+  },
+  "buttons": {
+    "bookNow": "Book Now",
+    "search": "Search",
+    "save": "Save Settings",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "viewAll": "View All",
+    "clearFilters": "Clear Filters",
+    "goBack": "Go Back"
+  },
+  "status": {
+    "confirmed": "Confirmed",
+    "completed": "Completed",
+    "pending": "Pending",
+    "cancelled": "Cancelled",
+    "paid": "Paid",
+    "label": "Status"
+  },
+  "loading": {
+    "services": "Loading services...",
+    "bookings": "Loading bookings...",
+    "profile": "Loading profile...",
+    "bookingDetails": "Loading booking details...",
+    "data": "Loading data..."
+  },
+  "errors": {
+    "failedToLoadServices": "Failed to load services. Please try again.",
+    "failedToLoadBookings": "Failed to load bookings. Please try again.",
+    "noServicesAvailable": "No services available at the moment.",
+    "serviceNotFound": "Service not found",
+    "cannotLoadService": "Unable to load service information",
+    "backToServices": "← Back to All Services"
+  },
+  "auth": {
+    "signedInAs": "Signed in as",
+    "myProfile": "My Profile",
+    "myBookings": "My Bookings",
+    "pleaseLogin": "Please log in to view your profile",
+    "pleaseLoginBookings": "Please log in to view bookings",
+    "goToLogin": "Go to Login"
+  },
+  "sos": {
+    "button": "SOS",
+    "title": "Send Emergency Alert",
+    "subtitle": "Emergency Alert",
+    "alertSentTo": "This alert will be sent to:",
+    "adminTeam": "The Bliss Admin Team",
+    "withLocation": "Including your location data",
+    "confirmMessage": "Press confirm if you need urgent assistance",
+    "confirmSend": "Confirm Send SOS",
+    "sending": "Sending...",
+    "success": "Alert Sent Successfully",
+    "successMessage": "Our team has been notified\nand will contact you as soon as possible",
+    "failedAlert": "Failed to send SOS alert. Please try again or contact support."
+  },
+  "currency": "฿"
+}

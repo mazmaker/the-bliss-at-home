@@ -1,73 +1,104 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Search, Eye, Edit, Trash2, MapPin, Phone, Mail, Calendar, ChevronRight } from 'lucide-react'
-
-const customers = [
-  {
-    id: 'CUST001',
-    name: 'สมชาย ใจดี',
-    email: 'somchai@email.com',
-    phone: '081-234-5678',
-    totalBookings: 15,
-    totalSpent: 24500,
-    lastBooking: '2026-01-14',
-    status: 'active',
-  },
-  {
-    id: 'CUST002',
-    name: 'วิภาดา สุขสันต์',
-    email: 'wipada@email.com',
-    phone: '082-345-6789',
-    totalBookings: 8,
-    totalSpent: 12800,
-    lastBooking: '2026-01-10',
-    status: 'active',
-  },
-  {
-    id: 'CUST003',
-    name: 'กิตติ เก่งการค้า',
-    email: 'kitti@email.com',
-    phone: '083-456-7890',
-    totalBookings: 23,
-    totalSpent: 45600,
-    lastBooking: '2026-01-15',
-    status: 'active',
-  },
-  {
-    id: 'CUST004',
-    name: 'มานี มีตา',
-    email: 'manee@email.com',
-    phone: '084-567-8901',
-    totalBookings: 3,
-    totalSpent: 3600,
-    lastBooking: '2025-12-20',
-    status: 'inactive',
-  },
-  {
-    id: 'CUST005',
-    name: 'ประยุทธ์ มั่งมี',
-    email: 'prayut@email.com',
-    phone: '085-678-9012',
-    totalBookings: 31,
-    totalSpent: 67800,
-    lastBooking: '2026-01-13',
-    status: 'active',
-  },
-]
+import { Search, Eye, Edit, Phone, Mail, Calendar, Download } from 'lucide-react'
+import { useCustomers } from '../hooks/useCustomers'
+import { Customer, CustomerStatus } from '../lib/customerQueries'
+import { exportToCSV, exportToExcel } from '../utils/exportUtils'
+import CustomerDetailModal from '../components/CustomerDetailModal'
+import CustomerEditModal from '../components/CustomerEditModal'
+import CustomerStats from '../components/CustomerStats'
 
 function Customers() {
+  const { customers, loading, error } = useCustomers()
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | CustomerStatus>('all')
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
       searchQuery === '' ||
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (customer.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.phone.includes(searchQuery)
     const matchesStatus = statusFilter === 'all' || customer.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const handleExportCSV = () => {
+    const data = filteredCustomers.map((c) => ({
+      'รหัสลูกค้า': c.id,
+      'ชื่อ': c.full_name,
+      'อีเมล': c.email || '',
+      'เบอร์โทร': c.phone,
+      'สถานะ': c.status,
+      'จำนวนการจอง': c.total_bookings,
+      'ยอดใช้จ่ายรวม': c.total_spent,
+      'จองล่าสุด': c.last_booking_date || '',
+      'วันที่สมัคร': new Date(c.created_at).toLocaleDateString('th-TH'),
+    }))
+    exportToCSV(data, 'customers')
+  }
+
+  const handleExportExcel = () => {
+    const data = filteredCustomers.map((c) => ({
+      'รหัสลูกค้า': c.id,
+      'ชื่อ': c.full_name,
+      'อีเมล': c.email || '',
+      'เบอร์โทร': c.phone,
+      'สถานะ': c.status,
+      'จำนวนการจอง': c.total_bookings,
+      'ยอดใช้จ่ายรวม': c.total_spent,
+      'จองล่าสุด': c.last_booking_date || '',
+      'วันที่สมัคร': new Date(c.created_at).toLocaleDateString('th-TH'),
+    }))
+    exportToExcel(data, 'customers')
+  }
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  const getStatusBadge = (status: CustomerStatus) => {
+    const styles = {
+      active: 'bg-green-100 text-green-700',
+      suspended: 'bg-yellow-100 text-yellow-700',
+      banned: 'bg-red-100 text-red-700',
+    }
+    const labels = {
+      active: 'ใช้งานอยู่',
+      suspended: 'ระงับชั่วคราว',
+      banned: 'ระงับถาวร',
+    }
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+        {labels[status]}
+      </span>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto mb-4" />
+          <p className="text-stone-600">กำลังโหลดข้อมูลลูกค้า...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p className="text-red-800">เกิดข้อผิดพลาด: {error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -77,27 +108,26 @@ function Customers() {
           <h1 className="text-2xl font-bold text-stone-900">จัดการลูกค้า</h1>
           <p className="text-stone-500">Customer Management</p>
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2 bg-white border border-stone-300 rounded-xl text-stone-700 hover:bg-stone-50 transition flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className="px-4 py-2 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
-          <p className="text-2xl font-bold text-stone-900">{customers.length}</p>
-          <p className="text-xs text-stone-500">ลูกค้าทั้งหมด</p>
-        </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
-          <p className="text-2xl font-bold text-green-600">
-            {customers.filter((c) => c.status === 'active').length}
-          </p>
-          <p className="text-xs text-stone-500">ลูกค้าที่ใช้งานอยู่</p>
-        </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
-          <p className="text-2xl font-bold text-amber-700">
-            ฿{customers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString()}
-          </p>
-          <p className="text-xs text-stone-500">ยอดซื้อรวม</p>
-        </div>
-      </div>
+      {/* Customer Statistics */}
+      <CustomerStats />
 
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
@@ -119,7 +149,8 @@ function Customers() {
           >
             <option value="all">สถานะทั้งหมด</option>
             <option value="active">ใช้งานอยู่</option>
-            <option value="inactive">ไม่ใช้งาน</option>
+            <option value="suspended">ระงับชั่วคราว</option>
+            <option value="banned">ระงับถาวร</option>
           </select>
         </div>
       </div>
@@ -139,7 +170,8 @@ function Customers() {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ติดต่อ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การจอง</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ยอดซื้อ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จองล่าสุด</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่สมัคร</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จัดการ</th>
               </tr>
             </thead>
@@ -149,11 +181,11 @@ function Customers() {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
-                        {customer.name.charAt(0)}
+                        {customer.full_name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium text-stone-900">{customer.name}</p>
-                        <p className="text-xs text-stone-500">{customer.id}</p>
+                        <p className="font-medium text-stone-900">{customer.full_name}</p>
+                        <p className="text-xs text-stone-500">{customer.id.substring(0, 8)}</p>
                       </div>
                     </div>
                   </td>
@@ -161,7 +193,7 @@ function Customers() {
                     <div className="space-y-1 text-sm">
                       <div className="flex items-center gap-1 text-stone-600">
                         <Mail className="w-3 h-3" />
-                        {customer.email}
+                        {customer.email || '-'}
                       </div>
                       <div className="flex items-center gap-1 text-stone-600">
                         <Phone className="w-3 h-3" />
@@ -169,17 +201,31 @@ function Customers() {
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-sm text-stone-600">{customer.totalBookings} ครั้ง</td>
+                  <td className="py-3 px-4 text-sm text-stone-600">{customer.total_bookings} ครั้ง</td>
                   <td className="py-3 px-4 text-sm font-medium text-amber-700">
-                    ฿{customer.totalSpent.toLocaleString()}
+                    ฿{Number(customer.total_spent).toLocaleString()}
                   </td>
-                  <td className="py-3 px-4 text-sm text-stone-600">{customer.lastBooking}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-1 text-sm text-stone-600">
+                      <Calendar className="w-3 h-3" />
+                      {formatDate(customer.created_at)}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">{getStatusBadge(customer.status)}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-stone-100 rounded-lg transition" title="ดูรายละเอียด">
+                      <button
+                        onClick={() => setSelectedCustomer(customer)}
+                        className="p-2 hover:bg-stone-100 rounded-lg transition"
+                        title="ดูรายละเอียด"
+                      >
                         <Eye className="w-4 h-4 text-stone-600" />
                       </button>
-                      <button className="p-2 hover:bg-stone-100 rounded-lg transition" title="แก้ไข">
+                      <button
+                        onClick={() => setEditingCustomer(customer)}
+                        className="p-2 hover:bg-stone-100 rounded-lg transition"
+                        title="แก้ไข"
+                      >
                         <Edit className="w-4 h-4 text-stone-600" />
                       </button>
                     </div>
@@ -190,6 +236,24 @@ function Customers() {
           </table>
         </div>
       </div>
+
+      {/* Modals */}
+      {selectedCustomer && (
+        <CustomerDetailModal
+          isOpen={!!selectedCustomer}
+          onClose={() => setSelectedCustomer(null)}
+          customer={selectedCustomer}
+        />
+      )}
+
+      {editingCustomer && (
+        <CustomerEditModal
+          isOpen={!!editingCustomer}
+          onClose={() => setEditingCustomer(null)}
+          customer={editingCustomer}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

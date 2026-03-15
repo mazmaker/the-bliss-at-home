@@ -1,6 +1,9 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import { useTranslation } from '@bliss/i18n'
 import { ProtectedRoute } from '@bliss/ui'
 import Header from './components/Header'
+import './debug-session' // Load debug utilities
 import HomePage from './pages/Home'
 import ServiceCatalog from './pages/ServiceCatalog'
 import ServiceDetails from './pages/ServiceDetails'
@@ -9,18 +12,37 @@ import BookingHistory from './pages/BookingHistory'
 import BookingDetails from './pages/BookingDetails'
 import Profile from './pages/Profile'
 import ColorPalette from './pages/ColorPalette'
-import { CustomerLoginPage } from './pages/auth'
+import Register from './pages/Register'
+import PaymentConfirmation from './pages/PaymentConfirmation'
+import TransactionHistory from './pages/TransactionHistory'
+import Notifications from './pages/Notifications'
+import OTPVerification from './pages/OTPVerification'
+import TermsPage from './pages/Terms'
+import PrivacyPage from './pages/Privacy'
+import PromotionsPage from './pages/Promotions'
+import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth'
 
 function App() {
+  const { t } = useTranslation('common')
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+      <Toaster position="top-right" />
       <Routes>
-        {/* Public routes */}
+        {/* Public routes - Login only */}
         <Route path="/login" element={<CustomerLoginPageWrapper />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/services" element={<ServiceCatalog />} />
-        <Route path="/services/:slug" element={<ServiceDetails />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/design-system" element={<ColorPalette />} />
+
+        {/* Public routes - accessible without login */}
+        <Route path="/" element={<HomePageWrapper />} />
+        <Route path="/services" element={<ServiceCatalogWrapper />} />
+        <Route path="/services/:slug" element={<ServiceDetailsWrapper />} />
+        <Route path="/promotions" element={<PromotionsPageWrapper />} />
+        <Route path="/promotions/:id" element={<PromotionsPageWrapper />} />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
@@ -55,6 +77,39 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/verify-otp"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <OTPVerificationWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/confirmation"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <PaymentConfirmationWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <TransactionHistoryWrapper />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <NotificationsWrapper />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -63,14 +118,20 @@ function App() {
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-stone-200 py-8 mt-12">
         <div className="container mx-auto px-4">
-          <div className="text-center text-gray-500 text-sm">
-            <p>© 2026 The Bliss at Home. All rights reserved.</p>
+          <div className="text-center text-gray-500 text-sm pt-4">
+            <p>{t('footer.copyright')}</p>
             <div className="flex justify-center gap-4 mt-4">
-              <a href="#" className="hover:text-amber-700 transition">Terms of Service</a>
+              <Link to="/terms" className="hover:text-amber-700 transition font-medium">
+                {t('footer.terms')}
+              </Link>
               <span>|</span>
-              <a href="#" className="hover:text-amber-700 transition">Privacy Policy</a>
+              <Link to="/privacy" className="hover:text-amber-700 transition font-medium">
+                {t('footer.privacy')}
+              </Link>
               <span>|</span>
-              <a href="#" className="hover:text-amber-700 transition">Contact Us</a>
+              <a href="mailto:support@theblissathome.com" className="hover:text-amber-700 transition font-medium">
+                {t('footer.contact')}
+              </a>
             </div>
           </div>
         </div>
@@ -82,6 +143,42 @@ function App() {
 // Wrapper components to include Header
 function CustomerLoginPageWrapper() {
   return <CustomerLoginPage />
+}
+
+function HomePageWrapper() {
+  return (
+    <>
+      <Header />
+      <HomePage />
+    </>
+  )
+}
+
+function ServiceCatalogWrapper() {
+  return (
+    <>
+      <Header />
+      <ServiceCatalog />
+    </>
+  )
+}
+
+function ServiceDetailsWrapper() {
+  return (
+    <>
+      <Header />
+      <ServiceDetails />
+    </>
+  )
+}
+
+function PromotionsPageWrapper() {
+  return (
+    <>
+      <Header />
+      <PromotionsPage />
+    </>
+  )
 }
 
 function BookingWizardWrapper() {
@@ -116,6 +213,42 @@ function ProfileWrapper() {
     <>
       <Header />
       <Profile />
+    </>
+  )
+}
+
+function OTPVerificationWrapper() {
+  return (
+    <>
+      <Header />
+      <OTPVerification />
+    </>
+  )
+}
+
+function PaymentConfirmationWrapper() {
+  return (
+    <>
+      <Header />
+      <PaymentConfirmation />
+    </>
+  )
+}
+
+function TransactionHistoryWrapper() {
+  return (
+    <>
+      <Header />
+      <TransactionHistory />
+    </>
+  )
+}
+
+function NotificationsWrapper() {
+  return (
+    <>
+      <Header />
+      <Notifications />
     </>
   )
 }

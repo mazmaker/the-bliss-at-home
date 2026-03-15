@@ -104,7 +104,7 @@ function ColorPalette() {
             Back to Home
           </Link>
           <h1 className="text-4xl font-light text-stone-900 mb-2">Design System</h1>
-          <p className="text-stone-600 font-light">Color palette, typography, and UI components for The Bliss at Home</p>
+          <p className="text-stone-600 font-light">Color palette, typography, and UI components for The Bliss Massage at Home</p>
           <p className="text-amber-700 font-medium mt-2">ระบบการออกแบบ | สีและตัวอย่างส่วนประกอบ UI</p>
         </div>
 
@@ -248,28 +248,28 @@ function ColorPalette() {
           <div className="space-y-4">
             <div className="pb-4 border-b border-stone-100">
               <span className="text-sm text-stone-400 w-32 inline-block">Light (300)</span>
-              <span className="font-light text-2xl text-stone-900">The Bliss at Home</span>
-              <span className="font-light text-2xl text-stone-900 ml-4">เดอะ บลิส แอท โฮม</span>
+              <span className="font-light text-2xl text-stone-900">The Bliss Massage at Home</span>
+              <span className="font-light text-2xl text-stone-900 ml-4">เดอะ บลิส มาสสาจ แอท โฮม</span>
             </div>
             <div className="pb-4 border-b border-stone-100">
               <span className="text-sm text-stone-400 w-32 inline-block">Regular (400)</span>
-              <span className="font-normal text-2xl text-stone-900">The Bliss at Home</span>
-              <span className="font-normal text-2xl text-stone-900 ml-4">เดอะ บลิส แอท โฮม</span>
+              <span className="font-normal text-2xl text-stone-900">The Bliss Massage at Home</span>
+              <span className="font-normal text-2xl text-stone-900 ml-4">เดอะ บลิส มาสสาจ แอท โฮม</span>
             </div>
             <div className="pb-4 border-b border-stone-100">
               <span className="text-sm text-stone-400 w-32 inline-block">Medium (500)</span>
-              <span className="font-medium text-2xl text-stone-900">The Bliss at Home</span>
-              <span className="font-medium text-2xl text-stone-900 ml-4">เดอะ บลิส แอท โฮม</span>
+              <span className="font-medium text-2xl text-stone-900">The Bliss Massage at Home</span>
+              <span className="font-medium text-2xl text-stone-900 ml-4">เดอะ บลิส มาสสาจ แอท โฮม</span>
             </div>
             <div className="pb-4 border-b border-stone-100">
               <span className="text-sm text-stone-400 w-32 inline-block">Semi-Bold (600)</span>
-              <span className="font-semibold text-2xl text-stone-900">The Bliss at Home</span>
-              <span className="font-semibold text-2xl text-stone-900 ml-4">เดอะ บลิส แอท โฮม</span>
+              <span className="font-semibold text-2xl text-stone-900">The Bliss Massage at Home</span>
+              <span className="font-semibold text-2xl text-stone-900 ml-4">เดอะ บลิส มาสสาจ แอท โฮม</span>
             </div>
             <div>
               <span className="text-sm text-stone-400 w-32 inline-block">Bold (700)</span>
-              <span className="font-bold text-2xl text-stone-900">The Bliss at Home</span>
-              <span className="font-bold text-2xl text-stone-900 ml-4">เดอะ บลิส แอท โฮม</span>
+              <span className="font-bold text-2xl text-stone-900">The Bliss Massage at Home</span>
+              <span className="font-bold text-2xl text-stone-900 ml-4">เดอะ บลิส มาสสาจ แอท โฮม</span>
             </div>
           </div>
         </div>
@@ -304,8 +304,8 @@ function ColorPalette() {
 
         {/* Footer */}
         <div className="mt-12 text-center text-stone-500 text-sm">
-          <p>The Bliss at Home Design System</p>
-          <p className="mt-1">ระบบการออกแบบของ เดอะ บลิส แอท โฮม</p>
+          <p>The Bliss Massage at Home Design System</p>
+          <p className="mt-1">ระบบการออกแบบของ เดอะ บลิส มาสสาจ แอท โฮม</p>
           <p className="mt-2">Click any color to copy its hex value | คลิกที่สีเพื่อคัดลอกค่า hex</p>
         </div>
       </div>

@@ -1,9 +1,18 @@
 /**
  * Supabase Client Configuration
  * Shared singleton instance across all apps
+ * NOTE: This now uses the unified singleton from client/index.ts
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database.types'
+
+// Declare global window type for singleton
+declare global {
+  interface Window {
+    __supabaseClient?: SupabaseClient<Database>
+  }
+}
 
 // Default values (can be overridden by environment variables)
 const getDefaultUrl = () => {
@@ -26,27 +35,47 @@ const getDefaultAnonKey = () => {
 const supabaseUrl = getDefaultUrl()
 const supabaseAnonKey = getDefaultAnonKey()
 
-// Create and export singleton instance
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'implicit', // Change from PKCE to implicit to avoid CORS issues
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-  },
-  global: {
-    headers: {
-      'x-my-custom-header': 'admin-app',
+// Create singleton instance with unified configuration
+function createSingletonClient(): SupabaseClient<Database> {
+  // Check if instance already exists (survives HMR reloads)
+  if (typeof window !== 'undefined' && window.__supabaseClient) {
+    return window.__supabaseClient
+  }
+
+  console.log('🔌 Creating unified Supabase client singleton')
+
+  const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true, // Enable to automatically handle OAuth callbacks
+      flowType: 'pkce', // Use PKCE for better security
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      storageKey: 'bliss-customer-auth', // Custom storage key to avoid conflicts
+      debug: false, // Disable auth debugging in production
     },
-  },
-  // Add timeout to prevent hanging
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
+    global: {
+      headers: {
+        'x-my-custom-header': 'customer-app',
+      },
     },
-  },
-})
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+  })
+
+  // Store in window to survive HMR reloads
+  if (typeof window !== 'undefined') {
+    window.__supabaseClient = client
+  }
+
+  return client
+}
+
+// Export singleton instance
+export const supabase = createSingletonClient()
 
 // For server-side operations (service role)
 export const createServiceClient = (serviceRoleKey?: string) => {

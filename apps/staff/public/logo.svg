@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <!-- House icon -->
+  <path d="M25 35V50H40V35L32.5 25L25 35Z" fill="#92400E"/>
+  <path d="M32.5 15L15 35H20L32.5 20L45 35H50L32.5 15Z" fill="#B45309"/>
+  <path d="M30 42H35V50H30V42Z" fill="#FEF3C7"/>
+
+  <!-- Spa/Lotus element -->
+  <ellipse cx="32.5" cy="32" rx="3" ry="2" fill="#FEF3C7"/>
+
+  <!-- Text: The Bliss -->
+  <text x="55" y="32" font-family="Georgia, serif" font-size="18" font-weight="bold" fill="#78350F">The Bliss</text>
+
+  <!-- Text: at Home -->
+  <text x="55" y="48" font-family="Georgia, serif" font-size="14" fill="#92400E">at Home</text>
+</svg>

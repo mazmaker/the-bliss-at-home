@@ -1,27 +1,413 @@
 /**
  * Staff Login Page
- * Port 3004 - For STAFF role (LINE LIFF)
+ * Port 3004 - For STAFF role (LINE Only)
+ *
+ * Also handles invite token from admin-created staff accounts.
+ * When LIFF opens with ?token=xxx, this page validates the token
+ * and stores invite data in localStorage before proceeding with LINE login.
  */
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AuthLayout, LoginForm, Button } from '@bliss/ui'
-import { APP_CONFIGS } from '@bliss/supabase/auth'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { AuthLayout, Button } from '@bliss/ui'
+import { APP_CONFIGS, authService, liffService, supabase } from '@bliss/supabase/auth'
+import { AlertCircle, UserCheck, Loader2 } from 'lucide-react'
+
+// Get LIFF ID from environment
+const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
+
+// Module-level flag to prevent auto-login across re-mounts within the same page load
+let skipAutoLoginForSession = false
+
+// Check if auto-login should be skipped (uses localStorage with timestamp for cross-tab support)
+function shouldSkipAutoLogin(): boolean {
+  if (skipAutoLoginForSession) return true
+  if (sessionStorage.getItem('staff_skip_auto_login')) return true
+  // Check localStorage timestamp (survives new LINE in-app browser contexts)
+  const skipTs = localStorage.getItem('staff_skip_auto_login_until')
+  if (skipTs && Date.now() < parseInt(skipTs, 10)) return true
+  return false
+}
+
+function markSkipAutoLogin() {
+  skipAutoLoginForSession = true
+  sessionStorage.setItem('staff_skip_auto_login', 'true')
+  // Also set in localStorage with 2-minute TTL (survives new browsing contexts)
+  localStorage.setItem('staff_skip_auto_login_until', String(Date.now() + 120_000))
+}
+
+function clearSkipAutoLogin() {
+  skipAutoLoginForSession = false
+  sessionStorage.removeItem('staff_skip_auto_login')
+  localStorage.removeItem('staff_skip_auto_login_until')
+}
+
+// Validate that a saved redirect path is a valid deep link (not login page, not external URL)
+function isValidDeepLink(path: string | null): path is string {
+  if (!path) return false
+  if (!path.startsWith('/staff/')) return false
+  if (path.startsWith('/staff/login')) return false
+  if (path.startsWith('/staff/auth')) return false
+  if (path.startsWith('/staff/callback')) return false
+  if (path.startsWith('/staff/register')) return false
+  return true
+}
 
 export function StaffLoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const config = APP_CONFIGS.STAFF
-  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLINELogin = () => {
-    // TODO: Implement LINE LIFF login
+  // Clean up invalid redirect paths on mount (e.g. stale "/staff/login?liff.hback=2")
+  const storedRedirect = localStorage.getItem('staff_redirect_after_login')
+  if (storedRedirect && !isValidDeepLink(storedRedirect)) {
+    localStorage.removeItem('staff_redirect_after_login')
+  }
+
+  // Get redirect path from ProtectedRoute's state or localStorage
+  const fromState = (location.state as any)?.from
+  const redirectPath = (isValidDeepLink(fromState) ? fromState : null)
+    || (isValidDeepLink(storedRedirect) ? storedRedirect : null)
+    || config.defaultPath
+
+  // Save redirect path to localStorage so it survives page reloads
+  // BUT: don't save if user just logged out (this path is stale from ProtectedRoute's re-render)
+  useEffect(() => {
+    const from = (location.state as any)?.from
+    if (isValidDeepLink(from) && !localStorage.getItem('staff_just_logged_out')) {
+      localStorage.setItem('staff_redirect_after_login', from)
+    }
+  }, [location.state])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLiffReady, setIsLiffReady] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [inviteProcessing, setInviteProcessing] = useState(false)
+  const [inviteStaffName, setInviteStaffName] = useState<string | null>(null)
+
+  // Process invite token from URL params (sent via LIFF invite link)
+  useEffect(() => {
+    async function processInviteFromUrl() {
+      // Check for token in URL params (LIFF passes query params through)
+      const urlParams = new URLSearchParams(window.location.search)
+      const token = urlParams.get('token')
+
+      // Also check liff.state param (LIFF sometimes encodes params there)
+      const liffState = urlParams.get('liff.state')
+      let tokenFromState: string | null = null
+      if (liffState) {
+        try {
+          const stateParams = new URLSearchParams(liffState)
+          tokenFromState = stateParams.get('token')
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+
+      const inviteToken = token || tokenFromState
+
+      if (!inviteToken) return // No invite token, normal login flow
+
+      // Already processed this token?
+      const existingToken = localStorage.getItem('staff_invite_token')
+      if (existingToken === inviteToken) {
+        console.log('[Invite] Token already processed, skipping validation')
+        return
+      }
+
+      console.log('[Invite] Found invite token in URL, validating...')
+      setInviteProcessing(true)
+
+      try {
+        // Validate token against database
+        const { data, error: queryError } = await supabase
+          .from('staff')
+          .select('id, name_th, invite_token_expires_at')
+          .eq('invite_token', inviteToken)
+          .is('profile_id', null)
+          .single()
+
+        if (queryError || !data) {
+          console.error('[Invite] Token validation failed:', queryError)
+          setError('ลิงก์คำเชิญไม่ถูกต้องหรือถูกใช้งานแล้ว')
+          setInviteProcessing(false)
+          return
+        }
+
+        // Check expiry
+        if (data.invite_token_expires_at && new Date(data.invite_token_expires_at) < new Date()) {
+          setError('ลิงก์คำเชิญหมดอายุแล้ว กรุณาติดต่อผู้ดูแลระบบ')
+          setInviteProcessing(false)
+          return
+        }
+
+        // Store invite data in localStorage (survives LIFF redirect)
+        localStorage.setItem('staff_invite_token', inviteToken)
+        localStorage.setItem('staff_invite_staff_id', data.id)
+        localStorage.setItem('staff_invite_name', data.name_th)
+
+        console.log('[Invite] Token valid! Staff:', data.name_th, 'ID:', data.id)
+        setInviteStaffName(data.name_th)
+        setInviteProcessing(false)
+
+        // Clean token from URL to avoid re-processing
+        window.history.replaceState({}, '', window.location.pathname)
+      } catch (err) {
+        console.error('[Invite] Error processing token:', err)
+        setError('เกิดข้อผิดพลาดในการตรวจสอบคำเชิญ')
+        setInviteProcessing(false)
+      }
+    }
+
+    processInviteFromUrl()
+  }, [])
+
+  // Initialize LIFF on mount
+  useEffect(() => {
+    // Helper: only save deep link if valid AND doesn't overwrite existing valid one
+    function saveDeepLinkIfBetter(path: string) {
+      if (!isValidDeepLink(path)) return
+      const existing = localStorage.getItem('staff_redirect_after_login')
+      if (isValidDeepLink(existing)) return
+      localStorage.setItem('staff_redirect_after_login', path)
+    }
+
+    // Extract deep link path from multiple sources before liff.init()
+    const urlParams = new URLSearchParams(window.location.search)
+
+    // Strategy 1: Direct liff.state param
+    let deepLinkPath = urlParams.get('liff.state')
+    if (deepLinkPath && deepLinkPath.startsWith('/')) {
+      saveDeepLinkIfBetter(deepLinkPath)
+    }
+
+    // Strategy 2: Extract from liffRedirectUri (when coming from OAuth callback)
+    if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+      const liffRedirectUri = urlParams.get('liffRedirectUri')
+      if (liffRedirectUri) {
+        try {
+          const redirectUrl = new URL(decodeURIComponent(liffRedirectUri))
+          const stateFromRedirect = redirectUrl.searchParams.get('liff.state')
+          if (stateFromRedirect && stateFromRedirect.startsWith('/')) {
+            deepLinkPath = stateFromRedirect
+            saveDeepLinkIfBetter(deepLinkPath)
+          }
+        } catch (e) { /* ignore parse errors */ }
+      }
+    }
+
+    // Strategy 3: Extract from URL pathname (LIFF secondary redirect URL format)
+    // When LIFF concatenates: /staff/login + /staff/jobs/xxx → /staff/login/staff/jobs/xxx
+    if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+      const pathname = window.location.pathname
+      if (pathname.startsWith('/staff/login/staff/')) {
+        deepLinkPath = pathname.substring('/staff/login'.length)
+        saveDeepLinkIfBetter(deepLinkPath)
+      }
+    }
+
+    // Strategy 4: Try OAuth state parameter
+    if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+      const oauthState = urlParams.get('state')
+      if (oauthState) {
+        try {
+          const decoded = decodeURIComponent(oauthState)
+          const stateMatch = decoded.match(/liff\.state=([^&;]+)/)
+          if (stateMatch) {
+            const pathFromState = decodeURIComponent(stateMatch[1])
+            if (pathFromState.startsWith('/')) {
+              deepLinkPath = pathFromState
+              saveDeepLinkIfBetter(deepLinkPath)
+            }
+          }
+        } catch (e) { /* ignore */ }
+      }
+    }
+
+    async function initLiff() {
+      if (!LIFF_ID) {
+        console.warn('LIFF ID not configured')
+        setIsLiffReady(false)
+        return
+      }
+
+      try {
+        await liffService.initialize(LIFF_ID)
+        setIsLiffReady(true)
+
+        // Strategy 5: After liff.init(), check if SDK added liff.state to URL
+        if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
+          const postInitParams = new URLSearchParams(window.location.search)
+          const postInitLiffState = postInitParams.get('liff.state')
+          if (postInitLiffState && postInitLiffState.startsWith('/')) {
+            saveDeepLinkIfBetter(postInitLiffState)
+          }
+        }
+
+        // Check if user just logged out - ALWAYS skip auto-login
+        // Do NOT clear staff_redirect_after_login here — it might be a fresh deep link
+        // from a new LIFF URL open (not the stale path from ProtectedRoute's re-render).
+        // The stale path is prevented by the useEffect guard above (checks staff_just_logged_out).
+        const justLoggedOut = localStorage.getItem('staff_just_logged_out')
+        if (justLoggedOut || shouldSkipAutoLogin()) {
+          console.log('[LIFF] Skipping auto-login (justLoggedOut or skipFlag)')
+          localStorage.removeItem('staff_just_logged_out')
+          markSkipAutoLogin() // Persist across re-mounts, page reloads, AND new browsing contexts
+          setIsLoading(false)
+          return
+        }
+
+        // Auto-login if already logged in via LIFF (only try once per session)
+        if (liffService.isLoggedIn()) {
+          await handleLiffAutoLogin()
+        }
+      } catch (err) {
+        console.error('LIFF init error:', err)
+        setError('Failed to initialize LINE Login')
+        setIsLiffReady(false)
+      }
+    }
+
+    initLiff()
+  }, [])
+
+  // Handle auto-login when LIFF is already logged in
+  async function handleLiffAutoLogin() {
     setIsLoading(true)
-    // This will use LINE LIFF SDK
-    console.log('LINE Login via LIFF')
-    setTimeout(() => {
+    setError(null)
+
+    // IMPORTANT: Read redirect path BEFORE loginWithLine()!
+    // loginWithLine() sets the Supabase session → triggers onAuthStateChange →
+    // React re-renders → App.tsx Login IIFE reads & removes savedPath from localStorage.
+    // By reading it first, we avoid losing it to this race condition.
+    const savedPath = localStorage.getItem('staff_redirect_after_login')
+    const targetPath = savedPath || redirectPath
+
+    try {
+      console.log('[Auto-login] Getting LIFF profile...')
+      const profile = await liffService.getProfile()
+      console.log('[Auto-login] LIFF profile:', profile)
+
+      // Check for invite data from admin invitation flow
+      const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
+
+      console.log('[Auto-login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
+      const result = await authService.loginWithLine({
+        lineUserId: profile.userId,
+        displayName: profile.displayName,
+        pictureUrl: profile.pictureUrl,
+      }, 'STAFF', inviteStaffId)
+      console.log('[Auto-login] Login successful:', result)
+
+      // Clean up invite data from localStorage
+      localStorage.removeItem('staff_invite_token')
+      localStorage.removeItem('staff_invite_staff_id')
+      localStorage.removeItem('staff_invite_name')
+
+      // Mark that user logged in via LIFF (for logout later)
+      localStorage.setItem('staff_logged_in_via_liff', 'true')
+
+      // Don't remove staff_redirect_after_login here — StaffLayout will clean it up
+      // after the user successfully lands on a protected page.
+
+      // Redirect immediately — no need to wait for React state update since
+      // window.location.href triggers a full page reload which re-initializes auth
+      console.log('[Auto-login] Redirecting to:', targetPath, '(saved:', savedPath, 'redirect:', redirectPath, ')')
+      window.location.href = targetPath
+    } catch (err: any) {
+      // If auto-login fails (e.g., expired token), silently fail and show login button
+      console.error('[Auto-login] Error:', err)
+      console.log('[Auto-login] Falling back to manual login')
+      // Prevent retry loop: mark auto-login as failed (persists across page reloads)
+      markSkipAutoLogin()
       setIsLoading(false)
-      navigate(config.defaultPath)
-    }, 1000)
+      // Don't set error - just let user click the login button
+    }
+  }
+
+  // Handle LINE login button click
+  async function handleLINELogin() {
+    if (!isLiffReady) {
+      setError('LINE Login is not available')
+      return
+    }
+
+    // User explicitly clicked login - clear all skip guards
+    clearSkipAutoLogin()
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      console.log('[LINE Login] Checking LIFF login status...')
+      if (liffService.isLoggedIn()) {
+        console.log('[LINE Login] Already logged in, getting profile...')
+        // Already logged in, get profile and authenticate
+        const profile = await liffService.getProfile()
+        console.log('[LINE Login] LIFF profile:', profile)
+
+        // Check for invite data from admin invitation flow
+        const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
+
+        // IMPORTANT: Read redirect path BEFORE loginWithLine() to avoid race condition
+        // (loginWithLine sets session → auth state change → App.tsx IIFE steals savedPath)
+        const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
+
+        console.log('[LINE Login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
+        const result = await authService.loginWithLine({
+          lineUserId: profile.userId,
+          displayName: profile.displayName,
+          pictureUrl: profile.pictureUrl,
+        }, 'STAFF', inviteStaffId)
+        console.log('[LINE Login] Login successful:', result)
+
+        // Clean up invite data from localStorage
+        localStorage.removeItem('staff_invite_token')
+        localStorage.removeItem('staff_invite_staff_id')
+        localStorage.removeItem('staff_invite_name')
+
+        // Mark that user logged in via LIFF (for logout later)
+        localStorage.setItem('staff_logged_in_via_liff', 'true')
+
+        // Wait for auth state to update (onAuthStateChange event)
+        console.log('[LINE Login] Waiting for auth state update...')
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Clear LIFF parameters from URL before navigating
+        window.history.replaceState({}, '', window.location.pathname)
+
+        // Don't remove staff_redirect_after_login here — StaffLayout will clean it up.
+
+        // Use window.location to force a full page reload with updated auth state
+        console.log('[LINE Login] Redirecting to:', targetPath)
+        window.location.href = targetPath
+      } else {
+        console.log('[LINE Login] Not logged in, redirecting to LINE authorization...')
+        // Not logged in, redirect to LINE authorization
+        // LIFF will redirect back to the Endpoint URL after login
+        liffService.login()
+      }
+    } catch (err: any) {
+      console.error('[LINE Login] Error:', err)
+      setError(err.message || 'LINE login failed')
+      setIsLoading(false)
+    }
+  }
+
+
+  // Show loading state while processing invite token
+  if (inviteProcessing) {
+    return (
+      <AuthLayout
+        appTitle={config.name}
+        backgroundVariant="gradient"
+        showBackLink={false}
+      >
+        <div className="text-center py-8">
+          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
+          <p className="text-stone-600">กำลังตรวจสอบคำเชิญ...</p>
+        </div>
+      </AuthLayout>
+    )
   }
 
   return (
@@ -30,61 +416,70 @@ export function StaffLoginPage() {
       backgroundVariant="gradient"
       showBackLink={false}
     >
-      {/* LINE Login Button */}
-      <div className="mb-6">
-        <Button
-          onClick={handleLINELogin}
-          disabled={isLoading}
-          className="w-full bg-green-500 hover:bg-green-600"
-          style={{
-            backgroundColor: config.primaryColor,
-            height: '48px',
-            fontSize: '16px',
-            fontWeight: '600',
-          }}
-        >
-          {isLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin">⟳</span>
-              Connecting...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="w-6 h-6"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+      {/* Error Alert */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Invite Welcome Banner */}
+      {(inviteStaffName || localStorage.getItem('staff_invite_name')) && (
+        <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+          <UserCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-emerald-800">
+              ยินดีต้อนรับ {inviteStaffName || localStorage.getItem('staff_invite_name')}!
+            </p>
+            <p className="text-xs text-emerald-600 mt-1">
+              กดปุ่มด้านล่างเพื่อเข้าสู่ระบบด้วย LINE และเชื่อมต่อบัญชีของคุณ
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* LINE Login Button - Staff ลงทะเบียนและเข้าสู่ระบบผ่าน LINE เท่านั้น */}
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-stone-900 mb-2">เข้าสู่ระบบ Staff</h2>
+        <p className="text-sm text-stone-600">ใช้บัญชี LINE ของคุณในการเข้าสู่ระบบ</p>
+      </div>
+
+      <Button
+        onClick={handleLINELogin}
+        disabled={isLoading || !isLiffReady}
+        className="w-full hover:opacity-90 transition-opacity"
+        style={{
+          backgroundColor: '#06C755',
+          height: '56px',
+          fontSize: '18px',
+          fontWeight: '600',
+        }}
+      >
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="animate-spin">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              Sign in with LINE
             </span>
-          )}
-        </Button>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          Recommended for staff
-        </p>
-      </div>
+            กำลังเชื่อมต่อ...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-3">
+            {/* LINE Logo */}
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 5.64 2 10.14c0 4.08 3.6 7.49 8.47 8.14.33.07.78.21.89.49.1.25.07.64.03.89l-.14.85c-.04.26-.2 1.02.89.56.09-.04.18-.08.27-.12 3.66-1.88 6.59-4.54 6.59-8.81C19 5.64 15.52 2 12 2zm4.24 10.15l-.98.02c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0h-.98c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0H8.76c-.18 0-.33-.15-.33-.33V9.34c0-.18.15-.33.33-.33h2.48c.18 0 .33.15.33.33v2.48c0 .18-.15.33-.33.33z"/>
+            </svg>
+            เข้าสู่ระบบด้วย LINE
+          </span>
+        )}
+      </Button>
 
-      {/* Divider */}
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or</span>
-        </div>
-      </div>
-
-      {/* Email Login Fallback */}
-      <LoginForm
-        appTitle={config.name}
-        primaryColor={config.primaryColor}
-        redirectTo={config.defaultPath}
-        showRegister={false}
-        showForgotPassword={false}
-        showRememberMe={true}
-      />
+      <p className="text-xs text-stone-500 text-center mt-3">
+        {isLiffReady ? 'ยังไม่มีบัญชี? ระบบจะสร้างบัญชีให้อัตโนมัติเมื่อคุณเข้าสู่ระบบครั้งแรก' : 'LINE Login not available'}
+      </p>
     </AuthLayout>
   )
 }

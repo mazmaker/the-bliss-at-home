@@ -22,7 +22,8 @@ export interface HotelData {
   bank_account_number?: string
   bank_account_name?: string
   commission_rate: number
-  status: 'active' | 'inactive'
+  discount_rate?: number
+  status: 'active' | 'inactive' | 'pending' | 'suspended' | 'banned'
   // Banking and tax information fields
   tax_id?: string | null
   bank_name?: string | null
@@ -32,13 +33,12 @@ export interface HotelData {
   updated_at?: string
 }
 
-// Fetch hotel by slug from database
+// Fetch hotel by slug from database (no status filter — caller checks status)
 const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, status, created_at, updated_at')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at')
     .eq('hotel_slug', slug)
-    .eq('status', 'active')
     .single()
 
   if (error) {
@@ -47,7 +47,6 @@ const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
       .from('hotels')
       .select('*')
       .eq('id', slug)
-      .eq('status', 'active')
       .single()
 
     if (errorById) {
@@ -65,7 +64,7 @@ const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
 const fetchAllHotels = async (): Promise<HotelData[]> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, status, created_at, updated_at')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at')
     .eq('status', 'active')
     .order('name_th', { ascending: true })
 
@@ -107,17 +106,23 @@ export const useHotelContext = () => {
   const isLoading = hotelLoading || hotelsLoading
   const isValidHotel = !!hotelData && !hotelError
 
+  // Check if hotel is blocked (suspended or banned)
+  const hotelStatus = hotelData?.status
+  const isBlocked = hotelStatus === 'suspended' || hotelStatus === 'banned'
+
   return {
     hotelId: hotelData?.id,
     hotelSlug: hotelData?.hotel_slug,
     hotelData,
     isValidHotel,
     isLoading,
+    isBlocked,
+    hotelStatus,
     error: hotelError,
     // Helper methods
     getHotelName: () => hotelData?.name_th || 'Unknown Hotel',
     getHotelNameEn: () => hotelData?.name_en || 'Unknown Hotel',
-    getCommissionRate: () => hotelData?.commission_rate || 20,
+    getCommissionRate: () => hotelData?.discount_rate || hotelData?.commission_rate || 20,
     getHotelSlug: () => hotelData?.hotel_slug || 'unknown-hotel',
     // Available hotels list (now from database)
     availableHotels

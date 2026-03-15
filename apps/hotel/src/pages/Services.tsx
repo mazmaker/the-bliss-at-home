@@ -1,111 +1,148 @@
-import { useState } from 'react'
-import { Search, Clock, Star, Info } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Search, Clock, Info, RefreshCw, AlertCircle, Percent } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@bliss/supabase/auth'
+import { useHotelContext } from '../hooks/useHotelContext'
+import BookingModalNew from '../components/BookingModalNew'
+
+// Service interface matching database structure
+interface Service {
+  id: string
+  name_th: string
+  name_en: string
+  description_th?: string | null
+  description_en?: string | null
+  category: 'massage' | 'nail' | 'spa' | 'facial'
+  duration: number
+  duration_options?: any // Use any to handle Json type from database
+  base_price: number
+  hotel_price: number
+  price_60?: number | null
+  price_90?: number | null
+  price_120?: number | null
+  image_url?: string | null
+  is_active: boolean | null
+  sort_order?: number | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+// Fetch services from database
+const fetchServices = async (): Promise<Service[]> => {
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    throw new Error(`Failed to fetch services: ${error.message}`)
+  }
+
+  return data || []
+}
 
 function Services() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'massage' | 'nail' | 'spa'>('all')
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
 
-  const services = [
-    {
-      id: 'SVC001',
-      name: 'Thai Massage (2 hours)',
-      nameTh: 'นวดไทย (2 ชั่วโมง)',
-      category: 'massage',
-      duration: 120,
-      regularPrice: 800,
-      hotelPrice: 640,
-      discount: 20,
-      rating: 4.8,
-      reviews: 234,
-      image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400',
-      description: 'นวดแผนไทยแท้โดยผู้เชี่ยวชาญ',
-    },
-    {
-      id: 'SVC002',
-      name: 'Oil Massage (2 hours)',
-      nameTh: 'นวดน้ำมัน (2 ชั่วโมง)',
-      category: 'massage',
-      duration: 120,
-      regularPrice: 1000,
-      hotelPrice: 800,
-      discount: 20,
-      rating: 4.9,
-      reviews: 189,
-      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400',
-      description: 'นวดน้ำมันอโรเมติกาบำบัดคลายเครียด',
-    },
-    {
-      id: 'SVC003',
-      name: 'Gel Manicure',
-      nameTh: 'เล็บเจล',
-      category: 'nail',
-      duration: 60,
-      regularPrice: 450,
-      hotelPrice: 360,
-      discount: 20,
-      rating: 4.7,
-      reviews: 312,
-      image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400',
-      description: 'ทำเล็บเจลเกรดพรีเมียมพร้อมดีไซน์ทันสมัย',
-    },
-    {
-      id: 'SVC004',
-      name: 'Luxury Spa Package',
-      nameTh: 'แพ็กเกจสปาหรู',
-      category: 'spa',
-      duration: 150,
-      regularPrice: 2500,
-      hotelPrice: 2000,
-      discount: 20,
-      rating: 5.0,
-      reviews: 145,
-      image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400',
-      description: 'แพ็กเกจสปาครบวงจร นวด สครับ และทรีตเมนท์หน้า',
-    },
-    {
-      id: 'SVC005',
-      name: 'Foot Massage (1 hour)',
-      nameTh: 'นวดเท้า (1 ชั่วโมง)',
-      category: 'massage',
-      duration: 60,
-      regularPrice: 400,
-      hotelPrice: 320,
-      discount: 20,
-      rating: 4.6,
-      reviews: 456,
-      image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=400',
-      description: 'นวดเท้าผ่อนคลาย กำจัดความเมื่อยล้า',
-    },
-    {
-      id: 'SVC006',
-      name: 'Facial Treatment',
-      nameTh: 'ทรีตเมนท์หน้า',
-      category: 'spa',
-      duration: 90,
-      regularPrice: 1200,
-      hotelPrice: 960,
-      discount: 20,
-      rating: 4.8,
-      reviews: 98,
-      image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400',
-      description: 'ทรีตเมนท์บำบัดผิวหน้าด้วยผลิตภัณฑ์ออร์แกนิค',
-    },
-  ]
+  // Get hotel context for discount rate
+  const { getCommissionRate } = useHotelContext()
 
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.nameTh.includes(searchQuery)
-    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter
-    return matchesSearch && matchesCategory
+  // Memoize discount rate to prevent recalculation
+  const discountRate = useMemo(() => getCommissionRate(), [getCommissionRate])
+
+  // Calculate discounted price based on hotel's discount rate
+  const calculateDiscountedPrice = useCallback((originalPrice: number): number => {
+    const discountAmount = originalPrice * (discountRate / 100)
+    const discountedPrice = originalPrice - discountAmount
+
+    return discountedPrice
+  }, [discountRate])
+
+  // Get discount percentage for display
+  const getDiscountPercentage = useCallback((): number => {
+    return discountRate
+  }, [discountRate])
+
+  // Query services from database
+  const { data: services = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['hotel-services'],
+    queryFn: fetchServices,
   })
+
+
+  const filteredServices = useMemo(() => {
+    return services.filter((service) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        service.name_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.name_th?.includes(searchQuery)
+      const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter
+      return matchesSearch && matchesCategory
+    })
+  }, [services, searchQuery, categoryFilter])
 
   const categoryLabels = {
     all: 'ทั้งหมด',
-    massage: 'นวดนวด',
+    massage: 'นวด',
     nail: 'เล็บ',
     spa: 'สปา',
+  }
+
+
+  // Function to open booking modal
+  const handleBookService = useCallback((service: Service) => {
+    // Create service object with discount information - DON'T modify hotel_price
+    const serviceWithDiscount = {
+      ...service,
+      original_price: service.hotel_price, // Keep original price for reference
+      discount_rate: discountRate // Add discount rate for enhanced calculations
+    }
+
+    setSelectedService(serviceWithDiscount)
+    setIsBookingModalOpen(true)
+  }, [discountRate])
+
+  // Function to close booking modal
+  const handleCloseBookingModal = useCallback(() => {
+    setIsBookingModalOpen(false)
+    setSelectedService(null)
+  }, [])
+
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-96 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
+          <p className="text-stone-600">กำลังโหลดบริการ...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-96 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+          <p className="text-stone-900 font-medium mb-1">เกิดข้อผิดพลาด</p>
+          <p className="text-stone-600 text-sm mb-4">{(error as Error).message}</p>
+          <button
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition"
+          >
+            <RefreshCw className="w-4 h-4" />
+            ลองใหม่
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -125,7 +162,7 @@ function Services() {
           <div>
             <h3 className="font-semibold mb-1">ราคาพิเศษสำหรับโรงแรม</h3>
             <p className="text-sm opacity-90">
-              โรงแรมของคุณได้รับส่วนลด 20% จากราคาปกติ สำหรับการจองทั้งหมด
+              ราคาที่แสดงเป็นราคาพิเศษสำหรับโรงแรม พร้อมให้บริการลูกค้าของคุณ
             </p>
           </div>
         </div>
@@ -169,61 +206,129 @@ function Services() {
 
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredServices.map((service) => (
-          <div key={service.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100 hover:shadow-xl transition">
-            {/* Image */}
-            <div className="relative h-48 bg-stone-200">
-              <img
-                src={service.image}
-                alt={service.nameTh}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-3 left-3">
-                <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                  ส่วนลด {service.discount}%
-                </span>
+        {filteredServices.map((service) => {
+          return (
+            <div key={service.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100 hover:shadow-xl transition">
+              {/* Image */}
+              <div className="relative h-48 bg-stone-200">
+                <img
+                  src={service.image_url || 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400'}
+                  alt={service.name_th}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="p-5">
+                <h3 className="font-semibold text-stone-900 mb-1">{service.name_th}</h3>
+                <p className="text-sm text-stone-500 mb-3">{service.name_en}</p>
+                <p className="text-sm text-stone-600 mb-4 line-clamp-2">{service.description_th || service.description_en}</p>
+
+                {/* Duration Options with Prices */}
+                <div className="bg-stone-50 rounded-xl p-3 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
+                    <div className="flex items-center gap-1 text-green-600">
+                      <Percent className="w-3 h-3" />
+                      <span className="text-xs font-medium">
+                        -{getDiscountPercentage()}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Duration Options with Individual Prices */}
+                  <div className="space-y-2">
+                    {service.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0
+                      ? service.duration_options.sort((a, b) => a - b).map((duration) => {
+                          // Get original price for this specific duration from admin-set prices
+                          let originalPriceForDuration: number
+                          if (duration === 60 && service.price_60) {
+                            originalPriceForDuration = service.price_60
+                          } else if (duration === 90 && service.price_90) {
+                            originalPriceForDuration = service.price_90
+                          } else if (duration === 120 && service.price_120) {
+                            originalPriceForDuration = service.price_120
+                          } else {
+                            // Fallback to proportional calculation if specific price not set
+                            originalPriceForDuration = Math.round((service.hotel_price / service.duration) * duration)
+                          }
+
+                          const discountedPriceForDuration = Math.round(calculateDiscountedPrice(originalPriceForDuration))
+
+                          return (
+                            <div key={duration} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-3 h-3 text-stone-400" />
+                                <span className="text-xs text-stone-600">{duration} นาที</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-stone-500 line-through">
+                                  ฿{originalPriceForDuration.toLocaleString()}
+                                </div>
+                                <div className="text-sm font-bold text-amber-700">
+                                  ฿{discountedPriceForDuration.toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })
+                      : (
+                        // Fallback for single duration
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-stone-400" />
+                            <span className="text-xs text-stone-600">{service.duration} นาที</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs text-stone-500 line-through">
+                              ฿{service.hotel_price}
+                            </div>
+                            <div className="text-sm font-bold text-amber-700">
+                              ฿{Math.round(calculateDiscountedPrice(service.hotel_price))}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+                  </div>
+                </div>
+
+                {/* Book Button */}
+                <button
+                  onClick={() => handleBookService(service)}
+                  className="w-full py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+                >
+                  จองบริการนี้
+                </button>
               </div>
             </div>
-
-            {/* Content */}
-            <div className="p-5">
-              <h3 className="font-semibold text-stone-900 mb-1">{service.nameTh}</h3>
-              <p className="text-sm text-stone-500 mb-3">{service.name}</p>
-              <p className="text-sm text-stone-600 mb-4 line-clamp-2">{service.description}</p>
-
-              {/* Duration & Rating */}
-              <div className="flex items-center gap-4 mb-4 text-sm">
-                <div className="flex items-center gap-1 text-stone-600">
-                  <Clock className="w-4 h-4" />
-                  <span>{service.duration} นาที</span>
-                </div>
-                <div className="flex items-center gap-1 text-amber-600">
-                  <Star className="w-4 h-4 fill-amber-500" />
-                  <span className="font-medium">{service.rating}</span>
-                  <span className="text-stone-400">({service.reviews})</span>
-                </div>
-              </div>
-
-              {/* Prices */}
-              <div className="bg-stone-50 rounded-xl p-3 mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-stone-500">ราคาปกติ</span>
-                  <span className="text-sm text-stone-400 line-through">฿{service.regularPrice}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-stone-700">ราคาโรงแรม</span>
-                  <span className="text-lg font-bold text-amber-700">฿{service.hotelPrice}</span>
-                </div>
-              </div>
-
-              {/* Book Button */}
-              <button className="w-full py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition">
-                จองบริการนี้
-              </button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
+
+      {/* Empty State */}
+      {filteredServices.length === 0 && !isLoading && !error && (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <Search className="w-16 h-16 mx-auto" />
+          </div>
+          <p className="text-gray-600 text-lg font-medium mb-2">ไม่พบบริการที่ค้นหา</p>
+          <p className="text-gray-500 text-sm">ลองค้นหาด้วยคำอื่นหรือเปลี่ยนหมวดหมู่</p>
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {selectedService && (
+        <BookingModalNew
+          isOpen={isBookingModalOpen}
+          onClose={handleCloseBookingModal}
+          initialService={selectedService}
+          onSuccess={() => {
+            // Optional callback after successful booking
+            handleCloseBookingModal()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -40,7 +40,6 @@ export async function getHotelSlugFromId(hotelId: string): Promise<string> {
       .from('hotels')
       .select('hotel_slug')
       .eq('id', hotelId)
-      .eq('status', 'active')
       .single()
 
     if (error || !data?.hotel_slug) {

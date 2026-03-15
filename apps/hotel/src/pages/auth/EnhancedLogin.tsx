@@ -95,29 +95,11 @@ export function EnhancedHotelLogin() {
   // Check password change requirement for authenticated users
   useEffect(() => {
     const checkPasswordRequirement = async () => {
-      console.log('🔍 [DEBUG] checkPasswordRequirement called:', {
-        isAuthenticated,
-        user: user,
-        userRole: user?.role,
-        userId: user?.id
-      })
-
-      console.log('🔍 [DEBUG] Checking conditions:', {
-        'isAuthenticated': isAuthenticated,
-        'user exists': !!user,
-        'user.id exists': !!user?.id,
-        'user.role': user?.role,
-        'role === HOTEL': user?.role === 'HOTEL'
-      })
-
       // WORKAROUND: Also check localStorage for session since useAuth might be delayed
       const hasStoredSession = typeof window !== 'undefined' && !!localStorage.getItem('bliss-customer-auth')
-      console.log('🔍 [DEBUG] LocalStorage session exists:', hasStoredSession)
 
       // Check if we have a stored session but useAuth hasn't updated yet
       if (!isAuthenticated && hasStoredSession) {
-        console.log('🔄 [DEBUG] Found stored session but useAuth not ready, checking manually...')
-
         try {
           const sessionData = localStorage.getItem('bliss-customer-auth')
           if (sessionData) {
@@ -125,71 +107,66 @@ export function EnhancedHotelLogin() {
             const sessionUser = session.user || session.currentSession?.user
 
             if (sessionUser?.id) {
-              console.log('🔍 [DEBUG] Manual session check - user ID:', sessionUser.id)
-
-              // Check hotel data directly since useAuth isn't ready
               const { data: hotelData, error: hotelError } = await supabase
                 .from('hotels')
-                .select('password_change_required')
+                .select('password_change_required, status')
                 .eq('auth_user_id', sessionUser.id)
                 .single()
 
-              console.log('📊 [DEBUG] Manual hotel query result:', { hotelData, hotelError })
-
-              if (!hotelError && hotelData?.password_change_required) {
-                console.log('🔐 [DEBUG] MANUAL CHECK: Password change is REQUIRED! Setting up form...')
+              if (!hotelError && (hotelData?.status === 'suspended' || hotelData?.status === 'banned')) {
+                await supabase.auth.signOut()
+                localStorage.removeItem('bliss-customer-auth')
+                const msg = hotelData.status === 'banned'
+                  ? 'บัญชีโรงแรมของท่านถูกแบนถาวร ไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อผู้ดูแลระบบ'
+                  : 'บัญชีโรงแรมของท่านถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
+                setSubmitError(msg)
+                return
+              } else if (!hotelError && hotelData?.password_change_required) {
                 setNeedsPasswordChange(true)
                 setLoginStep('change-password')
-                return // Stop here, don't redirect
+                return
               } else if (!hotelError && !hotelData?.password_change_required) {
-                console.log('✅ [DEBUG] MANUAL CHECK: No password change needed, waiting for useAuth...')
                 return // Let useAuth handle the redirect when ready
               }
             }
           }
         } catch (error) {
-          console.error('❌ [DEBUG] Manual session check error:', error)
+          console.error('Manual session check error:', error)
         }
       }
 
       if (isAuthenticated && user?.role === 'HOTEL' && user.id) {
-        console.log('✅ [DEBUG] User is authenticated HOTEL, checking password requirement...')
         setIsCheckingPasswordRequirement(true)
 
         try {
           // Check if password change is required
-          console.log('🔍 [DEBUG] Querying hotels table for auth_user_id:', user.id)
           const { data: hotelData, error: hotelError } = await supabase
             .from('hotels')
-            .select('password_change_required')
+            .select('password_change_required, status')
             .eq('auth_user_id', user.id)
             .single()
 
-          console.log('📊 [DEBUG] Hotel query result:', { hotelData, hotelError })
-
           if (hotelError) {
-            console.error('❌ [DEBUG] Error checking password change requirement:', hotelError)
-            // If we can't check, assume no password change needed and redirect
+            console.error('Error checking hotel data:', hotelError)
             const hotelUrl = await getHotelUrl()
-            console.log('🔄 [DEBUG] Redirecting to hotel URL (error case):', hotelUrl)
             navigate(hotelUrl, { replace: true })
+          } else if (hotelData?.status === 'suspended' || hotelData?.status === 'banned') {
+            // Hotel is blocked — sign out and show error
+            await supabase.auth.signOut()
+            const msg = hotelData.status === 'banned'
+              ? 'บัญชีโรงแรมของท่านถูกแบนถาวร ไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อผู้ดูแลระบบ'
+              : 'บัญชีโรงแรมของท่านถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
+            setSubmitError(msg)
           } else if (hotelData?.password_change_required) {
-            // Password change is required
-            console.log('🔐 [DEBUG] Password change is REQUIRED! Setting up change password form...')
             setNeedsPasswordChange(true)
             setLoginStep('change-password')
           } else {
-            // No password change needed, redirect to hotel app
-            console.log('✅ [DEBUG] No password change needed, redirecting...')
             const hotelUrl = await getHotelUrl()
-            console.log('🔄 [DEBUG] Redirecting to hotel URL:', hotelUrl)
             navigate(hotelUrl, { replace: true })
           }
         } catch (error) {
-          console.error('❌ [DEBUG] Error checking password requirement:', error)
-          // On error, redirect to avoid infinite loop
+          console.error('Error checking hotel data:', error)
           const hotelUrl = await getHotelUrl()
-          console.log('🔄 [DEBUG] Redirecting to hotel URL (catch case):', hotelUrl)
           navigate(hotelUrl, { replace: true })
         } finally {
           setIsCheckingPasswordRequirement(false)
@@ -206,8 +183,7 @@ export function EnhancedHotelLogin() {
     const timer = setTimeout(() => {
       const hasSession = typeof window !== 'undefined' && !!localStorage.getItem('bliss-customer-auth')
       if (hasSession && !isAuthenticated && !user) {
-        console.log('⏰ [DEBUG] Timer triggered - session exists but useAuth not ready, forcing recheck...')
-        setShouldForceCheck(prev => prev + 1) // This will trigger the main useEffect
+          setShouldForceCheck(prev => prev + 1) // This will trigger the main useEffect
       }
     }, 1000) // Check after 1 second
 
@@ -297,15 +273,25 @@ export function EnhancedHotelLogin() {
           return
         }
 
-        // Check if password change is required
+        // Check hotel status and password change requirement
         const { data: hotelData, error: hotelError } = await supabase
           .from('hotels')
-          .select('password_change_required')
+          .select('password_change_required, status')
           .eq('auth_user_id', result.data.user.id)
           .single()
 
         if (hotelError) {
-          console.error('Error checking password change requirement:', hotelError)
+          console.error('Error checking hotel data:', hotelError)
+        }
+
+        // Block login if hotel is suspended or banned
+        if (hotelData?.status === 'suspended' || hotelData?.status === 'banned') {
+          await supabase.auth.signOut()
+          const msg = hotelData.status === 'banned'
+            ? 'บัญชีโรงแรมของท่านถูกแบนถาวร ไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อผู้ดูแลระบบ'
+            : 'บัญชีโรงแรมของท่านถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
+          setSubmitError(msg)
+          return
         }
 
         if (hotelData?.password_change_required) {
@@ -360,7 +346,8 @@ export function EnhancedHotelLogin() {
       }
 
       // Use our new change-password API endpoint
-      const response = await fetch('http://localhost:3000/api/hotels/change-password', {
+      const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api')
+      const response = await fetch(`${apiUrl}/hotels/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

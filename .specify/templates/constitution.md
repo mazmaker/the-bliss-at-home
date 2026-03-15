@@ -1,4 +1,4 @@
-# The Bliss at Home - Project Constitution
+# The Bliss Massage at Home - Project Constitution
 
 **Version:** 2.0.0 (Supabase-First Architecture)
 **Effective:** January 14, 2026
@@ -8,7 +8,7 @@
 
 ## บทนำ (Preamble)
 
-เอกสารนี้เป็น "Single Source of Truth" สำหรับการตัดสินใจด้านเทคนิคทั้งหมดของโปรเจกต์ **The Bliss at Home** - แพลตฟอร์มจองบริการนวด สปา และทำเล็บถึงที่
+เอกสารนี้เป็น "Single Source of Truth" สำหรับการตัดสินใจด้านเทคนิคทั้งหมดของโปรเจกต์ **The Bliss Massage at Home** - แพลตฟอร์มจองบริการนวด สปา และทำเล็บถึงที่
 
 สถาปัตยกรรมหลัก: **Supabase-First** พร้อม Node.js Server เสริมสำหรับงานที่ซับซ้อน
 
@@ -186,7 +186,7 @@ the-bliss-at-home/
 │   │       └── pages/
 │   ├── customer/           # Port 3002
 │   ├── hotel/              # Port 3003
-│   ├── provider/           # Port 3004 (LINE LIFF)
+│   ├── staff/             # Port 3004 (LINE LIFF)
 │   └── server/             # Port 3000
 │       └── src/
 │           ├── routes/              # API routes
@@ -1164,7 +1164,7 @@ pnpm dev:server       # Server only
 3001  Admin App
 3002  Customer App
 3003  Hotel App
-3004  Provider App (LINE LIFF)
+3004  Staff App (LINE LIFF)
 5432  Supabase PostgreSQL (local)
 ```
 
@@ -1245,7 +1245,7 @@ pnpm typecheck              # Check types
 
 ---
 
-**เอกสารนี้เป็น "Single Source of Truth" สำหรับโปรเจกต์ The Bliss at Home**
+**เอกสารนี้เป็น "Single Source of Truth" สำหรับโปรเจกต์ The Bliss Massage at Home**
 
 ---
 

@@ -1,9 +1,24 @@
+// Load environment variables FIRST before any other imports
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+dotenv.config({ path: join(__dirname, '..', '.env') })
+
 import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
-
-// Load environment variables
-dotenv.config()
+import cron from 'node-cron'
+import paymentRoutes from './routes/payment.js'
+import otpRoutes from './routes/otp.js'
+import hotelRoutes from './routes/hotel.js'
+import secureBookingsRoutes from './routes/secure-bookings-v2.js'
+import notificationRoutes from './routes/notification.js'
+import bookingsRoutes from './routes/bookings.js'
+import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
+import receiptsRoutes from './routes/receipts.js'
+import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations } from './services/notificationService.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -32,14 +47,46 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.get('/api', (req: Request, res: Response) => {
   res.json({
-    message: 'The Bliss at Home - API Server',
+    message: 'The Bliss Massage at Home - API Server',
     version: '1.0.0',
     endpoints: {
       health: '/health',
       api: '/api',
+      payments: '/api/payments',
+      otp: '/api/otp',
+      hotels: '/api/hotels',
+      'secure-bookings': '/api/secure-bookings (Professional JWT Auth)',
+      notifications: '/api/notifications',
+      bookings: '/api/bookings',
+      cancellationPolicy: '/api/cancellation-policy',
+      receipts: '/api/receipts',
     },
   })
 })
+
+// Payment routes
+app.use('/api/payments', paymentRoutes)
+
+// OTP routes
+app.use('/api/otp', otpRoutes)
+
+// Hotel authentication routes
+app.use('/api/hotels', hotelRoutes)
+
+// Secure bookings routes
+app.use('/api/secure-bookings', secureBookingsRoutes)
+
+// Notification routes
+app.use('/api/notifications', notificationRoutes)
+
+// Booking routes
+app.use('/api/bookings', bookingsRoutes)
+
+// Cancellation policy routes
+app.use('/api/cancellation-policy', cancellationPolicyRoutes)
+
+// Receipt & Credit Note routes
+app.use('/api/receipts', receiptsRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -58,11 +105,54 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   })
 })
 
+// === Cron Jobs ===
+
+// Check for due job reminders every minute
+cron.schedule('* * * * *', async () => {
+  try {
+    const count = await processJobReminders()
+    if (count > 0) console.log(`[Cron] Sent ${count} job reminders`)
+  } catch (err) {
+    console.error('[Cron] Error processing reminders:', err)
+  }
+})
+
+// Check for due customer email reminders every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const count = await processCustomerEmailReminders()
+    if (count > 0) console.log(`[Cron] Sent ${count} customer email reminders`)
+  } catch (err) {
+    console.error('[Cron] Error processing customer email reminders:', err)
+  }
+})
+
+// Check for unassigned jobs and escalate every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const count = await processJobEscalations()
+    if (count > 0) console.log(`[Cron] Processed ${count} job escalations`)
+  } catch (err) {
+    console.error('[Cron] Error processing job escalations:', err)
+  }
+})
+
+// Cleanup old reminder records daily at 3 AM (Thailand time)
+cron.schedule('0 20 * * *', async () => {
+  // 20:00 UTC = 03:00 ICT (Thailand)
+  try {
+    await cleanupOldReminders()
+  } catch (err) {
+    console.error('[Cron] Error cleaning up reminders:', err)
+  }
+})
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min)`)
 })
 
 export default app

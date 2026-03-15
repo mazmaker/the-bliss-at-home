@@ -38,7 +38,7 @@ function Login() {
               <span className="text-3xl">บ</span>
             </div>
             <h1 className="text-2xl font-bold text-stone-900">เข้าสู่ระบบ</h1>
-            <p className="text-stone-500">The Bliss at Home</p>
+            <p className="text-stone-500">The Bliss Massage at Home</p>
           </div>
 
           {/* Form */}

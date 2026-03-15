@@ -13,6 +13,7 @@ build/
 .env.local
 .env.*.local
 .env.production
+.env.service
 !.env.example
 
 # IDE
@@ -36,6 +37,9 @@ pnpm-debug.log*
 # Testing
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
+blob-report/
 
 # Supabase
 supabase/.branches/
@@ -50,7 +54,44 @@ supabase/logs/
 # TypeScript
 *.tsbuildinfo
 
+# Sprint Dashboard (deployed separately via Cloudflare Pages, not part of dev repo)
+sprint-dashboard/
+
 # Misc
 .cache/
 .parcel-cache/
 .temp/
+
+# Project credentials (NEVER commit these)
+docs/SUPABASE_CREDENTIALS.md
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# MCP Configuration (contains access tokens - NEVER commit)
+.mcp.json
+.mcp.json.backup
+.mcp-config.json
+.playwright-mcp/
+
+# Prevent one-off scripts/SQL at root (use scripts/ or supabase/migrations/ instead)
+/*.sql
+/*.js
+!vitest.config.js
+
+# Prevent macOS duplicate files ("file 2.ext", "file 3.ext")
+*\ 2.*
+*\ 3.*
+*\ 2
+
+# Windows null file
+nul
+
+# Screenshots (Playwright test captures, debugging)
+/*.png
+
+# Session context files (AI conversation handoff — ephemeral)
+SESSION-CONTEXT-*.md
+
+# Temporary task/prompt files
+REPORTS-TASK-PROMPT.md

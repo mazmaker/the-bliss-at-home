@@ -24,7 +24,10 @@ export function createSupabaseClient(config: ClientConfig): SupabaseClient<Datab
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'pkce', // Recommended for SPAs
+      flowType: 'pkce', // Must match supabaseClient.ts auth flow
+      storage: window?.localStorage,
+      storageKey: 'bliss-customer-auth', // Match the auth client storage key
+      debug: false, // Disable debug logs in production
     },
   })
 }
@@ -44,8 +47,21 @@ export function createSupabaseAdminClient(config: { url: string; serviceRoleKey:
 
 /**
  * Get browser client (for Vite apps)
+ * Implements singleton pattern to avoid multiple client instances
+ * Uses window object to survive HMR reloads
  */
+declare global {
+  interface Window {
+    __supabaseClient?: SupabaseClient<Database>
+  }
+}
+
 export function getBrowserClient(): SupabaseClient<Database> {
+  // Check if instance already exists (survives HMR reloads)
+  if (typeof window !== 'undefined' && window.__supabaseClient) {
+    return window.__supabaseClient
+  }
+
   const url = import.meta.env.VITE_SUPABASE_URL
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -53,5 +69,13 @@ export function getBrowserClient(): SupabaseClient<Database> {
     throw new Error('Missing Supabase environment variables')
   }
 
-  return createSupabaseClient({ url, anonKey })
+  console.log('🔌 Creating new Supabase browser client instance')
+  const client = createSupabaseClient({ url, anonKey })
+
+  // Store in window to survive HMR reloads
+  if (typeof window !== 'undefined') {
+    window.__supabaseClient = client
+  }
+
+  return client
 }

@@ -79,7 +79,7 @@ export function HotelMapDisplay({
     window.initMap = initializeMap
 
     script.onload = () => {
-      // Script loaded, initMap will be called automatically
+      initializeMap()
     }
 
     script.onerror = () => {

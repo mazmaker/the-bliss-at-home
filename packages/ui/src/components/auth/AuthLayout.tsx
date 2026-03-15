@@ -71,7 +71,7 @@ export function AuthLayout({
             <img
               src={appLogo}
               alt={appTitle}
-              className="h-12 w-auto mx-auto mb-4"
+              className="h-16 w-auto mx-auto mb-4"
             />
           )}
           <h2 className="text-3xl font-extrabold text-gray-900">
@@ -88,7 +88,7 @@ export function AuthLayout({
       {/* Footer */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <p className="text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} {appTitle}. All rights reserved.
+          © {new Date().getFullYear()} {appTitle}. สงวนลิขสิทธิ์
         </p>
       </div>
     </div>

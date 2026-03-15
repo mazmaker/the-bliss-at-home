@@ -5,14 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <!-- build: 2026-03-05 -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <title>Bliss Provider - The Bliss at Home</title>
+    <title>Bliss Provider - The Bliss Massage at Home</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anantason:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Capture deep link path IMMEDIATELY before any JS framework loads.
+      (function() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var deepLink = null;
+
+          // Strategy 1: Direct liff.state param (when already LINE-logged-in)
+          var liffState = params.get('liff.state');
+          if (liffState && liffState.indexOf('/') === 0) {
+            deepLink = liffState;
+          }
+
+          // Strategy 2: Extract from liffRedirectUri (OAuth callback when NOT logged in)
+          if (!deepLink) {
+            var liffRedirectUri = params.get('liffRedirectUri');
+            if (liffRedirectUri) {
+              try {
+                var redirectUrl = new URL(decodeURIComponent(liffRedirectUri));
+                var stateFromRedirect = redirectUrl.searchParams.get('liff.state');
+                if (stateFromRedirect && stateFromRedirect.indexOf('/') === 0) {
+                  deepLink = stateFromRedirect;
+                }
+              } catch(e2) {}
+            }
+          }
+
+          // Strategy 3: Extract from OAuth state param
+          if (!deepLink) {
+            var oauthState = params.get('state');
+            if (oauthState) {
+              try {
+                var decoded = decodeURIComponent(oauthState);
+                var match = decoded.match(/liff\.state=([^&;]+)/);
+                if (match) {
+                  var pathFromState = decodeURIComponent(match[1]);
+                  if (pathFromState.indexOf('/') === 0) {
+                    deepLink = pathFromState;
+                  }
+                }
+              } catch(e3) {}
+            }
+          }
+
+          // Strategy 4: Extract from URL pathname (LIFF secondary redirect URL format)
+          // When LIFF concatenates: /staff/login + /staff/jobs/xxx → /staff/login/staff/jobs/xxx
+          if (!deepLink) {
+            var pathname = window.location.pathname;
+            if (pathname.indexOf('/staff/login/staff/') === 0) {
+              deepLink = pathname.substring('/staff/login'.length);
+            }
+          }
+
+          // Strategy 5: Direct deep link path — LIFF SDK may navigate directly to the deep link
+          // URL (e.g., /staff/jobs/xxx) instead of using liff.state query param.
+          // Only capture paths with a sub-path (has more than 3 segments like /staff/jobs/UUID).
+          if (!deepLink) {
+            var pathname = window.location.pathname;
+            var segments = pathname.split('/').filter(Boolean); // ['staff', 'jobs', 'uuid']
+            if (segments.length >= 3 && segments[0] === 'staff' && pathname.indexOf('/staff/login') !== 0 && pathname.indexOf('/staff/auth') !== 0 && pathname.indexOf('/staff/callback') !== 0 && pathname.indexOf('/staff/register') !== 0) {
+              deepLink = pathname;
+            }
+          }
+
+          // Only save valid deep links (not login/auth pages)
+          if (deepLink && deepLink.indexOf('/staff/login') !== 0 && deepLink.indexOf('/staff/auth') !== 0 && deepLink.indexOf('/staff/callback') !== 0) {
+            localStorage.setItem('staff_redirect_after_login', deepLink);
+          }
+
+          // Also capture from hash fragment (some LIFF configs use hash)
+          if (window.location.hash) {
+            var hashParams = new URLSearchParams(window.location.hash.substring(1));
+            var hashState = hashParams.get('liff.state');
+            if (hashState && hashState.indexOf('/') === 0) {
+              localStorage.setItem('staff_redirect_after_login', hashState);
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-# The Bliss at Home - แผนการพัฒนา 12 สัปดาห์
+# The Bliss Massage at Home - แผนการพัฒนา 12 สัปดาห์
 ## Implementation Plan (13 ม.ค. - 7 เม.ย. 2026)
 
 **เวอร์ชัน:** 1.0.0
@@ -39,7 +39,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Frontend Applications                     │
-│  Admin (3001) │ Customer (3002) │ Hotel (3003) │ Provider (3004) │
+│  Admin (3001) │ Customer (3002) │ Hotel (3003) │ Staff (3004) │
 └─────────────────────────────────────────────────────────────┘
                            │
         ┌──────────────────┼──────────────────┐
@@ -64,7 +64,7 @@
 | **Admin** | 3001 | ผู้ดูแลระบบ | จัดการทุกอย่าง - bookings, services, providers, hotels, customers, payments, reports, SOS |
 | **Customer** | 3002 | ลูกค้าทั่วไป | เลือกบริการ → จอง → ชำระเงิน → ดูสถานะ → รีวิว |
 | **Hotel** | 3003 | พนักงานโรงแรม | จองให้แขก → ดูการจอง → ดูบิล/ใบแจ้งหนี้ |
-| **Provider** | 3004 | หมอนวด (LIFF) | รับงาน → เริ่มบริการ → เสร็จสิ้น → ดูรายได้ |
+| **Staff** | 3004 | หมอนวด (LIFF) | รับงาน → เริ่มบริการ → เสร็จสิ้น → ดูรายได้ |
 
 ---
 
@@ -209,7 +209,7 @@
 #### UI/UX Designer
 | Task | วัน | สถานะ | Dependency |
 |------|------|--------|------------|
-| Provider App wireframes (10+ screens) | 27-29 | ⬜ | Week 1 personas |
+| Staff App wireframes (10+ screens) | 27-29 | ⬜ | Week 1 personas |
 | Admin App wireframes (15+ screens) | 30-1 | ⬜ | Week 1 personas |
 
 **Provider Screens (LIFF):**
@@ -610,7 +610,7 @@
 
 ## Phase 3: Provider & Admin (สัปดาห์ที่ 9-11)
 
-### Week 9: Provider App (LINE LIFF) (10-16 มี.ค.)
+### Week 9: Staff App (LINE LIFF) (10-16 มี.ค.)
 
 **📅 กำหนดการ:** 10-16 มีนาคม 2026
 
@@ -668,7 +668,7 @@
 | Test music feature | 15-16 | ⬜ | Music implementation |
 
 #### 🎯 Deliverables
-- [ ] Complete Provider App (LIFF)
+- [ ] Complete Staff App (LIFF)
 - [ ] Job assignment system
 - [ ] LINE notifications
 - [ ] Service music feature
@@ -1103,7 +1103,7 @@ FROM bookings;
 
 ---
 
-**เอกสารนี้เป็นแผนการพัฒนาหลักของโปรเจกต์ The Bliss at Home**
+**เอกสารนี้เป็นแผนการพัฒนาหลักของโปรเจกต์ The Bliss Massage at Home**
 
 **Version:** 1.0.0
 **Last Updated:** 14 มกราคม 2026
@@ -1111,4 +1111,4 @@ FROM bookings;
 
 ---
 
-*Made with ❤️ for The Bliss at Home Team*
+*Made with ❤️ for The Bliss Massage at Home Team*
