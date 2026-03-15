@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Search, Filter, Tag, Calendar, Percent, Gift, Star, Clock, ArrowLeft } from 'lucide-react'
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
 import { useTranslation } from '@bliss/i18n'
@@ -30,11 +30,33 @@ const PromotionsPage = () => {
   const { t, i18n } = useTranslation(['home', 'common'])
   const { data: promotions, isLoading } = useActivePromotions()
   const [selectedPromo, setSelectedPromo] = useState<Promotion | null>(null)
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'discount' | 'expiring'>('newest')
 
   const isEn = i18n.language === 'en' || i18n.language === 'cn'
+
+  // Handle URL parameter - auto open modal if ID in URL
+  useEffect(() => {
+    if (id && promotions) {
+      const promotion = promotions.find((promo: Promotion) => promo.id === id)
+      setSelectedPromo(promotion || null)
+    } else {
+      setSelectedPromo(null)
+    }
+  }, [id, promotions])
+
+  // Handle promotion click - update URL
+  const handlePromotionClick = (promo: Promotion) => {
+    navigate(`/promotions/${promo.id}`)
+  }
+
+  // Handle modal close - go back to main page
+  const handleCloseModal = () => {
+    navigate('/promotions')
+  }
 
   const filteredAndSortedPromotions = useMemo(() => {
     if (!promotions) return []
@@ -177,7 +199,7 @@ const PromotionsPage = () => {
               return (
                 <div
                   key={promo.id}
-                  onClick={() => setSelectedPromo(promo)}
+                  onClick={() => handlePromotionClick(promo)}
                   className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border hover:border-amber-200"
                 >
                   {/* Image or Gradient Header */}
@@ -251,7 +273,7 @@ const PromotionsPage = () => {
       <UniversalPromotionModal
         promotion={selectedPromo}
         variant="thai"
-        onClose={() => setSelectedPromo(null)}
+        onClose={handleCloseModal}
       />
     </div>
   )

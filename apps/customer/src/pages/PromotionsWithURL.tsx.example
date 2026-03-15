@@ -1,0 +1,73 @@
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
+import { generatePromotionUrl, parsePromotionUrl } from '../utils/slugUtils'
+
+const PromotionsPage = () => {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { data: promotions, isLoading } = useActivePromotions()
+  const [selectedPromo, setSelectedPromo] = useState(null)
+
+  // Parse URL to get selected promotion ID
+  const promoId = searchParams.get('promo')
+
+  // Update selected promotion when URL changes
+  useEffect(() => {
+    if (promoId && promotions) {
+      const promotion = promotions.find(p => p.id === promoId)
+      setSelectedPromo(promotion || null)
+    } else {
+      setSelectedPromo(null)
+    }
+  }, [promoId, promotions])
+
+  // Handle promotion click - update URL
+  const handlePromotionClick = (promo) => {
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.set('promo', promo.id)
+    setSearchParams(newSearchParams)
+    // setSelectedPromo will be called by useEffect
+  }
+
+  // Handle modal close - update URL
+  const handleCloseModal = () => {
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.delete('promo')
+    setSearchParams(newSearchParams)
+    // setSelectedPromo will be called by useEffect
+  }
+
+  // Alternative: Using full URL with slug
+  const handlePromotionClickWithSlug = (promo) => {
+    const promoUrl = generatePromotionUrl(promo.id, promo.name_en)
+    window.history.pushState({}, '', promoUrl)
+    setSelectedPromo(promo)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* ... existing JSX ... */}
+
+      {/* Promotions Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {promotions?.map((promo) => (
+          <div
+            key={promo.id}
+            onClick={() => handlePromotionClick(promo)} // 🔥 Updated
+            className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+          >
+            {/* ... existing promotion card JSX ... */}
+          </div>
+        ))}
+      </div>
+
+      {/* Modal */}
+      <UniversalPromotionModal
+        promotion={selectedPromo}
+        variant="thai"
+        onClose={handleCloseModal} // 🔥 Updated
+      />
+    </div>
+  )
+}

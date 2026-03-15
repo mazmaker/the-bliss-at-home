@@ -42,6 +42,7 @@ function App() {
         <Route path="/services" element={<ServiceCatalogWrapper />} />
         <Route path="/services/:slug" element={<ServiceDetailsWrapper />} />
         <Route path="/promotions" element={<PromotionsPageWrapper />} />
+        <Route path="/promotions/:id" element={<PromotionsPageWrapper />} />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
