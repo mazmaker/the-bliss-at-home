@@ -415,15 +415,15 @@ export default function HotelDetail() {
               ) : invoices && invoices.length > 0 ? (
                 invoices.slice(0, 5).map((invoice) => (
                   <tr key={invoice.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{invoice.invoice_number}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{invoice.bill_number}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(invoice.period_start).toLocaleDateString('th-TH')} - {new Date(invoice.period_end).toLocaleDateString('th-TH')}
                     </td>
                     <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
-                      ฿{Number(invoice.total_revenue).toLocaleString()}
+                      ฿{Number(invoice.total_amount || 0).toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-blue-600">
-                      ฿{Number(invoice.commission_amount).toLocaleString()}
+                      ฿{Number(invoice.commission_amount || 0).toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {invoice.status === 'paid' ? (

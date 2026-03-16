@@ -73,14 +73,29 @@ export default function HotelBilling() {
     })
   }
 
-  const totalRevenue = filteredInvoices.reduce((sum, inv) => sum + Number(inv.total_revenue), 0)
-  const totalCommission = filteredInvoices.reduce((sum, inv) => sum + Number(inv.commission_amount), 0)
+  const totalRevenue = filteredInvoices.reduce((sum, inv) => {
+    const revenue = Number(inv.total_amount) || 0
+    return sum + revenue
+  }, 0)
+
+  const totalCommission = filteredInvoices.reduce((sum, inv) => {
+    const commission = Number(inv.total_base_price) || 0
+    return sum + commission
+  }, 0)
+
   const paidAmount = filteredInvoices
     .filter((inv) => inv.status === 'paid')
-    .reduce((sum, inv) => sum + Number(inv.total_revenue), 0)
+    .reduce((sum, inv) => {
+      const revenue = Number(inv.total_amount) || 0
+      return sum + revenue
+    }, 0)
+
   const pendingAmount = filteredInvoices
     .filter((inv) => inv.status === 'pending')
-    .reduce((sum, inv) => sum + Number(inv.total_revenue), 0)
+    .reduce((sum, inv) => {
+      const revenue = Number(inv.total_amount) || 0
+      return sum + revenue
+    }, 0)
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     const formattedData = formatInvoicesForExport(filteredInvoices)
@@ -112,7 +127,7 @@ export default function HotelBilling() {
     const name = hotel?.name_th || hotel?.name_en || 'โรงแรม'
     const formatDate = (d: string) => new Date(d).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
     const statusLabel = { draft: 'ร่าง', pending: 'รอชำระ', paid: 'จ่ายแล้ว', overdue: 'เกินกำหนด', cancelled: 'ยกเลิก' }[invoice.status] || invoice.status
-    const printContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบแจ้งหนี้ ${invoice.invoice_number}</title>
+    const printContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบแจ้งหนี้ ${invoice.bill_number}</title>
       <style>
         @page { size: A4; margin: 2cm; }
         body { font-family: 'Sarabun', 'TH Sarabun New', sans-serif; font-size: 14px; color: #333; }
@@ -128,7 +143,7 @@ export default function HotelBilling() {
         .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; }
       </style></head><body>
       <h1>ใบแจ้งหนี้ / Invoice</h1>
-      <p class="subtitle">${invoice.invoice_number}</p>
+      <p class="subtitle">${invoice.bill_number}</p>
       <div class="section">
         <div class="info-grid">
           <div class="info-item"><label>โรงแรม</label><span>${name}</span></div>
@@ -140,7 +155,7 @@ export default function HotelBilling() {
       <div class="section">
         <div class="section-title">สรุปยอด</div>
         <div class="summary-row"><span>จำนวนการจอง</span><span>${invoice.total_bookings} รายการ</span></div>
-        <div class="summary-highlight"><span>ยอดเรียกเก็บรวม</span><span>฿${Number(invoice.total_revenue).toLocaleString()}</span></div>
+        <div class="summary-highlight"><span>ยอดเรียกเก็บรวม</span><span>฿${(Number(invoice.total_amount) || 0).toLocaleString()}</span></div>
       </div>
       <div class="footer"><p>สร้างโดยระบบ The Bliss Massage at Home</p></div>
       </body></html>`
@@ -338,7 +353,6 @@ export default function HotelBilling() {
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">ประเภท</th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">จำนวนการจอง</th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">ยอดเรียกเก็บ</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">ส่วนลด</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">สถานะ</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">วันที่ครบกำหนด</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700">การกระทำ</th>
@@ -347,7 +361,7 @@ export default function HotelBilling() {
             <tbody className="divide-y divide-gray-200">
               {filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center">
                     <FileText className="mx-auto h-12 w-12 text-gray-400" />
                     <p className="mt-2 text-gray-500">ไม่พบข้อมูลบิล</p>
                   </td>
@@ -358,7 +372,7 @@ export default function HotelBilling() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium text-gray-900">{invoice.invoice_number}</span>
+                        <span className="font-medium text-gray-900">{invoice.bill_number}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
@@ -376,11 +390,7 @@ export default function HotelBilling() {
                       {invoice.total_bookings}
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-gray-900">
-                      ฿{Number(invoice.total_revenue).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-right font-medium text-blue-600">
-                      ฿{Number(invoice.commission_amount).toLocaleString()}
-                      <span className="ml-1 text-xs text-gray-500">({Number(invoice.commission_rate)}%)</span>
+                      ฿{(Number(invoice.total_amount) || 0).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {getStatusBadge(invoice.status)}
