@@ -1,4 +1,4 @@
-import { Users, ArrowRight } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { CoupleFormat } from '../types/booking'
 
 interface CoupleFormatSelectorProps {
@@ -20,18 +20,6 @@ function CoupleFormatSelector({ selectedFormat, onFormatSelect, disabled = false
       ],
       icon: Users,
       color: 'from-green-600 to-green-700'
-    },
-    {
-      value: 'sequential' as CoupleFormat,
-      title: 'ทีละท่าน',
-      subtitle: 'ผู้ให้บริการ 1 คน',
-      description: 'บริการทีละท่านตามลำดับ ใช้ผู้ให้บริการ 1 คน',
-      features: [
-        'บริการทีละท่าน',
-        'ผู้ให้บริการ 1 คน'
-      ],
-      icon: ArrowRight,
-      color: 'from-blue-600 to-blue-700'
     }
   ]
 

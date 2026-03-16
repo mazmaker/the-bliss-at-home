@@ -88,36 +88,6 @@ export function CustomerTypeSelector({
             </div>
           </button>
 
-          <button
-            onClick={() => onCoupleFormatChange('sequential')}
-            className={`w-full p-4 rounded-xl border-2 text-left transition ${
-              coupleFormat === 'sequential'
-                ? 'border-amber-700 bg-amber-50'
-                : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                coupleFormat === 'sequential' ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-400'
-              }`}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 8h14M5 16h14" strokeLinecap="round" />
-                  <path d="M15 5l3 3-3 3M15 13l3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-stone-900">{t('wizard.step1.sequential')}</div>
-                <div className="text-sm text-stone-500">{t('wizard.step1.sequentialDesc')}</div>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                coupleFormat === 'sequential' ? 'border-amber-700 bg-amber-700' : 'border-stone-300'
-              }`}>
-                {coupleFormat === 'sequential' && (
-                  <div className="w-2 h-2 rounded-full bg-white" />
-                )}
-              </div>
-            </div>
-          </button>
         </div>
       )}
     </div>
