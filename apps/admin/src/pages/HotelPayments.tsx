@@ -23,6 +23,7 @@ import {
 import { exportToCSV, exportToExcel, exportToPDF, formatPaymentsForExport } from '../utils/exportUtils'
 import { useHotelPayments, useHotelInvoices } from '../hooks/useHotels'
 import { PaymentForm } from '../components/PaymentForm'
+import { } from '../lib/hotelQueries'
 import type { HotelPayment } from '../lib/hotelQueries'
 
 
@@ -136,6 +137,7 @@ export default function HotelPayments() {
     setShowExportMenu(false)
   }
 
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -225,6 +227,7 @@ export default function HotelPayments() {
           </button>
         </div>
       </div>
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

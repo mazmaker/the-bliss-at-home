@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Download, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock, Building2, MapPin, CheckCircle, TrendingUp, AlertTriangle, Calculator, Banknote, Receipt, MessageCircle } from 'lucide-react'
+import { Download, CreditCard, FileText, Check, Loader2, AlertCircle, RefreshCw, Phone, Mail, Clock, Building2, MapPin, CheckCircle, TrendingUp, AlertTriangle, Calculator, Banknote, Receipt, MessageCircle, Eye } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
@@ -11,12 +11,19 @@ import { getMonthlyBillStatus, calculateLateFee } from '../utils/overdueCalculat
 interface MonthlyBooking {
   id: string
   booking_date: string
+  booking_time: string
   guest_name: string
   room_number: string
   service_name: string
+  duration: number
+  staff_name?: string
+  base_price: number
+  discount_amount: number
   final_price: number
   payment_status: string
   status: string
+  customer_notes?: string
+  staff_notes?: string
   hotel_discount_rate?: number
   created_at: string
 }
@@ -27,6 +34,8 @@ interface MonthlyBillData {
   bookings: MonthlyBooking[]
   totalBookings: number
   totalRevenue: number
+  totalBasePrice: number // Total original price before discount
+  totalDiscountAmount: number // Total discount amount
   platformFee: number
   hotelRevenue: number
   pendingPayments: number
@@ -62,14 +71,20 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     .select(`
       id,
       booking_date,
+      booking_time,
+      duration,
       hotel_room_number,
+      base_price,
+      discount_amount,
       final_price,
       payment_status,
       status,
       created_at,
       customer_notes,
+      staff_notes,
       service_id,
-      services:service_id(name_th)
+      services:service_id(name_th),
+      staff:staff_id(name_th)
     `)
     .eq('hotel_id', hotelId)
     .gte('booking_date', monthStart)
@@ -137,27 +152,114 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     return guestMatch?.[1]?.trim() || 'ไม่ระบุชื่อ'
   }
 
+  // Get hotel discount rate first
+  const hotelDiscountRate = hotelData?.discount_rate || hotelData?.commission_rate || 0
+
+  // Debug: Check if all bookings are from the same hotel
+  console.log('🏨 Hotel Discount Check:', {
+    currentHotelId: hotelId,
+    currentHotelDiscountRate: hotelDiscountRate,
+    bookingsHotelIds: (data || []).map(b => b.hotel_id),
+    uniqueHotels: [...new Set((data || []).map(b => b.hotel_id))]
+  })
+
   // Transform data to match interface with fallback data
-  const transformedData = (data || []).map((booking: any) => ({
-    id: booking.id,
-    booking_date: booking.booking_date,
-    guest_name: parseGuestName(booking.customer_notes),
-    room_number: booking.hotel_room_number || 'ไม่ระบุห้อง',
-    service_name: booking.services?.name_th || 'บริการนวดแผนไทย', // Use actual service name if available
-    final_price: booking.final_price || 0,
-    payment_status: booking.payment_status || 'pending',
-    status: booking.status || 'completed',
-    hotel_discount_rate: 0, // Default value since this column doesn't exist
-    created_at: booking.created_at
-  }))
+  const transformedData = (data || []).map((booking: any) => {
+    // Calculate discount amount if not recorded
+    const originalDiscountAmount = booking.discount_amount || 0
+
+    // NOTE: For now, we use current hotel's discount rate
+    // TODO: In future, each booking should store its own hotel's discount rate
+    const calculatedDiscountAmount = originalDiscountAmount === 0 && hotelDiscountRate > 0 && booking.base_price > 0
+      ? Math.round(booking.base_price * (hotelDiscountRate / 100))
+      : originalDiscountAmount
+
+    // Debug: Show calculation for each booking
+    if (originalDiscountAmount === 0) {
+      console.log(`📊 Booking ${booking.id}: ฿${booking.base_price} × ${hotelDiscountRate}% = ฿${calculatedDiscountAmount}`)
+    }
+
+    // Additional check: Calculate actual discount from final_price
+    const actualDiscountFromFinalPrice = booking.base_price - booking.final_price
+    const actualDiscountRate = booking.base_price > 0 ? (actualDiscountFromFinalPrice / booking.base_price) * 100 : 0
+
+    if (Math.abs(actualDiscountFromFinalPrice - calculatedDiscountAmount) > 1) {
+      console.warn(`⚠️ Discount mismatch for booking ${booking.id}:`, {
+        base_price: booking.base_price,
+        final_price: booking.final_price,
+        actual_discount: actualDiscountFromFinalPrice,
+        actual_rate: `${actualDiscountRate.toFixed(1)}%`,
+        calculated_discount: calculatedDiscountAmount,
+        used_rate: `${hotelDiscountRate}%`
+      })
+    }
+
+    return {
+      id: booking.id,
+      booking_date: booking.booking_date,
+      booking_time: booking.booking_time || '00:00',
+      guest_name: parseGuestName(booking.customer_notes),
+      room_number: booking.hotel_room_number || 'ไม่ระบุห้อง',
+      service_name: booking.services?.name_th || 'บริการนวดแผนไทย', // Use actual service name if available
+      duration: booking.duration || 60,
+      staff_name: booking.staff?.name_th || 'ยังไม่มีการมอบหมาย',
+      base_price: booking.base_price || 0,
+      discount_amount: calculatedDiscountAmount,
+      final_price: booking.final_price || 0,
+      payment_status: booking.payment_status || 'pending',
+      status: booking.status || 'completed',
+      customer_notes: booking.customer_notes,
+      staff_notes: booking.staff_notes,
+      hotel_discount_rate: hotelDiscountRate,
+      created_at: booking.created_at
+    }
+  })
 
   const bookingData = transformedData
   const totalRevenue = bookingData.reduce((sum, booking) => sum + (booking.final_price || 0), 0)
 
+  // Calculate hotel revenue breakdown
+  const totalBasePrice = (data || []).reduce((sum, booking) => sum + (booking.base_price || 0), 0)
+
+  // If discount_amount is 0 but we have hotel discount rate, calculate it
+  const totalDiscountAmount = (data || []).reduce((sum, booking) => {
+    let discountAmount = booking.discount_amount || 0
+
+    // If no discount recorded but we have hotel discount rate, calculate it
+    if (discountAmount === 0 && hotelDiscountRate > 0 && booking.base_price > 0) {
+      discountAmount = Math.round(booking.base_price * (hotelDiscountRate / 100))
+    }
+
+    return sum + discountAmount
+  }, 0)
+
+  const calculatedHotelRevenue = totalBasePrice - totalDiscountAmount
+
+  // Debug: Check discount amounts
+  console.log('🔍 Discount Debug (Fixed):', {
+    totalBookings: (data || []).length,
+    hotelDiscountRate,
+    totalBasePrice,
+    totalDiscountAmount,
+    calculatedHotelRevenue,
+    sampleBookings: (data || []).slice(0, 3).map(b => {
+      const calcDiscount = (b.discount_amount || 0) === 0 && hotelDiscountRate > 0 && b.base_price > 0
+        ? Math.round(b.base_price * (hotelDiscountRate / 100))
+        : (b.discount_amount || 0)
+      return {
+        id: b.id,
+        base_price: b.base_price,
+        discount_amount_original: b.discount_amount,
+        discount_amount_calculated: calcDiscount,
+        final_price: b.final_price
+      }
+    })
+  })
+
   // No platform fee for hotels - they keep 100% of revenue
   const hotelCommissionRate = 0
   const platformFee = 0 // No platform fee
-  const hotelRevenue = totalRevenue // Hotels keep 100%
+  const hotelRevenue = calculatedHotelRevenue // Hotels get full price minus discount
 
   // Calculate pending payments from previous months only
   const pendingPayments = (previousUnpaidBillsData || [])
@@ -202,6 +304,8 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     bookings: bookingData,
     totalBookings: bookingData.length,
     totalRevenue,
+    totalBasePrice,
+    totalDiscountAmount,
     platformFee,
     hotelRevenue,
     pendingPayments,
@@ -357,6 +461,10 @@ function MonthlyBill() {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
+
+  // Modal states
+  const [selectedBookingForDetail, setSelectedBookingForDetail] = useState<MonthlyBooking | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   const { hotelId, hotelData, getHotelName, getHotelNameEn, isValidHotel, isLoading: hotelLoading } = useHotelContext()
 
@@ -574,6 +682,7 @@ function MonthlyBill() {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Bill Summary */}
@@ -638,7 +747,7 @@ function MonthlyBill() {
             </div>
             <div>
               <p className="text-2xl font-bold text-amber-700">
-                ฿{((billData?.hotelRevenue || 0) - (billData?.lateFee || 0)).toLocaleString()}
+                ฿{((billData?.totalRevenue || 0) - (billData?.lateFee || 0)).toLocaleString()}
               </p>
               <p className="text-sm text-stone-500">ยอดชำระสุทธิ</p>
             </div>
@@ -651,7 +760,6 @@ function MonthlyBill() {
         <div className="p-6 border-b border-stone-100">
           <h3 className="text-lg font-semibold text-stone-900">รายละเอียดการจอง</h3>
         </div>
-
         {!billData || billData.bookings.length === 0 ? (
           <div className="text-center py-12 text-stone-500">
             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -664,30 +772,43 @@ function MonthlyBill() {
               <thead className="bg-stone-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    วันที่
+                    วันที่/เวลา
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    แขก
+                    แขก/ห้อง
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    บริการ
+                    บริการ/ผู้ให้บริการ
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                     สถานะ
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    ยอดเงิน
+                    รายได้โรงแรม
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    ยอดชำระ
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                     การชำระ
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    ดูรายละเอียด
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-stone-200">
                 {billData.bookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-stone-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-900">
-                      {new Date(booking.booking_date).toLocaleDateString('th-TH')}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm">
+                        <div className="font-medium text-stone-900">
+                          {new Date(booking.booking_date).toLocaleDateString('th-TH')}
+                        </div>
+                        <div className="text-stone-500">
+                          {booking.booking_time} • {booking.duration} นาที
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
@@ -695,8 +816,21 @@ function MonthlyBill() {
                         <div className="text-stone-500">ห้อง {booking.room_number}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-stone-900">
-                      {booking.service_name}
+                    <td className="px-6 py-4">
+                      <div className="text-sm">
+                        <div className="font-medium text-stone-900">{booking.service_name}</div>
+                        <div className="text-stone-500">{booking.staff_name}</div>
+                        {(booking.customer_notes || booking.staff_notes) && (
+                          <div className="text-xs text-stone-400 mt-1">
+                            {booking.customer_notes && (
+                              <div>แขก: {booking.customer_notes}</div>
+                            )}
+                            {booking.staff_notes && (
+                              <div>ผู้ให้บริการ: {booking.staff_notes}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -722,6 +856,16 @@ function MonthlyBill() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm">
+                        <div className="text-base font-bold text-green-600">
+                          ฿{booking.discount_amount.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-stone-500">
+                          รายได้โรงแรม
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-lg font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -733,8 +877,20 @@ function MonthlyBill() {
                         {booking.payment_status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'}
                       </span>
                     </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedBookingForDetail(booking)
+                          setIsDetailModalOpen(true)
+                        }}
+                        className="inline-flex items-center justify-center w-8 h-8 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-full transition-colors"
+                        title="ดูรายละเอียดการจอง"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
-                ))}
+              ))}
               </tbody>
             </table>
           </div>
@@ -849,6 +1005,153 @@ function MonthlyBill() {
 
           {/* Enhanced Payment Methods from Database */}
           <PaymentMethodsSection adminContact={adminContact} />
+        </div>
+      )}
+
+      {/* Booking Detail Modal */}
+      {isDetailModalOpen && selectedBookingForDetail && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">รายละเอียดการจอง</h2>
+                  <p className="text-amber-100 text-sm mt-1">
+                    วันที่ {new Date(selectedBookingForDetail.booking_date).toLocaleDateString('th-TH')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="w-8 h-8 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <AlertCircle className="w-4 h-4 transform rotate-45" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">ชื่อแขก</label>
+                      <p className="text-stone-900 font-medium">{selectedBookingForDetail.guest_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">เลขห้อง</label>
+                      <p className="text-stone-900">{selectedBookingForDetail.room_number}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">บริการ</label>
+                      <p className="text-stone-900">{selectedBookingForDetail.service_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">ผู้ให้บริการ</label>
+                      <p className="text-stone-900">{selectedBookingForDetail.staff_name}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">วันที่จอง</label>
+                      <p className="text-stone-900">
+                        {new Date(selectedBookingForDetail.booking_date).toLocaleDateString('th-TH')}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">เวลา</label>
+                      <p className="text-stone-900">{selectedBookingForDetail.booking_time}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">ระยะเวลา</label>
+                      <p className="text-stone-900">{selectedBookingForDetail.duration} นาที</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-stone-500">สถานะ</label>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedBookingForDetail.status === 'completed'
+                          ? 'bg-green-100 text-green-700'
+                          : selectedBookingForDetail.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-700'
+                          : selectedBookingForDetail.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : selectedBookingForDetail.status === 'cancelled'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {selectedBookingForDetail.status === 'completed'
+                          ? 'เสร็จสิ้น'
+                          : selectedBookingForDetail.status === 'in_progress'
+                          ? 'กำลังดำเนินการ'
+                          : selectedBookingForDetail.status === 'pending'
+                          ? 'รอดำเนินการ'
+                          : selectedBookingForDetail.status === 'cancelled'
+                          ? 'ยกเลิก'
+                          : selectedBookingForDetail.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price Details */}
+                <div className="border-t border-stone-200 pt-6">
+                  <h3 className="text-lg font-semibold text-stone-900 mb-4">รายละเอียดราคา</h3>
+                  <div className="bg-stone-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">ราคาเต็ม</span>
+                      <span className="font-medium">฿{selectedBookingForDetail.base_price.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">รายได้โรงแรม</span>
+                      <span className="font-medium text-green-600">฿{selectedBookingForDetail.discount_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t border-stone-200 pt-2 flex justify-between">
+                      <span className="font-semibold text-stone-900">ราคาสุดท้าย</span>
+                      <span className="font-bold text-amber-600">฿{selectedBookingForDetail.final_price.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {(selectedBookingForDetail.customer_notes || selectedBookingForDetail.staff_notes) && (
+                  <div className="border-t border-stone-200 pt-6">
+                    <h3 className="text-lg font-semibold text-stone-900 mb-4">หมายเหตุ</h3>
+                    <div className="space-y-3">
+                      {selectedBookingForDetail.customer_notes && (
+                        <div>
+                          <label className="text-sm font-medium text-stone-500">หมายเหตุจากแขก</label>
+                          <p className="text-stone-900 bg-blue-50 p-3 rounded-lg">
+                            {selectedBookingForDetail.customer_notes}
+                          </p>
+                        </div>
+                      )}
+                      {selectedBookingForDetail.staff_notes && (
+                        <div>
+                          <label className="text-sm font-medium text-stone-500">หมายเหตุจากผู้ให้บริการ</label>
+                          <p className="text-stone-900 bg-green-50 p-3 rounded-lg">
+                            {selectedBookingForDetail.staff_notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-stone-50 px-6 py-4 flex justify-end">
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg font-medium transition-colors"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -101,7 +101,9 @@ export function InvoiceForm({
     const [periodStart, periodEnd] = selectedPeriod.split('|')
     const periodBookings = bookings.filter((booking) => {
       const serviceDate = new Date(booking.service_date)
-      return serviceDate >= new Date(periodStart) && serviceDate <= new Date(periodEnd)
+      const isInPeriod = serviceDate >= new Date(periodStart) && serviceDate <= new Date(periodEnd)
+      const isCompleted = booking.status === 'completed'
+      return isInPeriod && isCompleted
     })
 
     const totalRevenue = periodBookings.reduce((sum, b) => sum + Number(b.total_price), 0)
@@ -315,10 +317,12 @@ function calculateAvailablePeriods(
   invoices: HotelInvoice[],
   bookings: HotelBooking[]
 ): PeriodOption[] {
-  if (bookings.length === 0) return []
+  // Filter only completed bookings
+  const completedBookings = bookings.filter(b => b.status === 'completed')
+  if (completedBookings.length === 0) return []
 
-  // Find earliest and latest booking dates
-  const dates = bookings.map((b) => new Date(b.service_date))
+  // Find earliest and latest completed booking dates
+  const dates = completedBookings.map((b) => new Date(b.service_date))
   const earliestDate = new Date(Math.min(...dates.map((d) => d.getTime())))
   const latestDate = new Date(Math.max(...dates.map((d) => d.getTime())))
 

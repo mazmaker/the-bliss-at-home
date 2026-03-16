@@ -3,7 +3,7 @@ import { Search, Clock, Info, RefreshCw, AlertCircle, Percent } from 'lucide-rea
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
-import BookingModalNew from '../components/BookingModalNew'
+import BookingModal from '../components/BookingModal'
 
 // Service interface matching database structure
 interface Service {
@@ -319,7 +319,7 @@ function Services() {
 
       {/* Booking Modal */}
       {selectedService && (
-        <BookingModalNew
+        <BookingModal
           isOpen={isBookingModalOpen}
           onClose={handleCloseBookingModal}
           initialService={selectedService}

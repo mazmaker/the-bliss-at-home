@@ -45,7 +45,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>ใบแจ้งหนี้ ${invoice.invoice_number}</title>
+          <title>ใบแจ้งหนี้ ${invoice.bill_number}</title>
           <style>
             @page { size: A4; margin: 2cm; }
             body { font-family: 'Sarabun', 'TH Sarabun New', sans-serif; font-size: 14px; color: #333; }
@@ -66,7 +66,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
         </head>
         <body>
           <h1>ใบแจ้งหนี้ / Invoice</h1>
-          <p class="subtitle">${invoice.invoice_number}</p>
+          <p class="subtitle">${invoice.bill_number}</p>
 
           <div class="section">
             <div class="info-grid">
@@ -80,7 +80,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
           <div class="section">
             <div class="section-title">สรุปยอด</div>
             <div class="summary-row"><span>จำนวนการจอง</span><span>${invoice.total_bookings} รายการ</span></div>
-            <div class="summary-highlight"><span>ยอดเรียกเก็บรวม</span><span>฿${Number(invoice.total_revenue).toLocaleString()}</span></div>
+            <div class="summary-highlight"><span>ยอดเรียกเก็บรวม</span><span>฿${(Number(invoice.total_amount) || 0).toLocaleString()}</span></div>
           </div>
 
           <div class="footer">
@@ -114,7 +114,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">รายละเอียดบิล/ใบแจ้งหนี้</h2>
-              <p className="text-sm text-gray-500">{invoice.invoice_number}</p>
+              <p className="text-sm text-gray-500">{invoice.bill_number}</p>
             </div>
             <button
               onClick={onClose}
@@ -150,7 +150,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
                     {formatDate(invoice.period_start)} - {formatDate(invoice.period_end)}
                   </p>
                   <p className="text-xs text-gray-500">
-                    ({invoice.period_type === 'weekly' ? 'รายสัปดาห์' : 'รายเดือน'})
+                    (เดือน {invoice.month}/{invoice.year})
                   </p>
                 </div>
                 <div>
@@ -158,7 +158,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
                     <FileText className="h-4 w-4" />
                     <span>วันที่ออกบิล</span>
                   </div>
-                  <p className="mt-1 font-medium text-gray-900">{formatDate(invoice.issued_date)}</p>
+                  <p className="mt-1 font-medium text-gray-900">{formatDate(invoice.created_at)}</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -166,8 +166,8 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
                     <span>วันครบกำหนด</span>
                   </div>
                   <p className="mt-1 font-medium text-gray-900">{formatDate(invoice.due_date)}</p>
-                  {invoice.paid_date && (
-                    <p className="text-xs text-green-600">จ่าย: {formatDate(invoice.paid_date)}</p>
+                  {invoice.paid_at && (
+                    <p className="text-xs text-green-600">จ่าย: {formatDate(invoice.paid_at)}</p>
                   )}
                 </div>
               </div>
@@ -186,37 +186,20 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
                 <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-3">
                   <span className="text-gray-600">ยอดเรียกเก็บรวม</span>
                   <span className="text-lg font-semibold text-gray-900">
-                    ฿{Number(invoice.total_revenue).toLocaleString()}
+                    ฿{(Number(invoice.total_amount) || 0).toLocaleString()}
                   </span>
                 </div>
 
-                <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-3">
-                  <span className="text-gray-600">อัตราส่วนลด</span>
-                  <span className="text-lg font-semibold text-blue-600">{Number(invoice.commission_rate)}%</span>
-                </div>
 
-                <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                  <span className="text-lg font-semibold text-blue-900">ส่วนลดที่ได้รับ</span>
-                  <span className="text-2xl font-bold text-blue-700">
-                    ฿{Number(invoice.commission_amount).toLocaleString()}
+                <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
+                  <span className="text-lg font-semibold text-green-900">ยอดสุทธิ</span>
+                  <span className="text-2xl font-bold text-green-700">
+                    ฿{(Number(invoice.total_amount) || 0).toLocaleString()}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Calculation Details */}
-            <div className="rounded-lg bg-gray-50 p-4">
-              <h4 className="mb-2 text-sm font-medium text-gray-700">การคำนวณ</h4>
-              <p className="text-sm text-gray-600">
-                ส่วนลด = ยอดเรียกเก็บรวม × อัตราส่วนลด
-              </p>
-              <p className="text-sm text-gray-600">
-                = ฿{Number(invoice.total_revenue).toLocaleString()} × {Number(invoice.commission_rate)}%
-              </p>
-              <p className="text-sm font-semibold text-gray-900">
-                = ฿{Number(invoice.commission_amount).toLocaleString()}
-              </p>
-            </div>
           </div>
 
           {/* Footer */}
