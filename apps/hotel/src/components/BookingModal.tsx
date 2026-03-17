@@ -1,143 +1,190 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Calendar, Clock, CreditCard, Check, X, User, MapPin, Phone, Users } from 'lucide-react'
-import { PriceCalculator } from '../utils/priceCalculator'
-
-interface Service {
-  id: string
-  name_th: string
-  name_en: string
-  description_th?: string | null
-  description_en?: string | null
-  category: 'massage' | 'nail' | 'spa' | 'facial'
-  duration: number
-  duration_options?: number[] | null
-  base_price: number
-  hotel_price: number
-  image_url?: string | null
-  is_active: boolean | null
-  sort_order?: number | null
-  created_at: string | null
-  updated_at: string | null
-}
+import {
+  Calendar,
+  Clock,
+  Check,
+  X,
+  User,
+  MapPin,
+  Phone,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@bliss/supabase/auth'
+import { useBookingStore } from '../hooks/useBookingStore'
+import ServiceModeSelector from './ServiceModeSelector'
+import ServiceSelector from './ServiceSelector'
+import CoupleFormatSelector from './CoupleFormatSelector'
+import ProviderPreferenceSelector from './ProviderPreferenceSelector'
+import type { Service, ServiceSelection } from '../types/booking'
 
 interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: () => void  // Optional success callback
-  service: Service
+  onSuccess?: () => void
+  service?: Service | null
 }
 
-interface BookingData {
-  guestName: string
-  roomNumber: string
-  phoneNumber: string
-  numberOfGuests: number
-  selectedDuration: number
-  date: string
-  time: string
-  notes: string
+// Fetch services from database
+const fetchServices = async (): Promise<Service[]> => {
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    throw new Error(`Failed to fetch services: ${error.message}`)
+  }
+
+  // Cast and transform the data to match our Service type
+  const services: Service[] = (data || []).map(item => ({
+    ...item,
+    duration_options: Array.isArray(item.duration_options)
+      ? item.duration_options as number[]
+      : null
+  }))
+
+  return services
 }
 
 function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps) {
-  const [step, setStep] = useState(1)
-  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
-  const [bookingData, setBookingData] = useState<BookingData>({
-    guestName: '',
-    roomNumber: '',
-    phoneNumber: '',
-    numberOfGuests: 1,
-    selectedDuration: service?.duration || 60,
-    date: '',
-    time: '',
-    notes: '',
+  const {
+    // Store state
+    serviceConfiguration,
+    currentStep,
+    guestName,
+    roomNumber,
+    phoneNumber,
+    date,
+    time,
+    notes,
+    providerPreference,
+    isLoading,
+
+    // Store actions
+    setServiceMode,
+    setCoupleFormat,
+    addServiceSelection,
+    removeServiceSelection,
+    setGuestName,
+    setRoomNumber,
+    setPhoneNumber,
+    setDate,
+    setTime,
+    setNotes,
+    setProviderPreference,
+    nextStep,
+    previousStep,
+    resetAll,
+    canProceedToStep,
+    validateConfiguration,
+    getTotalPrice,
+    getTotalDuration,
+    getBookingData,
+    isConfigurationComplete
+  } = useBookingStore()
+
+  // Fetch services
+  const { data: services = [], isLoading: servicesLoading } = useQuery({
+    queryKey: ['services'],
+    queryFn: fetchServices,
+    enabled: isOpen
   })
 
+  // Reset store when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      resetAll()
+      // If opened with a specific service, auto-select it
+      if (service) {
+        const selection: ServiceSelection = {
+          id: `${service.id}-${Date.now()}`,
+          service,
+          duration: service.duration,
+          price: service.hotel_price || service.base_price,
+          recipientIndex: 0,
+          recipientName: '',
+          sortOrder: 0
+        }
+        addServiceSelection(selection)
+      }
+    }
+  }, [isOpen, service, resetAll, addServiceSelection])
+
+  // Time slots
   const timeSlots = [
-    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00',
+    '09:00', '10:00', '11:00', '12:00',
+    '13:00', '14:00', '15:00', '16:00',
+    '17:00', '18:00', '19:00', '20:00'
   ]
 
   const today = new Date().toISOString().split('T')[0]
 
-  // Get available duration options for the service
-  const durationOptions = service?.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0
-    ? [...service.duration_options].sort((a, b) => a - b)
-    : [service?.duration || 60]
+  const handleServiceSelect = (selection: ServiceSelection) => {
+    addServiceSelection(selection)
+  }
+
+  const handleServiceRemove = (index: number) => {
+    removeServiceSelection(index)
+  }
+
+  const handleNext = () => {
+    if (canProceedToStep(currentStep + 1)) {
+      nextStep()
+    }
+  }
+
+  const handlePrevious = () => {
+    previousStep()
+  }
 
   const handleSubmit = () => {
-    setAttemptedSubmit(true)
+    if (!isConfigurationComplete()) return
 
-    if (!bookingData.date || !bookingData.time) {
-      return // Don't submit if validation fails
-    }
+    const bookingData = getBookingData()
+    console.log('Enhanced Booking submitted:', bookingData)
 
-    console.log('Booking submitted:', {
-      service: service?.id,
-      serviceName: service?.name_th,
-      ...bookingData
-    })
     // Here you would normally send the booking to your backend
-    alert('การจองสำเร็จ!')
+    alert('การจองสำเร็จ! ระบบใหม่พร้อมใช้งาน')
 
-    // Call success callback if provided
     if (onSuccess) {
       onSuccess()
     } else {
       onClose()
     }
-    resetForm()
-  }
-
-  const resetForm = () => {
-    setStep(1)
-    setAttemptedSubmit(false)
-    setBookingData({
-      guestName: '',
-      roomNumber: '',
-      phoneNumber: '',
-      numberOfGuests: 1,
-      selectedDuration: service?.duration || 60,
-      date: '',
-      time: '',
-      notes: '',
-    })
-  }
-
-  const handleNextStep = () => {
-    setAttemptedSubmit(true)
-
-    // Check validation for current step
-    if (step === 1) {
-      if (bookingData.guestName.trim() && bookingData.roomNumber.trim() && bookingData.phoneNumber.trim()) {
-        setStep(step + 1)
-        setAttemptedSubmit(false) // Reset for next step
-      }
-    } else if (step === 2) {
-      if (bookingData.selectedDuration) {
-        setStep(step + 1)
-        setAttemptedSubmit(false) // Reset for next step
-      }
-    }
   }
 
   const handleClose = () => {
+    resetAll()
     onClose()
-    resetForm()
   }
 
   if (!isOpen) return null
 
+  const totalPrice = getTotalPrice()
+  const totalDuration = getTotalDuration()
+  const currentValidation = validateConfiguration()
+
+  // Step titles
+  const stepTitles = [
+    'เลือกบริการ',
+    'ข้อมูลแขก',
+    'เวลา & ยืนยัน',
+    'สำเร็จ'
+  ]
+
   return createPortal(
-    <div
-      className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[9999]"
-      style={{ margin: 0, padding: 0, minHeight: '100vh', minWidth: '100vw' }}
-    >
+    <div className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[9999]">
       <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto mx-4 my-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-stone-100">
           <div>
             <h2 className="text-xl font-bold text-stone-900">จองบริการให้แขก</h2>
-            <p className="text-stone-500">{service?.name_th || 'ไม่ระบุชื่อบริการ'}</p>
+            <p className="text-stone-500">ระบบจองแบบใหม่ - เลือกเดี่ยวหรือคู่</p>
           </div>
           <button
             onClick={handleClose}
@@ -147,384 +194,392 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
           </button>
         </div>
 
-        {/* Progress Steps */}
-        <div className="px-6 py-4 bg-stone-50">
-          <div className="flex items-center justify-between max-w-md mx-auto">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center">
+        {/* Progress Bar */}
+        <div className="px-6 py-4 border-b border-stone-100">
+          <div className="flex items-center justify-between">
+            {stepTitles.map((title, index) => (
+              <div key={index} className="flex items-center">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                    step >= s
-                      ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                      : 'bg-stone-200 text-stone-500'
+                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
+                    index === currentStep
+                      ? 'bg-amber-600 text-white'
+                      : index < currentStep
+                        ? 'bg-green-600 text-white'
+                        : 'bg-stone-200 text-stone-500'
                   }`}
                 >
-                  {step > s ? <Check className="w-4 h-4" /> : s}
+                  {index < currentStep ? <Check className="w-4 h-4" /> : index + 1}
                 </div>
-                {s < 3 && (
-                  <div className={`w-12 h-1 mx-2 ${step > s ? 'bg-amber-700' : 'bg-stone-200'}`} />
+                <span
+                  className={`ml-2 text-sm ${
+                    index === currentStep
+                      ? 'text-stone-900 font-semibold'
+                      : index < currentStep
+                        ? 'text-green-600'
+                        : 'text-stone-500'
+                  }`}
+                >
+                  {title}
+                </span>
+                {index < stepTitles.length - 1 && (
+                  <div className="w-8 h-px bg-stone-200 mx-4" />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-xs text-stone-500 max-w-md mx-auto">
-            <span className="flex-1 text-center">ข้อมูลแขก</span>
-            <span className="flex-1 text-center">เลือกระยะเวลา</span>
-            <span className="flex-1 text-center">เวลา & ยืนยัน</span>
-          </div>
         </div>
 
-        <div className="p-6">
-          {/* Step 1: Guest Information */}
-          {step === 1 && (
-            <div>
-              <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลแขก</h3>
-              <div className="space-y-4">
+        {/* Content */}
+        <div className="p-6 min-h-[400px]">
+          {/* Step 0: Service Selection */}
+          {currentStep === 0 && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-stone-900 mb-2">เลือกประเภทการรับบริการ</h3>
+                <ServiceModeSelector
+                  selectedMode={serviceConfiguration.mode}
+                  onModeSelect={setServiceMode}
+                />
+              </div>
+
+              {serviceConfiguration.mode === 'couple' && (
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    ชื่อแขก <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={bookingData.guestName}
-                    onChange={(e) => setBookingData({ ...bookingData, guestName: e.target.value })}
-                    placeholder="เช่น John Smith"
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 transition ${
-                      attemptedSubmit && !bookingData.guestName.trim()
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                        : 'border-stone-300 focus:ring-amber-500 focus:border-amber-500'
-                    }`}
+                  <h3 className="text-lg font-semibold text-stone-900 mb-2">รูปแบบการรับบริการสำหรับคู่</h3>
+                  <CoupleFormatSelector
+                    selectedFormat={serviceConfiguration.coupleFormat}
+                    onFormatSelect={setCoupleFormat}
                   />
-                  {attemptedSubmit && !bookingData.guestName.trim() && (
-                    <p className="mt-1 text-xs text-red-500">กรุณากรอกชื่อแขก</p>
-                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    เลขห้อง <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={bookingData.roomNumber}
-                    onChange={(e) => setBookingData({ ...bookingData, roomNumber: e.target.value })}
-                    placeholder="เช่น 1505"
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 transition ${
-                      attemptedSubmit && !bookingData.roomNumber.trim()
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                        : 'border-stone-300 focus:ring-amber-500 focus:border-amber-500'
-                    }`}
-                  />
-                  {attemptedSubmit && !bookingData.roomNumber.trim() && (
-                    <p className="mt-1 text-xs text-red-500">กรุณากรอกเลขห้อง</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={bookingData.phoneNumber}
-                    onChange={(e) => setBookingData({ ...bookingData, phoneNumber: e.target.value })}
-                    placeholder="เช่น 081-234-5678"
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 transition ${
-                      attemptedSubmit && !bookingData.phoneNumber.trim()
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                        : 'border-stone-300 focus:ring-amber-500 focus:border-amber-500'
-                    }`}
-                  />
-                  {attemptedSubmit && !bookingData.phoneNumber.trim() && (
-                    <p className="mt-1 text-xs text-red-500">กรุณากรอกเบอร์โทรศัพท์</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">จำนวนผู้รับบริการ</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4].map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => setBookingData({ ...bookingData, numberOfGuests: num })}
-                        className={`py-3 px-4 rounded-xl text-sm font-medium transition ${
-                          bookingData.numberOfGuests === num
-                            ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                            : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                        }`}
-                      >
-                        {num} คน
-                      </button>
+              )}
+
+              <div>
+                <h3 className="text-lg font-semibold text-stone-900 mb-2">เลือกบริการ</h3>
+                {servicesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto" />
+                      <p className="mt-2 text-stone-500">กำลังโหลดบริการ...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {Array.from({ length: serviceConfiguration.recipientCount }).map((_, index) => (
+                      <div key={index} className="border border-stone-200 rounded-lg p-4">
+                        <h4 className="font-medium text-stone-900 mb-3">
+                          {serviceConfiguration.mode === 'couple'
+                            ? `ผู้รับบริการคนที่ ${index + 1}`
+                            : 'เลือกบริการ'
+                          }
+                        </h4>
+                        <ServiceSelector
+                          services={services}
+                          recipientIndex={index}
+                          selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === index)}
+                          onServiceSelect={handleServiceSelect}
+                          onClearSelection={() => {
+                            const selectionIndex = serviceConfiguration.selections.findIndex(s => s.recipientIndex === index)
+                            if (selectionIndex !== -1) {
+                              handleServiceRemove(selectionIndex)
+                            }
+                          }}
+                        />
+                      </div>
                     ))}
                   </div>
-                </div>
+                )}
               </div>
-            </div>
-          )}
 
-          {/* Step 2: Select Duration */}
-          {step === 2 && (
-            <div>
-              <h3 className="text-lg font-semibold text-stone-900 mb-4">
-                เลือกระยะเวลา <span className="text-red-500">*</span>
-              </h3>
-              <div className="space-y-3">
-                {durationOptions.map((duration) => (
-                  <button
-                    key={duration}
-                    onClick={() => setBookingData({ ...bookingData, selectedDuration: duration })}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition ${
-                      bookingData.selectedDuration === duration
-                        ? 'border-amber-700 bg-amber-50'
-                        : 'border-stone-200 hover:border-stone-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-stone-900">{service?.name_th || 'ไม่ระบุชื่อบริการ'}</p>
-                        <p className="text-sm text-stone-500">{duration} นาที • {bookingData.numberOfGuests} คน</p>
-                      </div>
-                      <div className="text-right">
-                        {(() => {
-                          const pricePerPerson = PriceCalculator.calculateServicePrice(service, duration, 'single')
-                          const totalPrice = pricePerPerson * bookingData.numberOfGuests
-                          return (
-                            <>
-                              <p className="font-bold text-amber-700">฿{totalPrice.toLocaleString()}</p>
-                              {bookingData.numberOfGuests > 1 && (
-                                <p className="text-xs text-stone-400">฿{pricePerPerson.toLocaleString()} × {bookingData.numberOfGuests}</p>
-                              )}
-                            </>
-                          )
-                        })()}
-                      </div>
+              {/* Price Summary */}
+              {serviceConfiguration.selections.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-amber-900 mb-2">สรุปราคา</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>ระยะเวลารวม:</span>
+                      <span className="font-medium">{totalDuration} นาที</span>
                     </div>
-                  </button>
-                ))}
-              </div>
-              {attemptedSubmit && !bookingData.selectedDuration && (
-                <p className="mt-2 text-xs text-red-500">กรุณาเลือกระยะเวลาบริการ</p>
+                    <div className="flex justify-between text-lg font-semibold">
+                      <span>ราคารวม:</span>
+                      <span>฿{totalPrice.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Validation Errors */}
+              {currentValidation.errors.serviceSelection && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 mr-2" />
+                    <div>
+                      <h4 className="font-medium text-red-900">กรุณาแก้ไขข้อผิดพลาด:</h4>
+                      <ul className="mt-1 text-sm text-red-700">
+                        {currentValidation.errors.serviceSelection.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
 
-          {/* Step 3: Date & Time + Booking Summary */}
-          {step === 3 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Date & Time Form */}
-              <div>
-                <h3 className="text-lg font-semibold text-stone-900 mb-4">เลือกวันและเวลา</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      วันที่ <span className="text-red-500">*</span>
-                    </label>
+          {/* Step 1: Guest Information */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-stone-900">ข้อมูลแขก</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    ชื่อแขก *
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
                     <input
-                      type="date"
-                      value={bookingData.date}
-                      onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                      min={today}
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                      placeholder="เช่น คุณสมชาย ใจดี"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      เวลา <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {timeSlots.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => setBookingData({ ...bookingData, time })}
-                          className={`py-2 px-3 rounded-xl text-sm font-medium transition ${
-                            bookingData.time === time
-                              ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                              : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">หมายเหตุ</label>
-                    <textarea
-                      value={bookingData.notes}
-                      onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
-                      placeholder="ระบุความต้องการพิเศษ..."
-                      rows={3}
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    เลขห้อง *
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      value={roomNumber}
+                      onChange={(e) => setRoomNumber(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                      placeholder="เช่น 1205"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Booking Summary */}
               <div>
-                <div className="bg-stone-50 rounded-2xl p-6">
-                  <h3 className="font-semibold text-stone-900 mb-4">สรุปการจอง</h3>
+                <label className="block text-sm font-medium text-stone-700 mb-2">
+                  เบอร์โทรศัพท์ *
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                    placeholder="เช่น 081-234-5678"
+                  />
+                </div>
+              </div>
 
-                  <div className="space-y-4">
-                    {bookingData.guestName && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg">
-                          <User className="w-4 h-4 text-stone-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-500">แขก</p>
-                          <p className="text-sm font-medium text-stone-900">{bookingData.guestName}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {bookingData.roomNumber && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg">
-                          <MapPin className="w-4 h-4 text-stone-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-500">ห้อง</p>
-                          <p className="text-sm font-medium text-stone-900">#{bookingData.roomNumber}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {bookingData.phoneNumber && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg">
-                          <Phone className="w-4 h-4 text-stone-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-500">โทรศัพท์</p>
-                          <p className="text-sm font-medium text-stone-900">{bookingData.phoneNumber}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg">
-                        <Users className="w-4 h-4 text-stone-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-stone-500">จำนวนผู้รับบริการ</p>
-                        <p className="text-sm font-medium text-stone-900">{bookingData.numberOfGuests} คน</p>
-                      </div>
+              {/* Validation Errors */}
+              {currentValidation.errors.guestInfo && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 mr-2" />
+                    <div>
+                      <h4 className="font-medium text-red-900">กรุณาแก้ไขข้อผิดพลาด:</h4>
+                      <ul className="mt-1 text-sm text-red-700">
+                        {currentValidation.errors.guestInfo.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg">
-                        <CreditCard className="w-4 h-4 text-stone-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-stone-500">บริการ</p>
-                        <p className="text-sm font-medium text-stone-900">{service.name_th}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg">
-                        <Clock className="w-4 h-4 text-stone-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-stone-500">ระยะเวลา</p>
-                        <p className="text-sm font-medium text-stone-900">{bookingData.selectedDuration} นาที</p>
-                      </div>
-                    </div>
-
-                    {bookingData.date && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg">
-                          <Calendar className="w-4 h-4 text-stone-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-500">วันที่</p>
-                          <p className="text-sm font-medium text-stone-900">{bookingData.date}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {bookingData.time && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg">
-                          <Clock className="w-4 h-4 text-stone-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-500">เวลา</p>
-                          <p className="text-sm font-medium text-stone-900">{bookingData.time}</p>
-                        </div>
-                      </div>
-                    )}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
 
-                  <div className="mt-6 pt-4 border-t border-stone-200">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-stone-900">ยอดรวม</span>
-                      <span className="text-lg font-bold text-amber-700">
-                        ฿{(PriceCalculator.calculateServicePrice(service, bookingData.selectedDuration, 'single') * bookingData.numberOfGuests).toLocaleString()}
-                      </span>
+          {/* Step 2: Date & Time */}
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-stone-900">เลือกวันที่และเวลา</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    วันที่ *
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      min={today}
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    เวลา *
+                  </label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                    <select
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition appearance-none"
+                    >
+                      <option value="">เลือกเวลา</option>
+                      {timeSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-2">
+                  หมายเหตุ (ไม่บังคับ)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition resize-none"
+                  placeholder="หมายเหตุเพิ่มเติม..."
+                />
+              </div>
+
+              {/* Provider Preference for all bookings */}
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-2">
+                  ความต้องการผู้ให้บริการ
+                </label>
+                <ProviderPreferenceSelector
+                  selectedPreference={providerPreference}
+                  onPreferenceChange={setProviderPreference}
+                />
+              </div>
+
+              {/* Validation Errors */}
+              {currentValidation.errors.dateTime && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 mr-2" />
+                    <div>
+                      <h4 className="font-medium text-red-900">กรุณาแก้ไขข้อผิดพลาด:</h4>
+                      <ul className="mt-1 text-sm text-red-700">
+                        {currentValidation.errors.dateTime.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Final Summary */}
+              <div className="bg-stone-50 border border-stone-200 rounded-lg p-4">
+                <h4 className="font-semibold text-stone-900 mb-3">สรุปการจอง</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>ประเภท:</span>
+                    <span className="font-medium">
+                      {serviceConfiguration.mode === 'single' ? 'เดี่ยว' : 'คู่'}
+                      {serviceConfiguration.coupleFormat && ` (${serviceConfiguration.coupleFormat === 'simultaneous' ? 'พร้อมกัน' : 'ทีละคน'})`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>บริการ:</span>
+                    <div className="text-right">
+                      {serviceConfiguration.selections.map((selection, index) => (
+                        <div key={index} className="font-medium">
+                          {selection.service.name_th} ({selection.duration} นาที)
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>แขก:</span>
+                    <span className="font-medium">{guestName} (ห้อง {roomNumber})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>วันเวลา:</span>
+                    <span className="font-medium">
+                      {date && new Date(date).toLocaleDateString('th-TH')} {time}
+                    </span>
+                  </div>
+                  <div className="border-t border-stone-300 pt-2 mt-2">
+                    <div className="flex justify-between text-lg font-semibold">
+                      <span>ราคารวม:</span>
+                      <span>฿{totalPrice.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
-
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="p-6 border-t border-stone-100 bg-stone-50 rounded-b-3xl">
-          {/* Helper Text - Show only after attempted submit */}
-          {attemptedSubmit && (
-            ((step === 1 && (!bookingData.guestName.trim() || !bookingData.roomNumber.trim() || !bookingData.phoneNumber.trim())) ||
-            (step === 2 && !bookingData.selectedDuration) ||
-            (step === 3 && (!bookingData.date || !bookingData.time))) && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-xs text-amber-700 flex items-center gap-2">
-                <span className="w-4 h-4 text-amber-500">⚠️</span>
-                {step === 1 && (!bookingData.guestName.trim() || !bookingData.roomNumber.trim() || !bookingData.phoneNumber.trim()) &&
-                  'กรุณากรอกข้อมูลแขกให้ครบถ้วน (ชื่อแขก, เลขห้อง, เบอร์โทรศัพท์)'}
-                {step === 2 && !bookingData.selectedDuration &&
-                  'กรุณาเลือกระยะเวลาบริการ'}
-                {step === 3 && (!bookingData.date || !bookingData.time) &&
-                  'กรุณาเลือกวันที่และเวลาที่ต้องการรับบริการ'}
-              </p>
-            </div>
-          ))}
-
-          <div className="flex justify-between">
-            {step > 1 ? (
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-stone-100 px-6 py-4">
+          <div className="flex items-center gap-3">
+            {currentStep > 0 && (
               <button
-                onClick={() => {
-                  setStep(step - 1)
-                  setAttemptedSubmit(false)
-                }}
-                className="px-6 py-3 bg-white text-stone-700 rounded-xl font-medium hover:bg-stone-100 transition border border-stone-200"
+                onClick={handlePrevious}
+                className="flex items-center gap-2 px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition"
               >
+                <ChevronLeft className="w-4 h-4" />
                 ย้อนกลับ
               </button>
-            ) : (
-              <button
-                onClick={handleClose}
-                className="px-6 py-3 bg-white text-stone-700 rounded-xl font-medium hover:bg-stone-100 transition border border-stone-200"
-              >
-                ยกเลิก
-              </button>
             )}
-            {step < 3 ? (
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleClose}
+              className="px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition"
+            >
+              ยกเลิก
+            </button>
+
+            {currentStep < 2 ? (
               <button
-                onClick={handleNextStep}
-                className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+                onClick={handleNext}
+                disabled={!canProceedToStep(currentStep + 1)}
+                className="flex items-center gap-2 px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed transition"
               >
                 ถัดไป
+                <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
-                className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+                disabled={!isConfigurationComplete() || !currentValidation.isValid}
+                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-stone-300 disabled:cursor-not-allowed transition"
               >
+                <Check className="w-4 h-4" />
                 ยืนยันการจอง
               </button>
             )}
           </div>
         </div>
+
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black/20 rounded-3xl flex items-center justify-center">
+            <div className="bg-white p-4 rounded-lg shadow-lg">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto" />
+              <p className="mt-2 text-stone-600">กำลังดำเนินการ...</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>,
     document.body
