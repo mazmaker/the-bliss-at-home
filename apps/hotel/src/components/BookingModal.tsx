@@ -47,7 +47,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
     roomNumber: '',
     phoneNumber: '',
     numberOfGuests: 1,
-    selectedDuration: service.duration,
+    selectedDuration: service?.duration || 60,
     date: '',
     time: '',
     notes: '',
@@ -60,9 +60,9 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
   const today = new Date().toISOString().split('T')[0]
 
   // Get available duration options for the service
-  const durationOptions = service.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0
+  const durationOptions = service?.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0
     ? [...service.duration_options].sort((a, b) => a - b)
-    : [service.duration]
+    : [service?.duration || 60]
 
   const handleSubmit = () => {
     setAttemptedSubmit(true)
@@ -96,7 +96,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
       roomNumber: '',
       phoneNumber: '',
       numberOfGuests: 1,
-      selectedDuration: service.duration,
+      selectedDuration: service?.duration || 60,
       date: '',
       time: '',
       notes: '',
