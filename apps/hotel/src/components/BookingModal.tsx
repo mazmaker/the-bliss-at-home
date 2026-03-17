@@ -72,8 +72,8 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
     }
 
     console.log('Booking submitted:', {
-      service: service.id,
-      serviceName: service.name_th,
+      service: service?.id,
+      serviceName: service?.name_th,
       ...bookingData
     })
     // Here you would normally send the booking to your backend
@@ -137,7 +137,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
         <div className="flex items-center justify-between p-6 border-b border-stone-100">
           <div>
             <h2 className="text-xl font-bold text-stone-900">จองบริการให้แขก</h2>
-            <p className="text-stone-500">{service.name_th}</p>
+            <p className="text-stone-500">{service?.name_th || 'ไม่ระบุชื่อบริการ'}</p>
           </div>
           <button
             onClick={handleClose}
@@ -278,7 +278,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-stone-900">{service.name_th}</p>
+                        <p className="font-medium text-stone-900">{service?.name_th || 'ไม่ระบุชื่อบริการ'}</p>
                         <p className="text-sm text-stone-500">{duration} นาที • {bookingData.numberOfGuests} คน</p>
                       </div>
                       <div className="text-right">
