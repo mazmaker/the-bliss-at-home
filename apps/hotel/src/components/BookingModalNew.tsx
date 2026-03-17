@@ -179,7 +179,8 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   const steps = [
     { title: 'เลือกบริการ', description: 'เลือกบริการและจำนวนผู้รับบริการ' },
     { title: 'ข้อมูลแขก', description: 'กรอกข้อมูลผู้รับบริการ' },
-    { title: 'เวลา & ยืนยัน', description: 'เลือกวันที่และเวลาที่ต้องการ' },
+    { title: 'เลือกเวลา', description: 'เลือกวันที่และเวลาที่ต้องการ' },
+    { title: 'ยืนยันการจอง', description: 'ตรวจสอบและยืนยันการจอง' },
     { title: 'สำเร็จ', description: 'การจองเสร็จสิ้น' }
   ]
 
@@ -277,19 +278,25 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
 
       loadingToast.success(successMessage)
 
-      // Move to success step (step 3)
-      setCurrentStep(3)
+      // Move to success step (step 4)
+      setCurrentStep(4)
 
-      // Call success callback if provided
-      onSuccess?.()
+      // Don't call onSuccess here - let user see the success step first
+      // onSuccess will be called when user clicks "เสร็จสิ้น" button
 
-      // Navigate to hotel's booking history page
-      navigate(`/hotel/${getHotelSlug()}/history`)
-
-    } catch (err) {
+    } catch (err: any) {
       console.error('Booking failed:', err)
-      loadingToast.error(notifications.booking.createError)
-      showErrorByType(err)
+
+      // Handle specific error types
+      if (err.message === 'DUPLICATE_BOOKING' || err.message?.includes('DUPLICATE_BOOKING')) {
+        loadingToast.error('❌ การจองซ้ำซ้อน\n\nห้องนี้มีการจองในวันและเวลาเดียวกันอยู่แล้ว\nกรุณาเลือกเวลาอื่นหรือตรวจสอบการจองที่มีอยู่')
+      } else if (err.message?.includes('HTTP 409')) {
+        // Handle 409 Conflict as duplicate booking
+        loadingToast.error('❌ การจองซ้ำซ้อน\n\nห้องนี้มีการจองในวันและเวลาเดียวกันอยู่แล้ว\nกรุณาเลือกเวลาอื่นหรือตรวจสอบการจองที่มีอยู่')
+      } else {
+        loadingToast.error(notifications.booking.createError)
+        showErrorByType(err)
+      }
     } finally {
       setLoading(false)
     }
@@ -569,13 +576,10 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
               </div>
             )}
 
-            {/* Step 2: Date & Time + Confirmation */}
+            {/* Step 2: Date & Time Selection */}
             {currentStep === 2 && (
-              <div className="max-w-4xl mx-auto space-y-8">
-                <h3 className="text-lg font-semibold text-stone-900 mb-4">เลือกวันและเวลา & ยืนยันการจอง</h3>
-
-                {/* Date & Time Section */}
-                <div className="max-w-md mx-auto space-y-4">
+              <div className="max-w-md mx-auto space-y-6">
+                <h3 className="text-lg font-semibold text-stone-900 mb-4">เลือกวันและเวลา</h3>
 
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">
@@ -629,48 +633,111 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                     className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
-                </div>
+              </div>
+            )}
 
-                {/* Confirmation Section */}
-                <div className="max-w-2xl mx-auto space-y-6 pt-6 border-t border-stone-200">
-                  <h4 className="text-lg font-semibold text-stone-900">ตรวจสอบการจอง</h4>
+            {/* Step 3: Confirmation */}
+            {currentStep === 3 && (
+              <div className="max-w-4xl mx-auto space-y-8">
+                <h3 className="text-lg font-semibold text-stone-900 mb-4">ตรวจสอบและยืนยันการจอง</h3>
 
-                  {/* Guest Info Summary */}
-                  <div className="bg-stone-50 rounded-xl p-4">
-                    <h5 className="font-medium text-stone-900 mb-3">ข้อมูลแขก</h5>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-stone-600">ชื่อ:</span>
-                        <span className="text-stone-900">{guestName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-stone-600">ห้อง:</span>
-                        <span className="text-stone-900">{roomNumber}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-stone-600">โทรศัพท์:</span>
-                        <span className="text-stone-900">{phoneNumber}</span>
-                      </div>
-                      {date && (
-                        <div className="flex justify-between">
-                          <span className="text-stone-600">วันที่:</span>
-                          <span className="text-stone-900">{date}</span>
+                {/* Selected Service Summary */}
+                {serviceConfiguration.selections.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-stone-700 mb-3">บริการที่เลือก</h4>
+                    <div className="space-y-3">
+                      {serviceConfiguration.selections.map((selection) => (
+                        <div key={selection.id} className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center">
+                                  <User className="w-3 h-3 text-white" />
+                                </div>
+                                <h5 className="font-medium text-stone-900">
+                                  {serviceConfiguration.mode === 'couple'
+                                    ? `ผู้รับบริการ ${selection.recipientIndex + 1}`
+                                    : 'ผู้รับบริการ'
+                                  }
+                                </h5>
+                              </div>
+                              <div className="pl-8 space-y-1">
+                                <p className="text-sm font-medium text-stone-800">
+                                  {selection.service.name_th}
+                                </p>
+                                <div className="flex items-center gap-4 text-xs text-stone-600">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{selection.duration} นาที</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span>฿{selection.price.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                      {time && (
-                        <div className="flex justify-between">
-                          <span className="text-stone-600">เวลา:</span>
-                          <span className="text-stone-900">{time}</span>
+                      ))}
+
+                      {/* Total Summary */}
+                      <div className="bg-stone-100 rounded-xl p-4 border-2 border-stone-200">
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-stone-600">
+                            <span>รวมทั้งหมด: {serviceConfiguration.selections.length} บริการ</span>
+                            <span className="mx-2">•</span>
+                            <span>{serviceConfiguration.totalDuration} นาที</span>
+                          </div>
+                          <div className="text-lg font-bold text-amber-700">
+                            ฿{serviceConfiguration.totalPrice.toLocaleString()}
+                          </div>
                         </div>
-                      )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Guest Info Summary */}
+                <div className="bg-stone-50 rounded-xl p-4">
+                  <h5 className="font-medium text-stone-900 mb-3">ข้อมูลการจอง</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">แขก:</span>
+                      <span className="text-stone-900">{guestName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">ห้อง:</span>
+                      <span className="text-stone-900">#{roomNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">โทรศัพท์:</span>
+                      <span className="text-stone-900">{phoneNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">วันที่:</span>
+                      <span className="text-stone-900">{date}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">เวลา:</span>
+                      <span className="text-stone-900">{time}</span>
+                    </div>
+                    {notes && (
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">หมายเหตุ:</span>
+                        <span className="text-stone-900">{notes}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">ความต้องการผู้ให้บริการ:</span>
+                      <span className="text-stone-900 text-xs">{getProviderPreferenceLabel(providerPreference)}</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Step 3: Success */}
-            {currentStep === 3 && (
+            {/* Step 4: Success */}
+            {currentStep === 4 && (
               <div className="max-w-lg mx-auto space-y-6 text-center">
                 <div className="flex justify-center">
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
@@ -710,9 +777,24 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-6 space-y-3">
+                  {/* View History Button */}
                   <button
-                    onClick={handleClose}
+                    onClick={() => {
+                      handleClose()
+                      navigate(`/hotel/${getHotelSlug()}/history`)
+                    }}
+                    className="w-full px-6 py-3 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 transition-colors"
+                  >
+                    ดูประวัติการจอง
+                  </button>
+
+                  {/* Close Modal Button */}
+                  <button
+                    onClick={() => {
+                      onSuccess?.()
+                      handleClose()
+                    }}
                     className="w-full px-6 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors"
                   >
                     เสร็จสิ้น
@@ -752,7 +834,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
           )}
 
           {/* Navigation Buttons - Hidden on success step */}
-          {currentStep !== 3 && (
+          {currentStep !== 4 && (
             <div className="flex justify-between">
               {currentStep > 0 ? (
                 <button
@@ -771,7 +853,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                 </button>
               )}
 
-              {currentStep === 2 ? (
+              {currentStep === 3 ? (
                 <button
                   onClick={handleSubmit}
                   disabled={!validation.isValid || isLoading}

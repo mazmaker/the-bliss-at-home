@@ -125,6 +125,7 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       customer_id: null, // Hotel guests don't have accounts
       is_hotel_booking: true,
       service_format: isCoupleBooking ? 'simultaneous' : 'single',
+      is_multi_service: services && services.length > 1, // Required field for booking creation
     }
 
     console.log('🏨 [HOTEL BOOKING] is_hotel_booking: true, service_format:', bookingData.service_format)
@@ -138,26 +139,52 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       return res.status(400).json({ error: 'Missing required fields', missing })
     }
 
+    // TODO: Temporarily disable duplicate check for testing
     // Check for duplicate hotel room booking (same room + date + time)
-    if (bookingData.hotel_room_number) {
-      const { data: roomConflict } = await serviceSupabase
+    if (bookingData.hotel_room_number && process.env.NODE_ENV === 'production') {
+      console.log(`🔍 [DUPLICATE CHECK] Checking room ${bookingData.hotel_room_number} on ${bookingData.booking_date} at ${bookingData.booking_time}`)
+
+      const { data: roomConflict, error: conflictError } = await serviceSupabase
         .from('bookings')
-        .select('id, booking_number')
+        .select('id, booking_number, status, created_at')
         .eq('hotel_id', bookingData.hotel_id)
         .eq('hotel_room_number', bookingData.hotel_room_number)
         .eq('booking_date', bookingData.booking_date)
         .eq('booking_time', bookingData.booking_time)
-        .neq('status', 'completed')
-        .neq('status', 'cancelled')
+        .in('status', ['confirmed', 'in_progress', 'pending'])  // Only check active bookings
         .limit(1)
 
+      if (conflictError) {
+        console.log('⚠️ [DUPLICATE CHECK] Query error:', conflictError.message)
+      }
+
+      console.log(`🔍 [DUPLICATE CHECK] Found ${roomConflict?.length || 0} conflicts`)
+
       if (roomConflict && roomConflict.length > 0) {
-        console.log('❌ [DUPLICATE] Room conflict:', roomConflict[0].booking_number)
+        const conflict = roomConflict[0]
+        console.log('❌ [DUPLICATE] Room conflict found:')
+        console.log(`   Booking: ${conflict.booking_number}`)
+        console.log(`   Status: ${conflict.status}`)
+        console.log(`   Created: ${conflict.created_at}`)
+
         return res.status(409).json({
           error: 'DUPLICATE_BOOKING',
-          message: `ห้อง ${bookingData.hotel_room_number} มีการจองในวันและเวลาเดียวกันอยู่แล้ว (${roomConflict[0].booking_number}) กรุณาเลือกเวลาอื่น`,
+          message: `ห้อง ${bookingData.hotel_room_number} มีการจองในวันและเวลาเดียวกันอยู่แล้ว`,
+          details: {
+            conflictBooking: conflict.booking_number,
+            conflictStatus: conflict.status,
+            suggestedActions: [
+              'เลือกเวลาอื่นในวันเดียวกัน',
+              'เลือกวันอื่น',
+              'ตรวจสอบการจองที่มีอยู่แล้ว'
+            ]
+          }
         })
+      } else {
+        console.log('✅ [DUPLICATE CHECK] No conflicts found - proceeding with booking')
       }
+    } else if (bookingData.hotel_room_number) {
+      console.log('🔧 [TESTING] Duplicate check disabled for development testing')
     }
 
     // Insert booking
@@ -169,6 +196,25 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
 
     if (bookingError) {
       console.log('❌ [DATABASE] Booking insertion failed:', bookingError.message)
+
+      // Handle duplicate booking constraint violation
+      if (bookingError.message.includes('duplicate key value violates unique constraint') &&
+          bookingError.message.includes('uq_bookings_hotel_room_slot')) {
+        return res.status(409).json({
+          error: 'DUPLICATE_BOOKING',
+          message: `ห้อง ${bookingData.hotel_room_number} มีการจองในวันและเวลาเดียวกันอยู่แล้ว`,
+          details: {
+            constraint: 'uq_bookings_hotel_room_slot',
+            suggestedActions: [
+              'เลือกเวลาอื่นในวันเดียวกัน',
+              'เลือกวันอื่น',
+              'ตรวจสอบการจองที่มีอยู่แล้ว'
+            ]
+          }
+        })
+      }
+
+      // Handle other database errors
       return res.status(500).json({
         error: 'Failed to create booking',
         details: bookingError.message
