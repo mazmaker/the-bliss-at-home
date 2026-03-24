@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2, Key, Shield } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2, Key, Shield, User, Grid, List } from 'lucide-react'
 import { HotelForm } from '../components/HotelForm'
 import { useHotels, useTotalMonthlyRevenue } from '../hooks/useHotels'
 import { updateHotelStatus } from '../lib/hotelQueries'
@@ -12,6 +12,7 @@ function Hotels() {
   const { revenue: monthlyRevenue, loading: revenueLoading } = useTotalMonthlyRevenue()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'inactive' | 'suspended' | 'banned'>('all')
+  const [viewType, setViewType] = useState<'grid' | 'list'>('grid')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingHotel, setEditingHotel] = useState<any>(null)
   const [resetPasswordHotel, setResetPasswordHotel] = useState<any>(null)
@@ -128,7 +129,7 @@ function Hotels() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -151,6 +152,12 @@ function Hotels() {
             {hotels.filter((h) => h.status === 'pending').length}
           </p>
           <p className="text-xs text-stone-500">รออนุมัติ</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+          <p className="text-2xl font-bold text-red-600">
+            {hotels.filter((h) => !(h as any).recommended_sales_staff).length}
+          </p>
+          <p className="text-xs text-stone-500">ยังไม่กำหนดเซลล์</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
           <p className="text-2xl font-bold text-stone-900">
@@ -192,14 +199,41 @@ function Hotels() {
         </div>
       </div>
 
-      {/* Results */}
-      <div className="text-sm text-stone-500">
-        พบ {filteredHotels.length} โรงแรม
+      {/* Results and View Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-stone-500">
+          พบ {filteredHotels.length} โรงแรม
+        </div>
+        <div className="flex items-center gap-2 bg-white rounded-lg border border-stone-200 p-1">
+          <button
+            onClick={() => setViewType('grid')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition ${
+              viewType === 'grid'
+                ? 'bg-amber-100 text-amber-700'
+                : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <Grid className="w-4 h-4" />
+            Grid
+          </button>
+          <button
+            onClick={() => setViewType('list')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition ${
+              viewType === 'list'
+                ? 'bg-amber-100 text-amber-700'
+                : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <List className="w-4 h-4" />
+            List
+          </button>
+        </div>
       </div>
 
-      {/* Hotels Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredHotels.map((hotel) => (
+      {/* Hotels Display */}
+      {viewType === 'grid' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredHotels.map((hotel) => (
           <div key={hotel.id} className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100 hover:shadow-xl transition">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -227,6 +261,18 @@ function Hotels() {
                 <MapPin className="w-4 h-4" />
                 <span className="line-clamp-1">{hotel.address}</span>
               </div>
+              {(hotel as any).recommended_sales_staff ? (
+                <div className="flex items-center gap-2 text-stone-600">
+                  <User className="w-4 h-4" />
+                  <span className="font-medium">เซลล์:</span>
+                  <span>{(hotel as any).recommended_sales_staff}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-amber-600">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="text-sm font-medium">ยังไม่กำหนดเซลล์ที่แนะนำ</span>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-4 gap-4 p-4 bg-stone-50 rounded-xl mb-4">
@@ -295,7 +341,125 @@ function Hotels() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-stone-50 border-b border-stone-200">
+                <tr>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-stone-900">โรงแรม</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-stone-900">ติดต่อ</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-stone-900">เซลล์</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-stone-900">สถานะ</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-stone-900">สถิติ</th>
+                  <th className="text-right px-6 py-4 text-sm font-medium text-stone-900">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-200">
+                {filteredHotels.map((hotel) => (
+                  <tr key={hotel.id} className="hover:bg-stone-50 transition">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-stone-700 to-stone-800 rounded-lg flex items-center justify-center">
+                          <Building className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-stone-900">{hotel.name_th}</div>
+                          <div className="text-sm text-stone-500">{hotel.name_en}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm space-y-1">
+                        <div className="text-stone-900 font-medium">{hotel.contact_person}</div>
+                        <div className="text-stone-500 flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          {hotel.phone}
+                        </div>
+                        <div className="text-stone-500 flex items-center gap-1 max-w-xs truncate">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          {hotel.address}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {(hotel as any).recommended_sales_staff ? (
+                        <div className="flex items-center gap-2 text-stone-600">
+                          <User className="w-4 h-4" />
+                          <span className="font-medium">{(hotel as any).recommended_sales_staff}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-amber-600">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span className="text-sm">ยังไม่กำหนด</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {getStatusBadge(hotel.status)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs space-y-1">
+                        <div className="text-stone-900 font-medium">{(hotel as any).totalBookings ?? 0} การจอง</div>
+                        <div className="text-amber-700 font-medium">฿{((hotel as any).monthlyRevenue ?? 0).toLocaleString()}</div>
+                        <div className="text-green-700 font-medium">{Number((hotel as any).discount_rate || 0)}% ส่วนลด</div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                          <span className="text-stone-700 font-medium">{Number(hotel.rating).toFixed(1)}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Link
+                          to={`/admin/hotels/${hotel.id}`}
+                          className="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition"
+                          title="ดูรายละเอียด"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => setEditingHotel(hotel)}
+                          className="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition"
+                          title="แก้ไข"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setResetPasswordHotel(hotel)}
+                          className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                          title="รีเซ็ตรหัสผ่าน"
+                        >
+                          <Key className="w-4 h-4" />
+                        </button>
+                        {hotel.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleApproveHotel(hotel.id)}
+                              className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                              title="อนุมัติ"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRejectHotel(hotel.id)}
+                              className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
+                              title="ปฏิเสธ"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Add Hotel Modal */}
       <HotelForm

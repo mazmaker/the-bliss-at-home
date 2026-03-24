@@ -209,6 +209,15 @@ export default function HotelDetail() {
                   </a>
                 </div>
               </div>
+              {(hotel as any).recommended_sales_staff && (
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-500">เซลล์ที่แนะนำ</p>
+                    <p className="font-medium">{(hotel as any).recommended_sales_staff}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -82,6 +82,7 @@ const hotelFormSchema = z.object({
   // Additional info
   description: z.string().optional(),
   website: z.string().url('รูปแบบ URL ไม่ถูกต้อง').optional().or(z.literal('')),
+  recommended_sales_staff: z.string().optional(),
 })
 
 type HotelFormData = z.infer<typeof hotelFormSchema>
@@ -242,6 +243,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       tax_id: '',
       description: '',
       website: '',
+      recommended_sales_staff: '',
     },
   })
 
@@ -301,6 +303,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           tax_id: '',
           description: '',
           website: '',
+          recommended_sales_staff: '',
         })
       }
       setSubmitError('')
@@ -343,6 +346,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             tax_id: data.tax_id,
             description: data.description,
             website: data.website,
+            recommended_sales_staff: data.recommended_sales_staff,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editData.id)
@@ -370,6 +374,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             tax_id: data.tax_id,
             description: data.description,
             website: data.website,
+            recommended_sales_staff: data.recommended_sales_staff,
           },
         ])
 
@@ -566,6 +571,26 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                     {errors.website && (
                       <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
                     )}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      เซลล์ที่แนะนำ
+                    </label>
+                    <div className="relative mt-1">
+                      <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                      <input
+                        {...register('recommended_sales_staff')}
+                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="ชื่อหรือรหัสเซลล์ที่แนะนำสำหรับโรงแรมนี้"
+                      />
+                    </div>
+                    {errors.recommended_sales_staff && (
+                      <p className="mt-1 text-sm text-red-600">{errors.recommended_sales_staff.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      ระบุชื่อหรือรหัสพนักงานขายที่รับผิดชอบโรงแรมนี้
+                    </p>
                   </div>
                 </div>
               </div>
