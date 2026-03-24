@@ -81,13 +81,21 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
 
     if (!res.ok) {
       const error = await res.json()
-      console.error('LINE push error:', JSON.stringify(error))
+      const status = res.status
+      if (status === 429 || (error?.message && error.message.includes('limit'))) {
+        console.error(`🚫 LINE QUOTA EXCEEDED (push): status=${status}, message=${JSON.stringify(error)}`)
+      } else if (status === 403) {
+        console.error(`🚫 LINE AUTH ERROR (push): status=${status}, token may be invalid, message=${JSON.stringify(error)}`)
+      } else {
+        console.error(`❌ LINE push error: status=${status}, response=${JSON.stringify(error)}`)
+      }
       return false
     }
 
+    console.log(`✅ LINE push sent to ${lineUserId.substring(0, 8)}...`)
     return true
   } catch (error) {
-    console.error('LINE push failed:', error)
+    console.error('💥 LINE push network/fetch failed:', error)
     return false
   }
 }
@@ -119,14 +127,23 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
 
       if (!res.ok) {
         const error = await res.json()
-        console.error('LINE multicast error:', JSON.stringify(error))
+        const status = res.status
+        if (status === 429 || (error?.message && error.message.includes('limit'))) {
+          console.error(`🚫 LINE QUOTA EXCEEDED (multicast): status=${status}, recipients=${batch.length}, message=${JSON.stringify(error)}`)
+        } else if (status === 403) {
+          console.error(`🚫 LINE AUTH ERROR (multicast): status=${status}, token may be invalid, message=${JSON.stringify(error)}`)
+        } else {
+          console.error(`❌ LINE multicast error: status=${status}, recipients=${batch.length}, response=${JSON.stringify(error)}`)
+        }
         allSuccess = false
+      } else {
+        console.log(`✅ LINE multicast sent to ${batch.length} recipients`)
       }
     }
 
     return allSuccess
   } catch (error) {
-    console.error('LINE multicast failed:', error)
+    console.error('💥 LINE multicast network/fetch failed:', error)
     return false
   }
 }

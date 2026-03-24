@@ -178,17 +178,33 @@ function BookingWizard() {
     }
   }, [paymentMethods, selectedPaymentMethodId, showManualPaymentForm])
 
-  // Mock available dates (next 7 days)
+  // Available dates (today + next 6 days)
   const availableDates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date()
-    date.setDate(date.getDate() + i + 1)
+    date.setDate(date.getDate() + i)
     return date.toISOString().split('T')[0]
   })
 
-  // Mock available time slots
-  const timeSlots = [
+  // All possible time slots
+  const allTimeSlots = [
     '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
   ]
+
+  // Filter time slots: must be at least 3 hours in advance for today
+  const getAvailableTimeSlots = (date: string | null) => {
+    if (!date) return allTimeSlots
+    const now = new Date()
+    const todayStr = now.toISOString().split('T')[0]
+    if (date !== todayStr) return allTimeSlots
+    const minHour = now.getHours() + 3
+    const minMinute = now.getMinutes()
+    return allTimeSlots.filter((slot) => {
+      const [h, m] = slot.split(':').map(Number)
+      return h > minHour || (h === minHour && m >= minMinute)
+    })
+  }
+
+  const timeSlots = getAvailableTimeSlots(selectedDate)
 
   const steps = [
     { num: 1, label: t('wizard.steps.service') },
@@ -719,7 +735,14 @@ function BookingWizard() {
                     return (
                       <button
                         key={date}
-                        onClick={() => setSelectedDate(date)}
+                        onClick={() => {
+                          setSelectedDate(date)
+                          // Reset time if previously selected time is no longer available
+                          const slots = getAvailableTimeSlots(date)
+                          if (selectedTime && !slots.includes(selectedTime)) {
+                            setSelectedTime('')
+                          }
+                        }}
                         className={`p-4 rounded-xl border-2 transition ${
                           selectedDate === date
                             ? 'border-amber-500 bg-stone-50 text-amber-700'
