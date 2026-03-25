@@ -11,6 +11,7 @@ import MonthlyBill from './pages/MonthlyBill'
 import HotelProfile from './pages/HotelProfile'
 import HotelSettings from './pages/HotelSettings'
 import HotelNotifications from './pages/HotelNotifications'
+import TestExtendSession from './pages/TestExtendSession'
 import { EnhancedHotelLogin } from './pages/auth'
 import DynamicHotelRedirect from './components/DynamicHotelRedirect'
 
@@ -67,6 +68,7 @@ function App() {
           <Route path="profile" element={<HotelProfile />} />
           <Route path="notifications" element={<HotelNotifications />} />
           <Route path="settings" element={<HotelSettings />} />
+          <Route path="test-extend" element={<TestExtendSession />} />
         </Route>
 
         {/* Default redirects */}

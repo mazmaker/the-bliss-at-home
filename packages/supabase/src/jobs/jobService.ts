@@ -31,6 +31,8 @@ export async function getStaffJobs(
     .from('jobs')
     .select(`
       *,
+      total_staff_earnings,
+      total_duration_minutes,
       bookings (
         hotel_id,
         provider_preference,
@@ -88,6 +90,8 @@ export async function getPendingJobs(staffGender?: string | null): Promise<Job[]
     .from('jobs')
     .select(`
       *,
+      total_staff_earnings,
+      total_duration_minutes,
       bookings (
         hotel_id,
         provider_preference,
@@ -129,6 +133,8 @@ export async function getJob(jobId: string): Promise<Job | null> {
     .from('jobs')
     .select(`
       *,
+      total_staff_earnings,
+      total_duration_minutes,
       bookings (
         hotel_id,
         provider_preference,
@@ -349,7 +355,7 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
   // Get today's jobs
   const { data: todayJobs, error: todayError } = await supabase
     .from('jobs')
-    .select('amount, staff_earnings, status')
+    .select('amount, staff_earnings, total_staff_earnings, status')
     .eq('staff_id', staffId)
     .eq('scheduled_date', today)
 
@@ -360,7 +366,7 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
   // Get total stats
   const { data: totalJobs, error: totalError } = await supabase
     .from('jobs')
-    .select('amount, staff_earnings, status')
+    .select('amount, staff_earnings, total_staff_earnings, status')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
 
@@ -386,10 +392,10 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
 
   return {
     today_jobs_count: todayJobsList.length,
-    today_earnings: todayCompleted.reduce((sum: number, j: any) => sum + (j.staff_earnings || 0), 0),
+    today_earnings: todayCompleted.reduce((sum: number, j: any) => sum + (j.total_staff_earnings || j.staff_earnings || 0), 0),
     today_completed: todayCompleted.length,
     total_jobs: totalJobsList.length,
-    total_earnings: totalJobsList.reduce((sum: number, j: any) => sum + (j.staff_earnings || 0), 0),
+    total_earnings: totalJobsList.reduce((sum: number, j: any) => sum + (j.total_staff_earnings || j.staff_earnings || 0), 0),
     average_rating: ratingsList.length > 0
       ? ratingsList.reduce((sum: number, r: any) => sum + r.rating, 0) / ratingsList.length
       : 0,

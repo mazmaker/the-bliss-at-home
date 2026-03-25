@@ -1,12 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@bliss/supabase/auth'
 import {
   ArrowLeft, MapPin, Clock, User, Phone, Navigation, Calendar,
   Banknote, FileText, CheckCircle, XCircle, Play, Loader2
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton } from '../components'
+import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner } from '../components'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -18,6 +20,65 @@ function StaffJobDetail() {
   const { job, isLoading, error, refetch } = useJob(id || null)
   const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
+
+  // Query booking services for extension info (with fallback for missing columns)
+  const { data: bookingServices } = useQuery({
+    queryKey: ['booking-services', job?.id],
+    queryFn: async () => {
+      if (!job?.id) return []
+      try {
+        // Try with extension columns first
+        const { data, error } = await supabase
+          .from('booking_services')
+          .select('id, duration, price, is_extension, extended_at, sort_order')
+          .eq('booking_id', job.booking_id)
+          .order('sort_order')
+
+        if (error) throw error
+        return data || []
+      } catch (error) {
+        console.warn('Extension columns not available, using basic booking_services data:', error)
+        // Fallback to basic columns only
+        try {
+          const { data, error: fallbackError } = await supabase
+            .from('booking_services')
+            .select('id, duration, price, sort_order')
+            .eq('booking_id', job.booking_id)
+            .order('sort_order')
+
+          if (fallbackError) throw fallbackError
+          // Add default extension fields
+          return (data || []).map(service => ({
+            ...service,
+            is_extension: false,
+            extended_at: null
+          }))
+        } catch (fallbackError) {
+          console.error('Booking services query failed:', fallbackError)
+          return []
+        }
+      }
+    },
+    enabled: !!job?.id
+  })
+
+  // Process extension data with safety checks
+  const originalServices = bookingServices?.filter(s => s && !s.is_extension) || []
+  const extensionServices = bookingServices?.filter(s => s && s.is_extension) || []
+
+  // Debug logging
+  console.log('🔍 StaffJobDetail Debug:', {
+    jobId: job?.id,
+    bookingServices,
+    originalServices,
+    extensionServices,
+    extensionCount: extensionServices.length
+  })
+
+  const originalDuration = originalServices.reduce((sum, s) => sum + (s?.duration || 0), 0)
+  const originalPrice = originalServices.reduce((sum, s) => sum + (s?.price || 0), 0)
+  const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
+  const totalPrice = bookingServices?.reduce((sum, s) => sum + (s?.price || 0), 0) || originalPrice
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -187,16 +248,19 @@ function StaffJobDetail() {
         {getStatusBadge(job.status)}
       </div>
 
+      {/* Extension Alert Banner */}
+      <ExtensionAlertBanner jobId={job.id} />
+
       {/* Service Timer (in_progress) */}
       {isInProgress && job.started_at && (
-        <ServiceTimer startedAt={job.started_at} durationMinutes={job.duration_minutes} />
+        <ServiceTimer startedAt={job.started_at} durationMinutes={totalDuration} />
       )}
 
       {/* Service Info Card */}
       <div className="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
         <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-4">
           <h2 className="text-xl font-bold">{job.service_name}</h2>
-          <p className="text-amber-100 text-sm mt-1">{job.duration_minutes} นาที</p>
+          <p className="text-amber-100 text-sm mt-1">{job.total_duration_minutes || job.duration_minutes} นาที</p>
         </div>
 
         <div className="p-4 space-y-4">
@@ -284,7 +348,7 @@ function StaffJobDetail() {
             </div>
             <div>
               <p className="text-xs text-stone-500">รายได้</p>
-              <p className="text-xl font-bold text-amber-700">฿{Number(job.staff_earnings).toLocaleString()}</p>
+              <p className="text-xl font-bold text-amber-700">฿{Number(job.total_staff_earnings || job.staff_earnings).toLocaleString()}</p>
             </div>
           </div>
 
@@ -336,6 +400,18 @@ function StaffJobDetail() {
           )}
         </div>
       </div>
+
+      {/* Extension Information */}
+      {extensionServices.length > 0 && (
+        <ExtensionInfo
+          originalDuration={originalDuration}
+          originalPrice={originalPrice}
+          extensions={extensionServices}
+          totalDuration={totalDuration}
+          totalPrice={totalPrice}
+          className=""
+        />
+      )}
 
       {/* Timestamps */}
       {(job.accepted_at || job.started_at || job.completed_at || job.cancelled_at) && (
@@ -439,7 +515,7 @@ function StaffJobDetail() {
           jobId={job.id}
           serviceName={job.service_name}
           startedAt={job.started_at}
-          durationMinutes={job.duration_minutes}
+          durationMinutes={totalDuration}
         />
       ) : (
         <JobCancellationModal

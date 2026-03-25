@@ -63,6 +63,8 @@ export interface Job {
   // Payment info
   amount: number
   staff_earnings: number
+  total_staff_earnings?: number  // Total earnings including extensions
+  total_duration_minutes?: number  // Total duration including extensions
   payment_status: JobPaymentStatus
 
   // Job status

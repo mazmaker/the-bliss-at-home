@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loader2, AlertTriangle, ChevronRight } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { SOSButton, JobCancellationModal, ServiceTimer } from '../components'
+import { SOSButton, JobCancellationModal, ServiceTimer, ExtensionAcceptanceCard } from '../components'
+import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
 
@@ -16,6 +17,9 @@ function StaffDashboard() {
     onNewJob: handleNewJob,
   })
   const { stats } = useStaffStats()
+
+  // Extend session notifications
+  const { latestExtension, clearLatestExtension } = useExtendSessionNotifications(user?.id)
 
   const [currentJob, setCurrentJob] = useState<Job | null>(null)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
@@ -38,6 +42,15 @@ function StaffDashboard() {
     const inProgressJob = jobs.find(j => j.status === 'in_progress' || j.status === 'traveling' || j.status === 'arrived')
     setCurrentJob(inProgressJob || null)
   }, [jobs])
+
+  // Handle extend session notifications
+  useEffect(() => {
+    if (latestExtension) {
+      console.log('🔔 Extension detected, refreshing job data:', latestExtension)
+      refresh() // Refresh job data to get updated information
+      clearLatestExtension()
+    }
+  }, [latestExtension, refresh, clearLatestExtension])
 
   // Handle new job notification
   function handleNewJob(job: Job) {
@@ -249,6 +262,9 @@ function StaffDashboard() {
         </div>
       )}
 
+      {/* Extension Acceptance Card */}
+      <ExtensionAcceptanceCard />
+
       {/* Today's Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl shadow p-3 text-center">
@@ -292,7 +308,7 @@ function StaffDashboard() {
             {currentJob.started_at && (
               <ServiceTimer
                 startedAt={currentJob.started_at}
-                durationMinutes={currentJob.duration_minutes}
+                durationMinutes={currentJob.total_duration_minutes || currentJob.duration_minutes}
               />
             )}
 
@@ -376,7 +392,7 @@ function StaffDashboard() {
                     <div>
                       <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
                       <p className="text-sm text-stone-500">
-                        {job.scheduled_time} • {job.duration_minutes} นาที
+                        {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                       </p>
                     </div>
                     {getStatusBadge(job.status)}
@@ -408,7 +424,7 @@ function StaffDashboard() {
                 </Link>
 
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-amber-700">฿{job.staff_earnings}</p>
+                  <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCancelJobClick(job)}
@@ -451,7 +467,7 @@ function StaffDashboard() {
                     <div>
                       <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
                       <p className="text-sm text-stone-500">
-                        {job.scheduled_date} • {job.scheduled_time} • {job.duration_minutes} นาที
+                        {job.scheduled_date} • {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                       </p>
                     </div>
                     {getStatusBadge(job.status)}
@@ -489,7 +505,7 @@ function StaffDashboard() {
                 </Link>
 
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-amber-700">฿{job.staff_earnings}</p>
+                  <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                   <div className="flex items-center gap-2">
                     <Link
                       to={`/staff/jobs/${job.id}`}
@@ -530,7 +546,7 @@ function StaffDashboard() {
                       <div>
                         <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
                         <p className="text-sm text-stone-500">
-                          {job.scheduled_date} • {job.scheduled_time} • {job.duration_minutes} นาที
+                          {job.scheduled_date} • {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                         </p>
                       </div>
                       {getStatusBadge(job.status)}
@@ -561,7 +577,7 @@ function StaffDashboard() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold text-amber-700">฿{job.staff_earnings}</p>
+                      <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                       <div className="flex items-center gap-1 text-stone-500 text-xs">
                         <span>ดูรายละเอียด</span>
                         <ChevronRight className="w-4 h-4" />
@@ -586,7 +602,7 @@ function StaffDashboard() {
                         <p className="text-sm text-stone-600 mt-1">{job.customer_name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-green-600">+฿{job.staff_earnings}</p>
+                        <p className="font-bold text-green-600">+฿{job.total_staff_earnings || job.staff_earnings}</p>
                       </div>
                     </div>
                     {job.hotel_name && (
@@ -630,7 +646,7 @@ function StaffDashboard() {
                     <p className="text-sm text-stone-500">{job.scheduled_time} • {job.customer_name}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-green-600">+฿{job.staff_earnings}</p>
+                    <p className="font-bold text-green-600">+฿{job.total_staff_earnings || job.staff_earnings}</p>
                   </div>
                 </div>
               </Link>

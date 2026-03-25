@@ -28,10 +28,10 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
   const monthStartStr = monthStart.toISOString().split('T')[0]
 
-  // Fetch completed jobs
+  // Fetch completed jobs with total earnings and duration (including extensions)
   const { data: jobs, error } = await supabase
     .from('jobs')
-    .select('staff_earnings, duration_minutes, scheduled_date, status')
+    .select('staff_earnings, duration_minutes, total_staff_earnings, total_duration_minutes, scheduled_date, status')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
     .gte('scheduled_date', monthStartStr)
@@ -48,8 +48,9 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
 
   jobs?.forEach((job) => {
     const jobDate = job.scheduled_date
-    const earnings = job.staff_earnings || 0
-    const hours = (job.duration_minutes || 0) / 60
+    // Use total earnings/duration if available, fallback to base values
+    const earnings = job.total_staff_earnings || job.staff_earnings || 0
+    const hours = (job.total_duration_minutes || job.duration_minutes || 0) / 60
 
     // Month totals
     monthEarnings += earnings
@@ -116,7 +117,7 @@ export async function getDailyEarnings(
 ): Promise<DailyEarning[]> {
   const { data: jobs, error } = await supabase
     .from('jobs')
-    .select('staff_earnings, duration_minutes, scheduled_date')
+    .select('staff_earnings, duration_minutes, total_staff_earnings, total_duration_minutes, scheduled_date')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
     .gte('scheduled_date', startDate)
@@ -144,13 +145,13 @@ export async function getDailyEarnings(
     })
   }
 
-  // Fill in actual earnings
+  // Fill in actual earnings (including extensions)
   jobs?.forEach((job) => {
     const existing = dailyMap.get(job.scheduled_date)
     if (existing) {
-      existing.earnings += job.staff_earnings || 0
+      existing.earnings += job.total_staff_earnings || job.staff_earnings || 0
       existing.jobs += 1
-      existing.hours += (job.duration_minutes || 0) / 60
+      existing.hours += (job.total_duration_minutes || job.duration_minutes || 0) / 60
     }
   })
 
@@ -169,7 +170,7 @@ export async function getServiceEarnings(
 ): Promise<ServiceEarning[]> {
   const { data: jobs, error } = await supabase
     .from('jobs')
-    .select('service_name, service_name_en, staff_earnings')
+    .select('service_name, service_name_en, staff_earnings, total_staff_earnings')
     .eq('staff_id', staffId)
     .eq('status', 'completed')
     .gte('scheduled_date', startDate)
@@ -187,7 +188,7 @@ export async function getServiceEarnings(
   jobs?.forEach((job) => {
     const key = job.service_name
     const existing = serviceMap.get(key)
-    const earnings = job.staff_earnings || 0
+    const earnings = job.total_staff_earnings || job.staff_earnings || 0
     totalEarnings += earnings
 
     if (existing) {

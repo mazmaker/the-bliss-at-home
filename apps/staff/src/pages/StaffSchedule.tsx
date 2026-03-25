@@ -168,10 +168,10 @@ function StaffSchedule() {
     ).length
     const totalEarnings = filteredJobs
       .filter((j) => j.status === 'completed')
-      .reduce((sum, j) => sum + (j.staff_earnings || 0), 0)
+      .reduce((sum, j) => sum + (j.total_staff_earnings || j.staff_earnings || 0), 0)
     const totalHours = filteredJobs
       .filter((j) => j.status !== 'cancelled')
-      .reduce((sum, j) => sum + (j.duration_minutes || 0), 0) / 60
+      .reduce((sum, j) => sum + (j.total_duration_minutes || j.duration_minutes || 0), 0) / 60
 
     return { totalJobs, completedJobs, upcomingJobs, totalEarnings, totalHours }
   }, [filteredJobs])
@@ -441,8 +441,8 @@ function StaffSchedule() {
               </div>
             )}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
-              <span className="text-sm text-stone-500">{job.duration_minutes} นาที</span>
-              <span className="font-bold text-amber-700">฿{job.staff_earnings}</span>
+              <span className="text-sm text-stone-500">{job.total_duration_minutes || job.duration_minutes} นาที</span>
+              <span className="font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</span>
             </div>
           </button>
         ))}
@@ -704,7 +704,7 @@ function StaffSchedule() {
                     })}
                   </p>
                   <p className="text-xs text-amber-700">
-                    {selectedJob.scheduled_time} • {selectedJob.duration_minutes} นาที
+                    {selectedJob.scheduled_time} • {selectedJob.total_duration_minutes || selectedJob.duration_minutes} นาที
                   </p>
                 </div>
               </div>

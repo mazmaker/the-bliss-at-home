@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
+import { ExtendSessionModal } from '../components/ExtendSessionModal'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
@@ -176,6 +177,10 @@ function BookingHistory() {
     isOpen: false,
     booking: null
   })
+  const [extendSessionModal, setExtendSessionModal] = useState<{ isOpen: boolean; booking: SimpleBooking | null }>({
+    isOpen: false,
+    booking: null
+  })
 
   // Additional feature states
   const [notesModal, setNotesModal] = useState<{ isOpen: boolean; booking: SimpleBooking | null }>({
@@ -198,6 +203,12 @@ function BookingHistory() {
   // Cancel/Reschedule success handler
   const handleCancelRescheduleSuccess = () => {
     refetch()
+  }
+
+  // Extend session success handler
+  const handleExtendSessionSuccess = () => {
+    refetch()
+    setExtendSessionModal({ isOpen: false, booking: null })
   }
 
 
@@ -1218,6 +1229,17 @@ function BookingHistory() {
                     แก้ไขหมายเหตุ
                   </button>
 
+                  {/* Extend Session Button - Show for confirmed and in_progress bookings */}
+                  {['confirmed', 'in_progress'].includes(selectedBooking.status) && (
+                    <button
+                      onClick={() => setExtendSessionModal({ isOpen: true, booking: selectedBooking })}
+                      className="flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition text-sm"
+                    >
+                      <Clock className="w-4 h-4" />
+                      เพิ่มเวลาบริการ
+                    </button>
+                  )}
+
                   {selectedBooking.customer_notes?.includes('Phone:') && (
                     <button
                       onClick={() => {
@@ -1304,6 +1326,21 @@ function BookingHistory() {
           roomNumber={rescheduleModal.booking.room_number}
           currentDate={rescheduleModal.booking.booking_date}
           currentTime={rescheduleModal.booking.booking_time}
+        />
+      )}
+
+      {/* Extend Session Modal */}
+      {extendSessionModal.booking && extendSessionModal.isOpen && (
+        <ExtendSessionModal
+          booking={{
+            ...extendSessionModal.booking,
+            customer_name: extendSessionModal.booking.guest_name,
+            hotel_room_number: extendSessionModal.booking.room_number,
+            extension_count: 0, // Will be loaded from database
+            booking_services: [] // Will be loaded from database
+          } as any}
+          onConfirm={handleExtendSessionSuccess}
+          onCancel={() => setExtendSessionModal({ isOpen: false, booking: null })}
         />
       )}
 
