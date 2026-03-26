@@ -76,9 +76,11 @@ function StaffJobDetail() {
   })
 
   const originalDuration = originalServices.reduce((sum, s) => sum + (s?.duration || 0), 0)
-  const originalPrice = originalServices.reduce((sum, s) => sum + (s?.price || 0), 0)
+  // Use job's staff earnings (commission-based) for original price instead of customer price
+  const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
-  const totalPrice = bookingServices?.reduce((sum, s) => sum + (s?.price || 0), 0) || originalPrice
+  // Use job's total staff earnings (includes extension commissions) for total price
+  const totalPrice = job?.total_staff_earnings || job?.staff_earnings || originalPrice
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)

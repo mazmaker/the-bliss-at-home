@@ -399,9 +399,32 @@ function StaffSchedule() {
 
   // Render day view (list of jobs)
   const renderDayView = () => {
-    const todayJobs = sortedJobs.filter(
-      (job) => job.scheduled_date === formatLocalDate(currentDate)
-    )
+    // Show ALL jobs for selected day, regardless of filter
+    // Prioritize upcoming jobs first
+    const todayJobs = jobs
+      .filter((job) => job.scheduled_date === formatLocalDate(currentDate))
+      .sort((a, b) => {
+        // Sort by status priority first (upcoming jobs first)
+        const statusPriority = {
+          'in_progress': 0,
+          'assigned': 1,
+          'confirmed': 2,
+          'traveling': 3,
+          'arrived': 4,
+          'pending': 5,
+          'completed': 6,
+          'cancelled': 7
+        }
+        const aPriority = statusPriority[a.status] || 8
+        const bPriority = statusPriority[b.status] || 8
+
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority
+        }
+
+        // Then sort by time
+        return (a.scheduled_time || '').localeCompare(b.scheduled_time || '')
+      })
 
     if (todayJobs.length === 0) {
       return (
@@ -818,12 +841,29 @@ function StaffSchedule() {
 
               {/* Earnings */}
               <div className="bg-green-50 rounded-xl px-3 py-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-green-700 text-sm">รายได้</span>
-                  <span className="text-xl font-bold text-green-700">
-                    ฿{selectedJob.staff_earnings}
-                  </span>
-                </div>
+                {selectedJob.total_staff_earnings && selectedJob.total_staff_earnings !== selectedJob.staff_earnings ? (
+                  // Show extension earnings breakdown
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-700 text-sm">รายได้รวม</span>
+                      <span className="text-xl font-bold text-green-700">
+                        ฿{selectedJob.total_staff_earnings}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-600">รายได้เดิม: ฿{selectedJob.staff_earnings}</span>
+                      <span className="text-amber-600">+เพิ่มเวลาบริการ: ฿{selectedJob.total_staff_earnings - selectedJob.staff_earnings}</span>
+                    </div>
+                  </div>
+                ) : (
+                  // Show regular earnings
+                  <div className="flex items-center justify-between">
+                    <span className="text-green-700 text-sm">รายได้</span>
+                    <span className="text-xl font-bold text-green-700">
+                      ฿{selectedJob.staff_earnings}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -129,13 +129,21 @@ function StaffEarnings() {
     }
   }
 
-  // Get earnings for current period — aggregate from dailyEarnings which respects selected date range
+  // Prepare chart data based on view period — show all days, not just 14
+  const chartData = useMemo(() => {
+    if (viewPeriod === 'day') return dailyEarnings.slice(0, 1).reverse()
+    if (viewPeriod === 'week') return dailyEarnings.slice(0, 7).reverse()
+    return [...dailyEarnings].reverse() // month: show all days
+  }, [dailyEarnings, viewPeriod])
+
+  // Get earnings for current period — aggregate from CHART DATA (not all dailyEarnings)
+  // This ensures Summary Card matches exactly what's shown in the chart
   const periodEarnings = useMemo(() => {
-    const earnings = dailyEarnings.reduce((sum, d) => sum + d.earnings, 0)
-    const jobs = dailyEarnings.reduce((sum, d) => sum + d.jobs, 0)
-    const hours = dailyEarnings.reduce((sum, d) => sum + d.hours, 0)
+    const earnings = chartData.reduce((sum, d) => sum + d.earnings, 0)
+    const jobs = chartData.reduce((sum, d) => sum + d.jobs, 0)
+    const hours = chartData.reduce((sum, d) => sum + d.hours, 0)
     return { earnings, jobs, hours }
-  }, [dailyEarnings])
+  }, [chartData])
 
   // Get payout status badge
   const getPayoutStatusBadge = (status: PayoutStatus) => {
@@ -164,13 +172,6 @@ function StaffEarnings() {
     setCopiedRef(ref)
     setTimeout(() => setCopiedRef(null), 2000)
   }
-
-  // Prepare chart data based on view period — show all days, not just 14
-  const chartData = useMemo(() => {
-    if (viewPeriod === 'day') return dailyEarnings.slice(0, 1).reverse()
-    if (viewPeriod === 'week') return dailyEarnings.slice(0, 7).reverse()
-    return [...dailyEarnings].reverse() // month: show all days
-  }, [dailyEarnings, viewPeriod])
 
   // Calculate max earnings for chart
   const maxDailyEarning = Math.max(...chartData.map((d) => d.earnings), 1)
@@ -243,7 +244,7 @@ function StaffEarnings() {
             <p className="text-3xl font-bold">฿{periodEarnings.earnings.toLocaleString()}</p>
           </div>
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
+            <span className="text-2xl font-bold">฿</span>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
@@ -287,28 +288,94 @@ function StaffEarnings() {
       {/* Daily Earnings Chart */}
       {chartData.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-4">
-          <h3 className="font-semibold text-stone-900 mb-4">รายได้รายวัน</h3>
-          <div className="flex justify-between gap-0.5 h-32">
-            {chartData.map((day) => {
-              const dayDate = new Date(day.date)
-              return (
-                <div key={day.date} className="flex-1 flex flex-col items-center">
-                  <div className="flex-1 w-full flex items-end">
-                    <div
-                      className={`w-full rounded-t-lg transition-all ${
-                        day.earnings > 0
-                          ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
-                          : 'bg-stone-200'
-                      }`}
-                      style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
-                      title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
-                    />
-                  </div>
-                  <span className="text-[10px] text-stone-500 mt-1">{dayDate.getDate()}</span>
+          {viewPeriod === 'day' ? (
+            // Enhanced design for Day view only
+            <>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-bold text-amber-700">฿</span>
                 </div>
-              )
-            })}
-          </div>
+                <h3 className="font-semibold text-stone-900">รายได้รายวัน</h3>
+              </div>
+
+              <div className="flex justify-center">
+                {chartData.map((day) => {
+                  const dayDate = new Date(day.date)
+                  const isToday = day.date === new Date().toISOString().split('T')[0]
+                  const hasEarnings = day.earnings > 0
+
+                  return (
+                    <div key={day.date} className="flex flex-col items-center group px-4">
+                      <div className="h-40 flex items-end mb-2 relative">
+                        {/* Earnings amount on top */}
+                        {hasEarnings && (
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                            <span className="text-sm font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-lg whitespace-nowrap shadow-sm">
+                              ฿{day.earnings.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Bar */}
+                        <div
+                          className={`w-16 rounded-lg shadow-lg transition-all ${
+                            hasEarnings
+                              ? isToday
+                                ? 'bg-gradient-to-t from-green-600 to-green-500'
+                                : 'bg-gradient-to-t from-amber-600 to-amber-500'
+                              : 'bg-gradient-to-t from-stone-200 to-stone-100'
+                          }`}
+                          style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 160, hasEarnings ? 12 : 8)}px` }}
+                        />
+                      </div>
+
+                      {/* Date label */}
+                      <div className="text-center">
+                        <span className={`text-sm font-bold ${
+                          isToday
+                            ? 'text-green-700 bg-green-100 px-3 py-1 rounded-full'
+                            : hasEarnings
+                              ? 'text-amber-700'
+                              : 'text-stone-400'
+                        }`}>
+                          {dayDate.getDate()}
+                        </span>
+                        {isToday && (
+                          <div className="text-xs text-green-600 font-medium mt-1">วันนี้</div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            // Original simple design for Week/Month views
+            <>
+              <h3 className="font-semibold text-stone-900 mb-4">รายได้รายวัน</h3>
+              <div className="flex justify-between gap-0.5 h-32">
+                {chartData.map((day) => {
+                  const dayDate = new Date(day.date)
+                  return (
+                    <div key={day.date} className="flex-1 flex flex-col items-center">
+                      <div className="flex-1 w-full flex items-end">
+                        <div
+                          className={`w-full rounded-t-lg transition-all ${
+                            day.earnings > 0
+                              ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
+                              : 'bg-stone-200'
+                          }`}
+                          style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
+                          title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500 mt-1">{dayDate.getDate()}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 

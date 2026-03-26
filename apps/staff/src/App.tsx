@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import { useEffect, useRef } from 'react'
 import { ProtectedRoute } from '@bliss/ui'
 import { useAuth } from '@bliss/supabase/auth'
+import toast, { Toaster } from 'react-hot-toast'
 import StaffLayout from './layouts/StaffLayout'
 import StaffDashboard from './pages/StaffDashboard'
 import StaffJobDetail from './pages/StaffJobDetail'
@@ -71,6 +72,7 @@ function App() {
   }
 
   return (
+    <>
     <Routes>
       {/* Public login route */}
       <Route
@@ -176,6 +178,28 @@ function App() {
         })()
       } />
     </Routes>
+
+    {/* Toast notifications for extend session */}
+    <Toaster
+      position="top-center"
+      toastOptions={{
+        duration: 6000,
+        style: {
+          background: '#fef3c7',
+          color: '#92400e',
+          border: '1px solid #fcd34d',
+          borderRadius: '12px',
+          padding: '12px 16px',
+        },
+        success: {
+          iconTheme: {
+            primary: '#f59e0b',
+            secondary: '#fff',
+          },
+        },
+      }}
+    />
+    </>
   )
 }
 

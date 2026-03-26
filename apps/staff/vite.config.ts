@@ -16,6 +16,7 @@ export default defineConfig({
   server: {
     port: 3004,
     strictPort: true,
+    host: true, // Allow external connections
     allowedHosts: [
       'localhost',
       '.trycloudflare.com', // Allow all Cloudflare Tunnel subdomains

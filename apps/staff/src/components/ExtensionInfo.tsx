@@ -36,7 +36,8 @@ export function ExtensionInfo({
   }
 
   const totalExtensionTime = extensions.reduce((sum, ext) => sum + ext.duration, 0);
-  const totalExtensionPrice = extensions.reduce((sum, ext) => sum + ext.price, 0);
+  // Use actual total price from database (includes real commission rates)
+  const totalExtensionPrice = totalPrice - originalPrice;
 
   return (
     <div className={`bg-amber-50 border border-amber-200 rounded-lg p-4 ${className}`}>
@@ -102,7 +103,7 @@ export function ExtensionInfo({
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-amber-700 font-medium">+{extension.duration} นาที</span>
-                  <span className="text-green-600 font-medium">+฿{(extension.price || 0).toLocaleString()}</span>
+                  <span className="text-green-600 font-medium">+฿{((extension.price || 0) * 0.25).toLocaleString()}</span>
                 </div>
               </div>
             ))}
@@ -111,7 +112,7 @@ export function ExtensionInfo({
 
       {/* Note */}
       <div className="mt-3 p-2 bg-amber-100 rounded text-xs text-amber-700">
-        💡 การเพิ่มเวลานี้ถูกจัดการโดยโรงแรมและจะส่งผลต่อรายได้ของคุณ
+        💡 รายได้ที่แสดงเป็นส่วนแบ่งของสตาฟ (25% จากราคาการเพิ่มเวลา)
       </div>
     </div>
   );
