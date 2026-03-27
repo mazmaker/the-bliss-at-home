@@ -1,4 +1,12 @@
-// Pricing utilities for duration-based pricing
+// ⚠️ DEPRECATED: This file contains old pricing calculation logic
+// ⚠️ As of March 27, 2026: Admin App now uses direct price control
+// ⚠️ ServiceForm.tsx no longer imports from this file
+// ⚠️ Customer App uses stored prices (price_60, price_90, price_120) only
+//
+// This file is kept for reference only. All arbitrary multipliers (1.435, 1.855, 0.4)
+// have been replaced with admin-controlled pricing system.
+//
+// OLD LOGIC (removed from active use):
 // Base pricing logic: 60 minutes = base price, others calculated proportionally
 
 export interface PricingResult {

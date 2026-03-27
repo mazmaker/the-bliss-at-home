@@ -67,7 +67,9 @@ export function getHotelServicePrice(service: Service, duration: number): PriceR
 }
 
 /**
- * Fallback calculation logic (from original pricingUtils.ts)
+ * ⚠️ DEPRECATED: Fallback calculation logic (from original pricingUtils.ts)
+ * ⚠️ Since all services now have stored prices, this fallback should rarely be used
+ * ⚠️ EnhancedPriceCalculator is preferred for Hotel App pricing
  */
 function calculatePriceFromBase(basePrice: number, duration: number): number {
   let multiplier = 1.0

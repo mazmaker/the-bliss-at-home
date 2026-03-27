@@ -11,42 +11,27 @@ interface ServiceDurationPickerProps {
 
 /**
  * Calculate price for a given duration.
- * Uses stored price_60/price_90/price_120 if available,
- * otherwise calculates from base_price using multiplier formula
- * (same as admin pricingUtils.ts).
+ * Uses stored price_60/price_90/price_120 only - no calculations.
+ * All services must have proper stored prices configured by Admin.
  */
 export function getPriceForDuration(service: Service, duration: number): number {
-  // Use stored per-duration prices if available
+  // Use stored per-duration prices only
   if (duration === 60 && service.price_60) return service.price_60
   if (duration === 90 && service.price_90) return service.price_90
   if (duration === 120 && service.price_120) return service.price_120
 
-  // Calculate from base_price using multiplier (matches admin pricing logic)
-  const basePrice = Number(service.base_price)
-  let multiplier = 1.0
+  // If no stored price found, this is a configuration error
+  console.error(`❌ Missing stored price for ${duration} min in service: ${service.name_th || service.id}`)
+  console.error(`Available prices:`, {
+    price_60: service.price_60,
+    price_90: service.price_90,
+    price_120: service.price_120
+  })
 
-  switch (duration) {
-    case 60:
-      multiplier = 1.0
-      break
-    case 90:
-      multiplier = 1.435
-      break
-    case 120:
-      multiplier = 1.855
-      break
-    default:
-      if (duration < 60) {
-        multiplier = duration / 60
-      } else if (duration > 120) {
-        const extraMinutes = duration - 120
-        multiplier = 1.855 + (extraMinutes / 60) * 0.4
-      } else {
-        multiplier = 1.0 + ((duration - 60) / 60) * 0.855
-      }
-  }
-
-  return Math.round(basePrice * multiplier)
+  // Fallback to base_price but log as error
+  const fallbackPrice = Number(service.base_price || 0)
+  console.error(`Using fallback price: ฿${fallbackPrice}`)
+  return fallbackPrice
 }
 
 export function getAvailableDurations(service: Service): number[] {

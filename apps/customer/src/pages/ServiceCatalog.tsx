@@ -4,6 +4,7 @@ import { Search, Star, Clock, List, Sparkles, Hand, Flower2 } from 'lucide-react
 import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
+import { getPriceForDuration } from '../components/ServiceDurationPicker'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -45,19 +46,24 @@ function ServiceCatalog() {
 
   // Transform services to match expected format
   const transformedServices = useMemo(() => {
-    return services?.map(service => ({
-      id: service.id,
-      name: service.name_en || service.name_th,
-      name_th: service.name_th || '',
-      name_en: service.name_en || '',
-      price: Number(service.base_price || 0),
-      category: service.category,
-      rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
-      reviews: serviceReviewStats?.[service.id]?.review_count || 0,
-      duration: service.duration || 60,
-      slug: service.slug,
-      image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
-    })) || []
+    return services?.map(service => {
+      // Use stored price_60 if available, otherwise calculate from base_price
+      const displayPrice = service.price_60 || getPriceForDuration(service, 60)
+
+      return {
+        id: service.id,
+        name: service.name_en || service.name_th,
+        name_th: service.name_th || '',
+        name_en: service.name_en || '',
+        price: displayPrice,
+        category: service.category,
+        rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
+        reviews: serviceReviewStats?.[service.id]?.review_count || 0,
+        duration: service.duration || 60,
+        slug: service.slug,
+        image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      }
+    }) || []
   }, [services, serviceReviewStats])
 
   // Filter and sort services

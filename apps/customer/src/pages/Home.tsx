@@ -6,6 +6,7 @@ import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
 import { useTopReviews, useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { PromotionDetailModal } from '../components/PromotionDetailModal'
+import { getPriceForDuration } from '../components/ServiceDurationPicker'
 
 function HomePage() {
   const { t, i18n } = useTranslation(['home', 'common', 'services'])
@@ -54,14 +55,22 @@ function HomePage() {
     { id: 'spa', name: t('home:categories.spa'), icon: Flower2, color: 'sage', services: 8 },
   ]
 
-  // Get top 4 popular services sorted by rating
+  // Get top 4 popular services sorted by actual display price
   const popularServices = services
-    ?.sort((a, b) => (b.base_price || 0) - (a.base_price || 0))
+    ?.map((service) => {
+      // Use same pricing logic as ServiceCatalog
+      const displayPrice = service.price_60 || getPriceForDuration(service, 60)
+      return {
+        ...service,
+        displayPrice
+      }
+    })
+    .sort((a, b) => (b.displayPrice || 0) - (a.displayPrice || 0))
     .slice(0, 4)
     .map((service) => ({
       id: service.id,
       name: service.name_en || service.name_th,
-      price: Number(service.base_price || 0),
+      price: service.displayPrice,
       category: service.category,
       rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
       reviewCount: serviceReviewStats?.[service.id]?.review_count || 0,
