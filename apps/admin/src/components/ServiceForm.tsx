@@ -4,7 +4,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { supabase } from '../lib/supabase'
 import { ImageUpload } from './ImageUpload'
-import { calculatePrice, calculateAllDurationPrices, getPriceDisplay, getDurationLabel } from '../lib/pricingUtils'
+// Removed pricingUtils imports - Admin now controls prices directly
+
+// Simple duration label function
+const getDurationLabel = (duration: number): string => {
+  const labelMap: Record<number, string> = {
+    60: '60 นาที (1 ชั่วโมง)',
+    90: '90 นาที (1.5 ชั่วโมง)',
+    120: '120 นาที (2 ชั่วโมง)'
+  }
+  return labelMap[duration] || `${duration} นาที`
+}
 import {
   X,
   Upload,
@@ -40,17 +50,17 @@ const serviceFormSchema = z.object({
     .number({ required_error: 'ระบุราคา 60 นาทีเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
     .max(50000, 'ราคาสูงสุด 50,000 บาท')
-    .optional(),
+    .nullish(),
   price_90: z.coerce
     .number({ required_error: 'ระบุราคา 90 นาทีเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
     .max(50000, 'ราคาสูงสุด 50,000 บาท')
-    .optional(),
+    .nullish(),
   price_120: z.coerce
     .number({ required_error: 'ระบุราคา 120 นาทีเป็นตัวเลข' })
     .min(100, 'ราคาขั้นต่ำ 100 บาท')
     .max(50000, 'ราคาสูงสุด 50,000 บาท')
-    .optional(),
+    .nullish(),
   staff_commission_rate: z.coerce
     .number({ required_error: 'ระบุเปอร์เซ็นต์เป็นตัวเลข' })
     .min(0, 'เปอร์เซ็นต์ขั้นต่ำ 0%')
@@ -58,6 +68,29 @@ const serviceFormSchema = z.object({
   image_url: z.string().optional(),
   is_active: z.boolean(),
   sort_order: z.number().optional(),
+}).refine((data) => {
+  // Validate that required price fields are provided based on duration_options
+  if (!data.duration_options || data.duration_options.length === 0) {
+    return false
+  }
+
+  // Check if prices are provided for selected durations
+  for (const duration of data.duration_options) {
+    if (duration === 60 && (!data.price_60 || data.price_60 <= 0)) {
+      return false
+    }
+    if (duration === 90 && (!data.price_90 || data.price_90 <= 0)) {
+      return false
+    }
+    if (duration === 120 && (!data.price_120 || data.price_120 <= 0)) {
+      return false
+    }
+  }
+
+  return true
+}, {
+  message: 'กรุณากรอกราคาที่ถูกต้องสำหรับทุกระยะเวลาที่เลือก',
+  path: ['price_60'], // Show error on price fields instead
 })
 
 type ServiceFormData = z.infer<typeof serviceFormSchema>
@@ -259,6 +292,17 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       console.log('  - Available options (SAVING):', data.duration_options)
       console.log('  - Will save to database:', cleanData.duration_options)
 
+      // Debug pricing values
+      console.log('💰 PRICING DEBUG:')
+      console.log('  - Original price_60:', data.price_60)
+      console.log('  - Original price_90:', data.price_90)
+      console.log('  - Original price_120:', data.price_120)
+      console.log('  - CleanData price_60:', cleanData.price_60)
+      console.log('  - CleanData price_90:', cleanData.price_90)
+      console.log('  - CleanData price_120:', cleanData.price_120)
+      console.log('  - Calculated base_price:', cleanData.base_price)
+      console.log('  - Calculated hotel_price:', cleanData.hotel_price)
+
       if (editData?.id) {
         // Update existing service
         const { error, data: result } = await supabase
@@ -268,6 +312,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
           .select()
 
         console.log('✅ Update result:', result)
+        if (result && result[0]) {
+          console.log('💰 DATABASE RETURNED PRICES:')
+          console.log('  - DB price_60:', result[0].price_60)
+          console.log('  - DB price_90:', result[0].price_90)
+          console.log('  - DB price_120:', result[0].price_120)
+          console.log('  - DB base_price:', result[0].base_price)
+          console.log('  - DB hotel_price:', result[0].hotel_price)
+        }
         if (error) {
           console.error('❌ Update error:', error)
           console.error('❌ Full error details:', {
@@ -286,6 +338,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
           .select()
 
         console.log('✅ Insert result:', result)
+        if (result && result[0]) {
+          console.log('💰 DATABASE RETURNED PRICES:')
+          console.log('  - DB price_60:', result[0].price_60)
+          console.log('  - DB price_90:', result[0].price_90)
+          console.log('  - DB price_120:', result[0].price_120)
+          console.log('  - DB base_price:', result[0].base_price)
+          console.log('  - DB hotel_price:', result[0].hotel_price)
+        }
         if (error) {
           console.error('❌ Insert error:', error)
           console.error('❌ Full error details:', {
@@ -341,8 +401,12 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit, (errors) => {
             console.log('❌ Form validation errors:', errors)
+            console.log('💥 DEBUGGING FORM ERRORS - these might be causing orange warning!')
+            Object.entries(errors).forEach(([field, error]) => {
+              console.log(`  Field: ${field}, Error:`, error)
+            })
             setSubmitError('กรุณาตรวจสอบข้อมูลที่กรอกให้ครบถ้วนและถูกต้อง')
-          })} className="p-6">
+          })} className="p-6" noValidate>
             {/* Category Selection */}
             <div className="mb-6">
               <label className="text-sm font-medium text-gray-700 mb-2 block">
