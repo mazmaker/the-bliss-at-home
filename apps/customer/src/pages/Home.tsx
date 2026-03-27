@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Star, ChevronRight, Sparkles, Home, Gem, ChevronLeft, Hand, Flower2 } from 'lucide-react'
+import { Search, Star, ChevronRight, Sparkles, Home, Gem, ChevronLeft, Flower2 } from 'lucide-react'
 import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
 import { useTopReviews, useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { PromotionDetailModal } from '../components/PromotionDetailModal'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
+import { DiscountPrice } from '../components/DiscountPrice'
+import { isGlobalDiscountEnabled, getGlobalDiscountPercentage } from '../utils/discountUtils'
 
 function HomePage() {
   const { t, i18n } = useTranslation(['home', 'common', 'services'])
@@ -49,10 +51,27 @@ function HomePage() {
     'from-indigo-600 via-blue-600 to-indigo-700',
   ]
 
+  // Calculate actual service counts by category
+  const getServiceCountByCategory = (categoryId: string) => {
+    if (!services) return 0
+    return services.filter(service => service.category === categoryId).length
+  }
+
   const categories = [
-    { id: 'massage', name: t('home:categories.massage'), icon: Sparkles, color: 'champagne', services: 15 },
-    { id: 'nail', name: t('home:categories.nail'), icon: Hand, color: 'rose-gold', services: 12 },
-    { id: 'spa', name: t('home:categories.spa'), icon: Flower2, color: 'sage', services: 8 },
+    {
+      id: 'massage',
+      name: t('home:categories.massage'),
+      icon: Sparkles,
+      color: 'champagne',
+      services: getServiceCountByCategory('massage')
+    },
+    {
+      id: 'spa',
+      name: t('home:categories.spa'),
+      icon: Flower2,
+      color: 'sage',
+      services: getServiceCountByCategory('spa')
+    },
   ]
 
   // Get top 4 popular services sorted by actual display price
@@ -158,10 +177,10 @@ function HomePage() {
                     <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
                     <div className="absolute inset-0 bg-black/0 group-hover/slide:bg-black/10 transition-colors duration-300" />
-                    <div className="relative max-w-2xl">
+                    <div className="relative max-w-2xl mx-auto text-center">
                       <span className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium mb-3">{discountLabel}</span>
                       <h3 className="text-2xl md:text-3xl font-semibold">{name}</h3>
-                      {description && <p className="text-sm md:text-base opacity-90 mt-2 font-light max-w-lg">{description}</p>}
+                      {description && <p className="text-sm md:text-base opacity-90 mt-2 font-light mx-auto">{description}</p>}
                       <p className="text-xs opacity-70 mt-3 font-mono bg-white/10 inline-block px-2 py-1 rounded">{t('home:promotions.code')}: {promo.code}</p>
                     </div>
                   </div>
@@ -210,7 +229,7 @@ function HomePage() {
       <section className="mb-16 px-4">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-2xl font-light text-stone-900 mb-8 tracking-wide">{t('home:categories.title')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
           {categories.map((category) => {
             const IconComponent = category.icon
             return (
@@ -230,6 +249,27 @@ function HomePage() {
         </div>
         </div>
       </section>
+
+      {/* Global Discount Banner */}
+      {isGlobalDiscountEnabled() && (
+        <section className="mb-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 rounded-2xl p-6 text-center shadow-lg">
+              <div className="flex items-center justify-center mb-2">
+                <span className="bg-white text-amber-800 px-4 py-2 rounded-full font-bold text-lg">
+                  ลด {getGlobalDiscountPercentage()}%
+                </span>
+              </div>
+              <h3 className="text-white font-semibold text-xl mb-1">
+                ส่วนลดพิเศษทุกบริการ
+              </h3>
+              <p className="text-yellow-100 text-sm">
+                เพียงแค่กรอกโค้ด DISCOUNT15
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Popular Services */}
       <section className="mb-16 px-4">
@@ -290,7 +330,11 @@ function HomePage() {
                     <p className="text-sm text-stone-400 mb-2">{t('services:reviews.noReviews')}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-amber-700">฿{service.price}</span>
+                    <DiscountPrice
+                      originalPrice={service.price || 0}
+                      size="sm"
+                      className="flex-1"
+                    />
                     <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-amber-100 hover:text-amber-800 transition">
                       {t('home:popular.book')}
                     </span>

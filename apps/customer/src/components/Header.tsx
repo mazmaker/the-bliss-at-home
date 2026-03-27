@@ -93,17 +93,19 @@ function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-xl flex items-center justify-center shadow-lg">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
+            <img
+              src="https://rbdvlfriqjnwpxmmgisf.supabase.co/storage/v1/object/public/public-assets/logos/the-bliss-logo.png"
+              alt="The Bliss Massage at Home"
+              className="w-20 h-20 object-contain"
+            />
             <div>
               <h1 className="text-xl font-semibold text-stone-900 tracking-tight">The Bliss Massage at Home</h1>
-              <p className="text-xs text-stone-500 hidden sm:block font-light tracking-wide">Massage • Spa • Nail</p>
+              <p className="text-xs text-stone-500 hidden sm:block font-light tracking-wide">Massage & Spa</p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-12">
             {navItems.map((item) => (
               <Link
                 key={item.path}

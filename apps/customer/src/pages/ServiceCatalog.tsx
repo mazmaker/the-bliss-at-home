@@ -5,6 +5,7 @@ import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
+import { DiscountPrice } from '../components/DiscountPrice'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -209,8 +210,12 @@ function ServiceCatalog() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-semibold text-amber-700">฿{service.price}</span>
-                    <button className="bg-stone-900 text-white px-4 py-2 rounded-full font-medium hover:bg-amber-700 transition">
+                    <DiscountPrice
+                      originalPrice={service.price || 0}
+                      size="md"
+                      className="flex-1"
+                    />
+                    <button className="bg-stone-900 text-white px-4 py-2 rounded-full font-medium hover:bg-amber-700 transition ml-4">
                       {t('services:catalog.book')}
                     </button>
                   </div>
