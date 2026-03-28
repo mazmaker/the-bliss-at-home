@@ -10,12 +10,19 @@
 // Types
 // ============================================
 
+export interface EmailAttachment {
+  filename: string
+  content: string // base64 encoded
+  content_type?: string
+}
+
 export interface SendEmailParams {
   to: string | string[]
   subject: string
   html: string
   text?: string
   from?: string
+  attachments?: EmailAttachment[]
 }
 
 export interface EmailTemplateData {
@@ -44,7 +51,7 @@ function getEmailConfig() {
  */
 export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; error?: string }> {
   const config = getEmailConfig()
-  const { to, subject, html, text, from = config.defaultFrom } = params
+  const { to, subject, html, text, from = config.defaultFrom, attachments } = params
   const recipients = Array.isArray(to) ? to : [to]
 
   // Development mode - log email
@@ -55,25 +62,31 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
     console.log('Subject:', subject)
     console.log('HTML Length:', html.length, 'characters')
     if (text) console.log('Text:', text.substring(0, 200) + '...')
+    if (attachments?.length) console.log('Attachments:', attachments.map(a => a.filename).join(', '))
     console.log('================================================\n')
     return { success: true }
   }
 
   // Production mode - send via Resend API
   try {
+    const payload: any = {
+      from,
+      to: recipients,
+      subject,
+      html,
+      text,
+    }
+    if (attachments?.length) {
+      payload.attachments = attachments
+    }
+
     const res: any = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${config.resendApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from,
-        to: recipients,
-        subject,
-        html,
-        text,
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (!res.ok) {
@@ -984,6 +997,98 @@ async function sendCustomerReminder(
   })
 }
 
+// ============================================
+// Hotel Invoice Email Template
+// ============================================
+
+export function invoiceEmailTemplate(data: {
+  hotelName: string
+  billNumber: string
+  periodStart: string
+  periodEnd: string
+  periodType: string
+  totalBookings: number
+  totalAmount: number
+  totalDiscount: number
+  netAmount: number
+  status: string
+  dueDate: string
+  issuedDate: string
+  paidDate?: string
+  companyName: string
+  companyAddress: string
+  companyPhone: string
+  companyEmail: string
+  companyTaxId: string
+}): string {
+  const statusLabels: Record<string, string> = {
+    pending: 'รอชำระ',
+    paid: 'จ่ายแล้ว',
+    overdue: 'เกินกำหนด',
+    draft: 'ร่าง',
+    cancelled: 'ยกเลิก',
+  }
+  const statusLabel = statusLabels[data.status] || data.status
+  const statusColor = data.status === 'paid' ? '#16a34a' : data.status === 'overdue' ? '#dc2626' : '#d97706'
+
+  return baseTemplate(`
+    <div class="header" style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 30px; text-align: center;">
+      <h1 style="margin: 0; font-size: 22px;">ใบแจ้งหนี้ / Invoice</h1>
+      <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9;">${data.billNumber}</p>
+    </div>
+    <div class="content" style="padding: 25px;">
+      <p>เรียน <strong>${data.hotelName}</strong>,</p>
+      <p>แจ้งรายละเอียดใบแจ้งหนี้ค่าบริการจาก The Bliss Massage at Home ดังนี้</p>
+
+      <div class="info-box" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <h3 style="margin: 0 0 12px; font-size: 14px; color: #334155;">รายละเอียดใบแจ้งหนี้</h3>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">เลขที่บิล</td><td style="padding: 6px 0; text-align: right; font-weight: bold;">${data.billNumber}</td></tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">ช่วงเวลา</td><td style="padding: 6px 0; text-align: right;">${data.periodStart} - ${data.periodEnd}</td></tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">ประเภท</td><td style="padding: 6px 0; text-align: right;">${data.periodType === 'weekly' ? 'รายสัปดาห์' : 'รายเดือน'}</td></tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">วันที่ออกบิล</td><td style="padding: 6px 0; text-align: right;">${data.issuedDate}</td></tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">วันครบกำหนดชำระ</td><td style="padding: 6px 0; text-align: right; font-weight: bold; color: ${statusColor};">${data.dueDate}</td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;">สถานะ</td><td style="padding: 6px 0; text-align: right; font-weight: bold; color: ${statusColor};">${statusLabel}</td></tr>
+          ${data.paidDate ? `<tr style="border-top: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">วันที่ชำระ</td><td style="padding: 6px 0; text-align: right;">${data.paidDate}</td></tr>` : ''}
+        </table>
+      </div>
+
+      <div class="info-box" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <h3 style="margin: 0 0 12px; font-size: 14px; color: #334155;">สรุปยอด</h3>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">จำนวนการจอง</td><td style="padding: 6px 0; text-align: right;">${data.totalBookings} รายการ</td></tr>
+          ${data.totalDiscount > 0 ? `<tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">ยอดรวมก่อนส่วนลด</td><td style="padding: 6px 0; text-align: right;">฿${data.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 6px 0; color: #64748b;">ส่วนลด</td><td style="padding: 6px 0; text-align: right; color: #16a34a;">-฿${data.totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>` : ''}
+        </table>
+      </div>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 16px 0;">
+        <tr><td style="background: #1e40af; color: white; border-radius: 8px; padding: 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font-size: 14px; color: white;">ยอดเรียกเก็บรวม</td>
+            <td style="font-size: 22px; font-weight: bold; text-align: right; color: white;">฿${data.netAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+          </tr></table>
+        </td></tr>
+      </table>
+
+      <div class="info-box" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <h3 style="margin: 0 0 12px; font-size: 14px; color: #334155;">ข้อมูลบริษัท</h3>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          <tr><td style="padding: 4px 0; color: #64748b;">บริษัท</td><td style="padding: 4px 0; text-align: right;">${data.companyName}</td></tr>
+          <tr><td style="padding: 4px 0; color: #64748b;">เลขประจำตัวผู้เสียภาษี</td><td style="padding: 4px 0; text-align: right;">${data.companyTaxId}</td></tr>
+          <tr><td style="padding: 4px 0; color: #64748b;">ที่อยู่</td><td style="padding: 4px 0; text-align: right;">${data.companyAddress}</td></tr>
+          <tr><td style="padding: 4px 0; color: #64748b;">โทรศัพท์</td><td style="padding: 4px 0; text-align: right;">${data.companyPhone}</td></tr>
+          <tr><td style="padding: 4px 0; color: #64748b;">อีเมล</td><td style="padding: 4px 0; text-align: right;">${data.companyEmail}</td></tr>
+        </table>
+      </div>
+
+      <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 20px;">
+        ใบแจ้งหนี้นี้สร้างโดยระบบอัตโนมัติ หากมีข้อสงสัยกรุณาติดต่อ ${data.companyEmail}
+      </p>
+    </div>
+  `)
+}
+
 /**
  * Check if email service is ready (Resend API key configured)
  */
@@ -1003,5 +1108,6 @@ export const emailService = {
     staffJobCancellation: staffJobCancellationTemplate,
     receipt: receiptEmailTemplate,
     creditNote: creditNoteEmailTemplate,
+    invoice: invoiceEmailTemplate,
   },
 }

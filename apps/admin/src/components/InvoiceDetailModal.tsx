@@ -1,6 +1,8 @@
-import { X, Calendar, FileText, DollarSign, TrendingUp, CheckCircle, AlertTriangle, Download, Printer } from 'lucide-react'
+import { useState } from 'react'
+import { X, Calendar, FileText, DollarSign, TrendingUp, CheckCircle, AlertTriangle, Download, Printer, Mail, Loader2 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import type { HotelInvoice } from '../lib/hotelQueries'
-import { downloadInvoicePDF } from '../utils/invoicePdfGenerator'
+import { downloadInvoicePDF, generateInvoicePDFBase64 } from '../utils/invoicePdfGenerator'
 
 interface InvoiceDetailModalProps {
   isOpen: boolean
@@ -10,6 +12,8 @@ interface InvoiceDetailModalProps {
 }
 
 export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: InvoiceDetailModalProps) {
+  const [emailSending, setEmailSending] = useState(false)
+
   if (!isOpen || !invoice) return null
 
   const formatDate = (dateString: string) => {
@@ -100,6 +104,29 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
 
   const handleDownloadPDF = () => {
     downloadInvoicePDF(invoice, hotelName || 'โรงแรม')
+  }
+
+  const handleSendEmail = async () => {
+    setEmailSending(true)
+    try {
+      const pdfBase64 = generateInvoicePDFBase64(invoice, hotelName || 'โรงแรม')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+      const response = await fetch(`${API_URL}/api/invoices/${invoice.id}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfBase64 }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        toast.success(`ส่งใบแจ้งหนี้ไปยัง ${result.sentTo} เรียบร้อย`)
+      } else {
+        toast.error(result.error || 'ไม่สามารถส่งอีเมลได้')
+      }
+    } catch {
+      toast.error('เกิดข้อผิดพลาดในการส่งอีเมล')
+    } finally {
+      setEmailSending(false)
+    }
   }
 
   return (
@@ -216,6 +243,14 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
             >
               <Printer className="h-4 w-4" />
               พิมพ์
+            </button>
+            <button
+              onClick={handleSendEmail}
+              disabled={emailSending}
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            >
+              {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              {emailSending ? 'กำลังส่ง...' : 'ส่งอีเมล'}
             </button>
             <button
               onClick={handleDownloadPDF}

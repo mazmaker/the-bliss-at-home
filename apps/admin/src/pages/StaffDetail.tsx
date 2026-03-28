@@ -31,7 +31,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { type BankAccount, THAI_BANKS } from '@bliss/supabase'
+import { type BankAccount, THAI_BANKS, EMERGENCY_CONTACT_RELATIONSHIPS } from '@bliss/supabase'
 import { supabase } from '../lib/supabase'
 import { useStaffDetail } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
@@ -358,6 +358,40 @@ function OverviewTab({ staff }: { staff: Staff }) {
         </div>
       </div>
 
+      {/* Emergency Contact */}
+      <div>
+        <h3 className="text-lg font-semibold text-stone-900 mb-4">บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)</h3>
+        {(staff as any).emergency_contact_name ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-stone-400 mt-1" />
+              <div>
+                <p className="text-sm text-stone-500">ชื่อ-นามสกุล</p>
+                <p className="font-medium text-stone-900">{(staff as any).emergency_contact_name}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Phone className="w-5 h-5 text-stone-400 mt-1" />
+              <div>
+                <p className="text-sm text-stone-500">เบอร์โทรศัพท์</p>
+                <p className="font-medium text-stone-900">{(staff as any).emergency_contact_phone}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <div>
+                <p className="text-sm text-stone-500">ความสัมพันธ์</p>
+                <p className="font-medium text-stone-900">
+                  {EMERGENCY_CONTACT_RELATIONSHIPS.find((r) => r.value === (staff as any).emergency_contact_relationship)?.label || (staff as any).emergency_contact_relationship || 'ไม่ระบุ'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-stone-400">ยังไม่ได้กรอกข้อมูลบุคคลอ้างอิง</p>
+        )}
+      </div>
+
       {/* Skills */}
       <div>
         <h3 className="text-lg font-semibold text-stone-900 mb-4">ทักษะและบริการ</h3>
@@ -489,6 +523,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
   const getDocumentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       id_card: 'สำเนาบัตรประชาชน',
+      house_registration: 'สำเนาทะเบียนบ้าน',
       license: 'ใบประกอบวิชาชีพ',
       certificate: 'ใบรับรองการอบรม',
       bank_statement: 'สำเนาบัญชีธนาคาร',

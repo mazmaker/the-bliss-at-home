@@ -253,8 +253,16 @@ function StaffDashboard() {
                 {!eligibility.documents?.id_card?.verified && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบบัตรประชาชน</li>
                 )}
+                {!eligibility.documents?.house_registration?.verified && (
+                  <li className="list-disc">อัพโหลดและรอการตรวจสอบสำเนาทะเบียนบ้าน</li>
+                )}
                 {!eligibility.documents?.bank_statement?.verified && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบสำเนาบัญชีธนาคาร</li>
+                )}
+                {!eligibility.emergencyContact?.filled && (
+                  <li className="list-disc">
+                    <Link to="/staff/profile" className="underline hover:text-amber-900">กรอกข้อมูลบุคคลอ้างอิง</Link>
+                  </li>
                 )}
               </ul>
             </div>

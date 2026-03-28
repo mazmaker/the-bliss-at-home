@@ -511,7 +511,7 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
   // Get staff record
   const { data: staffData, error: staffError } = await supabase
     .from('staff')
-    .select('id, status, gender')
+    .select('id, status, gender, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship')
     .eq('profile_id', profileId)
     .single()
 
@@ -526,7 +526,14 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
       gender: null,
       documents: {
         id_card: { uploaded: false, verified: false },
+        house_registration: { uploaded: false, verified: false },
         bank_statement: { uploaded: false, verified: false },
+      },
+      emergencyContact: {
+        name: null,
+        phone: null,
+        relationship: null,
+        filled: false,
       },
     }
   }
@@ -553,12 +560,15 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
 
   const docs = documents || []
 
-  // Find id_card and bank_statement
+  // Find id_card, house_registration, and bank_statement
   const idCard = docs.find((d) => d.document_type === 'id_card')
+  const houseRegistration = docs.find((d) => d.document_type === 'house_registration')
   const bankStatement = docs.find((d) => d.document_type === 'bank_statement')
 
   const idCardUploaded = !!idCard
   const idCardVerified = idCard?.verification_status === 'verified'
+  const houseRegistrationUploaded = !!houseRegistration
+  const houseRegistrationVerified = houseRegistration?.verification_status === 'verified'
   const bankStatementUploaded = !!bankStatement
   const bankStatementVerified = bankStatement?.verification_status === 'verified'
 
@@ -575,6 +585,18 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     }
   }
 
+  if (!houseRegistrationUploaded) {
+    reasons.push('ยังไม่ได้อัปโหลดสำเนาทะเบียนบ้าน')
+  } else if (!houseRegistrationVerified) {
+    if (houseRegistration.verification_status === 'pending') {
+      reasons.push('สำเนาทะเบียนบ้านรอการตรวจสอบ')
+    } else if (houseRegistration.verification_status === 'rejected') {
+      reasons.push('สำเนาทะเบียนบ้านถูกปฏิเสธ กรุณาอัปโหลดใหม่')
+    } else if (houseRegistration.verification_status === 'reviewing') {
+      reasons.push('สำเนาทะเบียนบ้านกำลังตรวจสอบ')
+    }
+  }
+
   if (!bankStatementUploaded) {
     reasons.push('ยังไม่ได้อัปโหลดสำเนาบัญชีธนาคาร')
   } else if (!bankStatementVerified) {
@@ -587,13 +609,25 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     }
   }
 
+  // Check 4: Emergency contact must be filled
+  const emergencyContactFilled = !!(
+    staffData.emergency_contact_name &&
+    staffData.emergency_contact_phone &&
+    staffData.emergency_contact_relationship
+  )
+  if (!emergencyContactFilled) {
+    reasons.push('กรุณากรอกข้อมูลบุคคลอ้างอิง (ชื่อ, เบอร์โทร, ความสัมพันธ์)')
+  }
+
   const canWork =
     staffData.status === 'active' &&
     !!staffData.gender &&
     idCardVerified &&
-    bankStatementVerified
+    houseRegistrationVerified &&
+    bankStatementVerified &&
+    emergencyContactFilled
 
-  console.log('[Eligibility] Result:', { canWork, status: staffData.status, gender: staffData.gender, idCardVerified, bankStatementVerified, reasons })
+  console.log('[Eligibility] Result:', { canWork, status: staffData.status, gender: staffData.gender, idCardVerified, houseRegistrationVerified, bankStatementVerified, emergencyContactFilled, reasons })
 
   return {
     canWork,
@@ -606,13 +640,59 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
         verified: idCardVerified,
         status: idCard?.verification_status,
       },
+      house_registration: {
+        uploaded: houseRegistrationUploaded,
+        verified: houseRegistrationVerified,
+        status: houseRegistration?.verification_status,
+      },
       bank_statement: {
         uploaded: bankStatementUploaded,
         verified: bankStatementVerified,
         status: bankStatement?.verification_status,
       },
     },
+    emergencyContact: {
+      name: staffData.emergency_contact_name || null,
+      phone: staffData.emergency_contact_phone || null,
+      relationship: staffData.emergency_contact_relationship || null,
+      filled: emergencyContactFilled,
+    },
   }
+}
+
+// ============================================
+// Emergency Contact
+// ============================================
+
+export async function getEmergencyContact(profileId: string) {
+  const { data, error } = await supabase
+    .from('staff')
+    .select('emergency_contact_name, emergency_contact_phone, emergency_contact_relationship')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (error || !data) return null
+  return {
+    name: data.emergency_contact_name || '',
+    phone: data.emergency_contact_phone || '',
+    relationship: data.emergency_contact_relationship || '',
+  }
+}
+
+export async function updateEmergencyContact(
+  profileId: string,
+  contact: { name: string; phone: string; relationship: string }
+) {
+  const { error } = await supabase
+    .from('staff')
+    .update({
+      emergency_contact_name: contact.name,
+      emergency_contact_phone: contact.phone,
+      emergency_contact_relationship: contact.relationship,
+    })
+    .eq('profile_id', profileId)
+
+  if (error) throw error
 }
 
 // Export service
@@ -634,4 +714,6 @@ export const staffService = {
   updateSkillLevel,
   deleteSkill,
   canStaffStartWork,
+  getEmergencyContact,
+  updateEmergencyContact,
 }

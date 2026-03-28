@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { lineMessagingService } from '@bliss/supabase/notifications/lineMessagingService'
 
-export type DocumentType = 'id_card' | 'license' | 'certificate' | 'bank_statement' | 'other'
+export type DocumentType = 'id_card' | 'house_registration' | 'license' | 'certificate' | 'bank_statement' | 'other'
 export type DocumentStatus = 'pending' | 'reviewing' | 'verified' | 'rejected'
 
 export interface StaffDocument {
@@ -377,6 +377,7 @@ class StaffDocumentService {
   getDocumentTypeLabel(type: DocumentType): { th: string; en: string } {
     const labels = {
       id_card: { th: 'สำเนาบัตรประชาชน', en: 'ID Card' },
+      house_registration: { th: 'สำเนาทะเบียนบ้าน', en: 'House Registration' },
       license: { th: 'ใบประกอบวิชาชีพ', en: 'Professional License' },
       certificate: { th: 'ใบรับรองการอบรม', en: 'Training Certificate' },
       bank_statement: { th: 'สำเนาบัญชีธนาคาร', en: 'Bank Statement' },

@@ -150,9 +150,14 @@ class InvoicePDFGenerator {
     this.reset()
 
     const { invoice, hotelName } = data
+    const billNumber = (invoice as any).invoice_number || (invoice as any).bill_number || 'N/A'
+    const periodType = (invoice as any).period_type || 'monthly'
+    const issuedDate = (invoice as any).issued_date || (invoice as any).created_at
+    const paidDate = (invoice as any).paid_date || (invoice as any).paid_at
+    const totalRevenue = Number((invoice as any).total_revenue || invoice.total_amount || 0)
 
     // Header
-    this.addHeader('ใบแจ้งหนี้ / Invoice', invoice.invoice_number)
+    this.addHeader('ใบแจ้งหนี้ / Invoice', billNumber)
 
     // Hotel Info Section
     this.addSectionTitle('ข้อมูลโรงแรม')
@@ -164,13 +169,15 @@ class InvoicePDFGenerator {
 
     // Invoice Details Section
     this.addSectionTitle('รายละเอียดบิล')
-    this.addInfoRow('เลขที่บิล', invoice.invoice_number)
+    this.addInfoRow('เลขที่บิล', billNumber)
     this.addInfoRow('ช่วงเวลา', `${this.formatDate(invoice.period_start)} - ${this.formatDate(invoice.period_end)}`)
-    this.addInfoRow('ประเภท', invoice.period_type === 'weekly' ? 'รายสัปดาห์' : 'รายเดือน')
-    this.addInfoRow('วันที่ออกบิล', this.formatDate(invoice.issued_date))
+    this.addInfoRow('ประเภท', periodType === 'weekly' ? 'รายสัปดาห์' : 'รายเดือน')
+    if (issuedDate) {
+      this.addInfoRow('วันที่ออกบิล', this.formatDate(issuedDate))
+    }
     this.addInfoRow('วันครบกำหนด', this.formatDate(invoice.due_date))
-    if (invoice.paid_date) {
-      this.addInfoRow('วันที่ชำระ', this.formatDate(invoice.paid_date))
+    if (paidDate) {
+      this.addInfoRow('วันที่ชำระ', this.formatDate(paidDate))
     }
 
     this.currentY += 3
@@ -181,10 +188,10 @@ class InvoicePDFGenerator {
     this.addInfoRow('จำนวนการจองทั้งหมด', `${invoice.total_bookings} รายการ`)
     this.currentY += 3
 
-    // Total amount box (green) — total_revenue is the amount hotel must pay
+    // Total amount box (green)
     this.addTotalBox(
       'ยอดเรียกเก็บรวม',
-      `฿${Number(invoice.total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      `฿${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       [220, 252, 231], // green-100
       [22, 101, 52]    // green-800
     )
@@ -196,6 +203,10 @@ class InvoicePDFGenerator {
   download(filename: string): void {
     this.doc.save(filename)
   }
+
+  getBase64(): string {
+    return this.doc.output('datauristring').split(',')[1]
+  }
 }
 
 /**
@@ -204,5 +215,15 @@ class InvoicePDFGenerator {
 export function downloadInvoicePDF(invoice: HotelInvoice, hotelName: string): void {
   const generator = new InvoicePDFGenerator()
   generator.generateInvoice({ invoice, hotelName })
-  generator.download(`invoice-${invoice.invoice_number}.pdf`)
+  const filename = (invoice as any).invoice_number || (invoice as any).bill_number || invoice.id
+  generator.download(`invoice-${filename}.pdf`)
+}
+
+/**
+ * Generate invoice PDF as base64 string (for email attachment)
+ */
+export function generateInvoicePDFBase64(invoice: HotelInvoice, hotelName: string): string {
+  const generator = new InvoicePDFGenerator()
+  generator.generateInvoice({ invoice, hotelName })
+  return generator.getBase64()
 }

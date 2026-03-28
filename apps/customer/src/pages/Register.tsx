@@ -4,6 +4,7 @@ import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, Check, AlertCircle } f
 import { authService } from '@bliss/supabase/auth'
 import type { RegisterCredentials } from '@bliss/supabase/auth'
 import { useTranslation } from '@bliss/i18n'
+import { RefundPolicyConsent } from '../components/RefundPolicyConsent'
 
 function Register() {
   const { t } = useTranslation('auth')
@@ -19,6 +20,7 @@ function Register() {
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
+    agreeToRefundPolicy: false,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,7 +65,8 @@ function Register() {
       formData.phone &&
       formData.password &&
       formData.password === formData.confirmPassword &&
-      formData.agreeToTerms
+      formData.agreeToTerms &&
+      formData.agreeToRefundPolicy
     )
   }
 
@@ -243,6 +246,13 @@ function Register() {
                 </Link>
               </span>
             </label>
+
+            {/* Refund Policy Consent */}
+            <RefundPolicyConsent
+              accepted={formData.agreeToRefundPolicy}
+              onAcceptedChange={(accepted) => setFormData({ ...formData, agreeToRefundPolicy: accepted })}
+              hideAcceptButton
+            />
 
             {/* Submit Button */}
             <button

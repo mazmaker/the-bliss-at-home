@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useTranslation } from '@bliss/i18n'
 import { ProtectedRoute } from '@bliss/ui'
+import { useAuth } from '@bliss/supabase/auth'
 import Header from './components/Header'
+import { RefundPolicyConsent, useRefundPolicyConsent } from './components/RefundPolicyConsent'
 import './debug-session' // Load debug utilities
 import HomePage from './pages/Home'
 import ServiceCatalog from './pages/ServiceCatalog'
@@ -115,6 +118,9 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
+      {/* Global Consent Modal for Google login users */}
+      <ConsentModalGuard />
+
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-stone-200 py-8 mt-12">
         <div className="container mx-auto px-4">
@@ -182,11 +188,45 @@ function PromotionsPageWrapper() {
 }
 
 function BookingWizardWrapper() {
+  const { hasAccepted, isLoading, recheckConsent } = useRefundPolicyConsent()
+  const [showConsentModal, setShowConsentModal] = useState(false)
+
+  // Show consent modal if not accepted
+  if (!isLoading && hasAccepted === false && !showConsentModal) {
+    setShowConsentModal(true)
+  }
+
   return (
     <>
       <Header />
-      <BookingWizard />
+      {showConsentModal && (
+        <RefundPolicyConsent
+          asModal
+          onAccept={() => {
+            setShowConsentModal(false)
+            recheckConsent()
+          }}
+        />
+      )}
+      {!showConsentModal && <BookingWizard />}
     </>
+  )
+}
+
+/**
+ * Global consent modal — shows after login for users who haven't accepted refund policy
+ */
+function ConsentModalGuard() {
+  const { user } = useAuth()
+  const { hasAccepted, isLoading, recheckConsent } = useRefundPolicyConsent()
+
+  if (!user || isLoading || hasAccepted !== false) return null
+
+  return (
+    <RefundPolicyConsent
+      asModal
+      onAccept={() => recheckConsent()}
+    />
   )
 }
 

@@ -17,6 +17,7 @@ import { CreateStaffData, Staff } from '../services/staffService'
 import { toast } from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { EMERGENCY_CONTACT_RELATIONSHIPS } from '@bliss/supabase'
 
 interface EditStaffModalProps {
   isOpen: boolean
@@ -32,7 +33,7 @@ const skillIconMap = [
 ]
 
 export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModalProps) {
-  const [formData, setFormData] = useState<Partial<CreateStaffData>>({
+  const [formData, setFormData] = useState<Partial<CreateStaffData> & { emergency_contact_name?: string; emergency_contact_phone?: string; emergency_contact_relationship?: string }>({
     name_th: staff.name_th,
     name_en: staff.name_en || '',
     phone: staff.phone,
@@ -42,6 +43,9 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
     bio_th: staff.bio_th || '',
     bio_en: staff.bio_en || '',
     skills: staff.skills?.map(s => s.skill_id) || [],
+    emergency_contact_name: (staff as any).emergency_contact_name || '',
+    emergency_contact_phone: (staff as any).emergency_contact_phone || '',
+    emergency_contact_relationship: (staff as any).emergency_contact_relationship || '',
   })
 
   const updateStaffMutation = useUpdateStaff()
@@ -73,6 +77,9 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
         bio_th: staff.bio_th || '',
         bio_en: staff.bio_en || '',
         skills: staff.skills?.map(s => s.skill_id) || [],
+        emergency_contact_name: (staff as any).emergency_contact_name || '',
+        emergency_contact_phone: (staff as any).emergency_contact_phone || '',
+        emergency_contact_relationship: (staff as any).emergency_contact_relationship || '',
       })
     }
   }, [isOpen, staff])
@@ -271,6 +278,48 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
                     </button>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-3">
+                👤 บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-stone-500 mb-1">ชื่อ-นามสกุล</label>
+                  <input
+                    type="text"
+                    value={formData.emergency_contact_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact_name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="ชื่อบุคคลอ้างอิง"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-stone-500 mb-1">เบอร์โทรศัพท์</label>
+                  <input
+                    type="tel"
+                    value={formData.emergency_contact_phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact_phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="081-234-5678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-stone-500 mb-1">ความสัมพันธ์</label>
+                  <select
+                    value={formData.emergency_contact_relationship}
+                    onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact_relationship: e.target.value }))}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  >
+                    <option value="">-- เลือก --</option>
+                    {EMERGENCY_CONTACT_RELATIONSHIPS.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 

@@ -18,7 +18,8 @@ import {
   Loader2,
 } from 'lucide-react'
 import { exportToCSV, exportToExcel, exportToPDF, formatInvoicesForExport } from '../utils/exportUtils'
-import { downloadInvoicePDF } from '../utils/invoicePdfGenerator'
+import { downloadInvoicePDF, generateInvoicePDFBase64 } from '../utils/invoicePdfGenerator'
+import { toast } from 'react-hot-toast'
 import { useHotel, useHotelInvoices, useHotelBookings } from '../hooks/useHotels'
 import { InvoiceForm } from '../components/InvoiceForm'
 import { InvoiceDetailModal } from '../components/InvoiceDetailModal'
@@ -32,6 +33,7 @@ export default function HotelBilling() {
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<HotelInvoice | null>(null)
+  const [emailSendingId, setEmailSendingId] = useState<string | null>(null)
 
   const { hotel } = useHotel(id)
   const { invoices, loading, error, refetch } = useHotelInvoices(id)
@@ -121,6 +123,30 @@ export default function HotelBilling() {
 
   const handleDownloadInvoicePDF = (invoice: HotelInvoice) => {
     downloadInvoicePDF(invoice, hotel?.name_th || hotel?.name_en || 'โรงแรม')
+  }
+
+  const handleSendInvoiceEmail = async (invoice: HotelInvoice) => {
+    setEmailSendingId(invoice.id)
+    try {
+      const hotelName = hotel?.name_th || hotel?.name_en || 'โรงแรม'
+      const pdfBase64 = generateInvoicePDFBase64(invoice, hotelName)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+      const response = await fetch(`${API_URL}/api/invoices/${invoice.id}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfBase64 }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        toast.success(`ส่งใบแจ้งหนี้ไปยัง ${result.sentTo} เรียบร้อย`)
+      } else {
+        toast.error(result.error || 'ไม่สามารถส่งอีเมลได้')
+      }
+    } catch {
+      toast.error('เกิดข้อผิดพลาดในการส่งอีเมล')
+    } finally {
+      setEmailSendingId(null)
+    }
   }
 
   const handlePrintInvoice = (invoice: HotelInvoice) => {
@@ -416,6 +442,14 @@ export default function HotelBilling() {
                           title="ดาวน์โหลด PDF"
                         >
                           <Download className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleSendInvoiceEmail(invoice)}
+                          disabled={emailSendingId === invoice.id}
+                          className="rounded p-1 text-amber-600 hover:bg-amber-50 disabled:opacity-50"
+                          title="ส่งอีเมล"
+                        >
+                          {emailSendingId === invoice.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                         </button>
                         <button
                           onClick={() => handlePrintInvoice(invoice)}

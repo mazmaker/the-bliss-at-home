@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3 } from 'lucide-react'
+import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3, FileText } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { LogoUpload } from '../components/LogoUpload'
 
@@ -87,6 +87,11 @@ function Settings() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  // Refund Policy State
+  const [refundPolicyContent, setRefundPolicyContent] = useState('')
+  const [refundPolicyVersion, setRefundPolicyVersion] = useState('1.0')
+  const [refundPolicySaving, setRefundPolicySaving] = useState(false)
+
   // Cancellation Policy State
   const [policySettings, setPolicySettings] = useState<CancellationPolicySettings | null>(null)
   const [policyTiers, setPolicyTiers] = useState<CancellationPolicyTier[]>([])
@@ -98,6 +103,7 @@ function Settings() {
     { id: 'general', name: 'ทั่วไป', nameEn: 'General Settings', icon: Globe },
     { id: 'payment', name: 'การชำระเงิน', nameEn: 'Payment Settings', icon: CreditCard },
     { id: 'cancellation', name: 'นโยบายการยกเลิก', nameEn: 'Cancellation Policy', icon: Calendar },
+    { id: 'refund_policy', name: 'เงื่อนไขการคืนเงิน', nameEn: 'Refund Policy', icon: FileText },
     { id: 'reports', name: 'รายงาน/เป้าหมาย', nameEn: 'Reports & Targets', icon: BarChart3 },
   ]
 
@@ -105,7 +111,34 @@ function Settings() {
   useEffect(() => {
     loadSettings()
     loadCancellationPolicy()
+    loadRefundPolicy()
   }, [])
+
+  const loadRefundPolicy = async () => {
+    const { data } = await supabase.from('settings').select('value').eq('key', 'refund_policy_content').single()
+    if (data?.value) {
+      const val = typeof data.value === 'object' && 'value' in data.value ? data.value.value : data.value
+      const ver = typeof data.value === 'object' && 'version' in data.value ? data.value.version : '1.0'
+      setRefundPolicyContent(typeof val === 'string' ? val : '')
+      setRefundPolicyVersion(typeof ver === 'string' ? ver : '1.0')
+    }
+  }
+
+  const saveRefundPolicy = async () => {
+    setRefundPolicySaving(true)
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .update({ value: { value: refundPolicyContent, version: refundPolicyVersion }, updated_at: new Date().toISOString() })
+        .eq('key', 'refund_policy_content')
+      if (error) throw error
+      setMessage('บันทึกเงื่อนไขการคืนเงินเรียบร้อย')
+    } catch (err: any) {
+      setError(err.message || 'ไม่สามารถบันทึกได้')
+    } finally {
+      setRefundPolicySaving(false)
+    }
+  }
 
   // Load cancellation policy
   const loadCancellationPolicy = async () => {
@@ -867,6 +900,55 @@ function Settings() {
                     </div>
                   </>
                 )}
+              </div>
+            )}
+
+            {/* Refund Policy Tab */}
+            {activeTab === 'refund_policy' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                  <h3 className="font-semibold text-blue-900 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    เงื่อนไขการคืนเงิน (Refund Policy)
+                  </h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    เนื้อหาที่ลูกค้าต้องอ่านและยอมรับก่อนลงทะเบียน/จองบริการ (รองรับ Markdown)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">เวอร์ชัน</label>
+                  <input
+                    type="text"
+                    value={refundPolicyVersion}
+                    onChange={(e) => setRefundPolicyVersion(e.target.value)}
+                    className="w-full max-w-xs px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="เช่น 1.0, 2.0"
+                  />
+                  <p className="text-xs text-stone-400 mt-1">เมื่อเปลี่ยนเวอร์ชัน ลูกค้าเก่าจะต้องยอมรับเงื่อนไขใหม่อีกครั้ง</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">เนื้อหาเงื่อนไข (Markdown)</label>
+                  <textarea
+                    value={refundPolicyContent}
+                    onChange={(e) => setRefundPolicyContent(e.target.value)}
+                    rows={20}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    placeholder="เขียนเงื่อนไขการคืนเงินที่นี่..."
+                  />
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={saveRefundPolicy}
+                    disabled={refundPolicySaving}
+                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {refundPolicySaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    บันทึก
+                  </button>
+                </div>
               </div>
             )}
 

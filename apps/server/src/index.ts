@@ -18,6 +18,7 @@ import notificationRoutes from './routes/notification.js'
 import bookingsRoutes from './routes/bookings.js'
 import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
+import invoicesRoutes from './routes/invoices.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations } from './services/notificationService.js'
 
 const app = express()
@@ -87,6 +88,9 @@ app.use('/api/cancellation-policy', cancellationPolicyRoutes)
 
 // Receipt & Credit Note routes
 app.use('/api/receipts', receiptsRoutes)
+
+// Invoice email routes
+app.use('/api/invoices', invoicesRoutes)
 
 // 404 handler
 app.use((req: Request, res: Response) => {

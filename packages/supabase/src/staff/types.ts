@@ -3,7 +3,7 @@
  */
 
 // Document types (match Admin app)
-export type DocumentType = 'id_card' | 'license' | 'certificate' | 'bank_statement' | 'other'
+export type DocumentType = 'id_card' | 'house_registration' | 'license' | 'certificate' | 'bank_statement' | 'other'
 export type DocumentStatus = 'pending' | 'reviewing' | 'verified' | 'rejected'
 
 export interface StaffDocument {
@@ -58,6 +58,7 @@ export interface StaffSkill {
 // Document type labels (match Admin app)
 export const DOCUMENT_TYPES: Record<DocumentType, { th: string; en: string }> = {
   id_card: { th: 'สำเนาบัตรประชาชน', en: 'ID Card' },
+  house_registration: { th: 'สำเนาทะเบียนบ้าน', en: 'House Registration' },
   license: { th: 'ใบประกอบวิชาชีพ', en: 'Professional License' },
   certificate: { th: 'ใบรับรองการอบรม', en: 'Training Certificate' },
   bank_statement: { th: 'สำเนาบัญชีธนาคาร', en: 'Bank Statement' },
@@ -159,6 +160,25 @@ export interface StaffEligibility {
   gender: StaffGender | null
   documents: {
     id_card: { uploaded: boolean; verified: boolean; status?: string }
+    house_registration: { uploaded: boolean; verified: boolean; status?: string }
     bank_statement: { uploaded: boolean; verified: boolean; status?: string }
   }
+  emergencyContact: {
+    name: string | null
+    phone: string | null
+    relationship: string | null
+    filled: boolean
+  }
 }
+
+// Emergency contact relationship options
+export const EMERGENCY_CONTACT_RELATIONSHIPS = [
+  { value: 'father', label: 'บิดา' },
+  { value: 'mother', label: 'มารดา' },
+  { value: 'spouse', label: 'คู่สมรส' },
+  { value: 'sibling', label: 'พี่/น้อง' },
+  { value: 'child', label: 'บุตร' },
+  { value: 'relative', label: 'ญาติ' },
+  { value: 'friend', label: 'เพื่อน' },
+  { value: 'other', label: 'อื่นๆ' },
+] as const

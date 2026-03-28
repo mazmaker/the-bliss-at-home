@@ -420,3 +420,66 @@ export function useStaffEligibility() {
     refetch: fetchEligibility,
   }
 }
+
+// ============================================
+// useEmergencyContact Hook
+// ============================================
+
+export function useEmergencyContact() {
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const [contact, setContact] = useState<{ name: string; phone: string; relationship: string }>({
+    name: '',
+    phone: '',
+    relationship: '',
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchContact = useCallback(async () => {
+    if (!user?.id) return
+
+    try {
+      setIsLoading(true)
+      const data = await staffService.getEmergencyContact(user.id)
+      if (data) {
+        setContact(data)
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthLoading && user?.id) {
+      fetchContact()
+    }
+  }, [isAuthLoading, user?.id, fetchContact])
+
+  const saveContact = async (data: { name: string; phone: string; relationship: string }) => {
+    if (!user?.id) throw new Error('Not authenticated')
+
+    try {
+      setIsSaving(true)
+      setError(null)
+      await staffService.updateEmergencyContact(user.id, data)
+      setContact(data)
+    } catch (err: any) {
+      setError(err.message)
+      throw err
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return {
+    contact,
+    isLoading,
+    isSaving,
+    error,
+    saveContact,
+    refetch: fetchContact,
+  }
+}

@@ -199,7 +199,7 @@ export const getHotelInvoices = async (hotelId: string) => {
     const totalRevenue = monthBookings.reduce((sum, booking) => sum + Number(booking.final_price), 0)
     const commissionRate = monthBookings[0].hotels?.discount_rate || monthBookings[0].hotels?.commission_rate || 20
     const commissionAmount = totalRevenue * (commissionRate / 100)
-    const invoiceNumber = `INV-${year}${month}-${hotelId.slice(-4)}`
+    const invoiceNumber = `INV-${year}${month}-${hotelId.substring(0, 8).toUpperCase()}`
 
     return {
       id: `generated-${hotelId}-${monthKey}`,

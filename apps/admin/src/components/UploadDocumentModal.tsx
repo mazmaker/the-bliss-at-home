@@ -29,6 +29,7 @@ export function UploadDocumentModal({
 
   const documentTypes: { value: DocumentType; label: string }[] = [
     { value: 'id_card', label: 'สำเนาบัตรประชาชน' },
+    { value: 'house_registration', label: 'สำเนาทะเบียนบ้าน' },
     { value: 'license', label: 'ใบประกอบวิชาชีพ' },
     { value: 'certificate', label: 'ใบรับรองการอบรม' },
     { value: 'bank_statement', label: 'สำเนาบัญชีธนาคาร' },
