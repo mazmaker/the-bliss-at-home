@@ -1,3 +1,4 @@
+// Build cache bust: 2026-03-29 invoice email fix
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
