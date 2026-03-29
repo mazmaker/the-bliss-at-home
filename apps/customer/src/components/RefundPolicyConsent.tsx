@@ -113,21 +113,6 @@ export function RefundPolicyConsent({
     }
   }
 
-  // Simple markdown-to-HTML (headers, bold, lists)
-  const renderMarkdown = (text: string) => {
-    return text
-      .split('\n')
-      .map((line) => {
-        if (line.startsWith('### ')) return `<h4 class="font-semibold text-stone-800 mt-3 mb-1">${line.slice(4)}</h4>`
-        if (line.startsWith('## ')) return `<h3 class="font-bold text-stone-900 text-lg mt-4 mb-2">${line.slice(3)}</h3>`
-        if (line.startsWith('# ')) return `<h2 class="font-bold text-stone-900 text-xl mt-4 mb-2">${line.slice(2)}</h2>`
-        if (line.startsWith('- ')) return `<li class="ml-4 text-stone-700">${line.slice(2)}</li>`
-        if (line.trim() === '') return '<br/>'
-        return `<p class="text-stone-700">${line}</p>`
-      })
-      .join('')
-  }
-
   const content = (
     <div className={asModal ? '' : 'mt-4'}>
       <div className="flex items-center gap-2 mb-3">
@@ -146,9 +131,10 @@ export function RefundPolicyConsent({
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="h-64 overflow-y-auto border border-stone-300 rounded-lg p-4 bg-stone-50 text-sm leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(policyContent) }}
-          />
+            className="h-64 overflow-y-auto border border-stone-300 rounded-lg p-4 bg-stone-50 text-sm leading-relaxed whitespace-pre-wrap text-stone-700"
+          >
+            {policyContent}
+          </div>
 
           {!hasScrolledToBottom && (
             <p className="text-xs text-amber-600 mt-1 text-center animate-pulse">

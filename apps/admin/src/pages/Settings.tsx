@@ -912,7 +912,7 @@ function Settings() {
                     เงื่อนไขการคืนเงิน (Refund Policy)
                   </h3>
                   <p className="text-sm text-blue-700 mt-1">
-                    เนื้อหาที่ลูกค้าต้องอ่านและยอมรับก่อนลงทะเบียน/จองบริการ (รองรับ Markdown)
+                    เนื้อหาที่ลูกค้าต้องอ่านและยอมรับก่อนลงทะเบียน/จองบริการ
                   </p>
                 </div>
 
@@ -929,12 +929,12 @@ function Settings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">เนื้อหาเงื่อนไข (Markdown)</label>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">เนื้อหาเงื่อนไข</label>
                   <textarea
                     value={refundPolicyContent}
                     onChange={(e) => setRefundPolicyContent(e.target.value)}
                     rows={20}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                     placeholder="เขียนเงื่อนไขการคืนเงินที่นี่..."
                   />
                 </div>
