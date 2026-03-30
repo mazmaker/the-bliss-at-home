@@ -1092,6 +1092,73 @@ export function invoiceEmailTemplate(data: {
 /**
  * Check if email service is ready (Resend API key configured)
  */
+// ============================================
+// Credit Due Reminder Email Template
+// ============================================
+
+export function creditDueReminderEmailTemplate(data: {
+  hotelName: string
+  dueDate: string
+  daysRemaining: number
+  pendingBills: { billNumber: string; periodStart: string; periodEnd: string; netAmount: number }[]
+  totalOutstanding: number
+  companyName: string
+  companyPhone: string
+  companyEmail: string
+}): string {
+  const urgencyColor = data.daysRemaining <= 0 ? '#dc2626' : data.daysRemaining <= 1 ? '#ea580c' : '#d97706'
+  const urgencyLabel = data.daysRemaining <= 0 ? 'เลยกำหนดชำระ' : data.daysRemaining <= 1 ? 'ครบกำหนดพรุ่งนี้' : `อีก ${data.daysRemaining} วัน`
+
+  const billRows = data.pendingBills.map(bill => `
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 8px 0; color: #334155;">${bill.billNumber}</td>
+      <td style="padding: 8px 0; color: #64748b;">${bill.periodStart} - ${bill.periodEnd}</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: bold;">฿${bill.netAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+    </tr>
+  `).join('')
+
+  return baseTemplate(`
+    <div class="header" style="background: linear-gradient(135deg, ${urgencyColor}, #f59e0b); color: white; padding: 30px; text-align: center;">
+      <h1 style="margin: 0; font-size: 22px;">แจ้งเตือนครบกำหนดชำระเครดิต</h1>
+      <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9;">${urgencyLabel}</p>
+    </div>
+    <div class="content" style="padding: 25px;">
+      <p>เรียน <strong>${data.hotelName}</strong>,</p>
+      <p>ขอแจ้งเตือนว่ารอบเครดิตของท่านจะครบกำหนดชำระใน <strong style="color: ${urgencyColor};">${data.dueDate}</strong></p>
+
+      ${data.pendingBills.length > 0 ? `
+      <div class="info-box" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <h3 style="margin: 0 0 12px; font-size: 14px; color: #334155;">บิลที่รอชำระ</h3>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          <tr style="border-bottom: 2px solid #e2e8f0;">
+            <th style="padding: 8px 0; text-align: left; color: #64748b; font-size: 12px;">เลขที่บิล</th>
+            <th style="padding: 8px 0; text-align: left; color: #64748b; font-size: 12px;">ช่วงเวลา</th>
+            <th style="padding: 8px 0; text-align: right; color: #64748b; font-size: 12px;">ยอดเงิน</th>
+          </tr>
+          ${billRows}
+        </table>
+      </div>
+      ` : ''}
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 16px 0;">
+        <tr><td style="background: ${urgencyColor}; color: white; border-radius: 8px; padding: 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font-size: 14px; color: white;">ยอดค้างชำระรวม</td>
+            <td style="font-size: 22px; font-weight: bold; text-align: right; color: white;">฿${data.totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+          </tr></table>
+        </td></tr>
+      </table>
+
+      <p style="color: #64748b; font-size: 14px;">กรุณาชำระเงินภายในกำหนดเพื่อหลีกเลี่ยงค่าธรรมเนียมล่าช้า หากชำระแล้วกรุณาแจ้งให้ทราบ</p>
+
+      <div style="margin-top: 20px; padding: 12px; background: #f1f5f9; border-radius: 8px; font-size: 13px; color: #64748b;">
+        <p style="margin: 0;">ติดต่อสอบถาม: ${data.companyPhone} | ${data.companyEmail}</p>
+        <p style="margin: 4px 0 0;">${data.companyName}</p>
+      </div>
+    </div>
+  `)
+}
+
 function isReady(): boolean {
   return !!getEmailConfig().resendApiKey
 }
@@ -1109,5 +1176,6 @@ export const emailService = {
     receipt: receiptEmailTemplate,
     creditNote: creditNoteEmailTemplate,
     invoice: invoiceEmailTemplate,
+    creditDueReminder: creditDueReminderEmailTemplate,
   },
 }

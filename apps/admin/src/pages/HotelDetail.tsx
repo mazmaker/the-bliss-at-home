@@ -326,6 +326,51 @@ export default function HotelDetail() {
             </div>
           </div>
 
+          {/* Credit Settings */}
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h3 className="mb-4 font-semibold text-gray-900 flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              ตั้งค่าเครดิต
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">จำนวนวันเครดิต</p>
+                <p className="text-lg font-bold text-gray-900">{(hotel as any).credit_days || 30} วัน</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">วันเริ่มรอบเครดิต</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {(hotel as any).credit_start_date
+                    ? new Date((hotel as any).credit_start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : 'ยังไม่ได้กำหนด'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">วันครบรอบในเดือน</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {(hotel as any).credit_cycle_day ? `วันที่ ${(hotel as any).credit_cycle_day}` : 'ยังไม่ได้กำหนด'}
+                </p>
+              </div>
+            </div>
+            {(hotel as any).credit_start_date && (() => {
+              const today = new Date()
+              const creditDays = (hotel as any).credit_days || 30
+              const startDate = new Date((hotel as any).credit_start_date)
+              const dueDate = new Date(startDate)
+              dueDate.setDate(dueDate.getDate() + creditDays)
+              while (dueDate < today) {
+                dueDate.setDate(dueDate.getDate() + creditDays)
+              }
+              const daysLeft = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+              const color = daysLeft <= 1 ? 'text-red-600 bg-red-50' : daysLeft <= 7 ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50'
+              return (
+                <div className={`mt-3 px-4 py-2 rounded-lg ${color} text-sm font-medium`}>
+                  ครบกำหนดชำระอีก {daysLeft} วัน ({dueDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})
+                </div>
+              )
+            })()}
+          </div>
+
           {/* Status Management */}
           <div className="rounded-lg bg-white p-6 shadow">
             <h3 className="mb-4 font-semibold text-gray-900">จัดการสถานะ</h3>

@@ -31,13 +31,17 @@ export interface HotelData {
   bank_account_name?: string | null
   created_at?: string
   updated_at?: string
+  // Credit settings
+  credit_days?: number
+  credit_start_date?: string | null
+  credit_cycle_day?: number | null
 }
 
 // Fetch hotel by slug from database (no status filter — caller checks status)
 const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at, credit_days, credit_start_date, credit_cycle_day')
     .eq('hotel_slug', slug)
     .single()
 
@@ -64,7 +68,7 @@ const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
 const fetchAllHotels = async (): Promise<HotelData[]> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at, credit_days, credit_start_date, credit_cycle_day')
     .eq('status', 'active')
     .order('name_th', { ascending: true })
 

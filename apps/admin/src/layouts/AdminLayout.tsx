@@ -39,6 +39,7 @@ const navigation = [
   { name: 'ลูกค้า', nameEn: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'แจ้งเตือน SOS', nameEn: 'SOS Alerts', href: '/admin/sos-alerts', icon: ShieldAlert },
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },
+  { name: 'ปฏิทินเครดิต', nameEn: 'Credit Calendar', href: '/admin/credit-calendar', icon: CalendarCheck },
   { name: 'การจอง', nameEn: 'Bookings', href: '/admin/bookings', icon: Calendar },
   { name: 'โปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'รีวิว', nameEn: 'Reviews', href: '/admin/reviews', icon: Star },

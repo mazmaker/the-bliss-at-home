@@ -290,6 +290,10 @@ function Hotels() {
                 <p className="text-lg font-bold text-green-700">{Number((hotel as any).discount_rate || 0)}%</p>
                 <p className="text-xs text-stone-500">ส่วนลด</p>
               </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-blue-700">{(hotel as any).credit_days || '-'}</p>
+                <p className="text-xs text-stone-500">เครดิต (วัน)</p>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 mb-4">

@@ -5,7 +5,8 @@
 
 import { getSupabaseClient } from '../lib/supabase.js'
 import { lineService } from './lineService.js'
-import { emailService } from './emailService.js'
+import { emailService, creditDueReminderEmailTemplate } from './emailService.js'
+import { googleCalendarService } from './googleCalendarService.js'
 
 /**
  * Get Thai label for provider preference (server-side helper)
@@ -1774,4 +1775,235 @@ export async function sendPayoutCompletedNotification(
   result.success = true
   console.log(`✅ Payout notification processed: payout=${payoutId}, LINE=${result.lineNotified}, inApp=${result.inAppNotified}`)
   return result
+}
+
+// ============================================
+// Credit Due Reminders (Daily Cron)
+// ============================================
+
+/**
+ * Process credit due reminders for hotels
+ * Runs daily at 09:00 ICT — checks which hotels have credit due within 1 day
+ * Sends in-app notification + email to hotel and admin users
+ */
+export async function processCreditDueReminders(): Promise<number> {
+  const supabase = getSupabaseClient()
+  let sentCount = 0
+
+  const now = new Date()
+  const today = now.getDate()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowDay = tomorrow.getDate()
+
+  // Find hotels where credit_cycle_day = tomorrow (1-day advance warning)
+  // or credit_cycle_day = today (due today)
+  const { data: hotels, error: hotelsError } = await supabase
+    .from('hotels')
+    .select('id, name_th, name_en, email, credit_days, credit_start_date, credit_cycle_day')
+    .not('credit_cycle_day', 'is', null)
+    .not('credit_start_date', 'is', null)
+    .in('credit_cycle_day', [today, tomorrowDay])
+    .eq('status', 'active')
+
+  if (hotelsError) {
+    console.error('❌ [CreditReminder] Failed to fetch hotels:', hotelsError)
+    return 0
+  }
+
+  if (!hotels || hotels.length === 0) {
+    return 0
+  }
+
+  console.log(`📋 [CreditReminder] Found ${hotels.length} hotel(s) with credit due today/tomorrow`)
+
+  // Get company settings for email
+  const { data: settings } = await supabase
+    .from('settings')
+    .select('key, value')
+    .in('key', ['company_name_th', 'company_phone', 'company_email'])
+
+  const settingsMap = Object.fromEntries((settings || []).map(s => [s.key, s.value]))
+  const companyName = settingsMap.company_name_th || 'The Bliss Massage at Home'
+  const companyPhone = settingsMap.company_phone || ''
+  const companyEmail = settingsMap.company_email || ''
+
+  // Get admin profiles for in-app notifications
+  const { data: adminProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'ADMIN')
+
+  for (const hotel of hotels) {
+    const isDueToday = hotel.credit_cycle_day === today
+    const isDueTomorrow = hotel.credit_cycle_day === tomorrowDay
+    const daysRemaining = isDueToday ? 0 : 1
+    const notificationType = isDueToday ? 'credit_overdue' : 'credit_due_reminder'
+
+    // Check if we already sent this notification today
+    const todayStr = now.toISOString().split('T')[0]
+    const { data: existingNotif } = await supabase
+      .from('hotel_credit_notifications')
+      .select('id')
+      .eq('hotel_id', hotel.id)
+      .eq('notification_type', notificationType)
+      .gte('created_at', `${todayStr}T00:00:00`)
+      .limit(1)
+
+    if (existingNotif && existingNotif.length > 0) {
+      console.log(`⏭️ [CreditReminder] Already sent ${notificationType} for ${hotel.name_th} today`)
+      continue
+    }
+
+    // Get pending bills for this hotel
+    const { data: pendingBills } = await supabase
+      .from('monthly_bills')
+      .select('id, bill_number, period_start, period_end, total_amount, total_discount')
+      .eq('hotel_id', hotel.id)
+      .eq('status', 'pending')
+
+    const bills = (pendingBills || []).map(b => ({
+      billNumber: b.bill_number,
+      periodStart: b.period_start,
+      periodEnd: b.period_end,
+      netAmount: (b.total_amount || 0) - (b.total_discount || 0),
+    }))
+    const totalOutstanding = bills.reduce((sum, b) => sum + b.netAmount, 0)
+
+    // Calculate due date string
+    const dueDate = new Date(now.getFullYear(), now.getMonth(), hotel.credit_cycle_day!)
+    if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1)
+    const dueDateStr = dueDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+
+    // === 1. Send Email to hotel ===
+    if (hotel.email) {
+      try {
+        const html = creditDueReminderEmailTemplate({
+          hotelName: hotel.name_th || hotel.name_en || 'Hotel',
+          dueDate: dueDateStr,
+          daysRemaining,
+          pendingBills: bills,
+          totalOutstanding,
+          companyName,
+          companyPhone,
+          companyEmail,
+        })
+
+        const emailResult = await emailService.sendEmail({
+          to: hotel.email,
+          subject: isDueToday
+            ? `🔴 ครบกำหนดชำระวันนี้ — ${hotel.name_th}`
+            : `🟡 แจ้งเตือน: ครบกำหนดชำระพรุ่งนี้ — ${hotel.name_th}`,
+          html,
+        })
+
+        // Record notification
+        await supabase.from('hotel_credit_notifications').insert({
+          hotel_id: hotel.id,
+          notification_type: notificationType,
+          channel: 'email',
+          status: emailResult.success ? 'sent' : 'failed',
+          sent_at: emailResult.success ? new Date().toISOString() : null,
+        })
+
+        if (emailResult.success) {
+          console.log(`📧 [CreditReminder] Email sent to ${hotel.email} for ${hotel.name_th}`)
+        }
+      } catch (err) {
+        console.error(`❌ [CreditReminder] Email failed for ${hotel.name_th}:`, err)
+      }
+    }
+
+    // === 2. In-app notification to hotel users ===
+    // Hotel users are linked via hotels.auth_user_id (not profiles.hotel_id)
+    const { data: hotelRecord } = await supabase
+      .from('hotels')
+      .select('auth_user_id')
+      .eq('id', hotel.id)
+      .single()
+
+    const hotelProfiles = hotelRecord?.auth_user_id ? [{ id: hotelRecord.auth_user_id }] : []
+
+    if (hotelProfiles && hotelProfiles.length > 0) {
+      const hotelNotifRows = hotelProfiles.map(p => ({
+        user_id: p.id,
+        type: notificationType,
+        title: isDueToday ? 'ครบกำหนดชำระเครดิตวันนี้' : 'แจ้งเตือน: ครบกำหนดชำระเครดิตพรุ่งนี้',
+        message: isDueToday
+          ? `ยอดค้างชำระ ฿${totalOutstanding.toLocaleString()} ครบกำหนดวันนี้ กรุณาชำระโดยเร็ว`
+          : `ยอดค้างชำระ ฿${totalOutstanding.toLocaleString()} จะครบกำหนดพรุ่งนี้ (${dueDateStr})`,
+        data: {
+          hotel_id: hotel.id,
+          hotel_name: hotel.name_th,
+          total_outstanding: totalOutstanding,
+          due_date: dueDate.toISOString(),
+          bills_count: bills.length,
+        },
+        is_read: false,
+      }))
+
+      await supabase.from('notifications').insert(hotelNotifRows)
+
+      // Record in-app notification
+      await supabase.from('hotel_credit_notifications').insert({
+        hotel_id: hotel.id,
+        notification_type: notificationType,
+        channel: 'in_app',
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      })
+    }
+
+    // === 3. In-app notification to admin users ===
+    if (adminProfiles && adminProfiles.length > 0) {
+      const adminNotifRows = adminProfiles.map(admin => ({
+        user_id: admin.id,
+        type: notificationType,
+        title: isDueToday
+          ? `🔴 ครบกำหนดชำระ: ${hotel.name_th}`
+          : `🟡 แจ้งเตือน: ${hotel.name_th} ครบกำหนดพรุ่งนี้`,
+        message: `${hotel.name_th} — ยอดค้างชำระ ฿${totalOutstanding.toLocaleString()} ${isDueToday ? 'ครบกำหนดวันนี้' : 'จะครบกำหนด ' + dueDateStr}`,
+        data: {
+          hotel_id: hotel.id,
+          hotel_name: hotel.name_th,
+          total_outstanding: totalOutstanding,
+          due_date: dueDate.toISOString(),
+          bills_count: bills.length,
+        },
+        is_read: false,
+      }))
+
+      await supabase.from('notifications').insert(adminNotifRows)
+    }
+
+    // === 4. Create Google Calendar event ===
+    if (await googleCalendarService.isConfigured()) {
+      try {
+        const eventId = await googleCalendarService.createCreditDueEvent({
+          hotelId: hotel.id,
+          hotelName: hotel.name_th || hotel.name_en || 'Hotel',
+          dueDate,
+          totalOutstanding,
+          billNumbers: bills.map(b => b.billNumber),
+        })
+
+        if (eventId) {
+          await supabase.from('hotel_credit_notifications').insert({
+            hotel_id: hotel.id,
+            notification_type: notificationType,
+            channel: 'google_calendar',
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+          })
+        }
+      } catch (err) {
+        console.error(`[CreditReminder] Google Calendar error for ${hotel.name_th}:`, err)
+      }
+    }
+
+    sentCount++
+    console.log(`✅ [CreditReminder] Processed ${hotel.name_th}: ${notificationType}, outstanding=฿${totalOutstanding}`)
+  }
+
+  return sentCount
 }

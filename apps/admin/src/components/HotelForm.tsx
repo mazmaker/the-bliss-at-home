@@ -83,6 +83,10 @@ const hotelFormSchema = z.object({
   description: z.string().optional(),
   website: z.string().url('รูปแบบ URL ไม่ถูกต้อง').optional().or(z.literal('')),
   recommended_sales_staff: z.string().optional(),
+  // Credit settings
+  credit_days: z.coerce.number().min(1, 'จำนวนวันเครดิตขั้นต่ำ 1 วัน').max(365, 'จำนวนวันเครดิตสูงสุด 365 วัน').default(30),
+  credit_start_date: z.string().optional().or(z.literal('')),
+  credit_cycle_day: z.coerce.number().min(1, 'วันครบรอบขั้นต่ำ 1').max(31, 'วันครบรอบสูงสุด 31').optional().nullable(),
 })
 
 type HotelFormData = z.infer<typeof hotelFormSchema>
@@ -244,6 +248,9 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       description: '',
       website: '',
       recommended_sales_staff: '',
+      credit_days: 30,
+      credit_start_date: '',
+      credit_cycle_day: null,
     },
   })
 
@@ -255,6 +262,20 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       setValue('hotel_slug', generatedSlug, { shouldValidate: true })
     }
   }, [nameEn, setValue])
+
+  // Auto-fill credit_cycle_day from credit_start_date + credit_days
+  const creditStartDate = watch('credit_start_date')
+  const creditDays = watch('credit_days')
+  useEffect(() => {
+    if (creditStartDate && creditDays) {
+      const start = new Date(creditStartDate)
+      if (!isNaN(start.getTime())) {
+        const dueDate = new Date(start)
+        dueDate.setDate(dueDate.getDate() + Number(creditDays))
+        setValue('credit_cycle_day', dueDate.getDate(), { shouldValidate: true })
+      }
+    }
+  }, [creditStartDate, creditDays, setValue])
 
   // Load hotel auth status
   const loadAuthStatusData = async (hotelId: string) => {
@@ -347,6 +368,9 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             description: data.description,
             website: data.website,
             recommended_sales_staff: data.recommended_sales_staff,
+            credit_days: data.credit_days || 30,
+            credit_start_date: data.credit_start_date || null,
+            credit_cycle_day: data.credit_cycle_day || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editData.id)
@@ -375,6 +399,9 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             description: data.description,
             website: data.website,
             recommended_sales_staff: data.recommended_sales_staff,
+            credit_days: data.credit_days || 30,
+            credit_start_date: data.credit_start_date || null,
+            credit_cycle_day: data.credit_cycle_day || null,
           },
         ])
 
@@ -591,6 +618,55 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                     <p className="mt-1 text-xs text-gray-500">
                       ระบุชื่อหรือรหัสพนักงานขายที่รับผิดชอบโรงแรมนี้
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Credit Settings */}
+              <div className="space-y-4 border-t pt-6">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <CreditCard className="h-5 w-5" />
+                  ตั้งค่าเครดิต
+                </h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">จำนวนวันเครดิต</label>
+                    <input
+                      type="number"
+                      {...register('credit_days')}
+                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="30"
+                      min={1}
+                      max={365}
+                    />
+                    {errors.credit_days && (
+                      <p className="mt-1 text-sm text-red-600">{errors.credit_days.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">ระยะเวลาเครดิต (วัน) ก่อนต้องชำระ</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">วันเริ่มรอบเครดิต</label>
+                    <input
+                      type="date"
+                      {...register('credit_start_date')}
+                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">วันที่เริ่มนับรอบเครดิตแรก</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">วันครบรอบในเดือน</label>
+                    <input
+                      type="number"
+                      {...register('credit_cycle_day')}
+                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="1"
+                      min={1}
+                      max={31}
+                    />
+                    {errors.credit_cycle_day && (
+                      <p className="mt-1 text-sm text-red-600">{errors.credit_cycle_day.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">คำนวณอัตโนมัติจากวันเริ่มรอบ + จำนวนวัน (แก้ไขได้)</p>
                   </div>
                 </div>
               </div>

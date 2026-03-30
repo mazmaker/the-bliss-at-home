@@ -333,7 +333,7 @@ const fetchRecentBookings = async (hotelId: string): Promise<RecentBooking[]> =>
 }
 
 function Dashboard() {
-  const { hotelId, isValidHotel, isLoading: hotelLoading } = useHotelContext()
+  const { hotelId, hotelData, isValidHotel, isLoading: hotelLoading } = useHotelContext()
   const [activeTab, setActiveTab] = useState('overview')
 
   // Cancel/Reschedule states
@@ -571,6 +571,75 @@ function Dashboard() {
           )
         })}
       </div>
+
+      {/* Credit Info Widget */}
+      {hotelData?.credit_start_date && (() => {
+        const creditDays = hotelData.credit_days || 30
+        const now = new Date()
+
+        // Calculate due date from start date + credit days
+        const startDate = new Date(hotelData.credit_start_date!)
+        const dueDate = new Date(startDate)
+        dueDate.setDate(dueDate.getDate() + creditDays)
+        // If due date has passed, find next cycle
+        while (dueDate < now) {
+          dueDate.setDate(dueDate.getDate() + creditDays)
+        }
+
+        // Calculate cycle start (credit_days before due date)
+        const cycleStart = new Date(dueDate)
+        cycleStart.setDate(cycleStart.getDate() - creditDays)
+
+        // Days remaining
+        const diffMs = dueDate.getTime() - now.getTime()
+        const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+        // Color coding
+        const urgencyColor = daysRemaining <= 1
+          ? 'from-red-500 to-red-600'
+          : daysRemaining <= 7
+            ? 'from-amber-500 to-amber-600'
+            : 'from-emerald-500 to-emerald-600'
+
+        const urgencyBg = daysRemaining <= 1
+          ? 'bg-red-50 border-red-200'
+          : daysRemaining <= 7
+            ? 'bg-amber-50 border-amber-200'
+            : 'bg-emerald-50 border-emerald-200'
+
+        const urgencyText = daysRemaining <= 1
+          ? 'text-red-700'
+          : daysRemaining <= 7
+            ? 'text-amber-700'
+            : 'text-emerald-700'
+
+        const formatDate = (d: Date) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+
+        return (
+          <div className={`rounded-2xl border p-5 ${urgencyBg}`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <CalendarClock className={`w-5 h-5 ${urgencyText}`} />
+                <h3 className={`font-semibold ${urgencyText}`}>รอบเครดิต</h3>
+              </div>
+              <span className={`text-sm font-medium ${urgencyText}`}>
+                {creditDays} วัน
+              </span>
+            </div>
+            <p className="text-sm text-stone-600 mb-3">
+              {formatDate(cycleStart)} — {formatDate(dueDate)}
+            </p>
+            <div className="flex items-center gap-3">
+              <div className={`bg-gradient-to-r ${urgencyColor} text-white px-4 py-2 rounded-xl text-lg font-bold`}>
+                {daysRemaining > 0 ? `เหลือ ${daysRemaining} วัน` : 'ครบกำหนดวันนี้'}
+              </div>
+              {daysRemaining <= 1 && (
+                <span className="text-xs text-red-600 font-medium">กรุณาชำระเงิน</span>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Quick Action */}
       <div className="max-w-md">

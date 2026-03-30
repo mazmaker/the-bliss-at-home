@@ -19,7 +19,7 @@ import bookingsRoutes from './routes/bookings.js'
 import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
-import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations } from './services/notificationService.js'
+import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -92,6 +92,19 @@ app.use('/api/receipts', receiptsRoutes)
 // Invoice email routes
 app.use('/api/invoices', invoicesRoutes)
 
+// Dev-only endpoint to trigger credit reminders manually
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/dev/trigger-credit-reminders', async (_req, res) => {
+    try {
+      const count = await processCreditDueReminders()
+      res.json({ success: true, remindersSent: count })
+    } catch (err) {
+      console.error('[Dev] Error triggering credit reminders:', err)
+      res.status(500).json({ success: false, error: String(err) })
+    }
+  })
+}
+
 // 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({
@@ -151,12 +164,23 @@ cron.schedule('0 20 * * *', async () => {
   }
 })
 
+// Credit due reminders daily at 9 AM (Thailand time)
+cron.schedule('0 2 * * *', async () => {
+  // 02:00 UTC = 09:00 ICT (Thailand)
+  try {
+    const count = await processCreditDueReminders()
+    if (count > 0) console.log(`[Cron] Sent ${count} credit due reminders`)
+  } catch (err) {
+    console.error('[Cron] Error processing credit due reminders:', err)
+  }
+})
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min)`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT)`)
 })
 
 export default app

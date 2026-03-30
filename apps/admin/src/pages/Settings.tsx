@@ -44,6 +44,8 @@ interface SettingsState {
   omise_public_key: string
   omise_secret_key: string
   google_maps_api_key: string
+  google_calendar_id: string
+  google_service_account_key: string
   email_provider_api_key: string
   email_provider_domain: string
 
@@ -71,6 +73,8 @@ function Settings() {
     omise_public_key: '',
     omise_secret_key: '',
     google_maps_api_key: '',
+    google_calendar_id: '',
+    google_service_account_key: '',
     email_provider_api_key: '',
     email_provider_domain: '',
     report_monthly_target: '500000',
@@ -346,6 +350,8 @@ function Settings() {
         omise_public_key: settingsMap.omise_public_key || '',
         omise_secret_key: settingsMap.omise_secret_key || '',
         google_maps_api_key: settingsMap.google_maps_api_key || '',
+        google_calendar_id: settingsMap.google_calendar_id || '',
+        google_service_account_key: settingsMap.google_service_account_key || '',
         email_provider_api_key: settingsMap.email_provider_api_key || '',
         email_provider_domain: settingsMap.email_provider_domain || '',
         report_monthly_target: settingsMap.report_monthly_target || '500000',
@@ -382,6 +388,8 @@ function Settings() {
         { key: 'omise_public_key', value: { key: settings.omise_public_key || '' }, description: 'Omise public key' },
         { key: 'omise_secret_key', value: { key: settings.omise_secret_key || '' }, description: 'Omise secret key' },
         { key: 'google_maps_api_key', value: { key: settings.google_maps_api_key || '' }, description: 'Google Maps API key' },
+        { key: 'google_calendar_id', value: settings.google_calendar_id || '', description: 'Google Calendar ID for credit reminders' },
+        { key: 'google_service_account_key', value: settings.google_service_account_key || '', description: 'Google Service Account key (base64)' },
         { key: 'email_provider_api_key', value: { key: settings.email_provider_api_key || '' }, description: 'Email provider API key' },
         { key: 'email_provider_domain', value: { domain: settings.email_provider_domain || '' }, description: 'Email provider domain' },
         { key: 'report_monthly_target', value: { value: settings.report_monthly_target || '500000' }, description: 'Monthly revenue target (THB)' },
@@ -669,6 +677,44 @@ function Settings() {
                       placeholder="AIza..."
                     />
                   </div>
+                </div>
+
+                {/* Google Calendar */}
+                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                  <h3 className="font-medium text-stone-900 mb-1">Google Calendar (เครดิตโรงแรม)</h3>
+                  <p className="text-xs text-stone-500 mb-3">เชื่อมต่อ Google Calendar เพื่อสร้าง event แจ้งเตือนครบกำหนดชำระเครดิตอัตโนมัติ</p>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">Calendar ID</label>
+                      <input
+                        type="text"
+                        value={settings.google_calendar_id}
+                        onChange={(e) => setSettings({ ...settings, google_calendar_id: e.target.value })}
+                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="xxx@group.calendar.google.com"
+                      />
+                      <p className="text-xs text-stone-400 mt-1">ดูได้จาก Google Calendar Settings → Calendar ID</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">Service Account Key (Base64)</label>
+                      <textarea
+                        value={settings.google_service_account_key}
+                        onChange={(e) => setSettings({ ...settings, google_service_account_key: e.target.value })}
+                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 h-20"
+                        placeholder="eyJ0eXBlIjoic2Vydmlj..."
+                      />
+                      <p className="text-xs text-stone-400 mt-1">แปลง JSON key เป็น base64 ด้วย: btoa(JSON.stringify(key))</p>
+                    </div>
+                  </div>
+                  {settings.google_calendar_id && settings.google_service_account_key ? (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-emerald-600">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" /> เชื่อมต่อแล้ว
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-stone-400">
+                      <span className="w-2 h-2 rounded-full bg-stone-300" /> ยังไม่ได้เชื่อมต่อ
+                    </div>
+                  )}
                 </div>
 
                 {/* Email Provider */}
