@@ -6,6 +6,7 @@ import { useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
+import { getMinimumPriceInfo } from '../utils/serviceUtils'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -48,15 +49,16 @@ function ServiceCatalog() {
   // Transform services to match expected format
   const transformedServices = useMemo(() => {
     return services?.map(service => {
-      // Use stored price_60 if available, otherwise calculate from base_price
-      const displayPrice = service.price_60 || getPriceForDuration(service, 60)
+      // Use minimum available duration price instead of hardcoded 60min
+      const minPriceInfo = getMinimumPriceInfo(service)
 
       return {
         id: service.id,
         name: service.name_en || service.name_th,
         name_th: service.name_th || '',
         name_en: service.name_en || '',
-        price: displayPrice,
+        price: minPriceInfo.price,
+        minDuration: minPriceInfo.duration,
         category: service.category,
         rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
         reviews: serviceReviewStats?.[service.id]?.review_count || 0,
@@ -206,7 +208,7 @@ function ServiceCatalog() {
                   )}
 
                   <div className="flex items-center justify-between text-sm text-stone-500 mb-4">
-                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {service.duration} {t('services:catalog.min')}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> เริ่มต้น {service.minDuration} {t('services:catalog.min')}</span>
                   </div>
 
                   <div className="flex items-center justify-between">

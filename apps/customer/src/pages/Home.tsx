@@ -9,6 +9,7 @@ import { PromotionDetailModal } from '../components/PromotionDetailModal'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
 import { isGlobalDiscountEnabled, getGlobalDiscountPercentage } from '../utils/discountUtils'
+import { getMinimumPriceInfo } from '../utils/serviceUtils'
 
 function HomePage() {
   const { t, i18n } = useTranslation(['home', 'common', 'services'])
@@ -77,11 +78,12 @@ function HomePage() {
   // Get top 4 popular services sorted by actual display price
   const popularServices = services
     ?.map((service) => {
-      // Use same pricing logic as ServiceCatalog
-      const displayPrice = service.price_60 || getPriceForDuration(service, 60)
+      // Use minimum available duration price instead of hardcoded 60min
+      const minPriceInfo = getMinimumPriceInfo(service)
       return {
         ...service,
-        displayPrice
+        displayPrice: minPriceInfo.price,
+        minDuration: minPriceInfo.duration
       }
     })
     .sort((a, b) => (b.displayPrice || 0) - (a.displayPrice || 0))
@@ -90,6 +92,7 @@ function HomePage() {
       id: service.id,
       name: service.name_en || service.name_th,
       price: service.displayPrice,
+      minDuration: service.minDuration,
       category: service.category,
       rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
       reviewCount: serviceReviewStats?.[service.id]?.review_count || 0,
@@ -329,16 +332,17 @@ function HomePage() {
                   ) : (
                     <p className="text-sm text-stone-400 mb-2">{t('services:reviews.noReviews')}</p>
                   )}
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
                     <DiscountPrice
                       originalPrice={service.price || 0}
                       size="sm"
-                      className="flex-1"
+                      className=""
                     />
-                    <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-amber-100 hover:text-amber-800 transition">
-                      {t('home:popular.book')}
-                    </span>
+                    <span className="text-xs text-stone-500">เริ่มต้น {service.minDuration} นาที</span>
                   </div>
+                  <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-amber-100 hover:text-amber-800 transition mt-2 inline-block text-center w-full">
+                    {t('home:popular.book')}
+                  </span>
                 </div>
               </Link>
             )

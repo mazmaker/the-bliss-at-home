@@ -21,6 +21,7 @@ import {
   BarChart3,
   Settings,
 } from 'lucide-react'
+import { getMinimumPriceInfo, formatDurationOptions as formatDurationOptionsUtil } from '../utils/serviceUtils'
 
 interface Service {
   id: string
@@ -454,7 +455,11 @@ function Services() {
               <div className="space-y-2 mb-4 p-3 bg-stone-50 rounded-xl">
                 <div className="flex justify-between text-sm">
                   <span className="text-stone-600">ราคาบริการ:</span>
-                  <span className="font-semibold text-amber-700">฿{(service.price_60 ?? service.base_price).toLocaleString()}</span>
+                  <span className="font-semibold text-amber-700">฿{getMinimumPriceInfo(service).price.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs text-green-600">
+                  <span>เริ่มต้น:</span>
+                  <span className="font-medium">{getMinimumPriceInfo(service).duration} นาที</span>
                 </div>
                 <div className="flex justify-between text-xs text-blue-600">
                   <span>คอมมิชชั่น Staff:</span>
