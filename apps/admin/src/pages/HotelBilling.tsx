@@ -130,8 +130,8 @@ export default function HotelBilling() {
     try {
       const hotelName = hotel?.name_th || hotel?.name_en || 'โรงแรม'
       const pdfBase64 = generateInvoicePDFBase64(invoice, hotelName)
-      const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
-      const response = await fetch(`${API_URL}/api/invoices/${invoice.id}/send-email`, {
+      const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api')
+      const response = await fetch(`${API_URL}/invoices/${invoice.id}/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pdfBase64 }),
