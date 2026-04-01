@@ -10,6 +10,7 @@ import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
 import { isGlobalDiscountEnabled, getGlobalDiscountPercentage } from '../utils/discountUtils'
 import { getMinimumPriceInfo } from '../utils/serviceUtils'
+import { getServiceImage } from '../utils/imageUtils'
 
 function HomePage() {
   const { t, i18n } = useTranslation(['home', 'common', 'services'])
@@ -97,7 +98,7 @@ function HomePage() {
       rating: serviceReviewStats?.[service.id]?.avg_rating || 0,
       reviewCount: serviceReviewStats?.[service.id]?.review_count || 0,
       slug: service.slug,
-      image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      image: getServiceImage(service.image_url, service.category),
     })) || []
 
   return (

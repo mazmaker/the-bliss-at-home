@@ -7,6 +7,7 @@ import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
 import { getMinimumPriceInfo } from '../utils/serviceUtils'
+import { getServiceImage } from '../utils/imageUtils'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -64,7 +65,7 @@ function ServiceCatalog() {
         reviews: serviceReviewStats?.[service.id]?.review_count || 0,
         duration: service.duration || 60,
         slug: service.slug,
-        image: service.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+        image: getServiceImage(service.image_url, service.category),
       }
     }) || []
   }, [services, serviceReviewStats])

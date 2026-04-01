@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
 import BookingModalNew from '../components/BookingModalNew'
+import { getServiceImage } from '../utils/imageUtils'
 
 // Service interface matching database structure
 interface Service {
@@ -212,7 +213,7 @@ function Services() {
               {/* Image */}
               <div className="relative h-48 bg-stone-200">
                 <img
-                  src={service.image_url || 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400'}
+                  src={getServiceImage(service.image_url, service.category)}
                   alt={service.name_th}
                   className="w-full h-full object-cover"
                 />
