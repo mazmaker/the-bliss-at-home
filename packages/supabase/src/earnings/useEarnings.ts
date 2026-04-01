@@ -34,24 +34,34 @@ export function useEarningsSummary() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const staffId = user?.id
+  const profileId = user?.id
 
   const refresh = useCallback(async () => {
-    if (!staffId) {
+    if (!profileId) {
       setIsLoading(false)
       return
     }
 
     setIsLoading(true)
     try {
-      const data = await getEarningsSummary(staffId)
+      // Convert profile_id to staff_id first
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('profile_id', profileId)
+        .single()
+
+      if (staffError) throw staffError
+      if (!staffData) throw new Error('Staff record not found')
+
+      const data = await getEarningsSummary(staffData.id)
       setSummary(data)
     } catch (err) {
       setError(err as Error)
     } finally {
       setIsLoading(false)
     }
-  }, [staffId])
+  }, [profileId])
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -71,24 +81,34 @@ export function useDailyEarnings(startDate: string, endDate: string) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const staffId = user?.id
+  const profileId = user?.id
 
   const refresh = useCallback(async () => {
-    if (!staffId) {
+    if (!profileId) {
       setIsLoading(false)
       return
     }
 
     setIsLoading(true)
     try {
-      const data = await getDailyEarnings(staffId, startDate, endDate)
+      // Convert profile_id to staff_id first
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('profile_id', profileId)
+        .single()
+
+      if (staffError) throw staffError
+      if (!staffData) throw new Error('Staff record not found')
+
+      const data = await getDailyEarnings(staffData.id, startDate, endDate)
       setEarnings(data)
     } catch (err) {
       setError(err as Error)
     } finally {
       setIsLoading(false)
     }
-  }, [staffId, startDate, endDate])
+  }, [profileId, startDate, endDate])
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -108,24 +128,34 @@ export function useServiceEarnings(startDate: string, endDate: string) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const staffId = user?.id
+  const profileId = user?.id
 
   const refresh = useCallback(async () => {
-    if (!staffId) {
+    if (!profileId) {
       setIsLoading(false)
       return
     }
 
     setIsLoading(true)
     try {
-      const data = await getServiceEarnings(staffId, startDate, endDate)
+      // Convert profile_id to staff_id first
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('profile_id', profileId)
+        .single()
+
+      if (staffError) throw staffError
+      if (!staffData) throw new Error('Staff record not found')
+
+      const data = await getServiceEarnings(staffData.id, startDate, endDate)
       setServices(data)
     } catch (err) {
       setError(err as Error)
     } finally {
       setIsLoading(false)
     }
-  }, [staffId, startDate, endDate])
+  }, [profileId, startDate, endDate])
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -144,25 +174,37 @@ export function usePayouts(realtime = false) {
   const [payouts, setPayouts] = useState<Payout[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const [staffId, setStaffId] = useState<string | null>(null)
 
-  const staffId = user?.id
+  const profileId = user?.id
 
   const refresh = useCallback(async () => {
-    if (!staffId) {
+    if (!profileId) {
       setIsLoading(false)
       return
     }
 
     setIsLoading(true)
     try {
-      const data = await getPayoutHistory(staffId)
+      // Convert profile_id to staff_id first
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('profile_id', profileId)
+        .single()
+
+      if (staffError) throw staffError
+      if (!staffData) throw new Error('Staff record not found')
+
+      setStaffId(staffData.id)
+      const data = await getPayoutHistory(staffData.id)
       setPayouts(data)
     } catch (err) {
       setError(err as Error)
     } finally {
       setIsLoading(false)
     }
-  }, [staffId])
+  }, [profileId])
 
   useEffect(() => {
     if (!isAuthLoading) {

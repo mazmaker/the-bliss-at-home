@@ -15,6 +15,7 @@ import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } fro
 import { CoupleServiceConfig } from '../components/CoupleServiceConfig'
 import { VoucherCodeInput } from '../components/VoucherCodeInput'
 import ThaiAddressFields from '../components/ThaiAddressFields'
+import { getServiceImage } from '../utils/imageUtils'
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -95,7 +96,7 @@ function BookingWizard() {
       durationMinutes: serviceData.duration || 60,
       category: serviceData.category,
       description: serviceData.description_th || serviceData.description_en || '',
-      image: serviceData.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      image: getServiceImage(serviceData.image_url, serviceData.category),
       addons: serviceData.addons || [],
       raw: serviceData, // keep raw for duration/price helpers
     }
@@ -131,14 +132,14 @@ function BookingWizard() {
     }
   }, [addOnsParam])
 
-  // Price calculation
-  const person1Price = service?.raw ? getPriceForDuration(service.raw, selectedDuration) : 0
+  // Price calculation - only calculate if selectedDuration is valid
+  const person1Price = (service?.raw && selectedDuration > 0) ? getPriceForDuration(service.raw, selectedDuration) : 0
   const person1AddonTotal = service?.addons
     .filter((a) => (customerType === 'couple' ? person1AddOns : addOnsParam).includes(a.id))
     .reduce((sum, a) => sum + Number(a.price), 0) || 0
 
   const p2Svc = person2Service || serviceData
-  const person2PriceVal = p2Svc ? getPriceForDuration(p2Svc, person2Duration) : 0
+  const person2PriceVal = (p2Svc && person2Duration > 0) ? getPriceForDuration(p2Svc, person2Duration) : 0
   const person2AddonTotal = p2Svc
     ? (p2Svc.addons || [])
         .filter((a: any) => person2AddOns.includes(a.id))
@@ -1080,7 +1081,7 @@ function BookingWizard() {
                       <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl mt-3">
                         <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-stone-200 rounded-xl overflow-hidden">
                           <img
-                            src={p2Svc.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80'}
+                            src={getServiceImage(p2Svc.image_url, p2Svc.category)}
                             alt={p2Svc.name_th || p2Svc.name_en}
                             className="w-full h-full object-cover"
                           />
