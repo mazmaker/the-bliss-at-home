@@ -99,6 +99,17 @@ function App() {
           )
         }
       />
+      {/* Also handle /login without /admin prefix (subdomain deploy) */}
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/admin/dashboard" replace />
+          ) : (
+            <AdminLoginPage />
+          )
+        }
+      />
 
       {/* Protected admin routes - require ADMIN role */}
       <Route
@@ -132,6 +143,8 @@ function App() {
 
       {/* Default redirect */}
       <Route path="/" element={<Navigate to="/admin" replace />} />
+      {/* Catch-all: redirect unknown routes to login */}
+      <Route path="*" element={<Navigate to="/admin/login" replace />} />
     </Routes>
   )
 }
