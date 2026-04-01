@@ -21,7 +21,7 @@ import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
 import { getSupabaseClient } from './lib/supabase.js'
-import { processPointsExpiry } from '../../../packages/supabase/src/services/loyaltyService.js'
+import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -111,8 +111,9 @@ if (process.env.NODE_ENV !== 'production') {
 app.post('/api/dev/trigger-points-expiry', async (req: Request, res: Response) => {
   try {
     const supabase = getSupabaseClient()
-    const result = await processPointsExpiry(supabase as any)
-    res.json({ success: true, ...result })
+    const expiryResult = await processPointsExpiry(supabase as any)
+    const warningResult = await processExpiryWarnings(supabase as any)
+    res.json({ success: true, ...expiryResult, warningsSent: warningResult.warningCount })
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message })
   }
@@ -196,6 +197,10 @@ cron.schedule('0 18 * * *', async () => {
     const result = await processPointsExpiry(supabase as any)
     if (result.expiredCount > 0) {
       console.log(`[Cron] Points expired: ${result.expiredCount} transactions, ${result.affectedCustomers.length} customers`)
+    }
+    const warnings = await processExpiryWarnings(supabase as any)
+    if (warnings.warningCount > 0) {
+      console.log(`[Cron] Expiry warnings sent: ${warnings.warningCount} customers`)
     }
   } catch (err) {
     console.error('[Cron] Error processing points expiry:', err)

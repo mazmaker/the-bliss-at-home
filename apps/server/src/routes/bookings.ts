@@ -16,6 +16,7 @@ import type {
   BookingCancellationResponse,
   RefundOption,
 } from '../types/cancellation.js'
+import { refundPoints } from '../../../../packages/supabase/src/services/loyaltyService.js'
 
 const router = Router()
 
@@ -636,6 +637,7 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
         staff_id,
         hotel_id,
         is_hotel_booking,
+        points_redeemed,
         customer:customers(
           id,
           profile_id,
@@ -777,6 +779,28 @@ router.post('/:id/cancel', async (req: Request, res: Response) => {
         success: false,
         error: 'Failed to update booking status',
       })
+    }
+
+    // Refund loyalty points if booking used points
+    if (booking.customer_id && (booking.points_redeemed || 0) > 0) {
+      try {
+        const refunded = await refundPoints(supabase as any, booking.customer_id, id)
+        if (refunded > 0) {
+          console.log(`🔄 Loyalty points refunded for booking ${id}: ${refunded} points`)
+
+          // Send notification about points refund
+          await supabase.from('notifications').insert({
+            user_id: (booking.customer as any)?.profile_id || null,
+            type: 'points_refund',
+            title: 'คืนแต้มสะสม',
+            message: `คืนแต้ม ${refunded} แต้มจากการยกเลิก ${booking.booking_number}`,
+          }).then(({ error }) => {
+            if (error) console.error('Failed to create points refund notification:', error)
+          })
+        }
+      } catch (loyaltyError) {
+        console.error('⚠️ Failed to refund loyalty points:', loyaltyError)
+      }
     }
 
     // Send notifications

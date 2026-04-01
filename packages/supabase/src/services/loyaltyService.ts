@@ -487,6 +487,92 @@ export async function processPointsExpiry(
 }
 
 // ==========================================
+// Expiry Warning Notifications
+// ==========================================
+
+export async function processExpiryWarnings(
+  client: SupabaseClient<Database>
+): Promise<{ warningCount: number }> {
+  const settings = await getLoyaltySettings(client);
+  const warningDays = settings.points_expiry_warning_days || 30;
+
+  const warningDate = new Date();
+  warningDate.setDate(warningDate.getDate() + warningDays);
+  const warningDateStr = warningDate.toISOString();
+
+  // Find earn/bonus transactions that:
+  // - have expires_at within warning period
+  // - are not yet expired
+  // - warning has not been sent yet
+  const { data: warningTxs, error } = await client
+    .from('point_transactions')
+    .select('*')
+    .in('type', ['earn', 'bonus'])
+    .eq('expired', false)
+    .eq('warning_sent', false)
+    .not('expires_at', 'is', null)
+    .lte('expires_at', warningDateStr)
+    .gt('expires_at', new Date().toISOString());
+
+  if (error || !warningTxs || warningTxs.length === 0) {
+    return { warningCount: 0 };
+  }
+
+  // Group by customer_id to send one notification per customer
+  const customerWarnings = new Map<string, { totalPoints: number; earliestExpiry: string }>();
+
+  for (const tx of warningTxs) {
+    const existing = customerWarnings.get(tx.customer_id);
+    if (existing) {
+      existing.totalPoints += tx.points;
+      if (tx.expires_at! < existing.earliestExpiry) {
+        existing.earliestExpiry = tx.expires_at!;
+      }
+    } else {
+      customerWarnings.set(tx.customer_id, {
+        totalPoints: tx.points,
+        earliestExpiry: tx.expires_at!,
+      });
+    }
+
+    // Mark warning as sent
+    await client
+      .from('point_transactions')
+      .update({ warning_sent: true })
+      .eq('id', tx.id);
+  }
+
+  let warningCount = 0;
+
+  for (const [customerId, info] of customerWarnings) {
+    // Look up profile_id from customers table
+    const { data: customer } = await client
+      .from('customers')
+      .select('profile_id')
+      .eq('id', customerId)
+      .single();
+
+    if (!customer?.profile_id) continue;
+
+    const expiryDate = new Date(info.earliestExpiry);
+    const thaiDate = expiryDate.toLocaleDateString('th-TH', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    await client.from('notifications').insert({
+      user_id: customer.profile_id,
+      type: 'points_expiry_warning',
+      title: 'แต้มสะสมใกล้หมดอายุ',
+      message: `แต้มสะสม ${info.totalPoints.toLocaleString()} แต้มจะหมดอายุในวันที่ ${thaiDate}`,
+    });
+
+    warningCount++;
+  }
+
+  return { warningCount };
+}
+
+// ==========================================
 // Admin Adjust
 // ==========================================
 
@@ -516,6 +602,24 @@ export async function adminAdjustPoints(
     .from('customer_points')
     .update(updates)
     .eq('customer_id', customerId);
+
+  // Send notification to customer
+  const { data: customer } = await client
+    .from('customers')
+    .select('profile_id')
+    .eq('id', customerId)
+    .single();
+
+  if (customer?.profile_id) {
+    const action = points > 0 ? 'ได้รับ' : 'ถูกหัก';
+    const absPoints = Math.abs(points);
+    await client.from('notifications').insert({
+      user_id: customer.profile_id,
+      type: 'points_adjust',
+      title: points > 0 ? 'ได้รับแต้มพิเศษ' : 'หักแต้มสะสม',
+      message: `${action}แต้มสะสม ${absPoints} แต้ม เหตุผล: ${reason}`,
+    });
+  }
 }
 
 // ==========================================
