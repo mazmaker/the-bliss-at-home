@@ -88,24 +88,24 @@ function Header() {
   const IconComponent = ({ icon: Icon }: { icon: any }) => <Icon className="w-5 h-5" />
 
   return (
-    <header className="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200 shadow-sm">
-      <div className="container mx-auto px-4 py-4">
+    <header className="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200 shadow-sm">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <img
               src="https://rbdvlfriqjnwpxmmgisf.supabase.co/storage/v1/object/public/public-assets/logos/the-bliss-logo.png"
               alt="The Bliss Massage at Home"
-              className="w-20 h-20 object-contain"
+              className="w-12 h-12 object-contain"
             />
             <div>
-              <h1 className="text-xl font-semibold text-stone-900 tracking-tight">The Bliss Massage at Home</h1>
-              <p className="text-xs text-stone-500 hidden sm:block font-light tracking-wide">Massage & Spa</p>
+              <h1 className="text-lg font-semibold text-stone-900 tracking-tight">The Bliss Massage at Home</h1>
+              <p className="text-xs text-stone-500 hidden sm:block font-light">Massage & Spa</p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-12">
+          <nav className="hidden lg:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -123,7 +123,7 @@ function Header() {
           </nav>
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-4">
             {!isLoading && isLoggedIn ? (
               <>
                 {/* Notification Bell */}
@@ -149,7 +149,7 @@ function Header() {
                     className="flex items-center gap-2 text-stone-700 hover:text-amber-700 font-medium text-sm transition px-3 py-2 rounded-lg hover:bg-stone-50"
                   >
                     <User className="w-4 h-4" />
-                    <span>{displayName}</span>
+                    <span className="hidden xl:inline">{displayName}</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
 
@@ -204,7 +204,7 @@ function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-stone-700"
+            className="lg:hidden p-2 text-stone-700 hover:text-amber-700 transition rounded-lg hover:bg-stone-50"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -212,7 +212,7 @@ function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-stone-200 pt-4">
+          <div className="lg:hidden mt-4 pb-4 border-t border-stone-200 pt-4">
             <nav className="flex flex-col gap-3">
               {navItems.map((item) => (
                 <Link
