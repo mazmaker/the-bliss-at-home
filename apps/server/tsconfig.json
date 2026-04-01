@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "../../",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -21,6 +21,6 @@
     },
     "types": ["node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../packages/supabase/src/**/*"],
   "exclude": ["node_modules", "dist", "src/**/__tests__/**", "src/**/*.test.ts"]
 }
