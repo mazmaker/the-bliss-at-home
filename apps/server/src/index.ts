@@ -21,6 +21,7 @@ import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
 import { getSupabaseClient } from './lib/supabase.js'
+// @ts-ignore — relative import from shared package (outside rootDir)
 import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
 
 const app = express()

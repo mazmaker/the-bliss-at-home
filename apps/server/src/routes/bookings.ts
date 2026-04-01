@@ -16,6 +16,7 @@ import type {
   BookingCancellationResponse,
   RefundOption,
 } from '../types/cancellation.js'
+// @ts-ignore — relative import from shared package (outside rootDir)
 import { refundPoints } from '../../../../packages/supabase/src/services/loyaltyService.js'
 
 const router = Router()
