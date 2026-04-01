@@ -20,6 +20,8 @@ import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
+import { getSupabaseClient } from './lib/supabase.js'
+import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -105,6 +107,18 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 
+// Dev endpoint to trigger points expiry manually
+app.post('/api/dev/trigger-points-expiry', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabaseClient()
+    const expiryResult = await processPointsExpiry(supabase as any)
+    const warningResult = await processExpiryWarnings(supabase as any)
+    res.json({ success: true, ...expiryResult, warningsSent: warningResult.warningCount })
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
 // 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({
@@ -175,12 +189,30 @@ cron.schedule('0 2 * * *', async () => {
   }
 })
 
+// Points expiry check daily at 1 AM (Thailand time = 18:00 UTC prev day)
+cron.schedule('0 18 * * *', async () => {
+  // 18:00 UTC = 01:00 ICT (Thailand, next day)
+  try {
+    const supabase = getSupabaseClient()
+    const result = await processPointsExpiry(supabase as any)
+    if (result.expiredCount > 0) {
+      console.log(`[Cron] Points expired: ${result.expiredCount} transactions, ${result.affectedCustomers.length} customers`)
+    }
+    const warnings = await processExpiryWarnings(supabase as any)
+    if (warnings.warningCount > 0) {
+      console.log(`[Cron] Expiry warnings sent: ${warnings.warningCount} customers`)
+    }
+  } catch (err) {
+    console.error('[Cron] Error processing points expiry:', err)
+  }
+})
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT)`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT), Points expiry (daily 1AM ICT)`)
 })
 
 export default app

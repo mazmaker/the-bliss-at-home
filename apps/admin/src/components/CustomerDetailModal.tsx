@@ -1,6 +1,10 @@
-import { X, Mail, Phone, Calendar, TrendingUp, DollarSign, ShoppingBag, Home, FileText, User, Cake } from 'lucide-react'
+import { useState } from 'react'
+import { X, Mail, Phone, Calendar, TrendingUp, DollarSign, ShoppingBag, Home, FileText, User, Cake, Star, Plus, Minus } from 'lucide-react'
 import { useCustomerWithStats, useCustomerBookings, useCustomerAddresses, useCustomerTaxInfo } from '../hooks/useCustomers'
 import { Customer } from '../lib/customerQueries'
+import { supabase } from '../lib/supabase'
+import { getCustomerPoints, getPointTransactions, adminAdjustPoints } from '@bliss/supabase/services'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface CustomerDetailModalProps {
   isOpen: boolean
@@ -13,6 +17,46 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
   const { bookings, loading: bookingsLoading } = useCustomerBookings(customer.id)
   const { addresses, loading: addressesLoading } = useCustomerAddresses(customer.id)
   const { taxInfo, loading: taxInfoLoading } = useCustomerTaxInfo(customer.id)
+  const queryClient = useQueryClient()
+
+  // Loyalty Points
+  const [showAdjustModal, setShowAdjustModal] = useState(false)
+  const [adjustType, setAdjustType] = useState<'add' | 'deduct'>('add')
+  const [adjustAmount, setAdjustAmount] = useState('')
+  const [adjustReason, setAdjustReason] = useState('')
+  const [adjustSaving, setAdjustSaving] = useState(false)
+
+  const { data: customerPoints } = useQuery({
+    queryKey: ['admin', 'customer-points', customer.id],
+    queryFn: async () => getCustomerPoints(supabase as any, customer.id),
+    enabled: isOpen,
+  })
+
+  const { data: recentTxs } = useQuery({
+    queryKey: ['admin', 'customer-tx', customer.id],
+    queryFn: async () => getPointTransactions(supabase as any, customer.id, { limit: 5 }),
+    enabled: isOpen,
+  })
+
+  const handleAdjustPoints = async () => {
+    const pts = parseInt(adjustAmount)
+    if (isNaN(pts) || pts <= 0 || !adjustReason.trim()) return
+    setAdjustSaving(true)
+    try {
+      const points = adjustType === 'add' ? pts : -pts
+      await adminAdjustPoints(supabase as any, customer.id, points, adjustReason.trim())
+      queryClient.invalidateQueries({ queryKey: ['admin', 'customer-points', customer.id] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'customer-tx', customer.id] })
+      setShowAdjustModal(false)
+      setAdjustAmount('')
+      setAdjustReason('')
+    } catch (err) {
+      console.error('Failed to adjust points:', err)
+      alert('เกิดข้อผิดพลาด')
+    } finally {
+      setAdjustSaving(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -272,6 +316,112 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
                     ฿{customerStats.average_booking_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </p>
                   <p className="text-xs text-stone-500">ค่าเฉลี่ย/ครั้ง</p>
+                </div>
+              </div>
+            )}
+
+            {/* Loyalty Points */}
+            <div className="bg-amber-50 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-stone-900 flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-600" />
+                  แต้มสะสม (Loyalty Points)
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setAdjustType('add'); setShowAdjustModal(true) }}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
+                  >
+                    <Plus className="w-3 h-3" /> ให้แต้ม
+                  </button>
+                  <button
+                    onClick={() => { setAdjustType('deduct'); setShowAdjustModal(true) }}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                  >
+                    <Minus className="w-3 h-3" /> หักแต้ม
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-3 mb-3">
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-amber-700">{customerPoints?.total_points || 0}</p>
+                  <p className="text-xs text-stone-500">คงเหลือ</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-stone-700">{customerPoints?.lifetime_earned || 0}</p>
+                  <p className="text-xs text-stone-500">สะสมทั้งหมด</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-stone-700">{customerPoints?.lifetime_redeemed || 0}</p>
+                  <p className="text-xs text-stone-500">ใช้ไปแล้ว</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-stone-700">{customerPoints?.lifetime_expired || 0}</p>
+                  <p className="text-xs text-stone-500">หมดอายุ</p>
+                </div>
+              </div>
+              {recentTxs?.transactions && recentTxs.transactions.length > 0 && (
+                <div className="bg-white rounded-lg p-3">
+                  <p className="text-xs font-medium text-stone-500 mb-2">ล่าสุด</p>
+                  {recentTxs.transactions.slice(0, 3).map(tx => (
+                    <div key={tx.id} className="flex justify-between text-sm py-1 border-b border-stone-100 last:border-0">
+                      <span className="text-stone-600">{tx.description || tx.type}</span>
+                      <span className={tx.points > 0 ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                        {tx.points > 0 ? '+' : ''}{tx.points}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Adjust Points Modal */}
+            {showAdjustModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                <div className="bg-white rounded-2xl max-w-sm w-full p-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {adjustType === 'add' ? 'ให้แต้มพิเศษ' : 'หักแต้ม'}
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-1">จำนวนแต้ม</label>
+                      <input
+                        type="number"
+                        value={adjustAmount}
+                        onChange={e => setAdjustAmount(e.target.value)}
+                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500"
+                        min="1"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-1">เหตุผล</label>
+                      <input
+                        type="text"
+                        value={adjustReason}
+                        onChange={e => setAdjustReason(e.target.value)}
+                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500"
+                        placeholder="เช่น ชดเชยปัญหาบริการ"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={() => setShowAdjustModal(false)}
+                      className="flex-1 px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      onClick={handleAdjustPoints}
+                      disabled={adjustSaving || !adjustAmount || !adjustReason.trim()}
+                      className={`flex-1 px-4 py-2 text-white rounded-xl font-medium disabled:opacity-50 ${
+                        adjustType === 'add' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-500 hover:bg-red-600'
+                      }`}
+                    >
+                      {adjustSaving ? 'กำลังบันทึก...' : adjustType === 'add' ? 'ให้แต้ม' : 'หักแต้ม'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -13,6 +13,7 @@ import PaymentMethodModal from '../components/PaymentMethodModal'
 import ThaiAddressFields from '../components/ThaiAddressFields'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { Database } from '@bliss/supabase/types/database.types'
+import { PointsWidget } from '../components/PointsWidget'
 
 type Address = Database['public']['Tables']['addresses']['Row']
 
@@ -332,6 +333,7 @@ function Profile() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="space-y-6">
+                {customer && <PointsWidget customerId={customer.id} />}
                 <div>
                   <h3 className="text-lg font-semibold text-stone-900 mb-4">{t('personal.title')}</h3>
                   <div className="grid md:grid-cols-2 gap-4">

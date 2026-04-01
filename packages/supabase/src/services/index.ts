@@ -10,3 +10,4 @@ export * from './thaiGeographyService';
 export * as promotionService from './promotionService';
 export type { PromoValidationResult } from './promotionService';
 export * from './reviewService';
+export * from './loyaltyService';

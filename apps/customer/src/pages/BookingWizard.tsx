@@ -14,6 +14,7 @@ import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
 import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
 import { CoupleServiceConfig } from '../components/CoupleServiceConfig'
 import { VoucherCodeInput } from '../components/VoucherCodeInput'
+import { PointsRedeemSection } from '../components/PointsRedeemSection'
 import ThaiAddressFields from '../components/ThaiAddressFields'
 import { getServiceImage } from '../utils/imageUtils'
 
@@ -49,6 +50,9 @@ function BookingWizard() {
   const [person2AddOns, setPerson2AddOns] = useState<string[]>([])
   // Voucher
   const [appliedPromo, setAppliedPromo] = useState<PromoValidationResult | null>(null)
+  // Loyalty Points
+  const [pointsRedeemed, setPointsRedeemed] = useState(0)
+  const [pointsDiscount, setPointsDiscount] = useState(0)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [providerPreference, setProviderPreference] = useState<ProviderPreference>('no-preference')
@@ -151,7 +155,8 @@ function BookingWizard() {
     : (person1Price + person1AddonTotal) * qtyParam
 
   const discountAmount = appliedPromo?.valid ? appliedPromo.discountAmount : 0
-  const totalPrice = Math.max(0, subtotal - discountAmount)
+  const priceAfterPromo = Math.max(0, subtotal - discountAmount)
+  const totalPrice = Math.max(0, priceAfterPromo - pointsDiscount)
 
   // Selected add-ons (for backwards compat in review step)
   const selectedAddOns = useMemo(() => {
@@ -528,6 +533,8 @@ function BookingWizard() {
           final_price: totalPrice,
           promotion_id: appliedPromo?.valid ? appliedPromo.promotion?.id || null : null,
           provider_preference: providerPreference,
+          points_redeemed: pointsRedeemed || 0,
+          points_discount: pointsDiscount || 0,
         },
         services,
         addons: addonsData.length > 0 ? addonsData : undefined,
@@ -536,6 +543,18 @@ function BookingWizard() {
       // Store booking ID
       setCreatedBookingId(bookingId)
       setCreatedBookingNumber(null) // will be set by DB trigger
+
+      // Redeem loyalty points if used
+      if (pointsRedeemed > 0 && pointsDiscount > 0 && customer) {
+        try {
+          const { redeemPoints } = await import('@bliss/supabase/services')
+          const { getBrowserClient } = await import('@bliss/supabase')
+          await redeemPoints(getBrowserClient() as any, customer.id, bookingId, pointsRedeemed, pointsDiscount)
+          console.log(`⭐ Points redeemed: ${pointsRedeemed} points = ฿${pointsDiscount} discount`)
+        } catch (err) {
+          console.error('⚠️ Failed to redeem points:', err)
+        }
+      }
 
       // Go to Payment step
       setCurrentStep(6)
@@ -1172,6 +1191,18 @@ function BookingWizard() {
                   />
                 )}
 
+                {/* Points Redemption */}
+                {customer && (
+                  <PointsRedeemSection
+                    customerId={customer.id}
+                    orderAmount={priceAfterPromo}
+                    onPointsChange={(points, discount) => {
+                      setPointsRedeemed(points)
+                      setPointsDiscount(discount)
+                    }}
+                  />
+                )}
+
                 {/* Price Summary */}
                 <div className="space-y-2 p-4 bg-stone-50 rounded-xl">
                   <div className="flex justify-between items-center">
@@ -1182,6 +1213,12 @@ function BookingWizard() {
                     <div className="flex justify-between items-center text-green-600">
                       <span>{t('wizard.step5.discount')}</span>
                       <span className="font-medium">-฿{discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {pointsDiscount > 0 && (
+                    <div className="flex justify-between items-center text-amber-600">
+                      <span>ส่วนลดจากแต้ม ({pointsRedeemed.toLocaleString()} แต้ม)</span>
+                      <span className="font-medium">-฿{pointsDiscount.toLocaleString()}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-2 border-t border-stone-200">
