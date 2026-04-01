@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3, FileText } from 'lucide-react'
+import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3, FileText, Star } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { LogoUpload } from '../components/LogoUpload'
 
@@ -103,12 +103,27 @@ function Settings() {
   const [showTierModal, setShowTierModal] = useState(false)
   const [policyLoading, setPolicyLoading] = useState(false)
 
+  // Loyalty Points State
+  const [loyaltySettings, setLoyaltySettings] = useState({
+    loyalty_enabled: true,
+    points_per_baht: '100',
+    points_to_baht: '10',
+    min_redeem_points: '100',
+    max_discount_percent: '50',
+    first_booking_bonus: '50',
+    points_expiry_days: '365',
+    points_expiry_warning_days: '30',
+  })
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false)
+  const [loyaltySaving, setLoyaltySaving] = useState(false)
+
   const tabs = [
     { id: 'general', name: 'ทั่วไป', nameEn: 'General Settings', icon: Globe },
     { id: 'payment', name: 'การชำระเงิน', nameEn: 'Payment Settings', icon: CreditCard },
     { id: 'cancellation', name: 'นโยบายการยกเลิก', nameEn: 'Cancellation Policy', icon: Calendar },
     { id: 'refund_policy', name: 'เงื่อนไขการคืนเงิน', nameEn: 'Refund Policy', icon: FileText },
     { id: 'reports', name: 'รายงาน/เป้าหมาย', nameEn: 'Reports & Targets', icon: BarChart3 },
+    { id: 'loyalty', name: 'ระบบแต้มสะสม', nameEn: 'Loyalty Points', icon: Star },
   ]
 
   // Load settings from database
@@ -116,7 +131,68 @@ function Settings() {
     loadSettings()
     loadCancellationPolicy()
     loadRefundPolicy()
+    loadLoyaltySettings()
   }, [])
+
+  const loadLoyaltySettings = async () => {
+    setLoyaltyLoading(true)
+    try {
+      const loyaltyKeys = [
+        'loyalty_enabled', 'points_per_baht', 'points_to_baht',
+        'min_redeem_points', 'max_discount_percent', 'first_booking_bonus',
+        'points_expiry_days', 'points_expiry_warning_days'
+      ]
+      const { data } = await supabase.from('settings').select('key, value').in('key', loyaltyKeys)
+      if (data && data.length > 0) {
+        const mapped: Record<string, any> = {}
+        data.forEach((s: any) => {
+          if (s.key === 'loyalty_enabled') {
+            mapped[s.key] = s.value?.enabled ?? true
+          } else {
+            mapped[s.key] = String(s.value?.value ?? '')
+          }
+        })
+        setLoyaltySettings(prev => ({ ...prev, ...mapped }))
+      }
+    } catch (err) {
+      console.error('Failed to load loyalty settings:', err)
+    } finally {
+      setLoyaltyLoading(false)
+    }
+  }
+
+  const saveLoyaltySettings = async () => {
+    setLoyaltySaving(true)
+    try {
+      const settingsToSave = [
+        { key: 'loyalty_enabled', value: { enabled: loyaltySettings.loyalty_enabled }, description: 'เปิด/ปิดระบบแต้มสะสม' },
+        { key: 'points_per_baht', value: { value: parseInt(loyaltySettings.points_per_baht) || 100 }, description: 'ทุกกี่บาทได้ 1 แต้ม' },
+        { key: 'points_to_baht', value: { value: parseInt(loyaltySettings.points_to_baht) || 10 }, description: 'กี่แต้มเท่ากับ 1 บาท' },
+        { key: 'min_redeem_points', value: { value: parseInt(loyaltySettings.min_redeem_points) || 100 }, description: 'แลกแต้มขั้นต่ำ' },
+        { key: 'max_discount_percent', value: { value: parseInt(loyaltySettings.max_discount_percent) || 50 }, description: 'ส่วนลดสูงสุดจากแต้ม (%)' },
+        { key: 'first_booking_bonus', value: { value: parseInt(loyaltySettings.first_booking_bonus) || 50 }, description: 'โบนัสแต้มจองครั้งแรก' },
+        { key: 'points_expiry_days', value: { value: parseInt(loyaltySettings.points_expiry_days) || 365 }, description: 'อายุแต้ม (วัน)' },
+        { key: 'points_expiry_warning_days', value: { value: parseInt(loyaltySettings.points_expiry_warning_days) || 30 }, description: 'แจ้งเตือนก่อนหมดอายุ (วัน)' },
+      ]
+      for (const setting of settingsToSave) {
+        const { error } = await supabase.from('settings').upsert({
+          key: setting.key,
+          value: setting.value,
+          description: setting.description,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' })
+        if (error) throw error
+      }
+      setMessage('บันทึกการตั้งค่าระบบแต้มสะสมเรียบร้อยแล้ว')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      console.error('Failed to save loyalty settings:', err)
+      setError('เกิดข้อผิดพลาดในการบันทึก')
+      setTimeout(() => setError(''), 3000)
+    } finally {
+      setLoyaltySaving(false)
+    }
+  }
 
   const loadRefundPolicy = async () => {
     const { data } = await supabase.from('settings').select('value').eq('key', 'refund_policy_content').single()
@@ -1158,6 +1234,194 @@ function Settings() {
                   </div>
 
                 </div>
+              </div>
+            )}
+
+            {/* Loyalty Points Settings */}
+            {activeTab === 'loyalty' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-stone-900">ระบบแต้มสะสม</h2>
+                    <p className="text-sm text-stone-500 mt-1">Loyalty Points — ตั้งค่าการได้รับและแลกแต้มของลูกค้า</p>
+                  </div>
+                  <button
+                    onClick={saveLoyaltySettings}
+                    disabled={loyaltySaving}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    {loyaltySaving ? 'กำลังบันทึก...' : 'บันทึก'}
+                  </button>
+                </div>
+
+                {loyaltyLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="w-6 h-6 animate-spin text-amber-600" />
+                    <span className="ml-2 text-stone-500">กำลังโหลด...</span>
+                  </div>
+                ) : (
+                  <>
+                    {/* เปิด/ปิดระบบ */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <Star className="w-5 h-5 text-amber-700" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-stone-900">เปิดใช้งานระบบแต้มสะสม</p>
+                            <p className="text-sm text-stone-500">ลูกค้าจะได้รับแต้มเมื่อจองบริการเสร็จสมบูรณ์</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setLoyaltySettings(prev => ({ ...prev, loyalty_enabled: !prev.loyalty_enabled }))}
+                          className={`relative w-14 h-7 rounded-full transition-colors ${loyaltySettings.loyalty_enabled ? 'bg-amber-600' : 'bg-stone-300'}`}
+                        >
+                          <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${loyaltySettings.loyalty_enabled ? 'translate-x-7' : 'translate-x-0.5'}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* การได้รับแต้ม */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium text-stone-900 flex items-center gap-2">
+                        <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-bold">+</span>
+                        การได้รับแต้ม
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">ทุกกี่บาทได้ 1 แต้ม</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.points_per_baht}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_per_baht: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="1"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">บาท</span>
+                          </div>
+                          <p className="text-xs text-stone-400 mt-1">ตัวอย่าง: ฿{loyaltySettings.points_per_baht || 100} = 1 แต้ม, ฿{(parseInt(loyaltySettings.points_per_baht) || 100) * 5} = 5 แต้ม</p>
+                        </div>
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">โบนัสจองครั้งแรก</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.first_booking_bonus}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, first_booking_bonus: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="0"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">แต้ม</span>
+                          </div>
+                          <p className="text-xs text-stone-400 mt-1">ลูกค้าจะได้รับโบนัสนี้เมื่อจองครั้งแรกเสร็จสมบูรณ์</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* การแลกแต้ม */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium text-stone-900 flex items-center gap-2">
+                        <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">⇄</span>
+                        การแลกแต้ม
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">กี่แต้มเท่ากับ ฿1</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.points_to_baht}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_to_baht: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="1"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">แต้ม</span>
+                          </div>
+                          <p className="text-xs text-stone-400 mt-1">{loyaltySettings.points_to_baht || 10} แต้ม = ฿1</p>
+                        </div>
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">แลกขั้นต่ำ</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.min_redeem_points}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, min_redeem_points: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="0"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">แต้ม</span>
+                          </div>
+                          <p className="text-xs text-stone-400 mt-1">= ฿{Math.floor((parseInt(loyaltySettings.min_redeem_points) || 100) / (parseInt(loyaltySettings.points_to_baht) || 10))} ส่วนลด</p>
+                        </div>
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">ส่วนลดสูงสุด</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.max_discount_percent}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, max_discount_percent: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="1"
+                              max="100"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">%</span>
+                          </div>
+                          <p className="text-xs text-stone-400 mt-1">ป้องกันลูกค้าจองฟรี</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* อายุแต้ม */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium text-stone-900 flex items-center gap-2">
+                        <span className="w-6 h-6 bg-red-100 text-red-700 rounded-full flex items-center justify-center text-xs font-bold">⏱</span>
+                        อายุแต้ม
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">แต้มหมดอายุหลัง</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.points_expiry_days}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_expiry_days: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="1"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">วัน</span>
+                          </div>
+                        </div>
+                        <div className="bg-stone-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-stone-700 mb-2">แจ้งเตือนก่อนหมดอายุ</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={loyaltySettings.points_expiry_warning_days}
+                              onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_expiry_warning_days: e.target.value }))}
+                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              min="1"
+                            />
+                            <span className="text-sm text-stone-500 whitespace-nowrap">วัน</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ตัวอย่างการคำนวณ */}
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
+                      <h4 className="font-medium text-stone-900 mb-3">ตัวอย่างการคำนวณ</h4>
+                      <div className="text-sm text-stone-600 space-y-1">
+                        <p>• ลูกค้าจองบริการ ฿800 → ได้ <strong>{Math.floor(800 / (parseInt(loyaltySettings.points_per_baht) || 100))} แต้ม</strong></p>
+                        <p>• ลูกค้ามี 500 แต้ม → แลกส่วนลดได้ <strong>฿{Math.floor(500 / (parseInt(loyaltySettings.points_to_baht) || 10))}</strong></p>
+                        <p>• บริการ ฿1,000 → ส่วนลดจากแต้มสูงสุด <strong>฿{Math.floor(1000 * (parseInt(loyaltySettings.max_discount_percent) || 50) / 100)}</strong> ({loyaltySettings.max_discount_percent}%)</p>
+                        <p>• จองครั้งแรก → ได้โบนัส <strong>{loyaltySettings.first_booking_bonus} แต้ม</strong> (= ฿{Math.floor((parseInt(loyaltySettings.first_booking_bonus) || 50) / (parseInt(loyaltySettings.points_to_baht) || 10))})</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

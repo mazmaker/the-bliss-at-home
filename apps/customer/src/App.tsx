@@ -24,6 +24,7 @@ import TermsPage from './pages/Terms'
 import PrivacyPage from './pages/Privacy'
 import PromotionsPage from './pages/Promotions'
 import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth'
+import PointsHistory from './pages/PointsHistory'
 
 function App() {
   const { t } = useTranslation('common')
@@ -101,6 +102,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
               <TransactionHistoryWrapper />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/points"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <PointsHistoryWrapper />
             </ProtectedRoute>
           }
         />
@@ -280,6 +290,15 @@ function TransactionHistoryWrapper() {
     <>
       <Header />
       <TransactionHistory />
+    </>
+  )
+}
+
+function PointsHistoryWrapper() {
+  return (
+    <>
+      <Header />
+      <PointsHistory />
     </>
   )
 }

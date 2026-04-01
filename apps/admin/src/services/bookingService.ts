@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { awardPoints, refundPoints } from '@bliss/supabase/services'
 
 // Helper function to parse customer data from customer_notes
 function parseCustomerFromNotes(customerNotes?: string | null): {
@@ -414,6 +415,30 @@ class BookingService {
       if (error) {
         console.error('Error updating booking status:', error)
         throw error
+      }
+
+      // Award loyalty points when booking is completed
+      if (status === 'completed' && data && !data.is_hotel_booking && data.customer_id) {
+        try {
+          const result = await awardPoints(supabase as any, data.customer_id, id, Number(data.final_price) || 0)
+          if (result.pointsEarned > 0 || result.bonusPoints > 0) {
+            console.log(`⭐ Loyalty points awarded for booking ${id}: earned=${result.pointsEarned}, bonus=${result.bonusPoints}`)
+          }
+        } catch (loyaltyError) {
+          console.error('⚠️ Failed to award loyalty points:', loyaltyError)
+        }
+      }
+
+      // Refund loyalty points when booking is cancelled
+      if (status === 'cancelled' && data && data.customer_id && (data.points_redeemed || 0) > 0) {
+        try {
+          const refunded = await refundPoints(supabase as any, data.customer_id, id)
+          if (refunded > 0) {
+            console.log(`🔄 Loyalty points refunded for booking ${id}: ${refunded} points`)
+          }
+        } catch (loyaltyError) {
+          console.error('⚠️ Failed to refund loyalty points:', loyaltyError)
+        }
       }
 
       // When admin manually confirms a booking, trigger job creation + notifications
