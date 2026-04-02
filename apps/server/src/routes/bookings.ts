@@ -1148,4 +1148,341 @@ router.post('/:id/assign-staff', async (req: Request, res: Response) => {
   }
 })
 
+// ============================================
+// EXTEND BOOKING SESSION
+// ============================================
+
+interface ExtendBookingRequest {
+  additional_duration: number  // minutes to add
+  notes?: string              // optional reason/notes
+  promotion_id?: string       // promotion applied
+  discount_amount?: number    // discount from promotion
+  requested_by?: 'customer' | 'hotel_staff'
+}
+
+interface ExtendBookingResponse {
+  success: boolean
+  extension: {
+    id: string
+    additional_duration: number
+    extension_price: number
+    discount_amount: number
+    final_price: number
+  }
+  booking: {
+    new_total_duration: number
+    new_total_price: number
+    estimated_end_time: string
+    extension_count: number
+  }
+  payment?: {
+    requires_payment: boolean
+    payment_url?: string
+    payment_reference?: string
+  }
+  notifications: {
+    staff_notified: number
+    customer_notified: boolean
+  }
+}
+
+/**
+ * POST /api/bookings/:bookingId/extend
+ * Extend a booking session duration
+ */
+router.post('/:bookingId/extend', async (req: Request, res: Response) => {
+  const { bookingId } = req.params
+  const body: ExtendBookingRequest = req.body
+
+  console.log(`[ExtendBooking] Request for booking ${bookingId}:`, body)
+
+  try {
+    const supabase = getSupabaseClient()
+
+    // 1. Validate request
+    if (!body.additional_duration || body.additional_duration <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'invalid_duration',
+        message: 'ระยะเวลาเพิ่มเติมไม่ถูกต้อง'
+      })
+    }
+
+    // 2. Get booking with current services and staff
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        booking_services (
+          id, service_id, duration, price, recipient_name, recipient_index,
+          services (name_th, name_en, base_price, price_60, price_90, price_120, price_150, price_180, duration)
+        ),
+        jobs (id, staff_id, status),
+        customers (profile_id, full_name, phone),
+        hotels (id, name_th, name_en)
+      `)
+      .eq('id', bookingId)
+      .single()
+
+    if (bookingError || !booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'booking_not_found',
+        message: 'ไม่พบการจองที่ระบุ'
+      })
+    }
+
+    // 3. Validate booking status and extension limits
+    const allowedStatuses = ['confirmed', 'in_progress']
+    if (!allowedStatuses.includes(booking.status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'invalid_status',
+        message: 'ไม่สามารถเพิ่มเวลาได้ในสถานะปัจจุบัน'
+      })
+    }
+
+    const maxExtensions = 3
+    const currentExtensionCount = booking.extension_count || 0
+    if (currentExtensionCount >= maxExtensions) {
+      return res.status(400).json({
+        success: false,
+        error: 'max_extensions_reached',
+        message: `เพิ่มเวลาได้สูงสุด ${maxExtensions} ครั้งต่อการจอง`
+      })
+    }
+
+    // 4. Check 15-minute deadline
+    const now = new Date()
+    const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+    const currentTotalDuration = booking.booking_services.reduce((sum: number, service: any) => sum + service.duration, 0)
+    const currentEndTime = new Date(bookingDateTime.getTime() + (currentTotalDuration * 60 * 1000))
+    const deadlineTime = new Date(currentEndTime.getTime() - (15 * 60 * 1000))
+
+    if (now > deadlineTime) {
+      return res.status(400).json({
+        success: false,
+        error: 'extension_too_late',
+        message: 'ไม่สามารถเพิ่มเวลาได้ เนื่องจากเหลือเวลาน้อยกว่า 15 นาทีก่อนหมดเวลาบริการ'
+      })
+    }
+
+    // 5. Calculate extension price using service pricing structure
+    const originalService = booking.booking_services[0]?.services
+    if (!originalService) {
+      return res.status(400).json({
+        success: false,
+        error: 'service_not_found',
+        message: 'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+      })
+    }
+
+    let extensionPrice: number
+    switch(body.additional_duration) {
+      case 60:
+        extensionPrice = originalService.price_60 || (originalService.base_price * 0.5)
+        break
+      case 90:
+        extensionPrice = originalService.price_90 || (originalService.base_price * 0.75)
+        break
+      case 120:
+        extensionPrice = originalService.price_120 || originalService.base_price
+        break
+      case 150:
+        extensionPrice = originalService.price_150 || (originalService.base_price * 1.25)
+        break
+      case 180:
+        extensionPrice = originalService.price_180 || (originalService.base_price * 1.5)
+        break
+      default:
+        // Calculate proportional price
+        extensionPrice = (originalService.base_price / originalService.duration) * body.additional_duration
+    }
+
+    extensionPrice = Math.round(extensionPrice)
+
+    // 6. Apply promotion discount if provided
+    const discountAmount = body.discount_amount || 0
+    const finalExtensionPrice = Math.max(0, extensionPrice - discountAmount)
+
+    // 7. Create extension booking service record
+    const { data: extensionService, error: extensionError } = await supabase
+      .from('booking_services')
+      .insert({
+        booking_id: bookingId,
+        service_id: originalService.id,
+        duration: body.additional_duration,
+        price: finalExtensionPrice,
+        recipient_index: booking.booking_services[0].recipient_index,
+        recipient_name: booking.booking_services[0].recipient_name,
+        sort_order: booking.booking_services.length + 1,
+        is_extension: true,
+        extended_at: new Date().toISOString(),
+        original_booking_service_id: booking.booking_services[0].id
+      })
+      .select('id')
+      .single()
+
+    if (extensionError || !extensionService) {
+      console.error('[ExtendBooking] Failed to create extension service:', extensionError)
+      return res.status(500).json({
+        success: false,
+        error: 'database_error',
+        message: 'เกิดข้อผิดพลาดในการสร้างการขยายเวลา'
+      })
+    }
+
+    // 8. Update booking totals
+    const newTotalDuration = currentTotalDuration + body.additional_duration
+    const newTotalPrice = booking.final_price + finalExtensionPrice
+    const newExtensionCount = currentExtensionCount + 1
+    const estimatedEndTime = new Date(bookingDateTime.getTime() + (newTotalDuration * 60 * 1000))
+
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({
+        final_price: newTotalPrice,
+        extension_count: newExtensionCount,
+        last_extended_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+
+    if (updateError) {
+      console.error('[ExtendBooking] Failed to update booking:', updateError)
+      return res.status(500).json({
+        success: false,
+        error: 'database_error',
+        message: 'เกิดข้อผิดพลาดในการอัพเดทการจอง'
+      })
+    }
+
+    // 9. Update promotion usage if promotion was applied
+    if (body.promotion_id && discountAmount > 0) {
+      await supabase
+        .from('booking_promotions')
+        .insert({
+          booking_id: bookingId,
+          promotion_id: body.promotion_id,
+          discount_amount: discountAmount,
+          applied_at: new Date().toISOString(),
+          applied_by: 'customer',
+          booking_type: 'extension'
+        })
+    }
+
+    // 10. Send notifications to staff
+    let staffNotifiedCount = 0
+    if (booking.jobs && booking.jobs.length > 0) {
+      const staffIds = booking.jobs.map((job: any) => job.staff_id).filter(Boolean)
+
+      if (staffIds.length > 0) {
+        // Get staff profile IDs for notifications
+        const { data: staffProfiles } = await supabase
+          .from('staff')
+          .select('profile_id, full_name')
+          .in('id', staffIds)
+
+        if (staffProfiles && staffProfiles.length > 0) {
+          // Create in-app notifications
+          const staffNotifications = staffProfiles.map(staff => ({
+            user_id: staff.profile_id,
+            type: 'booking_extended',
+            title: 'การจองขยายเวลา',
+            message: `ลูกค้า ${booking.customers.full_name || booking.customers.phone} ขยายเวลาบริการเพิ่ม ${body.additional_duration} นาที เวลาสิ้นสุดใหม่: ${estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
+            data: {
+              booking_id: bookingId,
+              additional_duration: body.additional_duration,
+              new_end_time: estimatedEndTime.toISOString(),
+              extension_count: newExtensionCount
+            },
+            is_read: false
+          }))
+
+          const { error: notifError } = await supabase
+            .from('notifications')
+            .insert(staffNotifications)
+
+          if (!notifError) {
+            staffNotifiedCount = staffNotifications.length
+            console.log(`[ExtendBooking] Notifications sent to ${staffNotifiedCount} staff members`)
+          }
+        }
+      }
+    }
+
+    // 11. Send notification to customer
+    let customerNotified = false
+    if (booking.customers?.profile_id) {
+      const { error: customerNotifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: booking.customers.profile_id,
+          type: 'booking_extended_confirmation',
+          title: 'ยืนยันการขยายเวลาบริการ',
+          message: `การขยายเวลาบริการ ${body.additional_duration} นาทีเสร็จสมบูรณ์ ราคาเพิ่มเติม ฿${finalExtensionPrice.toLocaleString()} เวลาสิ้นสุดใหม่: ${estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
+          data: {
+            booking_id: bookingId,
+            extension_price: finalExtensionPrice,
+            new_end_time: estimatedEndTime.toISOString(),
+            extension_count: newExtensionCount
+          },
+          is_read: false
+        })
+
+      customerNotified = !customerNotifError
+    }
+
+    // 12. Prepare payment response (if needed)
+    let paymentInfo = undefined
+    if (finalExtensionPrice > 0) {
+      // For now, we'll indicate payment is required but won't create actual payment URL
+      // This should be integrated with Omise payment gateway in the future
+      paymentInfo = {
+        requires_payment: true,
+        payment_url: undefined, // Would be generated by payment gateway
+        payment_reference: `ext_${bookingId}_${Date.now()}`
+      }
+    }
+
+    console.log(`[ExtendBooking] Successfully extended booking ${bookingId}:`, {
+      additional_duration: body.additional_duration,
+      extension_price: finalExtensionPrice,
+      new_total_duration: newTotalDuration,
+      new_total_price: newTotalPrice,
+      staff_notified: staffNotifiedCount
+    })
+
+    return res.json({
+      success: true,
+      extension: {
+        id: extensionService.id,
+        additional_duration: body.additional_duration,
+        extension_price: finalExtensionPrice,
+        discount_amount: discountAmount,
+        final_price: finalExtensionPrice
+      },
+      booking: {
+        new_total_duration: newTotalDuration,
+        new_total_price: newTotalPrice,
+        estimated_end_time: estimatedEndTime.toISOString(),
+        extension_count: newExtensionCount
+      },
+      payment: paymentInfo,
+      notifications: {
+        staff_notified: staffNotifiedCount,
+        customer_notified: customerNotified
+      }
+    } as ExtendBookingResponse)
+
+  } catch (error: any) {
+    console.error('[ExtendBooking] Error:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: error.message || 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์'
+    })
+  }
+})
+
 export default router
