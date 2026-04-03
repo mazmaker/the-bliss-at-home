@@ -42,8 +42,10 @@ export function ExtendServiceModal({
 
   // Calculate current totals
   const currentTotals = useMemo(() => {
-    const totalDuration = booking.booking_services
-      .reduce((sum, service) => sum + service.duration, 0)
+    // Calculate duration from booking_services if available, otherwise use booking.duration
+    const totalDuration = booking.booking_services && booking.booking_services.length > 0
+      ? booking.booking_services.reduce((sum, service) => sum + service.duration, 0)
+      : booking.duration || 0
 
     return {
       duration: totalDuration,
@@ -94,10 +96,21 @@ export function ExtendServiceModal({
 
       if (result) {
         // Handle payment if required
-        if (result.paymentStatus.requiresPayment && result.paymentStatus.paymentUrl) {
-          // Redirect to payment page
-          window.location.href = result.paymentStatus.paymentUrl
+        if (result.paymentStatus.requiresPayment) {
+          if (result.paymentStatus.paymentUrl) {
+            // Redirect to Omise payment page (3DS or authorize flow)
+            console.log('💳 Redirecting to payment:', result.paymentStatus.paymentUrl)
+            window.location.href = result.paymentStatus.paymentUrl
+          } else {
+            // Payment required but no URL - show error
+            console.error('❌ Payment required but no payment URL provided')
+            // Extension created but payment pending - user should be notified
+            alert('การขยายเวลาสำเร็จแล้ว แต่ยังต้องชำระเงิน กรุณาตรวจสอบการแจ้งเตือนสำหรับลิงค์การชำระเงิน')
+            onConfirm()
+          }
         } else {
+          // No payment required (free extension or already paid)
+          console.log('✅ Extension completed without payment required')
           onConfirm()
         }
       }
@@ -265,9 +278,13 @@ export function ExtendServiceModal({
               โค้ดส่วนลด (ถ้ามี):
             </h4>
             <VoucherCodeInput
-              onPromoApplied={setAppliedPromo}
-              bookingType="extension"
-              extensionPrice={selectedOption?.price || 0}
+              orderAmount={selectedOption?.price || 0}
+              userId={booking.customer_id}
+              serviceIds={[booking.service.id]}
+              categories={[booking.service.category]}
+              appliedPromo={appliedPromo}
+              onApply={setAppliedPromo}
+              onRemove={() => setAppliedPromo(null)}
             />
           </div>
 

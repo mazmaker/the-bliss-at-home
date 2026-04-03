@@ -207,37 +207,106 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
         })
         .eq('id', transaction.id)
 
+      // Check if this is an extension payment
+      const isExtensionPayment = transaction.metadata?.is_extension === true
+
       // Update booking status
       if (charge.paid) {
-        await getSupabaseClient()
-          .from('bookings')
-          .update({
-            payment_status: 'paid',
-            status: 'confirmed', // Auto-confirm on successful payment
-          })
-          .eq('id', transaction.booking_id)
+        if (isExtensionPayment) {
+          // Extension payment completed - don't change main booking status
+          console.log(`💳 Extension payment completed for booking ${transaction.booking_id}`)
 
-        // Create job + send notifications (non-blocking, don't fail webhook)
-        try {
-          const notifResult = await processBookingConfirmed(transaction.booking_id)
-          console.log(`📋 Webhook notification result:`, notifResult)
-        } catch (notifError) {
-          console.error('⚠️ Notification failed (non-blocking):', notifError)
-        }
+          // Send extension payment confirmation notification
+          try {
+            await getSupabaseClient()
+              .from('notifications')
+              .insert({
+                user_id: transaction.customer_id,
+                type: 'extension_payment_completed',
+                title: 'ชำระเงินการขยายเวลาสำเร็จ',
+                message: `การชำระเงินสำหรับการขยายเวลา ${transaction.metadata?.extension_duration || 0} นาทีเสร็จสมบูรณ์ จำนวนเงิน ฿${transaction.amount.toLocaleString()}`,
+                data: {
+                  booking_id: transaction.booking_id,
+                  transaction_id: transaction.id,
+                  extension_duration: transaction.metadata?.extension_duration,
+                  amount: transaction.amount
+                },
+                is_read: false
+              })
 
-        // Send receipt email - must await to prevent Vercel serverless from terminating early
-        try {
-          await sendReceiptEmailForTransaction(transaction.id)
-        } catch (emailErr) {
-          console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+            console.log('📱 Extension payment notification sent')
+          } catch (notifError) {
+            console.error('⚠️ Extension notification failed (non-blocking):', notifError)
+          }
+
+          // Send extension receipt email
+          try {
+            await sendReceiptEmailForTransaction(transaction.id)
+          } catch (emailErr) {
+            console.error('⚠️ Extension receipt email failed (non-blocking):', emailErr)
+          }
+
+        } else {
+          // Regular booking payment
+          await getSupabaseClient()
+            .from('bookings')
+            .update({
+              payment_status: 'paid',
+              status: 'confirmed', // Auto-confirm on successful payment
+            })
+            .eq('id', transaction.booking_id)
+
+          // Create job + send notifications (non-blocking, don't fail webhook)
+          try {
+            const notifResult = await processBookingConfirmed(transaction.booking_id)
+            console.log(`📋 Webhook notification result:`, notifResult)
+          } catch (notifError) {
+            console.error('⚠️ Notification failed (non-blocking):', notifError)
+          }
+
+          // Send receipt email - must await to prevent Vercel serverless from terminating early
+          try {
+            await sendReceiptEmailForTransaction(transaction.id)
+          } catch (emailErr) {
+            console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+          }
         }
       } else if (charge.failure_code) {
-        await getSupabaseClient()
-          .from('bookings')
-          .update({
-            payment_status: 'failed',
-          })
-          .eq('id', transaction.booking_id)
+        if (isExtensionPayment) {
+          // Extension payment failed - send notification but don't change booking status
+          console.log(`❌ Extension payment failed for booking ${transaction.booking_id}:`, charge.failure_code)
+
+          try {
+            await getSupabaseClient()
+              .from('notifications')
+              .insert({
+                user_id: transaction.customer_id,
+                type: 'extension_payment_failed',
+                title: 'การชำระเงินการขยายเวลาล้มเหลว',
+                message: `การชำระเงินสำหรับการขยายเวลาล้มเหลว กรุณาลองชำระเงินอีกครั้ง หรือติดต่อฝ่ายสนับสนุน`,
+                data: {
+                  booking_id: transaction.booking_id,
+                  transaction_id: transaction.id,
+                  failure_code: charge.failure_code,
+                  failure_message: charge.failure_message
+                },
+                is_read: false
+              })
+
+            console.log('📱 Extension payment failure notification sent')
+          } catch (notifError) {
+            console.error('⚠️ Extension failure notification failed:', notifError)
+          }
+
+        } else {
+          // Regular booking payment failed
+          await getSupabaseClient()
+            .from('bookings')
+            .update({
+              payment_status: 'failed',
+            })
+            .eq('id', transaction.booking_id)
+        }
       }
 
       console.log(`✅ Updated transaction ${transaction.id} to status: ${newStatus}`)

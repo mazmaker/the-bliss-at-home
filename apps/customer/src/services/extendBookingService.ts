@@ -189,8 +189,10 @@ export async function getCustomerExtensionOptions(bookingId: string): Promise<Ex
     )
   }
 
-  const currentDuration = booking.booking_services
-    .reduce((sum, service) => sum + service.duration, 0)
+  // Calculate current duration from booking_services if available, otherwise use booking.duration
+  const currentDuration = booking.booking_services && booking.booking_services.length > 0
+    ? booking.booking_services.reduce((sum, service) => sum + service.duration, 0)
+    : booking.duration || 0
 
   // Use service's duration_options or fallback to default
   const availableDurations = service.duration_options || [60, 90, 120]
@@ -295,6 +297,8 @@ async function getCustomerBookingWithExtensions(bookingId: string): Promise<Book
       status,
       final_price,
       duration,
+      booking_date,
+      booking_time,
       extension_count,
       total_extensions_price,
       last_extended_at,
@@ -305,6 +309,7 @@ async function getCustomerBookingWithExtensions(bookingId: string): Promise<Book
         name_th,
         name_en,
         slug,
+        category,
         image_url
       ),
       booking_services (
@@ -381,8 +386,9 @@ function calculateEstimatedEndTime(booking: BookingWithExtensions, additionalDur
   const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
 
   // Add current total duration + extension
-  const currentDuration = booking.booking_services
-    .reduce((sum, service) => sum + service.duration, 0)
+  const currentDuration = booking.booking_services && booking.booking_services.length > 0
+    ? booking.booking_services.reduce((sum, service) => sum + service.duration, 0)
+    : booking.duration || 0
   const newTotalDuration = currentDuration + additionalDuration
 
   // Calculate end time

@@ -67,6 +67,7 @@ export interface BookingWithExtensions {
     name_th: string
     name_en: string
     slug: string
+    category: string
     image_url?: string
   }
   booking_services: BookingServiceExtended[]
