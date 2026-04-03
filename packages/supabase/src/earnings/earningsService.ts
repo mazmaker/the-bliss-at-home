@@ -10,6 +10,10 @@ import type {
   EarningsSummary,
   DailyEarning,
   ServiceEarning,
+  PayoutSchedule,
+  PayoutSettings,
+  NextPayoutInfo,
+  PayoutRound,
 } from './types'
 
 /**
@@ -354,6 +358,180 @@ export async function deleteBankAccount(accountId: string): Promise<void> {
   if (error) {
     console.error('Error deleting bank account:', error)
     throw error
+  }
+}
+
+// ============================================================
+// Payout Schedule Functions
+// ============================================================
+
+/**
+ * Get payout settings from payout_settings table
+ */
+export async function getPayoutSettings(): Promise<PayoutSettings> {
+  const { data, error } = await supabase
+    .from('payout_settings')
+    .select('setting_key, setting_value')
+
+  if (error) {
+    console.error('Error fetching payout settings:', error)
+    throw error
+  }
+
+  const settings: Record<string, string> = {}
+  data?.forEach((row: { setting_key: string; setting_value: string }) => {
+    settings[row.setting_key] = row.setting_value
+  })
+
+  return {
+    mid_month_payout_day: parseInt(settings.mid_month_payout_day || '16'),
+    end_month_payout_day: parseInt(settings.end_month_payout_day || '1'),
+    mid_month_cutoff_day: parseInt(settings.mid_month_cutoff_day || '10'),
+    end_month_cutoff_day: parseInt(settings.end_month_cutoff_day || '25'),
+    minimum_payout_amount: parseInt(settings.minimum_payout_amount || '100'),
+    carry_forward_enabled: settings.carry_forward_enabled !== 'false',
+  }
+}
+
+/**
+ * Get staff payout schedule (bi-monthly or monthly)
+ */
+export async function getPayoutSchedule(profileId: string): Promise<PayoutSchedule> {
+  const { data, error } = await supabase
+    .from('staff')
+    .select('payout_schedule')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching payout schedule:', error)
+    return 'monthly' // default
+  }
+
+  return (data?.payout_schedule as PayoutSchedule) || 'monthly'
+}
+
+/**
+ * Update staff payout schedule
+ */
+export async function updatePayoutSchedule(
+  profileId: string,
+  schedule: PayoutSchedule
+): Promise<void> {
+  const { error } = await supabase
+    .from('staff')
+    .update({ payout_schedule: schedule })
+    .eq('profile_id', profileId)
+
+  if (error) {
+    console.error('Error updating payout schedule:', error)
+    throw error
+  }
+}
+
+/**
+ * Calculate next payout info for staff
+ */
+export async function getNextPayoutInfo(profileId: string): Promise<NextPayoutInfo> {
+  const schedule = await getPayoutSchedule(profileId)
+  const settings = await getPayoutSettings()
+
+  const now = new Date()
+  const currentDay = now.getDate()
+  const currentMonth = now.getMonth()
+  const currentYear = now.getFullYear()
+
+  let nextCutoff: Date
+  let nextPayout: Date
+  let nextRound: PayoutRound
+
+  if (schedule === 'bi-monthly') {
+    // Bi-monthly: check which cutoff is next
+    if (currentDay <= settings.mid_month_cutoff_day) {
+      // Before mid-month cutoff → next is mid-month
+      nextCutoff = new Date(currentYear, currentMonth, settings.mid_month_cutoff_day)
+      nextPayout = new Date(currentYear, currentMonth, settings.mid_month_payout_day)
+      nextRound = 'mid-month'
+    } else if (currentDay <= settings.end_month_cutoff_day) {
+      // Between mid and end cutoff → next is end-month
+      nextCutoff = new Date(currentYear, currentMonth, settings.end_month_cutoff_day)
+      nextPayout = new Date(currentYear, currentMonth + 1, settings.end_month_payout_day)
+      nextRound = 'end-month'
+    } else {
+      // Past end cutoff → next month mid-month
+      nextCutoff = new Date(currentYear, currentMonth + 1, settings.mid_month_cutoff_day)
+      nextPayout = new Date(currentYear, currentMonth + 1, settings.mid_month_payout_day)
+      nextRound = 'mid-month'
+    }
+  } else {
+    // Monthly: only end-month
+    if (currentDay <= settings.end_month_cutoff_day) {
+      nextCutoff = new Date(currentYear, currentMonth, settings.end_month_cutoff_day)
+      nextPayout = new Date(currentYear, currentMonth + 1, settings.end_month_payout_day)
+      nextRound = 'end-month'
+    } else {
+      nextCutoff = new Date(currentYear, currentMonth + 1, settings.end_month_cutoff_day)
+      nextPayout = new Date(currentYear, currentMonth + 2, settings.end_month_payout_day)
+      nextRound = 'end-month'
+    }
+  }
+
+  // Calculate accumulated earnings (unpaid completed jobs)
+  // First get staff_id from profile_id
+  const { data: staffData } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+
+  let accumulated = 0
+  if (staffData) {
+    // Get all completed jobs not yet in any payout
+    const { data: jobs } = await supabase
+      .from('jobs')
+      .select('staff_earnings, total_staff_earnings')
+      .eq('staff_id', staffData.id)
+      .eq('status', 'completed')
+
+    if (jobs) {
+      // Get job IDs already in payouts
+      const { data: paidJobs } = await supabase
+        .from('payout_jobs')
+        .select('job_id')
+
+      const paidJobIds = new Set(paidJobs?.map((pj: { job_id: string }) => pj.job_id) || [])
+
+      // Note: we can't filter payout_jobs by staff_id easily,
+      // so we sum all completed jobs and subtract paid ones
+      // Actually, let's just use a simpler approach - sum unpaid earnings
+      const { data: allJobs } = await supabase
+        .from('jobs')
+        .select('id, staff_earnings, total_staff_earnings')
+        .eq('staff_id', staffData.id)
+        .eq('status', 'completed')
+
+      allJobs?.forEach((job: { id: string; staff_earnings: number; total_staff_earnings: number | null }) => {
+        if (!paidJobIds.has(job.id)) {
+          accumulated += job.total_staff_earnings || job.staff_earnings || 0
+        }
+      })
+    }
+  }
+
+  // Format as YYYY-MM-DD using local time (avoid UTC timezone shift)
+  const formatDate = (d: Date) => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
+  return {
+    schedule,
+    next_cutoff_date: formatDate(nextCutoff),
+    next_payout_date: formatDate(nextPayout),
+    next_round: nextRound,
+    accumulated_earnings: accumulated,
   }
 }
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Bell, LogOut, Volume2, Check, Clock, Loader2 } from 'lucide-react'
+import { Bell, LogOut, Volume2, Check, Clock, Loader2, Wallet, Calendar, Banknote } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
 import { useStaffNotifications } from '@bliss/supabase/notifications'
+import { getPayoutSchedule, updatePayoutSchedule, getNextPayoutInfo } from '@bliss/supabase'
+import type { PayoutSchedule, NextPayoutInfo } from '@bliss/supabase'
 import { isSoundEnabled, setSoundEnabled, NotificationSounds } from '../utils/soundNotification'
 import { REMINDER_OPTIONS } from '../utils/jobReminder'
 
@@ -19,10 +21,32 @@ function StaffSettings() {
   const [isSavingReminder, setIsSavingReminder] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
 
+  // Payout schedule state
+  const [payoutSchedule, setPayoutSchedule] = useState<PayoutSchedule>('monthly')
+  const [nextPayoutInfo, setNextPayoutInfo] = useState<NextPayoutInfo | null>(null)
+  const [isLoadingPayout, setIsLoadingPayout] = useState(true)
+  const [isSavingPayout, setIsSavingPayout] = useState(false)
+
   // Load sound setting on mount
   useEffect(() => {
     setSoundEnabledState(isSoundEnabled())
   }, [])
+
+  // Fetch payout schedule on mount
+  useEffect(() => {
+    if (!user?.id) return
+    setIsLoadingPayout(true)
+    Promise.all([
+      getPayoutSchedule(user.id),
+      getNextPayoutInfo(user.id),
+    ])
+      .then(([schedule, info]) => {
+        setPayoutSchedule(schedule)
+        setNextPayoutInfo(info)
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingPayout(false))
+  }, [user?.id])
 
   // Fetch reminder settings from server on mount
   useEffect(() => {
@@ -83,6 +107,22 @@ function StaffSettings() {
       setReminderError(err.message || 'ไม่สามารถบันทึกการตั้งค่าได้')
     } finally {
       setIsSavingReminder(false)
+    }
+  }
+
+  const handlePayoutScheduleChange = async (schedule: PayoutSchedule) => {
+    if (!user?.id || isSavingPayout) return
+    setIsSavingPayout(true)
+    try {
+      await updatePayoutSchedule(user.id, schedule)
+      setPayoutSchedule(schedule)
+      const info = await getNextPayoutInfo(user.id)
+      setNextPayoutInfo(info)
+      showSaved()
+    } catch (err) {
+      console.error('Failed to save payout schedule:', err)
+    } finally {
+      setIsSavingPayout(false)
     }
   }
 
@@ -336,6 +376,105 @@ function StaffSettings() {
               {/* Error */}
               {reminderError && (
                 <p className="text-xs text-red-600">{reminderError}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Payout Schedule Settings */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-amber-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-stone-900">รอบการรับเงิน</h3>
+              <p className="text-xs text-stone-500">Payout Schedule</p>
+            </div>
+            {isSavingPayout && <Loader2 className="w-4 h-4 animate-spin text-amber-600" />}
+          </div>
+          <p className="text-sm text-stone-600">เลือกรอบการรับชำระเงินที่ต้องการ</p>
+
+          {isLoadingPayout ? (
+            <div className="mt-4 flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-stone-400" />
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {/* Schedule Options */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Bi-monthly */}
+                <button
+                  onClick={() => handlePayoutScheduleChange('bi-monthly')}
+                  disabled={isSavingPayout}
+                  className={`relative p-3 rounded-xl border-2 transition text-left ${
+                    payoutSchedule === 'bi-monthly'
+                      ? 'border-amber-500 bg-amber-50'
+                      : 'border-stone-200 bg-stone-50 hover:border-stone-300'
+                  }`}
+                >
+                  {payoutSchedule === 'bi-monthly' && (
+                    <div className="absolute top-2 right-2">
+                      <Check className="w-4 h-4 text-amber-600" />
+                    </div>
+                  )}
+                  <Banknote className={`w-5 h-5 mb-1.5 ${payoutSchedule === 'bi-monthly' ? 'text-amber-600' : 'text-stone-400'}`} />
+                  <p className={`text-sm font-semibold ${payoutSchedule === 'bi-monthly' ? 'text-amber-800' : 'text-stone-700'}`}>
+                    ครึ่งเดือน
+                  </p>
+                  <p className="text-xs text-stone-500 mt-0.5">รับ 2 ครั้ง/เดือน</p>
+                  <p className="text-xs text-stone-400 mt-0.5">วันที่ 16 + วันที่ 1</p>
+                </button>
+
+                {/* Monthly */}
+                <button
+                  onClick={() => handlePayoutScheduleChange('monthly')}
+                  disabled={isSavingPayout}
+                  className={`relative p-3 rounded-xl border-2 transition text-left ${
+                    payoutSchedule === 'monthly'
+                      ? 'border-amber-500 bg-amber-50'
+                      : 'border-stone-200 bg-stone-50 hover:border-stone-300'
+                  }`}
+                >
+                  {payoutSchedule === 'monthly' && (
+                    <div className="absolute top-2 right-2">
+                      <Check className="w-4 h-4 text-amber-600" />
+                    </div>
+                  )}
+                  <Calendar className={`w-5 h-5 mb-1.5 ${payoutSchedule === 'monthly' ? 'text-amber-600' : 'text-stone-400'}`} />
+                  <p className={`text-sm font-semibold ${payoutSchedule === 'monthly' ? 'text-amber-800' : 'text-stone-700'}`}>
+                    รายเดือน
+                  </p>
+                  <p className="text-xs text-stone-500 mt-0.5">รับ 1 ครั้ง/เดือน</p>
+                  <p className="text-xs text-stone-400 mt-0.5">วันที่ 1</p>
+                </button>
+              </div>
+
+              {/* Next Payout Info */}
+              {nextPayoutInfo && (
+                <div className="bg-stone-50 rounded-xl p-3 space-y-2">
+                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">รอบถัดไป</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-stone-600">ตัดรอบ</span>
+                    <span className="text-sm font-medium text-stone-900">
+                      {new Date(nextPayoutInfo.next_cutoff_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-stone-600">รับเงิน</span>
+                    <span className="text-sm font-medium text-stone-900">
+                      {new Date(nextPayoutInfo.next_payout_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-stone-200">
+                    <span className="text-sm text-stone-600">ยอดสะสม</span>
+                    <span className="text-sm font-bold text-amber-700">
+                      ฿{nextPayoutInfo.accumulated_earnings.toLocaleString('th-TH')}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
           )}

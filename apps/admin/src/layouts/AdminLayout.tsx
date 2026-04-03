@@ -30,12 +30,14 @@ import {
   CheckCheck,
   AlertTriangle,
   UserX,
+  Wallet,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'ภาพรวม', nameEn: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'จัดการบริการ', nameEn: 'Services', href: '/admin/services', icon: Package },
   { name: 'พนักงาน', nameEn: 'Staff', href: '/admin/staff', icon: Users },
+  { name: 'รอบจ่ายเงิน', nameEn: 'Payout', href: '/admin/payout', icon: Wallet },
   { name: 'ลูกค้า', nameEn: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'แจ้งเตือน SOS', nameEn: 'SOS Alerts', href: '/admin/sos-alerts', icon: ShieldAlert },
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3, FileText, Star } from 'lucide-react'
+import { Save, Globe, CreditCard, AlertCircle, CheckCircle, RefreshCw, Calendar, Plus, Trash2, Edit2, BarChart3, FileText, Star, Wallet, Loader2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { LogoUpload } from '../components/LogoUpload'
 
@@ -117,6 +117,18 @@ function Settings() {
   const [loyaltyLoading, setLoyaltyLoading] = useState(false)
   const [loyaltySaving, setLoyaltySaving] = useState(false)
 
+  // Payout settings state
+  const [payoutSettings, setPayoutSettings] = useState({
+    mid_month_payout_day: '16',
+    end_month_payout_day: '1',
+    mid_month_cutoff_day: '10',
+    end_month_cutoff_day: '25',
+    minimum_payout_amount: '100',
+    carry_forward_enabled: true,
+  })
+  const [payoutLoading, setPayoutLoading] = useState(false)
+  const [payoutSaving, setPayoutSaving] = useState(false)
+
   const tabs = [
     { id: 'general', name: 'ทั่วไป', nameEn: 'General Settings', icon: Globe },
     { id: 'payment', name: 'การชำระเงิน', nameEn: 'Payment Settings', icon: CreditCard },
@@ -124,6 +136,7 @@ function Settings() {
     { id: 'refund_policy', name: 'เงื่อนไขการคืนเงิน', nameEn: 'Refund Policy', icon: FileText },
     { id: 'reports', name: 'รายงาน/เป้าหมาย', nameEn: 'Reports & Targets', icon: BarChart3 },
     { id: 'loyalty', name: 'ระบบแต้มสะสม', nameEn: 'Loyalty Points', icon: Star },
+    { id: 'payout', name: 'รอบจ่ายเงิน Staff', nameEn: 'Staff Payout', icon: Wallet },
   ]
 
   // Load settings from database
@@ -132,7 +145,58 @@ function Settings() {
     loadCancellationPolicy()
     loadRefundPolicy()
     loadLoyaltySettings()
+    loadPayoutSettings()
   }, [])
+
+  const loadPayoutSettings = async () => {
+    setPayoutLoading(true)
+    try {
+      const { data } = await supabase.from('payout_settings').select('setting_key, setting_value')
+      if (data) {
+        const map: Record<string, string> = {}
+        data.forEach((r: { setting_key: string; setting_value: string }) => { map[r.setting_key] = r.setting_value })
+        setPayoutSettings({
+          mid_month_payout_day: map.mid_month_payout_day || '16',
+          end_month_payout_day: map.end_month_payout_day || '1',
+          mid_month_cutoff_day: map.mid_month_cutoff_day || '10',
+          end_month_cutoff_day: map.end_month_cutoff_day || '25',
+          minimum_payout_amount: map.minimum_payout_amount || '100',
+          carry_forward_enabled: map.carry_forward_enabled !== 'false',
+        })
+      }
+    } catch (err) {
+      console.error('Error loading payout settings:', err)
+    } finally {
+      setPayoutLoading(false)
+    }
+  }
+
+  const savePayoutSettings = async () => {
+    setPayoutSaving(true)
+    try {
+      const entries = [
+        { key: 'mid_month_payout_day', value: payoutSettings.mid_month_payout_day },
+        { key: 'end_month_payout_day', value: payoutSettings.end_month_payout_day },
+        { key: 'mid_month_cutoff_day', value: payoutSettings.mid_month_cutoff_day },
+        { key: 'end_month_cutoff_day', value: payoutSettings.end_month_cutoff_day },
+        { key: 'minimum_payout_amount', value: payoutSettings.minimum_payout_amount },
+        { key: 'carry_forward_enabled', value: String(payoutSettings.carry_forward_enabled) },
+      ]
+      for (const entry of entries) {
+        await supabase
+          .from('payout_settings')
+          .update({ setting_value: entry.value })
+          .eq('setting_key', entry.key)
+      }
+      setMessage('บันทึกการตั้งค่ารอบจ่ายเงินเรียบร้อยแล้ว')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      console.error('Error saving payout settings:', err)
+      setMessage('ไม่สามารถบันทึกการตั้งค่าได้')
+    } finally {
+      setPayoutSaving(false)
+    }
+  }
 
   const loadLoyaltySettings = async () => {
     setLoyaltyLoading(true)
@@ -1418,6 +1482,157 @@ function Settings() {
                         <p>• ลูกค้ามี 500 แต้ม → แลกส่วนลดได้ <strong>฿{Math.floor(500 / (parseInt(loyaltySettings.points_to_baht) || 10))}</strong></p>
                         <p>• บริการ ฿1,000 → ส่วนลดจากแต้มสูงสุด <strong>฿{Math.floor(1000 * (parseInt(loyaltySettings.max_discount_percent) || 50) / 100)}</strong> ({loyaltySettings.max_discount_percent}%)</p>
                         <p>• จองครั้งแรก → ได้โบนัส <strong>{loyaltySettings.first_booking_bonus} แต้ม</strong> (= ฿{Math.floor((parseInt(loyaltySettings.first_booking_bonus) || 50) / (parseInt(loyaltySettings.points_to_baht) || 10))})</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'payout' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-stone-900">ตั้งค่ารอบจ่ายเงิน Staff</h3>
+                    <p className="text-sm text-stone-500">กำหนดวันตัดรอบ วันจ่ายเงิน และยอดขั้นต่ำ</p>
+                  </div>
+                  <button
+                    onClick={savePayoutSettings}
+                    disabled={payoutSaving}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                  >
+                    {payoutSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    บันทึก
+                  </button>
+                </div>
+
+                {payoutLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
+                  </div>
+                ) : (
+                  <>
+                    {/* Mid-month (งวดแรก) */}
+                    <div className="bg-stone-50 rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-stone-800">งวดแรก (Mid-month)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-stone-600 mb-1">วันตัดรอบงวดแรก</label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-stone-500">วันที่</span>
+                            <input
+                              type="number"
+                              min="1" max="28"
+                              value={payoutSettings.mid_month_cutoff_day}
+                              onChange={e => setPayoutSettings(s => ({ ...s, mid_month_cutoff_day: e.target.value }))}
+                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-stone-500">ของเดือน</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-stone-600 mb-1">วันจ่ายเงินงวดแรก</label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-stone-500">วันที่</span>
+                            <input
+                              type="number"
+                              min="1" max="28"
+                              value={payoutSettings.mid_month_payout_day}
+                              onChange={e => setPayoutSettings(s => ({ ...s, mid_month_payout_day: e.target.value }))}
+                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-stone-500">ของเดือน</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-stone-400">สำหรับ Staff ที่เลือกรอบ "ครึ่งเดือน" — นับรายได้จากวันที่ 26 เดือนก่อน ถึงวันตัดรอบ</p>
+                    </div>
+
+                    {/* End-month (งวดหลัง) */}
+                    <div className="bg-stone-50 rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-stone-800">งวดหลัง (End-month)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-stone-600 mb-1">วันตัดรอบงวดหลัง</label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-stone-500">วันที่</span>
+                            <input
+                              type="number"
+                              min="1" max="28"
+                              value={payoutSettings.end_month_cutoff_day}
+                              onChange={e => setPayoutSettings(s => ({ ...s, end_month_cutoff_day: e.target.value }))}
+                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-stone-500">ของเดือน</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-stone-600 mb-1">วันจ่ายเงินงวดหลัง</label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-stone-500">วันที่</span>
+                            <input
+                              type="number"
+                              min="1" max="28"
+                              value={payoutSettings.end_month_payout_day}
+                              onChange={e => setPayoutSettings(s => ({ ...s, end_month_payout_day: e.target.value }))}
+                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-stone-500">ของเดือนถัดไป</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-stone-400">สำหรับ Staff ทุกคน — นับรายได้จากวันที่ 11 (หรือ 26 สำหรับรายเดือน) ถึงวันตัดรอบ</p>
+                    </div>
+
+                    {/* Minimum & Carry Forward */}
+                    <div className="bg-stone-50 rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-stone-800">ยอดขั้นต่ำ & ยกยอด</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-stone-600 mb-1">ยอดขั้นต่ำในการจ่าย (บาท)</label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-stone-500">฿</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={payoutSettings.minimum_payout_amount}
+                              onChange={e => setPayoutSettings(s => ({ ...s, minimum_payout_amount: e.target.value }))}
+                              className="w-32 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                            />
+                          </div>
+                          <p className="text-xs text-stone-400 mt-1">ถ้ารายได้ต่ำกว่ายอดนี้จะยกยอดไปรอบถัดไป</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-stone-600 mb-1">ยกยอดข้ามรอบ</label>
+                          <button
+                            onClick={() => setPayoutSettings(s => ({ ...s, carry_forward_enabled: !s.carry_forward_enabled }))}
+                            className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
+                              payoutSettings.carry_forward_enabled ? 'bg-amber-700' : 'bg-stone-300'
+                            }`}
+                            style={{ width: '44px', height: '24px' }}
+                          >
+                            <span
+                              className="inline-block rounded-full bg-white shadow-sm transition-transform"
+                              style={{
+                                width: '20px', height: '20px',
+                                transform: payoutSettings.carry_forward_enabled ? 'translateX(22px)' : 'translateX(2px)',
+                              }}
+                            />
+                          </button>
+                          <p className="text-xs text-stone-400 mt-1">
+                            {payoutSettings.carry_forward_enabled ? 'เปิด — ยอดต่ำกว่าขั้นต่ำจะยกไปรอบถัดไป' : 'ปิด — จ่ายทุกยอดไม่ว่าจะน้อยแค่ไหน'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <h4 className="font-semibold text-amber-800 mb-2">สรุปการตั้งค่า</h4>
+                      <div className="text-sm text-amber-700 space-y-1">
+                        <p>• งวดแรก: ตัดรอบวันที่ {payoutSettings.mid_month_cutoff_day} → จ่ายวันที่ {payoutSettings.mid_month_payout_day}</p>
+                        <p>• งวดหลัง: ตัดรอบวันที่ {payoutSettings.end_month_cutoff_day} → จ่ายวันที่ {payoutSettings.end_month_payout_day} เดือนถัดไป</p>
+                        <p>• ยอดขั้นต่ำ: ฿{parseInt(payoutSettings.minimum_payout_amount).toLocaleString('th-TH')} {payoutSettings.carry_forward_enabled ? '(ยกยอดถ้าต่ำกว่า)' : '(จ่ายทุกยอด)'}</p>
                       </div>
                     </div>
                   </>

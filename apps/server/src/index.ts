@@ -20,6 +20,7 @@ import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
+import { processPayoutCutoff } from './services/payoutService.js'
 import { getSupabaseClient } from './lib/supabase.js'
 // @ts-ignore — relative import from shared package (outside rootDir)
 import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
@@ -107,6 +108,19 @@ if (process.env.NODE_ENV !== 'production') {
     }
   })
 }
+
+// Dev endpoint to trigger payout cutoff manually
+app.post('/api/dev/trigger-payout-cutoff', async (req: Request, res: Response) => {
+  try {
+    // Accept optional date override: { "date": "2026-04-10" }
+    const overrideDate = req.body?.date ? new Date(req.body.date + 'T01:00:00Z') : undefined
+    const result = await processPayoutCutoff(overrideDate)
+    res.json({ success: true, ...result })
+  } catch (err: any) {
+    console.error('[Dev] Error triggering payout cutoff:', err)
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
 
 // Dev endpoint to trigger points expiry manually
 app.post('/api/dev/trigger-points-expiry', async (req: Request, res: Response) => {
@@ -208,12 +222,25 @@ cron.schedule('0 18 * * *', async () => {
   }
 })
 
+// Payout cutoff check daily at 8 AM (Thailand time = 01:00 UTC)
+cron.schedule('0 1 * * *', async () => {
+  // 01:00 UTC = 08:00 ICT (Thailand)
+  try {
+    const result = await processPayoutCutoff()
+    if (result.payoutsCreated > 0 || result.carryForwards > 0) {
+      console.log(`[Cron] Payout cutoff: ${result.payoutsCreated} payouts created, ${result.carryForwards} carry-forwards`)
+    }
+  } catch (err) {
+    console.error('[Cron] Error processing payout cutoff:', err)
+  }
+})
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT), Points expiry (daily 1AM ICT)`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT), Points expiry (daily 1AM ICT), Payout cutoff (daily 8AM ICT)`)
 })
 
 export default app

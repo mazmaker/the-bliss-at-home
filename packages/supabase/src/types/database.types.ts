@@ -1633,11 +1633,14 @@ export type Database = {
       payouts: {
         Row: {
           bank_account_id: string | null
+          carry_forward_amount: number | null
           created_at: string | null
           gross_earnings: number
           id: string
+          is_carry_forward: boolean | null
           net_amount: number
           notes: string | null
+          payout_round: string | null
           period_end: string
           period_start: string
           platform_fee: number
@@ -1651,11 +1654,14 @@ export type Database = {
         }
         Insert: {
           bank_account_id?: string | null
+          carry_forward_amount?: number
           created_at?: string | null
           gross_earnings?: number
           id?: string
+          is_carry_forward?: boolean
           net_amount?: number
           notes?: string | null
+          payout_round?: string | null
           period_end: string
           period_start: string
           platform_fee?: number
@@ -1669,11 +1675,14 @@ export type Database = {
         }
         Update: {
           bank_account_id?: string | null
+          carry_forward_amount?: number
           created_at?: string | null
           gross_earnings?: number
           id?: string
+          is_carry_forward?: boolean
           net_amount?: number
           notes?: string | null
+          payout_round?: string | null
           period_end?: string
           period_start?: string
           platform_fee?: number
@@ -1701,6 +1710,65 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payout_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          notification_type: string
+          payout_round: string
+          period_month: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notification_type: string
+          payout_round: string
+          period_month: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notification_type?: string
+          payout_round?: string
+          period_month?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_notifications_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_settings: {
+        Row: {
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       point_transactions: {
         Row: {
@@ -2695,6 +2763,7 @@ export type Database = {
           is_available: boolean | null
           name_en: string | null
           name_th: string
+          payout_schedule: string | null
           phone: string
           profile_id: string | null
           rating: number | null
@@ -2731,6 +2800,7 @@ export type Database = {
           is_available?: boolean | null
           name_en?: string | null
           name_th: string
+          payout_schedule?: string | null
           phone: string
           profile_id?: string | null
           rating?: number | null
@@ -2767,6 +2837,7 @@ export type Database = {
           is_available?: boolean | null
           name_en?: string | null
           name_th?: string
+          payout_schedule?: string | null
           phone?: string
           profile_id?: string | null
           rating?: number | null

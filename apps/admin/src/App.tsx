@@ -20,6 +20,7 @@ import Settings from './pages/Settings'
 import Promotions from './pages/Promotions'
 import Reviews from './pages/Reviews'
 import CreditCalendar from './pages/CreditCalendar'
+import PayoutDashboard from './pages/PayoutDashboard'
 import { AdminLoginPage } from './pages/auth'
 
 function App() {
@@ -133,6 +134,7 @@ function App() {
         <Route path="hotels/:id/payments" element={<HotelPayments />} />
         <Route path="hotels/:id/bookings" element={<HotelBookings />} />
         <Route path="credit-calendar" element={<CreditCalendar />} />
+        <Route path="payout" element={<PayoutDashboard />} />
         <Route path="bookings" element={<Bookings />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />

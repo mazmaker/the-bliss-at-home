@@ -6,6 +6,27 @@ export type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
 export type PayoutPeriod = 'daily' | 'weekly' | 'biweekly' | 'monthly'
 
+export type PayoutSchedule = 'bi-monthly' | 'monthly'
+
+export type PayoutRound = 'mid-month' | 'end-month'
+
+export interface PayoutSettings {
+  mid_month_payout_day: number
+  end_month_payout_day: number
+  mid_month_cutoff_day: number
+  end_month_cutoff_day: number
+  minimum_payout_amount: number
+  carry_forward_enabled: boolean
+}
+
+export interface NextPayoutInfo {
+  schedule: PayoutSchedule
+  next_cutoff_date: string
+  next_payout_date: string
+  next_round: PayoutRound
+  accumulated_earnings: number
+}
+
 export interface Payout {
   id: string
   staff_id: string
@@ -13,7 +34,7 @@ export interface Payout {
   // Period info
   period_start: string
   period_end: string
-  period_type: PayoutPeriod
+  period_type?: PayoutPeriod
 
   // Amount details
   gross_earnings: number
@@ -30,6 +51,11 @@ export interface Payout {
 
   // Notes
   notes: string | null
+
+  // Payout schedule fields (optional — may not exist on older records)
+  payout_round?: PayoutRound | null
+  is_carry_forward?: boolean
+  carry_forward_amount?: number
 
   // Timestamps
   created_at: string
