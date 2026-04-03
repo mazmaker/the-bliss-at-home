@@ -1208,14 +1208,18 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
       })
     }
 
-    // 2. Get booking with current services and staff
+    // 2. Get booking with current services and staff (handle both old and new structures)
+    console.log(`[ExtendBooking] Querying booking ${bookingId}...`)
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select(`
         *,
         booking_services (
           id, service_id, duration, price, recipient_name, recipient_index,
-          services (name_th, name_en, base_price, price_60, price_90, price_120, price_150, price_180, duration)
+          services (name_th, name_en, base_price, price_60, price_90, price_120, duration)
+        ),
+        service:services (
+          name_th, name_en, base_price, price_60, price_90, price_120, duration
         ),
         jobs (id, staff_id, status),
         customers (profile_id, full_name, phone),
@@ -1224,7 +1228,20 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
       .eq('id', bookingId)
       .single()
 
-    if (bookingError || !booking) {
+    console.log(`[ExtendBooking] Query result:`, { bookingError, hasBooking: !!booking })
+
+    if (bookingError) {
+      console.error('[ExtendBooking] Supabase error:', bookingError)
+      return res.status(404).json({
+        success: false,
+        error: 'booking_not_found',
+        message: 'ไม่พบการจองที่ระบุ',
+        debug: bookingError.message
+      })
+    }
+
+    if (!booking) {
+      console.log('[ExtendBooking] No booking found')
       return res.status(404).json({
         success: false,
         error: 'booking_not_found',
@@ -1268,7 +1285,8 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
     }
 
     // 5. Calculate extension price using service pricing structure
-    const originalService = booking.booking_services[0]?.services
+    // Handle both old structure (direct service_id) and new structure (booking_services)
+    const originalService = booking.booking_services?.[0]?.services || booking.service
     if (!originalService) {
       return res.status(400).json({
         success: false,
@@ -1288,14 +1306,8 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
       case 120:
         extensionPrice = originalService.price_120 || originalService.base_price
         break
-      case 150:
-        extensionPrice = originalService.price_150 || (originalService.base_price * 1.25)
-        break
-      case 180:
-        extensionPrice = originalService.price_180 || (originalService.base_price * 1.5)
-        break
       default:
-        // Calculate proportional price
+        // Calculate proportional price for any duration (including 150, 180, etc.)
         extensionPrice = (originalService.base_price / originalService.duration) * body.additional_duration
     }
 
@@ -1306,19 +1318,23 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
     const finalExtensionPrice = Math.max(0, extensionPrice - discountAmount)
 
     // 7. Create extension booking service record
+    // Handle both old structure (direct service_id) and new structure (booking_services)
+    const serviceId = booking.booking_services?.[0]?.service_id || booking.service_id
+    const hasBookingServices = booking.booking_services && booking.booking_services.length > 0
+
     const { data: extensionService, error: extensionError } = await supabase
       .from('booking_services')
       .insert({
         booking_id: bookingId,
-        service_id: originalService.id,
+        service_id: serviceId,
         duration: body.additional_duration,
         price: finalExtensionPrice,
-        recipient_index: booking.booking_services[0].recipient_index,
-        recipient_name: booking.booking_services[0].recipient_name,
-        sort_order: booking.booking_services.length + 1,
+        recipient_index: hasBookingServices ? booking.booking_services[0].recipient_index : 0,
+        recipient_name: hasBookingServices ? booking.booking_services[0].recipient_name : null,
+        sort_order: hasBookingServices ? booking.booking_services.length + 1 : 1,
         is_extension: true,
         extended_at: new Date().toISOString(),
-        original_booking_service_id: booking.booking_services[0].id
+        original_booking_service_id: hasBookingServices ? booking.booking_services[0].id : null
       })
       .select('id')
       .single()
