@@ -28,6 +28,7 @@ import {
   type Payout,
   type PayoutStatus,
 } from '@bliss/supabase'
+import { supabase } from '@bliss/supabase/auth'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 
 type ViewPeriod = 'day' | 'week' | 'month'
@@ -42,6 +43,18 @@ function StaffEarnings() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [copiedRef, setCopiedRef] = useState<string | null>(null)
   const [showPayoutDetail, setShowPayoutDetail] = useState<Payout | null>(null)
+  const [payoutJobs, setPayoutJobs] = useState<any[]>([])
+
+  // Fetch payout jobs when detail modal opens
+  useEffect(() => {
+    if (!showPayoutDetail) { setPayoutJobs([]); return }
+    supabase
+      .from('payout_jobs')
+      .select('id, amount, job_id, job:jobs(service_name, staff_earnings, total_staff_earnings, scheduled_date)')
+      .eq('payout_id', showPayoutDetail.id)
+      .then(({ data }) => setPayoutJobs(data || []))
+      .catch(() => setPayoutJobs([]))
+  }, [showPayoutDetail])
 
   // Calculate date range based on view period
   const dateRange = useMemo(() => {
@@ -605,6 +618,23 @@ function StaffEarnings() {
                     alt="Transfer Slip"
                     className="w-full rounded-xl border border-stone-200"
                   />
+                </div>
+              )}
+
+              {/* Payout Jobs */}
+              {payoutJobs.length > 0 && (
+                <div>
+                  <p className="text-stone-500 mb-2">งานในรอบนี้ ({payoutJobs.length} งาน)</p>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {payoutJobs.map((pj: any) => (
+                      <div key={pj.id} className="flex justify-between text-sm bg-stone-50 px-3 py-2 rounded-lg">
+                        <span className="text-stone-700">{pj.job?.service_name || 'งาน'}</span>
+                        <span className="font-medium text-stone-900">
+                          ฿{(pj.job?.total_staff_earnings || pj.job?.staff_earnings || pj.amount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

@@ -122,12 +122,22 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
         has_bank: hasBankSet.has(p.staff_id),
       }))
 
+      // Count carry forwards from payout_notifications
+      const now = new Date()
+      const currentPeriodMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const { data: carryForwardRecords } = await supabase
+        .from('payout_notifications')
+        .select('staff_id')
+        .eq('notification_type', 'payout_carry_forward')
+        .eq('period_month', currentPeriodMonth)
+
+      const carryForwardCount = carryForwardRecords?.length || 0
+
       // Stats
       const allPayouts = enrichedPayouts
       const pendingPayouts = allPayouts.filter(p => p.status === 'pending')
       const totalStaff = new Set(allPayouts.map(p => p.staff_id)).size
       const pendingAmount = pendingPayouts.reduce((sum, p) => sum + Number(p.net_amount), 0)
-      const carryForwards = allPayouts.filter(p => p.is_carry_forward).length
 
       return {
         payouts: enrichedPayouts,
@@ -135,7 +145,7 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
           totalStaff,
           pendingCount: pendingPayouts.length,
           pendingAmount,
-          carryForwards,
+          carryForwards: carryForwardCount,
         },
       }
     },

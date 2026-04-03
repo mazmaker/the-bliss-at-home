@@ -600,5 +600,33 @@ export async function processPayoutCutoff(overrideDate?: Date): Promise<{
     console.log(`[Payout] End-month done: ${payoutsCreated} payouts, ${carryForwards} carry-forwards`)
   }
 
+  // ── Force payout for inactive staff with pending earnings (any cutoff day) ──
+  if (currentDay === settings.mid_month_cutoff_day || currentDay === settings.end_month_cutoff_day) {
+    const { data: inactiveStaff } = await supabase
+      .from('staff')
+      .select('id, profile_id, name_th, payout_schedule')
+      .eq('is_active', false)
+      .not('profile_id', 'is', null)
+
+    for (const staff of inactiveStaff || []) {
+      try {
+        // Check all unpaid completed jobs (no date range limit for inactive)
+        const earnings = await calculateStaffEarnings(staff.profile_id, '2020-01-01', formatDate(new Date(currentYear, currentMonth + 1, 0)))
+        if (earnings.totalEarnings > 0) {
+          await createPayoutRecord(
+            staff.id, staff.profile_id, earnings.totalEarnings,
+            earnings.totalJobs, earnings.jobIds,
+            '2020-01-01', formatDate(new Date(currentYear, currentMonth, currentDay)),
+            currentDay === settings.mid_month_cutoff_day ? 'mid-month' : 'end-month'
+          )
+          payoutsCreated++
+          console.log(`[Payout] Force payout for inactive staff ${staff.name_th}: ฿${earnings.totalEarnings}`)
+        }
+      } catch (err) {
+        console.error(`[Payout] Error force payout inactive ${staff.name_th}:`, err)
+      }
+    }
+  }
+
   return { payoutsCreated, carryForwards, notificationsSent }
 }
