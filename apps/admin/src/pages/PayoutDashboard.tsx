@@ -44,6 +44,8 @@ function statusLabel(status: string): { text: string; color: string } {
     case 'processing': return { text: 'กำลังโอน', color: 'bg-blue-100 text-blue-800' }
     case 'completed': return { text: 'จ่ายแล้ว', color: 'bg-green-100 text-green-800' }
     case 'failed': return { text: 'ล้มเหลว', color: 'bg-red-100 text-red-800' }
+    case 'carry_forward': return { text: 'ยกยอด', color: 'bg-orange-100 text-orange-800' }
+    case 'not_due': return { text: 'ยังไม่ถึงรอบ', color: 'bg-gray-100 text-gray-500' }
     default: return { text: status, color: 'bg-gray-100 text-gray-800' }
   }
 }
@@ -122,30 +124,87 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
         has_bank: hasBankSet.has(p.staff_id),
       }))
 
-      // Count carry forwards from payout_notifications
+      // ── Virtual rows: carry forward ──
       const now = new Date()
       const currentPeriodMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
       const { data: carryForwardRecords } = await supabase
         .from('payout_notifications')
-        .select('staff_id')
+        .select('staff_id, payout_round, period_month, created_at')
         .eq('notification_type', 'payout_carry_forward')
         .eq('period_month', currentPeriodMonth)
 
-      const carryForwardCount = carryForwardRecords?.length || 0
+      const carryForwardRows: PayoutRow[] = (carryForwardRecords || []).map(cf => ({
+        id: `cf-${cf.staff_id}-${cf.payout_round}`,
+        staff_id: cf.staff_id,
+        period_start: '',
+        period_end: '',
+        gross_earnings: 0,
+        net_amount: 0,
+        total_jobs: 0,
+        status: 'carry_forward' as any,
+        payout_round: cf.payout_round,
+        is_carry_forward: true,
+        carry_forward_amount: 0,
+        transfer_reference: null,
+        created_at: cf.created_at,
+        staff_name: nameMap.get(cf.staff_id) || 'Unknown',
+        payout_schedule: scheduleMap.get(cf.staff_id) || 'monthly',
+        has_bank: hasBankSet.has(cf.staff_id),
+      }))
+
+      // ── Virtual rows: not due (monthly staff during mid-month period) ──
+      const currentDay = now.getDate()
+      let notDueRows: PayoutRow[] = []
+      if (currentDay <= 10) {
+        // Before mid-month cutoff → monthly staff are "not due"
+        const { data: monthlyStaff } = await supabase
+          .from('staff')
+          .select('id, profile_id, name_th, payout_schedule')
+          .eq('payout_schedule', 'monthly')
+          .eq('is_active', true)
+          .not('profile_id', 'is', null)
+
+        const payoutStaffIds = new Set(enrichedPayouts.map(p => p.staff_id))
+        notDueRows = (monthlyStaff || [])
+          .filter(s => !payoutStaffIds.has(s.profile_id))
+          .map(s => ({
+            id: `nd-${s.profile_id}`,
+            staff_id: s.profile_id,
+            period_start: '',
+            period_end: '',
+            gross_earnings: 0,
+            net_amount: 0,
+            total_jobs: 0,
+            status: 'not_due' as any,
+            payout_round: null,
+            is_carry_forward: false,
+            carry_forward_amount: 0,
+            transfer_reference: null,
+            created_at: now.toISOString(),
+            staff_name: s.name_th,
+            payout_schedule: 'monthly',
+            has_bank: hasBankSet.has(s.profile_id),
+          }))
+      }
+
+      // Merge all rows (filter virtual rows based on status filter)
+      let allRows = [...enrichedPayouts, ...carryForwardRows, ...notDueRows]
+      if (filters.status && filters.status !== 'all') {
+        allRows = allRows.filter(p => p.status === filters.status)
+      }
 
       // Stats
-      const allPayouts = enrichedPayouts
-      const pendingPayouts = allPayouts.filter(p => p.status === 'pending')
-      const totalStaff = new Set(allPayouts.map(p => p.staff_id)).size
+      const pendingPayouts = enrichedPayouts.filter(p => p.status === 'pending')
+      const totalStaff = new Set([...enrichedPayouts.map(p => p.staff_id), ...carryForwardRows.map(p => p.staff_id), ...notDueRows.map(p => p.staff_id)]).size
       const pendingAmount = pendingPayouts.reduce((sum, p) => sum + Number(p.net_amount), 0)
 
       return {
-        payouts: enrichedPayouts,
+        payouts: allRows,
         stats: {
           totalStaff,
           pendingCount: pendingPayouts.length,
           pendingAmount,
-          carryForwards: carryForwardCount,
+          carryForwards: carryForwardRows.length,
         },
       }
     },
@@ -429,6 +488,8 @@ export default function PayoutDashboard() {
             <option value="processing">กำลังโอน</option>
             <option value="completed">จ่ายแล้ว</option>
             <option value="failed">ล้มเหลว</option>
+            <option value="carry_forward">ยกยอด</option>
+            <option value="not_due">ยังไม่ถึงรอบ</option>
           </select>
           <input
             type="month"
@@ -518,15 +579,25 @@ export default function PayoutDashboard() {
                       </td>
                       <td className="py-3 px-2 text-gray-600">{roundLabel(p.payout_round)}</td>
                       <td className="py-3 px-2 text-gray-600 text-xs">
-                        {formatDate(p.period_start)} - {formatDate(p.period_end)}
+                        {p.period_start ? `${formatDate(p.period_start)} - ${formatDate(p.period_end)}` : <span className="text-gray-300">—</span>}
                       </td>
-                      <td className="py-3 px-2 text-right text-gray-700">{p.total_jobs}</td>
+                      <td className="py-3 px-2 text-right text-gray-700">
+                        {p.status === 'not_due' || p.status === 'carry_forward' ? <span className="text-gray-300">—</span> : p.total_jobs}
+                      </td>
                       <td className="py-3 px-2 text-right font-semibold text-gray-900">
-                        {formatCurrency(Number(p.net_amount))}
-                        {p.is_carry_forward && Number(p.carry_forward_amount) > 0 && (
-                          <div className="text-xs text-orange-500 font-normal">
-                            +{formatCurrency(Number(p.carry_forward_amount))} ยกยอด
-                          </div>
+                        {p.status === 'not_due' ? (
+                          <span className="text-gray-300">—</span>
+                        ) : p.status === 'carry_forward' ? (
+                          <span className="text-xs text-orange-500 font-normal">ต่ำกว่าขั้นต่ำ</span>
+                        ) : (
+                          <>
+                            {formatCurrency(Number(p.net_amount))}
+                            {p.is_carry_forward && Number(p.carry_forward_amount) > 0 && (
+                              <div className="text-xs text-orange-500 font-normal">
+                                +{formatCurrency(Number(p.carry_forward_amount))} ยกยอด
+                              </div>
+                            )}
+                          </>
                         )}
                       </td>
                       <td className="py-3 px-2 text-center">
