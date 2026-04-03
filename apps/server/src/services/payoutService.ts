@@ -508,7 +508,7 @@ export async function processPayoutCutoff(overrideDate?: Date): Promise<{
           // Use profile_id for job queries (jobs.staff_id = profiles.id)
           const earnings = await calculateStaffEarnings(staff.profile_id, periodStart, periodEnd)
 
-          if (earnings.totalEarnings >= settings.minimum_payout_amount) {
+          if (earnings.totalEarnings >= settings.minimum_payout_amount || (earnings.totalEarnings > 0 && !settings.carry_forward_enabled)) {
             await createPayoutRecord(
               staff.id, staff.profile_id, earnings.totalEarnings,
               earnings.totalJobs, earnings.jobIds,
@@ -581,7 +581,7 @@ export async function processPayoutCutoff(overrideDate?: Date): Promise<{
 
           const totalAmount = earnings.totalEarnings + carryForwardAmount
 
-          if (totalAmount >= settings.minimum_payout_amount) {
+          if (totalAmount >= settings.minimum_payout_amount || (totalAmount > 0 && !settings.carry_forward_enabled)) {
             await createPayoutRecord(
               staff.id, staff.profile_id, earnings.totalEarnings,
               earnings.totalJobs, earnings.jobIds,

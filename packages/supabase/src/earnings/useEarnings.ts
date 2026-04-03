@@ -44,17 +44,8 @@ export function useEarningsSummary() {
 
     setIsLoading(true)
     try {
-      // Convert profile_id to staff_id first
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('id')
-        .eq('profile_id', profileId)
-        .single()
-
-      if (staffError) throw staffError
-      if (!staffData) throw new Error('Staff record not found')
-
-      const data = await getEarningsSummary(staffData.id)
+      // jobs.staff_id references profiles.id, so use profileId directly
+      const data = await getEarningsSummary(profileId)
       setSummary(data)
     } catch (err) {
       setError(err as Error)
@@ -91,17 +82,8 @@ export function useDailyEarnings(startDate: string, endDate: string) {
 
     setIsLoading(true)
     try {
-      // Convert profile_id to staff_id first
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('id')
-        .eq('profile_id', profileId)
-        .single()
-
-      if (staffError) throw staffError
-      if (!staffData) throw new Error('Staff record not found')
-
-      const data = await getDailyEarnings(staffData.id, startDate, endDate)
+      // jobs.staff_id references profiles.id, so use profileId directly
+      const data = await getDailyEarnings(profileId, startDate, endDate)
       setEarnings(data)
     } catch (err) {
       setError(err as Error)
@@ -138,17 +120,8 @@ export function useServiceEarnings(startDate: string, endDate: string) {
 
     setIsLoading(true)
     try {
-      // Convert profile_id to staff_id first
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('id')
-        .eq('profile_id', profileId)
-        .single()
-
-      if (staffError) throw staffError
-      if (!staffData) throw new Error('Staff record not found')
-
-      const data = await getServiceEarnings(staffData.id, startDate, endDate)
+      // jobs.staff_id references profiles.id, so use profileId directly
+      const data = await getServiceEarnings(profileId, startDate, endDate)
       setServices(data)
     } catch (err) {
       setError(err as Error)
