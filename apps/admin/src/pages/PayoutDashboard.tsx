@@ -99,13 +99,33 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
         .select('profile_id, name_th, payout_schedule')
         .in('profile_id', staffIds)
 
-      // Check bank accounts
-      const { data: bankAccounts } = await supabase
-        .from('bank_accounts')
-        .select('staff_id')
-        .in('staff_id', staffIds)
+      // Check bank accounts (bank_accounts.staff_id = staff.id, not profile_id)
+      // So we need to map profile_id → staff.id first
+      const staffIdMap = new Map<string, string>() // profile_id → staff.id
+      staffRecords?.forEach(s => {
+        if ((s as any).id) staffIdMap.set(s.profile_id, (s as any).id)
+      })
 
-      const hasBankSet = new Set(bankAccounts?.map(b => b.staff_id) || [])
+      // Re-query staff with id included
+      const { data: staffWithIds } = await supabase
+        .from('staff')
+        .select('id, profile_id')
+        .in('profile_id', staffIds)
+
+      const staffTableIds = staffWithIds?.map(s => s.id) || []
+      const profileToStaffId = new Map<string, string>()
+      staffWithIds?.forEach(s => profileToStaffId.set(s.profile_id, s.id))
+
+      const { data: bankAccounts } = staffTableIds.length > 0
+        ? await supabase.from('bank_accounts').select('staff_id').in('staff_id', staffTableIds)
+        : { data: [] }
+
+      const bankStaffIds = new Set(bankAccounts?.map(b => b.staff_id) || [])
+      // Convert back to profile_id set for matching
+      const hasBankSet = new Set<string>()
+      staffWithIds?.forEach(s => {
+        if (bankStaffIds.has(s.id)) hasBankSet.add(s.profile_id)
+      })
 
       const nameMap = new Map<string, string>()
       const scheduleMap = new Map<string, string>()

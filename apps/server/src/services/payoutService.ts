@@ -205,10 +205,11 @@ async function createPayoutRecord(
   }
 
   // Check if staff has bank account — notify if missing
+  // bank_accounts.staff_id = staff.id (not profile_id)
   const { data: bankAccounts } = await supabase
     .from('bank_accounts')
     .select('id')
-    .eq('staff_id', profileId)
+    .eq('staff_id', staffId)
     .limit(1)
 
   if (!bankAccounts || bankAccounts.length === 0) {
