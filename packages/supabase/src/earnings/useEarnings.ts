@@ -197,7 +197,8 @@ export function usePayouts(realtime = false) {
       if (!staffData) throw new Error('Staff record not found')
 
       setStaffId(staffData.id)
-      const data = await getPayoutHistory(staffData.id)
+      // payouts.staff_id stores profile_id, not staff.id
+      const data = await getPayoutHistory(profileId)
       setPayouts(data)
     } catch (err) {
       setError(err as Error)
