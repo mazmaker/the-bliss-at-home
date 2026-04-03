@@ -172,6 +172,28 @@ function Settings() {
   }
 
   const savePayoutSettings = async () => {
+    // Validation
+    const dayFields = [
+      { label: 'วันตัดรอบงวดแรก', value: payoutSettings.mid_month_cutoff_day },
+      { label: 'วันจ่ายเงินงวดแรก', value: payoutSettings.mid_month_payout_day },
+      { label: 'วันตัดรอบงวดหลัง', value: payoutSettings.end_month_cutoff_day },
+      { label: 'วันจ่ายเงินงวดหลัง', value: payoutSettings.end_month_payout_day },
+    ]
+    for (const field of dayFields) {
+      const num = parseInt(field.value)
+      if (!field.value || isNaN(num) || num < 1 || num > 28) {
+        setMessage(`${field.label}: ต้องเป็นตัวเลข 1-28`)
+        setTimeout(() => setMessage(''), 3000)
+        return
+      }
+    }
+    const minAmount = parseInt(payoutSettings.minimum_payout_amount)
+    if (!payoutSettings.minimum_payout_amount || isNaN(minAmount) || minAmount < 0 || minAmount > 100000) {
+      setMessage('ยอดขั้นต่ำ: ต้องเป็นตัวเลข 0-100,000')
+      setTimeout(() => setMessage(''), 3000)
+      return
+    }
+
     setPayoutSaving(true)
     try {
       const entries = [

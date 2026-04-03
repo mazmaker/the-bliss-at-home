@@ -464,6 +464,8 @@ function StaffEarnings() {
                     </p>
                     <p className="text-xs text-stone-500">
                       {payout.total_jobs} งาน
+                      {(payout as any).payout_round === 'mid-month' && ' • งวดแรก'}
+                      {(payout as any).payout_round === 'end-month' && ' • งวดหลัง'}
                       {payout.transfer_reference && ` • ${payout.transfer_reference}`}
                     </p>
                   </div>
@@ -518,6 +520,16 @@ function StaffEarnings() {
                 {getPayoutStatusBadge(showPayoutDetail.status)}
               </div>
 
+              {/* Round label */}
+              {(showPayoutDetail as any).payout_round && (
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500">รอบ</span>
+                  <span className="font-medium">
+                    {(showPayoutDetail as any).payout_round === 'mid-month' ? 'งวดแรก (วันที่ 16)' : 'งวดหลัง (วันที่ 1)'}
+                  </span>
+                </div>
+              )}
+
               {/* Period */}
               <div className="flex items-center justify-between">
                 <span className="text-stone-500">ช่วงเวลา</span>
@@ -527,6 +539,14 @@ function StaffEarnings() {
                   {new Date(showPayoutDetail.period_end).toLocaleDateString('th-TH')}
                 </span>
               </div>
+
+              {/* Carry forward info */}
+              {(showPayoutDetail as any).is_carry_forward && Number((showPayoutDetail as any).carry_forward_amount) > 0 && (
+                <div className="flex items-center justify-between text-orange-600">
+                  <span>ยอดยกมาจากรอบก่อน</span>
+                  <span className="font-medium">฿{Number((showPayoutDetail as any).carry_forward_amount).toLocaleString()}</span>
+                </div>
+              )}
 
               {/* Earnings breakdown */}
               <div className="bg-stone-50 rounded-xl p-4 space-y-2">

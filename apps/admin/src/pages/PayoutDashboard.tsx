@@ -23,6 +23,7 @@ interface PayoutRow {
   created_at: string
   staff_name?: string
   payout_schedule?: string
+  has_bank?: boolean
 }
 
 // ============================================================
@@ -96,6 +97,14 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
         .select('profile_id, name_th, payout_schedule')
         .in('profile_id', staffIds)
 
+      // Check bank accounts
+      const { data: bankAccounts } = await supabase
+        .from('bank_accounts')
+        .select('staff_id')
+        .in('staff_id', staffIds)
+
+      const hasBankSet = new Set(bankAccounts?.map(b => b.staff_id) || [])
+
       const nameMap = new Map<string, string>()
       const scheduleMap = new Map<string, string>()
       staffRecords?.forEach(s => {
@@ -110,6 +119,7 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
         ...p,
         staff_name: nameMap.get(p.staff_id) || 'Unknown',
         payout_schedule: scheduleMap.get(p.staff_id) || 'monthly',
+        has_bank: hasBankSet.has(p.staff_id),
       }))
 
       // Stats
@@ -153,18 +163,20 @@ function BatchPayoutModal({
   const handleProcess = async () => {
     if (!transferRef.trim()) return
     setIsProcessing(true)
+    const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
     try {
       for (const payout of selectedPayouts) {
+        const transferredAt = new Date().toISOString()
         await supabase
           .from('payouts')
           .update({
             status: 'completed',
             transfer_reference: transferRef,
-            transferred_at: new Date().toISOString(),
+            transferred_at: transferredAt,
           })
           .eq('id', payout.id)
 
-        // Send notification to staff
+        // Send in-app notification to staff
         await supabase.from('notifications').insert({
           user_id: payout.staff_id,
           title: 'ได้รับเงินแล้ว',
@@ -172,6 +184,17 @@ function BatchPayoutModal({
           type: 'payout',
           is_read: false,
         })
+
+        // Send LINE push notification via server (uses existing payout-completed endpoint)
+        try {
+          await fetch(`${serverUrl}/api/notifications/payout-completed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payout_id: payout.id }),
+          })
+        } catch (lineErr) {
+          console.warn('LINE notification failed (non-blocking):', lineErr)
+        }
       }
       onComplete()
     } catch (err) {
@@ -476,6 +499,12 @@ export default function PayoutDashboard() {
                         <div className="text-xs text-gray-400">
                           {p.payout_schedule === 'bi-monthly' ? 'ครึ่งเดือน' : 'รายเดือน'}
                         </div>
+                        {p.has_bank === false && (
+                          <div className="text-xs text-red-500 flex items-center gap-1 mt-0.5">
+                            <AlertCircle className="w-3 h-3" />
+                            ยังไม่มีบัญชีธนาคาร
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-2 text-gray-600">{roundLabel(p.payout_round)}</td>
                       <td className="py-3 px-2 text-gray-600 text-xs">

@@ -204,6 +204,24 @@ async function createPayoutRecord(
     }
   }
 
+  // Check if staff has bank account — notify if missing
+  const { data: bankAccounts } = await supabase
+    .from('bank_accounts')
+    .select('id')
+    .eq('staff_id', profileId)
+    .limit(1)
+
+  if (!bankAccounts || bankAccounts.length === 0) {
+    await supabase.from('notifications').insert({
+      user_id: profileId,
+      title: 'กรุณาเพิ่มบัญชีธนาคาร',
+      message: 'คุณมียอดรอจ่ายแต่ยังไม่มีบัญชีธนาคาร กรุณาเพิ่มที่หน้าโปรไฟล์',
+      type: 'payout',
+      is_read: false,
+    })
+    console.log(`[Payout] Staff ${profileId} has no bank account — notification sent`)
+  }
+
   console.log(`[Payout] Created payout ${payout?.id} for staff ${profileId}: ฿${netAmount} (${totalJobs} jobs, round=${round})`)
   return payout?.id || null
 }
