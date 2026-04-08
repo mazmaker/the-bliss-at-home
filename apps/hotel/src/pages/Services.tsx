@@ -229,12 +229,15 @@ function Services() {
                 <div className="bg-stone-50 rounded-xl p-3 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
-                    <div className="flex items-center gap-1 text-green-600">
-                      <Percent className="w-3 h-3" />
-                      <span className="text-xs font-medium">
-                        -{getDiscountPercentage()}%
-                      </span>
-                    </div>
+                    {/* แสดงส่วนลดเฉพาะเมื่อมีส่วนลด */}
+                    {getDiscountPercentage() > 0 && (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <Percent className="w-3 h-3" />
+                        <span className="text-xs font-medium">
+                          -{getDiscountPercentage()}%
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Duration Options with Individual Prices */}
@@ -263,9 +266,12 @@ function Services() {
                                 <span className="text-xs text-stone-600">{duration} นาที</span>
                               </div>
                               <div className="text-right">
-                                <div className="text-xs text-stone-500 line-through">
-                                  ฿{originalPriceForDuration.toLocaleString()}
-                                </div>
+                                {/* แสดงราคาขีดฆ่าเฉพาะเมื่อมีส่วนลด */}
+                                {getDiscountPercentage() > 0 && (
+                                  <div className="text-xs text-stone-500 line-through">
+                                    ฿{originalPriceForDuration.toLocaleString()}
+                                  </div>
+                                )}
                                 <div className="text-sm font-bold text-amber-700">
                                   ฿{discountedPriceForDuration.toLocaleString()}
                                 </div>
@@ -281,9 +287,12 @@ function Services() {
                             <span className="text-xs text-stone-600">{service.duration} นาที</span>
                           </div>
                           <div className="text-right">
-                            <div className="text-xs text-stone-500 line-through">
-                              ฿{service.hotel_price}
-                            </div>
+                            {/* แสดงราคาขีดฆ่าเฉพาะเมื่อมีส่วนลด */}
+                            {getDiscountPercentage() > 0 && (
+                              <div className="text-xs text-stone-500 line-through">
+                                ฿{service.hotel_price}
+                              </div>
+                            )}
                             <div className="text-sm font-bold text-amber-700">
                               ฿{Math.round(calculateDiscountedPrice(service.hotel_price))}
                             </div>

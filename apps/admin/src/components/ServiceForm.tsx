@@ -145,7 +145,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       description_th: '',
       description_en: '',
       category: undefined,
-      duration_options: [60], // Default 60 minutes
+      duration_options: [], // No default - user must choose
       base_price: undefined,
       price_60: undefined,
       price_90: undefined,
@@ -212,7 +212,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         description_th: '',
         description_en: '',
         category: undefined,
-        duration_options: ['60'], // Use string for form consistency
+        duration_options: [], // No default - user must choose
         base_price: undefined,
         price_60: undefined,
         price_90: undefined,
@@ -591,7 +591,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 ราคาบริการตามระยะเวลา
               </label>
               <p className="text-xs text-gray-500 mb-4">
-                💡 กรอกราคาสำหรับแต่ละระยะเวลาที่เลือกไว้
+                💡 เลือกระยะเวลาที่ต้องการด้านบน จากนั้นกรอกราคาสำหรับแต่ละระยะเวลาที่เลือก
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -661,6 +661,15 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   </div>
                 )}
               </div>
+
+              {/* Helper message when no durations selected */}
+              {selectedDurations.length === 0 && (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    ⚠️ กรุณาเลือกระยะเวลาบริการด้านบนก่อน จากนั้นช่องกรอกราคาจะปรากฏขึ้น
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Fixed Pricing Preview */}

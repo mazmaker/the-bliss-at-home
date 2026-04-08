@@ -113,7 +113,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       const payoutJobsData = unpaidJobs.map((job) => ({
         payout_id: payout.id,
         job_id: job.id,
-        amount: job.staff_earnings || 0,
+        amount: job.total_staff_earnings || job.staff_earnings || 0,
       }))
 
       const { error: pjError } = await supabase
@@ -137,7 +137,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
     }
   }
 
-  const totalEarnings = unpaidJobs.reduce((sum, j) => sum + (j.staff_earnings || 0), 0)
+  const totalEarnings = unpaidJobs.reduce((sum, j) => sum + (j.total_staff_earnings || j.staff_earnings || 0), 0)
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

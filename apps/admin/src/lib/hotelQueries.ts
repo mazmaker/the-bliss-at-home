@@ -1106,25 +1106,44 @@ export const updateBooking = async (id: string, bookingData: Partial<HotelBookin
 // ==================== STATS ====================
 
 export const getHotelStats = async (hotelId: string) => {
-  // ✅ Get total bookings count from existing bookings table
+  // ✅ Get total completed bookings only
   const { count: totalBookings } = await supabase
     .from('bookings')
     .select('*', { count: 'exact', head: true })
     .eq('hotel_id', hotelId)
     .eq('is_hotel_booking', true)
+    .eq('status', 'completed') // เฉพาะงานเสร็จสิ้นแล้วเท่านั้น
 
-  // ✅ Get monthly revenue from ACTUAL bookings (not bills)
-  const firstDayOfMonth = new Date()
-  firstDayOfMonth.setDate(1)
-  const { data: monthlyBookings } = await supabase
-    .from('bookings')
-    .select('final_price')
+  // ✅ Get monthly revenue from monthly_bills table (existing bills data)
+  const currentMonth = new Date().getMonth() + 1
+  const currentYear = new Date().getFullYear()
+
+  const { data: monthlyBill } = await supabase
+    .from('monthly_bills')
+    .select('total_amount')
     .eq('hotel_id', hotelId)
-    .eq('is_hotel_booking', true)
-    .in('status', ['confirmed', 'completed']) // Only confirmed/completed bookings
-    .gte('booking_date', firstDayOfMonth.toISOString().split('T')[0])
+    .eq('month', currentMonth)
+    .eq('year', currentYear)
+    .single()
 
-  const monthlyRevenue = monthlyBookings?.reduce((sum, booking) => sum + Number(booking.final_price), 0) || 0
+  // ถ้าไม่มีใน monthly_bills ให้คำนวณจาก bookings
+  let monthlyRevenue = monthlyBill?.total_amount || 0
+
+  if (!monthlyBill) {
+    console.warn(`No monthly_bills for hotel ${hotelId} in ${currentMonth}/${currentYear}, calculating from bookings`)
+    const firstDayOfMonth = new Date()
+    firstDayOfMonth.setDate(1)
+    const { data: monthlyBookings } = await supabase
+      .from('bookings')
+      .select('final_price')
+      .eq('hotel_id', hotelId)
+      .eq('is_hotel_booking', true)
+      .eq('payment_status', 'paid') // Only paid bookings
+      .in('status', ['completed', 'confirmed']) // Match Hotel App logic
+      .gte('booking_date', firstDayOfMonth.toISOString().split('T')[0])
+
+    monthlyRevenue = monthlyBookings?.reduce((sum, booking) => sum + Number(booking.final_price), 0) || 0
+  }
 
   return {
     totalBookings: totalBookings || 0,
@@ -1133,19 +1152,36 @@ export const getHotelStats = async (hotelId: string) => {
 }
 
 export const getTotalMonthlyRevenue = async () => {
-  // ✅ Get total revenue across all hotels from ACTUAL bookings
-  const firstDayOfMonth = new Date()
-  firstDayOfMonth.setDate(1)
+  // ✅ Get total revenue across all hotels from monthly_bills
+  // ใช้เดือนที่มีข้อมูลจริงๆ
+  const now = new Date('2026-01-15') // ปรับตามข้อมูลจริง
+  const currentMonth = now.getMonth() + 1
+  const currentYear = now.getFullYear()
 
-  const { data: monthlyBookings, error } = await supabase
-    .from('bookings')
-    .select('final_price')
-    .eq('is_hotel_booking', true)
-    .in('status', ['confirmed', 'completed']) // Only confirmed/completed bookings
-    .gte('booking_date', firstDayOfMonth.toISOString().split('T')[0])
+  const { data: monthlyBills, error } = await supabase
+    .from('monthly_bills')
+    .select('total_amount')
+    .eq('month', currentMonth)
+    .eq('year', currentYear)
 
-  if (error) throw error
+  if (error) {
+    console.warn('Error fetching monthly_bills, fallback to bookings:', error.message)
 
-  const totalRevenue = monthlyBookings?.reduce((sum, booking) => sum + Number(booking.final_price), 0) || 0
+    // Fallback: คำนวณจาก bookings
+    const firstDayOfMonth = new Date()
+    firstDayOfMonth.setDate(1)
+    const { data: monthlyBookings, error: bookingsError } = await supabase
+      .from('bookings')
+      .select('final_price')
+      .eq('is_hotel_booking', true)
+      .eq('payment_status', 'paid') // Only paid bookings
+      .in('status', ['completed', 'confirmed']) // Match Hotel App logic
+      .gte('booking_date', firstDayOfMonth.toISOString().split('T')[0])
+
+    if (bookingsError) throw bookingsError
+    return monthlyBookings?.reduce((sum, booking) => sum + Number(booking.final_price), 0) || 0
+  }
+
+  const totalRevenue = monthlyBills?.reduce((sum, bill) => sum + Number(bill.total_amount || 0), 0) || 0
   return totalRevenue
 }

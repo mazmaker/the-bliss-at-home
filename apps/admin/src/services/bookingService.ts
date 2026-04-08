@@ -236,8 +236,7 @@ class BookingService {
           *,
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price),
-          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
+          service:services(id, name_th, name_en, category, duration, base_price)
         `)
         .order('created_at', { ascending: false })
 
@@ -343,8 +342,7 @@ class BookingService {
           *,
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price),
-          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
+          service:services(id, name_th, name_en, category, duration, base_price)
         `)
         .eq('id', id)
         .single()
@@ -407,8 +405,7 @@ class BookingService {
           *,
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price),
-          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
+          service:services(id, name_th, name_en, category, duration, base_price)
         `)
         .single()
 
@@ -485,8 +482,7 @@ class BookingService {
           *,
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price),
-          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
+          service:services(id, name_th, name_en, category, duration, base_price)
         `)
         .single()
 
@@ -518,8 +514,7 @@ class BookingService {
           *,
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price),
-          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
+          service:services(id, name_th, name_en, category, duration, base_price)
         `)
         .single()
 
@@ -549,8 +544,7 @@ class BookingService {
           *,
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
-          service:services(id, name_th, name_en, category, duration, base_price),
-          promotion:promotions(id, name_th, name_en, code, discount_type, discount_value)
+          service:services(id, name_th, name_en, category, duration, base_price)
         `)
         .or(`booking_number.ilike.%${query}%,customer_notes.ilike.%${query}%`)
         .order('created_at', { ascending: false })

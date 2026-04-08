@@ -163,6 +163,15 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
     );
   }
 
+  // Get hotel discount rate
+  const { data: hotel } = await supabase
+    .from('hotels')
+    .select('discount_rate')
+    .eq('id', booking.hotel_id)
+    .single();
+
+  const hotelDiscountRate = hotel?.discount_rate || 0;
+
   const currentTotalDuration = booking.booking_services
     .reduce((sum, bs) => sum + bs.duration, 0);
 
@@ -173,9 +182,9 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
     .filter(duration => duration > 0) // Only positive durations
     .map(duration => ({
       duration,
-      price: calculateServicePrice(service, duration),
+      price: calculateServicePrice(service, duration, hotelDiscountRate),
       totalNewDuration: currentTotalDuration + duration,
-      totalNewPrice: booking.final_price + calculateServicePrice(service, duration),
+      totalNewPrice: booking.final_price + calculateServicePrice(service, duration, hotelDiscountRate),
       isAvailable: (currentTotalDuration + duration) <= EXTENSION_BUSINESS_RULES.MAX_SESSION_DURATION,
       label: `ขยายเป็น ${currentTotalDuration + duration} นาที (+${duration} นาที)`
     }))
@@ -267,13 +276,22 @@ async function calculateExtensionPrice(
     );
   }
 
-  return calculateServicePrice(service, additionalDuration);
+  // Get hotel discount rate
+  const { data: hotel } = await supabase
+    .from('hotels')
+    .select('discount_rate')
+    .eq('id', booking.hotel_id)
+    .single();
+
+  const hotelDiscountRate = hotel?.discount_rate || 0;
+
+  return calculateServicePrice(service, additionalDuration, hotelDiscountRate);
 }
 
 /**
  * Calculate service price for given duration (with hotel discount)
  */
-function calculateServicePrice(service: any, duration: number): number {
+function calculateServicePrice(service: any, duration: number, hotelDiscountRate: number = 0): number {
   let basePrice: number;
 
   // Get price based on duration
@@ -292,8 +310,9 @@ function calculateServicePrice(service: any, duration: number): number {
       basePrice = (service.base_price / service.duration) * duration;
   }
 
-  // Apply hotel discount (20% off customer price)
-  const hotelRate = Math.floor(basePrice * 0.8);
+  // Apply hotel discount (using actual hotel discount rate, fallback to 0%)
+  const discountMultiplier = 1 - (hotelDiscountRate / 100);
+  const hotelRate = Math.floor(basePrice * discountMultiplier);
 
   return hotelRate;
 }

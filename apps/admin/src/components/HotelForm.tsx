@@ -238,7 +238,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       address: '',
       latitude: null,
       longitude: null,
-      discount_rate: 20,
+      discount_rate: 0,
       rating: 0,
       status: 'pending',
       bank_name: '',
@@ -315,7 +315,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           latitude: null,
           longitude: null,
           commission_rate: 20,
-          discount_rate: 20,
+          discount_rate: 0,
           rating: 0,
           status: 'pending',
           bank_name: '',
@@ -378,7 +378,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
         if (error) throw error
       } else {
         // Create new hotel
-        const { error } = await supabase.from('hotels').insert([
+        const { data: newHotel, error } = await supabase.from('hotels').insert([
           {
             name_th: data.name_th,
             name_en: data.name_en,
@@ -403,9 +403,42 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             credit_start_date: data.credit_start_date || null,
             credit_cycle_day: data.credit_cycle_day || null,
           },
-        ])
+        ]).select('id').single()
 
         if (error) throw error
+
+        // 🔐 สร้างบัญชีผู้ใช้สำหรับโรงแรมใหม่
+        try {
+          const authResult = await createHotelAccount({
+            hotelId: newHotel.id,
+            email: data.email,
+            name: data.name_th,
+          })
+
+          if (authResult.success && authResult.temporaryPassword) {
+            // แสดง temporary password ให้ admin
+            setTemporaryPassword(authResult.temporaryPassword)
+            setAuthStatus({
+              hasAccount: true,
+              loginEmail: authResult.loginEmail,
+              passwordChangeRequired: true,
+            })
+
+            toast.success(`โรงแรมสร้างสำเร็จ! รหัสผ่านชั่วคราว: ${authResult.temporaryPassword}`, {
+              duration: 8000,
+            })
+          } else {
+            console.warn('Failed to create hotel auth account:', authResult.error)
+            toast.error(`โรงแรมสร้างสำเร็จ แต่ไม่สามารถสร้างบัญชีผู้ใช้ได้: ${authResult.error}`, {
+              duration: 6000,
+            })
+          }
+        } catch (authError: any) {
+          console.error('Error creating hotel auth account:', authError)
+          toast.error(`โรงแรมสร้างสำเร็จ แต่เกิดข้อผิดพลาดในการสร้างบัญชีผู้ใช้`, {
+            duration: 6000,
+          })
+        }
       }
 
       setSubmitSuccess(true)
@@ -725,7 +758,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                       type="number"
                       step="0.01"
                       className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="20"
+                      placeholder="0"
                     />
                   </div>
                   {errors.discount_rate && (

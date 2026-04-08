@@ -126,7 +126,19 @@ export const useHotelContext = () => {
     // Helper methods
     getHotelName: () => hotelData?.name_th || 'Unknown Hotel',
     getHotelNameEn: () => hotelData?.name_en || 'Unknown Hotel',
-    getCommissionRate: () => hotelData?.discount_rate || hotelData?.commission_rate || 20,
+    getCommissionRate: () => {
+      // ✅ แก้ไข: ใช้ discount_rate เป็นหลัก แม้จะเป็น 0 ก็ใช้ได้
+      const rate = hotelData?.discount_rate !== null && hotelData?.discount_rate !== undefined
+        ? hotelData.discount_rate
+        : (hotelData?.commission_rate || 0);
+      console.log('🔍 Hotel discount debug:', {
+        hotelSlug: hotelData?.hotel_slug,
+        discount_rate: hotelData?.discount_rate,
+        commission_rate: hotelData?.commission_rate,
+        finalRate: rate
+      });
+      return rate;
+    },
     getHotelSlug: () => hotelData?.hotel_slug || 'unknown-hotel',
     // Available hotels list (now from database)
     availableHotels

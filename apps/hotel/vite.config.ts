@@ -16,6 +16,8 @@ export default defineConfig({
   server: {
     port: 3003,
     strictPort: true,
+    host: true, // Allow external connections
+    allowedHosts: ['phys-craps-diy-san.trycloudflare.com'],
   },
   build: {
     outDir: 'dist',
