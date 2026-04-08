@@ -29,6 +29,15 @@ export function ExtendServiceButton({
   const [showModal, setShowModal] = useState(false)
   const extensionStatus = useExtensionStatus(booking)
 
+  // 🔍 Debug log
+  console.log('🔍 ExtendServiceButton Debug:', {
+    bookingStatus: booking.status,
+    canExtend: extensionStatus.canExtend,
+    reasonIfCannot: extensionStatus.reasonIfCannot,
+    extensionCount: booking.extension_count,
+    maxExtensions: 3
+  })
+
   const handleExtensionComplete = () => {
     setShowModal(false)
     onExtended?.()
