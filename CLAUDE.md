@@ -50,13 +50,44 @@ cloudflared tunnel --url http://localhost:3004
 
 ## Database
 - **Backend:** Supabase (PostgreSQL + Auth + Storage + Realtime)
-- **Migrations:** `supabase/migrations/` (219 migration files)
+- **Migrations:** `supabase/migrations/` (219+ migration files)
+- **Total Tables:** **54 tables** (verified from production)
 - **Key tables:** bookings, staff, customers, services, notifications, profiles, hotels, reviews, payments, earnings
 - **Always use migrations** for schema changes via `mcp__supabase__apply_migration`
+
+### 🚨 **CRITICAL DATABASE RULES**
+
+**⚠️ MANDATORY: Read `docs/database-schema.md` BEFORE any database work**
+
+#### **ABSOLUTE REQUIREMENTS:**
+1. **ALWAYS read `docs/database-schema.md`** before:
+   - Creating migrations
+   - Writing functions/triggers
+   - Adding features involving database
+   - Making schema changes
+
+2. **NEVER create tables without checking schema doc first**
+   - We have **54 existing tables**
+   - Don't duplicate functionality
+   - Don't guess table names
+   - Don't create relationships blindly
+
+3. **Follow migration naming:** `YYYYMMDD_HHMMSS_descriptive_name.sql`
+
+4. **Every new table MUST have:**
+   - Proper RLS policies for all roles
+   - Appropriate indexes
+   - FK constraints where needed
+   - Documentation update
+
+5. **Check existing functions before creating new ones**
+
+#### **VIOLATION = IMMEDIATE ROLLBACK**
 
 ## Project Key Files
 | File | Purpose |
 |------|---------|
+| `docs/database-schema.md` | **🚨 MANDATORY READ** - Complete DB schema (54 tables) |
 | `docs/CHECKLIST.md` | Dev task checklist with remaining work per feature |
 | `docs/project-timeline.html` | Sprint dashboard (deploys to sprint.lightepic.com) |
 | `docs/gantt-chart.html` | Gantt chart view |
@@ -123,8 +154,10 @@ Always use `browser_snapshot` first to understand page structure before interact
 | Cancel/manage deploys | Vercel | - |
 
 ## Rules
-1. **Always search docs first** when implementing new features
-2. **Use Supabase MCP** for database questions (don't guess schema)
-3. **Use Playwright snapshot** before browser interactions
-4. **Check `docs/CHECKLIST.md`** to see current task status and remaining work
-5. **Use Vercel MCP automatically** when tasks involve: deploy status, build errors, production debugging, deployment management, or any Vercel-related operations
+1. **🚨 ALWAYS read `docs/database-schema.md` FIRST** before any database work (migrations, functions, schema changes)
+2. **🚫 NEVER create tables without reading schema doc** - we have 54 existing tables, don't duplicate
+3. **Always search docs first** when implementing new features
+4. **Use Supabase MCP** for database questions (don't guess schema)
+5. **Use Playwright snapshot** before browser interactions
+6. **Check `docs/CHECKLIST.md`** to see current task status and remaining work
+7. **Use Vercel MCP automatically** when tasks involve: deploy status, build errors, production debugging, deployment management, or any Vercel-related operations
