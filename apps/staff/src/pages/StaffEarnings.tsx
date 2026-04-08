@@ -514,8 +514,8 @@ function StaffEarnings() {
 
       {/* Payout Detail Modal */}
       {showPayoutDetail && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPayoutDetail(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-20" onClick={() => setShowPayoutDetail(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] overflow-hidden shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
               <h3 className="font-semibold text-lg text-stone-900">รายละเอียดการโอนเงิน</h3>
               <button
@@ -625,7 +625,7 @@ function StaffEarnings() {
               {payoutJobs.length > 0 && (
                 <div>
                   <p className="text-stone-500 mb-2">งานในรอบนี้ ({payoutJobs.length} งาน)</p>
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  <div className="space-y-1.5">
                     {payoutJobs.map((pj: any) => (
                       <div key={pj.id} className="flex justify-between text-sm bg-stone-50 px-3 py-2 rounded-lg">
                         <span className="text-stone-700">{pj.job?.service_name || 'งาน'}</span>

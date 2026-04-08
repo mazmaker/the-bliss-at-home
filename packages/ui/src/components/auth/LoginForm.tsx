@@ -3,9 +3,20 @@
  * Used by all 4 applications with app-specific customization
  */
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaGoogle, FaFacebook } from 'react-icons/fa'
+import { FaGoogle, FaFacebook, FaExternalLinkAlt } from 'react-icons/fa'
+
+function isWebView(): boolean {
+  const ua = navigator.userAgent || ''
+  // LINE, Facebook, Instagram, Messenger, WeChat, Twitter, Snapchat
+  if (/\b(FBAN|FBAV|FBIOS|Instagram|Line|MicroMessenger|WeChat|Twitter|Snapchat)\b/i.test(ua)) return true
+  // Android WebView marker
+  if (/\bwv\b/.test(ua)) return true
+  // iOS WebView: has iPhone/iPad but no Safari token
+  if (/iPhone|iPad|iPod/.test(ua) && !/Safari/.test(ua)) return true
+  return false
+}
 import Button from '../Button'
 import Input from '../Input'
 import Loader from '../Loader'
@@ -77,6 +88,21 @@ export function LoginForm({
     email?: string
     password?: string
   }>({})
+
+  const inWebView = useMemo(() => isWebView(), [])
+  const [copied, setCopied] = useState(false)
+
+  const handleOpenInBrowser = async () => {
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 3000)
+    } catch {
+      // Fallback: prompt user
+      window.prompt('คัดลอก URL นี้ไปเปิดใน Browser:', url)
+    }
+  }
 
   const validateForm = (): boolean => {
     const errors: typeof validationErrors = {}
@@ -155,8 +181,28 @@ export function LoginForm({
         </div>
       )}
 
-      {/* Social Login Buttons */}
-      {showSocialLogin && (
+      {/* WebView Warning Banner */}
+      {showSocialLogin && inWebView && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <p className="text-sm text-amber-800 font-medium mb-2">
+            ไม่สามารถใช้ Google Login ใน App นี้ได้
+          </p>
+          <p className="text-xs text-amber-700 mb-3">
+            กรุณาเปิดใน Chrome หรือ Safari เพื่อเข้าสู่ระบบด้วย Google หรือใช้อีเมล/รหัสผ่านด้านล่าง
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenInBrowser}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-100 border border-amber-300 rounded-lg text-sm font-medium text-amber-900 hover:bg-amber-200 transition-colors"
+          >
+            <FaExternalLinkAlt className="w-3.5 h-3.5" />
+            {copied ? 'คัดลอก URL แล้ว! วางใน Browser เพื่อเปิด' : 'คัดลอก URL เพื่อเปิดใน Browser'}
+          </button>
+        </div>
+      )}
+
+      {/* Social Login Buttons — hidden in WebView */}
+      {showSocialLogin && !inWebView && (
         <>
           <div className="space-y-3 mb-6">
             <button
@@ -168,18 +214,6 @@ export function LoginForm({
               <FaGoogle className="w-5 h-5 text-red-500" />
               เข้าสู่ระบบด้วย Google
             </button>
-
-            {/* Facebook Login - Temporarily disabled due to Development mode limitations */}
-            {/* Uncomment when app is in Production mode */}
-            {/* <button
-              type="button"
-              onClick={() => handleSocialLogin('facebook')}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-stone-200 rounded-xl font-medium text-stone-700 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-            >
-              <FaFacebook className="w-5 h-5" style={{ color: '#1877F2' }} />
-              Continue with Facebook
-            </button> */}
           </div>
 
           {/* Divider */}

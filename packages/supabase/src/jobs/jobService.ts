@@ -299,6 +299,40 @@ export async function updateJobStatus(
     updateData.started_at = new Date().toISOString()
   } else if (status === 'completed') {
     updateData.completed_at = new Date().toISOString()
+
+    // Safety net: calculate staff_earnings if still 0
+    try {
+      const { data: job } = await supabase
+        .from('jobs')
+        .select('staff_earnings, booking_id')
+        .eq('id', jobId)
+        .single()
+
+      if (job && (!job.staff_earnings || Number(job.staff_earnings) === 0) && job.booking_id) {
+        const { data: booking } = await supabase
+          .from('bookings')
+          .select('final_price, service_id')
+          .eq('id', job.booking_id)
+          .single()
+
+        if (booking?.final_price && booking?.service_id) {
+          const { data: service } = await supabase
+            .from('services')
+            .select('staff_commission_rate')
+            .eq('id', booking.service_id)
+            .single()
+
+          const commissionRate = Number(service?.staff_commission_rate) || 0.30
+          const earnings = Math.round(Number(booking.final_price) * commissionRate)
+          if (earnings > 0) {
+            updateData.staff_earnings = earnings
+            updateData.total_staff_earnings = earnings
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to calculate staff_earnings on complete:', e)
+    }
   } else if (status === 'cancelled') {
     updateData.cancelled_at = new Date().toISOString()
   }
