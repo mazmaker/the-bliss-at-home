@@ -4,6 +4,7 @@ import { ClipboardList, Calendar, Clock } from 'lucide-react'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerBookings } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation } from '@bliss/i18n'
+import { getServiceImage } from '../utils/imageUtils'
 
 function BookingHistory() {
   const { t } = useTranslation(['booking', 'common'])
@@ -25,7 +26,7 @@ function BookingHistory() {
       time: booking.booking_time || '00:00', // Already in HH:MM format
       status: booking.status ?? 'pending',
       price: Number(booking.final_price || 0),
-      image: booking.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      image: getServiceImage(booking.service?.image_url, booking.service?.category || 'massage'),
     }))
 
     // Filter by status

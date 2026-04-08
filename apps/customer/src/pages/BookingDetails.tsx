@@ -6,8 +6,11 @@ import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
 import { ReviewModal } from '../components/ReviewModal'
+import { ExtendServiceButtonLarge } from '../components/ExtendServiceButton'
 import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
+import { BookingWithExtensions } from '../types/extendService'
+import { getServiceImage } from '../utils/imageUtils'
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
@@ -67,8 +70,51 @@ function BookingDetails() {
         status: bookingData.payment_status || 'pending',
       },
       createdAt: new Date(bookingData.created_at!).toISOString().split('T')[0],
-      image: bookingData.service?.image_url || 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+      image: getServiceImage(bookingData.service?.image_url, bookingData.service?.category || 'massage'),
       providerPreference: (bookingData as any).provider_preference || null,
+    }
+  }, [bookingData])
+
+  // Transform booking data for extension system
+  const extendableBooking = useMemo((): BookingWithExtensions | null => {
+    if (!bookingData) return null
+
+    return {
+      id: bookingData.id,
+      booking_number: bookingData.booking_number,
+      customer_id: bookingData.customer_id,
+      status: bookingData.status,
+      final_price: Number(bookingData.final_price || bookingData.base_price || 0),
+      duration: bookingData.duration || 60,
+      extension_count: bookingData.extension_count || 0,
+      total_extensions_price: Number(bookingData.total_extensions_price || 0),
+      last_extended_at: bookingData.last_extended_at,
+      payment_method: bookingData.payment_method || 'cash',
+      payment_status: bookingData.payment_status || 'pending',
+      booking_date: bookingData.booking_date,
+      booking_time: bookingData.booking_time,
+      service: {
+        id: bookingData.service?.id || '',
+        name_th: bookingData.service?.name_th || '',
+        name_en: bookingData.service?.name_en || '',
+        slug: bookingData.service?.slug || '',
+        image_url: bookingData.service?.image_url
+      },
+      booking_services: bookingData.booking_services?.map(bs => ({
+        id: bs.id,
+        service_id: bs.service_id,
+        duration: bs.duration,
+        price: Number(bs.price),
+        is_extension: bs.is_extension || false,
+        extended_at: bs.extended_at,
+        recipient_index: bs.recipient_index || 0,
+        recipient_name: bs.recipient_name || 'ผู้รับบริการ',
+        created_at: bs.created_at,
+        services: {
+          name_th: bs.service?.name_th || bookingData.service?.name_th || '',
+          name_en: bs.service?.name_en || bookingData.service?.name_en || ''
+        }
+      })) || []
     }
   }, [bookingData])
 
@@ -393,8 +439,22 @@ function BookingDetails() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg text-stone-900 mb-1">{booking.serviceName}</h3>
-                  <p className="text-sm text-stone-600 mb-2 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.duration} {t('details.hours')}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-sm text-stone-600 flex items-center gap-1">
+                      <Clock className="w-4 h-4" /> {booking.duration} {t('details.hours')}
+                    </p>
+                    {extendableBooking && extendableBooking.extension_count > 0 && (
+                      <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-medium">
+                        +{extendableBooking.extension_count} ครั้ง
+                      </span>
+                    )}
+                  </div>
                   <p className="text-lg font-bold text-amber-700">฿{booking.price}</p>
+                  {extendableBooking && extendableBooking.total_extensions_price > 0 && (
+                    <p className="text-sm text-amber-600 mt-1">
+                      รวมค่าเพิ่มเวลา: ฿{extendableBooking.total_extensions_price.toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -594,6 +654,29 @@ function BookingDetails() {
                   >
                     {t('details.cancelBooking')}
                   </button>
+                </>
+              )}
+
+              {/* Extension Feature for In Progress Bookings */}
+              {booking.status === 'in_progress' && extendableBooking && (
+                <>
+                  <ExtendServiceButtonLarge
+                    booking={extendableBooking}
+                    onExtended={() => {
+                      // Refresh booking data after extension
+                      refetch()
+                    }}
+                    fullWidth={true}
+                  />
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <Sparkles className="w-5 h-5" />
+                      <span className="font-medium">บริการกำลังดำเนินการ</span>
+                    </div>
+                    <p className="text-sm text-blue-600 mt-1">
+                      คุณสามารถเพิ่มเวลาบริการได้หากต้องการเวลาเพิ่มเติม
+                    </p>
+                  </div>
                 </>
               )}
 
