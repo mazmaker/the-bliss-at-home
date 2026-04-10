@@ -658,6 +658,15 @@ function BookingDetails() {
               )}
 
               {/* Extension Feature for In Progress Bookings */}
+              {/* 🔍 Debug condition checking */}
+              {console.log('🔍 BookingDetails Debug:', {
+                bookingStatus: booking.status,
+                extendableBooking: !!extendableBooking,
+                showCondition: booking.status === 'in_progress' && extendableBooking,
+                timestamp: new Date().toISOString(),
+                environment: import.meta.env.PROD ? 'production' : 'development',
+                bookingNumber: booking.id
+              })}
               {booking.status === 'in_progress' && extendableBooking && (
                 <>
                   <ExtendServiceButtonLarge
