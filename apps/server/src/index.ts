@@ -20,6 +20,7 @@ import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
+import { reminderService } from './services/reminderService.js'
 import { processPayoutCutoff } from './services/payoutService.js'
 import { getSupabaseClient } from './lib/supabase.js'
 // @ts-ignore — relative import from shared package (outside rootDir)
@@ -201,6 +202,17 @@ cron.schedule('0 2 * * *', async () => {
     if (count > 0) console.log(`[Cron] Sent ${count} credit due reminders`)
   } catch (err) {
     console.error('[Cron] Error processing credit due reminders:', err)
+  }
+})
+
+// Job reminders check every hour (3 days, 1 day, 2 hours before job)
+cron.schedule('0 * * * *', async () => {
+  try {
+    console.log('🔔 [Cron] Checking job reminders (3 days, 1 day, 2 hours)...')
+    await reminderService.sendScheduledReminders()
+    console.log('✅ [Cron] Job reminders processed successfully')
+  } catch (err) {
+    console.error('❌ [Cron] Error processing job reminders:', err)
   }
 })
 

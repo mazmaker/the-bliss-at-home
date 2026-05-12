@@ -6,6 +6,7 @@ import { exportToCSV, exportToExcel } from '../utils/exportUtils'
 import CustomerDetailModal from '../components/CustomerDetailModal'
 import CustomerEditModal from '../components/CustomerEditModal'
 import CustomerStats from '../components/CustomerStats'
+import CustomerTypeBadge from '../components/CustomerTypeBadge'
 
 function Customers() {
   const { customers, loading, error } = useCustomers()
@@ -167,6 +168,7 @@ function Customers() {
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ประเภท</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ติดต่อ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การจอง</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ยอดซื้อ</th>
@@ -188,6 +190,13 @@ function Customers() {
                         <p className="text-xs text-stone-500">{customer.id.substring(0, 8)}</p>
                       </div>
                     </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <CustomerTypeBadge
+                      type={customer.total_bookings > 0 ? 'returning' : 'new'}
+                      totalBookings={customer.total_bookings}
+                      totalSpent={customer.total_spent}
+                    />
                   </td>
                   <td className="py-3 px-4">
                     <div className="space-y-1 text-sm">

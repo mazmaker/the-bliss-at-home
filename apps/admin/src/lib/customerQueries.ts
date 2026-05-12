@@ -112,10 +112,29 @@ export async function getAllCustomers() {
     }
   }
 
-  return customers.map((customer) => ({
-    ...customer,
-    email: customer.profile_id ? emailMap[customer.profile_id] || '' : '',
-  })) as Customer[]
+  // Calculate real total_bookings and total_spent for each customer
+  const customerStats = await Promise.all(
+    customers.map(async (customer) => {
+      const { data: successfulBookings } = await supabase
+        .from('bookings')
+        .select('id, final_price')
+        .eq('customer_id', customer.id)
+        .eq('status', 'completed')
+        .in('payment_status', ['completed', 'paid'])
+
+      const realTotalBookings = successfulBookings?.length || 0
+      const realTotalSpent = successfulBookings?.reduce((sum, b) => sum + Number(b.final_price || 0), 0) || 0
+
+      return {
+        ...customer,
+        total_bookings: realTotalBookings,
+        total_spent: realTotalSpent,
+        email: customer.profile_id ? emailMap[customer.profile_id] || '' : '',
+      }
+    })
+  )
+
+  return customerStats as Customer[]
 }
 
 export async function getCustomerById(id: string) {
@@ -144,11 +163,13 @@ export async function getCustomerById(id: string) {
 export async function getCustomerWithStats(id: string): Promise<CustomerWithStats> {
   const customer = await getCustomerById(id)
 
-  // Fetch all bookings for this customer (real data, not stale columns)
+  // Fetch only successful bookings for this customer (completed + paid)
   const { data: bookings } = await supabase
     .from('bookings')
-    .select('id, created_at, final_price')
+    .select('id, created_at, final_price, status, payment_status')
     .eq('customer_id', id)
+    .eq('status', 'completed')
+    .in('payment_status', ['completed', 'paid'])
     .order('created_at', { ascending: true })
 
   const totalBookings = bookings?.length || 0
@@ -364,7 +385,7 @@ export async function upsertCustomerTaxInfo(
 export async function getCustomerStatistics() {
   const { data: customers, error } = await supabase
     .from('customers')
-    .select('id, total_bookings, total_spent, status')
+    .select('id, status')
 
   if (error) throw error
 
@@ -373,13 +394,30 @@ export async function getCustomerStatistics() {
   const suspended = customers?.filter((c) => c.status === 'suspended').length || 0
   const banned = customers?.filter((c) => c.status === 'banned').length || 0
 
-  // Calculate customers with repeat bookings
-  const repeatCustomers = customers?.filter((c) => c.total_bookings > 1).length || 0
+  // Calculate real statistics from successful bookings
+  const { data: allBookings } = await supabase
+    .from('bookings')
+    .select('customer_id, final_price')
+    .eq('status', 'completed')
+    .in('payment_status', ['completed', 'paid'])
+
+  const bookingsByCustomer = (allBookings || []).reduce((acc, booking) => {
+    if (!acc[booking.customer_id]) {
+      acc[booking.customer_id] = { count: 0, totalSpent: 0 }
+    }
+    acc[booking.customer_id].count++
+    acc[booking.customer_id].totalSpent += Number(booking.final_price || 0)
+    return acc
+  }, {} as Record<string, { count: number; totalSpent: number }>)
+
+  // Calculate customers with repeat bookings (more than 1 successful booking)
+  const repeatCustomers = Object.values(bookingsByCustomer).filter(stats => stats.count > 1).length
   const repeatRate = total > 0 ? (repeatCustomers / total) * 100 : 0
 
-  // Calculate average customer lifetime value
-  const totalRevenue = customers?.reduce((sum, c) => sum + Number(c.total_spent), 0) || 0
-  const averageLifetimeValue = total > 0 ? totalRevenue / total : 0
+  // Calculate total revenue and average lifetime value from real data
+  const totalRevenue = Object.values(bookingsByCustomer).reduce((sum, stats) => sum + stats.totalSpent, 0)
+  const customersWithBookings = Object.keys(bookingsByCustomer).length
+  const averageLifetimeValue = customersWithBookings > 0 ? totalRevenue / customersWithBookings : 0
 
   return {
     total,

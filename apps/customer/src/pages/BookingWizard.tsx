@@ -184,8 +184,8 @@ function BookingWizard() {
     }
   }, [paymentMethods, selectedPaymentMethodId, showManualPaymentForm])
 
-  // Available dates (today + next 6 days)
-  const availableDates = Array.from({ length: 7 }, (_, i) => {
+  // Available dates (today + next 13 days = 14 days total)
+  const availableDates = Array.from({ length: 14 }, (_, i) => {
     const date = new Date()
     date.setDate(date.getDate() + i)
     return date.toISOString().split('T')[0]
@@ -745,6 +745,9 @@ function BookingWizard() {
 
               <div className="mb-6">
                 <h3 className="font-semibold text-stone-900 mb-3">{t('wizard.step2.date')}</h3>
+                <p className="text-sm text-stone-500 mb-3">
+                  สามารถจองล่วงหน้าได้สูงสุด 14 วัน (2 อาทิตย์)
+                </p>
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {availableDates.map((date) => {
                     const dateObj = new Date(date)

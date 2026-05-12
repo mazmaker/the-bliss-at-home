@@ -1,6 +1,45 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 
+// Business rules for booking validation
+const BOOKING_RULES = {
+  MAX_ADVANCE_DAYS: 14,
+  MIN_ADVANCE_HOURS: 3
+};
+
+function validateBookingDate(bookingDate: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  const booking = new Date(`${bookingDate}T00:00:00`);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Check minimum advance (3 hours for today)
+  if (booking.toDateString() === today.toDateString()) {
+    const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000));
+    if (booking < minDateTime) {
+      return {
+        isValid: false,
+        error: `ต้องจองล่วงหน้าอย่างน้อย ${BOOKING_RULES.MIN_ADVANCE_HOURS} ชั่วโมงสำหรับวันนี้`
+      };
+    }
+  }
+
+  // Check maximum advance (14 days)
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + BOOKING_RULES.MAX_ADVANCE_DAYS);
+
+  if (booking > maxDate) {
+    return {
+      isValid: false,
+      error: `สามารถจองล่วงหน้าได้สูงสุด ${BOOKING_RULES.MAX_ADVANCE_DAYS} วัน`
+    };
+  }
+
+  return { isValid: true };
+}
+
 type Booking = Database['public']['Tables']['bookings']['Row'];
 type BookingInsert = Database['public']['Tables']['bookings']['Insert'];
 type BookingAddonInsert = Database['public']['Tables']['booking_addons']['Insert'];
@@ -186,6 +225,14 @@ export async function createBooking(
   booking: BookingInsert,
   addons?: Array<Omit<BookingAddonInsert, 'booking_id'>>
 ): Promise<Booking> {
+  // Validate booking date (14 days advance limit)
+  if (booking.booking_date) {
+    const dateValidation = validateBookingDate(booking.booking_date);
+    if (!dateValidation.isValid) {
+      throw new Error(dateValidation.error);
+    }
+  }
+
   const { data, error } = await client
     .from('bookings')
     .insert(booking)
@@ -285,6 +332,12 @@ export async function createBookingWithServices(
   }>,
   addons?: Array<Omit<BookingAddonInsert, 'booking_id'>>
 ): Promise<string> {
+  // Validate booking date (14 days advance limit)
+  const dateValidation = validateBookingDate(bookingData.booking_date);
+  if (!dateValidation.isValid) {
+    throw new Error(dateValidation.error);
+  }
+
   // Use the primary service (person 1 / recipient_index 0) for the booking row
   const primaryService = services.find((s) => s.recipient_index === 0) || services[0];
 

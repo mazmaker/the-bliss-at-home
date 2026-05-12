@@ -10,6 +10,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { staffAssignmentService } from '../services/staffAssignmentService'
 import { sendBookingConfirmedNotifications } from '../services/notificationService.js'
+import { validateBookingDate } from './bookings.js'
 
 // Extend Request interface to include user property
 interface AuthenticatedRequest extends Request {
@@ -137,6 +138,13 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
     if (missing.length > 0) {
       console.log('❌ [VALIDATION] Missing required fields:', missing)
       return res.status(400).json({ error: 'Missing required fields', missing })
+    }
+
+    // Validate booking date (14 days advance limit)
+    const dateValidation = validateBookingDate(bookingData.booking_date)
+    if (!dateValidation.isValid) {
+      console.log('❌ [DATE VALIDATION] Booking date invalid:', dateValidation.error)
+      return res.status(400).json({ error: dateValidation.error })
     }
 
     // TODO: Temporarily disable duplicate check for testing

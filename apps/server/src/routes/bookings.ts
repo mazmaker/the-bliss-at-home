@@ -22,6 +22,48 @@ import { refundPoints } from '../../../../packages/supabase/src/services/loyalty
 const router = Router()
 
 // ============================================
+// Business Rules
+// ============================================
+
+const BOOKING_RULES = {
+  MAX_ADVANCE_DAYS: 14,
+  MIN_ADVANCE_HOURS: 3
+}
+
+export function validateBookingDate(bookingDate: string): {
+  isValid: boolean
+  error?: string
+} {
+  const booking = new Date(`${bookingDate}T00:00:00`)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  // Check minimum advance (3 hours for today)
+  if (booking.toDateString() === today.toDateString()) {
+    const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000))
+    if (booking < minDateTime) {
+      return {
+        isValid: false,
+        error: `ต้องจองล่วงหน้าอย่างน้อย ${BOOKING_RULES.MIN_ADVANCE_HOURS} ชั่วโมงสำหรับวันนี้`
+      }
+    }
+  }
+
+  // Check maximum advance (14 days)
+  const maxDate = new Date(today)
+  maxDate.setDate(maxDate.getDate() + BOOKING_RULES.MAX_ADVANCE_DAYS)
+
+  if (booking > maxDate) {
+    return {
+      isValid: false,
+      error: `สามารถจองล่วงหน้าได้สูงสุด ${BOOKING_RULES.MAX_ADVANCE_DAYS} วัน`
+    }
+  }
+
+  return { isValid: true }
+}
+
+// ============================================
 // Types
 // ============================================
 

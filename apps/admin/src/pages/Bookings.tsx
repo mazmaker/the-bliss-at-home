@@ -6,6 +6,7 @@ import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, typ
 import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
+import CustomerTypeBadge from '../components/CustomerTypeBadge'
 
 function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -287,6 +288,7 @@ function Bookings() {
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รหัส</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ประเภท</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">บริการ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">โรงแรม</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
@@ -302,13 +304,13 @@ function Bookings() {
             <tbody>
               {bookingsLoading ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-stone-500">
+                  <td colSpan={13} className="py-8 text-center text-stone-500">
                     กำลังโหลดข้อมูล...
                   </td>
                 </tr>
               ) : filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-stone-500">
+                  <td colSpan={13} className="py-8 text-center text-stone-500">
                     ไม่พบข้อมูลการจอง
                   </td>
                 </tr>
@@ -321,6 +323,17 @@ function Bookings() {
                         <p className="text-sm font-medium text-stone-900">{booking.customer?.full_name || 'ไม่ระบุ'}</p>
                         <p className="text-xs text-stone-500">{booking.customer?.phone || '-'}</p>
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {booking.is_hotel_booking ? (
+                        <span className="text-xs text-stone-400">-</span>
+                      ) : (
+                        <CustomerTypeBadge
+                          type={booking.customer?.total_bookings > 0 ? 'returning' : 'new'}
+                          totalBookings={booking.customer?.total_bookings || 0}
+                          totalSpent={booking.customer?.total_spent || 0}
+                        />
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-stone-600">
                       {booking.booking_services && booking.booking_services.length > 1 ? (
