@@ -9,7 +9,7 @@ import { Clock, DollarSign, Calendar, TrendingUp } from 'lucide-react';
 interface ExtensionService {
   id: string;
   duration: number;
-  price: number;
+  price: number; // Customer price
   extended_at: string;
   sort_order: number;
 }
@@ -20,6 +20,7 @@ interface ExtensionInfoProps {
   extensions: ExtensionService[];
   totalDuration: number;
   totalPrice: number;
+  staffCommissionRate?: number; // Add commission rate back
   className?: string;
 }
 
@@ -29,6 +30,7 @@ export function ExtensionInfo({
   extensions,
   totalDuration,
   totalPrice,
+  staffCommissionRate = 30, // Default 30% commission
   className = ""
 }: ExtensionInfoProps) {
   if (extensions.length === 0) {
@@ -36,8 +38,8 @@ export function ExtensionInfo({
   }
 
   const totalExtensionTime = extensions.reduce((sum, ext) => sum + ext.duration, 0);
-  // Calculate extension earnings directly from extension services (fixed amounts)
-  const totalExtensionPrice = extensions.reduce((sum, ext) => sum + (ext.price || 0), 0);
+  // Calculate staff earnings from total_staff_earnings - original_staff_earnings
+  const totalExtensionPrice = totalPrice - originalPrice;
 
   return (
     <div className={`bg-amber-50 border border-amber-200 rounded-lg p-4 ${className}`}>
@@ -103,7 +105,7 @@ export function ExtensionInfo({
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-amber-700 font-medium">+{extension.duration} นาที</span>
-                  <span className="text-green-600 font-medium">+฿{(extension.price || 0).toLocaleString()}</span>
+                  <span className="text-green-600 font-medium">+฿{Math.round((extension.price || 0) * (staffCommissionRate / 100)).toLocaleString()}</span>
                 </div>
               </div>
             ))}
@@ -112,7 +114,7 @@ export function ExtensionInfo({
 
       {/* Note */}
       <div className="mt-3 p-2 bg-amber-100 rounded text-xs text-amber-700">
-        💡 รายได้ที่แสดงเป็นจำนวนคงที่ที่แอดมินกำหนดไว้สำหรับแต่ละบริการ
+        💡 รายได้ที่แสดงเป็นส่วนแบ่ง {staffCommissionRate}% จากราคาการเพิ่มเวลา
       </div>
     </div>
   );

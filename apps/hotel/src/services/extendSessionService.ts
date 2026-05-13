@@ -67,10 +67,10 @@ export async function extendBookingSession(
       request.additionalDuration
     );
 
-    // 4.5. Calculate fixed staff earnings for extension
+    // 4.5. Calculate staff earnings for extension (using commission rate)
     const staffEarnings = await calculateStaffExtensionEarnings(
       booking,
-      request.additionalDuration
+      extensionPrice
     );
 
     // 5. Create extension service record
@@ -337,16 +337,16 @@ function calculateServicePriceWithDiscount(service: any, duration: number, hotel
 }
 
 /**
- * Calculate staff earnings for extension service (fixed amount system)
+ * Calculate staff earnings for extension service (same method as regular service)
  */
 async function calculateStaffExtensionEarnings(
   booking: BookingWithExtensions,
-  additionalDuration: number
+  extensionPrice: number
 ): Promise<number> {
-  // Get service to determine fixed staff earnings
+  // Get service commission rate (same as regular service calculation)
   const { data: service } = await supabase
     .from('services')
-    .select('price_60, price_90, price_120')
+    .select('staff_commission_rate')
     .eq('id', booking.booking_services[0].service_id)
     .single();
 
@@ -357,25 +357,14 @@ async function calculateStaffExtensionEarnings(
     );
   }
 
-  // Calculate staff earnings based on admin-set customer prices (fixed amounts)
-  let staffEarnings: number;
+  // Calculate staff earnings using commission rate (same as regular jobs)
+  const commissionRate = Number(service.staff_commission_rate) || 0.30; // Default 30% if not set
+  const staffEarnings = Math.round(extensionPrice * commissionRate);
 
-  if (additionalDuration === 60 && service.price_60) {
-    staffEarnings = service.price_60;
-  } else if (additionalDuration === 90 && service.price_90) {
-    staffEarnings = service.price_90;
-  } else if (additionalDuration === 120 && service.price_120) {
-    staffEarnings = service.price_120;
-  } else {
-    // Fallback: proportional calculation from 60-minute base
-    const baseEarnings = service.price_60 || 0;
-    staffEarnings = Math.round((baseEarnings / 60) * additionalDuration);
-  }
-
-  console.log('💰 Extension Staff Fixed Earnings:', {
-    additionalDuration,
-    staffEarnings,
-    service: `${service.price_60}/${service.price_90}/${service.price_120}`
+  console.log('💰 Extension Staff Earnings (Commission-based):', {
+    extensionPrice,
+    commissionRate,
+    staffEarnings
   });
 
   return staffEarnings;

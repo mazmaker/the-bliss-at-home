@@ -413,6 +413,7 @@ function StaffJobDetail() {
           extensions={extensionServices}
           totalDuration={totalDuration}
           totalPrice={totalPrice}
+          staffCommissionRate={30} // Use 30% as standard commission rate
           className=""
         />
       )}
