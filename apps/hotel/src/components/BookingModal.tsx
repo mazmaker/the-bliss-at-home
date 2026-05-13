@@ -15,6 +15,9 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useBookingStore } from '../hooks/useBookingStore'
+import { useHotelContext } from '../hooks/useHotelContext'
+import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
+import { PriceCalculator } from '../utils/priceCalculator'
 import ServiceModeSelector from './ServiceModeSelector'
 import ServiceSelector from './ServiceSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
@@ -88,6 +91,9 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
     isConfigurationComplete
   } = useBookingStore()
 
+  // Get hotel discount information
+  const { getDiscountAmount } = useHotelContext()
+
   // Fetch services
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services'],
@@ -101,11 +107,17 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
       resetAll()
       // If opened with a specific service, auto-select it
       if (service) {
+        // Calculate price with hotel discount
+        const hotelDiscountAmount = getDiscountAmount()
+        const calculatedPrice = hotelDiscountAmount > 0
+          ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, service.duration, hotelDiscountAmount, 'single')
+          : PriceCalculator.calculateServicePrice(service, service.duration, 'single')
+
         const selection: ServiceSelection = {
           id: `${service.id}-${Date.now()}`,
           service,
           duration: service.duration,
-          price: service.hotel_price || service.base_price,
+          price: calculatedPrice,
           recipientIndex: 0,
           recipientName: '',
           sortOrder: 0
@@ -113,7 +125,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
         addServiceSelection(selection)
       }
     }
-  }, [isOpen, service, resetAll, addServiceSelection])
+  }, [isOpen, service, resetAll, addServiceSelection, getDiscountAmount])
 
   // Time slots
   const timeSlots = [

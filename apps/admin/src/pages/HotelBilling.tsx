@@ -478,7 +478,7 @@ export default function HotelBilling() {
             refetch()
           }}
           hotelId={id!}
-          commissionRate={Number(hotel.discount_rate || hotel.commission_rate)}
+          commissionRate={Number(hotel.commission_rate)}
           invoices={invoices || []}
           bookings={bookings || []}
         />

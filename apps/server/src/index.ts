@@ -110,6 +110,109 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 
+// Dev endpoint to trigger job reminders manually
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/dev/trigger-job-reminders', async (_req, res) => {
+    try {
+      console.log('🔔 [Dev] Manually triggering job reminders...')
+      await reminderService.sendScheduledReminders()
+      res.json({ success: true, message: 'Job reminders triggered successfully' })
+    } catch (err) {
+      console.error('[Dev] Error triggering job reminders:', err)
+      res.status(500).json({ success: false, error: String(err) })
+    }
+  })
+}
+
+// Dev endpoint to test LINE notification
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/dev/test-line', async (req, res) => {
+    try {
+      const { line_user_id } = req.body
+      if (!line_user_id) {
+        return res.status(400).json({ success: false, error: 'line_user_id required' })
+      }
+
+      const { lineService } = await import('./services/lineService.js')
+      const success = await lineService.pushMessage(line_user_id, [{
+        type: 'text',
+        text: '🧪 ทดสอบ LINE Notification\nระบบแจ้งเตือนทำงานปกติ!'
+      }])
+
+      res.json({
+        success,
+        message: success ? 'LINE test message sent!' : 'LINE test failed - check server logs'
+      })
+    } catch (err) {
+      console.error('[Dev] Error testing LINE:', err)
+      res.status(500).json({ success: false, error: String(err) })
+    }
+  })
+}
+
+// Dev endpoint to test new job notification with specific link
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/dev/test-job-notification', async (req, res) => {
+    try {
+      const { line_user_id, job_id } = req.body
+      if (!line_user_id || !job_id) {
+        return res.status(400).json({ success: false, error: 'line_user_id and job_id required' })
+      }
+
+      const { lineService } = await import('./services/lineService.js')
+
+      // Sample job data
+      const jobData = {
+        serviceName: 'Thai Massage 90 นาทีThai Massage 90 นาที',
+        scheduledDate: '2026-05-14',
+        scheduledTime: '14:00',
+        address: '123 ถนนสุขุมวิท กรุงเทพฯ',
+        staffEarnings: 1500,
+        durationMinutes: 90,
+        jobIds: [job_id],
+        isRescheduled: false
+      }
+
+      const success = await lineService.sendNewJobToStaff([line_user_id], jobData)
+
+      res.json({
+        success,
+        message: success ? 'New job notification sent with job-specific link!' : 'Failed to send notification',
+        jobLink: `${process.env.STAFF_LIFF_URL}/staff/jobs/${job_id}`
+      })
+    } catch (err) {
+      console.error('[Dev] Error testing job notification:', err)
+      res.status(500).json({ success: false, error: String(err) })
+    }
+  })
+}
+
+// Dev endpoint for mock payment (when OMISE keys not available)
+if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_MOCK_PAYMENT === 'true') {
+  app.post('/api/payments/mock-success', async (req, res) => {
+    try {
+      const { booking_id, amount } = req.body
+
+      // Simulate successful payment
+      console.log(`🧪 [Mock Payment] Simulating payment success for booking ${booking_id}, amount: ฿${amount}`)
+
+      // You can add logic here to update booking status to 'confirmed'
+      // and create payment record if needed
+
+      res.json({
+        success: true,
+        payment_id: `mock_payment_${Date.now()}`,
+        status: 'successful',
+        amount: amount,
+        message: 'Mock payment successful - for development only'
+      })
+    } catch (err) {
+      console.error('[Mock Payment] Error:', err)
+      res.status(500).json({ success: false, error: String(err) })
+    }
+  })
+}
+
 // Dev endpoint to trigger payout cutoff manually
 app.post('/api/dev/trigger-payout-cutoff', async (req: Request, res: Response) => {
   try {
@@ -130,6 +233,178 @@ app.post('/api/dev/trigger-points-expiry', async (req: Request, res: Response) =
     const expiryResult = await processPointsExpiry(supabase as any)
     const warningResult = await processExpiryWarnings(supabase as any)
     res.json({ success: true, ...expiryResult, warningsSent: warningResult.warningCount })
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// Dev endpoint to check hotels discount data and impact
+app.post('/api/dev/check-hotels-discount', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabaseClient()
+
+    // ดึงข้อมูล hotels พร้อม discount_rate และ discount_amount ปัจจุบัน
+    const { data: hotels, error } = await supabase
+      .from('hotels')
+      .select('id, name_th, name_en, discount_rate, discount_amount, commission_rate, status')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    // วิเคราะห์ข้อมูล hotels
+    const totalHotels = hotels?.length || 0
+    const hotelsWithDiscount = hotels?.filter(h => h.discount_rate > 0) || []
+    const discountRates = hotelsWithDiscount.map(h => h.discount_rate)
+    const avgDiscountRate = discountRates.length > 0
+      ? discountRates.reduce((a, b) => a + b, 0) / discountRates.length
+      : 0
+
+    // ตรวจสอบ bookings ที่ยังไม่เสร็จ
+    const { data: pendingBookings } = await supabase
+      .from('bookings')
+      .select('id, hotel_id, final_price, discount_amount, status, created_at, hotels!inner(name_th, discount_rate)')
+      .in('status', ['pending', 'confirmed'])
+      .not('hotel_id', 'is', null)
+      .order('created_at', { ascending: false })
+
+    const totalPendingBookings = pendingBookings?.length || 0
+    const affectedBookings = pendingBookings?.filter(b => (b.hotels as any)?.discount_rate > 0) || []
+
+    res.json({
+      success: true,
+      analysis: {
+        totalHotels,
+        hotelsWithDiscount: hotelsWithDiscount.length,
+        hotelsWithoutDiscount: totalHotels - hotelsWithDiscount.length,
+        avgDiscountRate: Math.round(avgDiscountRate * 100) / 100,
+        minDiscountRate: Math.min(...discountRates) || 0,
+        maxDiscountRate: Math.max(...discountRates) || 0,
+        // ข้อมูล bookings
+        totalPendingBookings,
+        affectedBookings: affectedBookings.length,
+        totalPendingValue: pendingBookings?.reduce((sum, b) => sum + (b.final_price || 0), 0) || 0
+      },
+      hotels: hotels?.map(h => ({
+        id: h.id,
+        name: h.name_th,
+        discount_rate: h.discount_rate,
+        status: h.status
+      })) || [],
+      impactExamples: [
+        {
+          servicePrice: 2000,
+          discounts: discountRates.map(rate => ({
+            percentage: rate,
+            oldDiscount: Math.round(2000 * rate / 100),
+            suggestedNewDiscount: Math.round(2000 * rate / 100) // แนะนำให้ใช้ค่าเดิม
+          }))
+        },
+        {
+          servicePrice: 5000,
+          discounts: discountRates.map(rate => ({
+            percentage: rate,
+            oldDiscount: Math.round(5000 * rate / 100),
+            suggestedNewDiscount: Math.min(Math.round(5000 * rate / 100), 1000) // จำกัดไม่เกิน 1,000
+          }))
+        }
+      ]
+    })
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// Dev endpoint to force migration via SQL function
+app.post('/api/dev/force-migration', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabaseClient()
+    const { action, sql } = req.body
+
+    if (action === 'create_function') {
+      console.log('🔥 Creating temp function for DDL...')
+
+      // Create temp function that can run ALTER TABLE
+      const functionSQL = `
+        CREATE OR REPLACE FUNCTION temp_add_discount_amount()
+        RETURNS text AS $func$
+        BEGIN
+          -- Check if column exists
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'hotels' AND column_name = 'discount_amount'
+          ) THEN
+            -- Add the column
+            EXECUTE 'ALTER TABLE hotels ADD COLUMN discount_amount DECIMAL(10,2) DEFAULT 0 NOT NULL';
+            RETURN 'SUCCESS: Column discount_amount added';
+          ELSE
+            RETURN 'INFO: Column discount_amount already exists';
+          END IF;
+        END;
+        $func$ LANGUAGE plpgsql SECURITY DEFINER;
+      `
+
+      // Try to execute via raw SQL (this might not work with Supabase client)
+      console.log('📝 Function SQL created')
+
+      // Attempt to call the function after creation
+      const { data: result, error } = await supabase.rpc('temp_add_discount_amount')
+
+      if (error) {
+        console.log('⚠️ Direct function call failed:', error.message)
+        return res.json({
+          success: false,
+          error: error.message,
+          solution: 'Manual Dashboard execution required',
+          dashboardUrl: 'https://supabase.com/dashboard/project/rbdvlfriqjnwpxmmgisf/sql',
+          sql: 'ALTER TABLE hotels ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(10,2) DEFAULT 0 NOT NULL;'
+        })
+      }
+
+      res.json({
+        success: true,
+        result,
+        message: 'Migration completed via temp function'
+      })
+
+    } else {
+      res.status(400).json({ success: false, error: 'Invalid action' })
+    }
+
+  } catch (err: any) {
+    console.error('🚨 Force migration error:', err.message)
+    res.json({
+      success: false,
+      error: err.message,
+      finalSolution: {
+        message: 'Use Supabase Dashboard SQL Editor',
+        url: 'https://supabase.com/dashboard/project/rbdvlfriqjnwpxmmgisf/sql',
+        sql: 'ALTER TABLE hotels ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(10,2) DEFAULT 0 NOT NULL;'
+      }
+    })
+  }
+})
+
+// Dev endpoint to check if migration was successful
+app.post('/api/dev/check-migration', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabaseClient()
+
+    // Check if discount_amount column exists
+    const { data: checkData } = await supabase
+      .from('hotels')
+      .select('*')
+      .limit(1)
+      .single()
+
+    const hasDiscountAmount = checkData && 'discount_amount' in checkData
+
+    res.json({
+      success: true,
+      migrationStatus: hasDiscountAmount ? 'completed' : 'pending',
+      columnsFound: checkData ? Object.keys(checkData) : [],
+      sampleData: checkData
+    })
+
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message })
   }

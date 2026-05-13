@@ -23,6 +23,7 @@ export interface HotelData {
   bank_account_name?: string
   commission_rate: number
   discount_rate?: number
+  discount_amount?: number
   status: 'active' | 'inactive' | 'pending' | 'suspended' | 'banned'
   // Banking and tax information fields
   tax_id?: string | null
@@ -41,7 +42,7 @@ export interface HotelData {
 const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at, credit_days, credit_start_date, credit_cycle_day')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, discount_amount, status, created_at, updated_at, credit_days, credit_start_date, credit_cycle_day')
     .eq('hotel_slug', slug)
     .single()
 
@@ -68,7 +69,7 @@ const fetchHotelBySlug = async (slug: string): Promise<HotelData | null> => {
 const fetchAllHotels = async (): Promise<HotelData[]> => {
   const { data, error } = await supabase
     .from('hotels')
-    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, status, created_at, updated_at, credit_days, credit_start_date, credit_cycle_day')
+    .select('id, name_th, name_en, hotel_slug, contact_person, phone, email, address, website, latitude, longitude, tax_id, bank_name, bank_account_number, bank_account_name, commission_rate, discount_rate, discount_amount, status, created_at, updated_at, credit_days, credit_start_date, credit_cycle_day')
     .eq('status', 'active')
     .order('name_th', { ascending: true })
 
@@ -127,17 +128,33 @@ export const useHotelContext = () => {
     getHotelName: () => hotelData?.name_th || 'Unknown Hotel',
     getHotelNameEn: () => hotelData?.name_en || 'Unknown Hotel',
     getCommissionRate: () => {
-      // ✅ แก้ไข: ใช้ discount_rate เป็นหลัก แม้จะเป็น 0 ก็ใช้ได้
-      const rate = hotelData?.discount_rate !== null && hotelData?.discount_rate !== undefined
-        ? hotelData.discount_rate
-        : (hotelData?.commission_rate || 0);
+      // ✅ Commission rate สำหรับการคำนวณค่าธรรมเนียม
+      return hotelData?.commission_rate || 0;
+    },
+    getDiscountAmount: () => {
+      // ✅ ใช้ discount_amount เป็นหลัก, fallback ไป discount_rate แปลงเป็นเปอร์เซ็นต์
+      if (hotelData?.discount_amount !== null && hotelData?.discount_amount !== undefined && hotelData.discount_amount > 0) {
+        return hotelData.discount_amount; // จำนวนเงินคงที่ (บาท)
+      }
+
+      // Fallback: ถ้ายังไม่มี discount_amount ให้ใช้ discount_rate (backward compatibility)
+      if (hotelData?.discount_rate !== null && hotelData?.discount_rate !== undefined && hotelData.discount_rate > 0) {
+        // สำหรับ fallback ให้ return 0 เพื่อให้ระบบใช้ percentage calculation แทน
+        console.log('🔄 Falling back to percentage discount:', hotelData.discount_rate);
+        return 0; // จะใช้ getDiscountRate() แทน
+      }
+
       console.log('🔍 Hotel discount debug:', {
         hotelSlug: hotelData?.hotel_slug,
+        discount_amount: hotelData?.discount_amount,
         discount_rate: hotelData?.discount_rate,
-        commission_rate: hotelData?.commission_rate,
-        finalRate: rate
+        using: 'no_discount'
       });
-      return rate;
+      return 0;
+    },
+    getDiscountRate: () => {
+      // ✅ สำหรับ backward compatibility เท่านั้น
+      return hotelData?.discount_rate || 0;
     },
     getHotelSlug: () => hotelData?.hotel_slug || 'unknown-hotel',
     // Available hotels list (now from database)

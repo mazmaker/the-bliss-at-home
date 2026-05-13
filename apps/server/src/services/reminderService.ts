@@ -70,23 +70,11 @@ class ReminderService {
 
     console.log(`🔍 [Reminder] Checking ${type} reminders for timeframe:`, targetTime)
 
-    // Query jobs ที่ต้องการ reminder
+    // Query basic jobs first
     const { data: jobs, error } = await supabase
       .from('jobs')
-      .select(`
-        id, scheduled_date, scheduled_time, duration,
-        staff:staff_id!inner (
-          id, name_th, profile_id,
-          profile:profiles!inner (id, line_user_id)
-        ),
-        booking:booking_id!inner (
-          customer:customers (full_name),
-          service:services (name_th),
-          address, hotel:hotels (name_th),
-          hotel_room_number
-        )
-      `)
-      .eq('status', 'accepted')
+      .select('id, scheduled_date, scheduled_time, staff_id, booking_id')
+      .eq('status', 'confirmed')
       .gte('scheduled_date', targetTime.startDate)
       .lte('scheduled_date', targetTime.endDate)
       .not('staff_id', 'is', null)
@@ -101,14 +89,44 @@ class ReminderService {
       return []
     }
 
-    // กรอง jobs ที่ยังไม่ได้ส่ง reminder type นี้
+    console.log(`📋 [Reminder] Found ${jobs.length} ${type} jobs to check`)
+
+    // กรอง jobs ที่ยังไม่ได้ส่ง reminder type นี้ และดึงข้อมูลเพิ่มเติม
     const filteredJobs: JobToRemind[] = []
 
     for (const job of jobs) {
       const reminderSent = await this.hasReminderBeenSent(job.id, type)
       if (!reminderSent) {
-        const staff = job.staff as any
-        const booking = job.booking as any
+        // Get staff info
+        const { data: staff } = await supabase
+          .from('staff')
+          .select('id, name_th, profile_id')
+          .eq('id', job.staff_id)
+          .single()
+
+        if (!staff) continue
+
+        // Get profile info for LINE user ID
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('line_user_id')
+          .eq('id', staff.profile_id)
+          .single()
+
+        // Get booking info
+        const { data: booking } = await supabase
+          .from('bookings')
+          .select(`
+            address, hotel_room_number, hotel_id, duration,
+            customer:customer_id (full_name),
+            service:service_id (name_th),
+            hotel:hotel_id (name_th)
+          `)
+          .eq('id', job.booking_id)
+          .single()
+
+        if (!booking) continue
+
         const location = this.buildLocationText(booking)
 
         filteredJobs.push({
@@ -116,13 +134,13 @@ class ReminderService {
           staffId: staff.id,
           staffName: staff.name_th,
           profileId: staff.profile_id,
-          lineUserId: staff.profile?.line_user_id || null,
+          lineUserId: profile?.line_user_id || null,
           customerName: booking.customer?.full_name || 'ลูกค้า',
           serviceName: booking.service?.name_th || 'บริการ',
           scheduledDate: job.scheduled_date,
           scheduledTime: job.scheduled_time,
           location,
-          duration: job.duration || 60
+          duration: booking.duration || 60
         })
       }
     }
@@ -197,7 +215,9 @@ class ReminderService {
     const message = this.buildLineMessage(job, type)
 
     try {
-      await lineService.sendMessage([job.lineUserId], {
+      const staffAppUrl = process.env.STAFF_LIFF_URL || 'https://hollywood-camps-permissions-leave.trycloudflare.com'
+
+      await lineService.pushMessage(job.lineUserId, [{
         type: 'template',
         altText: message.altText,
         template: {
@@ -210,8 +230,8 @@ class ReminderService {
           actions: [
             {
               type: 'uri',
-              label: '📱 เปิดแอพ Staff',
-              uri: 'https://staff.theblissathome.com'
+              label: '📱 ดูรายละเอียดงาน',
+              uri: `${staffAppUrl}/jobs/${job.jobId}`
             },
             {
               type: 'uri',
@@ -220,7 +240,7 @@ class ReminderService {
             }
           ]
         }
-      })
+      }])
     } catch (error) {
       console.error('[Reminder] Failed to send LINE notification:', error)
       // ไม่ throw error เพราะ in-app notification ยังส่งสำเร็จ

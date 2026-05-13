@@ -319,7 +319,7 @@ export default function HotelDetail() {
               {/* ส่วนลด */}
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {hotel.discount_rate || 0}%
+                  ฿{Number((hotel as any).discount_amount || 0).toLocaleString()}
                 </div>
                 <p className="text-sm text-gray-500">ส่วนลด</p>
               </div>

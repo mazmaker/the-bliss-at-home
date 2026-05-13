@@ -25,6 +25,7 @@ interface MonthlyBooking {
   customer_notes?: string
   staff_notes?: string
   hotel_discount_rate?: number
+  hotel_discount_amount?: number
   created_at: string
 }
 
@@ -56,7 +57,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   // Get hotel discount rate first
   const { data: hotelData, error: hotelError } = await supabase
     .from('hotels')
-    .select('discount_rate, commission_rate')
+    .select('discount_rate, discount_amount, commission_rate')
     .eq('id', hotelId)
     .single()
 
@@ -141,7 +142,11 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   console.log('Raw booking data:', data)
   console.log('Previous unpaid bills data:', previousUnpaidBillsData)
   console.log('Current month bill data:', currentMonthBillData)
-  console.log('Hotel discount rate:', hotelData.discount_rate || hotelData.commission_rate)
+  console.log('Hotel discount data:', {
+    discount_amount: hotelData.discount_amount,
+    discount_rate: hotelData.discount_rate,
+    commission_rate: hotelData.commission_rate
+  })
 
   // Helper function to extract guest name from customer_notes
   const parseGuestName = (customerNotes?: string | null): string => {
@@ -152,7 +157,8 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     return guestMatch?.[1]?.trim() || 'ไม่ระบุชื่อ'
   }
 
-  // Get hotel discount rate first
+  // Get hotel discount information (prefer discount_amount)
+  const hotelDiscountAmount = hotelData?.discount_amount || 0
   const hotelDiscountRate = hotelData?.discount_rate || hotelData?.commission_rate || 0
 
   // Debug: Check if all bookings are from the same hotel
@@ -211,6 +217,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
       customer_notes: booking.customer_notes,
       staff_notes: booking.staff_notes,
       hotel_discount_rate: hotelDiscountRate,
+      hotel_discount_amount: hotelDiscountAmount,
       created_at: booking.created_at
     }
   })
@@ -784,6 +791,9 @@ function MonthlyBill() {
                     สถานะ
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    ส่วนลด
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                     รายได้โรงแรม
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
@@ -857,8 +867,18 @@ function MonthlyBill() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
+                        <div className="text-base font-bold text-red-600">
+                          -฿{booking.discount_amount.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-stone-500">
+                          ส่วนลด
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm">
                         <div className="text-base font-bold text-green-600">
-                          ฿{booking.discount_amount.toLocaleString()}
+                          ฿{(booking.base_price - booking.discount_amount).toLocaleString()}
                         </div>
                         <div className="text-xs text-stone-500">
                           รายได้โรงแรม
@@ -1105,8 +1125,12 @@ function MonthlyBill() {
                       <span className="font-medium">฿{selectedBookingForDetail.base_price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-stone-600">ส่วนลด</span>
+                      <span className="font-medium text-red-600">-฿{selectedBookingForDetail.discount_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-stone-600">รายได้โรงแรม</span>
-                      <span className="font-medium text-green-600">฿{selectedBookingForDetail.discount_amount.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">฿{(selectedBookingForDetail.base_price - selectedBookingForDetail.discount_amount).toLocaleString()}</span>
                     </div>
                     <div className="border-t border-stone-200 pt-2 flex justify-between">
                       <span className="font-semibold text-stone-900">ราคาสุดท้าย</span>

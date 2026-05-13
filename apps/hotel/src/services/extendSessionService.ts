@@ -67,6 +67,12 @@ export async function extendBookingSession(
       request.additionalDuration
     );
 
+    // 4.5. Calculate fixed staff earnings for extension
+    const staffEarnings = await calculateStaffExtensionEarnings(
+      booking,
+      request.additionalDuration
+    );
+
     // 5. Create extension service record
     const newBookingService = await createExtensionService({
       bookingId: request.bookingId,
@@ -78,16 +84,19 @@ export async function extendBookingSession(
       originalBookingServiceId: booking.booking_services[0].id
     });
 
-    // 6. Calculate new totals
+    // 6. Update job total_staff_earnings
+    await updateJobStaffEarnings(request.bookingId, staffEarnings);
+
+    // 7. Calculate new totals
     const newTotalPrice = booking.final_price + extensionPrice;
     const originalDuration = booking.booking_services
       .reduce((sum, service) => sum + service.duration, 0);
     const newTotalDuration = originalDuration + request.additionalDuration;
 
-    // 7. Calculate estimated end time
+    // 8. Calculate estimated end time
     const estimatedEndTime = calculateEstimatedEndTime(booking, request.additionalDuration);
 
-    // 8. Send notifications (non-blocking)
+    // 9. Send notifications (non-blocking)
     notifyStaffAboutExtension(
       staffAssignment.assignedStaffId,
       request.bookingId,
@@ -163,14 +172,15 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
     );
   }
 
-  // Get hotel discount rate
+  // Get hotel discount information (prefer discount_amount)
   const { data: hotel } = await supabase
     .from('hotels')
-    .select('discount_rate')
+    .select('discount_amount, discount_rate')
     .eq('id', booking.hotel_id)
     .single();
 
-  const hotelDiscountRate = hotel?.discount_rate || 0;
+  const hotelDiscountAmount = hotel?.discount_amount || 0;
+  const hotelDiscountRate = hotel?.discount_rate || 0; // backward compatibility
 
   const currentTotalDuration = booking.booking_services
     .reduce((sum, bs) => sum + bs.duration, 0);
@@ -180,14 +190,17 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
 
   return availableDurations
     .filter(duration => duration > 0) // Only positive durations
-    .map(duration => ({
-      duration,
-      price: calculateServicePrice(service, duration, hotelDiscountRate),
-      totalNewDuration: currentTotalDuration + duration,
-      totalNewPrice: booking.final_price + calculateServicePrice(service, duration, hotelDiscountRate),
-      isAvailable: (currentTotalDuration + duration) <= EXTENSION_BUSINESS_RULES.MAX_SESSION_DURATION,
-      label: `ขยายเป็น ${currentTotalDuration + duration} นาที (+${duration} นาที)`
-    }))
+    .map(duration => {
+      const extensionPrice = calculateServicePriceWithDiscount(service, duration, hotelDiscountAmount, hotelDiscountRate);
+      return {
+        duration,
+        price: extensionPrice,
+        totalNewDuration: currentTotalDuration + duration,
+        totalNewPrice: booking.final_price + extensionPrice,
+        isAvailable: (currentTotalDuration + duration) <= EXTENSION_BUSINESS_RULES.MAX_SESSION_DURATION,
+        label: `ขยายเป็น ${currentTotalDuration + duration} นาที (+${duration} นาที)`
+      };
+    })
     .filter(option => option.isAvailable);
 }
 
@@ -276,45 +289,145 @@ async function calculateExtensionPrice(
     );
   }
 
-  // Get hotel discount rate
+  // Get hotel discount information (prefer discount_amount)
   const { data: hotel } = await supabase
     .from('hotels')
-    .select('discount_rate')
+    .select('discount_amount, discount_rate')
     .eq('id', booking.hotel_id)
     .single();
 
-  const hotelDiscountRate = hotel?.discount_rate || 0;
+  const hotelDiscountAmount = hotel?.discount_amount || 0;
+  const hotelDiscountRate = hotel?.discount_rate || 0; // backward compatibility
 
-  return calculateServicePrice(service, additionalDuration, hotelDiscountRate);
+  return calculateServicePriceWithDiscount(service, additionalDuration, hotelDiscountAmount, hotelDiscountRate);
 }
 
 /**
  * Calculate service price for given duration (with hotel discount)
+ * Updated to use new discount_amount system
  */
-function calculateServicePrice(service: any, duration: number, hotelDiscountRate: number = 0): number {
-  let basePrice: number;
+function calculateServicePriceWithDiscount(service: any, duration: number, hotelDiscountAmount: number = 0, hotelDiscountRate: number = 0): number {
+  // Get original price for this duration using admin-set prices
+  let originalPrice: number;
 
-  // Get price based on duration
-  switch(duration) {
-    case 60:
-      basePrice = service.price_60 || (service.base_price * 0.5);
-      break;
-    case 90:
-      basePrice = service.price_90 || (service.base_price * 0.75);
-      break;
-    case 120:
-      basePrice = service.price_120 || service.base_price;
-      break;
-    default:
-      // Calculate proportional price
-      basePrice = (service.base_price / service.duration) * duration;
+  if (duration === 60 && service.price_60) {
+    originalPrice = service.price_60;
+  } else if (duration === 90 && service.price_90) {
+    originalPrice = service.price_90;
+  } else if (duration === 120 && service.price_120) {
+    originalPrice = service.price_120;
+  } else {
+    // Fallback: calculate proportional price
+    const baseRate = service.hotel_price / service.duration;
+    originalPrice = Math.round(baseRate * duration);
   }
 
-  // Apply hotel discount (using actual hotel discount rate, fallback to 0%)
-  const discountMultiplier = 1 - (hotelDiscountRate / 100);
-  const hotelRate = Math.floor(basePrice * discountMultiplier);
+  // Apply discount - prefer discount_amount (fixed baht) over discount_rate (percentage)
+  if (hotelDiscountAmount > 0) {
+    // New system: fixed baht discount
+    const actualDiscount = Math.min(hotelDiscountAmount, originalPrice);
+    return Math.round(originalPrice - actualDiscount);
+  } else if (hotelDiscountRate > 0) {
+    // Legacy system: percentage discount (backward compatibility)
+    const percentDiscount = originalPrice * (hotelDiscountRate / 100);
+    return Math.round(originalPrice - percentDiscount);
+  }
 
-  return hotelRate;
+  return originalPrice;
+}
+
+/**
+ * Calculate staff earnings for extension service (fixed amount system)
+ */
+async function calculateStaffExtensionEarnings(
+  booking: BookingWithExtensions,
+  additionalDuration: number
+): Promise<number> {
+  // Get service to determine fixed staff earnings
+  const { data: service } = await supabase
+    .from('services')
+    .select('price_60, price_90, price_120')
+    .eq('id', booking.booking_services[0].service_id)
+    .single();
+
+  if (!service) {
+    throw new ExtensionError(
+      ExtensionErrorCode.DATABASE_ERROR,
+      'ไม่พบข้อมูลบริการสำหรับคำนวณรายได้ staff'
+    );
+  }
+
+  // Calculate staff earnings based on admin-set customer prices (fixed amounts)
+  let staffEarnings: number;
+
+  if (additionalDuration === 60 && service.price_60) {
+    staffEarnings = service.price_60;
+  } else if (additionalDuration === 90 && service.price_90) {
+    staffEarnings = service.price_90;
+  } else if (additionalDuration === 120 && service.price_120) {
+    staffEarnings = service.price_120;
+  } else {
+    // Fallback: proportional calculation from 60-minute base
+    const baseEarnings = service.price_60 || 0;
+    staffEarnings = Math.round((baseEarnings / 60) * additionalDuration);
+  }
+
+  console.log('💰 Extension Staff Fixed Earnings:', {
+    additionalDuration,
+    staffEarnings,
+    service: `${service.price_60}/${service.price_90}/${service.price_120}`
+  });
+
+  return staffEarnings;
+}
+
+/**
+ * Update job total_staff_earnings with extension earnings (fixed amount system)
+ */
+async function updateJobStaffEarnings(
+  bookingId: string,
+  additionalEarnings: number
+): Promise<void> {
+  // Get the job associated with this booking
+  const { data: job } = await supabase
+    .from('jobs')
+    .select('id, staff_earnings, total_staff_earnings')
+    .eq('booking_id', bookingId)
+    .single();
+
+  if (!job) {
+    throw new ExtensionError(
+      ExtensionErrorCode.DATABASE_ERROR,
+      'ไม่พบข้อมูล job สำหรับอัปเดต staff earnings'
+    );
+  }
+
+  // Calculate new total earnings (base + extensions)
+  const baseEarnings = job.staff_earnings || 0;
+  const currentTotalEarnings = job.total_staff_earnings || baseEarnings;
+  const newTotalEarnings = currentTotalEarnings + additionalEarnings;
+
+  // Update total_staff_earnings in jobs table
+  const { error } = await supabase
+    .from('jobs')
+    .update({ total_staff_earnings: newTotalEarnings })
+    .eq('id', job.id);
+
+  if (error) {
+    throw new ExtensionError(
+      ExtensionErrorCode.DATABASE_ERROR,
+      `ไม่สามารถอัปเดต staff earnings ได้: ${error.message}`
+    );
+  }
+
+  console.log('💰 Updated Staff Earnings (Fixed Amount):', {
+    bookingId,
+    jobId: job.id,
+    baseEarnings,
+    currentTotalEarnings,
+    additionalEarnings,
+    newTotalEarnings
+  });
 }
 
 /**

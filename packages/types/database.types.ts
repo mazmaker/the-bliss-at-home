@@ -677,6 +677,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           discount_rate: number
+          discount_amount: number
           email: string
           hotel_slug: string | null
           id: string
@@ -709,6 +710,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           discount_rate?: number
+          discount_amount?: number
           email: string
           hotel_slug?: string | null
           id?: string
@@ -741,6 +743,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           discount_rate?: number
+          discount_amount?: number
           email?: string
           hotel_slug?: string | null
           id?: string

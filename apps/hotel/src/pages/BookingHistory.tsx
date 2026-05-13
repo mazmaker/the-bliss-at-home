@@ -9,6 +9,7 @@ import {
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
 import { ExtendSessionModal } from '../components/ExtendSessionModal'
+import { ExtensionInfo } from '../components/ExtensionInfo'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
@@ -26,6 +27,8 @@ interface SimpleBooking {
   booking_time: string
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
   payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
+  base_price: number // เพิ่ม base_price
+  discount_amount: number // เพิ่ม discount_amount
   final_price: number
   customer_notes: string | null
   staff_name: string | null
@@ -109,6 +112,8 @@ const fetchSimpleBookings = async (hotelId: string): Promise<SimpleBooking[]> =>
       duration,
       status,
       payment_status,
+      base_price,
+      discount_amount,
       final_price,
       customer_notes,
       recipient_count,
@@ -138,6 +143,8 @@ const fetchSimpleBookings = async (hotelId: string): Promise<SimpleBooking[]> =>
     duration: booking.duration,
     status: booking.status,
     payment_status: booking.payment_status,
+    base_price: booking.base_price || booking.final_price, // fallback
+    discount_amount: booking.discount_amount || 0,
     final_price: booking.final_price,
     customer_notes: booking.customer_notes,
     staff_name: booking.staff?.name_th || null,
@@ -301,6 +308,43 @@ function BookingHistory() {
   const { data: availableServices = [] } = useQuery({
     queryKey: ['available-services'],
     queryFn: fetchAllServices,
+  })
+
+  // Query extension data for selected booking
+  const { data: extensionData } = useQuery({
+    queryKey: ['booking-extensions', selectedBooking?.id],
+    queryFn: async () => {
+      if (!selectedBooking?.id) return null
+
+      const { data, error } = await supabase
+        .from('booking_services')
+        .select('id, duration, price, is_extension, extended_at, sort_order')
+        .eq('booking_id', selectedBooking.id)
+        .order('sort_order')
+
+      if (error) {
+        console.warn('Extension query error:', error)
+        return null
+      }
+
+      const originalServices = data?.filter(s => !s.is_extension) || []
+      const extensionServices = data?.filter(s => s.is_extension) || []
+
+      const originalDuration = originalServices.reduce((sum, s) => sum + s.duration, 0)
+      const originalPrice = originalServices.reduce((sum, s) => sum + s.price, 0)
+      const totalDuration = data?.reduce((sum, s) => sum + s.duration, 0) || 0
+      const totalPrice = data?.reduce((sum, s) => sum + s.price, 0) || 0
+
+      return {
+        originalServices,
+        extensionServices,
+        originalDuration: originalDuration || selectedBooking.duration,
+        originalPrice: originalPrice || selectedBooking.base_price,
+        totalDuration,
+        totalPrice: totalPrice || selectedBooking.final_price
+      }
+    },
+    enabled: !!selectedBooking?.id
   })
 
 
@@ -875,7 +919,14 @@ function BookingHistory() {
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <div className="text-sm font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
+                        <div className="text-sm">
+                          <div className="font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
+                          {booking.discount_amount > 0 && (
+                            <div className="text-xs text-stone-500">
+                              ส่วนลด -฿{booking.discount_amount.toLocaleString()}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-3">
                         {getStatusBadge(booking.status)}
@@ -996,6 +1047,9 @@ function BookingHistory() {
                           </div>
                           <div className="text-right">
                             <p className="text-lg font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</p>
+                            {booking.discount_amount > 0 && (
+                              <p className="text-xs text-stone-500">ส่วนลด -฿{booking.discount_amount.toLocaleString()}</p>
+                            )}
                             <button className="text-xs text-amber-600 hover:text-amber-700">
                               <Eye className="w-4 h-4" />
                             </button>
@@ -1077,9 +1131,21 @@ function BookingHistory() {
                     <h3 className="font-semibold text-gray-900">รายละเอียดบริการ</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">
-                      ฿{selectedBooking.final_price.toLocaleString()}
-                    </p>
+                    <div className="space-y-1">
+                      {selectedBooking.discount_amount > 0 && (
+                        <>
+                          <div className="text-sm text-gray-500">
+                            ราคาเต็ม: ฿{selectedBooking.base_price.toLocaleString()}
+                          </div>
+                          <div className="text-sm text-red-600">
+                            ส่วนลด: -฿{selectedBooking.discount_amount.toLocaleString()}
+                          </div>
+                        </>
+                      )}
+                      <p className="text-2xl font-bold text-blue-600">
+                        ฿{selectedBooking.final_price.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -1140,6 +1206,18 @@ function BookingHistory() {
                   </div>
                 </div>
               </div>
+
+              {/* Extension Information */}
+              {extensionData && extensionData.extensionServices.length > 0 && (
+                <ExtensionInfo
+                  originalDuration={extensionData.originalDuration}
+                  originalPrice={extensionData.originalPrice}
+                  extensions={extensionData.extensionServices}
+                  totalDuration={extensionData.totalDuration}
+                  totalPrice={extensionData.totalPrice}
+                  className="mb-5"
+                />
+              )}
 
               {/* Payment Information */}
               <div className="bg-white border border-gray-200 rounded-xl p-5">

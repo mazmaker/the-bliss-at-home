@@ -287,7 +287,7 @@ function Hotels() {
                 <p className="text-xs text-stone-500">รายได้/เดือน</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-bold text-green-700">{Number((hotel as any).discount_rate || 0)}%</p>
+                <p className="text-lg font-bold text-green-700">฿{Number((hotel as any).discount_amount || 0).toLocaleString()}</p>
                 <p className="text-xs text-stone-500">ส่วนลด</p>
               </div>
               <div className="text-center">
@@ -407,7 +407,7 @@ function Hotels() {
                       <div className="text-xs space-y-1">
                         <div className="text-stone-900 font-medium">{(hotel as any).totalBookings ?? 0} การจอง</div>
                         <div className="text-amber-700 font-medium">฿{((hotel as any).monthlyRevenue ?? 0).toLocaleString()}</div>
-                        <div className="text-green-700 font-medium">{Number((hotel as any).discount_rate || 0)}% ส่วนลด</div>
+                        <div className="text-green-700 font-medium">฿{Number((hotel as any).discount_amount || 0).toLocaleString()} ส่วนลด</div>
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                           <span className="text-stone-700 font-medium">{Number(hotel.rating).toFixed(1)}</span>

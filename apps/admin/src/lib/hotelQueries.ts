@@ -11,6 +11,7 @@ export interface Hotel {
   latitude: number | null
   longitude: number | null
   commission_rate: number
+  discount_amount: number // ใหม่: จำนวนเงินส่วนลดคงที่ (บาท)
   status: 'active' | 'pending' | 'inactive' | 'suspended' | 'banned'
   bank_name?: string
   bank_account_number?: string
@@ -156,7 +157,7 @@ export const getHotelInvoices = async (hotelId: string) => {
   // ✅ If no bills exist, generate from actual bookings data
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('booking_date, final_price, status, created_at, hotels!inner(commission_rate, discount_rate)')
+    .select('booking_date, final_price, status, created_at, hotels!inner(commission_rate, discount_rate, discount_amount)')
     .eq('hotel_id', hotelId)
     .eq('is_hotel_booking', true)
     .in('status', ['confirmed', 'completed'])
@@ -197,7 +198,8 @@ export const getHotelInvoices = async (hotelId: string) => {
   const invoices = Object.entries(monthlyGroups).map(([monthKey, monthBookings]) => {
     const [year, month] = monthKey.split('-')
     const totalRevenue = monthBookings.reduce((sum, booking) => sum + Number(booking.final_price), 0)
-    const commissionRate = monthBookings[0].hotels?.discount_rate || monthBookings[0].hotels?.commission_rate || 20
+    // ⚠️ Commission ต่างจาก Discount: Commission = ส่วนแบ่งที่เราได้รับ (%)
+    const commissionRate = monthBookings[0].hotels?.commission_rate || 20
     const commissionAmount = totalRevenue * (commissionRate / 100)
     const invoiceNumber = `INV-${year}${month}-${hotelId.substring(0, 8).toUpperCase()}`
 

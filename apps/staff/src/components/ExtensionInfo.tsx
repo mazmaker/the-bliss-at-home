@@ -103,7 +103,7 @@ export function ExtensionInfo({
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-amber-700 font-medium">+{extension.duration} นาที</span>
-                  <span className="text-green-600 font-medium">+฿{((extension.price || 0) * 0.25).toLocaleString()}</span>
+                  <span className="text-green-600 font-medium">+฿{(extension.price || 0).toLocaleString()}</span>
                 </div>
               </div>
             ))}
@@ -112,7 +112,7 @@ export function ExtensionInfo({
 
       {/* Note */}
       <div className="mt-3 p-2 bg-amber-100 rounded text-xs text-amber-700">
-        💡 รายได้ที่แสดงเป็นส่วนแบ่งของสตาฟ (25% จากราคาการเพิ่มเวลา)
+        💡 รายได้ที่แสดงเป็นจำนวนคงที่ที่แอดมินกำหนดไว้สำหรับแต่ละบริการ
       </div>
     </div>
   );

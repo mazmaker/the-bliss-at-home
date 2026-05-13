@@ -53,6 +53,7 @@ export interface HotelPerformance {
   avg_booking_value: number
   commission_earned: number
   commission_rate: number
+  discount_amount: number // ฿ จำนวนเงินส่วนลดคงที่
 
   // Customer Metrics
   unique_customers: number
@@ -585,7 +586,8 @@ export async function getHotelPerformance(days: number = 30): Promise<HotelPerfo
       total_revenue: Number(hotel.total_revenue) || 0,
       avg_booking_value: Number(hotel.avg_booking_value) || 0,
       commission_earned: Number(hotel.commission_earned) || 0,
-      commission_rate: Number(hotel.discount_rate || hotel.commission_rate) || 0,
+      commission_rate: Number(hotel.commission_rate) || 0,
+      discount_amount: Number(hotel.discount_amount) || 0, // ใหม่: ส่วนลดจำนวนเงินคงที่
 
       // Customer Metrics
       unique_customers: hotel.unique_customers || 0,

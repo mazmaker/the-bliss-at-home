@@ -414,12 +414,12 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                       </div>
                     )}
 
-                    {/* Discount */}
+                    {/* Discount & Commission */}
                     <div className="flex justify-between items-center pt-2 border-t border-stone-200">
                       <span className="text-stone-500 text-xs">ส่วนลด:</span>
                       <div className="text-right">
-                        <span className="font-medium text-stone-600 text-xs">{hotel.discount_rate || hotel.commission_rate}%</span>
-                        <div className="text-xs text-stone-500">฿{hotel.commission_earned.toLocaleString()}</div>
+                        <span className="font-medium text-amber-600 text-xs">฿{Number(hotel.discount_amount || 0).toLocaleString()}</span>
+                        <div className="text-xs text-stone-500">Commission: ฿{hotel.commission_earned.toLocaleString()}</div>
                       </div>
                     </div>
                   </div>

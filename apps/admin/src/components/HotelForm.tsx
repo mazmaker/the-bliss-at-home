@@ -62,10 +62,10 @@ const hotelFormSchema = z.object({
   address: z.string().min(10, 'ที่อยู่ต้องมีอย่างน้อย 10 ตัวอักษร'),
   latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
   longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
-  discount_rate: z.coerce
-    .number({ required_error: 'ระบุเปอร์เซ็นต์ส่วนลดเป็นตัวเลข' })
-    .min(0, 'เปอร์เซ็นต์ส่วนลดขั้นต่ำ 0%')
-    .max(100, 'เปอร์เซ็นต์ส่วนลดสูงสุด 100%'),
+  discount_amount: z.coerce
+    .number({ required_error: 'ระบุจำนวนเงินส่วนลดเป็นตัวเลข' })
+    .min(0, 'จำนวนเงินส่วนลดขั้นต่ำ 0 บาท')
+    .max(10000, 'จำนวนเงินส่วนลดสูงสุด 10,000 บาท'),
   rating: z.coerce
     .number()
     .min(0, 'คะแนนขั้นต่ำ 0')
@@ -238,7 +238,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       address: '',
       latitude: null,
       longitude: null,
-      discount_rate: 0,
+      discount_amount: 0,
       rating: 0,
       status: 'pending',
       bank_name: '',
@@ -315,7 +315,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
           latitude: null,
           longitude: null,
           commission_rate: 20,
-          discount_rate: 0,
+          discount_amount: 0,
           rating: 0,
           status: 'pending',
           bank_name: '',
@@ -358,7 +358,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             address: data.address,
             latitude: data.latitude,
             longitude: data.longitude,
-            discount_rate: data.discount_rate,
+            discount_amount: data.discount_amount,
             rating: data.rating,
             status: data.status,
             bank_name: data.bank_name,
@@ -389,7 +389,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             address: data.address,
             latitude: data.latitude,
             longitude: data.longitude,
-            discount_rate: data.discount_rate,
+            discount_amount: data.discount_amount,
             rating: data.rating,
             status: data.status,
             bank_name: data.bank_name,
@@ -749,21 +749,26 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    อัตราค่าส่วนลด (%) *
+                    จำนวนเงินส่วนลด (บาท) *
                   </label>
                   <div className="relative mt-1">
-                    <Percent className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                     <input
-                      {...register('discount_rate')}
+                      {...register('discount_amount')}
                       type="number"
-                      step="0.01"
+                      step="1"
+                      min="0"
+                      max="10000"
                       className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="0"
                     />
                   </div>
-                  {errors.discount_rate && (
-                    <p className="mt-1 text-sm text-red-600">{errors.discount_rate.message}</p>
+                  {errors.discount_amount && (
+                    <p className="mt-1 text-sm text-red-600">{errors.discount_amount.message}</p>
                   )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    จำนวนเงินคงที่ที่ลดให้ลูกค้า (เช่น 100 บาท, 500 บาท)
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

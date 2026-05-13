@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Search, Clock, Info, RefreshCw, AlertCircle, Percent } from 'lucide-react'
+import { Search, Clock, Info, RefreshCw, AlertCircle, Coins } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import { useHotelContext } from '../hooks/useHotelContext'
@@ -49,24 +49,36 @@ function Services() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
 
-  // Get hotel context for discount rate
-  const { getCommissionRate } = useHotelContext()
+  // Get hotel context for discount amount
+  const { getDiscountAmount, getDiscountRate } = useHotelContext()
 
-  // Memoize discount rate to prevent recalculation
-  const discountRate = useMemo(() => getCommissionRate(), [getCommissionRate])
+  // Memoize discount amount to prevent recalculation
+  const discountAmount = useMemo(() => getDiscountAmount(), [getDiscountAmount])
+  const discountRate = useMemo(() => getDiscountRate(), [getDiscountRate])
 
-  // Calculate discounted price based on hotel's discount rate
+  // Calculate discounted price based on hotel's discount amount (fixed amount)
   const calculateDiscountedPrice = useCallback((originalPrice: number): number => {
-    const discountAmount = originalPrice * (discountRate / 100)
-    const discountedPrice = originalPrice - discountAmount
+    if (discountAmount > 0) {
+      // ใหม่: ใช้จำนวนเงินคงที่
+      const actualDiscount = Math.min(discountAmount, originalPrice)
+      return Math.round(originalPrice - actualDiscount)
+    } else if (discountRate > 0) {
+      // Fallback: ใช้เปอร์เซ็นต์ (backward compatibility)
+      const percentDiscount = originalPrice * (discountRate / 100)
+      return Math.round(originalPrice - percentDiscount)
+    }
+    return originalPrice
+  }, [discountAmount, discountRate])
 
-    return discountedPrice
-  }, [discountRate])
-
-  // Get discount percentage for display
-  const getDiscountPercentage = useCallback((): number => {
-    return discountRate
-  }, [discountRate])
+  // Get discount display info
+  const getDiscountDisplay = useCallback((): { text: string; amount: number } => {
+    if (discountAmount > 0) {
+      return { text: `฿${discountAmount.toLocaleString()}`, amount: discountAmount }
+    } else if (discountRate > 0) {
+      return { text: `${discountRate}%`, amount: discountRate }
+    }
+    return { text: 'ไม่มีส่วนลด', amount: 0 }
+  }, [discountAmount, discountRate])
 
   // Query services from database
   const { data: services = [], isLoading, error, refetch } = useQuery({
@@ -230,11 +242,10 @@ function Services() {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
                     {/* แสดงส่วนลดเฉพาะเมื่อมีส่วนลด */}
-                    {getDiscountPercentage() > 0 && (
+                    {getDiscountDisplay().amount > 0 && (
                       <div className="flex items-center gap-1 text-green-600">
-                        <Percent className="w-3 h-3" />
                         <span className="text-xs font-medium">
-                          -{getDiscountPercentage()}%
+                          ส่วนลด {getDiscountDisplay().text}
                         </span>
                       </div>
                     )}
@@ -253,8 +264,10 @@ function Services() {
                           } else if (duration === 120 && service.price_120) {
                             originalPriceForDuration = service.price_120
                           } else {
-                            // Fallback to proportional calculation if specific price not set
-                            originalPriceForDuration = Math.round((service.hotel_price / service.duration) * duration)
+                            // Fallback: ใช้ hotel_price เมื่อไม่มี price_xx ที่กำหนด
+                            // แต่ให้คำนวณตามสัดส่วน duration ที่เลือก vs duration ของ service
+                            const baseRate = service.hotel_price / service.duration
+                            originalPriceForDuration = Math.round(baseRate * duration)
                           }
 
                           const discountedPriceForDuration = Math.round(calculateDiscountedPrice(originalPriceForDuration))
@@ -267,7 +280,7 @@ function Services() {
                               </div>
                               <div className="text-right">
                                 {/* แสดงราคาขีดฆ่าเฉพาะเมื่อมีส่วนลด */}
-                                {getDiscountPercentage() > 0 && (
+                                {getDiscountDisplay().amount > 0 && (
                                   <div className="text-xs text-stone-500 line-through">
                                     ฿{originalPriceForDuration.toLocaleString()}
                                   </div>
@@ -288,7 +301,7 @@ function Services() {
                           </div>
                           <div className="text-right">
                             {/* แสดงราคาขีดฆ่าเฉพาะเมื่อมีส่วนลด */}
-                            {getDiscountPercentage() > 0 && (
+                            {getDiscountDisplay().amount > 0 && (
                               <div className="text-xs text-stone-500 line-through">
                                 ฿{service.hotel_price}
                               </div>

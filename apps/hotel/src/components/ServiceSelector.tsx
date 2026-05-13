@@ -3,6 +3,7 @@ import { Clock, Check, ChevronRight, User } from 'lucide-react'
 import { Service, ServiceSelection, DurationOption } from '../types/booking'
 import { PriceCalculator } from '../utils/priceCalculator'
 import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
+import { useHotelContext } from '../hooks/useHotelContext'
 
 interface ServiceSelectorProps {
   services: Service[]
@@ -34,6 +35,9 @@ function ServiceSelector({
     selectedService?.duration || null
   )
   const [step, setStep] = useState<'service' | 'duration' | 'completed'>('service')
+
+  // Get hotel discount information
+  const { getDiscountAmount, getDiscountRate } = useHotelContext()
 
   // Auto-select service when initialServiceId is provided
   useEffect(() => {
@@ -89,9 +93,10 @@ function ServiceSelector({
       const duration = durationOptions[0].value
       setSelectedDuration(duration)
 
-      // Calculate price and call onServiceSelect immediately
-      const calculatedPrice = service.discount_rate && service.discount_rate > 0
-        ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, duration, service.discount_rate, 'single')
+      // Calculate price with hotel discount
+      const hotelDiscountAmount = getDiscountAmount()
+      const calculatedPrice = hotelDiscountAmount > 0
+        ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, duration, hotelDiscountAmount, 'single')
         : PriceCalculator.calculateServicePrice(service, duration, 'single')
 
       onServiceSelect({
@@ -122,9 +127,9 @@ function ServiceSelector({
     setSelectedDuration(duration)
 
     // Calculate the correct price for the selected duration with hotel discount
-
-    const calculatedPrice = service.discount_rate && service.discount_rate > 0
-      ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, duration, service.discount_rate, 'single')
+    const hotelDiscountAmount = getDiscountAmount()
+    const calculatedPrice = hotelDiscountAmount > 0
+      ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, duration, hotelDiscountAmount, 'single')
       : PriceCalculator.calculateServicePrice(service, duration, 'single')
 
     onServiceSelect({
@@ -233,11 +238,26 @@ function ServiceSelector({
                         </span>
                       </div>
 
-                      {showPrice && (
-                        <div className={`text-sm font-bold ${isSelected ? 'text-[#d29b25]' : 'text-[#b6d387]'}`}>
-                          ฿{service.hotel_price.toLocaleString()}
-                        </div>
-                      )}
+                      {showPrice && (() => {
+                        const hotelDiscountAmount = getDiscountAmount()
+                        // Use the service's default duration for price display
+                        const defaultDuration = service.duration
+                        const displayPrice = hotelDiscountAmount > 0
+                          ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(service, defaultDuration, hotelDiscountAmount, 'single')
+                          : PriceCalculator.calculateServicePrice(service, defaultDuration, 'single')
+
+                        return (
+                          <div className={`text-sm font-bold ${isSelected ? 'text-[#d29b25]' : 'text-[#b6d387]'}`}>
+                            {service.duration_options && service.duration_options.length > 1 ? (
+                              // For services with multiple duration options, show starting price
+                              <span>เริ่มต้น ฿{displayPrice.toLocaleString()}</span>
+                            ) : (
+                              // For services with single duration, show exact price
+                              <span>฿{displayPrice.toLocaleString()}</span>
+                            )}
+                          </div>
+                        )
+                      })()}
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -289,8 +309,9 @@ function ServiceSelector({
               {getDurationOptions(selectedServiceData).map((option) => {
                 const isSelected = selectedDuration === option.value
                 // Calculate the correct price for this duration option with hotel discount
-                const calculatedPrice = selectedServiceData.discount_rate && selectedServiceData.discount_rate > 0
-                  ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(selectedServiceData, option.value, selectedServiceData.discount_rate, 'single')
+                const hotelDiscountAmount = getDiscountAmount()
+                const calculatedPrice = hotelDiscountAmount > 0
+                  ? EnhancedPriceCalculator.calculateServicePriceWithDiscount(selectedServiceData, option.value, hotelDiscountAmount, 'single')
                   : PriceCalculator.calculateServicePrice(selectedServiceData, option.value, 'single')
 
                 return (

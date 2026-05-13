@@ -12,12 +12,13 @@ export class EnhancedPriceCalculator {
   /**
    * Calculate discounted price for a specific duration
    * @param originalPrice - Original price for specific duration
-   * @param discountRate - Hotel discount rate percentage
+   * @param discountAmount - Hotel discount amount in baht (fixed amount)
    * @returns Discounted price
    */
-  private static calculateDiscountedPrice(originalPrice: number, discountRate: number): number {
-    const discountAmount = originalPrice * (discountRate / 100)
-    return Math.round(originalPrice - discountAmount)
+  private static calculateDiscountedPrice(originalPrice: number, discountAmount: number): number {
+    // ใช้จำนวนเงินคงที่แทนเปอร์เซ็นต์ แต่ไม่เกินราคาเดิม
+    const actualDiscount = Math.min(discountAmount, originalPrice)
+    return Math.round(originalPrice - actualDiscount)
   }
 
   /**
@@ -58,21 +59,21 @@ export class EnhancedPriceCalculator {
    * Calculate discounted price for a service with specific duration
    * @param service - The service object (may include discount info)
    * @param duration - Selected duration in minutes
-   * @param discountRate - Hotel discount rate percentage
+   * @param discountAmount - Hotel discount amount in baht (fixed amount)
    * @param mode - Booking mode (single/couple) - currently not affecting price
    * @returns Discounted price in baht
    */
   static calculateServicePriceWithDiscount(
     service: Service,
     duration: number,
-    discountRate: number,
+    discountAmount: number,
     _mode: BookingMode = 'single'
   ): number {
     // Get original price for this duration
     const originalPrice = this.calculateOriginalPriceForDuration(service, duration)
 
-    // Apply hotel discount
-    const discountedPrice = this.calculateDiscountedPrice(originalPrice, discountRate)
+    // Apply hotel discount (fixed amount)
+    const discountedPrice = this.calculateDiscountedPrice(originalPrice, discountAmount)
 
     return discountedPrice
   }
@@ -80,13 +81,13 @@ export class EnhancedPriceCalculator {
   /**
    * Get all available duration options with discounted prices
    * @param service - The service object
-   * @param discountRate - Hotel discount rate percentage
+   * @param discountAmount - Hotel discount amount in baht (fixed amount)
    * @param mode - Booking mode
    * @returns Array of duration options with discounted prices
    */
   static getDurationOptionsWithDiscountedPrices(
     service: Service,
-    discountRate: number,
+    discountAmount: number,
     mode: BookingMode = 'single'
   ): Array<{
     duration: number
@@ -104,7 +105,7 @@ export class EnhancedPriceCalculator {
       .sort((a, b) => a - b)
       .map(duration => {
         const originalPrice = this.calculateOriginalPriceForDuration(service, duration)
-        const discountedPrice = this.calculateDiscountedPrice(originalPrice, discountRate)
+        const discountedPrice = this.calculateDiscountedPrice(originalPrice, discountAmount)
         const savings = originalPrice - discountedPrice
 
         return {
@@ -152,18 +153,18 @@ export class EnhancedPriceCalculator {
    * Backward compatibility: Use enhanced calculation if discount available
    * @param service - The service object
    * @param duration - Selected duration in minutes
-   * @param discountRate - Hotel discount rate (optional)
+   * @param discountAmount - Hotel discount amount in baht (optional)
    * @param mode - Booking mode
    * @returns Calculated price
    */
   static calculateServicePrice(
     service: Service,
     duration: number,
-    discountRate?: number,
+    discountAmount?: number,
     mode: BookingMode = 'single'
   ): number {
-    if (discountRate && discountRate > 0) {
-      return this.calculateServicePriceWithDiscount(service, duration, discountRate, mode)
+    if (discountAmount && discountAmount > 0) {
+      return this.calculateServicePriceWithDiscount(service, duration, discountAmount, mode)
     }
 
     // Fallback to original calculator

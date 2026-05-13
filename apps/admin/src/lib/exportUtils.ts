@@ -333,7 +333,7 @@ export async function exportToPDF(data: ReportExportData): Promise<void> {
                   <td>${hotel.name}</td>
                   <td>${hotel.bookings}</td>
                   <td>฿${hotel.revenue.toLocaleString()}</td>
-                  <td>${hotel.discount_rate || hotel.commission_rate}%</td>
+                  <td>฿${hotel.discount_amount?.toLocaleString() || '0'}</td>
                 </tr>
               `).join('')}
             </tbody>
