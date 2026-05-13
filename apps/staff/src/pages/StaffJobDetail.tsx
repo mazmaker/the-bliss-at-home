@@ -99,7 +99,23 @@ function StaffJobDetail() {
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
 
   // Get commission rate from service query (fallback to 30%)
-  const commissionRate = serviceData || 30;
+  let commissionRate = serviceData || 30;
+
+  // Handle if commission rate is stored as decimal (0.3) vs percentage (30)
+  if (commissionRate < 1) {
+    commissionRate = commissionRate * 100; // Convert 0.3 to 30
+  }
+
+  // Debug commission rate
+  console.log('🔍 Commission Debug:', {
+    serviceData,
+    adjustedCommissionRate: commissionRate,
+    extensionServices: extensionServices.map(ext => ({
+      price: ext.price,
+      calculation: (ext.price || 0) * (commissionRate / 100),
+      result: Math.round((ext.price || 0) * (commissionRate / 100))
+    }))
+  });
 
   // Calculate total price: base earnings + extension commission earnings using actual rate
   const extensionEarnings = extensionServices.reduce((sum, ext) => {
