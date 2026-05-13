@@ -402,10 +402,18 @@ async function updateJobStaffEarnings(
     );
   }
 
-  // Calculate new total earnings (base + extensions)
+  // Calculate new total earnings (base + all extensions)
   const baseEarnings = job.staff_earnings || 0;
-  const currentTotalEarnings = job.total_staff_earnings || baseEarnings;
-  const newTotalEarnings = currentTotalEarnings + additionalEarnings;
+
+  // Get all extension services for this booking to calculate total extension earnings
+  const { data: allExtensions } = await supabase
+    .from('booking_services')
+    .select('price')
+    .eq('booking_id', bookingId)
+    .eq('is_extension', true);
+
+  const totalExtensionEarnings = (allExtensions || []).reduce((sum, ext) => sum + (ext.price || 0), 0);
+  const newTotalEarnings = baseEarnings + totalExtensionEarnings + additionalEarnings;
 
   // Update total_staff_earnings in jobs table
   const { error } = await supabase
@@ -424,7 +432,7 @@ async function updateJobStaffEarnings(
     bookingId,
     jobId: job.id,
     baseEarnings,
-    currentTotalEarnings,
+    totalExtensionEarnings,
     additionalEarnings,
     newTotalEarnings
   });

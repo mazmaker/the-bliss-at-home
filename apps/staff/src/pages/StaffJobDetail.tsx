@@ -76,11 +76,13 @@ function StaffJobDetail() {
   })
 
   const originalDuration = originalServices.reduce((sum, s) => sum + (s?.duration || 0), 0)
-  // Use job's staff earnings (commission-based) for original price instead of customer price
+  // Use job's staff earnings (fixed amount) for original price
   const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
-  // Use job's total staff earnings (includes extension commissions) for total price
-  const totalPrice = job?.total_staff_earnings || job?.staff_earnings || originalPrice
+
+  // Calculate total price: base earnings + extension earnings (fixed amounts)
+  const extensionEarnings = extensionServices.reduce((sum, ext) => sum + (ext.price || 0), 0)
+  const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -350,7 +352,7 @@ function StaffJobDetail() {
             </div>
             <div>
               <p className="text-xs text-stone-500">รายได้</p>
-              <p className="text-xl font-bold text-amber-700">฿{Number(job.total_staff_earnings || job.staff_earnings).toLocaleString()}</p>
+              <p className="text-xl font-bold text-amber-700">฿{Number(totalPrice).toLocaleString()}</p>
             </div>
           </div>
 

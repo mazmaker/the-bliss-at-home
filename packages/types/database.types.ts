@@ -855,6 +855,8 @@ export type Database = {
           staff_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["job_status"] | null
+          total_duration_minutes: number | null
+          total_staff_earnings: number | null
           updated_at: string | null
         }
         Insert: {
@@ -892,6 +894,8 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"] | null
+          total_duration_minutes?: number | null
+          total_staff_earnings?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -929,6 +933,8 @@ export type Database = {
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"] | null
+          total_duration_minutes?: number | null
+          total_staff_earnings?: number | null
           updated_at?: string | null
         }
         Relationships: [
