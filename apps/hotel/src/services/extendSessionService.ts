@@ -67,10 +67,10 @@ export async function extendBookingSession(
       request.additionalDuration
     );
 
-    // 4.5. Calculate staff earnings for extension (using regular customer prices)
+    // 4.5. Calculate staff earnings for extension (using actual extension price)
     const staffEarnings = await calculateStaffExtensionEarnings(
       booking,
-      request.additionalDuration
+      extensionPrice
     );
 
     // 5. Create extension service record
@@ -337,16 +337,16 @@ function calculateServicePriceWithDiscount(service: any, duration: number, hotel
 }
 
 /**
- * Calculate staff earnings for extension service (using regular customer prices)
+ * Calculate staff earnings for extension service (same as regular bookings - from actual price paid)
  */
 async function calculateStaffExtensionEarnings(
   booking: BookingWithExtensions,
-  additionalDuration: number
+  extensionPrice: number
 ): Promise<number> {
-  // Get service with commission rate and regular customer prices
+  // Get service commission rate
   const { data: service } = await supabase
     .from('services')
-    .select('staff_commission_rate, price_60, price_90, price_120, base_price, duration')
+    .select('staff_commission_rate')
     .eq('id', booking.booking_services[0].service_id)
     .single();
 
@@ -357,29 +357,13 @@ async function calculateStaffExtensionEarnings(
     );
   }
 
-  // Get regular customer price (same as what customers pay)
-  let regularPrice: number;
-
-  if (additionalDuration === 60 && service.price_60) {
-    regularPrice = service.price_60;
-  } else if (additionalDuration === 90 && service.price_90) {
-    regularPrice = service.price_90;
-  } else if (additionalDuration === 120 && service.price_120) {
-    regularPrice = service.price_120;
-  } else {
-    // Fallback: calculate proportional price from base
-    const baseRate = service.base_price / service.duration;
-    regularPrice = Math.round(baseRate * additionalDuration);
-  }
-
-  // Calculate staff earnings using commission rate on REGULAR price (not hotel price)
+  // Calculate staff earnings from actual extension price (same as regular jobs use final_price)
   const commissionRate = Number(service.staff_commission_rate) || 0.30;
   const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
-  const staffEarnings = Math.round(regularPrice * (normalizedRate / 100));
+  const staffEarnings = Math.round(extensionPrice * (normalizedRate / 100));
 
-  console.log('💰 Extension Staff Earnings (Regular Price-based):', {
-    additionalDuration,
-    regularPrice,
+  console.log('💰 Extension Staff Earnings (Actual Price-based):', {
+    extensionPrice,
     commissionRate: normalizedRate,
     staffEarnings
   });
@@ -411,34 +395,18 @@ async function updateJobStaffEarnings(
   // Calculate new total earnings (base + all extensions)
   const baseEarnings = job.staff_earnings || 0;
 
-  // Get all extension services with service info to calculate regular prices
+  // Get all extension services with actual prices paid
   const { data: allExtensions } = await supabase
     .from('booking_services')
-    .select('duration, service_id, services!inner(staff_commission_rate, price_60, price_90, price_120, base_price, duration)')
+    .select('price, service_id, services!inner(staff_commission_rate)')
     .eq('booking_id', bookingId)
     .eq('is_extension', true);
 
-  // Calculate total extension earnings using regular customer prices (not hotel prices)
+  // Calculate total extension earnings using actual prices paid (same as final_price logic)
   const totalExtensionEarnings = (allExtensions || []).reduce((sum, ext) => {
-    const service = ext.services;
-    let regularPrice: number;
-
-    // Get regular customer price based on duration
-    if (ext.duration === 60 && service.price_60) {
-      regularPrice = service.price_60;
-    } else if (ext.duration === 90 && service.price_90) {
-      regularPrice = service.price_90;
-    } else if (ext.duration === 120 && service.price_120) {
-      regularPrice = service.price_120;
-    } else {
-      // Fallback: proportional from base price
-      const baseRate = service.base_price / service.duration;
-      regularPrice = Math.round(baseRate * ext.duration);
-    }
-
-    const commissionRate = service.staff_commission_rate || 30;
+    const commissionRate = ext.services?.staff_commission_rate || 30;
     const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
-    const earnings = Math.round(regularPrice * (normalizedRate / 100));
+    const earnings = Math.round((ext.price || 0) * (normalizedRate / 100));
     return sum + earnings;
   }, 0);
 
