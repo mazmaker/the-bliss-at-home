@@ -38,8 +38,10 @@ export function ExtensionInfo({
   }
 
   const totalExtensionTime = extensions.reduce((sum, ext) => sum + ext.duration, 0);
-  // Calculate staff earnings from total_staff_earnings - original_staff_earnings
-  const totalExtensionPrice = totalPrice - originalPrice;
+  // Calculate total extension earnings using commission rate (same as individual items)
+  const totalExtensionPrice = extensions.reduce((sum, ext) => {
+    return sum + Math.round((ext.price || 0) * (staffCommissionRate / 100));
+  }, 0);
 
   return (
     <div className={`bg-amber-50 border border-amber-200 rounded-lg p-4 ${className}`}>
