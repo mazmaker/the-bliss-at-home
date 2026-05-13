@@ -21,6 +21,24 @@ function StaffJobDetail() {
   const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
 
+  // Query service commission rate
+  const { data: serviceData } = useQuery({
+    queryKey: ['service-commission', job?.booking_id],
+    queryFn: async () => {
+      if (!job?.booking_id) return null
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('service_id, services!inner(staff_commission_rate)')
+        .eq('id', job.booking_id)
+        .single()
+
+      if (error || !data) return null
+      return data.services.staff_commission_rate || 30
+    },
+    enabled: !!job?.booking_id
+  })
+
   // Query booking services for extension info (with fallback for missing columns)
   const { data: bookingServices } = useQuery({
     queryKey: ['booking-services', job?.id],
@@ -80,9 +98,12 @@ function StaffJobDetail() {
   const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
 
-  // Calculate total price: base earnings + extension commission earnings
+  // Get commission rate from service query (fallback to 30%)
+  const commissionRate = serviceData || 30;
+
+  // Calculate total price: base earnings + extension commission earnings using actual rate
   const extensionEarnings = extensionServices.reduce((sum, ext) => {
-    return sum + Math.round((ext.price || 0) * 0.30); // 30% commission
+    return sum + Math.round((ext.price || 0) * (commissionRate / 100));
   }, 0)
   const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
 
@@ -415,7 +436,7 @@ function StaffJobDetail() {
           extensions={extensionServices}
           totalDuration={totalDuration}
           totalPrice={totalPrice}
-          staffCommissionRate={30} // Use 30% as standard commission rate
+          staffCommissionRate={commissionRate} // Use actual service commission rate
           className=""
         />
       )}
