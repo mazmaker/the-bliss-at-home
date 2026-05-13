@@ -80,8 +80,10 @@ function StaffJobDetail() {
   const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
 
-  // Calculate total price: base earnings + extension earnings (fixed amounts)
-  const extensionEarnings = extensionServices.reduce((sum, ext) => sum + (ext.price || 0), 0)
+  // Calculate total price: base earnings + extension commission earnings
+  const extensionEarnings = extensionServices.reduce((sum, ext) => {
+    return sum + Math.round((ext.price || 0) * 0.30); // 30% commission
+  }, 0)
   const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
 
   const [isProcessing, setIsProcessing] = useState(false)
