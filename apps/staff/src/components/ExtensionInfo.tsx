@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Clock, DollarSign, Calendar, TrendingUp } from 'lucide-react';
+import { normalizeCommissionRate, calculateStaffEarnings, calculateExtensionEarnings } from '../utils/commissionUtils';
 
 interface ExtensionService {
   id: string;
@@ -37,11 +38,10 @@ export function ExtensionInfo({
     return null;
   }
 
+  // Normalize commission rate and calculate earnings
+  const adjustedCommissionRate = normalizeCommissionRate(staffCommissionRate);
   const totalExtensionTime = extensions.reduce((sum, ext) => sum + ext.duration, 0);
-  // Calculate total extension earnings using commission rate (same as individual items)
-  const totalExtensionPrice = extensions.reduce((sum, ext) => {
-    return sum + Math.round((ext.price || 0) * (staffCommissionRate / 100));
-  }, 0);
+  const totalExtensionPrice = calculateExtensionEarnings(extensions, staffCommissionRate);
 
   return (
     <div className={`bg-amber-50 border border-amber-200 rounded-lg p-4 ${className}`}>
@@ -107,7 +107,7 @@ export function ExtensionInfo({
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-amber-700 font-medium">+{extension.duration} นาที</span>
-                  <span className="text-green-600 font-medium">+฿{Math.round((extension.price || 0) * (staffCommissionRate / 100)).toLocaleString()}</span>
+                  <span className="text-green-600 font-medium">+฿{calculateStaffEarnings(extension.price || 0, staffCommissionRate).toLocaleString()}</span>
                 </div>
               </div>
             ))}
@@ -116,7 +116,7 @@ export function ExtensionInfo({
 
       {/* Note */}
       <div className="mt-3 p-2 bg-amber-100 rounded text-xs text-amber-700">
-        💡 รายได้ที่แสดงเป็นส่วนแบ่ง {staffCommissionRate}% จากราคาการเพิ่มเวลา
+        💡 รายได้ที่แสดงเป็นส่วนแบ่ง {adjustedCommissionRate}% จากราคาการเพิ่มเวลา
       </div>
     </div>
   );
