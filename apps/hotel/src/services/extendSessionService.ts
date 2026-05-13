@@ -394,15 +394,22 @@ async function updateJobStaffEarnings(
   // Calculate new total earnings (base + all extensions)
   const baseEarnings = job.staff_earnings || 0;
 
-  // Get all extension services for this booking to calculate total extension earnings
+  // Get all extension services with service commission rates
   const { data: allExtensions } = await supabase
     .from('booking_services')
-    .select('price')
+    .select('price, service_id, services!inner(staff_commission_rate)')
     .eq('booking_id', bookingId)
     .eq('is_extension', true);
 
-  const totalExtensionEarnings = (allExtensions || []).reduce((sum, ext) => sum + (ext.price || 0), 0);
-  const newTotalEarnings = baseEarnings + totalExtensionEarnings + additionalEarnings;
+  // Calculate total extension earnings using commission rates (not customer prices)
+  const totalExtensionEarnings = (allExtensions || []).reduce((sum, ext) => {
+    const commissionRate = ext.services?.staff_commission_rate || 30;
+    const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
+    const earnings = Math.round((ext.price || 0) * (normalizedRate / 100));
+    return sum + earnings;
+  }, 0);
+
+  const newTotalEarnings = baseEarnings + totalExtensionEarnings;
 
   // Update total_staff_earnings in jobs table
   const { error } = await supabase
