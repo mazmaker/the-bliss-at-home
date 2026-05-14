@@ -4,18 +4,15 @@
  */
 
 /**
- * Get available hours (09-23, 00)
+ * Get available hours (09-23)
  */
 export function getAvailableHours(): string[] {
   const hours: string[] = []
 
-  // 09:00 - 23:00
+  // 09:00 - 23:00 (no midnight)
   for (let h = 9; h <= 23; h++) {
     hours.push(h.toString().padStart(2, '0'))
   }
-
-  // 00:00 (midnight)
-  hours.push('00')
 
   return hours
 }
@@ -41,11 +38,6 @@ export function isTimeSlotAvailable(date: string, hour: string, minute: string):
   const slotTime = new Date()
   slotTime.setHours(parseInt(hour), parseInt(minute), 0, 0)
 
-  // Special case for 00:00 - it's next day
-  if (hour === '00') {
-    slotTime.setDate(slotTime.getDate() + 1)
-  }
-
   const minTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)) // 3 hours from now
 
   return slotTime >= minTime
@@ -69,11 +61,6 @@ export function getAvailableHoursForDate(date: string): string[] {
  * Get available minutes for a specific date and hour
  */
 export function getAvailableMinutesForDateHour(date: string, hour: string): string[] {
-  // For midnight hour (00), only allow 00:00, not 00:15/00:30/00:45
-  if (hour === '00') {
-    return isTimeSlotAvailable(date, hour, '00') ? ['00'] : []
-  }
-
   return getMinuteIntervals().filter(minute =>
     isTimeSlotAvailable(date, hour, minute)
   )
