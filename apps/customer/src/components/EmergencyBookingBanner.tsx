@@ -36,100 +36,52 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
   }
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 border-2 border-amber-200 rounded-2xl shadow-lg mx-4 my-6">
-      {/* Subtle animated background */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-orange-300 to-amber-300 rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
-      </div>
+    <div className="relative bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-xl my-3 shadow-lg">
 
-      {/* Main content */}
-      <div className="relative z-10 p-6">
-        {/* Elegant close button */}
-        <button
-          onClick={() => setIsVisible(false)}
-          className="absolute top-4 right-4 text-stone-400 hover:text-stone-600 transition-colors p-1 hover:bg-white rounded-full"
-        >
-          <X className="w-4 h-4" />
-        </button>
+      <div className="p-4">
+        <div className="flex items-center gap-4">
+          {/* Icon */}
+          <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
 
-        {/* Premium header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+          {/* Content */}
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-stone-800 mb-1">
+              ต้องการนวดภายใน 30 นาที?
+            </h3>
+            <p className="text-xs text-stone-600 mb-3">
+              ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ
+            </p>
+
+            {/* Compact contact buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleContact('phone')}
+                className="flex items-center gap-1 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-amber-600 transition-colors"
+              >
+                <Phone className="w-3 h-3" />
+                โทร
+              </button>
+
+              <button
+                onClick={() => handleContact('line')}
+                className="flex items-center gap-1 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-600 transition-colors"
+              >
+                <MessageCircle className="w-3 h-3" />
+                LINE
+              </button>
+
+              <button
+                onClick={() => handleContact('chat')}
+                className="flex items-center gap-1 bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-emerald-600 transition-colors"
+              >
+                <MessageCircle className="w-3 h-3" />
+                WhatsApp
+              </button>
             </div>
           </div>
 
-          <h2 className="text-2xl font-light text-stone-800 mb-2">
-            บริการพิเศษ
-          </h2>
-          <p className="text-lg text-stone-700 font-medium">
-            ต้องการนวดภายใน 30 นาทีนี้?
-          </p>
-          <p className="text-stone-600 text-sm mt-1">
-            ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ
-          </p>
-        </div>
-
-        {/* Elegant value proposition */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-amber-200/50 p-5 mb-6">
-          <h3 className="text-stone-800 font-medium mb-3 flex items-center gap-2">
-            <Star className="w-5 h-5 text-amber-500" />
-            บริการด่วนพิเศษ
-          </h3>
-          <div className="grid grid-cols-1 gap-2">
-            <div className="flex items-start gap-2 text-sm">
-              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
-              <span className="text-stone-700">ตรวจสอบคิวนักนวดที่พร้อมให้บริการ</span>
-            </div>
-            <div className="flex items-start gap-2 text-sm">
-              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
-              <span className="text-stone-700">จัดการจองพิเศษภายใน 5 นาที</span>
-            </div>
-            <div className="flex items-start gap-2 text-sm">
-              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
-              <span className="text-stone-700">รับประกันคุณภาพเหมือนการจองปกติ</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Premium contact methods */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <button
-            onClick={() => handleContact('phone')}
-            className="bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white p-4 rounded-xl transition-all duration-300 hover:shadow-lg group"
-          >
-            <Phone className="w-5 h-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-            <div className="text-sm font-medium">โทรเลย</div>
-            <div className="text-xs opacity-90">24/7</div>
-          </button>
-
-          <button
-            onClick={() => handleContact('line')}
-            className="bg-gradient-to-b from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white p-4 rounded-xl transition-all duration-300 hover:shadow-lg group"
-          >
-            <div className="w-5 h-5 mx-auto mb-2 text-sm font-bold group-hover:scale-110 transition-transform">LINE</div>
-            <div className="text-sm font-medium">แชทเลย</div>
-            <div className="text-xs opacity-90">2 นาที</div>
-          </button>
-
-          <button
-            onClick={() => handleContact('chat')}
-            className="bg-gradient-to-b from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white p-4 rounded-xl transition-all duration-300 hover:shadow-lg group"
-          >
-            <MessageCircle className="w-5 h-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-            <div className="text-sm font-medium">WhatsApp</div>
-            <div className="text-xs opacity-90">รวดเร็ว</div>
-          </button>
-        </div>
-
-        {/* Elegant social proof */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm">
-            <Clock className="w-4 h-4" />
-            <span>เราช่วยลูกค้าด่วน <strong>{currentStats}+ คน</strong> ต่อวัน</span>
-          </div>
         </div>
       </div>
     </div>

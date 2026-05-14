@@ -149,15 +149,19 @@ function HomePage() {
       </section>
 
       {/* Emergency Booking Banner */}
-      <EmergencyBookingBanner
-        onContactAdmin={(method) => {
-          if (method === 'line') {
-            navigate('/emergency-booking')
-          } else {
-            navigate('/emergency-booking')
-          }
-        }}
-      />
+      <section className="px-4">
+        <div className="max-w-6xl mx-auto relative">
+          <EmergencyBookingBanner
+            onContactAdmin={(method) => {
+              if (method === 'line') {
+                navigate('/emergency-booking')
+              } else {
+                navigate('/emergency-booking')
+              }
+            }}
+          />
+        </div>
+      </section>
 
       {/* Promotions Slider */}
       {promotions && promotions.length > 0 && (
