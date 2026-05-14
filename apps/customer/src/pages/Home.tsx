@@ -8,6 +8,7 @@ import { useTranslation } from '@bliss/i18n'
 import { PromotionDetailModal } from '../components/PromotionDetailModal'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
+import EmergencyBookingBanner from '../components/EmergencyBookingBanner'
 import { isGlobalDiscountEnabled, getGlobalDiscountPercentage } from '../utils/discountUtils'
 import { getMinimumPriceInfo } from '../utils/serviceUtils'
 import { getServiceImage } from '../utils/imageUtils'
@@ -146,6 +147,17 @@ function HomePage() {
           </form>
         </div>
       </section>
+
+      {/* Emergency Booking Banner */}
+      <EmergencyBookingBanner
+        onContactAdmin={(method) => {
+          if (method === 'line') {
+            navigate('/emergency-booking')
+          } else {
+            navigate('/emergency-booking')
+          }
+        }}
+      />
 
       {/* Promotions Slider */}
       {promotions && promotions.length > 0 && (

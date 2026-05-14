@@ -25,6 +25,7 @@ import PrivacyPage from './pages/Privacy'
 import PromotionsPage from './pages/Promotions'
 import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth'
 import PointsHistory from './pages/PointsHistory'
+import EmergencyBooking from './pages/EmergencyBooking'
 
 function App() {
   const { t } = useTranslation('common')
@@ -47,6 +48,7 @@ function App() {
         <Route path="/services/:slug" element={<ServiceDetailsWrapper />} />
         <Route path="/promotions" element={<PromotionsPageWrapper />} />
         <Route path="/promotions/:id" element={<PromotionsPageWrapper />} />
+        <Route path="/emergency-booking" element={<EmergencyBookingWrapper />} />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
@@ -195,6 +197,10 @@ function PromotionsPageWrapper() {
       <PromotionsPage />
     </>
   )
+}
+
+function EmergencyBookingWrapper() {
+  return <EmergencyBooking />
 }
 
 function BookingWizardWrapper() {
