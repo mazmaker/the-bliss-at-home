@@ -628,7 +628,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                             : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                         }`}
                       >
-                        {hour} น.
+                        {hour}:00
                       </button>
                     ))}
                   </div>

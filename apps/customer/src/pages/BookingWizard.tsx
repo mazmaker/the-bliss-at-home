@@ -792,7 +792,7 @@ function BookingWizard() {
                           : 'border-stone-200 hover:border-amber-300'
                       }`}
                     >
-                      {hour} น.
+                      {hour}:00
                     </button>
                   ))}
                 </div>

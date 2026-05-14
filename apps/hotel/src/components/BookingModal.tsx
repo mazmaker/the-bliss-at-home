@@ -470,7 +470,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                             : 'border-stone-300 hover:border-amber-300'
                         }`}
                       >
-                        {hour} น.
+                        {hour}:00
                       </button>
                     ))}
                   </div>
