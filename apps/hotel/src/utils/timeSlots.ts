@@ -1,64 +1,36 @@
 /**
  * Time Slot Utilities for Hotel Booking System
- * Support 09:00-00:00 with time period grouping
+ * Simple two-step selection: Hour → Minute
  */
-
-export interface TimeSlot {
-  time: string // "09:15"
-  display: string // "09:15 น."
-  period: 'morning' | 'afternoon' | 'evening' | 'night'
-}
-
-export interface TimePeriod {
-  key: 'morning' | 'afternoon' | 'evening' | 'night'
-  label: string
-  icon: string
-  slots: TimeSlot[]
-}
 
 /**
- * Generate all possible time slots with 15-minute intervals
+ * Get available hours (09-23, 00)
  */
-export function generateAllTimeSlots(): TimeSlot[] {
-  const slots: TimeSlot[] = []
+export function getAvailableHours(): string[] {
+  const hours: string[] = []
 
-  // 09:00 - 23:45
+  // 09:00 - 23:00
   for (let h = 9; h <= 23; h++) {
-    for (let m = 0; m < 60; m += 15) {
-      const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
-      const period = getTimePeriod(h)
-      slots.push({
-        time,
-        display: `${time} น.`,
-        period
-      })
-    }
+    hours.push(h.toString().padStart(2, '0'))
   }
 
-  // Add 00:00 (midnight)
-  slots.push({
-    time: '00:00',
-    display: '00:00 น.',
-    period: 'night'
-  })
+  // 00:00 (midnight)
+  hours.push('00')
 
-  return slots
+  return hours
 }
 
 /**
- * Determine which period a time belongs to
+ * Get 15-minute intervals
  */
-export function getTimePeriod(hour: number): 'morning' | 'afternoon' | 'evening' | 'night' {
-  if (hour >= 9 && hour < 12) return 'morning'
-  if (hour >= 12 && hour < 18) return 'afternoon'
-  if (hour >= 18 && hour < 22) return 'evening'
-  return 'night' // 22:00-00:00
+export function getMinuteIntervals(): string[] {
+  return ['00', '15', '30', '45']
 }
 
 /**
- * Check if time slot is available based on 3-hour advance rule
+ * Check if specific time slot is available based on 3-hour advance rule
  */
-export function isTimeSlotAvailable(date: string, time: string): boolean {
+export function isTimeSlotAvailable(date: string, hour: string, minute: string): boolean {
   const now = new Date()
   const todayStr = now.toISOString().split('T')[0]
 
@@ -66,12 +38,11 @@ export function isTimeSlotAvailable(date: string, time: string): boolean {
   if (date !== todayStr) return true
 
   // For today, check 3-hour advance rule
-  const [hour, minute] = time.split(':').map(Number)
   const slotTime = new Date()
-  slotTime.setHours(hour, minute, 0, 0)
+  slotTime.setHours(parseInt(hour), parseInt(minute), 0, 0)
 
   // Special case for 00:00 - it's next day
-  if (hour === 0) {
+  if (hour === '00') {
     slotTime.setDate(slotTime.getDate() + 1)
   }
 
@@ -81,39 +52,24 @@ export function isTimeSlotAvailable(date: string, time: string): boolean {
 }
 
 /**
- * Get time periods with available slots for a given date
+ * Get available hours for a specific date
  */
-export function getAvailableTimePeriods(date: string): TimePeriod[] {
-  const allSlots = generateAllTimeSlots()
-  const availableSlots = allSlots.filter(slot => isTimeSlotAvailable(date, slot.time))
+export function getAvailableHoursForDate(date: string): string[] {
+  const allHours = getAvailableHours()
 
-  const periods: TimePeriod[] = [
-    {
-      key: 'morning',
-      label: 'เช้า',
-      icon: '🌅',
-      slots: availableSlots.filter(slot => slot.period === 'morning')
-    },
-    {
-      key: 'afternoon',
-      label: 'บ่าย',
-      icon: '🌞',
-      slots: availableSlots.filter(slot => slot.period === 'afternoon')
-    },
-    {
-      key: 'evening',
-      label: 'เย็น',
-      icon: '🌆',
-      slots: availableSlots.filter(slot => slot.period === 'evening')
-    },
-    {
-      key: 'night',
-      label: 'กลางคืน',
-      icon: '🌙',
-      slots: availableSlots.filter(slot => slot.period === 'night')
-    }
-  ]
+  return allHours.filter(hour => {
+    // Check if any minute interval in this hour is available
+    return getMinuteIntervals().some(minute =>
+      isTimeSlotAvailable(date, hour, minute)
+    )
+  })
+}
 
-  // Only return periods that have available slots
-  return periods.filter(period => period.slots.length > 0)
+/**
+ * Get available minutes for a specific date and hour
+ */
+export function getAvailableMinutesForDateHour(date: string, hour: string): string[] {
+  return getMinuteIntervals().filter(minute =>
+    isTimeSlotAvailable(date, hour, minute)
+  )
 }
