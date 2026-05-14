@@ -69,6 +69,11 @@ export function getAvailableHoursForDate(date: string): string[] {
  * Get available minutes for a specific date and hour
  */
 export function getAvailableMinutesForDateHour(date: string, hour: string): string[] {
+  // For midnight hour (00), only allow 00:00, not 00:15/00:30/00:45
+  if (hour === '00') {
+    return isTimeSlotAvailable(date, hour, '00') ? ['00'] : []
+  }
+
   return getMinuteIntervals().filter(minute =>
     isTimeSlotAvailable(date, hour, minute)
   )
