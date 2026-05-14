@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Calendar,
@@ -22,6 +22,7 @@ import ServiceModeSelector from './ServiceModeSelector'
 import ServiceSelector from './ServiceSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ProviderPreferenceSelector from './ProviderPreferenceSelector'
+import { getAvailableHoursForDate, getAvailableMinutesForDateHour } from '../utils/timeSlots'
 import type { Service, ServiceSelection } from '../types/booking'
 
 interface BookingModalProps {
@@ -94,6 +95,10 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
   // Get hotel discount information
   const { getDiscountAmount } = useHotelContext()
 
+  // Local state for two-step time selection
+  const [selectedHour, setSelectedHour] = useState('')
+  const [selectedMinute, setSelectedMinute] = useState('')
+
   // Fetch services
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services'],
@@ -127,14 +132,26 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
     }
   }, [isOpen, service, resetAll, addServiceSelection, getDiscountAmount])
 
-  // Time slots
-  const timeSlots = [
-    '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00',
-    '17:00', '18:00', '19:00', '20:00'
-  ]
+  // Available hours and minutes based on selected date
+  const availableHours = date ? getAvailableHoursForDate(date) : []
+  const availableMinutes = date && selectedHour ? getAvailableMinutesForDateHour(date, selectedHour) : []
 
   const today = new Date().toISOString().split('T')[0]
+
+  // Update store time when hour and minute are both selected
+  useEffect(() => {
+    if (selectedHour && selectedMinute) {
+      setTime(`${selectedHour}:${selectedMinute}`)
+    } else {
+      setTime('')
+    }
+  }, [selectedHour, selectedMinute, setTime])
+
+  // Reset hour and minute when date changes
+  useEffect(() => {
+    setSelectedHour('')
+    setSelectedMinute('')
+  }, [date])
 
   const handleServiceSelect = (selection: ServiceSelection) => {
     addServiceSelection(selection)
@@ -416,7 +433,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-stone-900">เลือกวันที่และเวลา</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">
                     วันที่ *
@@ -433,26 +450,56 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                   </div>
                 </div>
 
+                {/* Time Selection - Step 1: Hour */}
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">
-                    เวลา *
+                    เลือกชั่วโมง *
                   </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
-                    <select
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition appearance-none"
-                    >
-                      <option value="">เลือกเวลา</option>
-                      {timeSlots.map((slot) => (
-                        <option key={slot} value={slot}>
-                          {slot}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-4 gap-2">
+                    {availableHours.map((hour) => (
+                      <button
+                        key={hour}
+                        type="button"
+                        onClick={() => {
+                          setSelectedHour(hour)
+                          setSelectedMinute('') // Reset minute selection
+                        }}
+                        className={`py-2 px-3 rounded-lg border transition text-sm ${
+                          selectedHour === hour
+                            ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
+                            : 'border-stone-300 hover:border-amber-300'
+                        }`}
+                      >
+                        {hour === '00' ? '00' : hour} น.
+                      </button>
+                    ))}
                   </div>
                 </div>
+
+                {/* Time Selection - Step 2: Minute */}
+                {selectedHour && (
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                      เลือกนาที *
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableMinutes.map((minute) => (
+                        <button
+                          key={minute}
+                          type="button"
+                          onClick={() => setSelectedMinute(minute)}
+                          className={`py-2 px-3 rounded-lg border transition ${
+                            selectedMinute === minute
+                              ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
+                              : 'border-stone-300 hover:border-amber-300'
+                          }`}
+                        >
+                          {selectedHour}:{minute}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
