@@ -2,7 +2,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from '@bliss/i18n'
 import { ChevronLeft, Clock, Calendar, MapPin, CreditCard, Building2, Banknote, AlertTriangle, CheckCircle, Sparkles, Plus, QrCode, Smartphone, Wallet, User, Phone } from 'lucide-react'
-import { getAvailableHoursForDate, getAvailableMinutesForDateHour, formatTimeDisplay } from '../utils/timeSlots'
+import { getAvailableTimePeriods } from '../utils/timeSlots'
 import { useServiceBySlug, useServiceById } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCreateBookingWithServices } from '@bliss/supabase/hooks/useBookings'
@@ -56,8 +56,6 @@ function BookingWizard() {
   const [pointsDiscount, setPointsDiscount] = useState(0)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
-  const [selectedHour, setSelectedHour] = useState('')
-  const [selectedMinute, setSelectedMinute] = useState('')
   const [providerPreference, setProviderPreference] = useState<ProviderPreference>('no-preference')
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showManualAddressForm, setShowManualAddressForm] = useState(false)
@@ -194,18 +192,8 @@ function BookingWizard() {
     return date.toISOString().split('T')[0]
   })
 
-  // Available hours and minutes based on selected date
-  const availableHours = selectedDate ? getAvailableHoursForDate(selectedDate) : []
-  const availableMinutes = selectedDate && selectedHour ? getAvailableMinutesForDateHour(selectedDate, selectedHour) : []
-
-  // Update selectedTime when hour and minute are both selected
-  useEffect(() => {
-    if (selectedHour && selectedMinute) {
-      setSelectedTime(`${selectedHour}:${selectedMinute}`)
-    } else {
-      setSelectedTime('')
-    }
-  }, [selectedHour, selectedMinute])
+  // Available time periods based on selected date
+  const availableTimePeriods = selectedDate ? getAvailableTimePeriods(selectedDate) : []
 
   const steps = [
     { num: 1, label: t('wizard.steps.service') },
@@ -755,9 +743,7 @@ function BookingWizard() {
                         key={date}
                         onClick={() => {
                           setSelectedDate(date)
-                          // Reset hour and minute when date changes
-                          setSelectedHour('')
-                          setSelectedMinute('')
+                          // Reset time when date changes
                           setSelectedTime('')
                         }}
                         className={`p-4 rounded-xl border-2 transition ${
@@ -775,50 +761,35 @@ function BookingWizard() {
                 </div>
               </div>
 
-              {/* Time Selection - Step 1: Hour */}
+              {/* Time Selection by Periods */}
               <div>
-                <h3 className="font-semibold text-stone-900 mb-3">{t('wizard.step2.time')} - เลือกชั่วโมง</h3>
-                <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
-                  {availableHours.map((hour) => (
-                    <button
-                      key={hour}
-                      onClick={() => {
-                        setSelectedHour(hour)
-                        setSelectedMinute('') // Reset minute selection
-                      }}
-                      className={`py-2 px-3 rounded-xl border-2 transition text-sm ${
-                        selectedHour === hour
-                          ? 'border-amber-500 bg-stone-50 text-amber-700 font-medium'
-                          : 'border-stone-200 hover:border-amber-300'
-                      }`}
-                    >
-                      {hour === '00' ? '00' : hour} น.
-                    </button>
+                <h3 className="font-semibold text-stone-900 mb-3">{t('wizard.step2.time')}</h3>
+                <div className="space-y-4">
+                  {availableTimePeriods.map((period) => (
+                    <div key={period.key}>
+                      <h4 className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
+                        <span className="text-lg">{period.icon}</span>
+                        {period.label}
+                      </h4>
+                      <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                        {period.slots.map((slot) => (
+                          <button
+                            key={slot.time}
+                            onClick={() => setSelectedTime(slot.time)}
+                            className={`py-2 px-3 rounded-xl border-2 transition text-sm ${
+                              selectedTime === slot.time
+                                ? 'border-amber-500 bg-stone-50 text-amber-700 font-medium'
+                                : 'border-stone-200 hover:border-amber-300'
+                            }`}
+                          >
+                            {slot.time}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-
-              {/* Time Selection - Step 2: Minute */}
-              {selectedHour && (
-                <div>
-                  <h3 className="font-semibold text-stone-900 mb-3">เลือกนาที</h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    {availableMinutes.map((minute) => (
-                      <button
-                        key={minute}
-                        onClick={() => setSelectedMinute(minute)}
-                        className={`py-3 px-4 rounded-xl border-2 transition ${
-                          selectedMinute === minute
-                            ? 'border-amber-500 bg-stone-50 text-amber-700 font-medium'
-                            : 'border-stone-200 hover:border-amber-300'
-                        }`}
-                      >
-                        {selectedHour}:{minute}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {!selectedDate || !selectedTime ? (
                 <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm flex items-center gap-2">

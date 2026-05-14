@@ -22,7 +22,7 @@ import ServiceModeSelector from './ServiceModeSelector'
 import ServiceSelector from './ServiceSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ProviderPreferenceSelector from './ProviderPreferenceSelector'
-import { getAvailableHoursForDate, getAvailableMinutesForDateHour } from '../utils/timeSlots'
+import { getAvailableTimePeriods } from '../utils/timeSlots'
 import type { Service, ServiceSelection } from '../types/booking'
 
 interface BookingModalProps {
@@ -95,9 +95,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
   // Get hotel discount information
   const { getDiscountAmount } = useHotelContext()
 
-  // Local state for two-step time selection
-  const [selectedHour, setSelectedHour] = useState('')
-  const [selectedMinute, setSelectedMinute] = useState('')
+  // No additional local state needed - using store time directly
 
   // Fetch services
   const { data: services = [], isLoading: servicesLoading } = useQuery({
@@ -132,26 +130,15 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
     }
   }, [isOpen, service, resetAll, addServiceSelection, getDiscountAmount])
 
-  // Available hours and minutes based on selected date
-  const availableHours = date ? getAvailableHoursForDate(date) : []
-  const availableMinutes = date && selectedHour ? getAvailableMinutesForDateHour(date, selectedHour) : []
+  // Available time periods based on selected date
+  const availableTimePeriods = date ? getAvailableTimePeriods(date) : []
 
   const today = new Date().toISOString().split('T')[0]
 
-  // Update store time when hour and minute are both selected
+  // Reset time when date changes
   useEffect(() => {
-    if (selectedHour && selectedMinute) {
-      setTime(`${selectedHour}:${selectedMinute}`)
-    } else {
-      setTime('')
-    }
-  }, [selectedHour, selectedMinute, setTime])
-
-  // Reset hour and minute when date changes
-  useEffect(() => {
-    setSelectedHour('')
-    setSelectedMinute('')
-  }, [date])
+    setTime('')
+  }, [date, setTime])
 
   const handleServiceSelect = (selection: ServiceSelection) => {
     addServiceSelection(selection)
@@ -450,56 +437,38 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                   </div>
                 </div>
 
-                {/* Time Selection - Step 1: Hour */}
+                {/* Time Selection by Periods */}
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    เลือกชั่วโมง *
+                  <label className="block text-sm font-medium text-stone-700 mb-3">
+                    เลือกเวลา *
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {availableHours.map((hour) => (
-                      <button
-                        key={hour}
-                        type="button"
-                        onClick={() => {
-                          setSelectedHour(hour)
-                          setSelectedMinute('') // Reset minute selection
-                        }}
-                        className={`py-2 px-3 rounded-lg border transition text-sm ${
-                          selectedHour === hour
-                            ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
-                            : 'border-stone-300 hover:border-amber-300'
-                        }`}
-                      >
-                        {hour === '00' ? '00' : hour} น.
-                      </button>
+                  <div className="space-y-4">
+                    {availableTimePeriods.map((period) => (
+                      <div key={period.key}>
+                        <h4 className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
+                          <span className="text-lg">{period.icon}</span>
+                          {period.label}
+                        </h4>
+                        <div className="grid grid-cols-4 gap-2">
+                          {period.slots.map((slot) => (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              onClick={() => setTime(slot.time)}
+                              className={`py-2 px-3 rounded-lg border transition text-sm ${
+                                time === slot.time
+                                  ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
+                                  : 'border-stone-300 hover:border-amber-300'
+                              }`}
+                            >
+                              {slot.time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Time Selection - Step 2: Minute */}
-                {selectedHour && (
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      เลือกนาที *
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {availableMinutes.map((minute) => (
-                        <button
-                          key={minute}
-                          type="button"
-                          onClick={() => setSelectedMinute(minute)}
-                          className={`py-2 px-3 rounded-lg border transition ${
-                            selectedMinute === minute
-                              ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
-                              : 'border-stone-300 hover:border-amber-300'
-                          }`}
-                        >
-                          {selectedHour}:{minute}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div>

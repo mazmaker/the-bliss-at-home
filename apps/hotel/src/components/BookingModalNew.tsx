@@ -15,7 +15,7 @@ import CoupleFormatSelector from './CoupleFormatSelector'
 import ServiceSelector from './ServiceSelector'
 import PricingSummary from './PricingSummary'
 import ProviderPreferenceSelector from './ProviderPreferenceSelector'
-import { getAvailableHoursForDate, getAvailableMinutesForDateHour } from '../utils/timeSlots'
+import { getAvailableTimePeriods } from '../utils/timeSlots'
 
 interface BookingModalNewProps {
   isOpen: boolean
@@ -92,9 +92,7 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   const navigate = useNavigate()
   const { hotelId, getHotelSlug } = useHotelContext()
 
-  // Local state for two-step time selection
-  const [selectedHour, setSelectedHour] = useState('')
-  const [selectedMinute, setSelectedMinute] = useState('')
+  // No additional local state needed - using store time directly
 
   // Helper function to get provider preference label (moved to component scope)
   const getProviderPreferenceLabel = (preference: ProviderPreference): string => {
@@ -137,9 +135,8 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     })
   }, [rawServices, initialService])
 
-  // Available hours and minutes based on selected date
-  const availableHours = date ? getAvailableHoursForDate(date) : []
-  const availableMinutes = date && selectedHour ? getAvailableMinutesForDateHour(date, selectedHour) : []
+  // Available time periods based on selected date
+  const availableTimePeriods = date ? getAvailableTimePeriods(date) : []
 
   // Calculate minimum date and time (3 hours from now)
   const now = new Date()
@@ -154,20 +151,10 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     return maxDateTime.toISOString().split('T')[0]
   }, [])
 
-  // Update store time when hour and minute are both selected
+  // Reset time when date changes
   useEffect(() => {
-    if (selectedHour && selectedMinute) {
-      setTime(`${selectedHour}:${selectedMinute}`)
-    } else {
-      setTime('')
-    }
-  }, [selectedHour, selectedMinute, setTime])
-
-  // Reset hour and minute when date changes
-  useEffect(() => {
-    setSelectedHour('')
-    setSelectedMinute('')
-  }, [date])
+    setTime('')
+  }, [date, setTime])
 
   // Initialize service mode when modal opens with initial service
   useEffect(() => {
@@ -609,64 +596,42 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                   </div>
                 </div>
 
-                {/* Time Selection - Step 1: Hour */}
+                {/* Time Selection by Periods */}
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    เลือกชั่วโมง <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-stone-700 mb-3">
+                    เลือกเวลา <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {availableHours.map((hour) => (
-                      <button
-                        key={hour}
-                        onClick={() => {
-                          setSelectedHour(hour)
-                          setSelectedMinute('') // Reset minute selection
-                        }}
-                        className={`py-2 px-3 rounded-xl text-sm font-medium transition ${
-                          selectedHour === hour
-                            ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                            : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                        }`}
-                      >
-                        {hour === '00' ? '00' : hour} น.
-                      </button>
+                  <div className="space-y-4">
+                    {availableTimePeriods.map((period) => (
+                      <div key={period.key}>
+                        <h4 className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
+                          <span className="text-lg">{period.icon}</span>
+                          {period.label}
+                        </h4>
+                        <div className="grid grid-cols-4 gap-2">
+                          {period.slots.map((slot) => (
+                            <button
+                              key={slot.time}
+                              onClick={() => setTime(slot.time)}
+                              className={`py-2 px-3 rounded-xl text-sm font-medium transition ${
+                                time === slot.time
+                                  ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
+                                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                              }`}
+                            >
+                              {slot.time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                  {availableHours.length === 0 && (
+                  {availableTimePeriods.length === 0 && (
                     <div className="text-center py-4 text-stone-500 text-sm">
                       ไม่มีเวลาที่สามารถจองได้ในวันนี้ กรุณาเลือกวันถัดไป
                     </div>
                   )}
                 </div>
-
-                {/* Time Selection - Step 2: Minute */}
-                {selectedHour && (
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      เลือกนาที <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {availableMinutes.map((minute) => (
-                        <button
-                          key={minute}
-                          onClick={() => setSelectedMinute(minute)}
-                          className={`py-2 px-3 rounded-xl text-sm font-medium transition ${
-                            selectedMinute === minute
-                              ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                              : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                          }`}
-                        >
-                          {selectedHour}:{minute}
-                        </button>
-                      ))}
-                    </div>
-                    {availableMinutes.length === 0 && (
-                      <div className="text-center py-4 text-stone-500 text-sm">
-                        ไม่มีนาทีที่สามารถจองได้ในช่วงเวลานี้
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">หมายเหตุ</label>
