@@ -337,16 +337,16 @@ function calculateServicePriceWithDiscount(service: any, duration: number, hotel
 }
 
 /**
- * Calculate staff earnings for extension service (same as regular bookings - from actual price paid)
+ * Calculate staff earnings for hotel extension (using regular customer price, not hotel discounted price)
  */
 async function calculateStaffExtensionEarnings(
   booking: BookingWithExtensions,
-  extensionPrice: number
+  additionalDuration: number
 ): Promise<number> {
-  // Get service commission rate
+  // Get service with commission rate and regular prices
   const { data: service } = await supabase
     .from('services')
-    .select('staff_commission_rate')
+    .select('staff_commission_rate, price_60, price_90, price_120, base_price, duration')
     .eq('id', booking.booking_services[0].service_id)
     .single();
 
@@ -357,13 +357,30 @@ async function calculateStaffExtensionEarnings(
     );
   }
 
-  // Calculate staff earnings from actual extension price (same as regular jobs use final_price)
+  // Get regular customer price (same logic as customer bookings)
+  let regularPrice: number;
+
+  if (additionalDuration === 60 && service.price_60) {
+    regularPrice = service.price_60;
+  } else if (additionalDuration === 90 && service.price_90) {
+    regularPrice = service.price_90;
+  } else if (additionalDuration === 120 && service.price_120) {
+    regularPrice = service.price_120;
+  } else {
+    // Fallback: calculate proportional price from base
+    const baseRate = service.base_price / service.duration;
+    regularPrice = Math.round(baseRate * additionalDuration);
+  }
+
+  // Calculate staff earnings from regular customer price (not hotel discounted price)
   const commissionRate = Number(service.staff_commission_rate) || 0.30;
   const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
-  const staffEarnings = Math.round(extensionPrice * (normalizedRate / 100));
+  const staffEarnings = Math.round(regularPrice * (normalizedRate / 100));
 
-  console.log('💰 Extension Staff Earnings (Actual Price-based):', {
-    extensionPrice,
+  console.log('💰 Hotel Extension Staff Earnings (Regular Price-based):', {
+    additionalDuration,
+    regularPrice,
+    hotelPaysLess: 'but staff gets commission from regular price',
     commissionRate: normalizedRate,
     staffEarnings
   });
