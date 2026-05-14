@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Phone, MessageCircle, Clock, AlertTriangle, CheckCircle, Users } from 'lucide-react'
+import { Phone, MessageCircle, Clock, X, Sparkles, Star } from 'lucide-react'
 
 interface EmergencyBookingBannerProps {
   onContactAdmin?: (method: 'phone' | 'line' | 'chat') => void
@@ -7,13 +7,13 @@ interface EmergencyBookingBannerProps {
 
 export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBookingBannerProps) {
   const [isVisible, setIsVisible] = useState(true)
-  const [currentStats, setCurrentStats] = useState(42) // Dynamic number
+  const [currentStats, setCurrentStats] = useState(42)
 
-  // Animate stats every few seconds for engagement
+  // Gentle animation for engagement
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStats(prev => prev + Math.floor(Math.random() * 3))
-    }, 5000)
+      setCurrentStats(prev => prev + Math.floor(Math.random() * 2))
+    }, 8000)
     return () => clearInterval(interval)
   }, [])
 
@@ -30,106 +30,105 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
         window.open('https://line.me/ti/p/@blissathome')
         break
       case 'chat':
-        // Open chat widget or WhatsApp
         window.open('https://wa.me/66XXXXXXXXX?text=ต้องการนวดด่วนภายใน 30 นาที')
         break
     }
   }
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl shadow-2xl mx-4 my-6">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-full animate-ping delay-1000"></div>
-        <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-white rounded-full animate-bounce delay-500"></div>
+    <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 border-2 border-amber-200 rounded-2xl shadow-lg mx-4 my-6">
+      {/* Subtle animated background */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-orange-300 to-amber-300 rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
       </div>
 
       {/* Main content */}
       <div className="relative z-10 p-6">
-        {/* Close button */}
+        {/* Elegant close button */}
         <button
           onClick={() => setIsVisible(false)}
-          className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-stone-400 hover:text-stone-600 transition-colors p-1 hover:bg-white rounded-full"
         >
-          <AlertTriangle className="w-4 h-4" />
+          <X className="w-4 h-4" />
         </button>
 
-        {/* Header with urgency indicator */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative">
-            <Clock className="w-8 h-8 text-white animate-pulse" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping"></div>
+        {/* Premium header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">
-              🚨 ต้องการนวดภายใน 30 นาทีนี้?
-            </h2>
-            <p className="text-red-100 text-sm font-medium">
-              URGENT BOOKING • ไม่ทันจองล่วงหน้า? เราช่วยได้!
-            </p>
-          </div>
+
+          <h2 className="text-2xl font-light text-stone-800 mb-2">
+            บริการพิเศษ
+          </h2>
+          <p className="text-lg text-stone-700 font-medium">
+            ต้องการนวดภายใน 30 นาทีนี้?
+          </p>
+          <p className="text-stone-600 text-sm mt-1">
+            ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ
+          </p>
         </div>
 
-        {/* Value proposition */}
-        <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-6 h-6 text-green-300 flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="text-white font-semibold mb-2">เราจะช่วยคุณ:</h3>
-              <ul className="text-red-100 text-sm space-y-1">
-                <li>✅ ตรวจสอบคิวนักนวดที่ใกล้คุณที่สุด</li>
-                <li>✅ จัดการจองพิเศษให้ภายใน 5 นาที</li>
-                <li>✅ รับประกันบริการหรือคืนเงิน 100%</li>
-              </ul>
+        {/* Elegant value proposition */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-amber-200/50 p-5 mb-6">
+          <h3 className="text-stone-800 font-medium mb-3 flex items-center gap-2">
+            <Star className="w-5 h-5 text-amber-500" />
+            บริการด่วนพิเศษ
+          </h3>
+          <div className="grid grid-cols-1 gap-2">
+            <div className="flex items-start gap-2 text-sm">
+              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
+              <span className="text-stone-700">ตรวจสอบคิวนักนวดที่พร้อมให้บริการ</span>
+            </div>
+            <div className="flex items-start gap-2 text-sm">
+              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
+              <span className="text-stone-700">จัดการจองพิเศษภายใน 5 นาที</span>
+            </div>
+            <div className="flex items-start gap-2 text-sm">
+              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
+              <span className="text-stone-700">รับประกันคุณภาพเหมือนการจองปกติ</span>
             </div>
           </div>
         </div>
 
-        {/* Contact methods */}
+        {/* Premium contact methods */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <button
             onClick={() => handleContact('phone')}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 active:scale-95"
+            className="bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white p-4 rounded-xl transition-all duration-300 hover:shadow-lg group"
           >
-            <Phone className="w-6 h-6 text-white mx-auto mb-2" />
-            <div className="text-white text-sm font-semibold">โทรเลย</div>
-            <div className="text-red-100 text-xs">ตอบรับ 24/7</div>
+            <Phone className="w-5 h-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-sm font-medium">โทรเลย</div>
+            <div className="text-xs opacity-90">24/7</div>
           </button>
 
           <button
             onClick={() => handleContact('line')}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 active:scale-95"
+            className="bg-gradient-to-b from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white p-4 rounded-xl transition-all duration-300 hover:shadow-lg group"
           >
-            <div className="w-6 h-6 mx-auto mb-2 text-white font-bold">LINE</div>
-            <div className="text-white text-sm font-semibold">แชทเลย</div>
-            <div className="text-red-100 text-xs">ตอบใน 2 นาที</div>
+            <div className="w-5 h-5 mx-auto mb-2 text-sm font-bold group-hover:scale-110 transition-transform">LINE</div>
+            <div className="text-sm font-medium">แชทเลย</div>
+            <div className="text-xs opacity-90">2 นาที</div>
           </button>
 
           <button
             onClick={() => handleContact('chat')}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 active:scale-95"
+            className="bg-gradient-to-b from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white p-4 rounded-xl transition-all duration-300 hover:shadow-lg group"
           >
-            <MessageCircle className="w-6 h-6 text-white mx-auto mb-2" />
-            <div className="text-white text-sm font-semibold">WhatsApp</div>
-            <div className="text-red-100 text-xs">รวดเร็วที่สุด</div>
+            <MessageCircle className="w-5 h-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-sm font-medium">WhatsApp</div>
+            <div className="text-xs opacity-90">รวดเร็ว</div>
           </button>
         </div>
 
-        {/* Social proof */}
-        <div className="flex items-center justify-center gap-2 text-red-100">
-          <Users className="w-4 h-4" />
-          <span className="text-sm">
-            💚 เราช่วยลูกค้าฉุกเฉิน{' '}
-            <span className="font-bold text-white">{currentStats}+</span> คนต่อวัน
-          </span>
-        </div>
-
-        {/* Urgency timer effect */}
-        <div className="mt-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full text-sm font-semibold animate-pulse">
+        {/* Elegant social proof */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm">
             <Clock className="w-4 h-4" />
-            ตอบกลับภายใน 5 นาที หรือฟรี!
+            <span>เราช่วยลูกค้าด่วน <strong>{currentStats}+ คน</strong> ต่อวัน</span>
           </div>
         </div>
       </div>
