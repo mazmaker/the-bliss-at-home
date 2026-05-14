@@ -358,7 +358,7 @@ class HotelAuthService {
     try {
       // TODO: Implement proper token verification when columns are added
       // For now, return true for any non-empty token as a temporary workaround
-      return token && token.length > 0
+      return !!(token && token.length > 0)
 
       /* Original implementation when columns are available:
       const { data: hotel, error } = await getSupabaseClient()

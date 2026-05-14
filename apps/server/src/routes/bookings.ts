@@ -1522,7 +1522,7 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
             customer_id: booking.customer_id,
             amount: finalExtensionPrice,
             currency: 'THB',
-            payment_method: body.payment_method || 'credit_card',
+            payment_method: (body as any).paymentMethod || 'credit_card',
             description: `Extension payment for ${body.additional_duration} minutes - Booking ${booking.booking_number}`,
             status: charge.paid ? 'successful' : 'pending',
             omise_charge_id: charge.id,
@@ -1542,7 +1542,7 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
 
         paymentInfo = {
           requires_payment: true,
-          payment_url: charge.authorize_uri || charge.redirect_url,
+          payment_url: `https://dashboard.omise.co/charges/${charge.id}`,
           payment_reference: charge.id,
           transaction_id: transaction.id,
           charge_status: charge.status

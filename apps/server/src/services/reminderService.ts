@@ -135,8 +135,8 @@ class ReminderService {
           staffName: staff.name_th,
           profileId: staff.profile_id,
           lineUserId: profile?.line_user_id || null,
-          customerName: booking.customer?.full_name || 'ลูกค้า',
-          serviceName: booking.service?.name_th || 'บริการ',
+          customerName: (booking.customer as any)?.full_name || 'ลูกค้า',
+          serviceName: (booking.service as any)?.name_th || 'บริการ',
           scheduledDate: job.scheduled_date,
           scheduledTime: job.scheduled_time,
           location,
@@ -240,7 +240,7 @@ class ReminderService {
             }
           ]
         }
-      }])
+      }] as any)
     } catch (error) {
       console.error('[Reminder] Failed to send LINE notification:', error)
       // ไม่ throw error เพราะ in-app notification ยังส่งสำเร็จ
