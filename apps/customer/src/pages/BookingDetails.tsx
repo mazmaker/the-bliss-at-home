@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, XCircle, Download, FileText, Users } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
@@ -7,12 +7,14 @@ import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
 import { ReviewModal } from '../components/ReviewModal'
 import { ExtendServiceButtonLarge } from '../components/ExtendServiceButton'
+import { StaffTrackingMap } from '../components'
 import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 import { BookingWithExtensions } from '../types/extendService'
 import { getServiceImage } from '../utils/imageUtils'
-
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+
+// ใช้ regular supabase client แทน service role เพื่อหลีกเลี่ยง multiple instances
 
 function BookingDetails() {
   const { t } = useTranslation(['booking', 'common'])
@@ -24,12 +26,32 @@ function BookingDetails() {
   const [showRescheduleModal, setShowRescheduleModal] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
 
-  // Fetch booking data from Supabase
+  // Journey tracking state
+  const [activeJourneyId, setActiveJourneyId] = useState<string | null>(null)
+  const [isTrackingLoading, setIsTrackingLoading] = useState(false)
+
+  // Fetch booking data from Supabase with cache busting
   const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
+
+  // 🔄 Force refresh every time component mounts (for debugging)
+  useEffect(() => {
+    console.log('🔄 Force refreshing booking data...')
+    refetch()
+  }, [id, refetch])
 
   // Transform booking data to match UI format
   const booking = useMemo(() => {
     if (!bookingData) return null
+
+    // 🔍 Debug payment data
+    console.log('💳 Payment Debug:', {
+      booking_number: bookingData.booking_number,
+      payment_method: bookingData.payment_method,
+      payment_status: bookingData.payment_status,
+      base_price: bookingData.base_price,
+      final_price: bookingData.final_price,
+      full_booking_data: bookingData
+    })
 
     return {
       id: bookingData.booking_number,
@@ -54,16 +76,20 @@ function BookingDetails() {
         zipcode: '',
       },
       notes: bookingData.customer_notes || '',
-      provider: bookingData.staff
+      provider: bookingData.staff?.profiles
         ? {
-            name: bookingData.staff.name_en || bookingData.staff.name_th || '',
-            rating: 4.8, // TODO: Calculate from reviews
-            reviews: 0, // TODO: Count from reviews
+            name: bookingData.staff.profiles.full_name || 'ไม่ระบุชื่อ',
+            rating: bookingData.staff.rating || 4.8,
+            reviews: bookingData.staff.total_reviews || 0,
+            avatar: bookingData.staff.profiles.avatar_url,
+            phone: bookingData.staff.profiles.phone,
           }
         : {
-            name: 'Staff TBA',
+            name: 'ยังไม่ได้มอบหมายพนักงาน',
             rating: 0,
             reviews: 0,
+            avatar: null,
+            phone: null,
           },
       payment: {
         method: bookingData.payment_method || 'cash',
@@ -74,6 +100,78 @@ function BookingDetails() {
       providerPreference: (bookingData as any).provider_preference || null,
     }
   }, [bookingData])
+
+  // Fetch active journey for this booking
+  useEffect(() => {
+    const fetchActiveJourney = async () => {
+      if (!bookingData?.id) return
+
+      setIsTrackingLoading(true)
+      try {
+        // For testing: ใช้ journey ID สำหรับ booking ทดสอบ
+        if (bookingData.booking_number === 'BK20260518-GPS1') {
+          console.log('Using GPS test journey ID for BK20260518-GPS1')
+          setActiveJourneyId('journey-test-001')
+          setIsTrackingLoading(false)
+          return
+        } else if (bookingData.booking_number === 'BK20260518-GPS2') {
+          console.log('Using GPS test journey ID for BK20260518-GPS2')
+          setActiveJourneyId('journey-test-002')
+          setIsTrackingLoading(false)
+          return
+        }
+
+        // Check if there's an active journey for this booking
+        const { data: journeys, error } = await supabase
+          .from('staff_journeys')
+          .select('id, status')
+          .eq('booking_id', bookingData.id)
+          .in('status', ['traveling', 'arrived']) // Only show map for active journeys
+          .order('started_at', { ascending: false })
+          .limit(1)
+
+        console.log('Journey query result:', { journeys, error, bookingId: bookingData.id })
+
+        if (error) {
+          console.log('Error fetching journey:', error.message)
+          setActiveJourneyId(null)
+        } else if (journeys && journeys.length > 0) {
+          console.log('Found active journey:', journeys[0].id)
+          setActiveJourneyId(journeys[0].id)
+        } else {
+          console.log('No active journey found')
+          setActiveJourneyId(null)
+        }
+      } catch (err) {
+        console.error('Error fetching journey:', err)
+        setActiveJourneyId(null)
+      } finally {
+        setIsTrackingLoading(false)
+      }
+    }
+
+    fetchActiveJourney()
+
+    // Set up real-time subscription for journey changes
+    if (bookingData?.id) {
+      const channel = supabase
+        .channel('booking-journey-tracking')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'staff_journeys',
+          filter: `booking_id=eq.${bookingData.id}`
+        }, () => {
+          console.log('Journey updated, refreshing tracking...')
+          fetchActiveJourney()
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [bookingData?.id])
 
   // Transform booking data for extension system
   const extendableBooking = useMemo((): BookingWithExtensions | null => {
@@ -395,6 +493,35 @@ function BookingDetails() {
     }
   }
 
+  // 🔧 Debug: Manual update payment status
+  const updatePaymentStatus = async (newStatus: 'paid' | 'pending' | 'failed') => {
+    if (!bookingData) return
+
+    try {
+      console.log(`💳 Updating payment status to: ${newStatus}`)
+
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          payment_status: newStatus,
+          payment_method: newStatus === 'paid' ? 'cash' : 'cash',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', bookingData.id)
+
+      if (error) {
+        console.error('❌ Failed to update payment status:', error)
+        alert('Failed to update: ' + error.message)
+      } else {
+        console.log('✅ Payment status updated')
+        await refetch() // Refresh booking data
+      }
+    } catch (err) {
+      console.error('❌ Update error:', err)
+      alert('Update failed: ' + err)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -539,17 +666,32 @@ function BookingDetails() {
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.provider')}</h2>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-amber-100 rounded-full flex items-center justify-center">
+                {booking.provider.avatar ? (
+                  <img
+                    src={booking.provider.avatar}
+                    alt={booking.provider.name}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-amber-200"
+                    onError={(e) => {
+                      // Fallback to default icon if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                    }}
+                  />
+                ) : null}
+                <div
+                  className={`w-16 h-16 bg-gradient-to-br from-stone-100 to-amber-100 rounded-full flex items-center justify-center ${booking.provider.avatar ? 'hidden' : 'flex'}`}
+                >
                   <Sparkles className="w-8 h-8 text-amber-700" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-stone-900">{booking.provider.name}</h3>
                   <div className="flex items-center gap-2 text-sm text-stone-600">
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span>{booking.provider.rating}</span>
+                    <span>{booking.provider.rating.toFixed(1)}</span>
                     <span>•</span>
                     <span>{booking.provider.reviews} {t('details.reviews')}</span>
                   </div>
+                  {/* Skills removed - column doesn't exist in database */}
                   {isSpecificPreference(booking.providerPreference) && (
                     <div className="mt-2">
                       <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(booking.providerPreference)}`}>
@@ -561,6 +703,33 @@ function BookingDetails() {
                 </div>
               </div>
             </div>
+
+            {/* Staff Tracking Map */}
+            {activeJourneyId && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                  ติดตามการเดินทางของพนักงาน
+                </h2>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-blue-700 text-sm">
+                    พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง
+                  </p>
+                </div>
+                <StaffTrackingMap journeyId={activeJourneyId} height="350px" />
+              </div>
+            )}
+
+            {/* Loading state for tracking */}
+            {isTrackingLoading && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-gray-600 text-sm">กำลังตรวจสอบการเดินทางของพนักงาน...</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Summary & Actions */}
@@ -594,7 +763,21 @@ function BookingDetails() {
 
             {/* Payment Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> {t('details.paymentTitle')}</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" /> {t('details.paymentTitle')}
+                </h2>
+                {/* 🔧 Debug: Refresh button */}
+                <button
+                  onClick={() => {
+                    console.log('🔄 Manual refresh booking data...')
+                    refetch()
+                  }}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-stone-600">
                   <span>{t('details.paymentMethod')}</span>
@@ -602,15 +785,49 @@ function BookingDetails() {
                 </div>
                 <div className="flex justify-between text-stone-600">
                   <span>{t('common:status.label')}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     booking.payment.status === 'paid'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-green-100 text-green-700 border border-green-200'
                       : booking.payment.status === 'refunded'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-yellow-100 text-yellow-700'
+                        ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                        : booking.payment.status === 'failed'
+                          ? 'bg-red-100 text-red-700 border border-red-200'
+                          : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                   }`}>
-                    {booking.payment.status === 'paid' ? t('common:status.paid') : booking.payment.status === 'refunded' ? 'คืนเงินแล้ว' : t('common:status.pending')}
+                    {booking.payment.status === 'paid'
+                      ? '✅ ชำระแล้ว'
+                      : booking.payment.status === 'refunded'
+                        ? '🔄 คืนเงินแล้ว'
+                        : booking.payment.status === 'failed'
+                          ? '❌ ชำระไม่สำเร็จ'
+                          : '⏳ รอชำระเงิน'
+                    }
                   </span>
+                </div>
+              </div>
+
+              {/* 🔧 Debug: Payment Status Controls */}
+              <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
+                <p className="text-xs text-gray-600 mb-2">🔧 Debug: Update Payment Status</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updatePaymentStatus('paid')}
+                    className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded hover:bg-green-200"
+                  >
+                    Set Paid
+                  </button>
+                  <button
+                    onClick={() => updatePaymentStatus('pending')}
+                    className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded hover:bg-yellow-200"
+                  >
+                    Set Pending
+                  </button>
+                  <button
+                    onClick={() => updatePaymentStatus('failed')}
+                    className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200"
+                  >
+                    Set Failed
+                  </button>
                 </div>
               </div>
 

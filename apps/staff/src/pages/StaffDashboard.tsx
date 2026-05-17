@@ -4,6 +4,7 @@ import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loa
 import { useAuth } from '@bliss/supabase/auth'
 import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { SOSButton, JobCancellationModal, ServiceTimer, ExtensionAcceptanceCard } from '../components'
+import JobGPSControls from '../components/JobGPSControls'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -391,7 +392,16 @@ function StaffDashboard() {
       {/* My Upcoming Jobs */}
       {myJobs.length > 0 && !currentJob && (
         <div>
-          <h3 className="font-semibold text-stone-900 mb-3">งานของฉัน</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-stone-900">งานของฉัน</h3>
+            <Link
+              to="/staff/tracking"
+              className="text-green-600 hover:text-green-700 text-sm flex items-center gap-1"
+            >
+              <Navigation className="w-4 h-4" />
+              ดู GPS แยก
+            </Link>
+          </div>
           <div className="space-y-3">
             {myJobs.map((job) => (
               <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-stone-100">
@@ -431,6 +441,23 @@ function StaffDashboard() {
                   </div>
                 </Link>
 
+                {/* GPS Tracking Controls */}
+                <JobGPSControls
+                  job={{
+                    id: job.id,
+                    status: job.status,
+                    customer_name: job.customer_name,
+                    customer_address: job.address,
+                    customer_phone: job.customer_phone,
+                    booking_id: job.id
+                  }}
+                  onRefresh={refresh}
+                  onStartJob={handleStartJob}
+                  compact={false}
+                  isProcessing={isProcessing === job.id}
+                  canStartWork={!!eligibility?.canWork}
+                />
+
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                   <div className="flex items-center gap-2">
@@ -442,19 +469,7 @@ function StaffDashboard() {
                       <XCircle className="w-4 h-4" />
                       ยกเลิก
                     </button>
-                    <button
-                      onClick={() => handleStartJob(job.id)}
-                      disabled={isProcessing === job.id || !eligibility?.canWork}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium text-sm flex items-center gap-1 disabled:opacity-50"
-                      title={!eligibility?.canWork ? 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้' : undefined}
-                    >
-                      {isProcessing === job.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Play className="w-4 h-4" />
-                      )}
-                      เริ่มงาน
-                    </button>
+                    {/* ซ่อนปุ่มเริ่มงาน เพราะ GPS Controls จะจัดการแทน */}
                   </div>
                 </div>
               </div>

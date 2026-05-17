@@ -143,7 +143,19 @@ export async function getBookingById(
     .select(`
       *,
       service:services(*),
-      staff(*),
+      staff!inner(
+        id,
+        status,
+        rating,
+        total_reviews,
+        profiles!inner(
+          id,
+          full_name,
+          phone,
+          avatar_url,
+          metadata
+        )
+      ),
       customer:customers(*)
     `)
     .eq('id', bookingId)
@@ -186,7 +198,19 @@ export async function getBookingByNumber(
     .select(`
       *,
       service:services(*),
-      staff(*),
+      staff!inner(
+        id,
+        status,
+        rating,
+        total_reviews,
+        profiles!inner(
+          id,
+          full_name,
+          phone,
+          avatar_url,
+          metadata
+        )
+      ),
       customer:customers(*)
     `)
     .eq('booking_number', bookingNumber)
