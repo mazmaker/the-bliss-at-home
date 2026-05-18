@@ -143,12 +143,12 @@ export async function getBookingById(
     .select(`
       *,
       service:services(*),
-      staff!inner(
+      staff(
         id,
         status,
         rating,
         total_reviews,
-        profiles!inner(
+        profiles(
           id,
           full_name,
           phone,
@@ -198,12 +198,12 @@ export async function getBookingByNumber(
     .select(`
       *,
       service:services(*),
-      staff!inner(
+      staff(
         id,
         status,
         rating,
         total_reviews,
-        profiles!inner(
+        profiles(
           id,
           full_name,
           phone,

@@ -705,17 +705,40 @@ function BookingDetails() {
             </div>
 
             {/* Staff Tracking Map */}
-            {activeJourneyId && (
+            {(activeJourneyId || bookingData?.booking_number) && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
                   ติดตามการเดินทางของพนักงาน
                 </h2>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                   <p className="text-blue-700 text-sm">
-                    พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง
+                    {activeJourneyId
+                      ? 'พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง'
+                      : 'แผนที่แสดงพื้นที่บริการ (ทดสอบ Google Maps API)'}
                   </p>
                 </div>
-                <StaffTrackingMap journeyId={activeJourneyId} height="350px" />
+                <StaffTrackingMap journeyId={activeJourneyId || 'journey-test-001'} height="350px" />
+
+                {/* Debug Info */}
+                <div className="mt-3 text-xs text-gray-500 border-t pt-2">
+                  <div>Debug: journeyId = {activeJourneyId || 'fallback-test'} | booking = {bookingData?.booking_number}</div>
+
+                  {/* Quick Test Buttons */}
+                  <div className="mt-2 space-x-2">
+                    <button
+                      onClick={() => setActiveJourneyId('live-gps-test-001')}
+                      className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
+                    >
+                      Test Live GPS
+                    </button>
+                    <button
+                      onClick={() => setActiveJourneyId('journey-test-001')}
+                      className="bg-gray-500 text-white px-2 py-1 rounded text-xs"
+                    >
+                      Test Fallback
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 

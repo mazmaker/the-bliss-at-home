@@ -200,12 +200,12 @@ export default function StaffTrackingMap({
     }
   }, [journeyId])
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 5 minutes (ประหยัดเครดิต)
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('Auto-refreshing map...')
+      console.log('Auto-refreshing map... (5 min interval)')
       fetchJourneyData()
-    }, 30000) // 30 seconds
+    }, 5 * 60 * 1000) // 5 minutes = 300,000ms
 
     return () => clearInterval(interval)
   }, [journeyId])
@@ -423,11 +423,27 @@ export default function StaffTrackingMap({
           {/* Map provider และ Auto-refresh notice */}
           <div className="text-center space-y-1">
             <p className="text-xs text-gray-500">
-              แผนที่จะอัพเดทอัตโนมัติทุก 30 วินาทีและเมื่อมีตำแหน่งใหม่
+              แผนที่จะอัพเดทอัตโนมัติทุก 5 นาทีเพื่อประหยัดเครดิต
             </p>
-            <p className="text-xs text-gray-400">
-              ใช้งาน: {useGoogleMaps ? '🗺️ Google Maps' : '🌍 OpenStreetMap'}
-            </p>
+
+            {/* GPS Status Debug */}
+            <div className="bg-gray-100 rounded px-3 py-2 mt-3 text-left">
+              <p className="font-mono text-xs text-gray-600">
+                🎯 GPS: {journey?.current_latitude ?
+                  `${journey.current_latitude.toFixed(6)}, ${journey.current_longitude?.toFixed(6)}` :
+                  'Test Data (ไม่ใช่ GPS จริง)'
+                }
+              </p>
+              <p className="font-mono text-xs text-gray-600">
+                🕒 อัพเดท: {lastUpdate || 'ไม่มีข้อมูลเวลา'}
+              </p>
+              <p className="font-mono text-xs text-gray-600">
+                📡 สถานะ: {journey?.id?.includes('test') ?
+                  '🔴 ข้อมูลทดสอบ' :
+                  '🟢 GPS จริง'
+                }
+              </p>
+            </div>
           </div>
         </div>
       )}
