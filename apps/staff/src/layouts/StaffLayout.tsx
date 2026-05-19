@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  Navigation,
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
@@ -16,6 +17,7 @@ import { NotificationPanel, type Notification } from '../components'
 
 const navigation = [
   { name: 'หน้าแรก', nameEn: 'Home', href: '/staff', icon: Home },
+  { name: 'ติดตาม GPS', nameEn: 'GPS Tracking', href: '/staff/tracking', icon: Navigation },
   { name: 'ตารางงาน', nameEn: 'Schedule', href: '/staff/schedule', icon: Clock },
   { name: 'รายได้', nameEn: 'Earnings', href: '/staff/earnings', icon: DollarSign },
   { name: 'โปรไฟล์', nameEn: 'Profile', href: '/staff/profile', icon: User },

@@ -7,12 +7,22 @@ import { supabase } from './supabaseClient'
 import type { Profile, LoginCredentials, RegisterCredentials, UserRole, AuthResponse, LineLoginCredentials } from './types'
 import { AuthError } from './types'
 
+// Cache to prevent excessive API calls
+let profileCache: { profile: Profile | null; timestamp: number } | null = null
+const CACHE_DURATION = 2000 // 2 seconds
+
 /**
  * Get current user profile from profiles table
  * Auto-creates profile if it doesn't exist (for OAuth users)
  */
 async function getCurrentProfile(): Promise<Profile | null> {
   console.log('📍 getCurrentProfile: Starting...')
+
+  // Check cache first
+  if (profileCache && Date.now() - profileCache.timestamp < CACHE_DURATION) {
+    console.log('📍 getCurrentProfile: Returning cached result')
+    return profileCache.profile
+  }
 
   try {
     // WORKAROUND: Read session from localStorage directly instead of using getSession()
@@ -22,6 +32,7 @@ async function getCurrentProfile(): Promise<Profile | null> {
     const sessionData = localStorage.getItem('bliss-customer-auth')
     if (!sessionData) {
       console.log('📍 getCurrentProfile: No session found in localStorage')
+      profileCache = { profile: null, timestamp: Date.now() }
       return null
     }
 
@@ -36,10 +47,10 @@ async function getCurrentProfile(): Promise<Profile | null> {
       userId_nested: session.currentSession?.user?.id,
     })
 
-    // Try different possible structures
-    const user = session.user || session.currentSession?.user
-    const accessToken = session.access_token
-    const refreshToken = session.refresh_token
+    // Try different possible structures based on actual session format
+    const user = session.user || session.currentSession?.user || session.user_metadata
+    const accessToken = session.access_token || session.currentSession?.access_token
+    const refreshToken = session.refresh_token || session.currentSession?.refresh_token
 
     if (!user) {
       console.log('📍 getCurrentProfile: No valid user found in session')
@@ -86,9 +97,16 @@ async function getCurrentProfile(): Promise<Profile | null> {
     }
 
     console.log('📍 getCurrentProfile: Profile found!')
-    return profile as Profile
+    const result = profile as Profile
+
+    // Cache the result
+    profileCache = { profile: result, timestamp: Date.now() }
+    return result
   } catch (error) {
     console.error('❌ getCurrentProfile: Error caught:', error)
+
+    // Cache null result to prevent repeated failed attempts
+    profileCache = { profile: null, timestamp: Date.now() }
 
     // If there's an error parsing session or fetching profile, return null
     // This allows the user to login again
@@ -268,6 +286,9 @@ async function logout(): Promise<void> {
   localStorage.removeItem('bliss-customer-auth')  // Main session key
   localStorage.removeItem('rememberMe')
   sessionStorage.removeItem('sessionOnly')
+
+  // Clear profile cache
+  profileCache = null
 
   console.log('🔐 Logout: All session storage cleared')
 }

@@ -8,11 +8,12 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner } from '../components'
+import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobGPSControls, JobLocationMap } from '../components'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
 import { normalizeCommissionRate, calculateExtensionEarnings } from '../utils/commissionUtils'
+import { useGPSTracking } from '../hooks/useGPSTracking'
 
 function StaffJobDetail() {
   const { id } = useParams<{ id: string }>()
@@ -21,6 +22,9 @@ function StaffJobDetail() {
   const { job, isLoading, error, refetch } = useJob(id || null)
   const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
+
+  // Get GPS tracking status for map display
+  const { isTracking, currentPosition } = useGPSTracking()
 
   // Query service commission rate
   const { data: serviceData } = useQuery({
@@ -428,6 +432,20 @@ function StaffJobDetail() {
         </div>
       </div>
 
+      {/* Location Map */}
+      {isMyJob && (job.latitude || job.longitude || job.address || job.hotel_name) && (
+        <JobLocationMap
+          jobId={job.id}
+          destinationLat={job.latitude}
+          destinationLng={job.longitude}
+          destinationName={job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address}
+          customerPhone={job.customer_phone}
+          showMap={isTracking}
+          currentLat={currentPosition?.latitude}
+          currentLng={currentPosition?.longitude}
+        />
+      )}
+
       {/* Extension Information */}
       {extensionServices.length > 0 && (
         <ExtensionInfo
@@ -480,6 +498,24 @@ function StaffJobDetail() {
       {/* Error */}
       {actionError && (
         <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm">{actionError}</div>
+      )}
+
+      {/* GPS Tracking Controls */}
+      {isMyJob && !isFinished && (
+        <JobGPSControls
+          job={{
+            id: job.id,
+            status: job.status,
+            customer_name: job.customer_name,
+            customer_address: job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address,
+            customer_phone: job.customer_phone,
+            booking_id: job.booking_id
+          }}
+          onRefresh={refetch}
+          onStartJob={handleStart}
+          isProcessing={isProcessing}
+          canStartWork={eligibility?.canWork}
+        />
       )}
 
       {/* Action Buttons */}

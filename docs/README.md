@@ -1,66 +1,73 @@
-# Documentation
+# The Bliss at Home - Documentation Center
 
-เอกสารประกอบสำหรับโปรเจค The Bliss at Home
+## 📁 Folder Organization
 
-## 📚 เอกสารที่มี
+### 🔧 [setup/](setup/) - Installation & Setup Guides
+- Initial project setup and installation guides
+- API keys configuration (Google Maps, OAuth, etc.)
+- Admin user creation and login setup
+- MCP setup and configuration
 
-### MCP Configuration
+### 🎯 [features/](features/) - Feature Documentation  
+- Detailed feature analysis and implementation plans
+- Admin Quick Booking system
+- LINE Login integration
+- Hotel and extend session features
 
-- **[MCP_SETUP_GUIDE.md](./MCP_SETUP_GUIDE.md)** - คู่มือการตั้งค่า MCP servers ฉบับเต็ม
-- **[MCP_QUICK_FIX.md](./MCP_QUICK_FIX.md)** - คู่มือแก้ไขปัญหา MCP แบบด่วน (3 นาที)
+### 🧪 [testing/](testing/) - Test Plans
+- Comprehensive test plans for all apps
+- Integration testing guides
+- Test cases for specific features
 
-### อื่นๆ
+### 🗄️ [database/](database/) - Database Documentation
+- Complete database schema (54 tables)
+- Migration guides and diffs
+- Database setup and management
 
-- *(เพิ่มเอกสารอื่นๆ ได้ที่นี่)*
+### 📈 [planning/](planning/) - Project Planning
+- Project roadmap and status tracking
+- Feature checklists and requirements
+- Business planning documents
+
+### ⚙️ [technical/](technical/) - Technical Documentation
+- Code patterns and conventions
+- Git branching strategy
+- Font system and UI guidelines
+
+### 🔍 [troubleshooting/](troubleshooting/) - Bug Fixes & Issues
+- Common error fixes and solutions
+- Debugging guides
+- Known issues and workarounds
+
+### 📱 [apps/](apps/) - App-Specific Documentation
+- Individual app documentation
+- App-specific setup guides
+
+### 📊 [development/](development/) - Development History
+- Session logs and development progress
+- Historical context and decisions
+
+## 🚀 Quick Start Navigation
+
+### 🆕 New Developer? Start Here:
+1. 📖 [Setup Guide](setup/) 
+2. 🗄️ [Database Schema](database/) - **🚨 MUST READ** before any DB work
+3. 📋 [Current Tasks](planning/CHECKLIST.md) - See what needs to be done
+
+### 🎯 Working on Features?
+- 🏢 [Admin Quick Booking](features/admin-quick-booking-analysis.md)
+- 📱 [LINE Login](features/line-login-setup.md)  
+- 🏨 [Hotel Integration](features/HOTELS_CUSTOMERS_IMPLEMENTATION.md)
+
+### 🔧 Development Guidelines:
+- 💻 [Code Patterns](technical/CODE_PATTERNS.md)
+- 🌿 [Git Strategy](technical/GIT_BRANCHING_STRATEGY.md)
+- 🧪 [Testing](testing/)
+
+## 📊 Project Status
+- **Current Status**: [PROJECT_STATUS.md](planning/PROJECT_STATUS.md)
+- **Remaining Tasks**: [CHECKLIST.md](planning/CHECKLIST.md)
+- **Development History**: [development/](development/)
 
 ---
-
-## 🚀 Quick Links
-
-### เมื่อเปิดเครื่องใหม่และ MCP ไม่ทำงาน
-
-1. รัน script ตรวจสอบ:
-   ```bash
-   bash check-mcp.sh
-   ```
-
-2. อ่านคู่มือแก้ไข:
-   - **ด่วน:** [MCP_QUICK_FIX.md](./MCP_QUICK_FIX.md)
-   - **ละเอียด:** [MCP_SETUP_GUIDE.md](./MCP_SETUP_GUIDE.md)
-
----
-
-## 📝 การใช้งานเอกสาร
-
-### สำหรับปัญหา MCP
-
-1. **มีเวลา 3 นาที?** → ใช้ [MCP_QUICK_FIX.md](./MCP_QUICK_FIX.md)
-2. **ต้องการเข้าใจละเอียด?** → ใช้ [MCP_SETUP_GUIDE.md](./MCP_SETUP_GUIDE.md)
-3. **ต้องการตรวจสอบอัตโนมัติ?** → รัน `bash check-mcp.sh`
-
----
-
-## 🔧 Maintenance
-
-### เมื่ออัพเดท Node.js version
-
-อัพเดท path ใน `.mcp.json` สำหรับ:
-- Context7
-- shadcn-ui
-
-ดูวิธีการใน [MCP_SETUP_GUIDE.md](./MCP_SETUP_GUIDE.md#การอัพเดท-mcp-packages)
-
-### เมื่อ Supabase token หมดอายุ
-
-อัพเดท token ใน `.mcp.json` → Reload Claude Code
-
----
-
-## 📞 Support
-
-หากพบปัญหาที่แก้ไม่ได้ ให้รวบรวมข้อมูล:
-- Output จาก `bash check-mcp.sh`
-- เนื้อหาของ `.mcp.json`
-- Error message ที่เจอ
-
-แล้วถามใน Claude Code
+💡 **Tip**: Each folder has its own README.md with detailed contents!

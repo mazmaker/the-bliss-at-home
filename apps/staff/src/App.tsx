@@ -11,6 +11,7 @@ import StaffHistory from './pages/StaffHistory'
 import StaffEarnings from './pages/StaffEarnings'
 import StaffProfile from './pages/StaffProfile'
 import StaffSettings from './pages/StaffSettings'
+import StaffTrackingDashboard from './pages/StaffTrackingDashboard'
 import { StaffLoginPage, StaffRegisterPage, StaffAuthCallback } from './pages/auth'
 
 // Helper: check if a path is a valid deep link target (not login/auth pages)
@@ -136,6 +137,7 @@ function App() {
         <Route index element={<StaffDashboard />} />
         <Route path="jobs" element={<StaffDashboard />} />
         <Route path="jobs/:id" element={<StaffJobDetail />} />
+        <Route path="tracking" element={<StaffTrackingDashboard />} />
         <Route path="schedule" element={<StaffSchedule />} />
         <Route path="history" element={<StaffHistory />} />
         <Route path="earnings" element={<StaffEarnings />} />

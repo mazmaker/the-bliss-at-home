@@ -17,10 +17,10 @@ interface UseGPSTrackingOptions {
 
 export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   const {
-    updateInterval = 10000,
+    updateInterval = 5 * 60 * 1000, // 5 minutes (ประหยัดเครดิต)
     highAccuracy = true,
     timeout = 15000,
-    maximumAge = 10000
+    maximumAge = 60000 // Allow 1 minute old location
   } = options
 
   const [isTracking, setIsTracking] = useState(false)

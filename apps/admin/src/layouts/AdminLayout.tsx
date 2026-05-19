@@ -31,6 +31,7 @@ import {
   AlertTriangle,
   UserX,
   Wallet,
+  Plus,
 } from 'lucide-react'
 
 const navigation = [
@@ -43,6 +44,7 @@ const navigation = [
   { name: 'โรงแรม', nameEn: 'Hotels', href: '/admin/hotels', icon: Building },
   { name: 'ปฏิทินเครดิต', nameEn: 'Credit Calendar', href: '/admin/credit-calendar', icon: CalendarCheck },
   { name: 'การจอง', nameEn: 'Bookings', href: '/admin/bookings', icon: Calendar },
+  { name: 'จองแบบเร่งด่วน', nameEn: 'Quick Booking', href: '/admin/quick-booking', icon: Plus },
   { name: 'โปรโมชั่น', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'รีวิว', nameEn: 'Reviews', href: '/admin/reviews', icon: Star },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },

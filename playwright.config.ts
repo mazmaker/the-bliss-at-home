@@ -4,6 +4,7 @@ import { defineConfig, devices } from '@playwright/test'
 const ADMIN_PORT = process.env.E2E_ADMIN_PORT || '5001'
 const CUSTOMER_PORT = process.env.E2E_CUSTOMER_PORT || '5002'
 const HOTEL_PORT = process.env.E2E_HOTEL_PORT || '5003'
+const STAFF_PORT = process.env.E2E_STAFF_PORT || '5004'
 
 export default defineConfig({
   testDir: './e2e',
@@ -12,7 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
-  timeout: 30_000,
+  timeout: 60_000,
   use: {
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -42,6 +43,17 @@ export default defineConfig({
         baseURL: `http://localhost:${HOTEL_PORT}`,
       },
     },
+    {
+      name: 'staff',
+      testDir: './e2e',
+      testMatch: '**/gps-tracking.spec.ts',
+      use: {
+        ...devices['iPhone 14'], // Mobile device for GPS testing
+        baseURL: `http://localhost:${STAFF_PORT}`,
+        permissions: ['geolocation'], // Grant GPS permission
+        geolocation: { latitude: 13.7563, longitude: 100.5018 }, // Bangkok
+      },
+    },
   ],
   webServer: [
     {
@@ -62,6 +74,13 @@ export default defineConfig({
       command: `npx vite --port ${HOTEL_PORT}`,
       url: `http://localhost:${HOTEL_PORT}`,
       cwd: './apps/hotel',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    {
+      command: `npx vite --port ${STAFF_PORT}`,
+      url: `http://localhost:${STAFF_PORT}`,
+      cwd: './apps/staff',
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },

@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@bliss/ui'
 import { useAuth } from '@bliss/supabase/auth'
 import Header from './components/Header'
 import { RefundPolicyConsent, useRefundPolicyConsent } from './components/RefundPolicyConsent'
+import FloatingCTA from './components/FloatingCTA'
 import './debug-session' // Load debug utilities
 import HomePage from './pages/Home'
 import ServiceCatalog from './pages/ServiceCatalog'
@@ -26,6 +27,7 @@ import PromotionsPage from './pages/Promotions'
 import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth'
 import PointsHistory from './pages/PointsHistory'
 import EmergencyBooking from './pages/EmergencyBooking'
+import TrackStaff from './pages/TrackStaff'
 
 function App() {
   const { t } = useTranslation('common')
@@ -49,6 +51,7 @@ function App() {
         <Route path="/promotions" element={<PromotionsPageWrapper />} />
         <Route path="/promotions/:id" element={<PromotionsPageWrapper />} />
         <Route path="/emergency-booking" element={<EmergencyBookingWrapper />} />
+        <Route path="/track/:journeyId" element={<TrackStaffWrapper />} />
 
         {/* Protected routes - require CUSTOMER role */}
         <Route
@@ -133,6 +136,25 @@ function App() {
       {/* Global Consent Modal for Google login users */}
       <ConsentModalGuard />
 
+      {/* Floating CTA - shows on all pages */}
+      <FloatingCTA
+        phoneNumber="+66-XX-XXX-XXXX"
+        lineId="@blissathome"
+        facebookUrl="theblissathome"
+        colors={{
+          phone: 'bg-amber-500 hover:bg-amber-600',
+          line: 'bg-green-500 hover:bg-green-600',
+          facebook: 'bg-blue-600 hover:bg-blue-700',
+          main: 'bg-gradient-to-r from-amber-500 to-orange-600'
+        }}
+        onContactAdmin={(method) => {
+          // Optional: Add analytics tracking here
+          if (typeof gtag !== 'undefined') {
+            gtag('event', 'floating_cta_click', { method })
+          }
+        }}
+      />
+
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-stone-200 py-8 mt-12">
         <div className="container mx-auto px-4">
@@ -201,6 +223,10 @@ function PromotionsPageWrapper() {
 
 function EmergencyBookingWrapper() {
   return <EmergencyBooking />
+}
+
+function TrackStaffWrapper() {
+  return <TrackStaff />
 }
 
 function BookingWizardWrapper() {

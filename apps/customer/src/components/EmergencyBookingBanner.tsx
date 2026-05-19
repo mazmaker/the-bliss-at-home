@@ -36,52 +36,49 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
   }
 
   return (
-    <div className="relative bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-xl my-3 shadow-lg">
+    <div className="relative rounded-xl my-3 shadow-lg overflow-hidden" style={{ backgroundColor: '#D29B25' }}>
 
-      <div className="p-4">
-        <div className="flex items-center gap-4">
-          {/* Icon */}
-          <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+      <div className="relative p-6 text-center">
+        {/* White badge */}
+        <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-amber-800 text-sm font-medium mb-4">
+          บริการฉุกเฉิน
+        </div>
 
-          {/* Content */}
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-stone-800 mb-1">
-              ต้องการนวดภายใน 30 นาที?
-            </h3>
-            <p className="text-xs text-stone-600 mb-3">
-              ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ
-            </p>
+        {/* Main heading */}
+        <h3 className="text-xl font-semibold text-white mb-2">
+          ต้องการนวดภายใน 30 นาที?
+        </h3>
 
-            {/* Compact contact buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleContact('phone')}
-                className="flex items-center gap-1 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-amber-600 transition-colors"
-              >
-                <Phone className="w-3 h-3" />
-                โทร
-              </button>
+        {/* Subtitle */}
+        <p className="text-white/90 text-sm mb-6">
+          ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ
+        </p>
 
-              <button
-                onClick={() => handleContact('line')}
-                className="flex items-center gap-1 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-600 transition-colors"
-              >
-                <MessageCircle className="w-3 h-3" />
-                LINE
-              </button>
+        {/* Contact buttons */}
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={() => handleContact('phone')}
+            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
+          >
+            <Phone className="w-4 h-4" />
+            โทร
+          </button>
 
-              <button
-                onClick={() => handleContact('chat')}
-                className="flex items-center gap-1 bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-emerald-600 transition-colors"
-              >
-                <MessageCircle className="w-3 h-3" />
-                WhatsApp
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={() => handleContact('line')}
+            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
+          >
+            <MessageCircle className="w-4 h-4" />
+            LINE
+          </button>
 
+          <button
+            onClick={() => handleContact('chat')}
+            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
+          >
+            <MessageCircle className="w-4 h-4" />
+            WhatsApp
+          </button>
         </div>
       </div>
     </div>

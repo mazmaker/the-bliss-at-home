@@ -95,3 +95,14 @@ SESSION-CONTEXT-*.md
 
 # Temporary task/prompt files
 REPORTS-TASK-PROMPT.md
+
+# Personal notes and wiki (local development only)
+#note/
+
+# Documentation (organized locally, not for repo)
+#docs/
+
+# Claude skills (local AI tools, not for repo)
+#.claude/skills/
+# SQL scripts temp files (development only)
+scripts/sql/temp/

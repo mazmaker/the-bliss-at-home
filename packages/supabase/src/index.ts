@@ -19,6 +19,12 @@ export * from './earnings'
 export * from './staff'
 
 // Services module
+export * from './services/customerService'
+export * from './services/serviceService'
+export * from './services/bookingService'
+export * as adminBookingService from './services/adminBookingService'
+
+// Services module
 export * from './services'
 
 // Hooks module

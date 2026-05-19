@@ -41,7 +41,7 @@ export default function JobGPSControls({
     startTracking,
     stopTracking
   } = useGPSTracking({
-    updateInterval: 10000,
+    updateInterval: 5 * 60 * 1000, // 5 minutes
     highAccuracy: true
   })
 

@@ -15,6 +15,7 @@ import HotelBilling from './pages/HotelBilling'
 import HotelPayments from './pages/HotelPayments'
 import HotelBookings from './pages/HotelBookings'
 import Bookings from './pages/Bookings'
+import QuickBooking from './pages/QuickBooking'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import Promotions from './pages/Promotions'
@@ -136,6 +137,7 @@ function App() {
         <Route path="credit-calendar" element={<CreditCalendar />} />
         <Route path="payout" element={<PayoutDashboard />} />
         <Route path="bookings" element={<Bookings />} />
+        <Route path="quick-booking" element={<QuickBooking />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
         <Route path="promotions" element={<Promotions />} />

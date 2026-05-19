@@ -1,0 +1,204 @@
+{
+  "main": {
+    "id": "0998dd667b6bb2a8",
+    "type": "split",
+    "children": [
+      {
+        "id": "3b4e251ba1089f8a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3c2c0c038027d9d3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "wiki/log.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "log"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7c3b285770911d1c",
+    "type": "split",
+    "children": [
+      {
+        "id": "e1aaa2adc5569acb",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0a8765e010fb7937",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "12cff87221fd4b3c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "ea175cf47f65e0d6",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "49f43be96e6a2116",
+    "type": "split",
+    "children": [
+      {
+        "id": "3110e00971002135",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f96788ba8b649dca",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "wiki/log.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for log"
+            }
+          },
+          {
+            "id": "055e263c2c763ded",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "wiki/log.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from log"
+            }
+          },
+          {
+            "id": "b9ad8908fa0efdb4",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "b41e2fbe3e79a184",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "db8855badec7b3e1",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "wiki/log.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of log"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "3c2c0c038027d9d3",
+  "lastOpenFiles": [
+    "wiki/overview.md",
+    "wiki/log.md",
+    "wiki/index.md",
+    "wiki/hotcache.md",
+    "wiki/sources/bliss-product-catalog.md",
+    "wiki/projects/bliss-at-home.md",
+    "wiki/concepts/natural-skincare-formulation.md",
+    "wiki/tools",
+    "wiki/sources",
+    "wiki/snippets",
+    "wiki/projects",
+    "wiki/people",
+    "wiki/concepts",
+    "wiki",
+    "raw/Product.pdf"
+  ]
+}

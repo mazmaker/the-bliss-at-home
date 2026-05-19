@@ -137,9 +137,255 @@ export async function getCustomerStats(
   return stats;
 }
 
+// ============================================
+// ADMIN QUICK BOOKING EXTENSIONS
+// ============================================
+
+/**
+ * Search customers for admin booking (by phone, name, email)
+ */
+export async function searchCustomersForAdmin(
+  client: SupabaseClient<Database>,
+  query: string,
+  limit: number = 10
+): Promise<Customer[]> {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  const searchTerm = query.trim();
+
+  // Search by phone, name, and email (using separate queries like admin does)
+  const searchQueries = await Promise.all([
+    // Search by phone
+    client
+      .from('customers')
+      .select('*')
+      .ilike('phone', `%${searchTerm}%`)
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+      .limit(limit),
+    // Search by name
+    client
+      .from('customers')
+      .select('*')
+      .ilike('full_name', `%${searchTerm}%`)
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+      .limit(limit)
+  ])
+
+  const phoneResults = searchQueries[0]
+  const nameResults = searchQueries[1]
+
+  // Combine and deduplicate results
+  let allResults = [
+    ...(phoneResults.data || []),
+    ...(nameResults.data || [])
+  ]
+
+  // Search by email in profiles table if search term looks like email
+  const emailRegex = /@|\.com|\.th|\.org|\.net/i
+  if (emailRegex.test(searchTerm)) {
+    console.log('🔍 Searching for email pattern:', searchTerm)
+
+    const { data: profiles, error: emailError } = await client
+      .from('profiles')
+      .select('id, email')
+      .ilike('email', `%${searchTerm}%`)
+      .limit(limit)
+
+    if (!emailError && profiles) {
+      console.log('📧 Found profiles with email:', profiles.length)
+
+      // Get customers that match these profile IDs
+      const profileIds = profiles.map(p => p.id)
+      if (profileIds.length > 0) {
+        const { data: emailCustomers, error: emailCustomerError } = await client
+          .from('customers')
+          .select('*')
+          .in('profile_id', profileIds)
+          .eq('status', 'active')
+          .limit(limit)
+
+        if (!emailCustomerError && emailCustomers) {
+          console.log('📧 Found customers from email search:', emailCustomers.length)
+          allResults = [...allResults, ...emailCustomers]
+        }
+      }
+    }
+  }
+
+  // Remove duplicates
+  allResults = allResults.filter((item, index, self) =>
+    index === self.findIndex(t => t.id === item.id)
+  )
+
+  // Fetch emails from profiles table (same as admin approach)
+  const profileIds = allResults.map((c) => c.profile_id).filter(Boolean)
+  let emailMap: Record<string, string> = {}
+  if (profileIds.length > 0) {
+    const { data: profiles } = await client
+      .from('profiles')
+      .select('id, email')
+      .in('id', profileIds)
+    if (profiles) {
+      emailMap = Object.fromEntries(profiles.map((p) => [p.id, p.email || '']))
+    }
+  }
+
+  // Attach emails to customer objects
+  const customersWithEmails = allResults.map(customer => ({
+    ...customer,
+    email: customer.profile_id ? emailMap[customer.profile_id] || null : null
+  }))
+
+  const uniqueResults = customersWithEmails
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, limit)
+
+  const error = phoneResults.error || nameResults.error
+  const data = uniqueResults
+
+  // Debug logging
+  if (error) {
+    console.error('🔍 Search query error:', error)
+  }
+
+  console.log('🔍 Search query executed for term:', searchTerm)
+  console.log('📊 Raw search results:', data)
+
+  if (error) {
+    console.log('🚨 Search failed:', error)
+  } else {
+    console.log('📞 Phone results:', phoneResults.data?.length || 0)
+    console.log('👤 Name results:', nameResults.data?.length || 0)
+    console.log('🔀 Combined unique results:', uniqueResults.length)
+  }
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Create new customer for admin booking
+ */
+export async function createCustomerForAdmin(
+  client: SupabaseClient<Database>,
+  customerData: {
+    full_name: string;
+    phone: string;
+    address?: string;
+    date_of_birth?: string;
+    preferences?: any;
+    admin_notes?: string;
+    preferred_contact_method?: string;
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
+  }
+): Promise<Customer> {
+  // Get current admin user
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) throw new Error('Admin not authenticated');
+
+  // Validate and clean phone number
+  const cleanPhone = customerData.phone.replace(/[^\d]/g, '');
+  if (cleanPhone.length !== 10 || !cleanPhone.startsWith('0')) {
+    throw new Error('เบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์ 10 หลัก (เริ่มต้นด้วย 0)');
+  }
+
+  // Check for existing customer with same phone
+  const existing = await searchCustomersForAdmin(client, cleanPhone, 1);
+  if (existing.length > 0) {
+    throw new Error('มีลูกค้าเบอร์นี้ในระบบแล้ว: ' + existing[0].full_name);
+  }
+
+  // Validate required fields
+  if (!customerData.full_name || customerData.full_name.trim().length < 2) {
+    throw new Error('กรุณากรอกชื่อลูกค้า (อย่างน้อย 2 ตัวอักษร)');
+  }
+
+  const { data, error } = await client
+    .from('customers')
+    .insert({
+      full_name: customerData.full_name.trim(),
+      phone: cleanPhone,
+      address: customerData.address?.trim() || null,
+      date_of_birth: customerData.date_of_birth || null,
+      preferences: customerData.preferences || {},
+      admin_notes: customerData.admin_notes?.trim() || null,
+      preferred_contact_method: customerData.preferred_contact_method || 'phone',
+      emergency_contact_name: customerData.emergency_contact_name?.trim() || null,
+      emergency_contact_phone: customerData.emergency_contact_phone?.replace(/[^\d]/g, '') || null,
+      created_by_admin: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .select(`
+      *,
+      profile:profiles(
+        id,
+        full_name,
+        avatar_url,
+        email
+      )
+    `)
+    .single();
+
+  if (error) {
+    if (error.code === '23505' && error.message.includes('phone')) {
+      throw new Error('มีลูกค้าเบอร์นี้ในระบบแล้ว');
+    }
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Get customer booking history for admin view
+ */
+export async function getCustomerBookingHistory(
+  client: SupabaseClient<Database>,
+  customerId: string,
+  limit: number = 10
+): Promise<any[]> {
+  const { data, error } = await client
+    .from('bookings')
+    .select(`
+      id,
+      booking_number,
+      booking_date,
+      booking_time,
+      status,
+      final_price,
+      created_at,
+      booking_source,
+      service:services(
+        name_th,
+        name_en,
+        category
+      ),
+      staff:staff(
+        id,
+        profile:profiles(full_name)
+      )
+    `)
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
+}
+
 export const customerService = {
   getCurrentCustomer,
   getCustomerById,
   updateCustomer,
   getCustomerStats,
+  // Admin extensions
+  searchCustomersForAdmin,
+  createCustomerForAdmin,
+  getCustomerBookingHistory,
 };
