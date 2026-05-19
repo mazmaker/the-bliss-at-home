@@ -951,7 +951,6 @@ export default function ServiceSelection({
         {step === 'details' && currentServiceSelection && (
           <>
             {/* Selected Service Summary */}
-            {/* Selected Service Summary */}
             <div className="bg-[#ffe79d]/20 border border-[#d29b25]/30 rounded-lg p-4">
               <h3 className="font-medium text-[#d29b25] mb-2">บริการที่เลือก</h3>
               <div className="space-y-2 text-sm">
@@ -1218,46 +1217,6 @@ export default function ServiceSelection({
             </div>
           </div>
 
-          {/* Discount Code */}
-          <div className="bg-white border border-stone-200 rounded-lg p-4">
-            <h3 className="font-medium text-stone-900 mb-3">โค้ดส่วนลด</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                placeholder="กรอกโค้ดส่วนลด"
-                className="flex-1 px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
-              />
-              <button
-                onClick={() => validateDiscountCode(discountCode)}
-                disabled={!discountCode || isValidatingCode}
-                className="bg-[#b6d387] text-white px-4 py-2 rounded-lg hover:bg-[#9bc76f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isValidatingCode ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  'ใช้'
-                )}
-              </button>
-            </div>
-
-            {appliedPromotion && (
-              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
-                <div className="flex items-center gap-2 text-green-800">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="font-medium">{appliedPromotion.name_th}</span>
-                </div>
-                <div className="text-green-600">
-                  ส่วนลด {appliedPromotion.discount_type === 'percentage'
-                    ? `${appliedPromotion.discount_value}%`
-                    : formatCurrency(appliedPromotion.discount_value)
-                  }
-                </div>
-              </div>
-            )}
-          </div>
-
             {/* Pricing Summary */}
             {currentPricing && (
               <div className="bg-stone-50 border border-stone-200 rounded-lg p-4">
@@ -1298,10 +1257,9 @@ export default function ServiceSelection({
                 </div>
               </div>
             )}
-          </div>
           </>
         )}
-      </div>
+        </div>
 
       <div className="flex justify-between">
         <button
@@ -1337,6 +1295,7 @@ export default function ServiceSelection({
             <ArrowRight className="w-4 h-4" />
           </button>
         )}
+      </div>
       </div>
     </div>
   )
