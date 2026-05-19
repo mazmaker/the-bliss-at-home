@@ -95,12 +95,16 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       setError(null)
 
       // Start journey in database
+      console.log('🚀 Creating staff journey:', { bookingId, staffId })
       const { data: newJourneyId, error: journeyError } = await supabase.rpc('start_staff_journey', {
         p_booking_id: bookingId,
         p_staff_id: staffId
       })
 
+      console.log('📊 Journey creation result:', { newJourneyId, journeyError })
+
       if (journeyError) {
+        console.error('❌ Journey creation failed:', journeyError)
         throw new Error(journeyError.message)
       }
 

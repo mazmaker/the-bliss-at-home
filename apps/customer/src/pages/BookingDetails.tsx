@@ -100,19 +100,25 @@ function BookingDetails() {
       try {
 
         // Check if there's an active journey for this booking
+        console.log('🔍 Searching for journey with booking_id:', bookingData.id)
         const { data: journeys, error } = await supabase
           .from('staff_journeys')
-          .select('id, status')
+          .select('id, status, staff_id, booking_id')
           .eq('booking_id', bookingData.id)
           .in('status', ['traveling', 'arrived']) // Only show map for active journeys
           .order('started_at', { ascending: false })
           .limit(1)
 
+        console.log('📊 Journey query result:', { journeys, error, bookingId: bookingData.id })
+
         if (error) {
+          console.log('❌ Journey query error:', error.message)
           setActiveJourneyId(null)
         } else if (journeys && journeys.length > 0) {
+          console.log('✅ Found active journey:', journeys[0])
           setActiveJourneyId(journeys[0].id)
         } else {
+          console.log('⚠️ No active journeys found for this booking')
           setActiveJourneyId(null)
         }
       } catch (err) {
@@ -646,7 +652,19 @@ function BookingDetails() {
               </div>
             </div>
 
+            {/* Debug info - temporary */}
+            <div className="bg-gray-100 border rounded-lg p-3 text-xs">
+              <div>🔍 Debug Journey Status:</div>
+              <div>Booking ID: {bookingData?.id}</div>
+              <div>Booking Status: {bookingData?.status}</div>
+              <div>Staff Assigned: {bookingData?.staff_id || 'ไม่มี'}</div>
+              <div>Active Journey ID: {activeJourneyId || 'ไม่พบ'}</div>
+              <div>Tracking Loading: {isTrackingLoading ? 'กำลังโหลด...' : 'เสร็จแล้ว'}</div>
+              <div>Should Show Map: {activeJourneyId ? 'ใช่' : 'ไม่'}</div>
+            </div>
+
             {/* Staff Tracking Map - Only show when staff is actually traveling */}
+            {console.log('🗺️ Map render check:', { activeJourneyId, bookingId: bookingData?.id, showMap: !!activeJourneyId })}
             {activeJourneyId && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
