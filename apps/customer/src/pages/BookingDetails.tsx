@@ -33,9 +33,8 @@ function BookingDetails() {
   // Fetch booking data from Supabase with cache busting
   const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
 
-  // 🔄 Force refresh every time component mounts (for debugging)
+  // Refresh booking data when component mounts
   useEffect(() => {
-    console.log('🔄 Force refreshing booking data...')
     refetch()
   }, [id, refetch])
 
@@ -43,15 +42,6 @@ function BookingDetails() {
   const booking = useMemo(() => {
     if (!bookingData) return null
 
-    // 🔍 Debug payment data
-    console.log('💳 Payment Debug:', {
-      booking_number: bookingData.booking_number,
-      payment_method: bookingData.payment_method,
-      payment_status: bookingData.payment_status,
-      base_price: bookingData.base_price,
-      final_price: bookingData.final_price,
-      full_booking_data: bookingData
-    })
 
     return {
       id: bookingData.booking_number,
@@ -108,18 +98,6 @@ function BookingDetails() {
 
       setIsTrackingLoading(true)
       try {
-        // For testing: ใช้ journey ID สำหรับ booking ทดสอบ
-        if (bookingData.booking_number === 'BK20260518-GPS1') {
-          console.log('Using GPS test journey ID for BK20260518-GPS1')
-          setActiveJourneyId('journey-test-001')
-          setIsTrackingLoading(false)
-          return
-        } else if (bookingData.booking_number === 'BK20260518-GPS2') {
-          console.log('Using GPS test journey ID for BK20260518-GPS2')
-          setActiveJourneyId('journey-test-002')
-          setIsTrackingLoading(false)
-          return
-        }
 
         // Check if there's an active journey for this booking
         const { data: journeys, error } = await supabase
@@ -130,20 +108,14 @@ function BookingDetails() {
           .order('started_at', { ascending: false })
           .limit(1)
 
-        console.log('Journey query result:', { journeys, error, bookingId: bookingData.id })
-
         if (error) {
-          console.log('Error fetching journey:', error.message)
           setActiveJourneyId(null)
         } else if (journeys && journeys.length > 0) {
-          console.log('Found active journey:', journeys[0].id)
           setActiveJourneyId(journeys[0].id)
         } else {
-          console.log('No active journey found')
           setActiveJourneyId(null)
         }
       } catch (err) {
-        console.error('Error fetching journey:', err)
         setActiveJourneyId(null)
       } finally {
         setIsTrackingLoading(false)
@@ -162,7 +134,6 @@ function BookingDetails() {
           table: 'staff_journeys',
           filter: `booking_id=eq.${bookingData.id}`
         }, () => {
-          console.log('Journey updated, refreshing tracking...')
           fetchActiveJourney()
         })
         .subscribe()
@@ -376,7 +347,6 @@ function BookingDetails() {
     }
 
     const result = await response.json()
-    console.log('[Reschedule] Success:', result)
 
     // Refetch booking data to update UI
     await refetch()
@@ -493,34 +463,6 @@ function BookingDetails() {
     }
   }
 
-  // 🔧 Debug: Manual update payment status
-  const updatePaymentStatus = async (newStatus: 'paid' | 'pending' | 'failed') => {
-    if (!bookingData) return
-
-    try {
-      console.log(`💳 Updating payment status to: ${newStatus}`)
-
-      const { error } = await supabase
-        .from('bookings')
-        .update({
-          payment_status: newStatus,
-          payment_method: newStatus === 'paid' ? 'cash' : 'cash',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', bookingData.id)
-
-      if (error) {
-        console.error('❌ Failed to update payment status:', error)
-        alert('Failed to update: ' + error.message)
-      } else {
-        console.log('✅ Payment status updated')
-        await refetch() // Refresh booking data
-      }
-    } catch (err) {
-      console.error('❌ Update error:', err)
-      alert('Update failed: ' + err)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
@@ -704,41 +646,19 @@ function BookingDetails() {
               </div>
             </div>
 
-            {/* Staff Tracking Map */}
-            {(activeJourneyId || bookingData?.booking_number) && (
+            {/* Staff Tracking Map - Only show when staff is actually traveling */}
+            {activeJourneyId && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
                   ติดตามการเดินทางของพนักงาน
                 </h2>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                   <p className="text-blue-700 text-sm">
-                    {activeJourneyId
-                      ? 'พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง'
-                      : 'แผนที่แสดงพื้นที่บริการ (ทดสอบ Google Maps API)'}
+                    พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง
                   </p>
                 </div>
-                <StaffTrackingMap journeyId={activeJourneyId || 'journey-test-001'} height="350px" />
+                <StaffTrackingMap journeyId={activeJourneyId} height="350px" />
 
-                {/* Debug Info */}
-                <div className="mt-3 text-xs text-gray-500 border-t pt-2">
-                  <div>Debug: journeyId = {activeJourneyId || 'fallback-test'} | booking = {bookingData?.booking_number}</div>
-
-                  {/* Quick Test Buttons */}
-                  <div className="mt-2 space-x-2">
-                    <button
-                      onClick={() => setActiveJourneyId('live-gps-test-001')}
-                      className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
-                    >
-                      Test Live GPS
-                    </button>
-                    <button
-                      onClick={() => setActiveJourneyId('journey-test-001')}
-                      className="bg-gray-500 text-white px-2 py-1 rounded text-xs"
-                    >
-                      Test Fallback
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -790,16 +710,6 @@ function BookingDetails() {
                 <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
                   <CreditCard className="w-5 h-5" /> {t('details.paymentTitle')}
                 </h2>
-                {/* 🔧 Debug: Refresh button */}
-                <button
-                  onClick={() => {
-                    console.log('🔄 Manual refresh booking data...')
-                    refetch()
-                  }}
-                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200"
-                >
-                  🔄 Refresh
-                </button>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-stone-600">
@@ -829,30 +739,6 @@ function BookingDetails() {
                 </div>
               </div>
 
-              {/* 🔧 Debug: Payment Status Controls */}
-              <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
-                <p className="text-xs text-gray-600 mb-2">🔧 Debug: Update Payment Status</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => updatePaymentStatus('paid')}
-                    className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded hover:bg-green-200"
-                  >
-                    Set Paid
-                  </button>
-                  <button
-                    onClick={() => updatePaymentStatus('pending')}
-                    className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded hover:bg-yellow-200"
-                  >
-                    Set Pending
-                  </button>
-                  <button
-                    onClick={() => updatePaymentStatus('failed')}
-                    className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200"
-                  >
-                    Set Failed
-                  </button>
-                </div>
-              </div>
 
               {/* Receipt & Credit Note Downloads */}
               {(booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (
@@ -898,15 +784,6 @@ function BookingDetails() {
               )}
 
               {/* Extension Feature for In Progress Bookings */}
-              {/* 🔍 Debug condition checking */}
-              {console.log('🔍 BookingDetails Debug:', {
-                bookingStatus: booking.status,
-                extendableBooking: !!extendableBooking,
-                showCondition: booking.status === 'in_progress' && extendableBooking,
-                timestamp: new Date().toISOString(),
-                environment: import.meta.env.PROD ? 'production' : 'development',
-                bookingNumber: booking.id
-              })}
               {booking.status === 'in_progress' && extendableBooking && (
                 <>
                   <ExtendServiceButtonLarge
