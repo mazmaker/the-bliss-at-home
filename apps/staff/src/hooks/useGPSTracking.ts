@@ -15,6 +15,12 @@ interface UseGPSTrackingOptions {
   maximumAge?: number
 }
 
+interface WorkflowResponse {
+  success: boolean
+  data?: any
+  message?: string
+}
+
 export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   const {
     updateInterval = 5 * 60 * 1000, // 5 minutes (ประหยัดเครดิต)
@@ -85,20 +91,37 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     setError(errorMessage)
   }, [])
 
-  const startTracking = useCallback(async (bookingId: string, staffId: string) => {
+  // ✅ NEW: Start journey without billing (travel only)
+  const startJourneyOnly = useCallback(async (bookingId: string, staffId: string) => {
     if (!isSupported) {
       setError('อุปกรณ์ไม่รองรับ GPS')
-      return null
+      return { success: false, message: 'อุปกรณ์ไม่รองรับ GPS' }
     }
 
     try {
       setError(null)
 
-      // Start journey in database
-      console.log('🚀 Creating staff journey:', { bookingId, staffId })
-      const { data: newJourneyId, error: journeyError } = await supabase.rpc('start_staff_journey', {
+      // Get initial position for journey start
+      const initialPosition = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: highAccuracy,
+          timeout,
+          maximumAge
+        })
+      })
+
+      // Start GPS journey without billing timer
+      console.log('🚗 Starting GPS journey only:', { bookingId, staffId })
+      const { data: newJourneyId, error: journeyError } = await supabase.rpc('start_gps_journey_only', {
         p_booking_id: bookingId,
-        p_staff_id: staffId
+        p_staff_id: staffId,
+        p_initial_location: {
+          latitude: initialPosition.coords.latitude,
+          longitude: initialPosition.coords.longitude,
+          accuracy: initialPosition.coords.accuracy,
+          batteryLevel: (navigator as any).getBattery ?
+            await (navigator as any).getBattery().then((battery: any) => Math.round(battery.level * 100)) : 100
+        }
       })
 
       console.log('📊 Journey creation result:', { newJourneyId, journeyError })
@@ -110,18 +133,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
       setJourneyId(newJourneyId)
 
-      // Request initial position
-      navigator.geolocation.getCurrentPosition(
-        updateLocation,
-        handleError,
-        {
-          enableHighAccuracy: highAccuracy,
-          timeout,
-          maximumAge
-        }
-      )
-
-      // Start continuous tracking
+      // Start continuous GPS tracking
       const watchId = navigator.geolocation.watchPosition(
         updateLocation,
         handleError,
@@ -144,14 +156,103 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         }
       }
 
-      return newJourneyId
+      return {
+        success: true,
+        data: { journeyId: newJourneyId },
+        message: '🚗 เริ่มเดินทาง - ยังไม่เริ่มนับเวลาบริการ'
+      }
 
     } catch (err) {
-      console.error('Failed to start tracking:', err)
-      setError(err instanceof Error ? err.message : 'ไม่สามารถเริ่มติดตามได้')
-      return null
+      console.error('Failed to start journey:', err)
+      const errorMessage = err instanceof Error ? err.message : 'ไม่สามารถเริ่มเดินทางได้'
+      setError(errorMessage)
+      return { success: false, message: errorMessage }
     }
   }, [isSupported, updateLocation, handleError, highAccuracy, timeout, maximumAge])
+
+  // ✅ NEW: Confirm arrival with proximity check
+  const confirmArrival = useCallback(async (bookingId: string) => {
+    if (!currentPosition) {
+      setError('ไม่พบตำแหน่งปัจจุบัน')
+      return { success: false, message: 'ไม่พบตำแหน่งปัจจุบัน' }
+    }
+
+    try {
+      setError(null)
+
+      console.log('📍 Confirming arrival:', { bookingId, currentPosition })
+      const { data: isNearby, error: arrivalError } = await supabase.rpc('confirm_staff_arrival', {
+        p_booking_id: bookingId,
+        p_location: {
+          latitude: currentPosition.latitude,
+          longitude: currentPosition.longitude,
+          accuracy: currentPosition.accuracy
+        }
+      })
+
+      if (arrivalError) {
+        console.error('❌ Arrival confirmation failed:', arrivalError)
+        throw new Error(arrivalError.message)
+      }
+
+      if (isNearby) {
+        // Stop GPS tracking since we've arrived
+        await stopTracking()
+
+        return {
+          success: true,
+          data: { verified: true },
+          message: '📍 ยืนยันการมาถึงแล้ว - ยังไม่เริ่มนับเวลาบริการ'
+        }
+      } else {
+        return {
+          success: false,
+          message: '🚫 คุณยังไม่อยู่ใกล้จุดหมาย กรุณาเดินทางให้ใกล้กว่านี้'
+        }
+      }
+
+    } catch (err) {
+      console.error('Failed to confirm arrival:', err)
+      const errorMessage = err instanceof Error ? err.message : 'ไม่สามารถยืนยันการมาถึงได้'
+      setError(errorMessage)
+      return { success: false, message: errorMessage }
+    }
+  }, [currentPosition, stopTracking])
+
+  // ✅ NEW: Start service billing (THIS is where billing starts)
+  const startServiceBilling = useCallback(async (bookingId: string) => {
+    try {
+      setError(null)
+
+      console.log('💰 Starting service billing:', { bookingId })
+      const { data: billingInfo, error: billingError } = await supabase.rpc('start_service_billing', {
+        p_booking_id: bookingId
+      })
+
+      if (billingError) {
+        console.error('❌ Service billing failed:', billingError)
+        throw new Error(billingError.message)
+      }
+
+      return {
+        success: true,
+        data: billingInfo,
+        message: '💰 เริ่มคิดค่าบริการแล้ว'
+      }
+
+    } catch (err) {
+      console.error('Failed to start service billing:', err)
+      const errorMessage = err instanceof Error ? err.message : 'ไม่สามารถเริ่มคิดค่าบริการได้'
+      setError(errorMessage)
+      return { success: false, message: errorMessage }
+    }
+  }, [])
+
+  // ❌ DEPRECATED: Keep old function for backward compatibility
+  const startTracking = useCallback(async (bookingId: string, staffId: string) => {
+    console.warn('⚠️ startTracking is deprecated. Use startJourneyOnly instead.')
+    return startJourneyOnly(bookingId, staffId)
+  }, [startJourneyOnly])
 
   const stopTracking = useCallback(async () => {
     // Stop GPS tracking
@@ -206,6 +307,11 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     currentPosition,
     error,
     journeyId,
+    // ✅ NEW workflow functions
+    startJourneyOnly,
+    confirmArrival,
+    startServiceBilling,
+    // Legacy compatibility
     startTracking,
     stopTracking
   }

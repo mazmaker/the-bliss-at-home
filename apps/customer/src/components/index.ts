@@ -15,3 +15,6 @@ export { CancelBookingModal } from './CancelBookingModal'
 export { RescheduleModal } from './RescheduleModal'
 export { ReviewModal } from './ReviewModal'
 export { default as StaffTrackingMap } from './StaffTrackingMap'
+
+// Enhanced status components
+export { default as BookingStatusCardEnhanced } from './BookingStatusCardEnhanced'

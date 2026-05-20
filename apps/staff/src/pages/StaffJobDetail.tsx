@@ -8,7 +8,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobGPSControls, JobLocationMap } from '../components'
+import { ServiceTimerEnhanced, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
+import JobGPSControlsEnhanced from '../components/JobGPSControlsEnhanced'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -282,9 +283,15 @@ function StaffJobDetail() {
       {/* Extension Alert Banner */}
       <ExtensionAlertBanner jobId={job.id} />
 
-      {/* Service Timer (in_progress) */}
-      {isInProgress && job.started_at && (
-        <ServiceTimer startedAt={job.started_at} durationMinutes={totalDuration} />
+      {/* Enhanced Service Timer */}
+      {isInProgress && (
+        <ServiceTimerEnhanced
+          travelStartedAt={job.travel_started_at}
+          serviceStartedAt={job.started_at}
+          durationMinutes={totalDuration}
+          serviceRate={30}
+          showBilling={true}
+        />
       )}
 
       {/* Service Info Card */}
@@ -500,16 +507,16 @@ function StaffJobDetail() {
         <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm">{actionError}</div>
       )}
 
-      {/* GPS Tracking Controls */}
+      {/* Enhanced GPS Tracking Controls */}
       {isMyJob && !isFinished && (
-        <JobGPSControls
+        <JobGPSControlsEnhanced
           job={{
             id: job.id,
+            booking_id: job.booking_id || job.id, // Ensure booking_id is available
             status: job.status,
             customer_name: job.customer_name,
             customer_address: job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address,
-            customer_phone: job.customer_phone,
-            booking_id: job.booking_id
+            customer_phone: job.customer_phone
           }}
           onRefresh={refetch}
           onStartJob={handleStart}

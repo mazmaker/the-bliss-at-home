@@ -8,6 +8,7 @@ import { RescheduleModal } from '../components/RescheduleModal'
 import { ReviewModal } from '../components/ReviewModal'
 import { ExtendServiceButtonLarge } from '../components/ExtendServiceButton'
 import { StaffTrackingMap } from '../components'
+import BookingStatusCardEnhanced from '../components/BookingStatusCardEnhanced'
 import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 import { BookingWithExtensions } from '../types/extendService'
@@ -50,6 +51,10 @@ function BookingDetails() {
       date: bookingData.booking_date,
       time: bookingData.booking_time || '00:00',
       status: bookingData.status,
+      status_v2: (bookingData as any).status_v2 || bookingData.status, // New enhanced status
+      travel_started_at: (bookingData as any).travel_started_at,
+      service_started_at: (bookingData as any).service_started_at,
+      actual_arrival: (bookingData as any).actual_arrival,
       price: Number(bookingData.final_price || bookingData.base_price || 0),
       duration: (bookingData.duration || 60) / 60,
       addOns: bookingData.addons?.map((a) => ({
@@ -656,27 +661,64 @@ function BookingDetails() {
             <div className="bg-gray-100 border rounded-lg p-3 text-xs">
               <div>🔍 Debug Journey Status:</div>
               <div>Booking ID: {bookingData?.id}</div>
-              <div>Booking Status: {bookingData?.status}</div>
-              <div>Staff Assigned: {bookingData?.staff_id || 'ไม่มี'}</div>
+              <div>Booking Status: {bookingData?.status} {bookingData?.status === 'pending' && '❌ ต้องเป็น confirmed'}</div>
+              <div>Staff Assigned: {bookingData?.staff_id || 'ไม่มี'} ✅</div>
               <div>Active Journey ID: {activeJourneyId || 'ไม่พบ'}</div>
               <div>Tracking Loading: {isTrackingLoading ? 'กำลังโหลด...' : 'เสร็จแล้ว'}</div>
               <div>Should Show Map: {activeJourneyId ? 'ใช่' : 'ไม่'}</div>
+
+              {bookingData?.status === 'pending' && (
+                <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
+                  <div>⚠️ การจองยังไม่ได้ยืนยัน</div>
+                  <div>แก้ไข: Admin ต้องเปลี่ยน Status → 'confirmed'</div>
+                </div>
+              )}
+
+              <button
+                onClick={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from('bookings')
+                      .update({ status: 'confirmed' })
+                      .eq('id', bookingData?.id)
+
+                    if (error) throw error
+                    alert('✅ เปลี่ยน Status เป็น confirmed แล้ว - ลองกด เริ่มเดินทาง อีกครั้ง')
+                    window.location.reload()
+                  } catch (err) {
+                    alert('❌ Error: ' + err.message)
+                  }
+                }}
+                className="mt-2 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+              >
+                🚀 Fix: เปลี่ยนเป็น 'confirmed'
+              </button>
             </div>
 
-            {/* Staff Tracking Map - Only show when staff is actually traveling */}
-            {console.log('🗺️ Map render check:', { activeJourneyId, bookingId: bookingData?.id, showMap: !!activeJourneyId })}
-            {activeJourneyId && (
+            {/* Enhanced Booking Status Display */}
+            <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} />
+
+            {/* Staff Tracking Map - Only show when staff is EN_ROUTE */}
+            {console.log('🗺️ Map render check:', {
+              activeJourneyId,
+              status_v2: booking?.status_v2,
+              showMap: !!(activeJourneyId && booking?.status_v2 === 'STAFF_EN_ROUTE')
+            })}
+            {activeJourneyId && booking?.status_v2 === 'STAFF_EN_ROUTE' && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                  ติดตามการเดินทางของพนักงาน
+                  🚗 ติดตามการเดินทางของพนักงาน
                 </h2>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                   <p className="text-blue-700 text-sm">
                     พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง
                   </p>
                 </div>
-                <StaffTrackingMap journeyId={activeJourneyId} height="350px" />
-
+                <StaffTrackingMap
+                  journeyId={activeJourneyId}
+                  bookingStatus={booking.status_v2}
+                  height="350px"
+                />
               </div>
             )}
 
