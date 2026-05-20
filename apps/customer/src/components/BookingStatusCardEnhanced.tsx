@@ -52,7 +52,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
         color: 'gray',
         showProgress: true,
         currentStep: 0,
-        billing: 'ยังไม่เริ่มคิดค่าบริการ'
+        billing: 'รอการชำระเงิน'
       },
       'confirmed': {
         title: 'รอการมอบหมายพนักงาน',
@@ -61,7 +61,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
         color: 'amber',
         showProgress: true,
         currentStep: 1,
-        billing: 'ยังไม่เริ่มคิดค่าบริการ'
+        billing: 'ชำระเงินเสร็จแล้ว'
       },
       'assigned': {
         title: 'พนักงานรับงานแล้ว',
@@ -71,7 +71,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
         showStaff: true,
         showProgress: true,
         currentStep: 2,
-        billing: 'ยังไม่เริ่มคิดค่าบริการ'
+        billing: 'ชำระเงินเสร็จแล้ว'
       },
       'ASSIGNED': {
         title: 'พนักงานรับงานแล้ว',
@@ -81,7 +81,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
         showStaff: true,
         showProgress: true,
         currentStep: 2,
-        billing: 'ยังไม่เริ่มคิดค่าบริการ'
+        billing: 'ชำระเงินเสร็จแล้ว'
       },
       'STAFF_EN_ROUTE': {
         title: 'พนักงานกำลังเดินทาง',
@@ -92,7 +92,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
         showETA: true,
         showProgress: true,
         currentStep: 3,
-        billing: 'ยังไม่เริ่มคิดค่าบริการ'
+        billing: 'ชำระเงินเสร็จแล้ว - รอเริ่มบริการ'
       },
       'STAFF_ARRIVED': {
         title: 'พนักงานมาถึงแล้ว',
@@ -103,7 +103,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
         showContact: true,
         showProgress: true,
         currentStep: 3.5,
-        billing: 'ยังไม่เริ่มคิดค่าบริการ'
+        billing: 'ชำระเงินเสร็จแล้ว - รอเริ่มบริการ'
       },
       'SERVICE_IN_PROGRESS': {
         title: 'กำลังให้บริการ',
@@ -269,8 +269,8 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-purple-600">ไม่คิดค่าบริการ</div>
-              <div className="text-xs text-purple-500">เพียงรอติดตาม</div>
+              <div className="text-sm text-purple-600">เวลาเดินทาง</div>
+              <div className="text-xs text-purple-500">ไม่นับเป็นเวลาบริการ</div>
             </div>
           </div>
         </div>
@@ -317,7 +317,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
             )}
             {currentStatus === 'STAFF_EN_ROUTE' && (
               <p className={`text-sm text-${config.color}-600`}>
-                จะเริ่มคิดเมื่อพนักงานเริ่มให้บริการ
+                เวลาบริการจะเริ่มนับเมื่อพนักงานเริ่มให้บริการ
               </p>
             )}
           </div>

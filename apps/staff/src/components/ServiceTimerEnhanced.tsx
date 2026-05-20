@@ -89,7 +89,7 @@ export function ServiceTimerEnhanced({
             </div>
 
             <div className="text-right">
-              <div className="text-sm text-blue-600">ไม่คิดค่าบริการ</div>
+              <div className="text-sm text-blue-600">เวลาเดินทาง</div>
               {showBilling && (
                 <div className="text-xs text-blue-500">
                   ค่าชดเชย: {travelCompensation} บาท
@@ -132,7 +132,7 @@ export function ServiceTimerEnhanced({
 
               <div className="text-right">
                 <div className={`text-sm text-${serviceColor}-600`}>
-                  {isServiceActive ? '🟢 กำลังให้บริการ' : 'คิดค่าบริการ'}
+                  {isServiceActive ? '🟢 กำลังให้บริการ' : 'นับเวลาบริการ'}
                 </div>
                 <div className={`text-xs text-${serviceColor}-500`}>
                   เหลือ: {formatDuration(serviceRemaining)}
