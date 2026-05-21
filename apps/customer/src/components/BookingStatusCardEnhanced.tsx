@@ -236,8 +236,6 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
       {/* Staff Info & Travel Status */}
       {config.showStaff && booking.provider.name !== 'ยังไม่ได้มอบหมายพนักงาน' && (
         <div className="bg-white rounded-xl p-4 mb-4">
-          <h3 className="font-medium text-gray-900 mb-3">พนักงานของคุณ</h3>
-
           {/* Staff Basic Info */}
           <div className="flex items-center gap-3 mb-4">
             {booking.provider.avatar ? (
