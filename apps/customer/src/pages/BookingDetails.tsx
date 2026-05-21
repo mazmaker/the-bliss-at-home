@@ -111,13 +111,39 @@ function BookingDetails() {
           booking_number: bookingData.booking_number,
           status: bookingData.status
         })
-        const { data: journeys, error } = await supabase
+
+        // First try direct booking_id match
+        let { data: journeys, error } = await supabase
           .from('staff_journeys')
           .select('id, status, staff_id, booking_id')
           .eq('booking_id', bookingData.id)
-          .in('status', ['traveling', 'arrived']) // Only show map for active journeys
+          .in('status', ['traveling', 'arrived'])
           .order('started_at', { ascending: false })
           .limit(1)
+
+        console.log('🔍 Customer App: Direct search result:', { journeys, error })
+
+        // If no journey found, search through jobs table relationship
+        if (!journeys || journeys.length === 0) {
+          console.log('🔍 Customer App: No direct match, searching through jobs relationship...')
+
+          const { data: jobJourneys, error: jobError } = await supabase
+            .from('staff_journeys')
+            .select(`
+              id, status, staff_id, booking_id,
+              jobs!inner(id, booking_id)
+            `)
+            .eq('jobs.booking_id', bookingData.id)
+            .in('status', ['traveling', 'arrived'])
+            .order('started_at', { ascending: false })
+            .limit(1)
+
+          console.log('🔍 Customer App: Jobs relationship search result:', { jobJourneys, jobError })
+
+          if (!jobError && jobJourneys && jobJourneys.length > 0) {
+            journeys = jobJourneys
+          }
+        }
 
         console.log('📊 Journey query result:', { journeys, error, bookingId: bookingData.id })
 
