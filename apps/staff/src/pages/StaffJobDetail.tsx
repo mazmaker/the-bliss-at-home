@@ -436,7 +436,7 @@ function StaffJobDetail() {
           destinationLng={job.longitude}
           destinationName={job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address}
           customerPhone={job.customer_phone}
-          showMap={isTracking}
+          showMap={jobGPSStatus.isTracking}
           currentLat={currentPosition?.latitude}
           currentLng={currentPosition?.longitude}
         />
