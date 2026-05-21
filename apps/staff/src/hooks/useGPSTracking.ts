@@ -110,11 +110,18 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         })
       })
 
-      // Start GPS journey using existing function
-      console.log('🚗 Starting GPS journey (using existing function):', { bookingId, staffId })
-      const { data: newJourneyId, error: journeyError } = await supabase.rpc('start_staff_journey', {
+      // Start GPS journey without billing timer
+      console.log('🚗 Starting GPS journey only:', { bookingId, staffId })
+      const { data: newJourneyId, error: journeyError } = await supabase.rpc('start_gps_journey_only', {
         p_booking_id: bookingId,
-        p_staff_id: staffId
+        p_staff_id: staffId,
+        p_initial_location: {
+          latitude: initialPosition.coords.latitude,
+          longitude: initialPosition.coords.longitude,
+          accuracy: initialPosition.coords.accuracy,
+          batteryLevel: (navigator as any).getBattery ?
+            await (navigator as any).getBattery().then((battery: any) => Math.round(battery.level * 100)) : 100
+        }
       })
 
       console.log('📊 Journey creation result:', { newJourneyId, journeyError })
