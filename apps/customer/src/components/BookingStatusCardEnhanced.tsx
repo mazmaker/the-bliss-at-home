@@ -93,7 +93,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         title: 'พนักงานกำลังเดินทาง',
         description: 'ติดตามการเดินทางได้ในแผนที่ด้านล่าง',
         icon: '',
-        color: 'purple',
+        color: 'amber',
         showStaff: true,
         showETA: true,
         showProgress: true,

@@ -241,7 +241,7 @@ export default function StaffTrackingMap({
 
   const getStatusColor = (status: string) => {
     const colorMap: Record<string, string> = {
-      traveling: 'text-blue-600 bg-blue-100 border-blue-200',
+      traveling: 'text-amber-600 bg-amber-100 border-amber-200',
       arrived: 'text-purple-600 bg-purple-100 border-purple-200',
       completed: 'text-green-600 bg-green-100 border-green-200',
       cancelled: 'text-red-600 bg-red-100 border-red-200'
@@ -258,7 +258,7 @@ export default function StaffTrackingMap({
       <div className="bg-white rounded-lg shadow-md p-6" style={{ height }}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
             <p className="text-gray-600">กำลังโหลดแผนที่...</p>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function StaffTrackingMap({
             <p className="text-sm">{error}</p>
             <button
               onClick={refreshMap}
-              className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition"
+              className="mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 transition"
             >
               ลองใหม่
             </button>
@@ -291,13 +291,13 @@ export default function StaffTrackingMap({
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       {/* Header */}
       {journey && (
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+        <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold flex items-center gap-2">
                 ติดตามการเดินทางของพนักงาน
               </h3>
-              <p className="text-blue-100 text-sm">{journey.staff_name}</p>
+              <p className="text-amber-100 text-sm">{journey.staff_name}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(journey.status)}`}>
@@ -306,7 +306,7 @@ export default function StaffTrackingMap({
               <button
                 onClick={refreshMap}
                 disabled={isLoading}
-                className="p-1 hover:bg-blue-800 rounded transition"
+                className="p-1 hover:bg-amber-800 rounded transition"
                 title="รีเฟรชแผนที่"
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -314,7 +314,7 @@ export default function StaffTrackingMap({
             </div>
           </div>
           {lastUpdate && (
-            <p className="text-blue-100 text-xs mt-2">อัพเดทล่าสุด: {lastUpdate}</p>
+            <p className="text-amber-100 text-xs mt-2">อัพเดทล่าสุด: {lastUpdate}</p>
           )}
         </div>
       )}
@@ -351,7 +351,7 @@ export default function StaffTrackingMap({
         {isLoading && journey && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
             <div className="text-center">
-              <RefreshCw className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
+              <RefreshCw className="w-6 h-6 animate-spin text-amber-600 mx-auto mb-2" />
               <p className="text-sm text-gray-600">กำลังอัพเดท...</p>
             </div>
           </div>
@@ -391,7 +391,7 @@ export default function StaffTrackingMap({
                     href={`https://www.google.com/maps/dir/?api=1&destination=${journey.destination_lat},${journey.destination_lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-blue-100 text-blue-700 p-2 rounded hover:bg-blue-200 transition"
+                    className="bg-amber-100 text-amber-700 p-2 rounded hover:bg-amber-200 transition"
                     title="นำทางด้วย Google Maps"
                   >
                     <Navigation className="w-4 h-4" />

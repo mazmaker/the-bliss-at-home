@@ -520,7 +520,7 @@ function BookingDetails() {
         {/* Status Banner */}
         <div className={`p-6 rounded-2xl mb-6 ${
           booking.status === 'confirmed'
-            ? 'bg-blue-50 border-2 border-blue-200'
+            ? 'bg-amber-50 border-2 border-amber-200'
             : booking.status === 'completed'
             ? 'bg-green-50 border-2 border-green-200'
             : 'bg-stone-50 border-2 border-stone-200'
@@ -743,8 +743,8 @@ function BookingDetails() {
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
                   <Car className="w-5 h-5" /> ติดตามการเดินทางของพนักงาน
                 </h2>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-blue-700 text-sm">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  <p className="text-amber-700 text-sm">
                     พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง
                   </p>
                 </div>
@@ -760,7 +760,7 @@ function BookingDetails() {
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center justify-center py-8">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600 mx-auto mb-2"></div>
                     <p className="text-gray-600 text-sm">กำลังตรวจสอบการเดินทางของพนักงาน...</p>
                   </div>
                 </div>
@@ -887,12 +887,12 @@ function BookingDetails() {
                     }}
                     fullWidth={true}
                   />
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                    <div className="flex items-center gap-2 text-blue-700">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div className="flex items-center gap-2 text-amber-700">
                       <Sparkles className="w-5 h-5" />
                       <span className="font-medium">บริการกำลังดำเนินการ</span>
                     </div>
-                    <p className="text-sm text-blue-600 mt-1">
+                    <p className="text-sm text-amber-600 mt-1">
                       คุณสามารถเพิ่มเวลาบริการได้หากต้องการเวลาเพิ่มเติม
                     </p>
                   </div>
