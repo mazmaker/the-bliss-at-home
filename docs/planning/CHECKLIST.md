@@ -11,21 +11,21 @@
 
 ## Current Sprint
 
-**Sprint K: Invoice PDF + Hotel Cancel/Reschedule + Change Password + Webhook Sig** (4 - 10 มี.ค. 2569)
+**Sprint L: GPS Tracking System + 22-Status Workflow + Job Testing + Emergency Features** (19 - 25 พ.ค. 2569)
 
-### ✅ พบว่าทำเสร็จแล้ว (จากสแกนโค้ดจริง)
-- Customer Cancel/Reschedule — CancelBookingModal (432 lines) + RescheduleModal (472 lines) **[85%]**
-- Hotel Guest Activity Snapshot — GuestActivitySnapshot.tsx (326 lines, real data) **[85%]**
-- Hotel Book for Guest — BookingModalNew.tsx (727 lines, Supabase real data) **[85%]**
-- Payment PromptPay — backend done (create-source + QR) **[75%]**
-- Payment Refund System — full/partial refund + webhook complete **[80%]**
+### ✅ เสร็จแล้ว
+- GPS Tracking System — useGPSTracking + JobGPSControls + real-time location **[95%]**
+- 22-Status State Machine — useBookingStateMachine + transition validation **[90%]**
+- Staff Journey Tracking — start_staff_journey + customer map display **[95%]**
+- Emergency Booking Banner — responsive design update **[85%]**
+- Extension Service Payment — booking extension pricing + Omise integration **[85%]**
 
-### Priorities (ทำก่อน)
-1. ~~Hotel Cancel/Reschedule (0%)~~ → ✅ พบว่าทำเสร็จแล้ว (85%)
-2. Invoice PDF จริง — ตอนนี้เป็น text file fallback (20%)
-3. ~~Hotel + Staff Change Password backend (15%)~~ → ✅ Hotel เสร็จ 100% / Staff ไม่ต้องทำ (ใช้ LINE login)
+### Priorities (ทำต่อ)
+1. Job Status Flow Testing — manual testing workflow (กำลังทำ)
+2. Invoice PDF จริง — ยังเป็น text file fallback (20%)  
+3. Hotel Cancel/Reschedule — ยังขาดหายไป (0%)
 4. Webhook signature verification เปิดใน production (55%)
-5. PromptPay frontend integration (backend 75%, frontend 0%)
+5. PromptPay frontend integration (backend 78%, frontend 0%)
 
 ### Blockers
 - Invoice PDF ยังเป็น text file — ต้องใช้ PDF library (20%)

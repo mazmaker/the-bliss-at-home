@@ -58,17 +58,13 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
       if (existingJourneys && existingJourneys.length > 0) {
         const journey = existingJourneys[0]
-        console.log('🔍 Found existing journey:', journey)
 
         // Set state to match existing journey
-        console.log('🔄 Updating hook state with existing journey...')
         setJourneyId(journey.id)
         setIsTracking(journey.status === 'traveling')
-        console.log('🔄 Hook state updated:', { journeyId: journey.id, isTracking: journey.status === 'traveling' })
 
-        // 🔄 Sync booking status with journey status
+        // Sync booking status with journey status
         if (journey.status === 'traveling') {
-          console.log('🔄 Syncing booking status to match journey status...')
           try {
             const { error: syncError } = await supabase
               .from('bookings')
@@ -76,12 +72,10 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
               .eq('id', bookingId)
 
             if (syncError) {
-              console.error('❌ Failed to sync booking status:', syncError)
-            } else {
-              console.log('✅ Booking status synced to traveling')
+              console.error('Failed to sync booking status:', syncError)
             }
           } catch (err) {
-            console.error('❌ Booking status sync error:', err)
+            console.error('Booking status sync error:', err)
           }
         }
 
@@ -111,25 +105,13 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       timestamp: Date.now()
     }
 
-    console.log('📍 GPS position update:', {
-      lat: gpsPosition.latitude,
-      lng: gpsPosition.longitude,
-      accuracy: gpsPosition.accuracy,
-      journeyId
-    })
-
     setCurrentPosition(gpsPosition)
     setError(null)
 
-    // Update location in database if journey is active - เช็คทั้ง state และ current value
+    // Update location in database if journey is active
     const currentJourneyId = journeyId || localStorage.getItem('current_journey_id')
     if (currentJourneyId) {
       try {
-        console.log('📤 Updating location in database...', {
-          journeyId: currentJourneyId,
-          coordinates: `${gpsPosition.latitude}, ${gpsPosition.longitude}`
-        })
-
         const { error: updateError } = await supabase.rpc('update_journey_location', {
           p_journey_id: currentJourneyId,
           p_latitude: gpsPosition.latitude,
@@ -138,9 +120,9 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         })
 
         if (updateError) {
-          console.error('❌ Failed to update location:', updateError)
+          console.error('Failed to update location:', updateError)
 
-          // Fallback: อัพเดทโดยตรง
+          // Fallback: direct update
           const { error: directUpdateError } = await supabase
             .from('staff_journeys')
             .update({
@@ -152,20 +134,14 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             .eq('id', currentJourneyId)
 
           if (directUpdateError) {
-            console.error('❌ Direct update also failed:', directUpdateError)
+            console.error('Direct update also failed:', directUpdateError)
             setError('Failed to update location')
-          } else {
-            console.log('✅ Location updated via direct method')
           }
-        } else {
-          console.log('✅ Location updated successfully via RPC')
         }
       } catch (err) {
-        console.error('❌ Location update error:', err)
+        console.error('Location update error:', err)
         setError('Location update failed')
       }
-    } else {
-      console.log('⚠️ No journey ID - skipping database update')
     }
   }, [journeyId])
 
@@ -198,11 +174,9 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     try {
       setError(null)
 
-      // ✅ Check for existing journey first
+      // Check for existing journey first
       const existingJourney = await checkExistingJourney(bookingId)
       if (existingJourney) {
-        console.log('🔄 Resuming existing journey:', existingJourney.id)
-
         // Start GPS tracking for existing journey if still traveling
         if (existingJourney.status === 'traveling') {
           const watchId = navigator.geolocation.watchPosition(
@@ -220,7 +194,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         return {
           success: true,
           data: { journeyId: existingJourney.id },
-          message: '🔄 พบการเดินทางที่มีอยู่แล้ว'
+          message: 'พบการเดินทางที่มีอยู่แล้ว'
         }
       }
 
@@ -233,78 +207,42 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         })
       })
 
-      // ✅ เรียก database function ที่สร้างไว้แล้ว
-      console.log('🚗 Starting NEW GPS tracking:', { bookingId, staffId })
-
-      // เรียก start_staff_journey function จริง
-      console.log('📤 Staff App: Creating journey in database with:', {
-        p_booking_id: bookingId,
-        p_staff_id: staffId
-      })
-
+      // Create journey in database
       const { data: journeyId, error: journeyError } = await supabase.rpc('start_staff_journey', {
         p_booking_id: bookingId,
         p_staff_id: staffId
       })
 
-      console.log('📥 Staff App: Journey creation result:', { journeyId, journeyError })
-
       if (journeyError) {
-        console.error('❌ Failed to start journey:', journeyError)
+        console.error('Failed to start journey:', journeyError)
         throw new Error(journeyError.message || 'ไม่สามารถเริ่มเดินทางได้')
       }
 
-      console.log('📊 Journey created in database:', { journeyId })
       setJourneyId(journeyId)
-      // เก็บ journey ID ใน localStorage เพื่อให้ updateLocation ใช้ได้
       localStorage.setItem('current_journey_id', journeyId)
 
-      // ✅ Update job status to 'traveling' when GPS starts
+      // Update job status to 'traveling' when GPS starts
       try {
-        console.log('🔄 Attempting to update booking status to traveling...', { bookingId })
-
-        // First check current status
-        const { data: currentBooking, error: checkError } = await supabase
-          .from('bookings')
-          .select('id, status')
-          .eq('id', bookingId)
-          .single()
-
-        console.log('📊 Current booking status:', currentBooking, checkError)
-
-        // Try to update status
-        const { error: statusError, data: updateData } = await supabase
+        const { error: statusError } = await supabase
           .from('bookings')
           .update({ status: 'traveling' })
           .eq('id', bookingId)
-          .select('id, status')
 
         if (statusError) {
-          console.error('❌ Failed to update job status to traveling:', statusError)
-          console.error('❌ Status error code:', statusError.code)
-          console.error('❌ Status error message:', statusError.message)
-          console.error('❌ Status error details:', statusError.details)
-          console.error('❌ Full error object:', JSON.stringify(statusError, null, 2))
+          console.error('Failed to update job status to traveling:', statusError)
 
           // Try alternative status that might work
-          console.log('🔄 Trying alternative: updating to "assigned" status...')
-          const { error: altError, data: altData } = await supabase
+          const { error: altError } = await supabase
             .from('bookings')
             .update({ status: 'assigned' })
             .eq('id', bookingId)
-            .select('id, status')
 
           if (altError) {
-            console.error('❌ Alternative update also failed:', altError)
-          } else {
-            console.log('✅ Alternative status update worked:', altData)
+            console.error('Alternative status update also failed:', altError)
           }
-
-        } else {
-          console.log('✅ Job status updated to traveling successfully:', updateData)
         }
       } catch (err) {
-        console.error('❌ Error updating job status:', err)
+        console.error('Error updating job status:', err)
       }
 
       // Get initial location immediately
@@ -312,14 +250,8 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: highAccuracy,
           timeout,
-          maximumAge: 0 // ต้องการข้อมูลใหม่
+          maximumAge: 0
         })
-      })
-
-      console.log('📍 Initial GPS position:', {
-        lat: initialPos.coords.latitude,
-        lng: initialPos.coords.longitude,
-        accuracy: initialPos.coords.accuracy
       })
 
       // Update location immediately
@@ -446,34 +378,23 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   }, [startJourneyOnly])
 
   const stopTracking = useCallback(async () => {
-    console.log('🛑 stopTracking called:', { journeyId, currentPosition })
-
     try {
-      console.log('🔄 Starting GPS stop process...')
+      // Stop GPS tracking
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current)
+        watchIdRef.current = null
+      }
 
-    // Stop GPS tracking
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current)
-      watchIdRef.current = null
-      console.log('📡 GPS watch stopped')
-    }
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current)
+        intervalIdRef.current = null
+      }
 
-    if (intervalIdRef.current) {
-      clearInterval(intervalIdRef.current)
-      intervalIdRef.current = null
-    }
-
-    // Complete journey - ใช้ตำแหน่งล่าสุดหรือ fallback
-    if (journeyId) {
-      try {
-        const finalLat = currentPosition?.latitude || 13.7563 // fallback Bangkok
-        const finalLng = currentPosition?.longitude || 100.5018
-
-        console.log('🏁 Completing journey:', {
-          journeyId,
-          finalLat,
-          finalLng
-        })
+      // Complete journey
+      if (journeyId) {
+        try {
+          const finalLat = currentPosition?.latitude || 13.7563 // fallback Bangkok
+          const finalLng = currentPosition?.longitude || 100.5018
 
         const { error: completeError } = await supabase.rpc('complete_staff_journey', {
           p_journey_id: journeyId,
@@ -482,7 +403,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         })
 
         if (completeError) {
-          console.error('❌ Failed to complete journey:', completeError)
+          console.error('Failed to complete journey:', completeError)
 
           // Get booking ID from journey for fallback
           const { data: journeyData, error: journeyFetchError } = await supabase
@@ -492,18 +413,16 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             .single()
 
           if (journeyFetchError) {
-            console.error('❌ Failed to fetch journey booking_id:', journeyFetchError)
+            console.error('Failed to fetch journey booking_id:', journeyFetchError)
             throw new Error(`ไม่สามารถอัพเดตสถานะได้: ${completeError.message}`)
           }
 
           const bookingId = journeyData.booking_id
 
           // Fallback: Update journey in-place (don't change status to avoid constraint)
-          console.log('🔄 Fallback: Updating journey coordinates and completion time...')
           const { error: updateError } = await supabase
             .from('staff_journeys')
             .update({
-              // Don't change status to avoid unique constraint violation
               completed_at: new Date().toISOString(),
               current_latitude: finalLat,
               current_longitude: finalLng,
@@ -512,35 +431,28 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             .eq('id', journeyId)
 
           if (updateError) {
-            console.error('❌ Fallback journey update failed:', updateError)
+            console.error('Fallback journey update failed:', updateError)
             throw new Error(`ไม่สามารถอัพเดตการเดินทางได้: ${updateError.message}`)
-          } else {
-            console.log('✅ Journey completed via fallback update')
-
-            // Manual booking status update
-            try {
-              console.log('🔄 Fallback: Updating booking status to in_progress...')
-              const { error: bookingError } = await supabase
-                .from('bookings')
-                .update({ status: 'in_progress' })
-                .eq('id', bookingId)
-
-              if (bookingError) {
-                console.error('❌ Fallback booking update failed:', bookingError)
-                throw new Error(`ไม่สามารถอัพเดตสถานะงานได้: ${bookingError.message}`)
-              } else {
-                console.log('✅ Booking status updated to in_progress via fallback')
-              }
-            } catch (err) {
-              console.error('❌ Fallback booking update error:', err)
-              throw err
-            }
           }
-        } else {
-          console.log('✅ Journey completed successfully')
+
+          // Manual booking status update
+          try {
+            const { error: bookingError } = await supabase
+              .from('bookings')
+              .update({ status: 'in_progress' })
+              .eq('id', bookingId)
+
+            if (bookingError) {
+              console.error('Fallback booking update failed:', bookingError)
+              throw new Error(`ไม่สามารถอัพเดตสถานะงานได้: ${bookingError.message}`)
+            }
+          } catch (err) {
+            console.error('Fallback booking update error:', err)
+            throw err
+          }
         }
       } catch (err) {
-        console.error('❌ Journey completion error:', err)
+        console.error('Journey completion error:', err)
       }
     }
 
@@ -549,15 +461,11 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     setJourneyId(null)
     setCurrentPosition(null)
     setError(null)
-
-    // ล้าง localStorage
     localStorage.removeItem('current_journey_id')
 
-    console.log('🧹 GPS state cleared')
-
     } catch (outerError) {
-      console.error('💥 CRITICAL ERROR in stopTracking:', outerError)
-      alert(`💥 CRITICAL ERROR: ${outerError.message}`)
+      console.error('CRITICAL ERROR in stopTracking:', outerError)
+      alert(`เกิดข้อผิดพลาดร้ายแรง: ${outerError.message}`)
       throw outerError
     }
   }, [journeyId, currentPosition])
@@ -576,15 +484,13 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
   // Emergency reset function
   const emergencyReset = useCallback(async (jobId: string) => {
-    console.log('🚨 Emergency reset triggered for job:', jobId)
-
     try {
       // Find and complete any stuck journeys
       const { data: stuckJourneys } = await supabase
         .from('staff_journeys')
         .select('id')
         .eq('booking_id', jobId)
-        .in('status', ['traveling', 'arrived']) // Emergency reset ทั้ง traveling และ arrived
+        .in('status', ['traveling', 'arrived'])
 
       if (stuckJourneys && stuckJourneys.length > 0) {
         for (const journey of stuckJourneys) {
@@ -595,8 +501,6 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
               completed_at: new Date().toISOString()
             })
             .eq('id', journey.id)
-
-          console.log('✅ Reset journey:', journey.id)
         }
       }
 
@@ -606,10 +510,9 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       setCurrentPosition(null)
       setError(null)
 
-      console.log('🧹 Emergency reset complete')
       return { success: true, message: 'รีเซ็ตเสร็จแล้ว' }
     } catch (err) {
-      console.error('❌ Emergency reset failed:', err)
+      console.error('Emergency reset failed:', err)
       return { success: false, message: 'รีเซ็ตไม่สำเร็จ' }
     }
   }, [])

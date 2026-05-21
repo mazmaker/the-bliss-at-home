@@ -156,8 +156,9 @@ Always use `browser_snapshot` first to understand page structure before interact
 ## Rules
 1. **🚨 ALWAYS read `docs/database-schema.md` FIRST** before any database work (migrations, functions, schema changes)
 2. **🚫 NEVER create tables without reading schema doc** - we have 54 existing tables, don't duplicate
-3. **Always search docs first** when implementing new features
-4. **Use Supabase MCP** for database questions (don't guess schema)
-5. **Use Playwright snapshot** before browser interactions
-6. **Check `docs/CHECKLIST.md`** to see current task status and remaining work
-7. **Use Vercel MCP automatically** when tasks involve: deploy status, build errors, production debugging, deployment management, or any Vercel-related operations
+3. **🚫 NEVER use colorful emojis in UI design** - No colored emojis (🟢🔴🟡🟣🔵🟠) in any interface. Use text labels, icons, or simple symbols only
+4. **Always search docs first** when implementing new features
+5. **Use Supabase MCP** for database questions (don't guess schema)
+6. **Use Playwright snapshot** before browser interactions
+7. **Check `docs/CHECKLIST.md`** to see current task status and remaining work
+8. **Use Vercel MCP automatically** when tasks involve: deploy status, build errors, production debugging, deployment management, or any Vercel-related operations

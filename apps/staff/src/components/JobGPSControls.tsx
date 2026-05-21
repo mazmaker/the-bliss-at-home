@@ -57,29 +57,23 @@ export default function JobGPSControls({
     }
   }, [job.booking_id, emergencyReset])
 
-  // ✅ Check for existing journey on mount
+  // Check for existing journey on mount
   useEffect(() => {
     if (!checkExistingJourney || !job.booking_id) return
 
     // Prevent infinite loops by tracking checked bookings
     if (journeyCheckedRef.current.has(job.booking_id)) {
-      console.log('🔄 Already checked journey for booking:', job.booking_id)
       return
     }
 
     const checkForExistingJourney = async () => {
       try {
-        console.log('🔍 Checking for existing journey for booking:', job.booking_id)
         journeyCheckedRef.current.add(job.booking_id) // Mark as checked
 
         const existingJourney = await checkExistingJourney(job.booking_id)
         if (existingJourney) {
-          console.log('✅ Found existing journey, hook state should update automatically')
-
-          // ℹ️ Booking status sync removed due to RLS policies
-          // GPS tracking works independently and doesn't require booking status updates
-          console.log('ℹ️ GPS tracking active - booking status sync skipped (RLS policies)')
-          console.log('ℹ️ All GPS functionality works correctly without booking status updates')
+          // GPS tracking works independently
+          console.log('GPS tracking resumed for existing journey')
         }
       } catch (error) {
         console.error('Failed to check existing journey:', error)
@@ -89,7 +83,7 @@ export default function JobGPSControls({
     }
 
     checkForExistingJourney()
-  }, [job.booking_id, checkExistingJourney]) // Only depend on job.booking_id and checkExistingJourney
+  }, [job.booking_id, checkExistingJourney])
 
   // Get staff ID from staff table
   const getStaffId = async () => {
@@ -120,52 +114,29 @@ export default function JobGPSControls({
     try {
       const currentStaffId = await getStaffId()
 
-      // ✅ Check for existing journey first
+      // Check for existing journey first
       if (checkExistingJourney) {
-        console.log('🔍 Checking for existing journey before starting new one...')
         const existingJourney = await checkExistingJourney(job.booking_id)
         if (existingJourney) {
-          console.log('✅ Found existing journey:', existingJourney.id)
           // Wait for state to update then refresh
           setTimeout(() => {
-            console.log('🔄 Calling onRefresh after state update...')
             onRefresh?.()
           }, 100)
           return
         }
       }
 
-      console.log('🚗 GPS Debug Info:', {
-        jobId: job.id,
-        bookingId: job.booking_id,
-        usingBookingId: job.booking_id, // ✅ ใช้ job.booking_id สำหรับ journey
-        profileId: user?.id,
-        staffTableId: currentStaffId,
-        jobStatus: job.status
-      })
-
       if (!user?.id) {
         alert('กรุณาเข้าสู่ระบบใหม่อีกครั้ง')
         return
       }
 
-      console.log('🎯 Staff App: Starting GPS tracking for booking:', job.booking_id)
-      console.log('🎯 Staff App: Job details:', {
-        jobId: job.id,
-        bookingId: job.booking_id,
-        jobStatus: job.status,
-        customerName: job.customer_name
-      })
-
-      const result = await startTracking(job.booking_id, currentStaffId) // ✅ ใช้ booking_id ไม่ใช่ job.id
+      const result = await startTracking(job.booking_id, currentStaffId)
       if (result) {
-        console.log('🔄 GPS started successfully, calling onRefresh...', { result, hasRefresh: !!onRefresh })
-
-        // ✅ Force refresh หลังจาก GPS start สำเร็จ
+        // Force refresh after GPS start success
         setTimeout(() => {
-          console.log('🔄 Force refreshing UI after GPS start...')
           onRefresh?.()
-        }, 1000) // รอ 1 วิ่าที่ให้ database commit
+        }, 1000)
       }
     } catch (error) {
       console.error('Failed to start GPS:', error)
@@ -178,20 +149,19 @@ export default function JobGPSControls({
   const handleStopGPS = async () => {
     setIsProcessing(true)
     try {
-      console.log('🛑 Stopping GPS tracking...', { journeyId })
       await stopTracking()
-      setHasArrived(true) // เซ็ตสถานะมาถึงแล้ว
+      setHasArrived(true)
 
-      console.log('✅ GPS stopped successfully')
+      // Refresh to show updated status
       onRefresh?.()
 
-      // 🚫 DISABLED FOR DEBUGGING - no auto reload
-      console.log('🔄 GPS stop successful - auto reload disabled for debugging')
-      alert('✅ มาถึงแล้ว! (DEBUG: ไม่รีโหลดเพื่อ debug)')
+      // Auto-reload after successful arrival
+      setTimeout(() => {
+        window.location.reload()
+      }, 1500)
     } catch (error) {
-      console.error('❌ Failed to stop GPS:', error)
+      console.error('Failed to stop GPS:', error)
       alert(`เกิดข้อผิดพลาด: ${error.message}\n\nกรุณาลองใหม่อีกครั้ง`)
-      // ไม่รีโหลดเมื่อมี error
     } finally {
       setIsProcessing(false)
     }
@@ -250,18 +220,7 @@ export default function JobGPSControls({
   const isTrackingThis = isTracking && journeyId
   const canStartGPS = job.status === 'confirmed' || job.status === 'assigned'
   const shouldShowTracking = job.status === 'traveling' || isTrackingThis
-  const jobHasArrived = job.status === 'in_progress' // พนักงานมาถึงแล้ว (จาก database)
-
-  console.log('📱 GPS Controls Debug:', JSON.stringify({
-    jobId: job.id,
-    bookingId: job.booking_id,
-    jobStatus: job.status,
-    isTracking,
-    journeyId,
-    isTrackingThis,
-    shouldShowTracking,
-    canStartGPS
-  }, null, 2))
+  const jobHasArrived = job.status === 'in_progress'
 
   if (compact && !shouldShowTracking) {
     // Compact mode

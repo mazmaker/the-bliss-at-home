@@ -10,7 +10,8 @@ interface ServiceTimerEnhancedProps {
   travelStartedAt?: string // ISO timestamp when travel started
   serviceStartedAt?: string // ISO timestamp when service started
   durationMinutes: number // Expected service duration
-  serviceRate?: number // Baht per minute (default 30)
+  fixedEarnings?: number // Fixed earnings amount set by admin
+  travelCompensation?: number // Fixed travel compensation
   showBilling?: boolean // Show billing information
 }
 
@@ -18,7 +19,8 @@ export function ServiceTimerEnhanced({
   travelStartedAt,
   serviceStartedAt,
   durationMinutes,
-  serviceRate = 30,
+  fixedEarnings = 0,
+  travelCompensation = 0,
   showBilling = true
 }: ServiceTimerEnhancedProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -42,9 +44,9 @@ export function ServiceTimerEnhanced({
   const isServiceOvertime = serviceDuration > durationMinutes
   const isServiceActive = !!serviceStartedAt && !serviceStartedAt
 
-  // Calculate billing
-  const serviceCost = serviceDuration * serviceRate
-  const travelCompensation = Math.min(travelDuration * 5, 150) // 5 baht/min, max 150 baht
+  // Use fixed earnings from admin instead of calculating
+  const serviceCost = fixedEarnings // Admin-set fixed amount
+  const travelCompensationAmount = travelCompensation // Pre-calculated travel compensation
 
   const formatDuration = (minutes: number): string => {
     const hrs = Math.floor(minutes / 60)
@@ -62,7 +64,7 @@ export function ServiceTimerEnhanced({
     if (!serviceStartedAt) return 'gray'
     if (isServiceOvertime) return 'red'
     if (serviceRemaining < 5) return 'amber'
-    return 'emerald'
+    return 'violet'
   }
 
   const serviceColor = getServiceColor()
@@ -92,7 +94,7 @@ export function ServiceTimerEnhanced({
               <div className="text-sm text-blue-600">เวลาเดินทาง</div>
               {showBilling && (
                 <div className="text-xs text-blue-500">
-                  ค่าชดเชย: {travelCompensation} บาท
+                  ค่าชดเชย: {travelCompensationAmount} บาท
                 </div>
               )}
             </div>
@@ -182,14 +184,19 @@ export function ServiceTimerEnhanced({
 
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>เวลาบริการ: {formatDuration(serviceDuration)}</span>
+              <span>รายได้งาน (ตามที่แอดมินกำหนด)</span>
               <span>{serviceCost.toLocaleString()} บาท</span>
             </div>
 
-            {travelCompensation > 0 && (
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>เวลาบริการ: {formatDuration(serviceDuration)}</span>
+              <span>จำนวนคงที่</span>
+            </div>
+
+            {travelCompensationAmount > 0 && (
               <div className="flex justify-between text-sm text-blue-600">
                 <span>ค่าชดเชยการเดินทาง</span>
-                <span>+{travelCompensation.toLocaleString()} บาท</span>
+                <span>+{travelCompensationAmount.toLocaleString()} บาท</span>
               </div>
             )}
 
@@ -198,7 +205,7 @@ export function ServiceTimerEnhanced({
             <div className="flex justify-between font-bold">
               <span>รวมรายได้</span>
               <span className="text-green-600">
-                {(serviceCost + travelCompensation).toLocaleString()} บาท
+                {(serviceCost + travelCompensationAmount).toLocaleString()} บาท
               </span>
             </div>
 

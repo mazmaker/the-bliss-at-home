@@ -24,12 +24,20 @@ const audioBuffers: Map<SoundType, AudioBuffer> = new Map()
 
 // Initialize audio context (must be called after user interaction)
 export function initializeAudio(): void {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-  }
-  // Resume AudioContext if suspended (required by browser autoplay policies)
-  if (audioContext.state === 'suspended') {
-    audioContext.resume().catch(err => console.warn('Failed to resume AudioContext:', err))
+  try {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    // Resume AudioContext if suspended (required by browser autoplay policies)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(err => {
+        // Silently fail - don't spam console
+        console.debug('AudioContext resume failed (user interaction required)')
+      })
+    }
+  } catch (err) {
+    // Silently fail if AudioContext creation fails
+    console.debug('AudioContext initialization failed:', err)
   }
 }
 

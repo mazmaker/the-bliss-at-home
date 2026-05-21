@@ -129,7 +129,7 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
 
     // Listen for auth changes - single listener for the entire app
     let lastProfileFetchTime = 0
-    const PROFILE_FETCH_DEBOUNCE = 2000
+    const PROFILE_FETCH_DEBOUNCE = 5000 // เพิ่มเป็น 5 วินาที
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

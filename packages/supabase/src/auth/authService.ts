@@ -9,7 +9,7 @@ import { AuthError } from './types'
 
 // Cache to prevent excessive API calls
 let profileCache: { profile: Profile | null; timestamp: number } | null = null
-const CACHE_DURATION = 2000 // 2 seconds
+const CACHE_DURATION = 30000 // เพิ่มเป็น 30 วินาที เพื่อลด API calls
 
 /**
  * Get current user profile from profiles table
