@@ -404,7 +404,7 @@ export default function StaffTrackingMap({
           {/* Map provider และ Auto-refresh notice */}
           <div className="text-center space-y-1">
             <p className="text-xs text-gray-500">
-              แผนที่จะอัพเดทอัตโนมัติทุก 5 นาทีเพื่อประหยัดเครดิต
+              แผนที่จะอัพเดทอัตโนมัติเพื่อแสดงตำแหน่งพนักงานล่าสุด
             </p>
 
             {/* GPS Status Debug */}
