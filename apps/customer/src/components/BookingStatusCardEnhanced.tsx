@@ -337,27 +337,6 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         </div>
       )}
 
-      {/* Billing Status */}
-      <div className={`bg-${config.color}-100 border border-${config.color}-200 rounded-xl p-4`}>
-        <div className="flex items-center gap-2">
-          <span className="text-lg">💰</span>
-          <div>
-            <p className={`font-medium text-${config.color}-900`}>
-              {config.billing}
-            </p>
-            {currentStatus === 'SERVICE_IN_PROGRESS' && (
-              <p className={`text-sm text-${config.color}-600`}>
-                เวลาจะหยุดนับเมื่อบริการเสร็จสิ้น
-              </p>
-            )}
-            {currentStatus === 'STAFF_EN_ROUTE' && (
-              <p className={`text-sm text-${config.color}-600`}>
-                เวลาบริการจะเริ่มนับเมื่อพนักงานเริ่มให้บริการ
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Additional Info based on status */}
       {currentStatus === 'STAFF_ARRIVED' && (
