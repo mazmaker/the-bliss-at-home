@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Navigation, MapPin, AlertTriangle, CheckCircle, Loader2, Play, Phone, Car, Share2, Copy } from 'lucide-react'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
@@ -32,6 +32,8 @@ export default function JobGPSControls({
   const [staffId, setStaffId] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [hasArrived, setHasArrived] = useState(false) // ติดตามสถานะการมาถึง
+  const journeyCheckedRef = useRef<Set<string>>(new Set()) // Track which jobs we've checked
+  const syncedJobsRef = useRef<Set<string>>(new Set()) // Track which jobs we've already synced
 
   const {
     isTracking,
@@ -39,11 +41,46 @@ export default function JobGPSControls({
     error: gpsError,
     journeyId,
     startTracking,
-    stopTracking
+    stopTracking,
+    checkExistingJourney
   } = useGPSTracking({
     updateInterval: 5 * 60 * 1000, // 5 minutes
     highAccuracy: true
   })
+
+  // ✅ Check for existing journey on mount
+  useEffect(() => {
+    if (!checkExistingJourney || !job.id) return
+
+    // Prevent infinite loops by tracking checked jobs
+    if (journeyCheckedRef.current.has(job.id)) {
+      console.log('🔄 Already checked journey for job:', job.id)
+      return
+    }
+
+    const checkForExistingJourney = async () => {
+      try {
+        console.log('🔍 Checking for existing journey for job:', job.id)
+        journeyCheckedRef.current.add(job.id) // Mark as checked
+
+        const existingJourney = await checkExistingJourney(job.id)
+        if (existingJourney) {
+          console.log('✅ Found existing journey, hook state should update automatically')
+
+          // ℹ️ Booking status sync removed due to RLS policies
+          // GPS tracking works independently and doesn't require booking status updates
+          console.log('ℹ️ GPS tracking active - booking status sync skipped (RLS policies)')
+          console.log('ℹ️ All GPS functionality works correctly without booking status updates')
+        }
+      } catch (error) {
+        console.error('Failed to check existing journey:', error)
+        // Remove from checked set on error so we can retry
+        journeyCheckedRef.current.delete(job.id)
+      }
+    }
+
+    checkForExistingJourney()
+  }, [job.id, checkExistingJourney]) // Only depend on job.id and checkExistingJourney
 
   // Get staff ID from staff table
   const getStaffId = async () => {
@@ -73,6 +110,22 @@ export default function JobGPSControls({
     setIsProcessing(true)
     try {
       const currentStaffId = await getStaffId()
+
+      // ✅ Check for existing journey first
+      if (checkExistingJourney) {
+        console.log('🔍 Checking for existing journey before starting new one...')
+        const existingJourney = await checkExistingJourney(job.id)
+        if (existingJourney) {
+          console.log('✅ Found existing journey:', existingJourney.id)
+          // Wait for state to update then refresh
+          setTimeout(() => {
+            console.log('🔄 Calling onRefresh after state update...')
+            onRefresh?.()
+          }, 100)
+          return
+        }
+      }
+
       console.log('🚗 GPS Debug Info:', {
         jobId: job.id,
         bookingId: job.booking_id,
@@ -89,9 +142,15 @@ export default function JobGPSControls({
 
       console.log('🎯 Starting GPS tracking for job:', job.id)
 
-      const newJourneyId = await startTracking(job.id, user.id) // ใช้ job.id เสมอ
-      if (newJourneyId) {
-        onRefresh?.()
+      const result = await startTracking(job.id, currentStaffId) // ใช้ staff table ID
+      if (result) {
+        console.log('🔄 GPS started successfully, calling onRefresh...', { result, hasRefresh: !!onRefresh })
+
+        // ✅ Force refresh หลังจาก GPS start สำเร็จ
+        setTimeout(() => {
+          console.log('🔄 Force refreshing UI after GPS start...')
+          onRefresh?.()
+        }, 1000) // รอ 1 วิ่าที่ให้ database commit
       }
     } catch (error) {
       console.error('Failed to start GPS:', error)
@@ -123,8 +182,11 @@ export default function JobGPSControls({
   const shareTrackingLink = async () => {
     if (!journeyId) return
 
-    // Create customer tracking URL
-    const trackingUrl = `${window.location.origin}/track/${journeyId}`
+    // Create customer tracking URL - ชี้ไปที่ customer app (port 3008)
+    const customerAppUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:3008'  // Development
+      : 'https://customer.theblissmassageathome.com' // Production (actual domain)
+    const trackingUrl = `${customerAppUrl}/track/${journeyId}`
 
     try {
       if (navigator.share) {
@@ -165,6 +227,16 @@ export default function JobGPSControls({
   const canStartGPS = job.status === 'confirmed' || job.status === 'assigned'
   const shouldShowTracking = job.status === 'traveling' || isTrackingThis
 
+  console.log('📱 GPS Controls Debug:', JSON.stringify({
+    jobId: job.id,
+    jobStatus: job.status,
+    isTracking,
+    journeyId,
+    isTrackingThis,
+    shouldShowTracking,
+    canStartGPS
+  }, null, 2))
+
   if (compact && !shouldShowTracking) {
     // Compact mode
     if (hasArrived) {
@@ -173,7 +245,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartJobClick}
           disabled={externalProcessing || !canStartWork}
-          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm disabled:opacity-50"
+          className="flex items-center gap-1 text-amber-700 hover:text-amber-800 text-sm disabled:opacity-50"
         >
           {externalProcessing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -189,7 +261,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartGPS}
           disabled={isProcessing}
-          className="flex items-center gap-1 text-green-600 hover:text-green-700 text-sm disabled:opacity-50"
+          className="flex items-center gap-1 text-amber-700 hover:text-amber-800 text-sm disabled:opacity-50"
         >
           {isProcessing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -204,17 +276,17 @@ export default function JobGPSControls({
   return (
     <div className="space-y-3">
       {shouldShowTracking ? (
-        // GPS Active Status
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+        // GPS Active Status - The Bliss Brand Colors
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-green-700 font-medium text-sm">กำลังติดตาม GPS</span>
+            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+            <span className="text-amber-800 font-medium text-sm">กำลังติดตาม GPS</span>
           </div>
 
-          <p className="text-xs text-green-600 mb-2">ลูกค้าเห็นตำแหน่งของคุณแล้ว</p>
+          <p className="text-xs text-amber-700 mb-2">ลูกค้าเห็นตำแหน่งของคุณแล้ว</p>
 
           {currentPosition && (
-            <div className="text-xs text-green-600 mb-2">
+            <div className="text-xs text-amber-700 mb-2">
               อัพเดทล่าสุด: {new Date(currentPosition.timestamp).toLocaleTimeString('th-TH')}
             </div>
           )}
@@ -255,7 +327,7 @@ export default function JobGPSControls({
             <button
               onClick={handleStopGPS}
               disabled={isProcessing}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50"
             >
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -291,7 +363,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartJobClick}
           disabled={externalProcessing || !canStartWork}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           title={!canStartWork ? 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้' : undefined}
         >
           {externalProcessing ? (
@@ -306,7 +378,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartGPS}
           disabled={isProcessing}
-          className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {isProcessing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
