@@ -481,11 +481,25 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         if (completeError) {
           console.error('❌ Failed to complete journey:', completeError)
 
-          // Fallback: อัพเดท status โดยตรง
+          // Get booking ID from journey for fallback
+          const { data: journeyData, error: journeyFetchError } = await supabase
+            .from('staff_journeys')
+            .select('booking_id')
+            .eq('id', journeyId)
+            .single()
+
+          if (journeyFetchError) {
+            console.error('❌ Failed to fetch journey booking_id:', journeyFetchError)
+            throw new Error(`ไม่สามารถอัพเดตสถานะได้: ${completeError.message}`)
+          }
+
+          const bookingId = journeyData.booking_id
+
+          // Fallback: อัพเดท status โดยตรง + booking status
           const { error: updateError } = await supabase
             .from('staff_journeys')
             .update({
-              status: 'completed',
+              status: 'arrived',
               completed_at: new Date().toISOString(),
               final_latitude: finalLat,
               final_longitude: finalLng
@@ -493,9 +507,28 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             .eq('id', journeyId)
 
           if (updateError) {
-            console.error('❌ Fallback update also failed:', updateError)
+            console.error('❌ Fallback journey update failed:', updateError)
+            throw new Error(`ไม่สามารถอัพเดตการเดินทางได้: ${updateError.message}`)
           } else {
             console.log('✅ Journey completed via fallback update')
+
+            // Manual booking status update
+            try {
+              const { error: bookingError } = await supabase
+                .from('bookings')
+                .update({ status: 'in_progress' })
+                .eq('id', bookingId)
+
+              if (bookingError) {
+                console.error('❌ Fallback booking update failed:', bookingError)
+                throw new Error(`ไม่สามารถอัพเดตสถานะงานได้: ${bookingError.message}`)
+              } else {
+                console.log('✅ Booking status updated to in_progress via fallback')
+              }
+            } catch (err) {
+              console.error('❌ Fallback booking update error:', err)
+              throw err
+            }
           }
         } else {
           console.log('✅ Journey completed successfully')

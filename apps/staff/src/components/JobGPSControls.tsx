@@ -185,13 +185,15 @@ export default function JobGPSControls({
       console.log('✅ GPS stopped successfully')
       onRefresh?.()
 
-      // รีโหลดหน้าหลัง 1 วินาที เพื่อให้แน่ใจ UI reset
+      // รีโหลดหน้าเฉพาะเมื่อสำเร็จ
       setTimeout(() => {
         console.log('🔄 Force refreshing page to reset UI...')
         window.location.reload()
       }, 1000)
     } catch (error) {
-      console.error('Failed to stop GPS:', error)
+      console.error('❌ Failed to stop GPS:', error)
+      alert(`เกิดข้อผิดพลาด: ${error.message}\n\nกรุณาลองใหม่อีกครั้ง`)
+      // ไม่รีโหลดเมื่อมี error
     } finally {
       setIsProcessing(false)
     }
