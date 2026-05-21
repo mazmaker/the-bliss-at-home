@@ -28,9 +28,10 @@ interface BookingStatusCardEnhancedProps {
   } | null
   bookingData?: any
   onRefresh?: () => void
+  activeJourneyId?: string | null
 }
 
-const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingStatusCardEnhancedProps) => {
+const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJourneyId }: BookingStatusCardEnhancedProps) => {
   const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
@@ -41,14 +42,19 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
   if (!booking) return null
 
   // Use status_v2 if available, fallback to legacy status
-  const currentStatus = booking.status_v2 || booking.status?.toUpperCase() || 'PENDING'
+  let currentStatus = booking.status_v2 || booking.status?.toUpperCase() || 'PENDING'
+
+  // ✅ Override status when there's an active GPS journey
+  if (activeJourneyId && (currentStatus === 'CONFIRMED' || currentStatus === 'ASSIGNED')) {
+    currentStatus = 'STAFF_EN_ROUTE'
+  }
 
   const getStatusConfig = (status: BookingStatus) => {
     const configs = {
       'pending': {
         title: 'รอการยืนยัน',
         description: 'เรากำลังตรวจสอบการจองของคุณ',
-        icon: '⏳',
+        icon: '',
         color: 'gray',
         showProgress: true,
         currentStep: 0,
@@ -57,7 +63,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'confirmed': {
         title: 'รอการมอบหมายพนักงาน',
         description: 'เรากำลังหาพนักงานที่เหมาะสมให้คุณ',
-        icon: '🔍',
+        icon: '',
         color: 'amber',
         showProgress: true,
         currentStep: 1,
@@ -66,7 +72,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'assigned': {
         title: 'พนักงานรับงานแล้ว',
         description: 'พนักงานกำลังเตรียมตัวเดินทาง',
-        icon: '👨‍💼',
+        icon: '',
         color: 'blue',
         showStaff: true,
         showProgress: true,
@@ -76,7 +82,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'ASSIGNED': {
         title: 'พนักงานรับงานแล้ว',
         description: 'พนักงานกำลังเตรียมตัวเดินทาง',
-        icon: '👨‍💼',
+        icon: '',
         color: 'blue',
         showStaff: true,
         showProgress: true,
@@ -86,7 +92,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'STAFF_EN_ROUTE': {
         title: 'พนักงานกำลังเดินทาง',
         description: 'ติดตามการเดินทางได้ในแผนที่ด้านล่าง',
-        icon: '🚗',
+        icon: '',
         color: 'purple',
         showStaff: true,
         showETA: true,
@@ -97,7 +103,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'STAFF_ARRIVED': {
         title: 'พนักงานมาถึงแล้ว',
         description: 'พนักงานมาถึงจุดหมายแล้ว กำลังเตรียมเริ่มบริการ',
-        icon: '📍',
+        icon: '',
         color: 'green',
         showStaff: true,
         showContact: true,
@@ -108,18 +114,18 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'SERVICE_IN_PROGRESS': {
         title: 'กำลังให้บริการ',
         description: 'บริการกำลังดำเนินอยู่ โปรดผ่อนคลายและเพลิดเพลิน',
-        icon: '💆‍♀️',
+        icon: '',
         color: 'emerald',
         showStaff: true,
         showTimer: true,
         showProgress: true,
         currentStep: 4,
-        billing: '🟢 เริ่มคิดค่าบริการแล้ว'
+        billing: 'เริ่มคิดค่าบริการแล้ว'
       },
       'COMPLETED': {
         title: 'บริการเสร็จสิ้น',
         description: 'ขอบคุณที่ใช้บริการ หวังว่าคุณจะพอใจ',
-        icon: '✨',
+        icon: '',
         color: 'violet',
         showReview: true,
         billing: 'คิดค่าบริการเสร็จแล้ว'
@@ -127,7 +133,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
       'cancelled': {
         title: 'การจองถูกยกเลิก',
         description: 'การจองของคุณถูกยกเลิกแล้ว',
-        icon: '❌',
+        icon: '',
         color: 'red',
         billing: 'ไม่มีค่าใช้จ่าย'
       }
@@ -366,8 +372,8 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
 }
 
 // Helper function to add to BookingDetails.tsx imports
-const BookingStatusCardEnhancedWrapper = ({ booking, bookingData, onRefresh }: BookingStatusCardEnhancedProps) => {
-  return <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} onRefresh={onRefresh} />
+const BookingStatusCardEnhancedWrapper = ({ booking, bookingData, onRefresh, activeJourneyId }: BookingStatusCardEnhancedProps) => {
+  return <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} onRefresh={onRefresh} activeJourneyId={activeJourneyId} />
 }
 
 export default BookingStatusCardEnhancedWrapper

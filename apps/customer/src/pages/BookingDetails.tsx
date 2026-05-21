@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, XCircle, Download, FileText, Users } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, XCircle, Download, FileText, Users, Car } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { CancelBookingModal } from '../components/CancelBookingModal'
@@ -689,17 +689,17 @@ function BookingDetails() {
 
             {/* Debug info - temporary */}
             <div className="bg-gray-100 border rounded-lg p-3 text-xs">
-              <div>🔍 Debug Journey Status:</div>
+              <div>Debug Journey Status:</div>
               <div>Booking ID: {bookingData?.id}</div>
               <div>Booking Status: {bookingData?.status} {bookingData?.status === 'pending' && '❌ ต้องเป็น confirmed'}</div>
-              <div>Staff Assigned: {bookingData?.staff_id || 'ไม่มี'} ✅</div>
+              <div>Staff Assigned: {bookingData?.staff_id || 'ไม่มี'}</div>
               <div>Active Journey ID: {activeJourneyId || 'ไม่พบ'}</div>
               <div>Tracking Loading: {isTrackingLoading ? 'กำลังโหลด...' : 'เสร็จแล้ว'}</div>
               <div>Should Show Map: {activeJourneyId ? 'ใช่' : 'ไม่'}</div>
 
               {bookingData?.status === 'pending' && (
                 <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
-                  <div>⚠️ การจองยังไม่ได้ยืนยัน</div>
+                  <div>การจองยังไม่ได้ยืนยัน</div>
                   <div>แก้ไข: Admin ต้องเปลี่ยน Status → 'confirmed'</div>
                 </div>
               )}
@@ -713,23 +713,27 @@ function BookingDetails() {
                       .eq('id', bookingData?.id)
 
                     if (error) throw error
-                    alert('✅ เปลี่ยน Status เป็น confirmed แล้ว - ลองกด เริ่มเดินทาง อีกครั้ง')
+                    alert('เปลี่ยน Status เป็น confirmed แล้ว - ลองกด เริ่มเดินทาง อีกครั้ง')
                     window.location.reload()
                   } catch (err) {
-                    alert('❌ Error: ' + err.message)
+                    alert('Error: ' + err.message)
                   }
                 }}
                 className="mt-2 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
               >
-                🚀 Fix: เปลี่ยนเป็น 'confirmed'
+                Fix: เปลี่ยนเป็น 'confirmed'
               </button>
             </div>
 
             {/* Enhanced Booking Status Display */}
-            <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} />
+            <BookingStatusCardEnhanced
+              booking={booking}
+              bookingData={bookingData}
+              activeJourneyId={activeJourneyId}
+            />
 
             {/* Staff Tracking Map - Show when there's an active journey (staff traveling/arrived) */}
-            {console.log('🗺️ Map render check:', {
+            {console.log('Map render check:', {
               activeJourneyId,
               bookingStatus: booking?.status,
               showMap: !!(activeJourneyId && (booking?.status === 'confirmed' || booking?.status === 'in_progress'))
@@ -737,7 +741,7 @@ function BookingDetails() {
             {activeJourneyId && (booking?.status === 'confirmed' || booking?.status === 'in_progress') && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                  🚗 ติดตามการเดินทางของพนักงาน
+                  <Car className="w-5 h-5" /> ติดตามการเดินทางของพนักงาน
                 </h2>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                   <p className="text-blue-700 text-sm">
@@ -817,12 +821,12 @@ function BookingDetails() {
                           : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                   }`}>
                     {booking.payment.status === 'paid'
-                      ? '✅ ชำระแล้ว'
+                      ? 'ชำระแล้ว'
                       : booking.payment.status === 'refunded'
-                        ? '🔄 คืนเงินแล้ว'
+                        ? 'คืนเงินแล้ว'
                         : booking.payment.status === 'failed'
-                          ? '❌ ชำระไม่สำเร็จ'
-                          : '⏳ รอชำระเงิน'
+                          ? 'ชำระไม่สำเร็จ'
+                          : 'รอชำระเงิน'
                     }
                   </span>
                 </div>
