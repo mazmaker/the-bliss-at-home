@@ -137,6 +137,16 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
   }
 
   const config = getStatusConfig(currentStatus as BookingStatus)
+
+  // Check actual payment status vs booking status
+  const isPaymentPending = booking && booking.payment &&
+    booking.payment.status === 'pending'
+  const isBookingConfirmed = ['confirmed', 'assigned', 'ASSIGNED'].includes(currentStatus)
+
+  // Override billing message if payment is pending
+  if (isPaymentPending && isBookingConfirmed) {
+    config.billing = '⚠️ กรุณาชำระเงินให้เสร็จสมบูรณ์'
+  }
   const progressSteps = ['การจอง', 'หาพนักงาน', 'เดินทาง', 'บริการ']
 
   // Calculate durations
@@ -297,6 +307,21 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh }: BookingS
               <div className="text-xs text-emerald-500">
                 ~{(serviceDuration * 30).toLocaleString()} บาท
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Warning Banner */}
+      {isPaymentPending && isBookingConfirmed && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-2 text-red-700">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <p className="font-medium">การชำระเงินยังไม่เสร็จสมบูรณ์</p>
+              <p className="text-sm text-red-600 mt-1">
+                งานถูก confirm แล้ว แต่ยังรอการชำระเงิน กรุณาติดต่อทีมงานหากมีปัญหา
+              </p>
             </div>
           </div>
         </div>
