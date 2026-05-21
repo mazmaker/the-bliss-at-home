@@ -55,7 +55,7 @@ export const useBookingStateMachine = (bookingId: string, userId?: string): Book
         // Get current booking state
         const { data: booking, error: bookingError } = await supabase
           .from('bookings')
-          .select('status_v2')
+          .select('status')
           .eq('id', bookingId)
           .single()
 
@@ -63,7 +63,7 @@ export const useBookingStateMachine = (bookingId: string, userId?: string): Book
           throw new Error(bookingError.message)
         }
 
-        setCurrentState(booking.status_v2)
+        setCurrentState(booking.status)
 
         // Get state history
         const { data: transitions, error: historyError } = await supabase
