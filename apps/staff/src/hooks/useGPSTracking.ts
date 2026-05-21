@@ -40,16 +40,15 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   // Check if geolocation is supported
   const isSupported = 'geolocation' in navigator
 
-  // ✅ NEW: Check for existing active journey
+  // ✅ Simple journey checker - Focus on journey status only (avoid booking table permissions)
   const checkExistingJourney = useCallback(async (bookingId: string) => {
     try {
+      // Check all journeys for this booking and their statuses
       const { data: existingJourneys, error: queryError } = await supabase
         .from('staff_journeys')
-        .select('id, status, current_latitude, current_longitude, last_location_update')
+        .select('id, status, current_latitude, current_longitude, last_location_update, completed_at')
         .eq('booking_id', bookingId)
-        .eq('status', 'traveling') // เฉพาะ traveling เท่านั้น, arrived ถือว่าจบแล้ว
         .order('started_at', { ascending: false })
-        .limit(1)
 
       if (queryError) {
         console.error('Failed to check existing journey:', queryError)
@@ -57,37 +56,56 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       }
 
       if (existingJourneys && existingJourneys.length > 0) {
-        const journey = existingJourneys[0]
+        console.log('🔍 Found journeys for booking:', existingJourneys.map(j => ({ id: j.id, status: j.status })))
 
-        // Set state to match existing journey
-        setJourneyId(journey.id)
-        setIsTracking(journey.status === 'traveling')
+        // Find the most recent traveling journey (if any)
+        const travelingJourney = existingJourneys.find(j => j.status === 'traveling')
 
-        // Sync booking status with journey status
-        if (journey.status === 'traveling') {
+        // Check if there's already a completed journey
+        const completedJourney = existingJourneys.find(j => j.status === 'completed')
+
+        if (travelingJourney && completedJourney) {
+          console.log('⚠️ Found both traveling and completed journey - this should not happen')
+          console.log('🧹 Auto-cleaning: Marking traveling journey as completed too')
+
+          // Auto-clean: mark traveling journey as completed (ignore errors)
           try {
-            const { error: syncError } = await supabase
-              .from('bookings')
-              .update({ status: 'traveling' })
-              .eq('id', bookingId)
-
-            if (syncError) {
-              console.error('Failed to sync booking status:', syncError)
-            }
-          } catch (err) {
-            console.error('Booking status sync error:', err)
+            await supabase
+              .from('staff_journeys')
+              .update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+              })
+              .eq('id', travelingJourney.id)
+            console.log('✅ Auto-clean successful')
+          } catch (cleanError) {
+            console.log('⚠️ Auto-clean failed but continuing:', cleanError)
+            // Ignore error and continue - database state is messy but we'll work around it
           }
+
+          return null // Don't resume GPS regardless of clean success
         }
 
-        if (journey.current_latitude && journey.current_longitude) {
-          setCurrentPosition({
-            latitude: journey.current_latitude,
-            longitude: journey.current_longitude,
-            timestamp: journey.last_location_update ? new Date(journey.last_location_update).getTime() : Date.now()
-          })
+        if (travelingJourney && !completedJourney) {
+          console.log('✅ Found active traveling journey, resuming GPS')
+          const journey = travelingJourney
+
+          // Set state to match existing journey
+          setJourneyId(journey.id)
+          setIsTracking(true)
+
+          if (journey.current_latitude && journey.current_longitude) {
+            setCurrentPosition({
+              latitude: journey.current_latitude,
+              longitude: journey.current_longitude,
+              timestamp: journey.last_location_update ? new Date(journey.last_location_update).getTime() : Date.now()
+            })
+          }
+
+          return journey
         }
 
-        return journey
+        console.log('ℹ️ No active traveling journey found - ready to start new GPS')
       }
 
       return null
@@ -174,7 +192,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     try {
       setError(null)
 
-      // Check for existing journey first
+      // Check for existing journey first - if messy state, don't try to create new journey
       const existingJourney = await checkExistingJourney(bookingId)
       if (existingJourney) {
         // Start GPS tracking for existing journey if still traveling
@@ -195,6 +213,23 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
           success: true,
           data: { journeyId: existingJourney.id },
           message: 'พบการเดินทางที่มีอยู่แล้ว'
+        }
+      }
+
+      // ✅ Additional check: If checkExistingJourney found messy state but returned null,
+      // it means there are constraint issues - don't try to create new journey
+      console.log('🔍 Double-checking for any journeys before creating new one...')
+      const { data: anyJourneys } = await supabase
+        .from('staff_journeys')
+        .select('id, status')
+        .eq('booking_id', bookingId)
+        .limit(1)
+
+      if (anyJourneys && anyJourneys.length > 0) {
+        console.log('⚠️ Found existing journeys but checkExistingJourney returned null - database state is messy')
+        return {
+          success: false,
+          message: '🚫 ระบบพบข้อมูลที่ไม่สอดคล้อง กรุณาติดต่อทีมงาน'
         }
       }
 
@@ -396,33 +431,68 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
           const finalLat = currentPosition?.latitude || 13.7563 // fallback Bangkok
           const finalLng = currentPosition?.longitude || 100.5018
 
-        const { error: completeError } = await supabase.rpc('complete_staff_journey', {
-          p_journey_id: journeyId,
-          p_final_latitude: finalLat,
-          p_final_longitude: finalLng
-        })
+        // ✅ Smart approach: Check for existing completed journeys first
+        const { data: journeyData, error: journeyFetchError } = await supabase
+          .from('staff_journeys')
+          .select('booking_id, status')
+          .eq('id', journeyId)
+          .single()
 
-        if (completeError) {
-          console.error('Failed to complete journey:', completeError)
+        if (journeyFetchError) {
+          console.error('Failed to fetch journey data:', journeyFetchError)
+          throw new Error(`ไม่สามารถเข้าถึงข้อมูลการเดินทาง: ${journeyFetchError.message}`)
+        }
 
-          // Get booking ID from journey for fallback
-          const { data: journeyData, error: journeyFetchError } = await supabase
+        const bookingId = journeyData.booking_id
+        console.log('🏁 Completing journey:', { journeyId, bookingId, currentStatus: journeyData.status })
+
+        // ✅ Check if there's already a completed journey for this booking
+        const { data: existingCompleted } = await supabase
+          .from('staff_journeys')
+          .select('id, status')
+          .eq('booking_id', bookingId)
+          .eq('status', 'completed')
+          .limit(1)
+
+        if (existingCompleted && existingCompleted.length > 0) {
+          console.log('⚠️ Found existing completed journey, updating current traveling journey and booking status')
+
+          // Update current journey to completed as well (avoid multiple traveling journeys)
+          const { error: currentJourneyError } = await supabase
             .from('staff_journeys')
-            .select('booking_id')
+            .update({
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              current_latitude: finalLat,
+              current_longitude: finalLng,
+              last_location_update: new Date().toISOString()
+            })
             .eq('id', journeyId)
-            .single()
+            .eq('status', 'traveling') // Only update if still traveling
 
-          if (journeyFetchError) {
-            console.error('Failed to fetch journey booking_id:', journeyFetchError)
-            throw new Error(`ไม่สามารถอัพเดตสถานะได้: ${completeError.message}`)
+          if (currentJourneyError) {
+            console.log('Current journey update skipped (probably already completed):', currentJourneyError)
+          } else {
+            console.log('✅ Current traveling journey updated to completed')
           }
 
-          const bookingId = journeyData.booking_id
+          // Update booking status
+          const { error: bookingError } = await supabase
+            .from('bookings')
+            .update({ status: 'in_progress' })
+            .eq('id', bookingId)
 
-          // Fallback: Update journey in-place (don't change status to avoid constraint)
+          if (bookingError) {
+            console.error('Booking status update failed:', bookingError)
+          } else {
+            console.log('✅ Booking status updated to in_progress (existing completed journey found)')
+          }
+        } else {
+          // No completed journey exists, safe to update current journey
           const { error: updateError } = await supabase
             .from('staff_journeys')
             .update({
+              status: 'completed',
               completed_at: new Date().toISOString(),
               current_latitude: finalLat,
               current_longitude: finalLng,
@@ -431,12 +501,9 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             .eq('id', journeyId)
 
           if (updateError) {
-            console.error('Fallback journey update failed:', updateError)
-            throw new Error(`ไม่สามารถอัพเดตการเดินทางได้: ${updateError.message}`)
-          }
-
-          // Manual booking status update
-          try {
+            console.error('Journey completion failed:', updateError)
+            // If still fails, just update booking without journey status change
+            console.log('🔄 Fallback: Updating booking only...')
             const { error: bookingError } = await supabase
               .from('bookings')
               .update({ status: 'in_progress' })
@@ -444,11 +511,24 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
             if (bookingError) {
               console.error('Fallback booking update failed:', bookingError)
-              throw new Error(`ไม่สามารถอัพเดตสถานะงานได้: ${bookingError.message}`)
+              throw new Error(`ไม่สามารถอัพเดตสถานะงาน: ${bookingError.message}`)
+            } else {
+              console.log('✅ Fallback: Booking status updated without journey status change')
             }
-          } catch (err) {
-            console.error('Fallback booking update error:', err)
-            throw err
+          } else {
+            console.log('✅ Journey completed successfully')
+
+            // Update booking status
+            const { error: bookingError } = await supabase
+              .from('bookings')
+              .update({ status: 'in_progress' })
+              .eq('id', bookingId)
+
+            if (bookingError) {
+              console.error('Booking status update failed:', bookingError)
+            } else {
+              console.log('✅ Booking status updated to in_progress')
+            }
           }
         }
       } catch (err) {

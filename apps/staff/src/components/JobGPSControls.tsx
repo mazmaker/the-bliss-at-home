@@ -132,15 +132,20 @@ export default function JobGPSControls({
       }
 
       const result = await startTracking(job.booking_id, currentStaffId)
-      if (result) {
+      console.log('🎯 GPS Start Result:', result)
+
+      if (result && result.success) {
         // Force refresh after GPS start success
         setTimeout(() => {
           onRefresh?.()
         }, 1000)
+      } else if (result && !result.success) {
+        // ✅ Show error message from GPS system
+        alert(`❌ ไม่สามารถเริ่ม GPS ได้\n\n${result.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'}`)
       }
     } catch (error) {
-      console.error('Failed to start GPS:', error)
-      alert('ไม่สามารถเริ่มติดตาม GPS ได้: ' + error.message)
+      console.error('❌ GPS Start Exception:', error)
+      alert(`❌ เกิดข้อผิดพลาดในระบบ GPS\n\n${error.message || error}\n\nกรุณาลองใหม่อีกครั้ง`)
     } finally {
       setIsProcessing(false)
     }
@@ -149,19 +154,23 @@ export default function JobGPSControls({
   const handleStopGPS = async () => {
     setIsProcessing(true)
     try {
+      console.log('🛑 Starting GPS stop process...')
       await stopTracking()
       setHasArrived(true)
 
-      // Refresh to show updated status
+      console.log('✅ GPS stopped successfully')
       onRefresh?.()
 
-      // Auto-reload after successful arrival
-      setTimeout(() => {
-        window.location.reload()
-      }, 1500)
+      // ✅ Show success message instead of auto-reload for debugging
+      alert('✅ GPS หยุดเรียบร้อย! (ไม่รีโหลดเพื่อดู error)')
     } catch (error) {
-      console.error('Failed to stop GPS:', error)
-      alert(`เกิดข้อผิดพลาด: ${error.message}\n\nกรุณาลองใหม่อีกครั้ง`)
+      console.error('❌ GPS Stop Error:', error)
+      console.error('❌ Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      })
+      alert(`❌ เกิดข้อผิดพลาด: ${error.message}\n\nเช็ค Console เพื่อดูรายละเอียด`)
     } finally {
       setIsProcessing(false)
     }
