@@ -645,47 +645,6 @@ function BookingDetails() {
               </div>
             )}
 
-            {/* Provider Info */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.provider')}</h2>
-              <div className="flex items-center gap-4">
-                {booking.provider.avatar ? (
-                  <img
-                    src={booking.provider.avatar}
-                    alt={booking.provider.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-amber-200"
-                    onError={(e) => {
-                      // Fallback to default icon if image fails to load
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
-                    }}
-                  />
-                ) : null}
-                <div
-                  className={`w-16 h-16 bg-gradient-to-br from-stone-100 to-amber-100 rounded-full flex items-center justify-center ${booking.provider.avatar ? 'hidden' : 'flex'}`}
-                >
-                  <Sparkles className="w-8 h-8 text-amber-700" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-stone-900">{booking.provider.name}</h3>
-                  <div className="flex items-center gap-2 text-sm text-stone-600">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span>{booking.provider.rating.toFixed(1)}</span>
-                    <span>•</span>
-                    <span>{booking.provider.reviews} {t('details.reviews')}</span>
-                  </div>
-                  {/* Skills removed - column doesn't exist in database */}
-                  {isSpecificPreference(booking.providerPreference) && (
-                    <div className="mt-2">
-                      <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(booking.providerPreference)}`}>
-                        <Users className="w-3 h-3" />
-                        {getProviderPreferenceLabel(booking.providerPreference)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
             {/* Debug info - temporary */}
             <div className="bg-gray-100 border rounded-lg p-3 text-xs">
