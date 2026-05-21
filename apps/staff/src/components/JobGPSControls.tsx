@@ -79,6 +79,12 @@ export default function JobGPSControls({
           // GPS tracking works independently and doesn't require booking status updates
           console.log('ℹ️ GPS tracking active - booking status sync skipped (RLS policies)')
           console.log('ℹ️ All GPS functionality works correctly without booking status updates')
+
+          // 🔄 Refresh job data after booking status might have been synced
+          console.log('🔄 Refreshing job data after existing journey found...')
+          setTimeout(() => {
+            onRefresh?.()
+          }, 500) // Small delay to ensure database sync completes
         }
       } catch (error) {
         console.error('Failed to check existing journey:', error)
