@@ -498,14 +498,16 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
           const bookingId = journeyData.booking_id
 
-          // Fallback: อัพเดท status โดยตรง + booking status
+          // Fallback: Simple status update to 'completed' (avoid unique constraint)
+          console.log('🔄 Fallback: Updating journey to completed status...')
           const { error: updateError } = await supabase
             .from('staff_journeys')
             .update({
-              status: 'arrived',
+              status: 'completed',  // Use 'completed' to avoid constraint issues
               completed_at: new Date().toISOString(),
-              final_latitude: finalLat,
-              final_longitude: finalLng
+              current_latitude: finalLat,
+              current_longitude: finalLng,
+              last_location_update: new Date().toISOString()
             })
             .eq('id', journeyId)
 
@@ -517,6 +519,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
             // Manual booking status update
             try {
+              console.log('🔄 Fallback: Updating booking status to in_progress...')
               const { error: bookingError } = await supabase
                 .from('bookings')
                 .update({ status: 'in_progress' })
