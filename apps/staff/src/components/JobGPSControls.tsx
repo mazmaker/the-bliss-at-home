@@ -242,13 +242,14 @@ export default function JobGPSControls({
   }
 
   // Don't show GPS controls for completed/cancelled jobs
-  if (!['confirmed', 'assigned', 'traveling'].includes(job.status)) {
+  if (!['confirmed', 'assigned', 'traveling', 'in_progress'].includes(job.status)) {
     return null
   }
 
   const isTrackingThis = isTracking && journeyId
   const canStartGPS = job.status === 'confirmed' || job.status === 'assigned'
   const shouldShowTracking = job.status === 'traveling' || isTrackingThis
+  const jobHasArrived = job.status === 'in_progress' // พนักงานมาถึงแล้ว (จาก database)
 
   console.log('📱 GPS Controls Debug:', JSON.stringify({
     jobId: job.id,
@@ -263,8 +264,7 @@ export default function JobGPSControls({
 
   if (compact && !shouldShowTracking) {
     // Compact mode
-    if (hasArrived) {
-      // แสดงปุ่มเริ่มงานหลังจาก GPS เสร็จ
+    if (hasArrived || jobHasArrived) {  // แสดงปุ่มเริ่มงานเมื่อมาถึงแล้ว (GPS เสร็จ หรือ database = in_progress)
       return (
         <button
           onClick={handleStartJobClick}
@@ -382,8 +382,8 @@ export default function JobGPSControls({
             )}
           </div>
         </div>
-      ) : hasArrived ? (
-        // Start Work Button (หลังจาก GPS เสร็จแล้ว)
+      ) : hasArrived || jobHasArrived ? (
+        // Start Work Button (หลังจาก GPS เสร็จแล้ว หรือ database = in_progress)
         <button
           onClick={handleStartJobClick}
           disabled={externalProcessing || !canStartWork}
