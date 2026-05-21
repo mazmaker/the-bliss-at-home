@@ -70,7 +70,7 @@ export default function JobLocationMap({
                 href={navigationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                className="p-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
                 title="นำทางด้วย Google Maps"
               >
                 <Navigation className="w-4 h-4" />
@@ -84,12 +84,12 @@ export default function JobLocationMap({
 
   return (
     <div className="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+      <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-4">
         <h3 className="font-semibold flex items-center gap-2">
           <MapPin className="w-5 h-5" />
           แผนที่และการนำทาง
         </h3>
-        <p className="text-blue-100 text-sm mt-1">ตำแหน่งปัจจุบันและปลายทาง</p>
+        <p className="text-amber-100 text-sm mt-1">ตำแหน่งปัจจุบันและปลายทาง</p>
       </div>
 
       <div className="p-4 space-y-4">
