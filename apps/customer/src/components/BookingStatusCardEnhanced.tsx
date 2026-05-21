@@ -97,7 +97,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         showStaff: true,
         showETA: true,
         showProgress: true,
-        currentStep: 3,
+        currentStep: 2,
         billing: 'ชำระเงินเสร็จแล้ว - รอเริ่มบริการ'
       },
       'STAFF_ARRIVED': {
@@ -209,20 +209,22 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
             {progressSteps.map((step, index) => (
               <div key={index} className="flex items-center">
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium ${
-                  index < (config.currentStep || 0) ? `bg-${config.color}-600 text-white` :
+                  index < (config.currentStep || 0) ? `bg-green-600 text-white` :
                   index === Math.floor(config.currentStep || 0) ? `bg-${config.color}-600 text-white` :
                   `bg-gray-200 text-gray-500`
                 }`}>
                   {index < (config.currentStep || 0) ? '✓' : index + 1}
                 </div>
                 <span className={`ml-2 text-xs ${
-                  index <= (config.currentStep || 0) ? `text-${config.color}-700` : 'text-gray-500'
+                  index < (config.currentStep || 0) ? 'text-green-700' :
+                  index === Math.floor(config.currentStep || 0) ? `text-${config.color}-700` :
+                  'text-gray-500'
                 }`}>
                   {step}
                 </span>
                 {index < progressSteps.length - 1 && (
                   <div className={`flex-1 h-0.5 mx-3 ${
-                    index < (config.currentStep || 0) - 1 ? `bg-${config.color}-600` : 'bg-gray-200'
+                    index < (config.currentStep || 0) ? 'bg-green-600' : 'bg-gray-200'
                   }`} />
                 )}
               </div>
