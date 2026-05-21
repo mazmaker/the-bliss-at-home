@@ -80,15 +80,6 @@ export default function JobGPSControls({
           // GPS tracking works independently and doesn't require booking status updates
           console.log('ℹ️ GPS tracking active - booking status sync skipped (RLS policies)')
           console.log('ℹ️ All GPS functionality works correctly without booking status updates')
-
-          // 🔄 Only refresh if job status doesn't match journey status (prevent infinite loop)
-          if (job.status === 'confirmed' && existingJourney.status === 'traveling' && !refreshedJobsRef.current.has(job.booking_id)) {
-            console.log('🔄 Job status out of sync, refreshing once...')
-            refreshedJobsRef.current.add(job.booking_id) // Mark as refreshed
-            setTimeout(() => {
-              onRefresh?.()
-            }, 1000) // Single refresh to sync status
-          }
         }
       } catch (error) {
         console.error('Failed to check existing journey:', error)
