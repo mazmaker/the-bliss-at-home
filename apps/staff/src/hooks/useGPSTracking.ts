@@ -448,6 +448,9 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   const stopTracking = useCallback(async () => {
     console.log('🛑 stopTracking called:', { journeyId, currentPosition })
 
+    try {
+      console.log('🔄 Starting GPS stop process...')
+
     // Stop GPS tracking
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current)
@@ -548,6 +551,12 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     localStorage.removeItem('current_journey_id')
 
     console.log('🧹 GPS state cleared')
+
+    } catch (outerError) {
+      console.error('💥 CRITICAL ERROR in stopTracking:', outerError)
+      alert(`💥 CRITICAL ERROR: ${outerError.message}`)
+      throw outerError
+    }
   }, [journeyId, currentPosition])
 
   // Cleanup on unmount
