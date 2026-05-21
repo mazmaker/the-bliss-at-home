@@ -51,7 +51,7 @@ function BookingDetails() {
       date: bookingData.booking_date,
       time: bookingData.booking_time || '00:00',
       status: bookingData.status,
-      status_v2: (bookingData as any).status_v2 || bookingData.status, // New enhanced status
+      status_v2: bookingData.status, // Use existing status since status_v2 column doesn't exist
       travel_started_at: (bookingData as any).travel_started_at,
       service_started_at: (bookingData as any).service_started_at,
       actual_arrival: (bookingData as any).actual_arrival,
@@ -253,10 +253,19 @@ function BookingDetails() {
     )
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, hasActiveJourney: boolean = false) => {
+    // If there's an active journey, show traveling status
+    if (hasActiveJourney && status === 'confirmed') {
+      return 'bg-amber-100 text-amber-700'
+    }
+
     switch (status) {
       case 'confirmed':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-amber-100 text-amber-700'
+      case 'traveling':
+        return 'bg-amber-100 text-amber-700'
+      case 'arrived':
+        return 'bg-purple-100 text-purple-700'
       case 'in_progress':
         return 'bg-purple-100 text-purple-700'
       case 'completed':
@@ -270,10 +279,19 @@ function BookingDetails() {
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, hasActiveJourney: boolean = false) => {
+    // If there's an active journey, show traveling status
+    if (hasActiveJourney && status === 'confirmed') {
+      return 'กำลังเดินทาง'
+    }
+
     switch (status) {
       case 'confirmed':
         return t('common:status.confirmed')
+      case 'traveling':
+        return 'กำลังเดินทาง'
+      case 'arrived':
+        return 'ถึงแล้ว'
       case 'in_progress':
         return 'กำลังให้บริการ'
       case 'completed':
@@ -500,8 +518,8 @@ function BookingDetails() {
               <p className="text-sm text-stone-600 mb-1">{t('details.bookingNumber')}</p>
               <p className="font-bold text-stone-900">{booking.id}</p>
             </div>
-            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status ?? '')}`}>
-              {getStatusText(booking.status ?? '')}
+            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status ?? '', !!activeJourneyId)}`}>
+              {getStatusText(booking.status ?? '', !!activeJourneyId)}
             </span>
           </div>
         </div>
@@ -698,13 +716,13 @@ function BookingDetails() {
             {/* Enhanced Booking Status Display */}
             <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} />
 
-            {/* Staff Tracking Map - Only show when staff is EN_ROUTE */}
+            {/* Staff Tracking Map - Show when there's an active journey (staff traveling/arrived) */}
             {console.log('🗺️ Map render check:', {
               activeJourneyId,
-              status_v2: booking?.status_v2,
-              showMap: !!(activeJourneyId && booking?.status_v2 === 'STAFF_EN_ROUTE')
+              bookingStatus: booking?.status,
+              showMap: !!(activeJourneyId && (booking?.status === 'confirmed' || booking?.status === 'in_progress'))
             })}
-            {activeJourneyId && booking?.status_v2 === 'STAFF_EN_ROUTE' && (
+            {activeJourneyId && (booking?.status === 'confirmed' || booking?.status === 'in_progress') && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
                   🚗 ติดตามการเดินทางของพนักงาน
@@ -716,7 +734,6 @@ function BookingDetails() {
                 </div>
                 <StaffTrackingMap
                   journeyId={activeJourneyId}
-                  bookingStatus={booking.status_v2}
                   height="350px"
                 />
               </div>

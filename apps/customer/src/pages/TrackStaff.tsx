@@ -38,50 +38,74 @@ export default function TrackStaff() {
       setIsLoading(true)
       setError(null)
 
+      // Step 1: Get journey data
       const { data: journeyData, error: journeyError } = await supabase
         .from('staff_journeys')
-        .select(`
-          id,
-          status,
-          started_at,
-          bookings!inner (
-            id,
-            customer_name,
-            customer_phone,
-            address,
-            hotel_name,
-            room_number,
-            service_name,
-            duration_minutes
-          ),
-          profiles!inner (
-            full_name
-          )
-        `)
+        .select('id, status, started_at, booking_id, staff_id')
         .eq('id', journeyId)
         .single()
 
       if (journeyError) throw journeyError
+      if (!journeyData) throw new Error('ไม่พบข้อมูลการเดินทาง')
 
-      if (!journeyData) {
-        throw new Error('ไม่พบข้อมูลการเดินทาง')
-      }
+      console.log('📊 Journey data:', journeyData)
 
-      const booking = journeyData.bookings
-      const profile = journeyData.profiles
+      // Step 2: Get booking data
+      const { data: bookingData, error: bookingError } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          customer_name,
+          customer_phone,
+          address,
+          hotel_name,
+          room_number,
+          service_name,
+          duration_minutes
+        `)
+        .eq('id', journeyData.booking_id)
+        .single()
+
+      if (bookingError) throw bookingError
+      if (!bookingData) throw new Error('ไม่พบข้อมูลการจอง')
+
+      console.log('📊 Booking data:', bookingData)
+
+      // Step 3: Get staff profile data
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('id, profile_id')
+        .eq('id', journeyData.staff_id)
+        .single()
+
+      if (staffError) throw staffError
+      if (!staffData) throw new Error('ไม่พบข้อมูลพนักงาน')
+
+      console.log('📊 Staff data:', staffData)
+
+      // Step 4: Get profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', staffData.profile_id)
+        .single()
+
+      if (profileError) throw profileError
+
+      console.log('📊 Profile data:', profileData)
 
       setJourney({
         id: journeyData.id,
         status: journeyData.status,
         started_at: journeyData.started_at,
-        staff_name: profile.full_name,
-        customer_name: booking.customer_name,
-        customer_phone: booking.customer_phone,
-        destination_name: booking.hotel_name
-          ? `${booking.hotel_name}${booking.room_number ? ` ห้อง ${booking.room_number}` : ''}`
-          : booking.address,
-        service_name: booking.service_name,
-        estimated_duration: booking.duration_minutes
+        staff_name: profileData?.full_name || 'ไม่ระบุชื่อ',
+        customer_name: bookingData.customer_name || 'ไม่ระบุชื่อลูกค้า',
+        customer_phone: bookingData.customer_phone,
+        destination_name: bookingData.hotel_name
+          ? `${bookingData.hotel_name}${bookingData.room_number ? ` ห้อง ${bookingData.room_number}` : ''}`
+          : bookingData.address || 'ไม่ระบุที่อยู่',
+        service_name: bookingData.service_name || 'ไม่ระบุบริการ',
+        estimated_duration: bookingData.duration_minutes
       })
 
     } catch (err: any) {
@@ -104,7 +128,7 @@ export default function TrackStaff() {
 
   const getStatusColor = (status: string) => {
     const colorMap: Record<string, string> = {
-      traveling: 'text-blue-600 bg-blue-100 border-blue-200',
+      traveling: 'text-amber-700 bg-amber-100 border-amber-200',
       arrived: 'text-purple-600 bg-purple-100 border-purple-200',
       completed: 'text-green-600 bg-green-100 border-green-200',
       cancelled: 'text-red-600 bg-red-100 border-red-200'
@@ -157,7 +181,7 @@ export default function TrackStaff() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">กำลังโหลดข้อมูลการเดินทาง...</p>
         </div>
       </div>
