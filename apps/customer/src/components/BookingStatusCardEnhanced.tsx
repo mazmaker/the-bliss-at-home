@@ -44,18 +44,8 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
   // Use status_v2 if available, fallback to legacy status
   let currentStatus = booking.status_v2 || booking.status?.toUpperCase() || 'PENDING'
 
-  // 🔍 Debug logging for status card
-  console.log('🎯 BookingStatusCard Debug:', {
-    originalStatus: booking.status,
-    status_v2: booking.status_v2,
-    currentStatus,
-    activeJourneyId,
-    shouldOverride: activeJourneyId && (currentStatus === 'CONFIRMED' || currentStatus === 'ASSIGNED')
-  })
-
   // ✅ Override status when there's an active GPS journey
   if (activeJourneyId && (currentStatus.toUpperCase() === 'CONFIRMED' || currentStatus.toUpperCase() === 'ASSIGNED')) {
-    console.log('🔄 Overriding status from', currentStatus, 'to STAFF_EN_ROUTE')
     currentStatus = 'STAFF_EN_ROUTE'
   }
 
