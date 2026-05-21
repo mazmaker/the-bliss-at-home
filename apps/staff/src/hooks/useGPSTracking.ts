@@ -110,30 +110,12 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         })
       })
 
-      // Create journey manually to avoid triggering billing timer
-      console.log('🚗 Creating GPS journey manually:', { bookingId, staffId })
-
-      // 1. Create journey record without updating booking
-      const { data: journeyData, error: insertError } = await supabase
-        .from('staff_journeys')
-        .insert({
-          booking_id: bookingId,
-          staff_id: staffId,
-          status: 'traveling',
-          current_latitude: initialPosition.coords.latitude,
-          current_longitude: initialPosition.coords.longitude,
-          started_at: new Date().toISOString()
-        })
-        .select('id')
-        .single()
-
-      if (insertError) {
-        console.error('❌ Journey creation failed:', insertError)
-        throw new Error(insertError.message)
-      }
-
-      const newJourneyId = journeyData.id
-      const journeyError = null
+      // Start GPS journey using existing function
+      console.log('🚗 Starting GPS journey (using existing function):', { bookingId, staffId })
+      const { data: newJourneyId, error: journeyError } = await supabase.rpc('start_staff_journey', {
+        p_booking_id: bookingId,
+        p_staff_id: staffId
+      })
 
       console.log('📊 Journey creation result:', { newJourneyId, journeyError })
 
