@@ -498,12 +498,12 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
           const bookingId = journeyData.booking_id
 
-          // Fallback: Simple status update to 'completed' (avoid unique constraint)
-          console.log('🔄 Fallback: Updating journey to completed status...')
+          // Fallback: Update journey in-place (don't change status to avoid constraint)
+          console.log('🔄 Fallback: Updating journey coordinates and completion time...')
           const { error: updateError } = await supabase
             .from('staff_journeys')
             .update({
-              status: 'completed',  // Use 'completed' to avoid constraint issues
+              // Don't change status to avoid unique constraint violation
               completed_at: new Date().toISOString(),
               current_latitude: finalLat,
               current_longitude: finalLng,
