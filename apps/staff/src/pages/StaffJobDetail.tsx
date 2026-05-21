@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import {
@@ -8,8 +8,10 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimerEnhanced, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
-import JobGPSControlsEnhanced from '../components/JobGPSControlsEnhanced'
+import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
+import JobGPSControls from '../components/JobGPSControls'
+import JobStatusBadge from '../components/JobStatusBadge'
+import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -24,8 +26,11 @@ function StaffJobDetail() {
   const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
 
-  // Get GPS tracking status for map display
-  const { isTracking, currentPosition } = useGPSTracking()
+  // Get GPS tracking status for this specific job
+  const jobGPSStatus = useJobGPSStatus(job?.id || '')
+
+  // Keep global GPS hook for controls and map display
+  const { currentPosition, checkExistingJourney } = useGPSTracking()
 
   // Query service commission rate
   const { data: serviceData } = useQuery({
@@ -204,33 +209,7 @@ function StaffJobDetail() {
     }
   }
 
-  const getStatusBadge = (status: JobStatus) => {
-    const badges: Record<JobStatus, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      assigned: 'bg-orange-100 text-orange-700 border-orange-200',
-      confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
-      traveling: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      arrived: 'bg-purple-100 text-purple-700 border-purple-200',
-      in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
-      completed: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
-    }
-    const labels: Record<JobStatus, string> = {
-      pending: 'รอมอบหมาย',
-      assigned: 'มอบหมายแล้ว',
-      confirmed: 'ยืนยันแล้ว',
-      traveling: 'กำลังเดินทาง',
-      arrived: 'ถึงแล้ว',
-      in_progress: 'กำลังดำเนินการ',
-      completed: 'เสร็จสิ้น',
-      cancelled: 'ยกเลิก',
-    }
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${badges[status]}`}>
-        {labels[status]}
-      </span>
-    )
-  }
+  // ✅ getStatusBadge function removed - now using JobStatusBadge component
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + 'T00:00:00')
@@ -263,11 +242,24 @@ function StaffJobDetail() {
     )
   }
 
-  const isMyJob = job.staff_id === user?.id
+  // Fix ID matching: job.staff_id might be profile_id or staff table id
+  const isMyJob = job.staff_id === user?.id ||
+                 job.staff_id === eligibility?.staffData?.id
   const isPending = job.status === 'pending'
   const canStart = isMyJob && ['confirmed', 'traveling', 'arrived'].includes(job.status)
   const isInProgress = isMyJob && job.status === 'in_progress'
   const isFinished = job.status === 'completed' || job.status === 'cancelled'
+
+  // Debug log for GPS controls visibility
+  console.log('🔍 StaffJobDetail GPS Controls Debug:', {
+    jobId: job.id,
+    staffId: job.staff_id,
+    userId: user?.id,
+    isMyJob,
+    isFinished,
+    jobStatus: job.status,
+    shouldShowGPS: isMyJob && !isFinished
+  })
 
   return (
     <div className="pb-6 space-y-4">
@@ -277,7 +269,7 @@ function StaffJobDetail() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-lg font-semibold text-stone-900 flex-1">รายละเอียดงาน</h1>
-        {getStatusBadge(job.status)}
+        <JobStatusBadge status={job.status} isGPSTracking={jobGPSStatus.isTracking} />
       </div>
 
       {/* Extension Alert Banner */}
@@ -285,12 +277,9 @@ function StaffJobDetail() {
 
       {/* Enhanced Service Timer */}
       {isInProgress && (
-        <ServiceTimerEnhanced
-          travelStartedAt={job.travel_started_at}
-          serviceStartedAt={job.started_at}
+        <ServiceTimer
+          startedAt={job.started_at}
           durationMinutes={totalDuration}
-          serviceRate={30}
-          showBilling={true}
         />
       )}
 
@@ -507,16 +496,16 @@ function StaffJobDetail() {
         <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm">{actionError}</div>
       )}
 
-      {/* Enhanced GPS Tracking Controls */}
+      {/* GPS Tracking Controls */}
       {isMyJob && !isFinished && (
-        <JobGPSControlsEnhanced
+        <JobGPSControls
           job={{
             id: job.id,
-            booking_id: job.booking_id || job.id, // Ensure booking_id is available
             status: job.status,
             customer_name: job.customer_name,
             customer_address: job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address,
-            customer_phone: job.customer_phone
+            customer_phone: job.customer_phone,
+            booking_id: job.booking_id || job.id // Use the same field as in dashboard
           }}
           onRefresh={refetch}
           onStartJob={handleStart}
