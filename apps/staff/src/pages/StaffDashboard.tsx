@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loader2, AlertTriangle, ChevronRight } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { SOSButton, JobCancellationModal, ServiceTimer, ExtensionAcceptanceCard } from '../components'
+import { SOSButton, JobCancellationModal, ServiceTimer, ExtensionAcceptanceCard, JobStatusBadge } from '../components'
 import JobGPSControls from '../components/JobGPSControls'
+import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -125,6 +126,12 @@ function StaffDashboard() {
     setShowCancelModal(true)
   }
 
+  // Smart status badge component that includes GPS tracking state
+  function SmartJobStatusBadge({ job }: { job: { id: string; status: JobStatus } }) {
+    const gpsStatus = useJobGPSStatus(job.id)
+    return <JobStatusBadge status={job.status} isGPSTracking={gpsStatus.isTracking} />
+  }
+
   const handleConfirmCancel = async (reason: string, notes?: string) => {
     if (!jobToCancel) return
     try {
@@ -151,33 +158,6 @@ function StaffDashboard() {
     }
   }
 
-  const getStatusBadge = (status: JobStatus) => {
-    const badges: Record<JobStatus, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      assigned: 'bg-orange-100 text-orange-700 border-orange-200',
-      confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
-      traveling: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      arrived: 'bg-purple-100 text-purple-700 border-purple-200',
-      in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
-      completed: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
-    }
-    const labels: Record<JobStatus, string> = {
-      pending: 'รอมอบหมาย',
-      assigned: 'มอบหมายแล้ว',
-      confirmed: 'ยืนยันแล้ว',
-      traveling: 'กำลังเดินทาง',
-      arrived: 'ถึงแล้ว',
-      in_progress: 'กำลังดำเนินการ',
-      completed: 'เสร็จสิ้น',
-      cancelled: 'ยกเลิก',
-    }
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${badges[status]}`}>
-        {labels[status]}
-      </span>
-    )
-  }
 
   // Filter jobs for display
   const myJobs = jobs.filter(j => ['confirmed', 'traveling', 'arrived'].includes(j.status))
@@ -365,6 +345,26 @@ function StaffDashboard() {
               </div>
             )}
           </div>
+
+          {/* GPS Tracking Controls for Current Job */}
+          <div className="px-4 pb-2">
+            <JobGPSControls
+              job={{
+                id: currentJob.id,
+                status: currentJob.status,
+                customer_name: currentJob.customer_name,
+                customer_address: currentJob.address,
+                customer_phone: currentJob.customer_phone,
+                booking_id: currentJob.id
+              }}
+              onRefresh={refresh}
+              onStartJob={handleStartJob}
+              compact={false}
+              isProcessing={isProcessing === currentJob.id}
+              canStartWork={!!eligibility?.canWork}
+            />
+          </div>
+
           <div className="flex gap-2 p-4 pt-0">
             <button
               onClick={handleCompleteJob}
@@ -413,7 +413,7 @@ function StaffDashboard() {
                         {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                       </p>
                     </div>
-                    {getStatusBadge(job.status)}
+                    <SmartJobStatusBadge job={job} />
                   </div>
 
                   <div className="space-y-2 text-sm">
@@ -493,7 +493,7 @@ function StaffDashboard() {
                         {job.scheduled_date} • {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                       </p>
                     </div>
-                    {getStatusBadge(job.status)}
+                    <SmartJobStatusBadge job={job} />
                   </div>
 
                   {isSpecificPreference(job.provider_preference) && (
@@ -572,7 +572,7 @@ function StaffDashboard() {
                           {job.scheduled_date} • {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                         </p>
                       </div>
-                      {getStatusBadge(job.status)}
+                      <SmartJobStatusBadge job={job} />
                     </div>
 
                     <div className="space-y-2 mb-3 text-sm">
