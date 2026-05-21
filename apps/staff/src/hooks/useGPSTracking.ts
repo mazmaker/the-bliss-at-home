@@ -217,7 +217,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       setError(errorMessage)
       return { success: false, message: errorMessage }
     }
-  }, [currentPosition])
+  }, [currentPosition, stopTracking])
 
   // ✅ NEW: Start service billing (THIS is where billing starts)
   const startServiceBilling = useCallback(async (bookingId: string) => {
