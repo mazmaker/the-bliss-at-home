@@ -233,11 +233,13 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         </div>
       )}
 
-      {/* Staff Info */}
+      {/* Staff Info & Travel Status */}
       {config.showStaff && booking.provider.name !== 'ยังไม่ได้มอบหมายพนักงาน' && (
         <div className="bg-white rounded-xl p-4 mb-4">
           <h3 className="font-medium text-gray-900 mb-3">พนักงานของคุณ</h3>
-          <div className="flex items-center gap-3">
+
+          {/* Staff Basic Info */}
+          <div className="flex items-center gap-3 mb-4">
             {booking.provider.avatar ? (
               <img
                 src={booking.provider.avatar}
@@ -260,37 +262,37 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
             {config.showContact && booking.provider.phone && (
               <a
                 href={`tel:${booking.provider.phone}`}
-                className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg text-sm transition-colors"
               >
                 <Phone className="w-4 h-4" />
                 โทร
               </a>
             )}
           </div>
-        </div>
-      )}
 
-      {/* Travel Duration Display */}
-      {booking.travel_started_at && currentStatus === 'STAFF_EN_ROUTE' && (
-        <div className="bg-white rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Car className="w-5 h-5 text-purple-600" />
-            <span className="font-medium text-gray-900">เวลาเดินทาง</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-lg font-bold text-purple-600">
-                {formatDuration(travelDuration)}
+          {/* Travel Duration (when en route) */}
+          {booking.travel_started_at && currentStatus === 'STAFF_EN_ROUTE' && (
+            <div className="border-t border-gray-100 pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Car className="w-5 h-5 text-amber-600" />
+                <span className="font-medium text-gray-900">เวลาเดินทาง</span>
               </div>
-              <div className="text-sm text-gray-600">
-                เริ่มเดินทาง: {new Date(booking.travel_started_at).toLocaleTimeString('th-TH')}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-lg font-bold text-amber-600">
+                    {formatDuration(travelDuration)}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    เริ่มเดินทาง: {new Date(booking.travel_started_at).toLocaleTimeString('th-TH')}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-amber-600">เวลาเดินทาง</div>
+                  <div className="text-xs text-amber-500">ไม่นับเป็นเวลาบริการ</div>
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-purple-600">เวลาเดินทาง</div>
-              <div className="text-xs text-purple-500">ไม่นับเป็นเวลาบริการ</div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
