@@ -140,7 +140,13 @@ export default function JobGPSControls({
         return
       }
 
-      console.log('🎯 Starting GPS tracking for job:', job.id)
+      console.log('🎯 Staff App: Starting GPS tracking for job:', job.id)
+      console.log('🎯 Staff App: Job details:', {
+        jobId: job.id,
+        bookingId: job.booking_id,
+        jobStatus: job.status,
+        customerName: job.customer_name
+      })
 
       const result = await startTracking(job.id, currentStaffId) // ใช้ staff table ID
       if (result) {

@@ -105,7 +105,12 @@ function BookingDetails() {
       try {
 
         // Check if there's an active journey for this booking
-        console.log('🔍 Searching for journey with booking_id:', bookingData.id)
+        console.log('🔍 Customer App: Searching for journey with booking_id:', bookingData.id)
+        console.log('🔍 Customer App: BookingData details:', {
+          id: bookingData.id,
+          booking_number: bookingData.booking_number,
+          status: bookingData.status
+        })
         const { data: journeys, error } = await supabase
           .from('staff_journeys')
           .select('id, status, staff_id, booking_id')
