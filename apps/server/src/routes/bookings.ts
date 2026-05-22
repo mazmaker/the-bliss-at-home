@@ -30,17 +30,34 @@ const BOOKING_RULES = {
   MIN_ADVANCE_HOURS: 3
 }
 
-export function validateBookingDate(bookingDate: string): {
+export function validateBookingDate(bookingDate: string, bookingTime?: string): {
   isValid: boolean
   error?: string
 } {
-  const booking = new Date(`${bookingDate}T00:00:00`)
+  // 🎯 FIX: Use actual booking time, not midnight
+  const timeToUse = bookingTime || '00:00'
+  const booking = new Date(`${bookingDate}T${timeToUse}:00`)
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  console.log('📅 [BOOKING VALIDATION]', {
+    bookingDate,
+    bookingTime,
+    fullDateTime: booking.toISOString(),
+    now: now.toISOString(),
+    isSameDay: booking.toDateString() === today.toDateString()
+  })
 
   // Check minimum advance (3 hours for today)
   if (booking.toDateString() === today.toDateString()) {
     const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000))
+
+    console.log('⏰ [TIME CHECK]', {
+      bookingDateTime: booking.toISOString(),
+      minDateTime: minDateTime.toISOString(),
+      hoursAdvance: (booking.getTime() - now.getTime()) / (1000 * 60 * 60)
+    })
+
     if (booking < minDateTime) {
       return {
         isValid: false,

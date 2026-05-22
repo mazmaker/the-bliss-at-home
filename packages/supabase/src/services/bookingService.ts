@@ -7,17 +7,35 @@ const BOOKING_RULES = {
   MIN_ADVANCE_HOURS: 3
 };
 
-function validateBookingDate(bookingDate: string): {
+function validateBookingDate(bookingDate: string, bookingTime?: string): {
   isValid: boolean;
   error?: string;
 } {
-  const booking = new Date(`${bookingDate}T00:00:00`);
+  // 🎯 CLIENT-SIDE FIX: Use actual booking time, not midnight
+  const timeToUse = bookingTime || '00:00'
+  const booking = new Date(`${bookingDate}T${timeToUse}:00`);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  console.log('📅 [CLIENT BOOKING VALIDATION]', {
+    bookingDate,
+    bookingTime,
+    fullDateTime: booking.toISOString(),
+    now: now.toISOString(),
+    isSameDay: booking.toDateString() === today.toDateString()
+  });
 
   // Check minimum advance (3 hours for today)
   if (booking.toDateString() === today.toDateString()) {
     const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000));
+
+    console.log('⏰ [CLIENT TIME CHECK]', {
+      bookingDateTime: booking.toISOString(),
+      minDateTime: minDateTime.toISOString(),
+      hoursAdvance: (booking.getTime() - now.getTime()) / (1000 * 60 * 60),
+      isValid: booking >= minDateTime
+    });
+
     if (booking < minDateTime) {
       return {
         isValid: false,
@@ -249,9 +267,9 @@ export async function createBooking(
   booking: BookingInsert,
   addons?: Array<Omit<BookingAddonInsert, 'booking_id'>>
 ): Promise<Booking> {
-  // Validate booking date (14 days advance limit)
+  // Validate booking date and time (14 days advance limit + 3 hours minimum advance)
   if (booking.booking_date) {
-    const dateValidation = validateBookingDate(booking.booking_date);
+    const dateValidation = validateBookingDate(booking.booking_date, booking.booking_time || undefined);
     if (!dateValidation.isValid) {
       throw new Error(dateValidation.error);
     }
@@ -356,8 +374,8 @@ export async function createBookingWithServices(
   }>,
   addons?: Array<Omit<BookingAddonInsert, 'booking_id'>>
 ): Promise<string> {
-  // Validate booking date (14 days advance limit)
-  const dateValidation = validateBookingDate(bookingData.booking_date);
+  // Validate booking date and time (14 days advance limit + 3 hours minimum advance)
+  const dateValidation = validateBookingDate(bookingData.booking_date, bookingData.booking_time);
   if (!dateValidation.isValid) {
     throw new Error(dateValidation.error);
   }

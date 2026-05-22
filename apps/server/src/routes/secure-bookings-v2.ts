@@ -140,10 +140,10 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       return res.status(400).json({ error: 'Missing required fields', missing })
     }
 
-    // Validate booking date (14 days advance limit)
-    const dateValidation = validateBookingDate(bookingData.booking_date)
+    // Validate booking date and time (14 days advance limit + 3 hours minimum advance)
+    const dateValidation = validateBookingDate(bookingData.booking_date, bookingData.booking_time)
     if (!dateValidation.isValid) {
-      console.log('❌ [DATE VALIDATION] Booking date invalid:', dateValidation.error)
+      console.log('❌ [DATE VALIDATION] Booking date/time invalid:', dateValidation.error)
       return res.status(400).json({ error: dateValidation.error })
     }
 
