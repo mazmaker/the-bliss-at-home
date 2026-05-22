@@ -646,43 +646,6 @@ function BookingDetails() {
             )}
 
 
-            {/* Debug info - temporary */}
-            <div className="bg-gray-100 border rounded-lg p-3 text-xs">
-              <div>Debug Journey Status:</div>
-              <div>Booking ID: {bookingData?.id}</div>
-              <div>Booking Status: {bookingData?.status} {bookingData?.status === 'pending' && '❌ ต้องเป็น confirmed'}</div>
-              <div>Staff Assigned: {bookingData?.staff_id || 'ไม่มี'}</div>
-              <div>Active Journey ID: {activeJourneyId || 'ไม่พบ'}</div>
-              <div>Tracking Loading: {isTrackingLoading ? 'กำลังโหลด...' : 'เสร็จแล้ว'}</div>
-              <div>Should Show Map: {activeJourneyId ? 'ใช่' : 'ไม่'}</div>
-
-              {bookingData?.status === 'pending' && (
-                <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
-                  <div>การจองยังไม่ได้ยืนยัน</div>
-                  <div>แก้ไข: Admin ต้องเปลี่ยน Status → 'confirmed'</div>
-                </div>
-              )}
-
-              <button
-                onClick={async () => {
-                  try {
-                    const { error } = await supabase
-                      .from('bookings')
-                      .update({ status: 'confirmed' })
-                      .eq('id', bookingData?.id)
-
-                    if (error) throw error
-                    alert('เปลี่ยน Status เป็น confirmed แล้ว - ลองกด เริ่มเดินทาง อีกครั้ง')
-                    window.location.reload()
-                  } catch (err) {
-                    alert('Error: ' + err.message)
-                  }
-                }}
-                className="mt-2 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-              >
-                Fix: เปลี่ยนเป็น 'confirmed'
-              </button>
-            </div>
 
             {/* Enhanced Booking Status Display */}
             <BookingStatusCardEnhanced
