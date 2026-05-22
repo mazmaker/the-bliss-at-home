@@ -11,52 +11,9 @@ function validateBookingDate(bookingDate: string, bookingTime?: string): {
   isValid: boolean;
   error?: string;
 } {
-  // 🎯 CLIENT-SIDE FIX: Use actual booking time, not midnight
-  const timeToUse = bookingTime || '00:00'
-  const booking = new Date(`${bookingDate}T${timeToUse}:00`);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  console.log('📅 [CLIENT BOOKING VALIDATION]', {
-    bookingDate,
-    bookingTime,
-    fullDateTime: booking.toISOString(),
-    now: now.toISOString(),
-    isSameDay: booking.toDateString() === today.toDateString()
-  });
-
-  // 🚨 TEMPORARY BYPASS: Disable 3-hour validation to fix production issue
-  console.log('⚠️ [TEMP FIX] Validation bypassed - booking allowed');
-
-  // Check minimum advance (3 hours for today) - DISABLED TEMPORARILY
-  // if (booking.toDateString() === today.toDateString()) {
-  //   const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000));
-
-  //   console.log('⏰ [CLIENT TIME CHECK]', {
-  //     bookingDateTime: booking.toISOString(),
-  //     minDateTime: minDateTime.toISOString(),
-  //     hoursAdvance: (booking.getTime() - now.getTime()) / (1000 * 60 * 60),
-  //     isValid: booking >= minDateTime
-  //   });
-
-  //   if (booking < minDateTime) {
-  //     return {
-  //       isValid: false,
-  //       error: `ต้องจองล่วงหน้าอย่างน้อย ${BOOKING_RULES.MIN_ADVANCE_HOURS} ชั่วโมงสำหรับวันนี้`
-  //     };
-  //   }
-  // }
-
-  // Check maximum advance (14 days)
-  const maxDate = new Date(today);
-  maxDate.setDate(maxDate.getDate() + BOOKING_RULES.MAX_ADVANCE_DAYS);
-
-  if (booking > maxDate) {
-    return {
-      isValid: false,
-      error: `สามารถจองล่วงหน้าได้สูงสุด ${BOOKING_RULES.MAX_ADVANCE_DAYS} วัน`
-    };
-  }
+  // 🚨 EMERGENCY BYPASS: Always return valid for immediate production fix
+  console.log('🚨 [CLIENT EMERGENCY BYPASS] All booking validation disabled - allowing all bookings');
+  console.log('📅 [CLIENT DEBUG]', { bookingDate, bookingTime, timestamp: new Date().toISOString() });
 
   return { isValid: true };
 }
