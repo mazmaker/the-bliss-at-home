@@ -29,8 +29,28 @@ import { processPointsExpiry, processExpiryWarnings } from '../../../packages/su
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// CORS Configuration for production domains
+const corsOptions = {
+  origin: [
+    'http://localhost:3001', // Admin local
+    'http://localhost:3002', // Customer local
+    'http://localhost:3003', // Hotel local
+    'http://localhost:3004', // Staff local
+    'https://admin.theblissmassageathome.com', // Admin production
+    'https://customer.theblissmassageathome.com', // Customer production
+    'https://hotel.theblissmassageathome.com', // Hotel production
+    'https://staff.theblissmassageathome.com', // Staff production
+    // Vercel preview URLs
+    /^https:\/\/.*\.vercel\.app$/,
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Legacy browsers support
+}
+
 // Middleware
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
