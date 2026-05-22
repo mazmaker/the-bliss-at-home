@@ -5,6 +5,8 @@ interface EmergencyBookingBannerProps {
   onContactAdmin?: (method: 'phone' | 'line' | 'chat') => void
 }
 
+// Force customer app redeploy - CORS fix 2026-05-22 15:15
+
 export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBookingBannerProps) {
   const [isVisible, setIsVisible] = useState(true)
   const [currentStats, setCurrentStats] = useState(42)
