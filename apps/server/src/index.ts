@@ -1,4 +1,3 @@
-// Force server redeploy - CORS fix for payment API 2026-05-22 15:30
 // Load environment variables FIRST before any other imports
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
