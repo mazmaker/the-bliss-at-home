@@ -40,15 +40,16 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   // Check if geolocation is supported
   const isSupported = 'geolocation' in navigator
 
-  // ✅ Simple journey checker - Focus on journey status only (avoid booking table permissions)
+  // ✅ Simple journey checker - just like before, don't over-complicate
   const checkExistingJourney = useCallback(async (bookingId: string) => {
     try {
-      // Check all journeys for this booking and their statuses
       const { data: existingJourneys, error: queryError } = await supabase
         .from('staff_journeys')
-        .select('id, status, current_latitude, current_longitude, last_location_update, completed_at')
+        .select('id, status, current_latitude, current_longitude, last_location_update')
         .eq('booking_id', bookingId)
+        .eq('status', 'traveling') // Only check for active traveling journeys
         .order('started_at', { ascending: false })
+        .limit(1)
 
       if (queryError) {
         console.error('Failed to check existing journey:', queryError)
@@ -56,56 +57,21 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       }
 
       if (existingJourneys && existingJourneys.length > 0) {
-        console.log('🔍 Found journeys for booking:', existingJourneys.map(j => ({ id: j.id, status: j.status })))
+        const journey = existingJourneys[0]
 
-        // Find the most recent traveling journey (if any)
-        const travelingJourney = existingJourneys.find(j => j.status === 'traveling')
+        // Set state to match existing journey
+        setJourneyId(journey.id)
+        setIsTracking(journey.status === 'traveling')
 
-        // Check if there's already a completed journey
-        const completedJourney = existingJourneys.find(j => j.status === 'completed')
-
-        if (travelingJourney && completedJourney) {
-          console.log('⚠️ Found both traveling and completed journey - this should not happen')
-          console.log('🧹 Auto-cleaning: Marking traveling journey as completed too')
-
-          // Auto-clean: mark traveling journey as completed (ignore errors)
-          try {
-            await supabase
-              .from('staff_journeys')
-              .update({
-                status: 'completed',
-                completed_at: new Date().toISOString()
-              })
-              .eq('id', travelingJourney.id)
-            console.log('✅ Auto-clean successful')
-          } catch (cleanError) {
-            console.log('⚠️ Auto-clean failed but continuing:', cleanError)
-            // Ignore error and continue - database state is messy but we'll work around it
-          }
-
-          return null // Don't resume GPS regardless of clean success
+        if (journey.current_latitude && journey.current_longitude) {
+          setCurrentPosition({
+            latitude: journey.current_latitude,
+            longitude: journey.current_longitude,
+            timestamp: journey.last_location_update ? new Date(journey.last_location_update).getTime() : Date.now()
+          })
         }
 
-        if (travelingJourney && !completedJourney) {
-          console.log('✅ Found active traveling journey, resuming GPS')
-          const journey = travelingJourney
-
-          // Set state to match existing journey
-          setJourneyId(journey.id)
-          setIsTracking(true)
-
-          if (journey.current_latitude && journey.current_longitude) {
-            setCurrentPosition({
-              latitude: journey.current_latitude,
-              longitude: journey.current_longitude,
-              timestamp: journey.last_location_update ? new Date(journey.last_location_update).getTime() : Date.now()
-            })
-          }
-
-          return journey
-        }
-
-        console.log('ℹ️ No active traveling journey found - ready to start new GPS')
+        return journey
       }
 
       return null
@@ -195,6 +161,10 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       // Check for existing journey first - if messy state, don't try to create new journey
       const existingJourney = await checkExistingJourney(bookingId)
       if (existingJourney) {
+        // 🎯 CRITICAL FIX: Update React state for existing journey
+        setJourneyId(existingJourney.id)
+        setIsTracking(true)
+
         // Start GPS tracking for existing journey if still traveling
         if (existingJourney.status === 'traveling') {
           const watchId = navigator.geolocation.watchPosition(
@@ -216,22 +186,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         }
       }
 
-      // ✅ Additional check: If checkExistingJourney found messy state but returned null,
-      // it means there are constraint issues - don't try to create new journey
-      console.log('🔍 Double-checking for any journeys before creating new one...')
-      const { data: anyJourneys } = await supabase
-        .from('staff_journeys')
-        .select('id, status')
-        .eq('booking_id', bookingId)
-        .limit(1)
-
-      if (anyJourneys && anyJourneys.length > 0) {
-        console.log('⚠️ Found existing journeys but checkExistingJourney returned null - database state is messy')
-        return {
-          success: false,
-          message: '🚫 ระบบพบข้อมูลที่ไม่สอดคล้อง กรุณาติดต่อทีมงาน'
-        }
-      }
+      // Let the user try to create a new journey - don't over-protect
 
       // Get initial position for journey start
       const initialPosition = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -255,6 +210,9 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
       setJourneyId(journeyId)
       localStorage.setItem('current_journey_id', journeyId)
+
+      // 🎯 CRITICAL FIX: Update React state for new journey too
+      setIsTracking(true)
 
       // Update job status to 'traveling' when GPS starts
       try {
@@ -455,26 +413,16 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
           .limit(1)
 
         if (existingCompleted && existingCompleted.length > 0) {
-          console.log('⚠️ Found existing completed journey, updating current traveling journey and booking status')
+          console.log('⚠️ Found existing completed journey - will delete current traveling journey to avoid constraint')
 
-          // Update current journey to completed as well (avoid multiple traveling journeys)
-          const { error: currentJourneyError } = await supabase
+          // ✅ DELETE current traveling journey instead of updating (avoids constraint violation)
+          const { error: deleteError } = await supabase
             .from('staff_journeys')
-            .update({
-              status: 'completed',
-              completed_at: new Date().toISOString(),
-              current_latitude: finalLat,
-              current_longitude: finalLng,
-              last_location_update: new Date().toISOString()
-            })
+            .delete()
             .eq('id', journeyId)
-            .eq('status', 'traveling') // Only update if still traveling
+            .eq('status', 'traveling')
 
-          if (currentJourneyError) {
-            console.log('Current journey update skipped (probably already completed):', currentJourneyError)
-          } else {
-            console.log('✅ Current traveling journey updated to completed')
-          }
+          console.log('🗑️ Delete traveling journey result:', { deleteError })
 
           // Update booking status
           const { error: bookingError } = await supabase
@@ -482,10 +430,12 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             .update({ status: 'in_progress' })
             .eq('id', bookingId)
 
-          if (bookingError) {
-            console.error('Booking status update failed:', bookingError)
-          } else {
-            console.log('✅ Booking status updated to in_progress (existing completed journey found)')
+          console.log('🔄 Booking update result:', { bookingError })
+
+          if (!bookingError && !deleteError) {
+            console.log('✅ Traveling journey deleted and booking updated - UI should show เริ่มงาน button after reload')
+          } else if (!bookingError && deleteError) {
+            console.log('⚠️ Booking updated but journey delete failed - may still show มาถึงแล้ว after reload')
           }
         } else {
           // No completed journey exists, safe to update current journey
