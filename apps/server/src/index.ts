@@ -36,6 +36,7 @@ const corsOptions = {
     'http://localhost:3002', // Customer local
     'http://localhost:3003', // Hotel local
     'http://localhost:3004', // Staff local
+    'http://localhost:3008', // Customer app dev port
     'https://admin.theblissmassageathome.com', // Admin production
     'https://customer.theblissmassageathome.com', // Customer production
     'https://hotel.theblissmassageathome.com', // Hotel production
