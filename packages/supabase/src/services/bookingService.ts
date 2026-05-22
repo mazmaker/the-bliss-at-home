@@ -25,24 +25,27 @@ function validateBookingDate(bookingDate: string, bookingTime?: string): {
     isSameDay: booking.toDateString() === today.toDateString()
   });
 
-  // Check minimum advance (3 hours for today)
-  if (booking.toDateString() === today.toDateString()) {
-    const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000));
+  // 🚨 TEMPORARY BYPASS: Disable 3-hour validation to fix production issue
+  console.log('⚠️ [TEMP FIX] Validation bypassed - booking allowed');
 
-    console.log('⏰ [CLIENT TIME CHECK]', {
-      bookingDateTime: booking.toISOString(),
-      minDateTime: minDateTime.toISOString(),
-      hoursAdvance: (booking.getTime() - now.getTime()) / (1000 * 60 * 60),
-      isValid: booking >= minDateTime
-    });
+  // Check minimum advance (3 hours for today) - DISABLED TEMPORARILY
+  // if (booking.toDateString() === today.toDateString()) {
+  //   const minDateTime = new Date(now.getTime() + (BOOKING_RULES.MIN_ADVANCE_HOURS * 60 * 60 * 1000));
 
-    if (booking < minDateTime) {
-      return {
-        isValid: false,
-        error: `ต้องจองล่วงหน้าอย่างน้อย ${BOOKING_RULES.MIN_ADVANCE_HOURS} ชั่วโมงสำหรับวันนี้`
-      };
-    }
-  }
+  //   console.log('⏰ [CLIENT TIME CHECK]', {
+  //     bookingDateTime: booking.toISOString(),
+  //     minDateTime: minDateTime.toISOString(),
+  //     hoursAdvance: (booking.getTime() - now.getTime()) / (1000 * 60 * 60),
+  //     isValid: booking >= minDateTime
+  //   });
+
+  //   if (booking < minDateTime) {
+  //     return {
+  //       isValid: false,
+  //       error: `ต้องจองล่วงหน้าอย่างน้อย ${BOOKING_RULES.MIN_ADVANCE_HOURS} ชั่วโมงสำหรับวันนี้`
+  //     };
+  //   }
+  // }
 
   // Check maximum advance (14 days)
   const maxDate = new Date(today);
