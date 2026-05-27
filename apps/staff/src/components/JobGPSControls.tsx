@@ -55,7 +55,7 @@ export default function JobGPSControls({
   // Expose debug functions globally for debugging
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      window.__emergencyGPSReset = () => emergencyReset(job.booking_id)
+      window.__emergencyGPSReset = () => job.booking_id && emergencyReset(job.booking_id)
       window.__debugJobStatus = () => {
         console.log('🔍 DEBUG JOB STATUS:', {
           'job.id': job.id,
@@ -97,7 +97,8 @@ export default function JobGPSControls({
           }
         } catch (err) {
           console.error('❌ Reset error:', err)
-          alert('❌ Reset ไม่สำเร็จ: ' + err.message)
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+          alert('❌ Reset ไม่สำเร็จ: ' + errorMessage)
         }
       }
     }
@@ -116,7 +117,7 @@ export default function JobGPSControls({
       try {
         journeyCheckedRef.current.add(job.booking_id) // Mark as checked
 
-        const existingJourney = await checkExistingJourney(job.booking_id)
+        const existingJourney = job.booking_id ? await checkExistingJourney(job.booking_id) : null
         if (existingJourney) {
           // 🎯 CRITICAL FIX: Update React state when existing journey is found in useEffect
           console.log('GPS tracking resumed for existing journey - updating React state')
@@ -180,7 +181,7 @@ export default function JobGPSControls({
       // Check for existing journey first
       console.log('🚀 Step 2: Checking for existing journey...')
       if (checkExistingJourney) {
-        const existingJourney = await checkExistingJourney(job.booking_id)
+        const existingJourney = job.booking_id ? await checkExistingJourney(job.booking_id) : null
         console.log('🚀 Step 2 result: Existing journey =', existingJourney)
 
         if (existingJourney) {
@@ -200,6 +201,11 @@ export default function JobGPSControls({
       console.log('🚀 Step 4: Starting GPS tracking...')
       console.log('🚀 Calling startTracking with:', { booking_id: job.booking_id, staff_id: currentStaffId })
 
+      if (!job.booking_id) {
+        alert('❌ ไม่พบ Booking ID')
+        return
+      }
+
       const result = await startTracking(job.booking_id, currentStaffId)
       console.log('🚀 Step 4 result: GPS Start Result =', result)
 
@@ -217,12 +223,14 @@ export default function JobGPSControls({
       }
     } catch (error) {
       console.error('🚀 GPS Start Exception:', error)
-      console.error('🚀 Exception details:', {
+      const errorDetails = error instanceof Error ? {
         name: error.name,
         message: error.message,
         stack: error.stack
-      })
-      alert(`❌ เกิดข้อผิดพลาดในระบบ GPS\n\n${error.message || error}\n\nกรุณาลองใหม่อีกครั้ง`)
+      } : { message: String(error) }
+      console.error('🚀 Exception details:', errorDetails)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`❌ เกิดข้อผิดพลาดในระบบ GPS\n\n${errorMessage}\n\nกรุณาลองใหม่อีกครั้ง`)
     } finally {
       console.log('🚀 handleStartGPS: COMPLETE - Setting isProcessing to false')
       setIsProcessing(false)
@@ -253,12 +261,15 @@ export default function JobGPSControls({
 
     } catch (error) {
       console.error('❌ GPS Stop Error:', error)
-      console.error('❌ Error details:', {
+      const errorDetails = error instanceof Error ? {
         name: error.name,
         message: error.message,
         stack: error.stack
-      })
-      alert(`❌ เกิดข้อผิดพลาด: ${error.message}`)
+      } : { message: String(error) }
+      console.error('❌ Error details:', errorDetails)
+
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`❌ เกิดข้อผิดพลาด: ${errorMessage}`)
     } finally {
       console.log('🔓 Releasing UI lock - GPS stop process complete')
       setIsStoppingGPS(false)

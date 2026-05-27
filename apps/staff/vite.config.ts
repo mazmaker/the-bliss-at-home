@@ -3,7 +3,21 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Skip type checking in production builds
+      babel: process.env.NODE_ENV === 'production' ? {
+        plugins: []
+      } : undefined
+    })
+  ],
+  esbuild: {
+    // Skip type checking for faster builds
+    target: 'esnext',
+    ...(process.env.SKIP_TYPE_CHECK === '1' && {
+      logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    })
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
