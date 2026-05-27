@@ -246,7 +246,8 @@ function StaffJobDetail() {
   const isMyJob = job.staff_id === user?.id ||
                  job.staff_id === eligibility?.staffData?.id
   const isPending = job.status === 'pending'
-  const canStart = isMyJob && ['confirmed', 'traveling', 'arrived'].includes(job.status)
+  // JobGPSControls handles all job start actions, so no main "เริ่มงาน" button needed
+  const canStart = false // Disabled - let JobGPSControls handle job progression
   const isInProgress = isMyJob && job.status === 'in_progress'
   const isFinished = job.status === 'completed' || job.status === 'cancelled'
 
@@ -505,7 +506,7 @@ function StaffJobDetail() {
             customer_name: job.customer_name,
             customer_address: job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address,
             customer_phone: job.customer_phone,
-            booking_id: job.booking_id || job.id // Use the same field as in dashboard
+            booking_id: job.id // Use the same field as in dashboard
           }}
           onRefresh={refetch}
           onStartJob={handleStart}
