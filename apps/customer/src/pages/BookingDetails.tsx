@@ -71,23 +71,44 @@ function BookingDetails() {
         zipcode: '',
       },
       notes: bookingData.customer_notes || '',
-      provider: bookingData.staff?.profiles
-        ? {
+      provider: (() => {
+        // Check for assigned staff in jobs first
+        const assignedJob = bookingData.jobs?.find(job => job.staff_id && job.staff);
+        if (assignedJob?.staff?.profiles) {
+          return {
+            name: assignedJob.staff.profiles.full_name || 'ไม่ระบุชื่อ',
+            rating: assignedJob.staff.rating || 4.8,
+            reviews: assignedJob.staff.total_reviews || 0,
+            avatar: assignedJob.staff.profiles.avatar_url,
+            phone: assignedJob.staff.profiles.phone,
+            jobStatus: assignedJob.status,
+            jobId: assignedJob.id,
+          };
+        }
+
+        // Fallback to booking-level staff assignment
+        if (bookingData.staff?.profiles) {
+          return {
             name: bookingData.staff.profiles.full_name || 'ไม่ระบุชื่อ',
             rating: bookingData.staff.rating || 4.8,
             reviews: bookingData.staff.total_reviews || 0,
             avatar: bookingData.staff.profiles.avatar_url,
             phone: bookingData.staff.profiles.phone,
-          }
-        : {
-            name: 'ยังไม่ได้มอบหมายพนักงาน',
-            rating: 0,
-            reviews: 0,
-            avatar: null,
-            phone: null,
-          },
+            jobStatus: bookingData.status === 'confirmed' ? 'confirmed' : 'pending', // Default job status based on booking status
+          };
+        }
+
+        // No staff assigned
+        return {
+          name: 'ยังไม่ได้มอบหมายพนักงาน',
+          rating: 0,
+          reviews: 0,
+          avatar: null,
+          phone: null,
+        };
+      })(),
       payment: {
-        method: bookingData.payment_method || 'cash',
+        method: bookingData.payment_method || 'pending_payment',
         status: bookingData.payment_status || 'pending',
       },
       createdAt: new Date(bookingData.created_at!).toISOString().split('T')[0],
@@ -181,7 +202,7 @@ function BookingDetails() {
       extension_count: bookingData.extension_count || 0,
       total_extensions_price: Number(bookingData.total_extensions_price || 0),
       last_extended_at: bookingData.last_extended_at,
-      payment_method: bookingData.payment_method || 'cash',
+      payment_method: bookingData.payment_method || 'pending_payment',
       payment_status: bookingData.payment_status || 'pending',
       booking_date: bookingData.booking_date,
       booking_time: bookingData.booking_time,
@@ -325,8 +346,29 @@ function BookingDetails() {
         return t('details.bankTransfer')
       case 'cash':
         return t('details.cash')
+      case 'pending_payment':
+        return 'รอชำระเงิน'
       default:
         return method
+    }
+  }
+
+  const getJobStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'รอพนักงานยืนยัน'
+      case 'confirmed':
+        return 'พนักงานยืนยันแล้ว'
+      case 'traveling':
+        return 'กำลังเดินทาง'
+      case 'in_progress':
+        return 'กำลังให้บริการ'
+      case 'completed':
+        return 'เสร็จสิ้น'
+      case 'cancelled':
+        return 'ยกเลิกแล้ว'
+      default:
+        return status
     }
   }
 
@@ -654,6 +696,71 @@ function BookingDetails() {
               activeJourneyId={activeJourneyId}
             />
 
+            {/* Staff Assignment Info - Show when staff is assigned */}
+            {booking.provider && booking.provider.name !== 'ยังไม่ได้มอบหมายพนักงาน' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" /> ข้อมูลพนักงานที่ได้รับมอบหมาย
+                </h2>
+
+                <div className="flex items-start gap-4">
+                  {/* Staff Avatar */}
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-stone-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    {booking.provider.avatar ? (
+                      <img
+                        src={booking.provider.avatar}
+                        alt={booking.provider.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-amber-700 font-medium text-lg">
+                        {booking.provider.name?.charAt(0) || 'พ'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Staff Details */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-stone-900 mb-1">{booking.provider.name}</h3>
+
+                    {/* Job Status Badge */}
+                    {booking.provider.jobStatus && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        {getJobStatusText(booking.provider.jobStatus)}
+                      </div>
+                    )}
+
+                    {/* Rating */}
+                    <div className="flex items-center gap-2 text-sm text-stone-600">
+                      <Star className="w-4 h-4 text-amber-500" />
+                      <span>{booking.provider.rating.toFixed(1)} ({booking.provider.reviews} รีวิว)</span>
+                    </div>
+
+                    {/* Phone */}
+                    {booking.provider.phone && (
+                      <div className="flex items-center gap-2 text-sm text-stone-600 mt-1">
+                        <span>📞 {booking.provider.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Description */}
+                {booking.provider.jobStatus && (
+                  <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-stone-50 border border-amber-200 rounded-lg">
+                    <p className="text-amber-700 text-sm">
+                      {booking.provider.jobStatus === 'pending' && '🔄 รอพนักงานตอบรับการจอง'}
+                      {booking.provider.jobStatus === 'confirmed' && 'พนักงานรับงานแล้ว กำลังเตรียมตัวเดินทาง'}
+                      {booking.provider.jobStatus === 'traveling' && '🚗 พนักงานกำลังเดินทางไปยังสถานที่ของคุณ'}
+                      {booking.provider.jobStatus === 'in_progress' && '💆‍♀️ พนักงานกำลังให้บริการ'}
+                      {booking.provider.jobStatus === 'completed' && '🎉 การให้บริการเสร็จสิ้นแล้ว'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Staff Tracking Map - Show when there's an active journey (staff traveling/arrived) */}
             {console.log('Map render check:', {
               activeJourneyId,
@@ -754,6 +861,21 @@ function BookingDetails() {
                 </div>
               </div>
 
+              {/* Pay Now Button for Pending Payments */}
+              {booking.payment.status === 'pending' && (
+                <div className="mt-4 pt-4 border-t border-stone-100">
+                  <button
+                    onClick={() => navigate(`/payment/${booking.id}`)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    ชำระเงินตอนนี้
+                  </button>
+                  <p className="text-center text-xs text-stone-500 mt-2">
+                    งานจะถูกส่งให้สตาฟเมื่อชำระเงินเสร็จสิ้น
+                  </p>
+                </div>
+              )}
 
               {/* Receipt & Credit Note Downloads */}
               {(booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (

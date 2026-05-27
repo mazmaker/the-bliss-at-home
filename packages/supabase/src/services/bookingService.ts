@@ -34,6 +34,19 @@ interface BookingDetails extends Booking {
     created_at: string;
     updated_at: string;
     booking_id: string;
+    staff?: {
+      id: string;
+      status: string;
+      rating: number;
+      total_reviews: number;
+      profiles: {
+        id: string;
+        full_name: string | null;
+        phone: string | null;
+        avatar_url: string | null;
+        metadata: any;
+      };
+    };
   }>;
   addons?: Array<{
     id: string;
@@ -213,9 +226,36 @@ export async function getBookingByNumber(
 
   if (addonsError) throw addonsError;
 
+  // Get related jobs with assigned staff
+  const { data: jobs } = await client
+    .from('jobs')
+    .select(`
+      id,
+      status,
+      staff_id,
+      created_at,
+      updated_at,
+      booking_id,
+      staff:staff(
+        id,
+        status,
+        rating,
+        total_reviews,
+        profiles(
+          id,
+          full_name,
+          phone,
+          avatar_url,
+          metadata
+        )
+      )
+    `)
+    .eq('booking_id', booking.id);
+
   return {
     ...booking,
     addons: addons as any,
+    jobs: jobs || []
   } as BookingDetails;
 }
 

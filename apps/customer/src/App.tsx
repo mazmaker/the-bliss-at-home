@@ -28,6 +28,7 @@ import { CustomerLoginPage, AuthCallback, ResetPasswordPage } from './pages/auth
 import PointsHistory from './pages/PointsHistory'
 import EmergencyBooking from './pages/EmergencyBooking'
 import TrackStaff from './pages/TrackStaff'
+import CompletePayment from './pages/CompletePayment'
 
 function App() {
   const { t } = useTranslation('common')
@@ -99,6 +100,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
               <PaymentConfirmationWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/:id"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <CompletePaymentWrapper />
             </ProtectedRoute>
           }
         />
@@ -315,6 +324,10 @@ function PaymentConfirmationWrapper() {
       <PaymentConfirmation />
     </>
   )
+}
+
+function CompletePaymentWrapper() {
+  return <CompletePayment />
 }
 
 function TransactionHistoryWrapper() {

@@ -139,6 +139,36 @@ function BookingWizard() {
     }
   }, [addOnsParam])
 
+  // Auto-fill customer data when showing manual address form
+  useEffect(() => {
+    if (showManualAddressForm && customer && !address.name && !address.phone) {
+      setAddress(prev => ({
+        ...prev,
+        name: customer.full_name || customer.first_name || '',
+        phone: customer.phone || '',
+      }))
+    }
+  }, [showManualAddressForm, customer, address.name, address.phone])
+
+  // Auto-show manual form with customer data if no saved addresses
+  useEffect(() => {
+    if (!addressesLoading && addresses && customer && !selectedAddressId) {
+      if (addresses.length === 0) {
+        // No saved addresses, show manual form with customer data
+        setShowManualAddressForm(true)
+        setAddress({
+          name: customer.full_name || customer.first_name || '',
+          phone: customer.phone || '',
+          address: '',
+          district: '',
+          subdistrict: '',
+          province: '',
+          zipcode: '',
+        })
+      }
+    }
+  }, [addressesLoading, addresses, customer, selectedAddressId])
+
   // Price calculation - only calculate if selectedDuration is valid
   const person1Price = (service?.raw && selectedDuration > 0) ? getPriceForDuration(service.raw, selectedDuration) : 0
   const person1AddonTotal = service?.addons
@@ -256,10 +286,10 @@ function BookingWizard() {
   const handleShowManualForm = () => {
     setSelectedAddressId(null)
     setShowManualAddressForm(true)
-    // Reset address form
+    // Auto-fill with customer data instead of resetting to empty
     setAddress({
-      name: '',
-      phone: '',
+      name: customer?.full_name || customer?.first_name || '',
+      phone: customer?.phone || '',
       address: '',
       district: '',
       subdistrict: '',

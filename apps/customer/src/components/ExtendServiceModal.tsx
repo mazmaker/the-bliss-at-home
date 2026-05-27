@@ -56,6 +56,7 @@ export function ExtendServiceModal({
 
   // Get selected option details with promo discount
   const selectedOption = useMemo(() => {
+    if (!extensionOptions || !Array.isArray(extensionOptions)) return null
     const option = extensionOptions.find(option => option.duration === selectedDuration)
     if (!option) return null
 
@@ -98,19 +99,24 @@ export function ExtendServiceModal({
         // Handle payment if required
         if (result.paymentStatus.requiresPayment) {
           if (result.paymentStatus.paymentUrl) {
-            // Redirect to Omise payment page (3DS or authorize flow)
+            // Show success message before payment redirect
+            const paymentMsg = `✅ การขยายเวลาสำเร็จ!\n\n• เพิ่มเวลา: ${selectedDuration} นาที\n• ราคา: ${result.pricing.extensionPrice} บาท\n• อ้างอิง: ${result.paymentStatus.paymentReference}\n\nกำลังพาคุณไปหน้าชำระเงิน...`
+            alert(paymentMsg)
+
             console.log('💳 Redirecting to payment:', result.paymentStatus.paymentUrl)
-            window.location.href = result.paymentStatus.paymentUrl
+
+            // เพิ่ม delay เล็กน้อยเพื่อให้ผู้ใช้เห็นข้อความ
+            setTimeout(() => {
+              window.location.href = result.paymentStatus.paymentUrl
+            }, 2000)
           } else {
-            // Payment required but no URL - show error
             console.error('❌ Payment required but no payment URL provided')
-            // Extension created but payment pending - user should be notified
-            alert('การขยายเวลาสำเร็จแล้ว แต่ยังต้องชำระเงิน กรุณาตรวจสอบการแจ้งเตือนสำหรับลิงค์การชำระเงิน')
+            alert(`✅ การขยายเวลาสำเร็จ!\n\nเพิ่มเวลา ${selectedDuration} นาที (${result.pricing.extensionPrice} บาท)\nแต่ยังต้องชำระเงิน กรุณารอการแจ้งเตือนสำหรับลิงค์การชำระเงิน`)
             onConfirm()
           }
         } else {
-          // No payment required (free extension or already paid)
           console.log('✅ Extension completed without payment required')
+          alert(`🎉 การขยายเวลาสำเร็จ!\n\nเพิ่มเวลา ${selectedDuration} นาที\nไม่มีค่าใช้จ่ายเพิ่มเติม`)
           onConfirm()
         }
       }
