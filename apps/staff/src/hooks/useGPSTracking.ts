@@ -33,6 +33,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   const [currentPosition, setCurrentPosition] = useState<GPSPosition | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [journeyId, setJourneyId] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false) // ป้องกัน concurrent calls
 
   const watchIdRef = useRef<number | null>(null)
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null)
@@ -47,7 +48,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         .from('staff_journeys')
         .select('id, status, current_latitude, current_longitude, last_location_update')
         .eq('booking_id', bookingId)
-        .eq('status', 'traveling') // Only check for active traveling journeys
+        .in('status', ['traveling', 'arrived']) // Check for both traveling and arrived journeys
         .order('started_at', { ascending: false })
         .limit(1)
 
@@ -61,7 +62,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
         // Set state to match existing journey
         setJourneyId(journey.id)
-        setIsTracking(journey.status === 'traveling')
+        setIsTracking(journey.status === 'traveling') // Only traveling means GPS is active
 
         if (journey.current_latitude && journey.current_longitude) {
           setCurrentPosition({
@@ -371,6 +372,15 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   }, [startJourneyOnly])
 
   const stopTracking = useCallback(async () => {
+    // 🚨 PREVENT CONCURRENT CALLS: ป้องกัน race condition
+    if (isProcessing) {
+      console.log('⚠️ stopTracking already in progress, ignoring call...')
+      return
+    }
+
+    setIsProcessing(true)
+    console.log('🔒 stopTracking: Lock acquired')
+
     try {
       // Stop GPS tracking
       if (watchIdRef.current !== null) {
@@ -404,81 +414,34 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         const bookingId = journeyData.booking_id
         console.log('🏁 Completing journey:', { journeyId, bookingId, currentStatus: journeyData.status })
 
-        // ✅ Check if there's already a completed journey for this booking
-        const { data: existingCompleted } = await supabase
+        // ✅ SIMPLIFIED: Just update journey to 'arrived' (not completed)
+        const { error: updateError } = await supabase
           .from('staff_journeys')
-          .select('id, status')
-          .eq('booking_id', bookingId)
-          .eq('status', 'completed')
-          .limit(1)
+          .update({
+            status: 'arrived',
+            arrived_at: new Date().toISOString(),
+            current_latitude: finalLat,
+            current_longitude: finalLng,
+            last_location_update: new Date().toISOString()
+          })
+          .eq('id', journeyId)
 
-        if (existingCompleted && existingCompleted.length > 0) {
-          console.log('⚠️ Found existing completed journey - will delete current traveling journey to avoid constraint')
+        if (updateError) {
+          console.error('Journey arrival update failed:', updateError)
+          throw new Error(`ไม่สามารถอัพเดต journey: ${updateError.message}`)
+        } else {
+          console.log('✅ Journey updated to arrived status')
 
-          // ✅ DELETE current traveling journey instead of updating (avoids constraint violation)
-          const { error: deleteError } = await supabase
-            .from('staff_journeys')
-            .delete()
-            .eq('id', journeyId)
-            .eq('status', 'traveling')
-
-          console.log('🗑️ Delete traveling journey result:', { deleteError })
-
-          // Update booking status
+          // Update booking status to 'arrived' so user can manually click "เริ่มงาน"
           const { error: bookingError } = await supabase
             .from('bookings')
-            .update({ status: 'in_progress' })
+            .update({ status: 'arrived' })
             .eq('id', bookingId)
 
-          console.log('🔄 Booking update result:', { bookingError })
-
-          if (!bookingError && !deleteError) {
-            console.log('✅ Traveling journey deleted and booking updated - UI should show เริ่มงาน button after reload')
-          } else if (!bookingError && deleteError) {
-            console.log('⚠️ Booking updated but journey delete failed - may still show มาถึงแล้ว after reload')
-          }
-        } else {
-          // No completed journey exists, safe to update current journey
-          const { error: updateError } = await supabase
-            .from('staff_journeys')
-            .update({
-              status: 'completed',
-              completed_at: new Date().toISOString(),
-              current_latitude: finalLat,
-              current_longitude: finalLng,
-              last_location_update: new Date().toISOString()
-            })
-            .eq('id', journeyId)
-
-          if (updateError) {
-            console.error('Journey completion failed:', updateError)
-            // If still fails, just update booking without journey status change
-            console.log('🔄 Fallback: Updating booking only...')
-            const { error: bookingError } = await supabase
-              .from('bookings')
-              .update({ status: 'in_progress' })
-              .eq('id', bookingId)
-
-            if (bookingError) {
-              console.error('Fallback booking update failed:', bookingError)
-              throw new Error(`ไม่สามารถอัพเดตสถานะงาน: ${bookingError.message}`)
-            } else {
-              console.log('✅ Fallback: Booking status updated without journey status change')
-            }
+          if (bookingError) {
+            console.error('Booking status update failed:', bookingError)
           } else {
-            console.log('✅ Journey completed successfully')
-
-            // Update booking status
-            const { error: bookingError } = await supabase
-              .from('bookings')
-              .update({ status: 'in_progress' })
-              .eq('id', bookingId)
-
-            if (bookingError) {
-              console.error('Booking status update failed:', bookingError)
-            } else {
-              console.log('✅ Booking status updated to in_progress')
-            }
+            console.log('✅ Booking status updated to arrived')
           }
         }
       } catch (err) {
@@ -497,8 +460,11 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       console.error('CRITICAL ERROR in stopTracking:', outerError)
       alert(`เกิดข้อผิดพลาดร้ายแรง: ${outerError.message}`)
       throw outerError
+    } finally {
+      console.log('🔓 stopTracking: Releasing lock')
+      setIsProcessing(false)
     }
-  }, [journeyId, currentPosition])
+  }, [journeyId, currentPosition, isProcessing])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -553,6 +519,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     currentPosition,
     error,
     journeyId,
+    isProcessing, // ✅ NEW: Expose processing state
     // ✅ NEW workflow functions
     startJourneyOnly,
     confirmArrival,

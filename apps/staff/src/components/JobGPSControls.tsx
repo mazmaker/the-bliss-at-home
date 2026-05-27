@@ -32,6 +32,7 @@ export default function JobGPSControls({
   const [staffId, setStaffId] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [hasArrived, setHasArrived] = useState(false) // ติดตามสถานะการมาถึง
+  const [isStoppingGPS, setIsStoppingGPS] = useState(false) // ป้องกัน double-click
   const journeyCheckedRef = useRef<Set<string>>(new Set()) // Track which jobs we've checked
   const syncedJobsRef = useRef<Set<string>>(new Set()) // Track which jobs we've already synced
   const refreshedJobsRef = useRef<Set<string>>(new Set()) // Track which jobs we've already refreshed
@@ -41,6 +42,7 @@ export default function JobGPSControls({
     currentPosition,
     error: gpsError,
     journeyId,
+    isProcessing: gpsProcessing, // ✅ Get processing state from GPS hook
     startTracking,
     stopTracking,
     checkExistingJourney,
@@ -60,14 +62,43 @@ export default function JobGPSControls({
           'job.status': job.status,
           'job.booking_id': job.booking_id,
           hasArrived,
-          jobHasArrived: job.status === 'in_progress',
+          jobHasArrived: job.status === 'arrived',
+          jobInProgress: job.status === 'in_progress',
           'component state': { hasArrived, isTracking, journeyId },
           'button logic': {
             canStartGPS: job.status === 'confirmed' || job.status === 'assigned',
             shouldShowTracking: job.status === 'traveling' || (isTracking && journeyId),
-            jobHasArrived: job.status === 'in_progress',
+            jobHasArrived: job.status === 'arrived',
+          jobInProgress: job.status === 'in_progress',
           }
         })
+      }
+      // 🛠️ EMERGENCY: Reset stuck job to test flow
+      window.__resetStuckJob = async () => {
+        try {
+          console.log('🔧 Resetting stuck job status...')
+          const { data, error } = await supabase
+            .from('jobs')
+            .update({
+              status: 'confirmed',
+              started_at: null,
+              completed_at: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', job.id)
+            .select()
+
+          if (error) {
+            console.error('❌ Failed to reset job:', error)
+          } else {
+            console.log('✅ Job reset successful:', data)
+            alert('✅ Job รีเซ็ตแล้ว! รีเฟรชหน้าเพื่อทดสอบ flow ใหม่')
+            window.location.reload()
+          }
+        } catch (err) {
+          console.error('❌ Reset error:', err)
+          alert('❌ Reset ไม่สำเร็จ: ' + err.message)
+        }
       }
     }
   }, [job, hasArrived, isTracking, journeyId, emergencyReset])
@@ -199,79 +230,27 @@ export default function JobGPSControls({
   }
 
   const handleStopGPS = async () => {
-    setIsProcessing(true)
+    // 🚨 PREVENT DOUBLE-CLICKS: ป้องกันการกดหลายครั้ง
+    if (isStoppingGPS || gpsProcessing) {
+      console.log('⚠️ GPS stop already in progress, ignoring click...')
+      return
+    }
+
+    setIsStoppingGPS(true)
+
     try {
       console.log('🛑 Starting GPS stop process...')
+      console.log('🔒 UI Lock acquired - preventing double clicks')
+
       await stopTracking()
       setHasArrived(true)
 
-      console.log('✅ GPS stopped successfully')
+      console.log('✅ GPS stopped successfully - booking status should be updated to "arrived" by GPS hook')
 
-      // 🎯 NEW: Manually update job status to sync with booking status
-      console.log('🔧 Step 1: Manually updating job status to in_progress...')
-      console.log('🔧 Debug: job.booking_id =', job.booking_id)
-      console.log('🔧 Debug: job.id =', job.id)
+      // ❌ REMOVED: setTimeout refresh to prevent subscription conflicts
+      // Let real-time subscriptions handle the state update instead
+      console.log('🔄 Waiting for real-time subscription to sync job status...')
 
-      try {
-        // First check current job status
-        const { data: currentJob, error: fetchError } = await supabase
-          .from('jobs')
-          .select('id, status, booking_id')
-          .eq('booking_id', job.booking_id)
-          .single()
-
-        console.log('🔧 Current job in DB before update:', currentJob)
-        if (fetchError) {
-          console.error('❌ Failed to fetch current job:', fetchError)
-        }
-
-        // Update job status
-        const { data, error } = await supabase
-          .from('jobs')
-          .update({ status: 'in_progress' })
-          .eq('booking_id', job.booking_id)
-          .select()
-
-        if (error) {
-          console.error('❌ Failed to update job status:', error)
-          console.error('❌ Error details:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          })
-        } else {
-          console.log('✅ Job status manually updated to in_progress:', data)
-
-          // Verify the update worked
-          const { data: verifyJob, error: verifyError } = await supabase
-            .from('jobs')
-            .select('id, status, booking_id')
-            .eq('booking_id', job.booking_id)
-            .single()
-
-          console.log('🔧 Job after update verification:', verifyJob)
-          if (verifyError) {
-            console.error('❌ Failed to verify job update:', verifyError)
-          }
-        }
-      } catch (jobUpdateError) {
-        console.error('❌ Exception updating job status:', jobUpdateError)
-      }
-
-      // ✅ FIXED: Single targeted refresh after GPS completion
-      console.log('🔄 Step 2: Triggering parent component refresh to sync job status...')
-
-      // Wait a moment for database transaction to complete, then refresh once
-      setTimeout(() => {
-        console.log('🔄 Step 3: Calling onRefresh to update job data...')
-        if (onRefresh) {
-          onRefresh()
-          console.log('✅ Parent refresh triggered - job status should update')
-        } else {
-          console.log('⚠️ No onRefresh callback available')
-        }
-      }, 500)
     } catch (error) {
       console.error('❌ GPS Stop Error:', error)
       console.error('❌ Error details:', {
@@ -279,9 +258,10 @@ export default function JobGPSControls({
         message: error.message,
         stack: error.stack
       })
-      alert(`❌ เกิดข้อผิดพลาด: ${error.message}\n\nเช็ค Console เพื่อดูรายละเอียด`)
+      alert(`❌ เกิดข้อผิดพลาด: ${error.message}`)
     } finally {
-      setIsProcessing(false)
+      console.log('🔓 Releasing UI lock - GPS stop process complete')
+      setIsStoppingGPS(false)
     }
   }
 
@@ -338,7 +318,8 @@ export default function JobGPSControls({
   const isTrackingThis = isTracking && journeyId
   const canStartGPS = job.status === 'confirmed' || job.status === 'assigned'
   const shouldShowTracking = job.status === 'traveling' || isTrackingThis
-  const jobHasArrived = job.status === 'in_progress'
+  const jobHasArrived = job.status === 'arrived'
+  const jobInProgress = job.status === 'in_progress'
 
   // ✅ DEBUG: เช็คสถานะปุ่มที่แสดง
   console.log('🎯 GPS Button Logic Debug:', {
@@ -350,6 +331,7 @@ export default function JobGPSControls({
     shouldShowTracking,
     '🔍 Hook State': { isTracking, journeyId, isTrackingThis },
     'will show':
+      jobInProgress ? 'งานกำลังดำเนินการ' :
       (hasArrived || jobHasArrived) ? 'เริ่มงาน' :
       canStartGPS ? 'เริ่มเดินทาง' :
       shouldShowTracking ? 'มาถึงแล้ว' : 'none'
@@ -357,7 +339,7 @@ export default function JobGPSControls({
 
   if (compact && !shouldShowTracking) {
     // Compact mode
-    if (hasArrived || jobHasArrived) {  // แสดงปุ่มเริ่มงานเมื่อมาถึงแล้ว (GPS เสร็จ หรือ database = in_progress)
+    if ((hasArrived || jobHasArrived) && !jobInProgress) {  // แสดงปุ่มเริ่มงานเมื่อมาถึงแล้ว แต่ยังไม่เริ่มงาน
       return (
         <button
           onClick={handleStartJobClick}
@@ -387,6 +369,16 @@ export default function JobGPSControls({
         </button>
       )
     }
+
+    if (jobInProgress) {
+      return (
+        <div className="text-green-700 text-sm flex items-center gap-1">
+          <CheckCircle className="w-4 h-4" />
+          งานกำลังดำเนินการ
+        </div>
+      )
+    }
+
     return null
   }
 
@@ -443,15 +435,16 @@ export default function JobGPSControls({
           <div className="flex gap-2">
             <button
               onClick={handleStopGPS}
-              disabled={isProcessing}
+              disabled={gpsProcessing || isStoppingGPS}
               className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50"
+              title={(gpsProcessing || isStoppingGPS) ? 'กำลังประมวลผล กรุณารอ...' : undefined}
             >
-              {isProcessing ? (
+              {(gpsProcessing || isStoppingGPS) ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <CheckCircle className="w-4 h-4" />
               )}
-              มาถึงแล้ว
+              {(gpsProcessing || isStoppingGPS) ? 'กำลังยืนยัน...' : 'มาถึงแล้ว'}
             </button>
 
             {job.customer_phone && (
@@ -475,8 +468,8 @@ export default function JobGPSControls({
             )}
           </div>
         </div>
-      ) : hasArrived || jobHasArrived ? (
-        // Start Work Button (หลังจาก GPS เสร็จแล้ว หรือ database = in_progress)
+      ) : (hasArrived || jobHasArrived) && !jobInProgress ? (
+        // Start Work Button (หลังจาก GPS เสร็จแล้ว แต่ยังไม่เริ่มงาน)
         <button
           onClick={handleStartJobClick}
           disabled={externalProcessing || !canStartWork}
@@ -502,6 +495,12 @@ export default function JobGPSControls({
           ) : null}
           เริ่มเดินทาง (ติดตาม GPS)
         </button>
+      ) : jobInProgress ? (
+        // Job in progress - show status instead of button
+        <div className="w-full bg-green-50 border border-green-200 py-3 rounded-lg flex items-center justify-center gap-2">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <span className="text-green-700 font-medium">งานกำลังดำเนินการ</span>
+        </div>
       ) : null}
     </div>
   )
