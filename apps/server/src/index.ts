@@ -1,11 +1,19 @@
-// Load environment variables FIRST before any other imports
+// Load environment variables FIRST before any other imports (only for local development)
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-dotenv.config({ path: join(__dirname, '..', '.env') })
+// Only load .env file if running locally (not on Vercel)
+if (!process.env.VERCEL && !process.env.NODE_ENV?.includes('production')) {
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = dirname(__filename)
+  try {
+    dotenv.config({ path: join(__dirname, '..', '.env') })
+    console.log('✅ Loaded .env file for local development')
+  } catch (error) {
+    console.log('⚠️ No .env file found (running on Vercel or production)')
+  }
+}
 
 import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
@@ -23,8 +31,19 @@ import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders
 import { reminderService } from './services/reminderService.js'
 import { processPayoutCutoff } from './services/payoutService.js'
 import { getSupabaseClient } from './lib/supabase.js'
-// @ts-ignore — relative import from shared package (outside rootDir)
-import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
+// Skip shared package imports for Vercel compatibility
+// import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
+
+// Placeholder functions for loyalty service (temporarily disabled for Vercel)
+const processPointsExpiry = async (supabase: any) => {
+  console.log('⚠️ processPointsExpiry temporarily disabled for Vercel deployment')
+  return { expiredCount: 0 }
+}
+
+const processExpiryWarnings = async (supabase: any) => {
+  console.log('⚠️ processExpiryWarnings temporarily disabled for Vercel deployment')
+  return { warningCount: 0 }
+}
 
 const app = express()
 const PORT = process.env.PORT || 3000
