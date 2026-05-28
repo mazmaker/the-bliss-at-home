@@ -2,16 +2,17 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/index.ts",
+      "src": "dist/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/dist/index.js"
     }
   ],
+  "buildCommand": "cd ../.. && pnpm install && cd apps/server && pnpm build",
   "env": {
     "NODE_ENV": "production"
   }
