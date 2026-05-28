@@ -46,8 +46,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // Initialize Omise
-    const omise = require('omise')({
+    // Initialize Omise (dynamic import for ES modules)
+    const { default: Omise } = await import('omise');
+    const omise = Omise({
       publicKey: process.env.OMISE_PUBLIC_KEY,
       secretKey: process.env.OMISE_SECRET_KEY,
     });
