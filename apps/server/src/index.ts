@@ -37,12 +37,19 @@ import { getSupabaseClient } from './lib/supabase.js'
 // Placeholder functions for loyalty service (temporarily disabled for Vercel)
 const processPointsExpiry = async (supabase: any) => {
   console.log('⚠️ processPointsExpiry temporarily disabled for Vercel deployment')
-  return { expiredCount: 0 }
+  return {
+    expiredCount: 0,
+    affectedCustomers: [],
+    transactions: []
+  }
 }
 
 const processExpiryWarnings = async (supabase: any) => {
   console.log('⚠️ processExpiryWarnings temporarily disabled for Vercel deployment')
-  return { warningCount: 0 }
+  return {
+    warningCount: 0,
+    sentWarnings: []
+  }
 }
 
 const app = express()
