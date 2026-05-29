@@ -27,7 +27,7 @@ import bookingsRoutes from './routes/bookings.js'
 import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
-import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles.js'
+// import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles.js' // Temporarily disabled
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
 import { reminderService } from './services/reminderService.js'
 import { processPayoutCutoff } from './services/payoutService.js'
@@ -148,7 +148,7 @@ app.use('/api/receipts', receiptsRoutes)
 app.use('/api/invoices', invoicesRoutes)
 
 // Migration routes (temporary for payout cycles)
-app.use('/api/migrate', migratePayoutCyclesRoutes)
+// app.use('/api/migrate', migratePayoutCyclesRoutes) // Temporarily disabled
 
 
 // Dev-only endpoint to trigger credit reminders manually
