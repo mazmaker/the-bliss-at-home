@@ -17,13 +17,23 @@ import { CreateStaffData, Staff } from '../services/staffService'
 import { toast } from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { EMERGENCY_CONTACT_RELATIONSHIPS } from '@bliss/supabase'
-
 interface EditStaffModalProps {
   isOpen: boolean
   onClose: () => void
   staff: Staff
 }
+
+// Emergency contact relationship options
+const EMERGENCY_CONTACT_RELATIONSHIPS = [
+  { value: 'father', label: 'บิดา' },
+  { value: 'mother', label: 'มารดา' },
+  { value: 'spouse', label: 'คู่สมรส' },
+  { value: 'sibling', label: 'พี่/น้อง' },
+  { value: 'child', label: 'บุตร' },
+  { value: 'relative', label: 'ญาติ' },
+  { value: 'friend', label: 'เพื่อน' },
+  { value: 'other', label: 'อื่นๆ' },
+] as const
 
 // Icon mapping for skills
 const skillIconMap = [

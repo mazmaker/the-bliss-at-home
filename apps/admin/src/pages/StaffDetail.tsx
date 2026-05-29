@@ -32,7 +32,19 @@ import {
   Settings,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { type BankAccount, THAI_BANKS, EMERGENCY_CONTACT_RELATIONSHIPS } from '@bliss/supabase'
+import { type BankAccount, THAI_BANKS } from '@bliss/supabase'
+
+// Emergency contact relationship options
+const EMERGENCY_CONTACT_RELATIONSHIPS = [
+  { value: 'father', label: 'บิดา' },
+  { value: 'mother', label: 'มารดา' },
+  { value: 'spouse', label: 'คู่สมรส' },
+  { value: 'sibling', label: 'พี่/น้อง' },
+  { value: 'child', label: 'บุตร' },
+  { value: 'relative', label: 'ญาติ' },
+  { value: 'friend', label: 'เพื่อน' },
+  { value: 'other', label: 'อื่นๆ' },
+] as const
 import { supabase } from '../lib/supabase'
 import { useStaffDetail } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
