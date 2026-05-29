@@ -30,8 +30,11 @@ import {
 } from '@bliss/supabase'
 import { supabase } from '@bliss/supabase/auth'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
+import PayoutScheduleCard from '../components/PayoutScheduleCard'
+import PayoutCountdown from '../components/PayoutCountdown'
+import { StaffPayoutInfo, PayoutSchedule } from '../types/staff'
 
-type ViewPeriod = 'day' | 'week' | 'month'
+type ViewPeriod = 'day' | 'week' | '15days' | 'month'
 
 const THAI_MONTHS = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -44,6 +47,38 @@ function StaffEarnings() {
   const [copiedRef, setCopiedRef] = useState<string | null>(null)
   const [showPayoutDetail, setShowPayoutDetail] = useState<Payout | null>(null)
   const [payoutJobs, setPayoutJobs] = useState<any[]>([])
+  const [payoutInfo, setPayoutInfo] = useState<StaffPayoutInfo | null>(null)
+  const [showPayoutSchedule, setShowPayoutSchedule] = useState(true)
+
+  // Fetch staff payout information
+  useEffect(() => {
+    const fetchPayoutInfo = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession()
+        if (!session.session?.user) return
+
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('payout_schedule, custom_payout_interval, next_payout_date, last_payout_processed_at, payout_start_date')
+          .eq('profile_id', session.session.user.id)
+          .single()
+
+        if (staffData) {
+          setPayoutInfo({
+            payout_schedule: staffData.payout_schedule || 'bi_monthly',
+            custom_payout_interval: staffData.custom_payout_interval,
+            next_payout_date: staffData.next_payout_date,
+            last_payout_processed_at: staffData.last_payout_processed_at,
+            payout_start_date: staffData.payout_start_date
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching payout info:', error)
+      }
+    }
+
+    fetchPayoutInfo()
+  }, [])
 
   // Fetch payout jobs when detail modal opens
   useEffect(() => {
@@ -71,6 +106,11 @@ function StaffEarnings() {
       start.setDate(start.getDate() - dayOfWeek)
       start.setHours(0, 0, 0, 0)
       end.setDate(start.getDate() + 6)
+      end.setHours(23, 59, 59, 999)
+    } else if (viewPeriod === '15days') {
+      // Last 15 days from current date
+      start.setDate(start.getDate() - 14)
+      start.setHours(0, 0, 0, 0)
       end.setHours(23, 59, 59, 999)
     } else {
       // This month
@@ -115,6 +155,7 @@ function StaffEarnings() {
     const newDate = new Date(currentDate)
     if (viewPeriod === 'day') newDate.setDate(newDate.getDate() - 1)
     else if (viewPeriod === 'week') newDate.setDate(newDate.getDate() - 7)
+    else if (viewPeriod === '15days') newDate.setDate(newDate.getDate() - 15)
     else newDate.setMonth(newDate.getMonth() - 1)
     setCurrentDate(newDate)
   }
@@ -123,6 +164,7 @@ function StaffEarnings() {
     const newDate = new Date(currentDate)
     if (viewPeriod === 'day') newDate.setDate(newDate.getDate() + 1)
     else if (viewPeriod === 'week') newDate.setDate(newDate.getDate() + 7)
+    else if (viewPeriod === '15days') newDate.setDate(newDate.getDate() + 15)
     else newDate.setMonth(newDate.getMonth() + 1)
     setCurrentDate(newDate)
   }
@@ -130,15 +172,27 @@ function StaffEarnings() {
   // Format period label
   const getPeriodLabel = () => {
     if (viewPeriod === 'day') {
-      return `${currentDate.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear() + 543}`
+      return `${currentDate.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
     } else if (viewPeriod === 'week') {
       const weekStart = new Date(currentDate)
       weekStart.setDate(weekStart.getDate() - weekStart.getDay())
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
-      return `${weekStart.getDate()} - ${weekEnd.getDate()} ${THAI_MONTHS[currentDate.getMonth()]}`
+      return `${weekStart.getDate()} - ${weekEnd.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+    } else if (viewPeriod === '15days') {
+      const rangeStart = new Date(currentDate)
+      rangeStart.setDate(rangeStart.getDate() - 14)
+      const rangeEnd = new Date(currentDate)
+
+      // If same month
+      if (rangeStart.getMonth() === rangeEnd.getMonth()) {
+        return `${rangeStart.getDate()} - ${rangeEnd.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+      } else {
+        // Different months
+        return `${rangeStart.getDate()} ${THAI_MONTHS[rangeStart.getMonth()]} - ${rangeEnd.getDate()} ${THAI_MONTHS[rangeEnd.getMonth()]} ${currentDate.getFullYear()}`
+      }
     } else {
-      return `${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear() + 543}`
+      return `${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
     }
   }
 
@@ -146,6 +200,7 @@ function StaffEarnings() {
   const chartData = useMemo(() => {
     if (viewPeriod === 'day') return dailyEarnings.slice(0, 1).reverse()
     if (viewPeriod === 'week') return dailyEarnings.slice(0, 7).reverse()
+    if (viewPeriod === '15days') return dailyEarnings.slice(0, 15).reverse()
     return [...dailyEarnings].reverse() // month: show all days
   }, [dailyEarnings, viewPeriod])
 
@@ -218,9 +273,10 @@ function StaffEarnings() {
       {/* Period Selector */}
       <div className="flex gap-2 bg-white p-1 rounded-xl shadow-sm">
         {[
-          { key: 'day', label: 'วัน' },
-          { key: 'week', label: 'สัปดาห์' },
-          { key: 'month', label: 'เดือน' },
+          { key: 'day', label: '1 วัน' },
+          { key: 'week', label: '7 วัน' },
+          { key: '15days', label: '15 วัน' },
+          { key: 'month', label: '1 เดือน' },
         ].map((period) => (
           <button
             key={period.key}
@@ -253,7 +309,12 @@ function StaffEarnings() {
       <div className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-4 text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-sm opacity-90">รายได้{viewPeriod === 'day' ? 'วันนี้' : viewPeriod === 'week' ? 'สัปดาห์นี้' : 'เดือนนี้'}</p>
+            <p className="text-sm opacity-90">รายได้{
+              viewPeriod === 'day' ? 'วันนี้' :
+              viewPeriod === 'week' ? '7 วันนี้' :
+              viewPeriod === '15days' ? '15 วันนี้' :
+              'เดือนนี้'
+            }</p>
             <p className="text-3xl font-bold">฿{periodEarnings.earnings.toLocaleString()}</p>
           </div>
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -282,21 +343,6 @@ function StaffEarnings() {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Pending Payout */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-stone-500">รอโอน</span>
-            </div>
-          </div>
-          <p className="text-xl font-bold text-amber-600 mt-1">
-            ฿{(summary?.pending_payout || 0).toLocaleString()}
-          </p>
-        </div>
-      </div>
 
       {/* Daily Earnings Chart */}
       {chartData.length > 0 && (
@@ -420,6 +466,43 @@ function StaffEarnings() {
         </div>
       )}
 
+      {/* Payout Schedule Section */}
+      {payoutInfo && showPayoutSchedule && (
+        <div className="space-y-3">
+          {/* Payout Countdown - compact version */}
+          <PayoutCountdown
+            nextPayoutDate={payoutInfo.next_payout_date}
+            compact={true}
+            className="mb-2"
+          />
+
+          {/* Payout Schedule Card */}
+          <div className="relative">
+            <PayoutScheduleCard
+              payoutInfo={payoutInfo}
+              showDetails={false}
+            />
+            <button
+              onClick={() => setShowPayoutSchedule(false)}
+              className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show Payout Schedule Button (when hidden) */}
+      {payoutInfo && !showPayoutSchedule && (
+        <button
+          onClick={() => setShowPayoutSchedule(true)}
+          className="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+        >
+          <Calendar className="w-4 h-4" />
+          ดูรอบการจ่ายเงิน
+        </button>
+      )}
+
       {/* Payout History */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
@@ -465,12 +548,12 @@ function StaffEarnings() {
                   </div>
                   <div>
                     <p className="font-medium text-stone-900">
-                      {new Date(payout.period_start).toLocaleDateString('th-TH', {
+                      {new Date(payout.period_start).toLocaleDateString('th-TH-u-ca-gregory', {
                         day: 'numeric',
                         month: 'short',
                       })}
                       {' - '}
-                      {new Date(payout.period_end).toLocaleDateString('th-TH', {
+                      {new Date(payout.period_end).toLocaleDateString('th-TH-u-ca-gregory', {
                         day: 'numeric',
                         month: 'short',
                       })}
@@ -547,9 +630,9 @@ function StaffEarnings() {
               <div className="flex items-center justify-between">
                 <span className="text-stone-500">ช่วงเวลา</span>
                 <span className="font-medium">
-                  {new Date(showPayoutDetail.period_start).toLocaleDateString('th-TH')}
+                  {new Date(showPayoutDetail.period_start).toLocaleDateString('th-TH-u-ca-gregory')}
                   {' - '}
-                  {new Date(showPayoutDetail.period_end).toLocaleDateString('th-TH')}
+                  {new Date(showPayoutDetail.period_end).toLocaleDateString('th-TH-u-ca-gregory')}
                 </span>
               </div>
 
@@ -598,7 +681,7 @@ function StaffEarnings() {
                 <div className="flex items-center justify-between">
                   <span className="text-stone-500">วันที่โอน</span>
                   <span className="font-medium">
-                    {new Date(showPayoutDetail.transferred_at).toLocaleDateString('th-TH', {
+                    {new Date(showPayoutDetail.transferred_at).toLocaleDateString('th-TH-u-ca-gregory', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',

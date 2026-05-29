@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { X, DollarSign, AlertCircle, Plus, Loader2, CheckCircle } from 'lucide-react'
+import { X, DollarSign, AlertCircle, Plus, Loader2, CheckCircle, Calendar, Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
+import PayoutScheduleSelector from './PayoutScheduleSelector'
+import { PayoutSchedule } from '../types/staff'
 
 interface UnpaidJob {
   id: string
@@ -24,6 +26,10 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
   const [isCreating, setIsCreating] = useState(false)
   const [unpaidJobs, setUnpaidJobs] = useState<UnpaidJob[]>([])
   const [profileId, setProfileId] = useState<string | null>(null)
+  const [currentStep, setCurrentStep] = useState<'schedule' | 'jobs'>('schedule')
+  const [selectedSchedule, setSelectedSchedule] = useState<PayoutSchedule>('monthly')
+  const [customInterval, setCustomInterval] = useState(30)
+  const [currentPayoutSchedule, setCurrentPayoutSchedule] = useState<PayoutSchedule>('bi_monthly')
   const queryClient = useQueryClient()
 
   // Fetch unpaid jobs on mount
@@ -34,10 +40,10 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
   const fetchUnpaidJobs = async () => {
     setIsLoading(true)
     try {
-      // Get profile_id from staff table
+      // Get profile_id and payout schedule from staff table
       const { data: staffData, error: staffError } = await supabase
         .from('staff')
-        .select('profile_id')
+        .select('profile_id, payout_schedule, custom_payout_interval')
         .eq('id', staffId)
         .single()
 
@@ -48,6 +54,9 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       }
 
       setProfileId(staffData.profile_id)
+      setCurrentPayoutSchedule(staffData.payout_schedule || 'bi_monthly')
+      setSelectedSchedule(staffData.payout_schedule || 'monthly')
+      setCustomInterval(staffData.custom_payout_interval || 30)
 
       // Get all job_ids already in payout_jobs
       const { data: paidJobIds } = await supabase
@@ -82,6 +91,18 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
 
     setIsCreating(true)
     try {
+      // Update staff payout schedule first
+      const { error: updateError } = await supabase
+        .from('staff')
+        .update({
+          payout_schedule: selectedSchedule,
+          custom_payout_interval: selectedSchedule === 'custom_days' ? customInterval : null,
+          payout_start_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', staffId)
+
+      if (updateError) throw updateError
+
       // Calculate totals
       const grossEarnings = unpaidJobs.reduce((sum, j) => sum + (j.staff_earnings || 0), 0)
       const totalJobs = unpaidJobs.length
@@ -91,7 +112,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       const periodStart = dates[0]
       const periodEnd = dates[dates.length - 1]
 
-      // Create payout record
+      // Create payout record with schedule info
       const { data: payout, error: payoutError } = await supabase
         .from('payouts')
         .insert({
@@ -102,7 +123,8 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
           platform_fee: 0,
           net_amount: grossEarnings, // No platform fee deduction
           total_jobs: totalJobs,
-          status: 'pending',
+          status: 'pending'
+          // Removed payout_round to avoid constraint issues
         })
         .select()
         .single()
@@ -122,11 +144,21 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
 
       if (pjError) throw pjError
 
-      toast.success(`สร้างรอบจ่ายเงินสำเร็จ (${totalJobs} งาน, ฿${grossEarnings.toLocaleString()})`)
+      // Get schedule display name for toast
+      const scheduleNames = {
+        weekly: 'ทุกสัปดาห์ (7 วัน)',
+        bi_weekly: 'ทุก 2 สัปดาห์ (15 วัน)',
+        monthly: 'รายเดือน (30 วัน)',
+        bi_monthly: 'กลางเดือน + สิ้นเดือน',
+        custom_days: `กำหนดเอง (${customInterval} วัน)`
+      }
+
+      toast.success(`อัปเดตรอบการจ่ายเป็น "${scheduleNames[selectedSchedule]}" และสร้างรอบจ่ายเงินสำเร็จ (${totalJobs} งาน, ฿${grossEarnings.toLocaleString()})`)
 
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['staff', staffId, 'payouts'] })
       queryClient.invalidateQueries({ queryKey: ['staff', staffId, 'earnings', 'summary'] })
+      queryClient.invalidateQueries({ queryKey: ['staff', staffId] }) // Refresh staff data
 
       onClose()
     } catch (error: any) {
@@ -146,13 +178,35 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
         <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
-              <Plus className="w-6 h-6 text-green-600" />
+              {currentStep === 'schedule' ? (
+                <Settings className="w-6 h-6 text-green-600" />
+              ) : (
+                <Plus className="w-6 h-6 text-green-600" />
+              )}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-stone-900">สร้างรอบจ่ายเงิน</h2>
+              <h2 className="text-xl font-semibold text-stone-900">
+                {currentStep === 'schedule' ? 'กำหนดรอบการจ่ายเงิน' : 'สร้างรอบจ่ายเงิน'}
+              </h2>
               <p className="text-sm text-stone-600 mt-1">{staffName}</p>
             </div>
           </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mr-8">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+              currentStep === 'schedule' ? 'bg-green-600 text-white' : 'bg-green-200 text-green-800'
+            }`}>
+              1
+            </div>
+            <div className="w-8 h-px bg-stone-300"></div>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+              currentStep === 'jobs' ? 'bg-green-600 text-white' : 'bg-stone-200 text-stone-500'
+            }`}>
+              2
+            </div>
+          </div>
+
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/50 rounded-lg transition"
@@ -169,6 +223,64 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
               <Loader2 className="w-8 h-8 text-stone-400 animate-spin" />
               <span className="ml-3 text-stone-500">กำลังโหลดข้อมูล...</span>
             </div>
+          ) : currentStep === 'schedule' ? (
+            <div className="space-y-6">
+              {/* Current Schedule Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-blue-600 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-stone-900 mb-1">รอบการจ่ายปัจจุบัน</h3>
+                    <p className="text-sm text-stone-600">
+                      {currentPayoutSchedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
+                      {currentPayoutSchedule === 'bi_weekly' && 'ทุก 2 สัปดาห์ (15 วัน)'}
+                      {currentPayoutSchedule === 'monthly' && 'รายเดือน (30 วัน)'}
+                      {currentPayoutSchedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
+                      {currentPayoutSchedule === 'custom_days' && `กำหนดเอง (${customInterval} วัน)`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule Selector */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-stone-900">เลือกรอบการจ่ายเงินใหม่</h3>
+
+                {/* Current Selection Indicator */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-green-800">
+                      ตอนนี้ตั้งค่าเลือก:
+                      {selectedSchedule === 'weekly' && ' 7 วัน (ทุกสัปดาห์)'}
+                      {selectedSchedule === 'bi_weekly' && ' 15 วัน (ทุก 2 สัปดาห์)'}
+                      {selectedSchedule === 'monthly' && ' 30 วัน (รายเดือน)'}
+                      {selectedSchedule === 'bi_monthly' && ' กลางเดือน + สิ้นเดือน'}
+                      {selectedSchedule === 'custom_days' && ` ${customInterval} วัน (กำหนดเอง)`}
+                    </span>
+                  </div>
+                </div>
+
+                <PayoutScheduleSelector
+                  value={selectedSchedule}
+                  customInterval={customInterval}
+                  onScheduleChange={setSelectedSchedule}
+                  onCustomIntervalChange={setCustomInterval}
+                  showNextPayoutPreview={true}
+                />
+              </div>
+
+              {/* Info */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <p>
+                    การเปลี่ยนแปลงรอบการจ่ายเงินจะมีผลตั้งแต่การสร้างรอบนี้เป็นต้นไป
+                    ระบบจะคำนวณวันจ่ายครั้งถัดไปอัตโนมัติ
+                  </p>
+                </div>
+              </div>
+            </div>
           ) : unpaidJobs.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -177,6 +289,29 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Schedule Summary */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <Settings className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-900 mb-1">รอบการจ่ายที่เลือกแล้ว</h3>
+                    <p className="text-sm text-green-700 font-medium">
+                      • {selectedSchedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
+                      • {selectedSchedule === 'bi_weekly' && 'ทุก 2 สัปดาห์ (15 วัน)'}
+                      • {selectedSchedule === 'monthly' && 'รายเดือน (30 วัน)'}
+                      • {selectedSchedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
+                      • {selectedSchedule === 'custom_days' && `กำหนดเอง (${customInterval} วัน)`}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      ระบบจะอัปเดตรอบการจ่ายนี้ให้พนักงานคนนี้
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Summary */}
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex items-start gap-3">
@@ -212,9 +347,9 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
               {/* Jobs List */}
               <div>
                 <h4 className="text-sm font-semibold text-stone-700 mb-2">รายการงานที่รวมในรอบนี้ ({unpaidJobs.length} งาน)</h4>
-                <div className="border border-stone-200 rounded-xl overflow-hidden">
+                <div className="border border-stone-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-stone-50">
+                    <thead className="bg-stone-50 sticky top-0">
                       <tr>
                         <th className="py-2 px-3 text-left text-stone-600 font-medium">วันที่</th>
                         <th className="py-2 px-3 text-left text-stone-600 font-medium">บริการ</th>
@@ -237,15 +372,13 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot>
-                      <tr className="bg-green-50 border-t-2 border-green-300">
-                        <td colSpan={2} className="py-2 px-3 font-semibold text-stone-900 text-right">รวม</td>
-                        <td className="py-2 px-3 text-right font-bold text-green-700">
-                          ฿{totalEarnings.toLocaleString()}
-                        </td>
-                      </tr>
-                    </tfoot>
                   </table>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-b-xl p-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-stone-900">ยอดรวมทั้งหมด:</span>
+                    <span className="font-bold text-xl text-green-700">฿{totalEarnings.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
 
@@ -254,7 +387,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                 <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">
                   <p>
-                    ระบบจะสร้างรอบจ่ายเงินสถานะ "รอดำเนินการ"
+                    ระบบจะอัปเดตรอบการจ่ายเงินของพนักงานและสร้างรอบจ่ายเงินสถานะ "รอดำเนินการ"
                     จากนั้นสามารถกดปุ่ม "ดำเนินการจ่ายเงิน" เพื่อบันทึกการโอนเงินจริง
                   </p>
                 </div>
@@ -264,7 +397,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50 flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 p-6 border-t border-stone-200 bg-stone-50 flex-shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
@@ -272,25 +405,54 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
           >
             ยกเลิก
           </button>
-          {unpaidJobs.length > 0 && (
-            <button
-              onClick={handleCreatePayout}
-              disabled={isCreating}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  กำลังสร้าง...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  สร้างรอบจ่ายเงิน ({unpaidJobs.length} งาน)
-                </>
-              )}
-            </button>
-          )}
+
+          <div className="flex items-center gap-3">
+            {currentStep === 'jobs' && (
+              <button
+                onClick={() => setCurrentStep('schedule')}
+                className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
+                disabled={isCreating}
+              >
+                ย้อนกลับ
+              </button>
+            )}
+
+            {currentStep === 'schedule' ? (
+              <button
+                onClick={() => setCurrentStep('jobs')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <Calendar className="w-4 h-4" />
+                ถัดไป: ดูรายการงาน
+              </button>
+            ) : unpaidJobs.length > 0 ? (
+              <button
+                onClick={handleCreatePayout}
+                disabled={isCreating}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    กำลังสร้าง...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    สร้างรอบจ่ายเงิน ({unpaidJobs.length} งาน)
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition"
+              >
+                ปิด
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
