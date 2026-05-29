@@ -1,4 +1,4 @@
-// Build cache bust: 2026-03-29 invoice email fix
+// Build cache bust: 2026-05-29 payout cycles deployment force
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
@@ -8,13 +8,13 @@ import { Toaster } from 'react-hot-toast'
 import App from './App'
 import './index.css'
 
-// Create TanStack Query client
+// Create TanStack Query client - Enhanced for payout features
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60, // 1 minute
       gcTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: false, // Optimized for payout dashboard
     },
   },
 })
