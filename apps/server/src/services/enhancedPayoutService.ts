@@ -483,7 +483,8 @@ export async function notifyUpcomingPayouts(daysBefore: number = 1): Promise<voi
   }
 
   for (const staff of staffToNotify) {
-    if (staff.profiles?.line_user_id) {
+    const profile = staff.profiles as any
+    if (profile?.line_user_id) {
       // TODO: Integrate with LINE notification service
       console.log(`🔔 [Enhanced Payout] Would notify ${staff.name_th} about upcoming payout`)
     }

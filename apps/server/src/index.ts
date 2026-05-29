@@ -27,9 +27,11 @@ import bookingsRoutes from './routes/bookings.js'
 import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
 import receiptsRoutes from './routes/receipts.js'
 import invoicesRoutes from './routes/invoices.js'
+import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles.js'
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService.js'
 import { reminderService } from './services/reminderService.js'
 import { processPayoutCutoff } from './services/payoutService.js'
+import { processEnhancedPayoutCron } from './services/enhancedPayoutService.js'
 import { getSupabaseClient } from './lib/supabase.js'
 // Skip shared package imports for Vercel compatibility
 // import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
@@ -62,7 +64,8 @@ const corsOptions = {
     'http://localhost:3002', // Customer local
     'http://localhost:3003', // Hotel local
     'http://localhost:3004', // Staff local
-    'http://localhost:3008', // Customer app dev port
+    'http://localhost:3005', // Customer app dev port (current)
+    'http://localhost:3008', // Customer app dev port (legacy)
     'https://admin.theblissmassageathome.com', // Admin production
     'https://customer.theblissmassageathome.com', // Customer production
     'https://hotel.theblissmassageathome.com', // Hotel production
@@ -143,6 +146,10 @@ app.use('/api/receipts', receiptsRoutes)
 
 // Invoice email routes
 app.use('/api/invoices', invoicesRoutes)
+
+// Migration routes (temporary for payout cycles)
+app.use('/api/migrate', migratePayoutCyclesRoutes)
+
 
 // Dev-only endpoint to trigger credit reminders manually
 if (process.env.NODE_ENV !== 'production') {
@@ -569,12 +576,22 @@ cron.schedule('0 1 * * *', async () => {
   }
 })
 
+// Enhanced payout processing for new schedule types (daily at 8:30 AM Thailand time = 01:30 UTC)
+cron.schedule('30 1 * * *', async () => {
+  // 01:30 UTC = 08:30 ICT (Thailand) - runs 30 minutes after traditional payout cutoff
+  try {
+    await processEnhancedPayoutCron()
+  } catch (err) {
+    console.error('[Cron] Error processing enhanced payouts:', err)
+  }
+})
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT), Points expiry (daily 1AM ICT), Payout cutoff (daily 8AM ICT)`)
+  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT), Points expiry (daily 1AM ICT), Payout cutoff (daily 8AM ICT), Enhanced payouts (daily 8:30AM ICT)`)
 })
 
 export default app
