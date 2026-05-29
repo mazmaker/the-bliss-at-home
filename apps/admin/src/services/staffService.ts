@@ -588,4 +588,51 @@ export const staffService = {
       isExpired: false,
     }
   },
+
+  // Update staff payout schedule
+  async updatePayoutSchedule(request: {
+    staffId: string
+    payoutSchedule: string
+    customPayoutInterval?: number
+    payoutStartDate?: string
+  }) {
+    try {
+      const updates: any = {
+        payout_schedule: request.payoutSchedule,
+        payout_start_date: request.payoutStartDate || new Date().toISOString().split('T')[0]
+      }
+
+      if (request.customPayoutInterval) {
+        updates.custom_payout_interval = request.customPayoutInterval
+      }
+
+      const { data, error } = await supabase
+        .from('staff')
+        .update(updates)
+        .eq('id', request.staffId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Payout schedule update error:', error)
+        return {
+          success: false,
+          message: `ไม่สามารถอัปเดตรอบการจ่ายเงินได้: ${error.message}`
+        }
+      }
+
+      return {
+        success: true,
+        message: 'อัปเดตรอบการจ่ายเงินสำเร็จ',
+        staff: data,
+        nextPayoutDate: data.next_payout_date
+      }
+    } catch (error: any) {
+      console.error('Payout schedule update error:', error)
+      return {
+        success: false,
+        message: `เกิดข้อผิดพลาด: ${error.message || 'ไม่สามารถอัปเดตได้'}`
+      }
+    }
+  },
 }
