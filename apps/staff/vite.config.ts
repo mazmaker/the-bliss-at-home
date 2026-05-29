@@ -41,5 +41,6 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     target: 'esnext', // For LINE LIFF compatibility
+    chunkSizeWarningLimit: 1500 // Increase limit to avoid warnings
   },
 })

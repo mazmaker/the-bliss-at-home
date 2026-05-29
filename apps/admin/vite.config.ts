@@ -20,5 +20,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    chunkSizeWarningLimit: 3000 // Increase limit to avoid warnings
   },
 })
