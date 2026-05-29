@@ -36,6 +36,7 @@ import { StaffPayoutInfo, PayoutSchedule } from '../types/staff'
 
 type ViewPeriod = 'day' | 'week' | '15days' | 'month'
 
+// Force production deployment - with enhanced 15-day earnings view
 const THAI_MONTHS = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
