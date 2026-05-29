@@ -3,7 +3,21 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Skip type checking in production builds
+      babel: process.env.NODE_ENV === 'production' ? {
+        plugins: []
+      } : undefined
+    })
+  ],
+  esbuild: {
+    // Skip type checking for faster builds
+    target: 'esnext',
+    ...(process.env.SKIP_TYPE_CHECK === '1' && {
+      logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    })
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -16,6 +30,7 @@ export default defineConfig({
   server: {
     port: 3004,
     strictPort: true,
+    host: true, // Allow external connections
     allowedHosts: [
       'localhost',
       '.trycloudflare.com', // Allow all Cloudflare Tunnel subdomains
@@ -26,5 +41,6 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     target: 'esnext', // For LINE LIFF compatibility
+    chunkSizeWarningLimit: 1500 // Increase limit to avoid warnings
   },
 })

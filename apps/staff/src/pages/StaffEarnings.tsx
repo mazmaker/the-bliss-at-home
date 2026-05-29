@@ -28,9 +28,13 @@ import {
   type Payout,
   type PayoutStatus,
 } from '@bliss/supabase'
+import { supabase } from '@bliss/supabase/auth'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
+import PayoutScheduleCard from '../components/PayoutScheduleCard'
+import PayoutCountdown from '../components/PayoutCountdown'
+import { StaffPayoutInfo, PayoutSchedule } from '../types/staff'
 
-type ViewPeriod = 'day' | 'week' | 'month'
+type ViewPeriod = 'day' | 'week' | '15days' | 'month'
 
 const THAI_MONTHS = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -42,6 +46,50 @@ function StaffEarnings() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [copiedRef, setCopiedRef] = useState<string | null>(null)
   const [showPayoutDetail, setShowPayoutDetail] = useState<Payout | null>(null)
+  const [payoutJobs, setPayoutJobs] = useState<any[]>([])
+  const [payoutInfo, setPayoutInfo] = useState<StaffPayoutInfo | null>(null)
+  const [showPayoutSchedule, setShowPayoutSchedule] = useState(true)
+
+  // Fetch staff payout information
+  useEffect(() => {
+    const fetchPayoutInfo = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession()
+        if (!session.session?.user) return
+
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('payout_schedule, custom_payout_interval, next_payout_date, last_payout_processed_at, payout_start_date')
+          .eq('profile_id', session.session.user.id)
+          .single()
+
+        if (staffData) {
+          setPayoutInfo({
+            payout_schedule: staffData.payout_schedule || 'bi_monthly',
+            custom_payout_interval: staffData.custom_payout_interval,
+            next_payout_date: staffData.next_payout_date,
+            last_payout_processed_at: staffData.last_payout_processed_at,
+            payout_start_date: staffData.payout_start_date
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching payout info:', error)
+      }
+    }
+
+    fetchPayoutInfo()
+  }, [])
+
+  // Fetch payout jobs when detail modal opens
+  useEffect(() => {
+    if (!showPayoutDetail) { setPayoutJobs([]); return }
+    supabase
+      .from('payout_jobs')
+      .select('id, amount, job_id, job:jobs(service_name, staff_earnings, total_staff_earnings, scheduled_date)')
+      .eq('payout_id', showPayoutDetail.id)
+      .then(({ data }) => setPayoutJobs(data || []))
+      .catch(() => setPayoutJobs([]))
+  }, [showPayoutDetail])
 
   // Calculate date range based on view period
   const dateRange = useMemo(() => {
@@ -58,6 +106,11 @@ function StaffEarnings() {
       start.setDate(start.getDate() - dayOfWeek)
       start.setHours(0, 0, 0, 0)
       end.setDate(start.getDate() + 6)
+      end.setHours(23, 59, 59, 999)
+    } else if (viewPeriod === '15days') {
+      // Last 15 days from current date
+      start.setDate(start.getDate() - 14)
+      start.setHours(0, 0, 0, 0)
       end.setHours(23, 59, 59, 999)
     } else {
       // This month
@@ -102,6 +155,7 @@ function StaffEarnings() {
     const newDate = new Date(currentDate)
     if (viewPeriod === 'day') newDate.setDate(newDate.getDate() - 1)
     else if (viewPeriod === 'week') newDate.setDate(newDate.getDate() - 7)
+    else if (viewPeriod === '15days') newDate.setDate(newDate.getDate() - 15)
     else newDate.setMonth(newDate.getMonth() - 1)
     setCurrentDate(newDate)
   }
@@ -110,6 +164,7 @@ function StaffEarnings() {
     const newDate = new Date(currentDate)
     if (viewPeriod === 'day') newDate.setDate(newDate.getDate() + 1)
     else if (viewPeriod === 'week') newDate.setDate(newDate.getDate() + 7)
+    else if (viewPeriod === '15days') newDate.setDate(newDate.getDate() + 15)
     else newDate.setMonth(newDate.getMonth() + 1)
     setCurrentDate(newDate)
   }
@@ -117,25 +172,46 @@ function StaffEarnings() {
   // Format period label
   const getPeriodLabel = () => {
     if (viewPeriod === 'day') {
-      return `${currentDate.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear() + 543}`
+      return `${currentDate.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
     } else if (viewPeriod === 'week') {
       const weekStart = new Date(currentDate)
       weekStart.setDate(weekStart.getDate() - weekStart.getDay())
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
-      return `${weekStart.getDate()} - ${weekEnd.getDate()} ${THAI_MONTHS[currentDate.getMonth()]}`
+      return `${weekStart.getDate()} - ${weekEnd.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+    } else if (viewPeriod === '15days') {
+      const rangeStart = new Date(currentDate)
+      rangeStart.setDate(rangeStart.getDate() - 14)
+      const rangeEnd = new Date(currentDate)
+
+      // If same month
+      if (rangeStart.getMonth() === rangeEnd.getMonth()) {
+        return `${rangeStart.getDate()} - ${rangeEnd.getDate()} ${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+      } else {
+        // Different months
+        return `${rangeStart.getDate()} ${THAI_MONTHS[rangeStart.getMonth()]} - ${rangeEnd.getDate()} ${THAI_MONTHS[rangeEnd.getMonth()]} ${currentDate.getFullYear()}`
+      }
     } else {
-      return `${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear() + 543}`
+      return `${THAI_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
     }
   }
 
-  // Get earnings for current period — aggregate from dailyEarnings which respects selected date range
+  // Prepare chart data based on view period — show all days, not just 14
+  const chartData = useMemo(() => {
+    if (viewPeriod === 'day') return dailyEarnings.slice(0, 1).reverse()
+    if (viewPeriod === 'week') return dailyEarnings.slice(0, 7).reverse()
+    if (viewPeriod === '15days') return dailyEarnings.slice(0, 15).reverse()
+    return [...dailyEarnings].reverse() // month: show all days
+  }, [dailyEarnings, viewPeriod])
+
+  // Get earnings for current period — aggregate from CHART DATA (not all dailyEarnings)
+  // This ensures Summary Card matches exactly what's shown in the chart
   const periodEarnings = useMemo(() => {
-    const earnings = dailyEarnings.reduce((sum, d) => sum + d.earnings, 0)
-    const jobs = dailyEarnings.reduce((sum, d) => sum + d.jobs, 0)
-    const hours = dailyEarnings.reduce((sum, d) => sum + d.hours, 0)
+    const earnings = chartData.reduce((sum, d) => sum + d.earnings, 0)
+    const jobs = chartData.reduce((sum, d) => sum + d.jobs, 0)
+    const hours = chartData.reduce((sum, d) => sum + d.hours, 0)
     return { earnings, jobs, hours }
-  }, [dailyEarnings])
+  }, [chartData])
 
   // Get payout status badge
   const getPayoutStatusBadge = (status: PayoutStatus) => {
@@ -164,13 +240,6 @@ function StaffEarnings() {
     setCopiedRef(ref)
     setTimeout(() => setCopiedRef(null), 2000)
   }
-
-  // Prepare chart data based on view period — show all days, not just 14
-  const chartData = useMemo(() => {
-    if (viewPeriod === 'day') return dailyEarnings.slice(0, 1).reverse()
-    if (viewPeriod === 'week') return dailyEarnings.slice(0, 7).reverse()
-    return [...dailyEarnings].reverse() // month: show all days
-  }, [dailyEarnings, viewPeriod])
 
   // Calculate max earnings for chart
   const maxDailyEarning = Math.max(...chartData.map((d) => d.earnings), 1)
@@ -204,9 +273,10 @@ function StaffEarnings() {
       {/* Period Selector */}
       <div className="flex gap-2 bg-white p-1 rounded-xl shadow-sm">
         {[
-          { key: 'day', label: 'วัน' },
-          { key: 'week', label: 'สัปดาห์' },
-          { key: 'month', label: 'เดือน' },
+          { key: 'day', label: '1 วัน' },
+          { key: 'week', label: '7 วัน' },
+          { key: '15days', label: '15 วัน' },
+          { key: 'month', label: '1 เดือน' },
         ].map((period) => (
           <button
             key={period.key}
@@ -239,11 +309,16 @@ function StaffEarnings() {
       <div className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-4 text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-sm opacity-90">รายได้{viewPeriod === 'day' ? 'วันนี้' : viewPeriod === 'week' ? 'สัปดาห์นี้' : 'เดือนนี้'}</p>
+            <p className="text-sm opacity-90">รายได้{
+              viewPeriod === 'day' ? 'วันนี้' :
+              viewPeriod === 'week' ? '7 วันนี้' :
+              viewPeriod === '15days' ? '15 วันนี้' :
+              'เดือนนี้'
+            }</p>
             <p className="text-3xl font-bold">฿{periodEarnings.earnings.toLocaleString()}</p>
           </div>
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
+            <span className="text-2xl font-bold">฿</span>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
@@ -268,47 +343,98 @@ function StaffEarnings() {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Pending Payout */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-stone-500">รอโอน</span>
-            </div>
-          </div>
-          <p className="text-xl font-bold text-amber-600 mt-1">
-            ฿{(summary?.pending_payout || 0).toLocaleString()}
-          </p>
-        </div>
-      </div>
 
       {/* Daily Earnings Chart */}
       {chartData.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-4">
-          <h3 className="font-semibold text-stone-900 mb-4">รายได้รายวัน</h3>
-          <div className="flex justify-between gap-0.5 h-32">
-            {chartData.map((day) => {
-              const dayDate = new Date(day.date)
-              return (
-                <div key={day.date} className="flex-1 flex flex-col items-center">
-                  <div className="flex-1 w-full flex items-end">
-                    <div
-                      className={`w-full rounded-t-lg transition-all ${
-                        day.earnings > 0
-                          ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
-                          : 'bg-stone-200'
-                      }`}
-                      style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
-                      title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
-                    />
-                  </div>
-                  <span className="text-[10px] text-stone-500 mt-1">{dayDate.getDate()}</span>
+          {viewPeriod === 'day' ? (
+            // Enhanced design for Day view only
+            <>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-bold text-amber-700">฿</span>
                 </div>
-              )
-            })}
-          </div>
+                <h3 className="font-semibold text-stone-900">รายได้รายวัน</h3>
+              </div>
+
+              <div className="flex justify-center">
+                {chartData.map((day) => {
+                  const dayDate = new Date(day.date)
+                  const isToday = day.date === new Date().toISOString().split('T')[0]
+                  const hasEarnings = day.earnings > 0
+
+                  return (
+                    <div key={day.date} className="flex flex-col items-center group px-4">
+                      <div className="h-40 flex items-end mb-2 relative">
+                        {/* Earnings amount on top */}
+                        {hasEarnings && (
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                            <span className="text-sm font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-lg whitespace-nowrap shadow-sm">
+                              ฿{day.earnings.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Bar */}
+                        <div
+                          className={`w-16 rounded-lg shadow-lg transition-all ${
+                            hasEarnings
+                              ? isToday
+                                ? 'bg-gradient-to-t from-green-600 to-green-500'
+                                : 'bg-gradient-to-t from-amber-600 to-amber-500'
+                              : 'bg-gradient-to-t from-stone-200 to-stone-100'
+                          }`}
+                          style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 160, hasEarnings ? 12 : 8)}px` }}
+                        />
+                      </div>
+
+                      {/* Date label */}
+                      <div className="text-center">
+                        <span className={`text-sm font-bold ${
+                          isToday
+                            ? 'text-green-700 bg-green-100 px-3 py-1 rounded-full'
+                            : hasEarnings
+                              ? 'text-amber-700'
+                              : 'text-stone-400'
+                        }`}>
+                          {dayDate.getDate()}
+                        </span>
+                        {isToday && (
+                          <div className="text-xs text-green-600 font-medium mt-1">วันนี้</div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            // Original simple design for Week/Month views
+            <>
+              <h3 className="font-semibold text-stone-900 mb-4">รายได้รายวัน</h3>
+              <div className="flex justify-between gap-0.5 h-32">
+                {chartData.map((day) => {
+                  const dayDate = new Date(day.date)
+                  return (
+                    <div key={day.date} className="flex-1 flex flex-col items-center">
+                      <div className="flex-1 w-full flex items-end">
+                        <div
+                          className={`w-full rounded-t-lg transition-all ${
+                            day.earnings > 0
+                              ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
+                              : 'bg-stone-200'
+                          }`}
+                          style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
+                          title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500 mt-1">{dayDate.getDate()}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -338,6 +464,43 @@ function StaffEarnings() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Payout Schedule Section */}
+      {payoutInfo && showPayoutSchedule && (
+        <div className="space-y-3">
+          {/* Payout Countdown - compact version */}
+          <PayoutCountdown
+            nextPayoutDate={payoutInfo.next_payout_date}
+            compact={true}
+            className="mb-2"
+          />
+
+          {/* Payout Schedule Card */}
+          <div className="relative">
+            <PayoutScheduleCard
+              payoutInfo={payoutInfo}
+              showDetails={false}
+            />
+            <button
+              onClick={() => setShowPayoutSchedule(false)}
+              className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show Payout Schedule Button (when hidden) */}
+      {payoutInfo && !showPayoutSchedule && (
+        <button
+          onClick={() => setShowPayoutSchedule(true)}
+          className="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+        >
+          <Calendar className="w-4 h-4" />
+          ดูรอบการจ่ายเงิน
+        </button>
       )}
 
       {/* Payout History */}
@@ -385,18 +548,20 @@ function StaffEarnings() {
                   </div>
                   <div>
                     <p className="font-medium text-stone-900">
-                      {new Date(payout.period_start).toLocaleDateString('th-TH', {
+                      {new Date(payout.period_start).toLocaleDateString('th-TH-u-ca-gregory', {
                         day: 'numeric',
                         month: 'short',
                       })}
                       {' - '}
-                      {new Date(payout.period_end).toLocaleDateString('th-TH', {
+                      {new Date(payout.period_end).toLocaleDateString('th-TH-u-ca-gregory', {
                         day: 'numeric',
                         month: 'short',
                       })}
                     </p>
                     <p className="text-xs text-stone-500">
                       {payout.total_jobs} งาน
+                      {(payout as any).payout_round === 'mid-month' && ' • งวดแรก'}
+                      {(payout as any).payout_round === 'end-month' && ' • งวดหลัง'}
                       {payout.transfer_reference && ` • ${payout.transfer_reference}`}
                     </p>
                   </div>
@@ -432,8 +597,8 @@ function StaffEarnings() {
 
       {/* Payout Detail Modal */}
       {showPayoutDetail && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPayoutDetail(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-20" onClick={() => setShowPayoutDetail(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] overflow-hidden shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
               <h3 className="font-semibold text-lg text-stone-900">รายละเอียดการโอนเงิน</h3>
               <button
@@ -451,15 +616,33 @@ function StaffEarnings() {
                 {getPayoutStatusBadge(showPayoutDetail.status)}
               </div>
 
+              {/* Round label */}
+              {(showPayoutDetail as any).payout_round && (
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500">รอบ</span>
+                  <span className="font-medium">
+                    {(showPayoutDetail as any).payout_round === 'mid-month' ? 'งวดแรก (วันที่ 16)' : 'งวดหลัง (วันที่ 1)'}
+                  </span>
+                </div>
+              )}
+
               {/* Period */}
               <div className="flex items-center justify-between">
                 <span className="text-stone-500">ช่วงเวลา</span>
                 <span className="font-medium">
-                  {new Date(showPayoutDetail.period_start).toLocaleDateString('th-TH')}
+                  {new Date(showPayoutDetail.period_start).toLocaleDateString('th-TH-u-ca-gregory')}
                   {' - '}
-                  {new Date(showPayoutDetail.period_end).toLocaleDateString('th-TH')}
+                  {new Date(showPayoutDetail.period_end).toLocaleDateString('th-TH-u-ca-gregory')}
                 </span>
               </div>
+
+              {/* Carry forward info */}
+              {(showPayoutDetail as any).is_carry_forward && Number((showPayoutDetail as any).carry_forward_amount) > 0 && (
+                <div className="flex items-center justify-between text-orange-600">
+                  <span>ยอดยกมาจากรอบก่อน</span>
+                  <span className="font-medium">฿{Number((showPayoutDetail as any).carry_forward_amount).toLocaleString()}</span>
+                </div>
+              )}
 
               {/* Earnings breakdown */}
               <div className="bg-stone-50 rounded-xl p-4 space-y-2">
@@ -498,7 +681,7 @@ function StaffEarnings() {
                 <div className="flex items-center justify-between">
                   <span className="text-stone-500">วันที่โอน</span>
                   <span className="font-medium">
-                    {new Date(showPayoutDetail.transferred_at).toLocaleDateString('th-TH', {
+                    {new Date(showPayoutDetail.transferred_at).toLocaleDateString('th-TH-u-ca-gregory', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -518,6 +701,23 @@ function StaffEarnings() {
                     alt="Transfer Slip"
                     className="w-full rounded-xl border border-stone-200"
                   />
+                </div>
+              )}
+
+              {/* Payout Jobs */}
+              {payoutJobs.length > 0 && (
+                <div>
+                  <p className="text-stone-500 mb-2">งานในรอบนี้ ({payoutJobs.length} งาน)</p>
+                  <div className="space-y-1.5">
+                    {payoutJobs.map((pj: any) => (
+                      <div key={pj.id} className="flex justify-between text-sm bg-stone-50 px-3 py-2 rounded-lg">
+                        <span className="text-stone-700">{pj.job?.service_name || 'งาน'}</span>
+                        <span className="font-medium text-stone-900">
+                          ฿{(pj.job?.total_staff_earnings || pj.job?.staff_earnings || pj.amount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

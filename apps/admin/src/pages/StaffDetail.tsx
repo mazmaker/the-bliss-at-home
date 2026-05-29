@@ -29,9 +29,10 @@ import {
   ThumbsDown,
   Trash2,
   Plus,
+  Settings,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { type BankAccount, THAI_BANKS } from '@bliss/supabase'
+import { type BankAccount, THAI_BANKS, EMERGENCY_CONTACT_RELATIONSHIPS } from '@bliss/supabase'
 import { supabase } from '../lib/supabase'
 import { useStaffDetail } from '../hooks/useStaff'
 import { Staff } from '../services/staffService'
@@ -70,6 +71,9 @@ import { JobDetailModal } from '../components/JobDetailModal'
 import EditStaffModal from '../components/EditStaffModal'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { ReviewsTabContent } from '../components/ReviewsTabContent'
+import PayoutScheduleModal from '../components/PayoutScheduleModal'
+import { UpdatePayoutScheduleRequest } from '../types/staff'
+import { staffService } from '../services/staffService'
 
 type TabType = 'overview' | 'documents' | 'schedule' | 'performance' | 'reviews' | 'earnings'
 
@@ -358,6 +362,40 @@ function OverviewTab({ staff }: { staff: Staff }) {
         </div>
       </div>
 
+      {/* Emergency Contact */}
+      <div>
+        <h3 className="text-lg font-semibold text-stone-900 mb-4">บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)</h3>
+        {(staff as any).emergency_contact_name ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-stone-400 mt-1" />
+              <div>
+                <p className="text-sm text-stone-500">ชื่อ-นามสกุล</p>
+                <p className="font-medium text-stone-900">{(staff as any).emergency_contact_name}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Phone className="w-5 h-5 text-stone-400 mt-1" />
+              <div>
+                <p className="text-sm text-stone-500">เบอร์โทรศัพท์</p>
+                <p className="font-medium text-stone-900">{(staff as any).emergency_contact_phone}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <div>
+                <p className="text-sm text-stone-500">ความสัมพันธ์</p>
+                <p className="font-medium text-stone-900">
+                  {EMERGENCY_CONTACT_RELATIONSHIPS.find((r) => r.value === (staff as any).emergency_contact_relationship)?.label || (staff as any).emergency_contact_relationship || 'ไม่ระบุ'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-stone-400">ยังไม่ได้กรอกข้อมูลบุคคลอ้างอิง</p>
+        )}
+      </div>
+
       {/* Skills */}
       <div>
         <h3 className="text-lg font-semibold text-stone-900 mb-4">ทักษะและบริการ</h3>
@@ -489,6 +527,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
   const getDocumentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       id_card: 'สำเนาบัตรประชาชน',
+      house_registration: 'สำเนาทะเบียนบ้าน',
       license: 'ใบประกอบวิชาชีพ',
       certificate: 'ใบรับรองการอบรม',
       bank_statement: 'สำเนาบัญชีธนาคาร',
@@ -1330,16 +1369,38 @@ function EarningsTab({ staff }: { staff: Staff }) {
   const [showPayoutDetailModal, setShowPayoutDetailModal] = useState(false)
   const [showCalculationModal, setShowCalculationModal] = useState(false)
   const [showCreatePayoutModal, setShowCreatePayoutModal] = useState(false)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showDeleteBankConfirm, setShowDeleteBankConfirm] = useState(false)
   const [showAddBankModal, setShowAddBankModal] = useState(false)
   const [newBankForm, setNewBankForm] = useState({ bank_code: '', account_number: '', account_name: '' })
   const [isAddingBank, setIsAddingBank] = useState(false)
+  const [isUpdatingSchedule, setIsUpdatingSchedule] = useState(false)
   const [selectedPayout, setSelectedPayout] = useState<string | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')
 
   // Fetch real earnings data from API
   const { data: earningsSummary, isLoading: isLoadingSummary } = useStaffEarningsSummary(staff.id)
   const { data: payouts, isLoading: isLoadingPayouts } = useStaffPayouts(staff.id)
+
+  // Handle payout schedule update
+  const handleUpdateSchedule = async (request: UpdatePayoutScheduleRequest) => {
+    setIsUpdatingSchedule(true)
+    try {
+      const response = await staffService.updatePayoutSchedule(request)
+      if (response.success) {
+        toast.success('อัปเดตรอบการจ่ายเงินสำเร็จ!')
+        setShowScheduleModal(false)
+        // Refresh page data
+        window.location.reload()
+      } else {
+        toast.error(response.message || 'เกิดข้อผิดพลาด')
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการอัปเดต')
+    } finally {
+      setIsUpdatingSchedule(false)
+    }
+  }
 
   // Download report as CSV
   const handleDownloadReport = () => {
@@ -1719,6 +1780,44 @@ function EarningsTab({ staff }: { staff: Staff }) {
         </div>
       </div>
 
+      {/* Current Payout Schedule Display */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-blue-900">รอบการจ่ายเงินปัจจุบัน</h4>
+              <p className="text-sm text-blue-700">
+                • {staff.payout_schedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
+                • {staff.payout_schedule === 'bi_weekly' && 'ทุก 2 สัปดาห์ (15 วัน)'}
+                • {staff.payout_schedule === 'monthly' && 'รายเดือน (30 วัน)'}
+                • {staff.payout_schedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
+                • {staff.payout_schedule === 'custom_days' && `กำหนดเอง (${staff.custom_payout_interval || 30} วัน)`}
+                • {!staff.payout_schedule && 'กลางเดือน + สิ้นเดือน (ค่าเริ่มต้น)'}
+              </p>
+              {staff.next_payout_date && (
+                <p className="text-xs text-blue-600 mt-1">
+                  จ่ายครั้งถัดไป: {new Date(staff.next_payout_date).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowScheduleModal(true)}
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1"
+          >
+            <Settings className="w-4 h-4" />
+            แก้ไขรอบจ่าย
+          </button>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
         <div className="flex items-start gap-4">
@@ -1728,7 +1827,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-stone-900 mb-2">การจัดการการจ่ายเงิน</h3>
             <p className="text-sm text-stone-600 mb-4">
-              ระบบจะคำนวณรายได้และจ่ายเงินให้พนักงานตามรอบที่กำหนด (รายสัปดาห์/รายเดือน)
+              กดปุ่มด้านล่างเพื่อสร้างรอบจ่ายเงินใหม่ หรือจัดการรายการที่มีอยู่
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -1800,6 +1899,17 @@ function EarningsTab({ staff }: { staff: Staff }) {
           staffId={staff.id}
           staffName={staff.name_th || staff.name_en || ''}
           onClose={() => setShowCreatePayoutModal(false)}
+        />
+      )}
+
+      {/* Edit Payout Schedule Modal */}
+      {showScheduleModal && (
+        <PayoutScheduleModal
+          isOpen={showScheduleModal}
+          onClose={() => setShowScheduleModal(false)}
+          staff={staff}
+          onUpdateSchedule={handleUpdateSchedule}
+          isLoading={isUpdatingSchedule}
         />
       )}
 
