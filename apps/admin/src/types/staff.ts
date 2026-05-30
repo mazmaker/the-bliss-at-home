@@ -90,7 +90,7 @@ export const PAYOUT_SCHEDULE_OPTIONS: PayoutScheduleOption[] = [
   {
     value: 'bi_monthly',
     label: 'กลางเดือน + สิ้นเดือน',
-    description: 'จ่ายเงิน 2 ครั้งต่อเดือน วันที่ 15 และ 1 (ระบบปัจจุบัน)',
+    description: 'จ่ายเงิน 2 ครั้งต่อเดือน วันที่ 15 และ 1',
     icon: '•',
     isDefault: true
   },
