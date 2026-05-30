@@ -82,7 +82,7 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
                     <h3 className="text-sm font-medium text-gray-900">
                       {option.label}
                     </h3>
-                    {option.isDefault && (
+                    {value === option.value && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                         ปัจจุบัน
                       </span>
