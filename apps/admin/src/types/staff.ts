@@ -44,7 +44,7 @@ export type PayoutSchedule =
   | 'weekly'        // 7 วัน
   | 'bi_weekly'     // 15 วัน
   | 'monthly'       // 30 วัน
-  | 'bi_monthly'    // กลาง+สิ้นเดือน (เดิม)
+  | 'bi_monthly'    // กลาง+สิ้นเดือน
   | 'custom_days'   // กำหนดเอง
 
 // Staff status enum
@@ -90,7 +90,7 @@ export const PAYOUT_SCHEDULE_OPTIONS: PayoutScheduleOption[] = [
   {
     value: 'bi_monthly',
     label: 'กลางเดือน + สิ้นเดือน',
-    description: 'จ่ายเงิน 2 ครั้งต่อเดือน วันที่ 15 และ 1 (ระบบเดิม)',
+    description: 'จ่ายเงิน 2 ครั้งต่อเดือน วันที่ 15 และ 1 (ระบบปัจจุบัน)',
     icon: '•',
     isDefault: true
   },
