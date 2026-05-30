@@ -32,6 +32,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { useQueryClient } from '@tanstack/react-query'
 import { type BankAccount, THAI_BANKS } from '@bliss/supabase'
 
 // Emergency contact relationship options
@@ -93,6 +94,7 @@ function StaffDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const adminAuth = useAdminAuth()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -1402,8 +1404,10 @@ function EarningsTab({ staff }: { staff: Staff }) {
       if (response.success) {
         toast.success('อัปเดตรอบการจ่ายเงินสำเร็จ!')
         setShowScheduleModal(false)
-        // Refresh page data
-        window.location.reload()
+        // Refresh related queries
+        await queryClient.invalidateQueries({ queryKey: ['staff', id] })
+        await queryClient.invalidateQueries({ queryKey: ['staff-earnings'] })
+        await queryClient.invalidateQueries({ queryKey: ['staff-payouts'] })
       } else {
         toast.error(response.message || 'เกิดข้อผิดพลาด')
       }

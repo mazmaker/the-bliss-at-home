@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { Wallet, Users, Banknote, ArrowUpRight, Filter, Download, Check, X, Loader2, Clock, AlertCircle } from 'lucide-react'
@@ -416,13 +416,28 @@ export default function PayoutDashboard() {
 
   const selectedPayouts = payouts.filter(p => selectedIds.has(p.id))
 
-  // Current payout round info
-  const now = new Date()
-  const day = now.getDate()
-  let currentRoundText = ''
-  if (day <= 10) currentRoundText = `งวดแรก (ตัดรอบ 10, จ่าย 16)`
-  else if (day <= 25) currentRoundText = `งวดหลัง (ตัดรอบ 25, จ่าย 1 เดือนถัดไป)`
-  else currentRoundText = `งวดแรกเดือนถัดไป (ตัดรอบ 10, จ่าย 16)`
+  // Enhanced payout schedule summary
+  const payoutScheduleSummary = useMemo(() => {
+    const scheduleGroups = payouts.reduce((acc: Record<string, number>, payout) => {
+      const schedule = payout.payout_schedule || 'bi_monthly'
+      acc[schedule] = (acc[schedule] || 0) + 1
+      return acc
+    }, {})
+
+    const scheduleLabels = {
+      'weekly': '7 วัน',
+      'bi_weekly': '15 วัน',
+      'monthly': '30 วัน',
+      'bi_monthly': 'กลาง+สิ้นเดือน',
+      'custom_days': 'กำหนดเอง'
+    }
+
+    const summary = Object.entries(scheduleGroups)
+      .map(([schedule, count]) => `${scheduleLabels[schedule as keyof typeof scheduleLabels] || schedule}: ${count} คน`)
+      .join(' | ')
+
+    return summary || 'ระบบการจ่ายแบบใหม่: รองรับรอบการจ่ายหลากหลาย'
+  }, [payouts])
 
   return (
     <div className="space-y-6">
@@ -477,11 +492,11 @@ export default function PayoutDashboard() {
         </div>
       )}
 
-      {/* Current Round Info */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-2">
-        <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-        <span className="text-sm text-amber-800">
-          <span className="font-medium">รอบปัจจุบัน:</span> {currentRoundText}
+      {/* Enhanced Payout Schedule Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-2">
+        <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
+        <span className="text-sm text-blue-800">
+          <span className="font-medium">ระบบรอบการจ่าย:</span> {payoutScheduleSummary}
         </span>
       </div>
 
