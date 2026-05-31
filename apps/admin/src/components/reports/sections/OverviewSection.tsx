@@ -196,7 +196,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <button
             onClick={() => setShowExportDropdown(!showExportDropdown)}
             disabled={isExporting || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Download className="w-5 h-5" />
             {isExporting ? 'กำลังส่งออก...' : 'ส่งออกรายงาน'}

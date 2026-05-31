@@ -3,6 +3,7 @@ import { TrendingUp } from 'lucide-react'
 import ReportsSidebar, { type ReportSection } from '../components/reports/ReportsSidebar'
 import OverviewSection from '../components/reports/sections/OverviewSection'
 import SalesSection from '../components/reports/sections/SalesSection'
+import CustomerSection from '../components/reports/sections/CustomerSection'
 import HotelSection from '../components/reports/sections/HotelSection'
 import StaffSection from '../components/reports/sections/StaffSection'
 import ServicesSection from '../components/reports/sections/ServicesSection'
@@ -37,6 +38,8 @@ function Reports() {
         return <OverviewSection {...commonProps} />
       case 'sales':
         return <SalesSection {...commonProps} />
+      case 'customers':
+        return <CustomerSection {...commonProps} />
       case 'hotels':
         return <HotelSection {...commonProps} />
       case 'staff':

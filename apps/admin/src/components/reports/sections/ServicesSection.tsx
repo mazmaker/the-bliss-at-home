@@ -177,7 +177,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                 refetch.topServices()
                 refetch.categories()
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-700 to-pink-800 text-white rounded-xl font-medium hover:from-pink-800 hover:to-pink-900 transition"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition"
             >
               <RefreshCw className="w-5 h-5" />
               ลองใหม่
@@ -207,7 +207,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
           <button
             onClick={() => setShowExportDropdown(!showExportDropdown)}
             disabled={isExporting || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-600 to-pink-700 text-white rounded-xl font-medium hover:from-pink-700 hover:to-pink-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Download className="w-5 h-5" />
             {isExporting ? 'กำลังส่งออก...' : 'ส่งออกบริการ'}
@@ -253,7 +253,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
       {/* Service Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Services */}
-        <div className="bg-gradient-to-br from-[#d29b25] to-[#c08a20] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -270,7 +270,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
         </div>
 
         {/* Best Service */}
-        <div className="bg-gradient-to-br from-[#ffe79d] to-[#ffd773] rounded-2xl shadow-lg p-6 text-stone-800 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -282,12 +282,12 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
               </p>
               <p className="text-sm opacity-70">ยอดนิยมสุด</p>
             </div>
-            <Award className="w-12 h-12 text-stone-700 opacity-80" />
+            <Award className="w-12 h-12 text-white opacity-80" />
           </div>
         </div>
 
         {/* Service Revenue */}
-        <div className="bg-gradient-to-br from-[#b6d387] to-[#9bc470] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-stone-600 to-stone-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -304,7 +304,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
         </div>
 
         {/* Service Bookings */}
-        <div className="bg-gradient-to-br from-[#d29b25] to-[#b8841f] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-stone-500 to-stone-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -327,7 +327,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
           <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 border-b border-stone-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-pink-600 to-pink-700 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
                   <Award className="w-5 h-5 text-white" />
                 </div>
                 <div>

@@ -4,10 +4,11 @@ import {
   Sparkles,
   TrendingUp,
   PieChart,
-  BarChart3
+  BarChart3,
+  UserCheck
 } from 'lucide-react'
 
-export type ReportSection = 'overview' | 'sales' | 'hotels' | 'staff' | 'services'
+export type ReportSection = 'overview' | 'sales' | 'hotels' | 'staff' | 'services' | 'customers'
 
 interface ReportsSidebarProps {
   activeSection: ReportSection
@@ -45,6 +46,15 @@ const menuItems: MenuItem[] = [
     hoverColor: 'hover:bg-emerald-50',
     activeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     bgColor: 'bg-emerald-500'
+  },
+  {
+    id: 'customers',
+    icon: UserCheck,
+    label: { th: 'ลูกค้า', en: 'Customers' },
+    color: 'text-blue-600',
+    hoverColor: 'hover:bg-blue-50',
+    activeColor: 'bg-blue-100 text-blue-700 border-blue-200',
+    bgColor: 'bg-blue-500'
   },
   {
     id: 'hotels',

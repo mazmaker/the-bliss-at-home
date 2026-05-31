@@ -1404,14 +1404,23 @@ function EarningsTab({ staff }: { staff: Staff }) {
       if (response.success) {
         toast.success('อัปเดตรอบการจ่ายเงินสำเร็จ!')
         setShowScheduleModal(false)
-        // Refresh related queries
-        await queryClient.invalidateQueries({ queryKey: ['staff', id] })
-        await queryClient.invalidateQueries({ queryKey: ['staff-earnings'] })
-        await queryClient.invalidateQueries({ queryKey: ['staff-payouts'] })
+        // Refresh related queries safely
+        try {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['staff', id] }),
+            queryClient.invalidateQueries({ queryKey: ['staff-earnings'] }),
+            queryClient.invalidateQueries({ queryKey: ['staff-payouts'] })
+          ])
+        } catch (cacheError) {
+          console.warn('Cache invalidation failed:', cacheError)
+          // Fallback to page refresh if cache invalidation fails
+          window.location.reload()
+        }
       } else {
         toast.error(response.message || 'เกิดข้อผิดพลาด')
       }
     } catch (error: any) {
+      console.error('Update schedule error:', error)
       toast.error(error.message || 'เกิดข้อผิดพลาดในการอัปเดต')
     } finally {
       setIsUpdatingSchedule(false)

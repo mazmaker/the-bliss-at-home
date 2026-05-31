@@ -176,7 +176,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
             </p>
             <button
               onClick={() => refetch.dailyRevenue()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl font-medium hover:from-green-800 hover:to-green-900 transition"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition"
             >
               <RefreshCw className="w-5 h-5" />
               ลองใหม่
@@ -206,7 +206,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           <button
             onClick={() => setShowExportDropdown(!showExportDropdown)}
             disabled={isExporting || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium hover:from-green-700 hover:to-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Download className="w-5 h-5" />
             {isExporting ? 'กำลังส่งออก...' : 'ส่งออกยอดขาย'}
@@ -252,7 +252,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       {/* Advanced Revenue Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Gross Revenue */}
-        <div className="bg-gradient-to-br from-[#b6d387] to-[#9bc470] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -276,7 +276,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
 
         {/* Net Revenue */}
-        <div className="bg-gradient-to-br from-[#d29b25] to-[#c08a20] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-stone-600 to-stone-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -295,7 +295,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
 
         {/* Average Order Value */}
-        <div className="bg-gradient-to-br from-[#ffe79d] to-[#ffd773] rounded-2xl shadow-lg p-6 text-stone-800 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -309,12 +309,12 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 Per booking
               </div>
             </div>
-            <BarChart3 className="w-8 h-8 text-stone-700 opacity-80" />
+            <BarChart3 className="w-8 h-8 text-white opacity-80" />
           </div>
         </div>
 
         {/* Forecasting */}
-        <div className="bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-stone-500 to-stone-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
