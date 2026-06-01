@@ -219,6 +219,19 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 - ✅ **Mobile Friendly** - รองรับทุกขนาดหน้าจอ
 - ✅ **Production Ready** - พร้อม deploy
 
+#### **🔧 Phone Validation Fix - เสร็จสมบูรณ์ ✅**
+- **ปัญหาเดิม:** ตรวจสอบเฉพาะเบอร์ 08 + 10 หลัก
+- **แก้ไขแล้ว:** รองรับเบอร์โทรศัพท์ไทยทุกรูปแบบ
+  - **เบอร์มือถือ:** 06, 08, 09 (10 หลัก)
+  - **เบอร์บ้าน:** 02 (9 หลัก), 03/04/05/07 (9 หลัก)  
+  - **เบอร์พิเศษ:** 1xxx (4-6 หลัก)
+- **Files แก้ไข:**
+  - ✅ `apps/admin/src/pages/QuickBooking/ServiceSelection.tsx`
+  - ✅ `packages/supabase/src/services/adminBookingService.ts`
+  - ✅ `packages/supabase/src/services/customerService.ts`
+  - ✅ `apps/customer/src/components/AddressFormModal.tsx`
+- **ข้อความใหม่:** "เบอร์โทรศัพท์ไม่ถูกต้อง (เบอร์มือถือ: 06/08/09, เบอร์บ้าน: 02/03/04/05/07, เบอร์พิเศษ: 1xxx)"
+
 ---
 
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
