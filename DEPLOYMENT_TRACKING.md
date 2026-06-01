@@ -169,10 +169,11 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
   - ✅ `apps/admin/src/pages/Reports.tsx` - เพิ่ม CustomerSection
 
 ### **📋 สถานะ:**
-- ✅ **พร้อม Deploy** - ทุกฟีเจอร์เสร็จสมบูรณ์
+- ✅ **DEPLOYED สำเร็จแล้ว** - Manual deploy ใน Vercel Dashboard
 - ✅ **ใช้ข้อมูลจริง 100%** - ไม่มี placeholder
 - ✅ **UI สอดคล้องกับโปรแกรม** - stone/amber theme ทุก section
 - ✅ **Responsive Design** - ใช้งานได้ทุกหน้าจอ
+- ✅ **Production Ready** - ทั้ง Customer Analytics และ Payout System
 
 ---
 
@@ -180,5 +181,25 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 ---
 
+---
+
+## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
+
+### **❌ ห้ามทำโดยเด็ดขาด:**
+- ❌ **ห้าม Deploy เองโดยไม่ได้รับอนุญาต**
+- ❌ **ห้าม Deploy บ่อย** - เสียเครดิตเงิน
+- ❌ **ห้ามรีบ** - รอคำสั่งจากผู้ใช้เท่านั้น
+
+### **✅ Workflow ที่ถูกต้อง:**
+1. แก้ไขโค้ดเสร็จสิ้น
+2. อัปเดต DEPLOYMENT_TRACKING.md
+3. Commit การเปลี่ยนแปลง  
+4. **ถามผู้ใช้ก่อน:** "Ready to deploy?"
+5. รอคำสั่ง deploy เท่านั้น
+6. อัปเดตสถานะหลัง deploy
+
+---
+
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
+**🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
 **🕒 Last Updated: 2026-05-31**

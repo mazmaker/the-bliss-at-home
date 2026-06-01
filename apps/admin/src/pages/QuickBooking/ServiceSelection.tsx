@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, Clock, MapPin, Calendar, Tag, AlertCircle, CheckCircle, X, User, ChevronRight, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { adminBookingService } from '@bliss/supabase'
+import { GoogleMapsPicker } from '../../components/GoogleMapsPicker'
 
 interface Service {
   id: string
@@ -1132,16 +1133,17 @@ export default function ServiceSelection({
 
                 {/* Map Location (Optional) */}
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
                     เลือกตำแหน่งบนแผนที่ (ไม่บังคับ)
                   </label>
-                  <div className="w-full h-32 bg-stone-100 border border-stone-300 rounded-lg flex items-center justify-center text-stone-500 cursor-pointer hover:bg-stone-50">
-                    <div className="text-center">
-                      <MapPin className="w-6 h-6 mx-auto mb-1" />
-                      <p className="text-sm">คลิกเพื่อเลือกตำแหน่งบนแผนที่</p>
-                      <p className="text-xs text-stone-400">(ฟีเจอร์นี้จะพัฒนาในอนาคต)</p>
-                    </div>
-                  </div>
+                  <GoogleMapsPicker
+                    latitude={mapLocation?.lat || null}
+                    longitude={mapLocation?.lng || null}
+                    onLocationChange={(lat, lng) => {
+                      setMapLocation({ lat, lng })
+                    }}
+                    className="h-80"
+                  />
                 </div>
               </div>
             )}
