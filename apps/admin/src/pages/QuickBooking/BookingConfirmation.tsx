@@ -120,6 +120,7 @@ export default function BookingConfirmation({
         service_id: bookingData.service.id,
         booking_date: bookingData.bookingDate,
         booking_time: bookingData.bookingTime,
+        duration: bookingData.service.duration || 60,
         status: 'confirmed',
         base_price: bookingData.basePricing.final_price,
         discount_amount: bookingData.basePricing.discount_amount || 0,
