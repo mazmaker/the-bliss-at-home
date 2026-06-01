@@ -244,14 +244,18 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 - **UX Improvement:** เหมือน Customer App ไม่ต้องกรอกข้อมูลซ้ำ
 - **Technical:** ใช้ `useDefaultAddress` hook จาก @bliss/supabase
 
-#### **🔧 Mock Data for Testing - เพิ่มเติม ✅**
-- **ปัญหา:** Mock customers ไม่มี addresses data → ไม่สามารถทดสอบ auto-prefill ได้
-- **แก้ไขแล้ว:** เพิ่ม MOCK_ADDRESSES data สำหรับการทดสอบ
-- **Mock Address Examples:**
-  - **Mock Customer 1:** บ้านที่หลักสี่ (lat: 13.8847, lng: 100.5775)
-  - **Mock Customer 2:** ออฟฟิศที่บางนา (lat: 13.6904, lng: 100.6089)
-- **Fallback Logic:** ใช้ mock address เมื่อ defaultAddress เป็น null
-- **Status Messages:** แยกข้อความสำหรับข้อมูลจริง vs ทดสอบ
+#### **🔧 Real Database Integration - แก้ไขสำคัญ ✅**
+- **ปัญหาเดิม:** ใช้ mock data แทนข้อมูลจริงจากฐานข้อมูล
+- **แก้ไขแล้ว:** เปลี่ยนใช้ข้อมูลจริงเหมือน Customer App ทุกประการ
+- **Technical Changes:**
+  - ✅ **เปลี่ยนจาก** `useDefaultAddress()` **เป็น** `useAddresses()` - เหมือน Customer App
+  - ✅ **ลบ mock data** ออกทั้งหมด - ใช้เฉพาะข้อมูลจริง
+  - ✅ **หา default address** จาก addresses array ด้วย `is_default: true`
+  - ✅ **Status Messages** ครอบคลุมทุกสถานการณ์:
+    - กำลังโหลดข้อมูลที่อยู่
+    - พบที่อยู่เริ่มต้นและ prefill แล้ว  
+    - ไม่มีที่อยู่ในระบบ (ต้องกรอกใหม่)
+- **ผลลัพธ์:** ระบบใช้ข้อมูลลูกค้าจริงจากฐานข้อมูล 100%
 
 ---
 
