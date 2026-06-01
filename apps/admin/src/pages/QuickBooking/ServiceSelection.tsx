@@ -133,6 +133,45 @@ export default function ServiceSelection({
   // Get customer's default address
   const { data: defaultAddress, isLoading: addressLoading } = useDefaultAddress(customer?.id)
 
+  // Mock addresses for testing when using mock customers
+  const mockAddresses = [
+    {
+      id: 'mock-address-1',
+      customer_id: 'mock-customer-1',
+      label: 'บ้าน',
+      address_line: '123/45 หมู่บ้านสุขสันต์ ซอยรัชดา 15',
+      district: 'หลักสี่',
+      subdistrict: 'หลักสี่',
+      province: '10',
+      zipcode: '10210',
+      latitude: 13.8847,
+      longitude: 100.5775,
+      is_default: true,
+      created_at: '2024-01-15T10:00:00Z'
+    },
+    {
+      id: 'mock-address-2',
+      customer_id: 'mock-customer-2',
+      label: 'ที่ทำงาน',
+      address_line: '999 อาคารเอเซีย เซ็นเตอร์ ชั้น 25',
+      district: 'บางนา',
+      subdistrict: 'บางนา',
+      province: '10',
+      zipcode: '10260',
+      latitude: 13.6904,
+      longitude: 100.6089,
+      is_default: true,
+      created_at: '2023-11-20T09:15:00Z'
+    }
+  ]
+
+  // Use mock address for mock customers (development/testing)
+  const finalAddress = defaultAddress ||
+    (customer?.id?.startsWith('mock-') ?
+      mockAddresses.find(addr => addr.customer_id === customer.id) : null)
+
+  const finalAddressLoading = addressLoading && !customer?.id?.startsWith('mock-')
+
   const [services, setServices] = useState<Service[]>([])
   const [filteredServices, setFilteredServices] = useState<Service[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -229,24 +268,24 @@ export default function ServiceSelection({
       setContactName(customer.full_name || '')
       setContactPhone(customer.phone || '')
 
-      // Prefill address information when default address is available
-      if (defaultAddress && !addressLoading) {
-        setAddress(defaultAddress.address_line || '')
-        setProvince(defaultAddress.province || '')
-        setDistrict(defaultAddress.district || '')
-        setSubdistrict(defaultAddress.subdistrict || '')
-        setPostalCode(defaultAddress.zipcode || '')
+      // Prefill address information when address is available
+      if (finalAddress && !finalAddressLoading) {
+        setAddress(finalAddress.address_line || '')
+        setProvince(finalAddress.province || '')
+        setDistrict(finalAddress.district || '')
+        setSubdistrict(finalAddress.subdistrict || '')
+        setPostalCode(finalAddress.zipcode || '')
 
         // Set map location if coordinates are available
-        if (defaultAddress.latitude && defaultAddress.longitude) {
+        if (finalAddress.latitude && finalAddress.longitude) {
           setMapLocation({
-            lat: defaultAddress.latitude,
-            lng: defaultAddress.longitude
+            lat: finalAddress.latitude,
+            lng: finalAddress.longitude
           })
         }
       }
     }
-  }, [customer, defaultAddress, addressLoading])
+  }, [customer, finalAddress, finalAddressLoading])
 
   const loadServices = async () => {
     try {
@@ -1067,17 +1106,22 @@ export default function ServiceSelection({
                 </div>
 
                 {/* Address status info */}
-                {addressLoading && (
+                {finalAddressLoading && (
                   <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-sm text-blue-700">กำลังโหลดข้อมูลที่อยู่เริ่มต้นของลูกค้า...</span>
                   </div>
                 )}
 
-                {defaultAddress && !addressLoading && (
+                {finalAddress && !finalAddressLoading && (
                   <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-700">ระบบดึงข้อมูลที่อยู่เริ่มต้นของลูกค้าแล้ว - สามารถแก้ไขได้</span>
+                    <span className="text-sm text-green-700">
+                      {customer?.id?.startsWith('mock-') ?
+                        'ใช้ข้อมูลที่อยู่ทดสอบ - สามารถแก้ไขได้' :
+                        'ระบบดึงข้อมูลที่อยู่เริ่มต้นของลูกค้าแล้ว - สามารถแก้ไขได้'
+                      }
+                    </span>
                   </div>
                 )}
 

@@ -35,6 +35,38 @@ const MOCK_CUSTOMERS: Customer[] = [
   }
 ]
 
+// Mock addresses for testing auto-prefill
+const MOCK_ADDRESSES = [
+  {
+    id: 'mock-address-1',
+    customer_id: 'mock-customer-1',
+    label: 'บ้าน',
+    address_line: '123/45 หมู่บ้านสุขสันต์ ซอยรัชดา 15',
+    district: 'หลักสี่',
+    subdistrict: 'หลักสี่',
+    province: '10',
+    zipcode: '10210',
+    latitude: 13.8847,
+    longitude: 100.5775,
+    is_default: true,
+    created_at: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: 'mock-address-2',
+    customer_id: 'mock-customer-2',
+    label: 'ที่ทำงาน',
+    address_line: '999 อาคารเอเซีย เซ็นเตอร์ ชั้น 25',
+    district: 'บางนา',
+    subdistrict: 'บางนา',
+    province: '10',
+    zipcode: '10260',
+    latitude: 13.6904,
+    longitude: 100.6089,
+    is_default: true,
+    created_at: '2023-11-20T09:15:00Z'
+  }
+]
+
 function getMockCustomers(query: string): Customer[] {
   if (!query || query.length < 2) return []
 
