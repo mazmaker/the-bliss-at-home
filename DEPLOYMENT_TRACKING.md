@@ -177,9 +177,47 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 ---
 
-<!-- User จะเพิ่มการเปลี่ยนแปลงอื่นๆ ที่นี่ -->
+## 🆕 **SESSION 2026-06-01** - Enhanced Admin Quick Booking Map Picker
 
----
+### **🎯 ฟีเจอร์ใหม่: Interactive Google Maps Location Picker**
+
+#### **🗺️ Map Location Enhancement - เสร็จสมบูรณ์ ✅**
+- **Files Modified:**
+  - ✅ **NEW:** `apps/admin/src/components/GoogleMapsPicker.tsx` - เสร็จใหม่ทั้งหมด
+  - ✅ **UPDATED:** `apps/admin/src/pages/QuickBooking/ServiceSelection.tsx` - ใช้ GoogleMapsPicker แทน placeholder
+
+#### **✨ ฟีเจอร์หลัก:**
+- **แทนที่ Placeholder:** เปลี่ยนจาก "(ฟีเจอร์นี้จะพัฒนาในอนาคต)" เป็นแผนที่จริง
+- **Interactive Pin Placement:** คลิกบนแผนที่เพื่อวางหมุด
+- **Draggable Markers:** ลากหมุดเพื่อปรับตำแหน่ง  
+- **Location Search:** ช่องค้นหาสถานที่ด้านบนแผนที่
+- **Current Location Detection:** ปุ่ม "ตำแหน่งปัจจุบัน" 
+- **Coordinate Display:** แสดง Latitude/Longitude แบบเรียลไทม์
+- **Stone/Amber Theme:** สีธีมสอดคล้องกับ Admin App
+- **Usage Instructions:** คำแนะนำการใช้งานภาษาไทย
+- **Data Integration:** ตำแหน่งแผนที่บันทึกร่วมกับข้อมูลการจอง
+
+#### **🔧 Technical Features:**
+- **Google Maps API Integration:** ใช้ VITE_GOOGLE_MAPS_API_KEY
+- **Error Handling:** จัดการข้อผิดพลาดเมื่อโหลดแผนที่ไม่สำเร็จ
+- **Loading States:** แสดงสถานะกำลังโหลดและกำลังหาตำแหน่ง
+- **Responsive Design:** ปรับขนาดได้ตามหน้าจอ
+- **Memory Management:** จัดการ cleanup เมื่อ component ถูก unmount
+
+#### **🎨 UI/UX Improvements:**
+- **Height Optimized:** ปรับความสูง 300px (เหมาะสำหรับ Quick Booking)
+- **Interactive Controls:** ปุ่มควบคุมแผนที่ครบถ้วน
+- **Visual Feedback:** การเปลี่ยนสีเมื่อ hover ปุ่ม
+- **Clear Instructions:** คำอธิบายวิธีใช้งานชัดเจน
+- **Professional Look:** ไม่มีสีจัดจ้าน ใช้โทน stone/amber
+
+#### **📋 Ready for Deploy:**
+- ✅ **Component เสร็จสมบูรณ์** - ทำงานได้เต็มรูปแบบ
+- ✅ **Integration Complete** - ผสานเข้า Quick Booking แล้ว
+- ✅ **Theme Consistent** - ใช้ stone/amber เหมือน Admin App
+- ✅ **Error Handling** - จัดการข้อผิดพลาดครบถ้วน
+- ✅ **Mobile Friendly** - รองรับทุกขนาดหน้าจอ
+- ✅ **Production Ready** - พร้อม deploy
 
 ---
 
