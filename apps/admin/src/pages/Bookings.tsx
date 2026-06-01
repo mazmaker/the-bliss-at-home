@@ -155,14 +155,19 @@ function Bookings() {
     )
   }
 
-  const getPaymentBadge = (status: string) => {
+  const getPaymentBadge = (status: string, booking?: Booking) => {
+    // Check if this is an admin booking (created by admin)
+    const isAdminBooking = booking?.created_by_admin_id ||
+                          booking?.booking_source === 'admin_app' ||
+                          booking?.admin_notes?.includes('Admin Quick Booking')
+
     const badges = {
-      pending: 'bg-orange-100 text-orange-700',
+      pending: isAdminBooking ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700',
       paid: 'bg-green-100 text-green-700',
       refunded: 'bg-stone-100 text-stone-600',
     }
     const labels = {
-      pending: 'รอชำระ',
+      pending: isAdminBooking ? 'ชำระแล้ว (Admin)' : 'รอชำระ',
       paid: 'ชำระแล้ว',
       refunded: 'คืนเงิน',
     }
@@ -401,7 +406,7 @@ function Bookings() {
                       })()}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(booking.status)}</td>
-                    <td className="py-3 px-4">{getPaymentBadge(booking.payment_status)}</td>
+                    <td className="py-3 px-4">{getPaymentBadge(booking.payment_status, booking)}</td>
                     <td className="py-3 px-4">
                       <button
                         onClick={() => handleOpenDetail(booking)}
@@ -763,27 +768,48 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <div>
                 <p className="text-sm text-stone-500">สถานะการชำระ</p>
                 <p className="font-medium text-stone-900">
-                  {booking.payment_status === 'paid' && '✅ ชำระแล้ว'}
-                  {booking.payment_status === 'pending' && '⏳ รอชำระ'}
-                  {booking.payment_status === 'processing' && '🔄 กำลังดำเนินการ'}
-                  {booking.payment_status === 'refunded' && '↩️ คืนเงินแล้ว'}
-                  {booking.payment_status === 'failed' && '❌ ล้มเหลว'}
+                  {(() => {
+                    // Check if this is an admin booking
+                    const isAdminBooking = booking.created_by_admin_id ||
+                                          booking.booking_source === 'admin_app' ||
+                                          booking.admin_notes?.toLowerCase().includes('admin')
+
+                    if (booking.payment_status === 'paid') return '✅ ชำระแล้ว'
+                    if (booking.payment_status === 'pending' && isAdminBooking) return '✅ ชำระแล้ว (Admin จองแทน)'
+                    if (booking.payment_status === 'pending') return '⏳ รอชำระ'
+                    if (booking.payment_status === 'processing') return '🔄 กำลังดำเนินการ'
+                    if (booking.payment_status === 'refunded') return '↩️ คืนเงินแล้ว'
+                    if (booking.payment_status === 'failed') return '❌ ล้มเหลว'
+                    return booking.payment_status
+                  })()}
                 </p>
               </div>
             </div>
 
-            {booking.payment_method && (
+            {/* Only show payment method if explicitly recorded (not default cash) */}
+            {booking.payment_method && booking.payment_method !== 'cash' && (
               <div className="flex items-start gap-3">
                 <CreditCard className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
                   <p className="text-sm text-stone-500">ช่องทางการชำระเงิน</p>
                   <p className="font-medium text-stone-900">
-                    {booking.payment_method === 'cash' && '💵 เงินสด'}
-                    {booking.payment_method === 'credit_card' && '💳 บัตรเครดิต'}
+                    {booking.payment_method === 'credit_card' && '💳 บัตรเครดิท'}
                     {booking.payment_method === 'promptpay' && '📱 พร้อมเพย์'}
                     {booking.payment_method === 'bank_transfer' && '🏦 โอนเงิน'}
+                    {booking.payment_method === 'voucher' && '🎟️ คูปอง/เครดิต'}
                     {booking.payment_method === 'other' && '📋 อื่นๆ'}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Show cash only when explicitly selected by admin */}
+            {booking.payment_method === 'cash' && (booking.created_by_admin_id || booking.admin_notes?.toLowerCase().includes('admin')) && (
+              <div className="flex items-start gap-3">
+                <CreditCard className="w-5 h-5 text-green-600 mt-0.5" />
+                <div>
+                  <p className="text-sm text-stone-500">ช่องทางการชำระเงิน</p>
+                  <p className="font-medium text-stone-900">💵 เงินสด</p>
                 </div>
               </div>
             )}

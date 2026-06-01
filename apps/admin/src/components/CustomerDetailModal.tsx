@@ -100,15 +100,20 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
     )
   }
 
-  const getPaymentStatusBadge = (status: string) => {
+  const getPaymentStatusBadge = (status: string, booking?: any) => {
+    // Check if this is an admin booking
+    const isAdminBooking = booking?.created_by_admin_id ||
+                          booking?.booking_source === 'admin_app' ||
+                          booking?.admin_notes?.includes('Admin Quick Booking')
+
     const styles = {
       paid: 'bg-green-100 text-green-700',
-      pending: 'bg-yellow-100 text-yellow-700',
+      pending: isAdminBooking ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700',
       refunded: 'bg-red-100 text-red-700',
     } as const
     const labels = {
       paid: 'ชำระแล้ว',
-      pending: 'รอชำระ',
+      pending: isAdminBooking ? 'ชำระแล้ว (Admin)' : 'รอชำระ',
       refunded: 'คืนเงินแล้ว',
     } as const
     return (
@@ -473,7 +478,7 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
                       </div>
                       <div className="flex gap-2">
                         {getBookingStatusBadge(booking.status)}
-                        {getPaymentStatusBadge(booking.payment_status)}
+                        {getPaymentStatusBadge(booking.payment_status, booking)}
                       </div>
                     </div>
                   ))}

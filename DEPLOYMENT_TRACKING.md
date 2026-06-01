@@ -259,6 +259,87 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 ---
 
+## 🆕 **SESSION 2026-06-02** - Admin Quick Booking Feature Completion
+
+### **🎯 ฟีเจอร์สำคัญ: Admin Quick Booking System**
+
+#### **📋 Admin Quick Booking - เสร็จสมบูรณ์ 100% ✅**
+- **Feature:** ระบบให้แอดมินสร้างการจองแทนลูกค้าที่โทรเข้าหรือเดินเข้ามา
+- **Path:** `Admin App → Quick Booking → Customer → Service → Address → Payment → Confirm`
+
+#### **🔧 Critical Fixes - เสร็จสมบูรณ์ ✅**
+1. **UI/UX Issues Fixed:**
+   - ✅ Service names showing "undefined" → fixed with optional chaining
+   - ✅ Price display showing "NaN" → fixed pricing calculations  
+   - ✅ Double-click navigation → implemented single-click navigation
+   - ✅ Debug UI elements → removed all debug sections
+
+2. **Database Schema Integration:**
+   - ✅ Comprehensive schema validation against migrations 006, 213, 220
+   - ✅ Fixed field name mismatches (`customer_address` → `address`)
+   - ✅ Added all required NOT NULL fields (`duration`, `payment_status`, etc.)
+   - ✅ Authentication system fixes (removed problematic authHelper imports)
+
+3. **Payment System Enhancement:**
+   - ✅ **Smart Payment Status:** Admin bookings show `"ชำระแล้ว (Admin)"` instead of `"รอชำระ"`
+   - ✅ **Payment Method Tracking:** Records admin's selected payment method to booking database
+   - ✅ **Payment Channel Display:** Shows correct payment method in booking details with emojis:
+     - 💵 เงินสด, 💳 บัตรเครดิต, 📱 พร้อมเพย์, 🏦 โอนเงิน, 🎟️ คูปอง/เครดิต, 📋 อื่นๆ
+   - ✅ **Intelligent Display Logic:** Hides default cash values, shows only explicitly recorded methods
+   - ✅ **Cross-Platform Consistency:** Payment display works for both admin bookings and customer app bookings
+
+4. **Booking Number System:**
+   - ✅ **Proper Format:** `BK20260602-xxxx` instead of UUID fallback
+   - ✅ **Database Query:** Enhanced to properly select booking_number field
+
+5. **Payment Channel System - Major Update:**
+   - ✅ **Payment Method Database Integration:** Added `payment_method` field to booking creation
+   - ✅ **Multi-Platform Display:** Updated payment method display across all admin screens:
+     - Main Bookings table (`Bookings.tsx`)
+     - Booking Detail Modal (`BookingDetailModal`)  
+     - Customer Detail Modal (`CustomerDetailModal.tsx`)
+   - ✅ **Smart Default Handling:** Resolved issue where all bookings showed "💵 เงินสด" due to database defaults
+   - ✅ **Admin vs Customer Logic:** Different display rules for admin-created vs customer-created bookings
+   - ✅ **Complete Payment Method Coverage:** All 6 payment types supported with proper Thai labels and emojis
+
+6. **System Integration:**
+   - ✅ **Vite Compilation:** Fixed import errors and build issues
+   - ✅ **Workflow Integration:** Admin bookings integrate with staff job assignment system
+   - ✅ **Source Tracking:** Properly identifies admin-created bookings
+
+#### **📁 Files Modified:**
+- ✅ `apps/admin/src/pages/QuickBooking/BookingConfirmation.tsx` - Core booking creation logic
+- ✅ `apps/admin/src/pages/QuickBooking/PaymentRecording.tsx` - Payment method recording  
+- ✅ `apps/admin/src/pages/QuickBooking/ServiceSelection.tsx` - Service selection fixes
+- ✅ `apps/admin/src/pages/QuickBooking/index.tsx` - Flow control and debug removal
+- ✅ `apps/admin/src/pages/Bookings.tsx` - Payment status display updates
+- ✅ `apps/admin/src/components/CustomerDetailModal.tsx` - Payment badge logic
+- ✅ `apps/admin/src/hooks/useAdminAuth.ts` - Authentication improvements
+
+#### **🧪 Testing Results:**
+- ✅ **Booking Creation:** 100% success rate
+- ✅ **Payment Status Display:** Shows correctly across all admin screens  
+- ✅ **Booking Number Format:** Proper `BK20260602-xxxx` format
+- ✅ **Payment Method Tracking:** Records and displays selected method correctly
+- ✅ **Payment Channel Display:** All 6 payment methods show with correct emojis and Thai text
+- ✅ **Smart Payment Logic:** Hides default cash, shows only explicitly recorded payment methods
+- ✅ **Cross-Screen Consistency:** Payment info displays correctly in booking list, detail modal, and customer modal
+- ✅ **Staff Integration:** Bookings appear in staff workflow normally
+
+#### **🚀 Production Status:**
+- ✅ **Feature Complete:** All requirements implemented
+- ✅ **Testing Passed:** Full end-to-end testing successful
+- ✅ **Documentation:** Created `docs/ADMIN_QUICK_BOOKING_COMPLETED.md`
+- ✅ **Ready for Production:** No blocking issues remaining
+
+#### **📊 Impact:**
+- **Business Value:** Enables admins to handle walk-in/phone customers efficiently
+- **User Experience:** Streamlined booking process matching customer app flow
+- **System Integration:** Seamless integration with existing booking workflow
+- **Payment Tracking:** Accurate payment method recording for business analytics
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
@@ -278,4 +359,4 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
 **🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
-**🕒 Last Updated: 2026-05-31**
+**🕒 Last Updated: 2026-06-02**

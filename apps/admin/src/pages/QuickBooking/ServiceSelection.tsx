@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, Clock, MapPin, Calendar, Tag, AlertCircle, CheckCircle, X, User, ChevronRight, Check } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, ArrowRight, Clock, MapPin, Calendar, Tag, AlertCircle, CheckCircle, X, User, ChevronRight, Check, Plus } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { adminBookingService, useAddresses } from '@bliss/supabase'
+import { adminBookingService } from '@bliss/supabase'
 import { GoogleMapsPicker } from '../../components/GoogleMapsPicker'
 
 interface Service {
@@ -121,6 +122,7 @@ const bangkokDistricts = [
   // Add more as needed
 ]
 
+// Admin Quick Booking with Customer App-style address selection
 export default function ServiceSelection({
   customer,
   selectedService,
@@ -130,8 +132,36 @@ export default function ServiceSelection({
   onNext,
   onBack
 }: Props) {
-  // Get customer's addresses (same as Customer App)
-  const { data: addresses, isLoading: addressesLoading } = useAddresses(customer?.id)
+  // Get customer's addresses with admin access (bypass RLS)
+  const { data: addresses, isLoading: addressesLoading, refetch: refetchAddresses } = useQuery({
+    queryKey: ['admin-addresses', customer?.id],
+    queryFn: async () => {
+      if (!customer?.id) return []
+
+      // Direct query with admin context - bypass RLS
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('customer_id', customer?.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Admin addresses query error:', error)
+        throw error
+      }
+
+      return data || []
+    },
+    enabled: !!customer?.id,
+  })
+
+  // Force refetch addresses when customer changes
+  useEffect(() => {
+    if (customer?.id) {
+      refetchAddresses()
+    }
+  }, [customer?.id, refetchAddresses])
 
   // Find default address from addresses array (same as Customer App)
   const defaultAddress = addresses?.find(addr => addr.is_default) || null
@@ -142,9 +172,49 @@ export default function ServiceSelection({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
+  // Handle address selection (same as Customer App)
+  const handleSelectAddress = (addressId: string) => {
+    const selectedAddr = addresses?.find((a) => a.id === addressId)
+    if (selectedAddr) {
+      setSelectedAddressId(addressId)
+      setShowManualAddressForm(false)
+      // Populate address state from selected saved address
+      setContactName(selectedAddr.recipient_name || '')
+      setContactPhone(selectedAddr.phone || '')
+      setAddress(selectedAddr.address_line || '')
+      setDistrict(selectedAddr.district || '')
+      setSubdistrict(selectedAddr.subdistrict || '')
+      setProvince(selectedAddr.province || '')
+      setPostalCode(selectedAddr.zipcode || '')
+      // Copy coordinates from saved address
+      if (selectedAddr.latitude && selectedAddr.longitude) {
+        setMapLocation({
+          lat: selectedAddr.latitude,
+          lng: selectedAddr.longitude
+        })
+      } else {
+        setMapLocation(null)
+      }
+    }
+  }
+
+  const handleShowManualForm = () => {
+    setSelectedAddressId(null)
+    setShowManualAddressForm(true)
+    // Auto-fill with customer data instead of resetting to empty (exactly like Customer App)
+    setContactName(customer?.full_name || '')
+    setContactPhone(customer?.phone || '')
+    setAddress('')
+    setDistrict('')
+    setSubdistrict('')
+    setProvince('')
+    setPostalCode('')
+    setMapLocation(null)
+  }
+
   // Two-step service selection state (like Hotel app)
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
-    selectedService?.service.id || null
+    selectedService?.service?.id || null
   )
   const [selectedDuration, setSelectedDuration] = useState<number | null>(
     selectedService?.duration || null
@@ -159,6 +229,8 @@ export default function ServiceSelection({
   const [hotelId, setHotelId] = useState('')
 
   // Address details state for home/office booking
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [showManualAddressForm, setShowManualAddressForm] = useState(false)
   const [contactName, setContactName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [address, setAddress] = useState('')
@@ -167,6 +239,19 @@ export default function ServiceSelection({
   const [subdistrict, setSubdistrict] = useState('')
   const [postalCode, setPostalCode] = useState('')
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null)
+
+  // Debug current address selection state
+  console.log('📍 Address Selection State:', {
+    customerId: customer?.id,
+    customerName: customer?.full_name,
+    addressesLoading,
+    addressesCount: addresses?.length || 0,
+    selectedAddressId,
+    showManualAddressForm,
+    step,
+    shouldShowCards: addresses && addresses.length > 0 && !showManualAddressForm,
+    shouldShowForm: !addresses || addresses.length === 0 || showManualAddressForm
+  })
 
   const [discountCode, setDiscountCode] = useState('')
   const [appliedPromotion, setAppliedPromotion] = useState<Promotion | null>(null)
@@ -193,20 +278,59 @@ export default function ServiceSelection({
 
   // Initialize from existing selection
   useEffect(() => {
-    if (selectedService) {
-      setSelectedServiceId(selectedService.service.id)
-      setSelectedDuration(selectedService.duration)
-      setCurrentServiceSelection(selectedService)
+    if (selectedService && !currentServiceSelection) {
+      // Only initialize if we don't already have a selection to avoid re-initialization
+      const isDirectService = 'name_th' in selectedService && !('service' in selectedService)
+
+      console.log('🔄 Initializing from existing selectedService:', {
+        selectedService,
+        isDirectService,
+        serviceId: isDirectService ? (selectedService as any).id : selectedService?.service?.id,
+        serviceName: isDirectService ? (selectedService as any).name_th : selectedService?.service?.name_th,
+        duration: selectedService?.duration
+      })
+
+      if (isDirectService) {
+        // It's a direct Service object, convert to ServiceSelection structure
+        console.log('🔧 Converting direct Service to ServiceSelection structure')
+        const serviceObj = selectedService as any // Cast to Service type
+        const serviceSelection: ServiceSelection = {
+          id: `admin-${serviceObj.id}-${serviceObj.duration || 60}`,
+          service: serviceObj,
+          duration: serviceObj.duration || 60,
+          recipientIndex: 0,
+          recipientName: customer?.full_name || '',
+          price: 0, // Will be calculated by pricing effect
+          sortOrder: 0
+        }
+        setSelectedServiceId(serviceObj.id)
+        setSelectedDuration(serviceObj.duration || 60)
+        setCurrentServiceSelection(serviceSelection)
+      } else {
+        // It's a proper ServiceSelection object
+        setSelectedServiceId(selectedService?.service?.id || null)
+        setSelectedDuration(selectedService?.duration || null)
+        setCurrentServiceSelection(selectedService)
+      }
+
       setStep('details')
     }
-  }, [selectedService])
+  }, [selectedService, customer?.full_name, currentServiceSelection])
 
   // Recalculate pricing when selection changes
   useEffect(() => {
+    console.log('💰 currentServiceSelection changed:', {
+      hasSelection: !!currentServiceSelection,
+      serviceId: currentServiceSelection?.service?.id,
+      serviceName: currentServiceSelection?.service?.name_th,
+      duration: currentServiceSelection?.duration,
+      price: currentServiceSelection?.price
+    })
+
     if (currentServiceSelection) {
       calculatePricing(currentServiceSelection)
     }
-  }, [currentServiceSelection, isHotelBooking, appliedPromotion, customer.id])
+  }, [currentServiceSelection, isHotelBooking, appliedPromotion, customer?.id])
 
   // Set default date and time
   useEffect(() => {
@@ -225,31 +349,33 @@ export default function ServiceSelection({
     }
   }, [])
 
-  // Prefill customer contact and address information
+  // Auto-select default address when addresses are loaded (exactly like Customer App)
   useEffect(() => {
-    if (customer) {
-      // Prefill contact information
-      setContactName(customer.full_name || '')
-      setContactPhone(customer.phone || '')
-
-      // Prefill address information when default address is available
-      if (defaultAddress && !addressesLoading) {
-        setAddress(defaultAddress.address_line || '')
-        setProvince(defaultAddress.province || '')
-        setDistrict(defaultAddress.district || '')
-        setSubdistrict(defaultAddress.subdistrict || '')
-        setPostalCode(defaultAddress.zipcode || '')
-
-        // Set map location if coordinates are available
-        if (defaultAddress.latitude && defaultAddress.longitude) {
-          setMapLocation({
-            lat: defaultAddress.latitude,
-            lng: defaultAddress.longitude
-          })
-        }
+    if (addresses && addresses.length > 0 && !selectedAddressId && !showManualAddressForm) {
+      const defaultAddress = addresses.find(addr => addr.is_default)
+      if (defaultAddress) {
+        handleSelectAddress(defaultAddress.id)
       }
     }
-  }, [customer, defaultAddress, addressesLoading])
+  }, [addresses, selectedAddressId, showManualAddressForm])
+
+  // Auto-show manual form with customer data if no saved addresses (exactly like Customer App)
+  useEffect(() => {
+    if (!addressesLoading && addresses && customer && !selectedAddressId) {
+      if (addresses.length === 0) {
+        // No saved addresses, show manual form with customer data
+        setShowManualAddressForm(true)
+        setContactName(customer?.full_name || '')
+        setContactPhone(customer?.phone || '')
+        setAddress('')
+        setDistrict('')
+        setSubdistrict('')
+        setProvince('')
+        setPostalCode('')
+        setMapLocation(null)
+      }
+    }
+  }, [addressesLoading, addresses, customer, selectedAddressId])
 
   const loadServices = async () => {
     try {
@@ -272,7 +398,9 @@ export default function ServiceSelection({
   }
 
   // Price calculation utilities (based on Hotel app)
-  const calculateServicePrice = (service: Service, duration: number): number => {
+  const calculateServicePrice = (service: Service | undefined, duration: number): number => {
+    if (!service) return 0
+
     // Use admin-set prices when available
     if (duration === 60 && service.price_60) return service.price_60
     if (duration === 90 && service.price_90) return service.price_90
@@ -284,7 +412,11 @@ export default function ServiceSelection({
   }
 
   // Get duration options for selected service (like Hotel app)
-  const getDurationOptions = (service: Service): DurationOption[] => {
+  const getDurationOptions = (service: Service | undefined): DurationOption[] => {
+    if (!service) {
+      return []
+    }
+
     if (service.duration_options && Array.isArray(service.duration_options) && service.duration_options.length > 0) {
       return service.duration_options
         .sort((a, b) => a - b)
@@ -303,22 +435,13 @@ export default function ServiceSelection({
   }
 
   const calculatePricing = async (serviceSelection: ServiceSelection) => {
-    if (!serviceSelection) return
+    if (!serviceSelection || !serviceSelection.service) return
 
     try {
       const basePrice = calculateServicePrice(serviceSelection.service, serviceSelection.duration)
       let discountAmount = 0
-      let customerDiscount = 0
       let codeDiscount = 0
 
-      // Apply customer loyalty discount
-      if (customer.total_bookings >= 10) {
-        customerDiscount = basePrice * 0.1
-        discountAmount += customerDiscount
-      } else if (customer.total_bookings >= 5) {
-        customerDiscount = basePrice * 0.05
-        discountAmount += customerDiscount
-      }
 
       // Apply promotion discount
       if (appliedPromotion) {
@@ -337,7 +460,7 @@ export default function ServiceSelection({
         base_price: basePrice,
         discount_amount: discountAmount,
         final_price: Math.max(0, basePrice - discountAmount),
-        customer_discount: customerDiscount,
+        customer_discount: 0,
         code_discount: codeDiscount
       })
     } catch (err: any) {
@@ -347,6 +470,12 @@ export default function ServiceSelection({
 
   // Service selection handlers (like Hotel app)
   const handleServiceClick = (service: Service) => {
+    console.log('🎯 Service clicked:', {
+      serviceId: service.id,
+      serviceName: service.name_th,
+      service: service
+    })
+
     setSelectedServiceId(service.id)
     setError('')
     const durationOptions = getDurationOptions(service)
@@ -362,10 +491,17 @@ export default function ServiceSelection({
         service,
         duration,
         recipientIndex: 0,
-        recipientName: customer.full_name,
+        recipientName: customer?.full_name || '',
         price: calculatedPrice,
         sortOrder: 0
       }
+
+      console.log('✅ Service selection created:', {
+        selectionId: selection.id,
+        serviceName: selection.service.name_th,
+        duration: selection.duration,
+        price: selection.price
+      })
 
       setCurrentServiceSelection(selection)
       setStep('details') // Skip duration selection, go directly to details
@@ -378,10 +514,24 @@ export default function ServiceSelection({
   }
 
   const handleDurationSelect = (duration: number) => {
+    console.log('⏱️ Duration selected:', {
+      duration,
+      selectedServiceId,
+      servicesCount: services.length
+    })
+
     if (!selectedServiceId) return
 
     const service = services.find(s => s.id === selectedServiceId)
-    if (!service) return
+    if (!service) {
+      console.error('❌ Service not found in duration select:', selectedServiceId)
+      return
+    }
+
+    console.log('✅ Service found for duration select:', {
+      serviceId: service.id,
+      serviceName: service.name_th
+    })
 
     setSelectedDuration(duration)
 
@@ -395,6 +545,13 @@ export default function ServiceSelection({
       price: calculatedPrice,
       sortOrder: 0
     }
+
+    console.log('✅ Duration selection created:', {
+      selectionId: selection.id,
+      serviceName: selection.service.name_th,
+      duration: selection.duration,
+      price: selection.price
+    })
 
     setCurrentServiceSelection(selection)
     setStep('details')
@@ -437,14 +594,14 @@ export default function ServiceSelection({
       }
 
       // Check if promotion applies to current service
-      if (data.applies_to === 'specific_services' && currentService) {
-        if (!data.target_services?.includes(currentService.id)) {
+      if (data.applies_to === 'specific_services' && currentServiceSelection?.service) {
+        if (!data.target_services?.includes(currentServiceSelection?.service?.id)) {
           setAppliedPromotion(null)
           setError('โค้ดส่วนลดนี้ไม่สามารถใช้กับบริการที่เลือกได้')
           return
         }
-      } else if (data.applies_to === 'categories' && currentService) {
-        if (!data.target_categories?.includes(currentService.category)) {
+      } else if (data.applies_to === 'categories' && currentServiceSelection?.service) {
+        if (!data.target_categories?.includes(currentServiceSelection?.service?.category)) {
           setAppliedPromotion(null)
           setError('โค้ดส่วนลดนี้ไม่สามารถใช้กับหมวดหมู่บริการที่เลือกได้')
           return
@@ -452,8 +609,8 @@ export default function ServiceSelection({
       }
 
       // Check minimum order amount
-      if (data.min_order_amount && currentService) {
-        const basePrice = isHotelBooking ? currentService.hotel_price : currentService.base_price
+      if (data.min_order_amount && currentServiceSelection?.service) {
+        const basePrice = isHotelBooking ? currentServiceSelection?.service?.hotel_price : currentServiceSelection?.service?.base_price
         if (basePrice < data.min_order_amount) {
           setAppliedPromotion(null)
           setError(`ยอดขั้นต่ำสำหรับโค้ดนี้คือ ${formatCurrency(data.min_order_amount)}`)
@@ -521,45 +678,142 @@ export default function ServiceSelection({
     return [] // In real app, fetch districts based on province
   }
 
-  const handleProceedToNext = () => {
-    if (!currentServiceSelection || !currentPricing || !bookingDate || !selectedHour || !selectedMinute) {
-      setError('กรุณาเลือกบริการ วันที่ ชั่วโมง และนาที')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const processingRef = useRef(false)
+
+  const handleProceedToNext = async () => {
+    // Immediate check with useRef (synchronous)
+    if (processingRef.current) {
+      console.log('⏸️ Already processing, ignoring click')
       return
     }
 
-    // Validate address fields for home/office booking
-    if (!validateAddressFields()) {
-      return
+    // Set both immediately and for state
+    console.log('🚀 Starting processing - setting flag')
+    processingRef.current = true
+    setIsProcessing(true)
+    setError('')
+
+    try {
+      // Debug validation
+      console.log('🔍 Validation Debug:', {
+        isProcessing,
+        currentServiceSelection: !!currentServiceSelection,
+        service: !!currentServiceSelection?.service,
+        serviceId: currentServiceSelection?.service?.id,
+        serviceName: currentServiceSelection?.service?.name_th,
+        currentPricing: !!currentPricing,
+        bookingDate: !!bookingDate,
+        selectedHour: !!selectedHour,
+        selectedMinute: !!selectedMinute,
+        actualValues: {
+          bookingDate,
+          selectedHour,
+          selectedMinute,
+          currentServiceSelection: currentServiceSelection?.service?.name_th
+        }
+      })
+
+      // Wait a moment to ensure all state updates are complete
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // More specific validation messages
+      if (!currentServiceSelection) {
+        setError('กรุณาเลือกบริการ (currentServiceSelection is null)')
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+      if (!currentServiceSelection.service) {
+        setError('กรุณาเลือกบริการ (service object is missing)')
+        console.error('Service selection error:', currentServiceSelection)
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+      if (!currentPricing) {
+        setError('กำลังคำนวณราคา กรุณารอสักครู่')
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+      if (!bookingDate) {
+        setError('กรุณาเลือกวันที่')
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+      if (!selectedHour) {
+        setError('กรุณาเลือกชั่วโมง')
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+      if (!selectedMinute) {
+        setError('กรุณาเลือกนาที')
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+
+      // Validate address fields for home/office booking
+      if (!validateAddressFields()) {
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+
+      // Combine hour and minute into time string
+      const bookingTime = `${selectedHour}:${selectedMinute}`
+
+      // Format complete address for home/office booking
+      const selectedAddress = selectedAddressId ? addresses?.find(a => a.id === selectedAddressId) : null
+
+      const completeAddress = !isHotelBooking ? {
+        contactName,
+        contactPhone,
+        address,
+        province,
+        district,
+        subdistrict,
+        postalCode,
+        mapLocation,
+        formattedAddress: `${address} ${subdistrict} ${district} ${provinces.find(p => p.id === province)?.name} ${postalCode}`,
+        // Add metadata about address source
+        isFromSavedAddress: !!selectedAddressId,
+        savedAddressId: selectedAddressId,
+        savedAddressLabel: selectedAddress?.label,
+        savedAddressIsDefault: selectedAddress?.is_default
+      } : undefined
+
+      const details = {
+        bookingDate,
+        bookingTime,
+        isHotelBooking,
+        hotelId: isHotelBooking ? hotelId : undefined,
+        addressDetails: completeAddress,
+        discountCode: appliedPromotion?.code,
+        appliedDiscount: appliedPromotion,
+        selectedDuration: currentServiceSelection?.duration
+      }
+
+      console.log('✅ Validation passed, updating booking data')
+
+      onServiceSelect(currentServiceSelection.service, [], currentPricing, details)
+
+      // Navigation will be handled automatically by parent when step becomes complete
+      // Reset processing flag after data update
+      setTimeout(() => {
+        processingRef.current = false
+        setIsProcessing(false)
+      }, 100)
+
+    } catch (error) {
+      console.error('Error in handleProceedToNext:', error)
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
+      processingRef.current = false
+      setIsProcessing(false)
     }
-
-    // Combine hour and minute into time string
-    const bookingTime = `${selectedHour}:${selectedMinute}`
-
-    // Format complete address for home/office booking
-    const completeAddress = !isHotelBooking ? {
-      contactName,
-      contactPhone,
-      address,
-      province,
-      district,
-      subdistrict,
-      postalCode,
-      mapLocation,
-      formattedAddress: `${address} ${subdistrict} ${district} ${provinces.find(p => p.id === province)?.name} ${postalCode}`
-    } : undefined
-
-    const details = {
-      bookingDate,
-      bookingTime,
-      isHotelBooking,
-      hotelId: isHotelBooking ? hotelId : undefined,
-      addressDetails: completeAddress,
-      discountCode: appliedPromotion?.code,
-      appliedDiscount: appliedPromotion,
-      selectedDuration: currentServiceSelection.duration
-    }
-
-    onServiceSelect(currentServiceSelection.service, [], currentPricing, details)
   }
 
   const formatCurrency = (amount: number) => {
@@ -701,9 +955,9 @@ export default function ServiceSelection({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`${step === 'details' ? 'space-y-6' : 'grid grid-cols-1 lg:grid-cols-3 gap-6'}`}>
         {/* Left Column: Service Selection Steps */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={`${step === 'details' ? '' : 'lg:col-span-2'} space-y-6`}>
           {/* Service Selector Component */}
           <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm">
             {/* Header */}
@@ -721,14 +975,6 @@ export default function ServiceSelection({
                   </p>
                 </div>
               </div>
-              {currentServiceSelection && step !== 'service' && (
-                <button
-                  onClick={handleBackToServices}
-                  className="text-xs text-stone-500 hover:text-red-600 transition"
-                >
-                  เปลี่ยนบริการ
-                </button>
-              )}
             </div>
 
             {/* Step 1: Service Selection */}
@@ -837,14 +1083,6 @@ export default function ServiceSelection({
 
               return (
                 <div className="space-y-4">
-                  {/* Back button */}
-                  <button
-                    onClick={handleBackToServices}
-                    className="flex items-center gap-2 text-sm text-stone-600 hover:text-stone-800 transition"
-                  >
-                    <ChevronRight className="w-4 h-4 rotate-180" />
-                    <span>เปลี่ยนบริการ</span>
-                  </button>
 
                   {/* Selected service info */}
                   <div className="p-4 bg-stone-50 rounded-xl">
@@ -898,50 +1136,384 @@ export default function ServiceSelection({
             })()}
 
             {/* Step 3: Service Selected Confirmation */}
-            {step === 'details' && currentServiceSelection && (() => {
-              const selectedServiceData = currentServiceSelection.service
-
-              return (
+            {step === 'details' && currentServiceSelection && (
                 <div className="space-y-4">
-                  {/* Selection confirmed */}
-                  <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="text-sm font-bold text-green-700">บริการที่เลือก</span>
-                    </div>
-                    <div className="text-sm font-medium text-stone-800">
-                      {selectedServiceData.name_th} • {currentServiceSelection.duration} นาที • ฿{currentServiceSelection.price.toLocaleString()}
-                    </div>
-                  </div>
+                </div>
+              )}
+          </div>
 
-                  {/* Edit options */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleBackToServices}
-                      className="flex-1 px-3 py-2 text-xs bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition"
-                    >
-                      เปลี่ยนบริการ
-                    </button>
-                    {getDurationOptions(selectedServiceData).length > 1 && (
+          {/* Service Confirmation Banner - Always visible in details */}
+          {step === 'details' && currentServiceSelection && (
+            <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-sm font-bold text-green-700">บริการที่เลือก</span>
+              </div>
+              <div className="text-sm font-medium text-stone-800">
+                {currentServiceSelection?.service?.name_th || 'กำลังโหลดชื่อบริการ...'} • {formatDuration(currentServiceSelection?.duration || 0)} • {currentPricing ? formatCurrency(currentPricing.final_price) : 'กำลังคำนวณราคา...'}
+              </div>
+
+              {/* Debug info in development */}
+              {import.meta.env.DEV && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                  <p><strong>Debug:</strong></p>
+                  <p>Service: {currentServiceSelection?.service?.name_th || 'undefined'}</p>
+                  <p>Duration: {currentServiceSelection?.duration || 'undefined'}</p>
+                  <p>Price from selection: {currentServiceSelection?.price || 'undefined'}</p>
+                  <p>Price from pricing: {currentPricing?.final_price || 'undefined'}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleBackToServices}
+                  className="flex-1 px-3 py-2 text-xs bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition"
+                >
+                  เปลี่ยนบริการ
+                </button>
+                {getDurationOptions(currentServiceSelection?.service).length > 1 && (
+                  <button
+                    onClick={handleBackToDuration}
+                    className="flex-1 px-3 py-2 text-xs bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
+                  >
+                    เปลี่ยนระยะเวลา
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Main Content Area - Proper Layout Structure */}
+          {step === 'details' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left: Main Form (2 columns) */}
+              <div className="lg:col-span-2 space-y-6">
+
+                {/* 1. Booking Type Selection */}
+                <div className="bg-white border border-stone-200 rounded-lg p-5">
+            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-amber-700" />
+              ประเภทการจอง
+            </h3>
+            <div className="space-y-3">
+              <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
+                !isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="bookingType"
+                  checked={!isHotelBooking}
+                  onChange={() => setIsHotelBooking(false)}
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">นัดหมายที่บ้าน/สำนักงาน</span>
+                </div>
+              </label>
+              <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
+                isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="bookingType"
+                  checked={isHotelBooking}
+                  onChange={() => setIsHotelBooking(true)}
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex items-center gap-2 flex-1 justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium">บริการในโรงแรม</span>
+                  </div>
+                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    ลดพิเศษ
+                  </span>
+                </div>
+              </label>
+            </div>
+
+          </div>
+
+                {/* 2. Date and Time Selection */}
+                <div className="bg-white border border-stone-200 rounded-lg p-5">
+            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-amber-700" />
+              วันที่และเวลา
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">
+                  วันที่
+                </label>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                    ชั่วโมง
+                  </label>
+                  <select
+                    value={selectedHour}
+                    onChange={(e) => {
+                      setSelectedHour(e.target.value)
+                      setSelectedMinute('') // Reset minute when hour changes
+                    }}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                  >
+                    <option value="">เลือกชั่วโมง</option>
+                    {getAvailableHoursForDate(bookingDate).map((hour) => (
+                      <option key={hour} value={hour}>
+                        {hour}:00
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                    นาที
+                  </label>
+                  <select
+                    value={selectedMinute}
+                    onChange={(e) => setSelectedMinute(e.target.value)}
+                    disabled={!selectedHour}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25] disabled:bg-stone-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">เลือกนาที</option>
+                    {getAvailableMinutesForDateHour(bookingDate, selectedHour).map((minute) => (
+                      <option key={minute} value={minute}>
+                        :{minute.toString().padStart(2, '0')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {selectedHour && selectedMinute && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <Clock className="w-4 h-4 inline mr-2 text-blue-600" />
+                  เวลาที่เลือก: <span className="font-medium text-blue-800">{selectedHour}:{selectedMinute.toString().padStart(2, '0')} น.</span>
+                </div>
+              )}
+            </div>
+                </div>
+
+                {/* 3. Contact & Address Information (Conditional) */}
+                {!isHotelBooking && (
+                  <div className="bg-white border border-stone-200 rounded-lg p-5">
+                    <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
+                      <User className="w-5 h-5 text-amber-700" />
+                      ข้อมูลติดต่อและที่อยู่
+                    </h3>
+
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-stone-700">
+                        เลือกที่อยู่ที่บันทึกไว้ หรือเพิ่มที่อยู่ใหม่
+                      </label>
                       <button
-                        onClick={handleBackToDuration}
-                        className="flex-1 px-3 py-2 text-xs bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
+                        onClick={() => refetchAddresses()}
+                        disabled={addressesLoading}
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition disabled:opacity-50"
                       >
-                        เปลี่ยนระยะเวลา
+                        {addressesLoading ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
                       </button>
+                    </div>
+
+                    {addressesLoading ? (
+                      <div className="flex items-center justify-center p-6 bg-stone-50 rounded-lg">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3"></div>
+                        <p className="text-stone-600 text-sm ml-3">กำลังโหลดที่อยู่...</p>
+                      </div>
+                    ) : addresses && addresses.length > 0 && !showManualAddressForm ? (
+                      <div className="space-y-4">
+                        <p className="text-sm text-stone-600 mb-3">เลือกที่อยู่ที่บันทึกไว้</p>
+
+                        {/* Saved Address Cards */}
+                        <div className="space-y-3">
+                          {addresses.map((addr) => (
+                            <button
+                              key={addr.id}
+                              onClick={() => handleSelectAddress(addr.id)}
+                              className={`w-full p-4 rounded-xl border-2 text-left transition shadow-sm ${
+                                selectedAddressId === addr.id
+                                  ? 'border-amber-700 bg-amber-50 shadow-md'
+                                  : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50 hover:shadow-md'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="inline-block px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded">
+                                      {addr.label}
+                                    </span>
+                                    {addr.is_default && (
+                                      <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                                        ค่าเริ่มต้น
+                                      </span>
+                                    )}
+                                  </div>
+                                  <h3 className="font-semibold text-stone-900 mb-1">{addr.recipient_name}</h3>
+                                  <p className="text-sm text-stone-600 mb-1">{addr.phone}</p>
+                                  <p className="text-sm text-stone-600">
+                                    {addr.address_line}
+                                    {addr.subdistrict && `, ${addr.subdistrict}`}
+                                    {addr.district && `, ${addr.district}`}
+                                    {`, ${addr.province} ${addr.zipcode || ''}`}
+                                  </p>
+                                </div>
+                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                                  selectedAddressId === addr.id
+                                    ? 'border-amber-700 bg-amber-700'
+                                    : 'border-stone-300'
+                                }`}>
+                                  {selectedAddressId === addr.id && (
+                                    <CheckCircle className="w-4 h-4 text-white" />
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Add New Address Button */}
+                        <button
+                          onClick={handleShowManualForm}
+                          className="w-full p-4 mt-2 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span className="text-sm font-medium">เพิ่มที่อยู่ใหม่</span>
+                        </button>
+                      </div>
+                    ) : (
+                      /* Manual Address Form */
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-sm font-medium text-stone-900">กรอกข้อมูลที่อยู่ใหม่</h5>
+                          {addresses && addresses.length > 0 && (
+                            <button
+                              onClick={() => setShowManualAddressForm(false)}
+                              className="text-sm text-stone-600 hover:text-stone-900"
+                            >
+                              ← กลับไปเลือกที่อยู่ที่บันทึกไว้
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Contact Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              ชื่อผู้ติดต่อ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={contactName}
+                              onChange={(e) => setContactName(e.target.value)}
+                              placeholder="ชื่อ-นามสกุล"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="tel"
+                              value={contactPhone}
+                              onChange={(e) => setContactPhone(e.target.value)}
+                              placeholder="08x-xxx-xxxx"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div>
+                          <label className="block text-sm font-medium text-stone-700 mb-1">
+                            ที่อยู่ <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            placeholder="บ้านเลขที่, หมู่บ้าน, ถนน"
+                            className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                          />
+                        </div>
+
+                        {/* Simple Address Fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              จังหวัด <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={province}
+                              onChange={(e) => setProvince(e.target.value)}
+                              placeholder="กรุงเทพมหานคร"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              เขต/อำเภอ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={district}
+                              onChange={(e) => setDistrict(e.target.value)}
+                              placeholder="เขตบางรัก"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              แขวง/ตำบล
+                            </label>
+                            <input
+                              type="text"
+                              value={subdistrict}
+                              onChange={(e) => setSubdistrict(e.target.value)}
+                              placeholder="แขวงบางรัก"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              รหัสไปรษณีย์ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={postalCode}
+                              onChange={(e) => setPostalCode(e.target.value)}
+                              placeholder="10500"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-              )
-            })()}
-          </div>
-        </div>
+                )}
+              </div>
 
-        {/* Right Column: Booking Details */}
-        <div className="space-y-4">
-          {/* Discount Code - Always Available */}
+              {/* Right: Summary Sidebar (1 column) */}
+              <div className="space-y-4">
+          {/* Discount Code */}
           <div className="bg-white border border-stone-200 rounded-lg p-4">
             <h3 className="font-medium text-stone-900 mb-3">โค้ดส่วนลด</h3>
             <div className="flex gap-2">
@@ -981,54 +1553,91 @@ export default function ServiceSelection({
             )}
           </div>
 
-        {step === 'details' && currentServiceSelection && (
-          <>
-            {/* Selected Service Summary */}
-            <div className="bg-[#ffe79d]/20 border border-[#d29b25]/30 rounded-lg p-4">
-              <h3 className="font-medium text-[#d29b25] mb-2">บริการที่เลือก</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-stone-700">{currentServiceSelection.service.name_th}</span>
-                  <span className="text-[#d29b25] font-medium">
-                    {formatCurrency(currentServiceSelection.price)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-stone-600">
-                  <span>ระยะเวลา:</span>
-                  <span>{formatDuration(currentServiceSelection.duration)}</span>
+
+            {/* Price Summary */}
+            {currentPricing && (
+              <div className="bg-stone-50 border border-stone-200 rounded-lg p-4">
+                <h3 className="font-medium text-stone-900 mb-3">สรุปราคา</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">ค่าบริการ:</span>
+                    <span>{formatCurrency(currentPricing.base_price)}</span>
+                  </div>
+
+
+                  {currentPricing.code_discount && currentPricing.code_discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>ส่วนลดโค้ด:</span>
+                      <span>-{formatCurrency(currentPricing.code_discount || 0)}</span>
+                    </div>
+                  )}
+
+                  {currentPricing.discount_amount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>ส่วนลดรวม:</span>
+                      <span>-{formatCurrency(currentPricing.discount_amount)}</span>
+                    </div>
+                  )}
+
+                  <div className="border-t pt-2 flex justify-between font-medium">
+                    <span>ยอดรวม:</span>
+                    <span className="text-[#d29b25] text-lg">
+                      {formatCurrency(currentPricing.final_price)}
+                    </span>
+                  </div>
                 </div>
               </div>
+            )}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Right Column: Booking Details - Only show when not in details step */}
+        {step !== 'details' && (
+        <div className="space-y-4">
+
+        {step === 'details' && currentServiceSelection && (
+          <>
 
           {/* Booking Type */}
-          <div className="bg-white border border-stone-200 rounded-lg p-4">
-            <h3 className="font-medium text-stone-900 mb-3">ประเภทการจอง</h3>
-            <div className="space-y-2">
-              <label className="flex items-center gap-3 cursor-pointer">
+          <div className="bg-white border border-stone-200 rounded-lg p-5">
+            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-amber-700" />
+              ประเภทการจอง
+            </h3>
+            <div className="space-y-3">
+              <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
+                !isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+              }`}>
                 <input
                   type="radio"
                   name="bookingType"
                   checked={!isHotelBooking}
                   onChange={() => setIsHotelBooking(false)}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span>นัดหมายที่บ้าน/สำนักงาน</span>
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">นัดหมายที่บ้าน/สำนักงาน</span>
                 </div>
               </label>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
+                isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+              }`}>
                 <input
                   type="radio"
                   name="bookingType"
                   checked={isHotelBooking}
                   onChange={() => setIsHotelBooking(true)}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span>บริการในโรงแรม</span>
-                  <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded">
+                <div className="flex items-center gap-2 flex-1 justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium">บริการในโรงแรม</span>
+                  </div>
+                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                     ลดพิเศษ
                   </span>
                 </div>
@@ -1036,10 +1645,106 @@ export default function ServiceSelection({
             </div>
 
             {!isHotelBooking && (
-              <div className="mt-4 space-y-4">
-                <h4 className="font-medium text-stone-900 border-b border-stone-200 pb-2">
-                  ข้อมูลติดต่อและที่อยู่
-                </h4>
+              <>
+                <div className="mt-6 pt-4 border-t border-stone-200">
+                  <h4 className="font-medium text-stone-900 mb-4">
+                    ข้อมูลติดต่อและที่อยู่
+                  </h4>
+
+                  {/* Address Selection (exactly like Customer App) */}
+                  <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-medium text-stone-700">
+                      เลือกที่อยู่ที่บันทึกไว้ หรือเพิ่มที่อยู่ใหม่
+                    </label>
+                    <button
+                      onClick={() => refetchAddresses()}
+                      disabled={addressesLoading}
+                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition disabled:opacity-50"
+                    >
+                      {addressesLoading ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
+                    </button>
+                  </div>
+
+                  {addressesLoading ? (
+                    <div className="flex items-center justify-center p-6 bg-stone-50 rounded-lg">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3"></div>
+                      <p className="text-stone-600 text-sm ml-3">กำลังโหลดที่อยู่...</p>
+                    </div>
+                  ) : addresses && addresses.length > 0 && !showManualAddressForm ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-stone-600 mb-3">เลือกที่อยู่ที่บันทึกไว้</p>
+
+                      {/* Saved Address Cards */}
+                      <div className="space-y-3">
+                        {addresses.map((addr) => (
+                          <button
+                            key={addr.id}
+                            onClick={() => handleSelectAddress(addr.id)}
+                            className={`w-full p-4 rounded-xl border-2 text-left transition shadow-sm ${
+                              selectedAddressId === addr.id
+                                ? 'border-amber-700 bg-amber-50 shadow-md'
+                                : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50 hover:shadow-md'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="inline-block px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded">
+                                    {addr.label}
+                                  </span>
+                                  {addr.is_default && (
+                                    <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                                      ค่าเริ่มต้น
+                                    </span>
+                                  )}
+                                </div>
+                                <h3 className="font-semibold text-stone-900 mb-1">{addr.recipient_name}</h3>
+                                <p className="text-sm text-stone-600 mb-1">{addr.phone}</p>
+                                <p className="text-sm text-stone-600">
+                                  {addr.address_line}
+                                  {addr.subdistrict && `, ${addr.subdistrict}`}
+                                  {addr.district && `, ${addr.district}`}
+                                  {`, ${addr.province} ${addr.zipcode || ''}`}
+                                </p>
+                              </div>
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                                selectedAddressId === addr.id
+                                  ? 'border-amber-700 bg-amber-700'
+                                  : 'border-stone-300'
+                              }`}>
+                                {selectedAddressId === addr.id && (
+                                  <CheckCircle className="w-4 h-4 text-white" />
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Add New Address Button */}
+                      <button
+                        onClick={handleShowManualForm}
+                        className="w-full p-4 mt-2 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span className="text-sm font-medium">เพิ่มที่อยู่ใหม่</span>
+                      </button>
+                    </div>
+                  ) : (
+                    /* Manual Address Form (show when adding new address or no saved addresses) */
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-sm font-medium text-stone-900">กรอกข้อมูลที่อยู่ใหม่</h5>
+                        {addresses && addresses.length > 0 && (
+                          <button
+                            onClick={() => setShowManualAddressForm(false)}
+                            className="text-sm text-stone-600 hover:text-stone-900"
+                          >
+                            ← กลับไปเลือกที่อยู่ที่บันทึกไว้
+                          </button>
+                        )}
+                      </div>
 
                 {/* Contact Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1068,32 +1773,6 @@ export default function ServiceSelection({
                     />
                   </div>
                 </div>
-
-                {/* Address status info */}
-                {addressesLoading && (
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-sm text-blue-700">กำลังโหลดข้อมูลที่อยู่ของลูกค้า...</span>
-                  </div>
-                )}
-
-                {defaultAddress && !addressesLoading && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-700">
-                      ระบบดึงข้อมูลที่อยู่เริ่มต้นของลูกค้าแล้ว - สามารถแก้ไขได้
-                    </span>
-                  </div>
-                )}
-
-                {!addressesLoading && addresses && addresses.length === 0 && customer && (
-                  <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span className="text-sm text-amber-700">
-                      ลูกค้าท่านนี้ยังไม่มีข้อมูลที่อยู่ในระบบ - กรุณากรอกที่อยู่ใหม่
-                    </span>
-                  </div>
-                )}
 
                 {/* Address */}
                 <div>
@@ -1203,13 +1882,20 @@ export default function ServiceSelection({
                     className="h-80"
                   />
                 </div>
-              </div>
+                    </div>
+                  )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
 
-          {/* Date and Time Selection */}
-          <div className="bg-white border border-stone-200 rounded-lg p-4">
-            <h3 className="font-medium text-stone-900 mb-3">วันที่และเวลา</h3>
+                {/* 2. Date and Time Selection */}
+                <div className="bg-white border border-stone-200 rounded-lg p-5">
+            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-amber-700" />
+              วันที่และเวลา
+            </h3>
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
@@ -1283,21 +1969,15 @@ export default function ServiceSelection({
                 <h3 className="font-medium text-stone-900 mb-3">สรุปราคา</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-600">ราคาฐาน:</span>
+                    <span className="text-stone-600">ค่าบริการ:</span>
                     <span>{formatCurrency(currentPricing.base_price)}</span>
                   </div>
 
-                  {customer.total_bookings >= 5 && currentPricing.customer_discount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>ส่วนลดลูกค้าVIP:</span>
-                      <span>-{formatCurrency(currentPricing.customer_discount)}</span>
-                    </div>
-                  )}
 
-                  {appliedPromotion && currentPricing.code_discount > 0 && (
+                  {appliedPromotion && (currentPricing.code_discount ?? 0) > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>ส่วนลดโค้ด:</span>
-                      <span>-{formatCurrency(currentPricing.code_discount)}</span>
+                      <span>-{formatCurrency(currentPricing.code_discount ?? 0)}</span>
                     </div>
                   )}
 
@@ -1320,6 +2000,7 @@ export default function ServiceSelection({
           </>
         )}
         </div>
+        )}
 
       <div className="flex justify-between">
         <button
@@ -1330,7 +2011,7 @@ export default function ServiceSelection({
               handleBackToServices()
             } else if (step === 'details') {
               // If service has multiple duration options, go back to duration
-              if (currentServiceSelection && getDurationOptions(currentServiceSelection.service).length > 1) {
+              if (currentServiceSelection && getDurationOptions(currentServiceSelection?.service).length > 1) {
                 handleBackToDuration()
               } else {
                 handleBackToServices()
@@ -1347,12 +2028,25 @@ export default function ServiceSelection({
 
         {step === 'details' && (
           <button
-            onClick={handleProceedToNext}
-            disabled={!currentServiceSelection || !currentPricing || !bookingDate || !selectedHour || !selectedMinute}
-            className="flex items-center gap-2 bg-[#d29b25] text-white px-6 py-3 rounded-lg hover:bg-[#b8851e] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={(e) => {
+              console.log('🔘 Button clicked, isProcessing:', isProcessing, 'processingRef:', processingRef.current)
+              e.preventDefault()
+              handleProceedToNext()
+            }}
+            disabled={!currentServiceSelection || !currentPricing || !bookingDate || !selectedHour || !selectedMinute || isProcessing}
+            className="flex items-center gap-2 bg-[#d29b25] text-white px-6 py-3 rounded-lg hover:bg-[#b8851e] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            ถัดไป: บันทึกการชำระเงิน
-            <ArrowRight className="w-4 h-4" />
+            {isProcessing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                กำลังดำเนินการ...
+              </>
+            ) : (
+              <>
+                ถัดไป: บันทึกการชำระเงิน
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         )}
       </div>

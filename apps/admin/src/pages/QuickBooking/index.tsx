@@ -83,9 +83,37 @@ export default function QuickBooking() {
 
   // Update booking data
   const updateBookingData = useCallback((updates: Partial<BookingData>) => {
-    setBookingData(prev => ({ ...prev, ...updates }))
+    setBookingData(prev => {
+      const newData = { ...prev, ...updates }
+
+      // Auto-navigate to next step when current step becomes complete
+      setTimeout(() => {
+        const updatedCanProceed = isStepCompleteForData(currentStep, newData)
+        if (updatedCanProceed && currentStep < steps.length) {
+          setCurrentStep(currentStep + 1)
+        }
+      }, 50)
+
+      return newData
+    })
     setError(null)
-  }, [])
+  }, [currentStep])
+
+  // Helper function to check step completion with specific data
+  const isStepCompleteForData = (stepNumber: number, data: BookingData): boolean => {
+    switch (stepNumber) {
+      case 1:
+        return !!data.customer
+      case 2:
+        return !!data.service && !!data.basePricing
+      case 3:
+        return !!data.paymentMethod
+      case 4:
+        return true
+      default:
+        return false
+    }
+  }
 
   // Navigation handlers
   const goToNextStep = () => {
@@ -130,7 +158,7 @@ export default function QuickBooking() {
           <CustomerSearch
             selectedCustomer={bookingData.customer}
             onCustomerSelect={(customer) => updateBookingData({ customer })}
-            onNext={canProceed ? goToNextStep : undefined}
+            onNext={undefined}
           />
         )
       case 2:
@@ -150,12 +178,12 @@ export default function QuickBooking() {
                 isHotelBooking: details.isHotelBooking,
                 hotelId: details.hotelId,
                 hotelRoomNumber: details.hotelRoomNumber,
-                address: details.address,
+                addressDetails: details.addressDetails,
                 discountCode: details.discountCode,
                 appliedDiscount: details.appliedDiscount
               })
             }
-            onNext={canProceed ? goToNextStep : undefined}
+            onNext={undefined}
             onBack={goToPreviousStep}
           />
         )
@@ -174,7 +202,7 @@ export default function QuickBooking() {
                 adminNotes: adminNotes
               })
             }
-            onNext={canProceed ? goToNextStep : undefined}
+            onNext={undefined}
             onBack={goToPreviousStep}
           />
         )
@@ -273,15 +301,6 @@ export default function QuickBooking() {
         </div>
       </div>
 
-      {/* Debug Info (Development Only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="p-4 bg-stone-50 rounded-xl border border-stone-200">
-          <p className="text-xs text-stone-500 mb-2">Debug Info:</p>
-          <pre className="text-xs text-stone-600 overflow-x-auto">
-            {JSON.stringify(bookingData, null, 2)}
-          </pre>
-        </div>
-      )}
     </div>
   )
 }

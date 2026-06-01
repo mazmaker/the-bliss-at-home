@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CreditCard, Banknote, Smartphone, Gift, Check, AlertCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { getCurrentAuthenticatedUser } from '../../lib/authHelper'
 
 interface Props {
   totalAmount: number
@@ -50,10 +49,20 @@ export default function PaymentRecording({
       setIsSaving(true)
       setError('')
 
-      // Get current admin user using unified auth helper
-      const authenticatedUser = await getCurrentAuthenticatedUser()
-      if (!authenticatedUser) throw new Error('Admin not authenticated')
-      if (authenticatedUser.role !== 'ADMIN') throw new Error('Access denied. Admin role required.')
+      // Get current admin user using direct Supabase auth
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError) throw new Error(`Authentication error: ${authError.message}`)
+      if (!user) throw new Error('Admin not authenticated')
+
+      // Get admin profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profile) throw new Error('Failed to get admin profile')
+      if (profile.role !== 'ADMIN') throw new Error('Access denied. Admin role required.')
 
       // Save payment record to database
       const paymentData = {
@@ -63,7 +72,7 @@ export default function PaymentRecording({
         amount: totalAmount,
         payment_notes: paymentNotes.trim() || null,
         admin_notes: adminNotes.trim() || null,
-        recorded_by: authenticatedUser.id,
+        recorded_by: user.id,
         status: 'recorded', // Admin just recording, not processing
         recorded_at: new Date().toISOString()
       }

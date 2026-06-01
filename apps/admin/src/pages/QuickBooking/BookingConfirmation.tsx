@@ -116,31 +116,42 @@ export default function BookingConfirmation({
       // Create booking directly in database
       console.log('💾 Creating booking in database...')
       const bookingData_ = {
+        // Required NOT NULL fields
         customer_id: bookingData.customer.id,
         service_id: bookingData.service.id,
         booking_date: bookingData.bookingDate,
         booking_time: bookingData.bookingTime,
-        duration: bookingData.service.duration || 60,
+        duration: bookingData.service.duration || 60, // Required NOT NULL
+        base_price: bookingData.basePricing?.base_price || bookingData.basePricing?.final_price || 0,
+        final_price: bookingData.basePricing?.final_price || 0,
+
+        // Status fields
         status: 'confirmed',
-        base_price: bookingData.basePricing.final_price,
-        discount_amount: bookingData.basePricing.discount_amount || 0,
-        final_price: bookingData.basePricing.final_price,
+        payment_status: 'paid', // Admin booking = customer already paid
+
+        // Pricing fields
+        discount_amount: bookingData.basePricing?.discount_amount || 0,
+
+        // Location fields
         is_hotel_booking: bookingData.isHotelBooking || false,
         hotel_id: bookingData.hotelId || null,
         hotel_room_number: bookingData.hotelRoomNumber || null,
         address: bookingData.addressDetails?.formattedAddress || null,
         latitude: bookingData.addressDetails?.mapLocation?.lat || null,
         longitude: bookingData.addressDetails?.mapLocation?.lng || null,
-        payment_method_recorded: bookingData.paymentMethod || null,
-        admin_notes: bookingData.adminNotes || null,
-        created_by_admin_id: user.id,
-        booking_source: 'admin_quick_booking'
+
+        // Payment method (from admin selection)
+        payment_method: bookingData.paymentMethod || null,
+
+        // Notes (only admin_notes is essential)
+        admin_notes: bookingData.adminNotes || null
       }
+
 
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert(bookingData_)
-        .select()
+        .select('*, booking_number')
         .single()
 
       if (bookingError) {
@@ -152,7 +163,7 @@ export default function BookingConfirmation({
 
       setCreatedBooking({
         id: booking.id,
-        booking_number: `BK${booking.id}`,
+        booking_number: booking.booking_number || `BK${booking.id.slice(0, 8)}`,
         status: booking.status,
         created_at: booking.created_at
       })
