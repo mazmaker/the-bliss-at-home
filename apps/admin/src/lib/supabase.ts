@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'bliss-admin-auth',
     storage: window.localStorage,
     flowType: 'pkce',
-    debug: false, // Disabled - was causing infinite log spam
+    debug: process.env.NODE_ENV === 'development', // Enable debug in development
     refreshInterval: 30 * 60 * 1000, // Refresh every 30 minutes instead of 1 hour
   },
   global: {
@@ -43,5 +43,11 @@ export const createMockAdminClient = () => {
 
 // Export the appropriate client based on auth mode
 export const adminSupabase = USE_MOCK_AUTH ? createMockAdminClient() : supabase
+
+// Expose Supabase client globally for debugging
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).__supabaseClient = supabase;
+  console.log('🔧 Supabase client exposed as window.__supabaseClient for debugging');
+}
 
 export default supabase

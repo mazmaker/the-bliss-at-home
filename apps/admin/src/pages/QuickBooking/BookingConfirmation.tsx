@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Check, User, Calendar, Users, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
+import { supabase, adminBookingService } from '@bliss/supabase'
+import { getCurrentAuthenticatedUser } from '../lib/authHelper'
 
 interface BookingData {
   customer?: any
@@ -7,6 +9,24 @@ interface BookingData {
   staff?: any
   bookingDate?: string
   bookingTime?: string
+  isHotelBooking?: boolean
+  hotelId?: string
+  hotelRoomNumber?: string
+  addressDetails?: {
+    contactName: string
+    contactPhone: string
+    address: string
+    province: string
+    district: string
+    subdistrict: string
+    postalCode: string
+    mapLocation?: { lat: number, lng: number } | null
+    formattedAddress: string
+    isFromSavedAddress?: boolean
+    savedAddressId?: string | null
+    savedAddressLabel?: string
+    savedAddressIsDefault?: boolean
+  }
   basePricing?: {
     base_price: number
     discount_amount: number
@@ -73,23 +93,60 @@ export default function BookingConfirmation({
     setError('')
 
     try {
-      // TODO: Integrate with actual adminBookingService
-      // const booking = await adminBookingService.createAdminBooking(supabase, bookingInput)
+      // Check authentication using unified auth helper (supports both admin auth and Supabase auth)
+      const authenticatedUser = await getCurrentAuthenticatedUser()
+      console.log('🔐 Unified Auth Debug:', {
+        hasUser: !!authenticatedUser,
+        userEmail: authenticatedUser?.email,
+        userRole: authenticatedUser?.role
+      })
 
-      // Mock success for now
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      const mockBooking = {
-        id: 'mock-booking-123',
-        booking_number: 'BK20240519-001',
-        status: 'pending',
-        created_at: new Date().toISOString()
+      if (!authenticatedUser) {
+        throw new Error('กรุณา Login ใหม่ - session หมดอายุแล้ว')
       }
 
-      setCreatedBooking(mockBooking)
+      if (authenticatedUser.role !== 'ADMIN') {
+        throw new Error('Access denied. Admin role required.')
+      }
+
+      // Validate required data
+      if (!bookingData.customer?.id) throw new Error('Customer information missing')
+      if (!bookingData.service?.id) throw new Error('Service information missing')
+      if (!bookingData.bookingDate) throw new Error('Booking date missing')
+      if (!bookingData.bookingTime) throw new Error('Booking time missing')
+      if (!bookingData.basePricing) throw new Error('Pricing information missing')
+
+      // Create real booking using adminBookingService
+      const booking = await adminBookingService.createAdminBooking(supabase, {
+        customer_id: bookingData.customer.id,
+        service_id: bookingData.service.id,
+        booking_date: bookingData.bookingDate,
+        booking_time: bookingData.bookingTime,
+        duration: bookingData.service.duration || 60,
+        is_hotel_booking: bookingData.isHotelBooking || false,
+        hotel_id: bookingData.hotelId || null,
+        hotel_room_number: bookingData.hotelRoomNumber || null,
+        address: bookingData.addressDetails?.formattedAddress || null,
+        latitude: bookingData.addressDetails?.mapLocation?.latitude || null,
+        longitude: bookingData.addressDetails?.mapLocation?.longitude || null,
+        discount_amount: bookingData.basePricing.discount_amount || 0,
+        discount_code_applied: bookingData.discountCode || null,
+        payment_method_recorded: bookingData.paymentMethod || null,
+        admin_notes: bookingData.adminNotes || null,
+        admin_override_restrictions: false
+      })
+
+      setCreatedBooking({
+        id: booking.id,
+        booking_number: booking.booking_number || `BK${Date.now()}`,
+        status: booking.status,
+        created_at: booking.created_at
+      })
+
       onConfirm()
 
     } catch (err: any) {
+      console.error('Admin booking creation error:', err)
       setError(err.message || 'เกิดข้อผิดพลาดในการสร้างการจอง')
     } finally {
       setIsCreating(false)
@@ -182,6 +239,77 @@ export default function BookingConfirmation({
             )}
             {bookingData.bookingTime && (
               <p><span className="text-stone-500">เวลา:</span> {formatTime(bookingData.bookingTime)}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Service Location */}
+        <div className="bg-blue-50 rounded-xl p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Users className="w-5 h-5 text-blue-600" />
+            <h3 className="font-medium text-stone-900">สถานที่ให้บริการ</h3>
+          </div>
+          <div className="space-y-1 text-sm">
+            {bookingData.isHotelBooking && bookingData.hotelId ? (
+              <>
+                <p><span className="text-stone-500">ประเภท:</span> ที่โรงแรม</p>
+                {bookingData.hotelRoomNumber && (
+                  <p><span className="text-stone-500">ห้อง:</span> {bookingData.hotelRoomNumber}</p>
+                )}
+              </>
+            ) : (
+              <>
+                <p><span className="text-stone-500">ประเภท:</span> ที่บ้าน/ออฟฟิศ</p>
+
+                {/* Enhanced address display with source information */}
+                {bookingData.addressDetails ? (
+                  <>
+                    {/* Address source indicator */}
+                    {bookingData.addressDetails.isFromSavedAddress ? (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                          📍 ใช้ที่อยู่ที่บันทึกไว้
+                        </span>
+                        {bookingData.addressDetails.savedAddressLabel && (
+                          <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                            {bookingData.addressDetails.savedAddressLabel}
+                          </span>
+                        )}
+                        {bookingData.addressDetails.savedAddressIsDefault && (
+                          <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                            ค่าเริ่มต้น
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mb-2">
+                        <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">
+                          ✏️ ที่อยู่ใหม่ที่กรอกเอง
+                        </span>
+                      </div>
+                    )}
+
+                    <p><span className="text-stone-500">ที่อยู่:</span> {bookingData.addressDetails.formattedAddress}</p>
+                    {bookingData.addressDetails.contactName && (
+                      <p><span className="text-stone-500">ผู้ติดต่อ:</span> {bookingData.addressDetails.contactName}</p>
+                    )}
+                    {bookingData.addressDetails.contactPhone && (
+                      <p><span className="text-stone-500">เบอร์ติดต่อ:</span> {bookingData.addressDetails.contactPhone}</p>
+                    )}
+                  </>
+                ) : bookingData.customer?.address ? (
+                  <>
+                    <div className="mb-2">
+                      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                        👤 ที่อยู่จากโปรไฟล์ลูกค้า
+                      </span>
+                    </div>
+                    <p><span className="text-stone-500">ที่อยู่:</span> {bookingData.customer.address}</p>
+                  </>
+                ) : (
+                  <p><span className="text-stone-500 text-red-600">⚠️ ที่อยู่:</span> <span className="text-red-600">ไม่พบข้อมูลที่อยู่</span></p>
+                )}
+              </>
             )}
           </div>
         </div>

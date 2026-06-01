@@ -14,6 +14,7 @@ import {
   type Profile,
   type LoginCredentials,
 } from '../lib/supabaseAuth'
+import { supabase } from '../lib/supabase'
 import {
   setupActivityMonitoring,
   startSessionMonitoring,
@@ -432,7 +433,38 @@ export function useAdminAuth() {
         return response
       } else {
         // Real Supabase login
+        console.log('🔐 Starting real Supabase login for:', credentials.email);
         const response = await signInWithEmail(credentials)
+
+        // Debug session details
+        console.log('🔐 Login response:', {
+          hasUser: !!response.user,
+          hasSession: !!response.session,
+          hasProfile: !!response.profile,
+          userEmail: response.user?.email,
+          sessionExpiresAt: response.session?.expires_at ? new Date(response.session.expires_at * 1000).toLocaleString() : 'N/A'
+        });
+
+        // Check what's actually stored in localStorage after login
+        setTimeout(() => {
+          const storedAuth = localStorage.getItem('bliss-admin-auth');
+          console.log('🔐 localStorage after login:', storedAuth ? JSON.parse(storedAuth) : 'NOT FOUND');
+
+          // Also check the actual Supabase session
+          supabase.auth.getSession().then(({ data, error }) => {
+            console.log('🔐 getSession() after login:', {
+              hasSession: !!data.session,
+              error: error?.message
+            });
+          });
+        }, 100);
+
+        // Ensure Supabase session persists
+        if (response.session) {
+          console.log('✅ Supabase session created successfully')
+        } else {
+          console.warn('⚠️ Supabase session missing after login')
+        }
 
         setAuthState({
           user: response.profile,

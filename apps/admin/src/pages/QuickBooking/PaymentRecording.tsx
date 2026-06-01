@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CreditCard, Banknote, Smartphone, Gift, Check, AlertCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { getCurrentAuthenticatedUser } from '../../lib/authHelper'
 
 interface Props {
   totalAmount: number
@@ -49,9 +50,10 @@ export default function PaymentRecording({
       setIsSaving(true)
       setError('')
 
-      // Get current admin user
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Admin not authenticated')
+      // Get current admin user using unified auth helper
+      const authenticatedUser = await getCurrentAuthenticatedUser()
+      if (!authenticatedUser) throw new Error('Admin not authenticated')
+      if (authenticatedUser.role !== 'ADMIN') throw new Error('Access denied. Admin role required.')
 
       // Save payment record to database
       const paymentData = {
@@ -61,7 +63,7 @@ export default function PaymentRecording({
         amount: totalAmount,
         payment_notes: paymentNotes.trim() || null,
         admin_notes: adminNotes.trim() || null,
-        recorded_by: user.id,
+        recorded_by: authenticatedUser.id,
         status: 'recorded', // Admin just recording, not processing
         recorded_at: new Date().toISOString()
       }
@@ -126,7 +128,7 @@ export default function PaymentRecording({
             </div>
           )}
         </div>
-        <p className="text-stone-600">บันทึกช่องทางการชำระเงินของลูกค้า (ไม่ประมวลผลจริง)</p>
+        <p className="text-stone-600">บันทึกวิธีการชำระเงินที่ลูกค้าใช้ สำหรับการรายงานและสถิติ</p>
       </div>
 
       {/* Error Display */}
@@ -149,7 +151,7 @@ export default function PaymentRecording({
             <div>
               <p className="text-blue-800 font-medium">หมายเหตุสำคัญ</p>
               <p className="text-blue-700">
-                ระบบจะบันทึกช่องทางการชำระเงินเข้าฐานข้อมูลสำหรับการรายงานและสถิติ (ไม่ประมวลผลการเงินจริง)
+                ข้อมูลการชำระเงินจะถูกเก็บบันทึกไว้สำหรับการวิเคราะห์ธุรกิจและการรายงานเท่านั้น
               </p>
             </div>
           </div>
