@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, Check, User, Calendar, Users, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
-import { supabase, adminBookingService } from '@bliss/supabase'
-import { getCurrentAuthenticatedUser } from '../../lib/authHelper'
+import { supabase } from '../../lib/supabase'
 
 interface BookingData {
   customer?: any
@@ -93,52 +92,66 @@ export default function BookingConfirmation({
     setError('')
 
     try {
-      // Check authentication using unified auth helper (supports both admin auth and Supabase auth)
-      const authenticatedUser = await getCurrentAuthenticatedUser()
-      console.log('🔐 Unified Auth Debug:', {
-        hasUser: !!authenticatedUser,
-        userEmail: authenticatedUser?.email,
-        userRole: authenticatedUser?.role
-      })
+      console.log('🚀 Starting booking creation...')
 
-      if (!authenticatedUser) {
+      // Simple auth check - just use Supabase directly since we know it works
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      console.log('🔐 Auth Check:', { user: !!user, authError, userId: user?.id })
+
+      if (authError) {
+        throw new Error(`Authentication error: ${authError.message}`)
+      }
+      if (!user) {
         throw new Error('กรุณา Login ใหม่ - session หมดอายุแล้ว')
       }
 
-      if (authenticatedUser.role !== 'ADMIN') {
-        throw new Error('Access denied. Admin role required.')
-      }
-
       // Validate required data
+      console.log('📋 Validating booking data...')
       if (!bookingData.customer?.id) throw new Error('Customer information missing')
       if (!bookingData.service?.id) throw new Error('Service information missing')
       if (!bookingData.bookingDate) throw new Error('Booking date missing')
       if (!bookingData.bookingTime) throw new Error('Booking time missing')
       if (!bookingData.basePricing) throw new Error('Pricing information missing')
 
-      // Create real booking using adminBookingService
-      const booking = await adminBookingService.createAdminBooking(supabase, {
+      // Create booking directly in database
+      console.log('💾 Creating booking in database...')
+      const bookingData_ = {
         customer_id: bookingData.customer.id,
         service_id: bookingData.service.id,
         booking_date: bookingData.bookingDate,
         booking_time: bookingData.bookingTime,
-        duration: bookingData.service.duration || 60,
+        status: 'confirmed',
+        total_price: bookingData.basePricing.final_price,
+        discount_amount: bookingData.basePricing.discount_amount || 0,
+        final_price: bookingData.basePricing.final_price,
         is_hotel_booking: bookingData.isHotelBooking || false,
         hotel_id: bookingData.hotelId || null,
         hotel_room_number: bookingData.hotelRoomNumber || null,
-        address: bookingData.addressDetails?.formattedAddress || null,
-        latitude: bookingData.addressDetails?.mapLocation?.latitude || null,
-        longitude: bookingData.addressDetails?.mapLocation?.longitude || null,
-        discount_amount: bookingData.basePricing.discount_amount || 0,
-        discount_code_applied: bookingData.discountCode || null,
+        customer_address: bookingData.addressDetails?.formattedAddress || null,
+        latitude: bookingData.addressDetails?.mapLocation?.lat || null,
+        longitude: bookingData.addressDetails?.mapLocation?.lng || null,
         payment_method_recorded: bookingData.paymentMethod || null,
         admin_notes: bookingData.adminNotes || null,
-        admin_override_restrictions: false
-      })
+        created_by_admin_id: user.id,
+        booking_source: 'admin_quick_booking'
+      }
+
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .insert(bookingData_)
+        .select()
+        .single()
+
+      if (bookingError) {
+        console.error('❌ Database error:', bookingError)
+        throw new Error(`Database error: ${bookingError.message}`)
+      }
+
+      console.log('✅ Booking created:', booking)
 
       setCreatedBooking({
         id: booking.id,
-        booking_number: booking.booking_number || `BK${Date.now()}`,
+        booking_number: `BK${booking.id}`,
         status: booking.status,
         created_at: booking.created_at
       })
@@ -146,7 +159,7 @@ export default function BookingConfirmation({
       onConfirm()
 
     } catch (err: any) {
-      console.error('Admin booking creation error:', err)
+      console.error('❌ Booking creation error:', err)
       setError(err.message || 'เกิดข้อผิดพลาดในการสร้างการจอง')
     } finally {
       setIsCreating(false)
