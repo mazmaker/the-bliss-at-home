@@ -3,6 +3,7 @@
 **วันที่เสร็จ:** 2026-06-02  
 **สถานะ:** Production Ready ✅  
 **ผู้พัฒนา:** Claude Code  
+**อัพเดทล่าสุด:** 2026-06-02 (แก้ customer creation error)
 
 ---
 
@@ -28,6 +29,7 @@
 - ✅ **Missing required fields** → เพิ่ม `duration`, `payment_status` และ fields อื่นๆ
 - ✅ **Authentication issues** → ลบ problematic `authHelper` imports, ใช้ direct Supabase auth
 - ✅ **Schema compatibility** → ตรวจสอบกับ migration 006, 213, 220 อย่างครอบคลุม
+- ✅ **Customer creation error** → แก้ "Could not find relationship between customers and profiles" โดยลบ join กับ profiles table
 
 ### 3. **Payment System Integration** 
 - ✅ **Payment status logic** → Admin booking แสดง `payment_status: 'paid'` (ลูกค้าจ่ายแล้วถึงให้แอดมินจอง)
@@ -47,6 +49,12 @@
 - ✅ **Workflow integration** → Admin bookings เข้าสู่ระบบ job assignment ปกติ
 - ✅ **Booking source tracking** → ระบุได้ว่าสร้างโดยแอดมิน
 
+### 6. **Customer Creation Issues** (Fixed 2026-06-02)
+- ✅ **"Could not find a relationship" error** → แก้ไขโดยลบ join กับ profiles table ใน `createCustomerForAdmin`
+- ✅ **Database schema compatibility** → ใช้แต่ fields ที่มีจริงใน customers table
+- ✅ **Extended field storage** → เก็บ gender, admin_notes ใน preferences JSON
+- ✅ **Parameter mapping** → รองรับทั้ง birth_date และ date_of_birth
+
 ---
 
 ## 📁 ไฟล์ที่แก้ไข
@@ -61,6 +69,9 @@
 - `apps/admin/src/pages/Bookings.tsx` - รายการจอง + detail modal
 - `apps/admin/src/components/CustomerDetailModal.tsx` - ข้อมูลลูกค้า
 - `apps/admin/src/hooks/useAdminAuth.ts` - Authentication system
+
+### **Backend Services:**
+- `packages/supabase/src/services/customerService.ts` - แก้ไข createCustomerForAdmin function (2026-06-02)
 
 ---
 

@@ -276,7 +276,9 @@ export async function createCustomerForAdmin(
     full_name: string;
     phone: string;
     address?: string;
+    birth_date?: string;  // Support both birth_date and date_of_birth
     date_of_birth?: string;
+    gender?: string;
     preferences?: any;
     admin_notes?: string;
     preferred_contact_method?: string;
@@ -306,31 +308,26 @@ export async function createCustomerForAdmin(
     throw new Error('กรุณากรอกชื่อลูกค้า (อย่างน้อย 2 ตัวอักษร)');
   }
 
+  // Create the customer record (only with fields that exist in the table)
   const { data, error } = await client
     .from('customers')
     .insert({
       full_name: customerData.full_name.trim(),
       phone: cleanPhone,
       address: customerData.address?.trim() || null,
-      date_of_birth: customerData.date_of_birth || null,
-      preferences: customerData.preferences || {},
-      admin_notes: customerData.admin_notes?.trim() || null,
-      preferred_contact_method: customerData.preferred_contact_method || 'phone',
-      emergency_contact_name: customerData.emergency_contact_name?.trim() || null,
-      emergency_contact_phone: customerData.emergency_contact_phone?.replace(/[^\d]/g, '') || null,
-      created_by_admin: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      date_of_birth: customerData.birth_date || customerData.date_of_birth || null,
+      preferences: {
+        ...(customerData.preferences || {}),
+        // Store additional fields in preferences JSON
+        gender: customerData.gender || null,
+        admin_notes: customerData.admin_notes?.trim() || null,
+        preferred_contact_method: customerData.preferred_contact_method || 'phone',
+        emergency_contact_name: customerData.emergency_contact_name?.trim() || null,
+        emergency_contact_phone: customerData.emergency_contact_phone?.replace(/[^\d]/g, '') || null,
+        created_by_admin: true
+      }
     })
-    .select(`
-      *,
-      profile:profiles(
-        id,
-        full_name,
-        avatar_url,
-        email
-      )
-    `)
+    .select('*')
     .single();
 
   if (error) {
