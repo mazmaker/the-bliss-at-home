@@ -232,6 +232,18 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
   - ✅ `apps/customer/src/components/AddressFormModal.tsx`
 - **ข้อความใหม่:** "เบอร์โทรศัพท์ไม่ถูกต้อง (เบอร์มือถือ: 06/08/09, เบอร์บ้าน: 02/03/04/05/07, เบอร์พิเศษ: 1xxx)"
 
+#### **📋 Customer Data Auto-Prefill - เสร็จสมบูรณ์ ✅**
+- **ปัญหาเดิม:** Admin ต้องกรอกข้อมูลติดต่อและที่อยู่ใหม่ทุกครั้ง
+- **แก้ไขแล้ว:** ระบบดึงข้อมูลเดิมของลูกค้ามาแสดงอัตโนมัติ
+- **ฟีเจอร์ใหม่:**
+  - **Auto-prefill ข้อมูลติดต่อ:** ชื่อ + เบอร์โทรศัพท์จาก customer data
+  - **Auto-prefill ที่อยู่:** ดึงที่อยู่เริ่มต้นจากตาราง addresses
+  - **Auto-set Map Location:** ถ้ามีพิกัด latitude/longitude 
+  - **Loading Indicator:** แสดงสถานะกำลังโหลดข้อมูลที่อยู่
+  - **Success Feedback:** แจ้งเมื่อดึงข้อมูลสำเร็จ + สามารถแก้ไขได้
+- **UX Improvement:** เหมือน Customer App ไม่ต้องกรอกข้อมูลซ้ำ
+- **Technical:** ใช้ `useDefaultAddress` hook จาก @bliss/supabase
+
 ---
 
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
