@@ -120,10 +120,11 @@ function AddressFormModal({
     if (!formData.phone.trim()) {
       newErrors.phone = 'กรุณากรอกเบอร์โทรศัพท์'
     } else {
-      // Thai phone validation: 10 digits starting with 0
+      // Thai phone validation: Support all Thai phone formats
       const phoneDigits = formData.phone.replace(/\D/g, '')
-      if (phoneDigits.length !== 10 || !phoneDigits.startsWith('0')) {
-        newErrors.phone = 'เบอร์โทรศัพท์ต้อง 10 หลัก เริ่มต้นด้วย 0'
+      const phoneRegex = /^((06|08|09)[0-9]{8}|(02)[0-9]{7}|(03|04|05|07)[0-9]{6}|1[0-9]{3,5})$/
+      if (!phoneRegex.test(phoneDigits)) {
+        newErrors.phone = 'เบอร์โทรศัพท์ไม่ถูกต้อง (เบอร์มือถือ: 06/08/09, เบอร์บ้าน: 02/03/04/05/07, เบอร์พิเศษ: 1xxx)'
       }
     }
 

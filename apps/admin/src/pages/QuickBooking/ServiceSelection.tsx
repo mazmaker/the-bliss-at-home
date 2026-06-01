@@ -457,10 +457,10 @@ export default function ServiceSelection({
       return false
     }
 
-    // Validate phone number format
-    const phoneRegex = /^08[0-9]{8}$/
+    // Validate phone number format (Support all Thai phone formats)
+    const phoneRegex = /^((06|08|09)[0-9]{8}|(02)[0-9]{7}|(03|04|05|07)[0-9]{6}|1[0-9]{3,5})$/
     if (!phoneRegex.test(contactPhone.replace(/[-\s]/g, ''))) {
-      setError('เบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์ที่ขึ้นต้นด้วย 08 และมี 10 หลัก')
+      setError('เบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์ที่ถูกต้อง (เบอร์มือถือ: 06/08/09, เบอร์บ้าน: 02/03/04/05/07, เบอร์พิเศษ: 1xxx)')
       return false
     }
 
