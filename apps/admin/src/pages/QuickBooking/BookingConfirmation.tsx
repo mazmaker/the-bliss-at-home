@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Check, User, Calendar, Users, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase, adminBookingService } from '@bliss/supabase'
-import { getCurrentAuthenticatedUser } from '../lib/authHelper'
+import { getCurrentAuthenticatedUser } from '../../lib/authHelper'
 
 interface BookingData {
   customer?: any
