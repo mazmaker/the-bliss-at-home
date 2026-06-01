@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, Clock, MapPin, Calendar, Tag, AlertCircle, CheckCircle, X, User, ChevronRight, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { adminBookingService } from '@bliss/supabase'
+import { adminBookingService, useDefaultAddress } from '@bliss/supabase'
 import { GoogleMapsPicker } from '../../components/GoogleMapsPicker'
 
 interface Service {
@@ -130,6 +130,9 @@ export default function ServiceSelection({
   onNext,
   onBack
 }: Props) {
+  // Get customer's default address
+  const { data: defaultAddress, isLoading: addressLoading } = useDefaultAddress(customer?.id)
+
   const [services, setServices] = useState<Service[]>([])
   const [filteredServices, setFilteredServices] = useState<Service[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -218,6 +221,32 @@ export default function ServiceSelection({
       setSelectedMinute('00') // Default to :00
     }
   }, [])
+
+  // Prefill customer contact and address information
+  useEffect(() => {
+    if (customer) {
+      // Prefill contact information
+      setContactName(customer.full_name || '')
+      setContactPhone(customer.phone || '')
+
+      // Prefill address information when default address is available
+      if (defaultAddress && !addressLoading) {
+        setAddress(defaultAddress.address_line || '')
+        setProvince(defaultAddress.province || '')
+        setDistrict(defaultAddress.district || '')
+        setSubdistrict(defaultAddress.subdistrict || '')
+        setPostalCode(defaultAddress.zipcode || '')
+
+        // Set map location if coordinates are available
+        if (defaultAddress.latitude && defaultAddress.longitude) {
+          setMapLocation({
+            lat: defaultAddress.latitude,
+            lng: defaultAddress.longitude
+          })
+        }
+      }
+    }
+  }, [customer, defaultAddress, addressLoading])
 
   const loadServices = async () => {
     try {
@@ -1036,6 +1065,21 @@ export default function ServiceSelection({
                     />
                   </div>
                 </div>
+
+                {/* Address status info */}
+                {addressLoading && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-blue-700">กำลังโหลดข้อมูลที่อยู่เริ่มต้นของลูกค้า...</span>
+                  </div>
+                )}
+
+                {defaultAddress && !addressLoading && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm text-green-700">ระบบดึงข้อมูลที่อยู่เริ่มต้นของลูกค้าแล้ว - สามารถแก้ไขได้</span>
+                  </div>
+                )}
 
                 {/* Address */}
                 <div>
