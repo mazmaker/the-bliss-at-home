@@ -215,7 +215,7 @@ class ReminderService {
     const message = this.buildLineMessage(job, type)
 
     try {
-      const staffAppUrl = process.env.STAFF_LIFF_URL || 'https://hollywood-camps-permissions-leave.trycloudflare.com'
+      const staffAppUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissmassageathome.com'
 
       await lineService.pushMessage(job.lineUserId, [{
         type: 'template',
