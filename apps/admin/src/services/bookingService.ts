@@ -234,7 +234,7 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
-          customers(id, full_name, phone),
+          customers(id, full_name, phone, created_at),
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)

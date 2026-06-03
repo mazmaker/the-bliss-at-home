@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Review the UI/UX design changes in $ARGUMENTS. Check for:\n- Design system compliance\n- Component structure and reusability\n- Accessibility best practices\n- Visual consistency\n- User experience improvements\n- Code organization and maintainability\n\nProvide specific recommendations for improvements.",
+            "if": "Write(*.tsx)|Write(*.jsx)|Write(*.ts)|Write(*.js)|Write(*.vue)|Write(*.css)|Write(*.scss)|Write(*.sass)|Write(*.less)|Write(*.html)|Write(*.htm)|Edit(*.tsx)|Edit(*.jsx)|Edit(*.ts)|Edit(*.js)|Edit(*.vue)|Edit(*.css)|Edit(*.scss)|Edit(*.sass)|Edit(*.less)|Edit(*.html)|Edit(*.htm)",
+            "statusMessage": "🎨 Reviewing UI/UX design...",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  },
+  "autoMemoryEnabled": true,
+  "permissions": {
+    "defaultMode": "default"
+  }
+}

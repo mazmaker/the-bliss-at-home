@@ -113,8 +113,19 @@ export default function BookingConfirmation({
       if (!bookingData.bookingTime) throw new Error('Booking time missing')
       if (!bookingData.basePricing) throw new Error('Pricing information missing')
 
+      // Calculate staff earnings from service commission rate
+      const finalPrice = bookingData.basePricing?.final_price || 0
+      const commissionRate = bookingData.service?.staff_commission_rate || 0
+      const staffEarnings = Math.round(finalPrice * commissionRate)
+
       // Create booking directly in database
       console.log('💾 Creating booking in database...')
+      console.log('💰 Staff earnings calculation:', {
+        finalPrice,
+        commissionRate: `${commissionRate * 100}%`,
+        staffEarnings
+      })
+
       const bookingData_ = {
         // Required NOT NULL fields
         customer_id: bookingData.customer.id,
@@ -131,6 +142,10 @@ export default function BookingConfirmation({
 
         // Pricing fields
         discount_amount: bookingData.basePricing?.discount_amount || 0,
+        staff_earnings: staffEarnings, // Calculated from service commission rate
+
+        // Note: Customer contact info is stored in customers table via customer_id
+        // No need for separate customer_name/customer_phone fields
 
         // Location fields
         is_hotel_booking: bookingData.isHotelBooking || false,
@@ -142,6 +157,9 @@ export default function BookingConfirmation({
 
         // Payment method (from admin selection)
         payment_method: bookingData.paymentMethod || null,
+
+        // Booking source identifier
+        booking_source: 'admin_app',
 
         // Notes (only admin_notes is essential)
         admin_notes: bookingData.adminNotes || null

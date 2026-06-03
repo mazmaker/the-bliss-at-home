@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, User, Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
+import { Search, User, Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
 import { customerService } from '@bliss/supabase'
 import { supabase } from '../../lib/supabase'
 
@@ -105,15 +105,7 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Customer[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [createFormData, setCreateFormData] = useState({
-    full_name: '',
-    phone: '',
-    birth_date: '',
-    gender: '',
-    admin_notes: ''
-  })
-  const [createError, setCreateError] = useState('')
+  // Removed create form states - only allow selecting existing customers
   const [usingMockData, setUsingMockData] = useState(false)
 
 
@@ -267,33 +259,7 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Create new customer
-  const createCustomer = async () => {
-    if (!createFormData.full_name || !createFormData.phone) {
-      setCreateError('กรุณากรอกชื่อและเบอร์โทรศัพท์')
-      return
-    }
-
-    setIsLoading(true)
-    setCreateError('')
-
-    try {
-      const newCustomer = await customerService.createCustomerForAdmin(supabase, createFormData)
-      onCustomerSelect(newCustomer)
-      setShowCreateForm(false)
-      setCreateFormData({
-        full_name: '',
-        phone: '',
-        birth_date: '',
-        gender: '',
-        admin_notes: ''
-      })
-    } catch (error: any) {
-      setCreateError(error.message || 'เกิดข้อผิดพลาดในการสร้างลูกค้า')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Customer creation removed - only allow selecting existing customers
 
   // Format phone number for display
   const formatPhone = (phone: string) => {
@@ -323,19 +289,9 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-stone-900 mb-2">ค้นหาลูกค้า</h2>
-          <p className="text-stone-600">ค้นหาลูกค้าด้วยเบอร์โทร, ชื่อ, หรือ email</p>
-        </div>
-        {import.meta.env.DEV && (
-          <button
-            onClick={() => testDatabaseConnection(true)}
-            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            🔧 ทดสอบ DB
-          </button>
-        )}
+      <div>
+        <h2 className="text-xl font-semibold text-stone-900 mb-2">ค้นหาลูกค้า</h2>
+        <p className="text-stone-600">ค้นหาลูกค้าด้วยเบอร์โทร, ชื่อ, หรือ email</p>
       </div>
 
       {/* Selected Customer Display */}
@@ -486,151 +442,26 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
               ) : searchQuery.length >= 2 ? (
                 <div className="p-8 text-center text-stone-500">
                   <User className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-                  <p className="mb-4">ไม่พบลูกค้า "{searchQuery}"</p>
-                  <button
-                    onClick={() => {
-                      setShowCreateForm(true)
-                      setCreateFormData(prev => ({
-                        ...prev,
-                        phone: searchQuery.replace(/[^\d]/g, '').slice(0, 10)
-                      }))
-                    }}
-                    className="bg-amber-600 text-white px-4 py-2 rounded-xl hover:bg-amber-700 transition-colors flex items-center gap-2 mx-auto"
-                  >
-                    <Plus className="w-4 h-4" />
-                    สร้างลูกค้าใหม่
-                  </button>
+                  <p>ไม่พบลูกค้า "{searchQuery}"</p>
                 </div>
               ) : null}
             </div>
           )}
 
-          {/* Create New Customer Button */}
+          {/* Instructions for creating customers */}
           {!searchQuery && (
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="w-full border-2 border-dashed border-stone-300 rounded-xl p-6 hover:border-amber-400 hover:bg-amber-50 transition-colors"
-            >
-              <Plus className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-              <p className="text-stone-600 font-medium">สร้างลูกค้าใหม่</p>
-              <p className="text-stone-400 text-sm">สำหรับลูกค้าที่ไม่เคยใช้บริการ</p>
-            </button>
+            <div className="border-2 border-dashed border-stone-200 rounded-xl p-6 text-center">
+              <User className="w-8 h-8 text-stone-300 mx-auto mb-2" />
+              <p className="text-stone-600 font-medium">เลือกลูกค้าจากระบบ</p>
+              <p className="text-stone-400 text-sm">
+                พิมพ์ชื่อหรือเบอร์โทรเพื่อค้นหาลูกค้า
+              </p>
+            </div>
           )}
         </>
       )}
 
-      {/* Create Customer Form */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">สร้างลูกค้าใหม่</h3>
-
-            {createError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {createError}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
-                  ชื่อ-นามสกุล *
-                </label>
-                <input
-                  type="text"
-                  value={createFormData.full_name}
-                  onChange={(e) => setCreateFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="กรอกชื่อลูกค้า"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
-                  เบอร์โทรศัพท์ *
-                </label>
-                <input
-                  type="tel"
-                  value={createFormData.phone}
-                  onChange={(e) => setCreateFormData(prev => ({
-                    ...prev,
-                    phone: e.target.value.replace(/[^\d]/g, '').slice(0, 10)
-                  }))}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="0812345678"
-                />
-              </div>
-
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
-                    วันเกิด
-                  </label>
-                  <input
-                    type="date"
-                    value={createFormData.birth_date}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, birth_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
-                    เพศ
-                  </label>
-                  <select
-                    value={createFormData.gender}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, gender: e.target.value }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  >
-                    <option value="">เลือกเพศ</option>
-                    <option value="male">ชาย</option>
-                    <option value="female">หญิง</option>
-                    <option value="other">อื่นๆ</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
-                  หมายเหตุ (Admin)
-                </label>
-                <input
-                  type="text"
-                  value={createFormData.admin_notes}
-                  onChange={(e) => setCreateFormData(prev => ({ ...prev, admin_notes: e.target.value }))}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="หมายเหตุเพิ่มเติม"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowCreateForm(false)
-                  setCreateError('')
-                }}
-                className="px-4 py-2 text-stone-600 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
-                disabled={isLoading}
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={createCustomer}
-                disabled={isLoading || !createFormData.full_name || !createFormData.phone}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isLoading && (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                )}
-                สร้างลูกค้า
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Customer creation removed - use Customers page instead */}
 
       {/* Next Button */}
       {selectedCustomer && onNext && (

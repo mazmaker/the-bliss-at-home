@@ -21,6 +21,8 @@ export function GoogleMapsPicker({
   onLocationChange,
   className = '',
 }: GoogleMapsPickerProps) {
+  console.log('🗺️ GoogleMapsPicker: Component initialized', { latitude, longitude, className })
+
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
@@ -45,10 +47,13 @@ export function GoogleMapsPicker({
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
     if (!apiKey) {
+      console.error('❌ GoogleMapsPicker: No API key found')
       setError('Google Maps API Key ไม่ถูกตั้งค่า')
       setIsLoading(false)
       return
     }
+
+    console.log('✅ GoogleMapsPicker: API key found, loading Google Maps...')
 
     const script = document.createElement('script')
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=th`
@@ -158,9 +163,10 @@ export function GoogleMapsPicker({
         onLocationChange(lat, lng)
       })
 
+      console.log('🎉 GoogleMapsPicker: Map initialized successfully')
       setIsLoading(false)
     } catch (err) {
-      console.error('Error initializing map:', err)
+      console.error('❌ GoogleMapsPicker: Error initializing map:', err)
       setError('เกิดข้อผิดพลาดในการโหลดแผนที่')
       setIsLoading(false)
     }

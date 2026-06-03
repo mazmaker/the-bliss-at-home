@@ -69,6 +69,7 @@ export function CancelBookingModal({
   totalPrice,
   paymentStatus,
 }: CancelBookingModalProps) {
+  // Auto UI/UX review test - improved component structure
   const [step, setStep] = useState<'check' | 'reason' | 'confirm' | 'result'>('check')
   const [eligibility, setEligibility] = useState<CancellationEligibility | null>(null)
   const [policy, setPolicy] = useState<CancellationPolicy | null>(null)

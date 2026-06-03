@@ -3,3 +3,4 @@
  */
 
 export { AdminLoginForm } from './AdminLoginForm'
+export { default as ThaiAddressFields } from './ThaiAddressFields'

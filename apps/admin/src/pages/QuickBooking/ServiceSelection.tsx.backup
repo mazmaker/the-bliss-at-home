@@ -4,7 +4,6 @@ import { ArrowLeft, ArrowRight, Clock, MapPin, Calendar, Tag, AlertCircle, Check
 import { supabase } from '../../lib/supabase'
 import { adminBookingService } from '@bliss/supabase'
 import { GoogleMapsPicker } from '../../components/GoogleMapsPicker'
-import { ThaiAddressFields } from '../../components'
 
 interface Service {
   id: string
@@ -22,7 +21,6 @@ interface Service {
   image_url?: string
   is_active: boolean
   sort_order: number
-  staff_commission_rate: number // Commission rate percentage (e.g., 0.25 for 0.25%)
 }
 
 interface ServiceSelection {
@@ -180,7 +178,6 @@ export default function ServiceSelection({
     if (selectedAddr) {
       setSelectedAddressId(addressId)
       setShowManualAddressForm(false)
-      setUserWantsNewAddress(false)
       // Populate address state from selected saved address
       setContactName(selectedAddr.recipient_name || '')
       setContactPhone(selectedAddr.phone || '')
@@ -204,7 +201,6 @@ export default function ServiceSelection({
   const handleShowManualForm = () => {
     setSelectedAddressId(null)
     setShowManualAddressForm(true)
-    setUserWantsNewAddress(true)
     // Auto-fill with customer data instead of resetting to empty (exactly like Customer App)
     setContactName(customer?.full_name || '')
     setContactPhone(customer?.phone || '')
@@ -235,7 +231,6 @@ export default function ServiceSelection({
   // Address details state for home/office booking
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showManualAddressForm, setShowManualAddressForm] = useState(false)
-  const [userWantsNewAddress, setUserWantsNewAddress] = useState(false)
   const [contactName, setContactName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [address, setAddress] = useState('')
@@ -355,15 +350,14 @@ export default function ServiceSelection({
   }, [])
 
   // Auto-select default address when addresses are loaded (exactly like Customer App)
-  // But NOT when user explicitly wants to add a new address
   useEffect(() => {
-    if (addresses && addresses.length > 0 && !selectedAddressId && !showManualAddressForm && !userWantsNewAddress) {
+    if (addresses && addresses.length > 0 && !selectedAddressId && !showManualAddressForm) {
       const defaultAddress = addresses.find(addr => addr.is_default)
       if (defaultAddress) {
         handleSelectAddress(defaultAddress.id)
       }
     }
-  }, [addresses, selectedAddressId, showManualAddressForm, userWantsNewAddress])
+  }, [addresses, selectedAddressId, showManualAddressForm])
 
   // Auto-show manual form with customer data if no saved addresses (exactly like Customer App)
   useEffect(() => {
@@ -784,7 +778,7 @@ export default function ServiceSelection({
         subdistrict,
         postalCode,
         mapLocation,
-        formattedAddress: `${address} ${subdistrict} ${district} ${province} ${postalCode}`,
+        formattedAddress: `${address} ${subdistrict} ${district} ${provinces.find(p => p.id === province)?.name} ${postalCode}`,
         // Add metadata about address source
         isFromSavedAddress: !!selectedAddressId,
         savedAddressId: selectedAddressId,
@@ -1014,7 +1008,7 @@ export default function ServiceSelection({
                 </div>
 
                 {/* Services Grid */}
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
                   {filteredServices.map((service) => {
                     const isSelected = selectedServiceId === service.id
                     const basePrice = calculateServicePrice(service, service.duration)
@@ -1024,10 +1018,10 @@ export default function ServiceSelection({
                         key={service.id}
                         onClick={() => handleServiceClick(service)}
                         className={`
-                          w-full p-6 rounded-xl border-2 text-left transition-all duration-300 shadow-sm
+                          p-4 rounded-xl border-2 text-left transition-all duration-300 shadow-sm
                           ${isSelected
-                            ? 'border-[#d29b25] bg-gradient-to-r from-[#ffe79d] to-[#ffe79d]/70 shadow-lg transform scale-[1.01]'
-                            : 'border-stone-200 bg-white hover:border-[#d29b25]/50 hover:bg-[#ffe79d]/20 hover:shadow-lg'
+                            ? 'border-[#d29b25] bg-gradient-to-r from-[#ffe79d] to-[#ffe79d]/70 shadow-md transform scale-[1.01]'
+                            : 'border-stone-300 bg-white hover:border-[#d29b25]/50 hover:bg-[#ffe79d]/20 hover:shadow-md'
                           }
                           cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d29b25] focus:ring-offset-1
                         `}
@@ -1407,10 +1401,7 @@ export default function ServiceSelection({
                           <h5 className="text-sm font-medium text-stone-900">กรอกข้อมูลที่อยู่ใหม่</h5>
                           {addresses && addresses.length > 0 && (
                             <button
-                              onClick={() => {
-                                setShowManualAddressForm(false)
-                                setUserWantsNewAddress(false)
-                              }}
+                              onClick={() => setShowManualAddressForm(false)}
                               className="text-sm text-stone-600 hover:text-stone-900"
                             >
                               ← กลับไปเลือกที่อยู่ที่บันทึกไว้
@@ -1460,43 +1451,59 @@ export default function ServiceSelection({
                           />
                         </div>
 
-                        {/* Thai Address Fields with Dropdown */}
-                        <ThaiAddressFields
-                          province={province}
-                          district={district}
-                          subdistrict={subdistrict}
-                          zipcode={postalCode}
-                          onChange={({ province, district, subdistrict, zipcode }) => {
-                            setProvince(province)
-                            setDistrict(district)
-                            setSubdistrict(subdistrict)
-                            setPostalCode(zipcode)
-                          }}
-                        />
+                        {/* Simple Address Fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              จังหวัด <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={province}
+                              onChange={(e) => setProvince(e.target.value)}
+                              placeholder="กรุงเทพมหานคร"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              เขต/อำเภอ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={district}
+                              onChange={(e) => setDistrict(e.target.value)}
+                              placeholder="เขตบางรัก"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                        </div>
 
-                        {/* GPS Map Integration */}
-                        <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
-                            ปักหมุดตำแหน่งที่อยู่ <span className="text-red-500">*</span>
-                          </label>
-
-
-                          <GoogleMapsPicker
-                            latitude={mapLocation?.lat || 13.7563}
-                            longitude={mapLocation?.lng || 100.5018}
-                            onLocationChange={(lat: number, lng: number) => setMapLocation({ lat, lng })}
-                            className="w-full h-64 rounded-lg border border-stone-300"
-                          />
-                          {mapLocation && (
-                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-green-600" />
-                                <span className="text-sm font-medium text-green-800">
-                                  พิกัดที่เลือก: {mapLocation.lat.toFixed(6)}, {mapLocation.lng.toFixed(6)}
-                                </span>
-                              </div>
-                            </div>
-                          )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              แขวง/ตำบล
+                            </label>
+                            <input
+                              type="text"
+                              value={subdistrict}
+                              onChange={(e) => setSubdistrict(e.target.value)}
+                              placeholder="แขวงบางรัก"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              รหัสไปรษณีย์ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={postalCode}
+                              onChange={(e) => setPostalCode(e.target.value)}
+                              placeholder="10500"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1586,11 +1593,489 @@ export default function ServiceSelection({
           )}
         </div>
 
-        {/* Right Column: Booking Details - Only show when not in details step */}
-        {step !== 'details' && (
+        {/* Right Column: Booking Details */}
         <div className="space-y-4">
-        </div>
+
+        {currentServiceSelection && (
+          <>
+
+          {/* Booking Type */}
+          <div className="bg-white border border-stone-200 rounded-lg p-5">
+            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-amber-700" />
+              ประเภทการจอง
+            </h3>
+            <div className="space-y-3">
+              <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
+                !isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="bookingType"
+                  checked={!isHotelBooking}
+                  onChange={() => setIsHotelBooking(false)}
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">นัดหมายที่บ้าน/สำนักงาน</span>
+                </div>
+              </label>
+              <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
+                isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="bookingType"
+                  checked={isHotelBooking}
+                  onChange={() => setIsHotelBooking(true)}
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex items-center gap-2 flex-1 justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium">บริการในโรงแรม</span>
+                  </div>
+                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    ลดพิเศษ
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {!isHotelBooking && (
+              <>
+                <div className="mt-6 pt-4 border-t border-stone-200">
+                  <h4 className="font-medium text-stone-900 mb-4">
+                    ข้อมูลติดต่อและที่อยู่
+                  </h4>
+
+                  {/* Address Selection (exactly like Customer App) */}
+                  <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-medium text-stone-700">
+                      เลือกที่อยู่ที่บันทึกไว้ หรือเพิ่มที่อยู่ใหม่
+                    </label>
+                    <button
+                      onClick={() => refetchAddresses()}
+                      disabled={addressesLoading}
+                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition disabled:opacity-50"
+                    >
+                      {addressesLoading ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
+                    </button>
+                  </div>
+
+                  {addressesLoading ? (
+                    <div className="flex items-center justify-center p-6 bg-stone-50 rounded-lg">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3"></div>
+                      <p className="text-stone-600 text-sm ml-3">กำลังโหลดที่อยู่...</p>
+                    </div>
+                  ) : addresses && addresses.length > 0 && !showManualAddressForm ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-stone-600 mb-3">เลือกที่อยู่ที่บันทึกไว้</p>
+
+                      {/* Saved Address Cards */}
+                      <div className="space-y-3">
+                        {addresses.map((addr) => (
+                          <button
+                            key={addr.id}
+                            onClick={() => handleSelectAddress(addr.id)}
+                            className={`w-full p-4 rounded-xl border-2 text-left transition shadow-sm ${
+                              selectedAddressId === addr.id
+                                ? 'border-amber-700 bg-amber-50 shadow-md'
+                                : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50 hover:shadow-md'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="inline-block px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded">
+                                    {addr.label}
+                                  </span>
+                                  {addr.is_default && (
+                                    <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                                      ค่าเริ่มต้น
+                                    </span>
+                                  )}
+                                </div>
+                                <h3 className="font-semibold text-stone-900 mb-1">{addr.recipient_name}</h3>
+                                <p className="text-sm text-stone-600 mb-1">{addr.phone}</p>
+                                <p className="text-sm text-stone-600">
+                                  {addr.address_line}
+                                  {addr.subdistrict && `, ${addr.subdistrict}`}
+                                  {addr.district && `, ${addr.district}`}
+                                  {`, ${addr.province} ${addr.zipcode || ''}`}
+                                </p>
+                              </div>
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                                selectedAddressId === addr.id
+                                  ? 'border-amber-700 bg-amber-700'
+                                  : 'border-stone-300'
+                              }`}>
+                                {selectedAddressId === addr.id && (
+                                  <CheckCircle className="w-4 h-4 text-white" />
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Add New Address Button */}
+                      <button
+                        onClick={handleShowManualForm}
+                        className="w-full p-4 mt-2 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span className="text-sm font-medium">เพิ่มที่อยู่ใหม่</span>
+                      </button>
+
+                      {/* Map Location for Selected Address */}
+                      {selectedAddressId && (
+                        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin className="w-5 h-5 text-blue-600" />
+                            <label className="text-sm font-medium text-blue-900">
+                              ปักหมุดตำแหน่งที่แน่นอน (สำหรับ Staff นำทาง)
+                            </label>
+                          </div>
+                          <p className="text-xs text-blue-600 mb-3">
+                            📍 กรุณาปักหมุดตำแหน่งที่แน่นอนเพื่อให้ Staff สามารถนำทางไปได้ถูกต้อง
+                          </p>
+                          <GoogleMapsPicker
+                            latitude={mapLocation?.lat || null}
+                            longitude={mapLocation?.lng || null}
+                            onLocationChange={(lat, lng) => {
+                              setMapLocation({ lat, lng })
+                            }}
+                            className="h-80"
+                          />
+                          {mapLocation ? (
+                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs">
+                              <span className="text-green-600">✅ ตำแหน่งบันทึกแล้ว:</span>
+                              <span className="font-mono ml-2 text-green-700">
+                                {mapLocation.lat.toFixed(6)}, {mapLocation.lng.toFixed(6)}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                              <span className="text-yellow-600">⚠️ ยังไม่ได้ปักหมุด - คลิกบนแผนที่เพื่อระบุตำแหน่ง</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Manual Address Form (show when adding new address or no saved addresses) */
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-sm font-medium text-stone-900">กรอกข้อมูลที่อยู่ใหม่</h5>
+                        {addresses && addresses.length > 0 && (
+                          <button
+                            onClick={() => setShowManualAddressForm(false)}
+                            className="text-sm text-stone-600 hover:text-stone-900"
+                          >
+                            ← กลับไปเลือกที่อยู่ที่บันทึกไว้
+                          </button>
+                        )}
+                      </div>
+
+                {/* Contact Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      ชื่อผู้ติดต่อ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      placeholder="ชื่อ-นามสกุล"
+                      className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="08x-xxx-xxxx"
+                      className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                    ที่อยู่ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="บ้านเลขที่, หมู่บ้าน, ถนน"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                  />
+                </div>
+
+                {/* Province, District, Subdistrict */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      จังหวัด <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={province}
+                      onChange={(e) => handleProvinceChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                    >
+                      <option value="">-- เลือกจังหวัด --</option>
+                      {provinces.map((prov) => (
+                        <option key={prov.id} value={prov.id}>
+                          {prov.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      เขต/อำเภอ <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={district}
+                      onChange={(e) => handleDistrictChange(e.target.value)}
+                      disabled={!province}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25] disabled:bg-stone-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="">
+                        {province ? "-- เลือกเขต/อำเภอ --" : "-- เลือกจังหวัดก่อน --"}
+                      </option>
+                      {getAvailableDistricts().map((dist) => (
+                        <option key={dist.id} value={dist.id}>
+                          {dist.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      แขวง/ตำบล <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={subdistrict}
+                      onChange={(e) => setSubdistrict(e.target.value)}
+                      disabled={!district}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25] disabled:bg-stone-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="">
+                        {district ? "-- เลือกแขวง/ตำบล --" : "-- เลือกเขต/อำเภอก่อน --"}
+                      </option>
+                      {/* In real app, fetch subdistricts based on district */}
+                      {district && (
+                        <>
+                          <option value="1">คลองเตย</option>
+                          <option value="2">คลองตัน</option>
+                          <option value="3">พระโขนง</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                      รหัสไปรษณีย์ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="10110"
+                      maxLength={5}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                    />
+                  </div>
+                </div>
+
+                {/* GPS Location Input */}
+                <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-3">🗺️ GPS ปักหมุด (สำหรับ Staff นำทาง)</h4>
+                  <p className="text-sm text-blue-600 mb-3">กรุณาใส่พิกัด GPS เพื่อให้ Staff นำทางไปได้ถูกต้อง</p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-blue-900 mb-1">Latitude (ละติจูด)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="13.7563"
+                        value={mapLocation?.lat || ''}
+                        onChange={(e) => {
+                          const lat = parseFloat(e.target.value)
+                          if (!isNaN(lat)) {
+                            setMapLocation(prev => ({ lat, lng: prev?.lng || 100.5018 }))
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-blue-900 mb-1">Longitude (ลองติจูด)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="100.5018"
+                        value={mapLocation?.lng || ''}
+                        onChange={(e) => {
+                          const lng = parseFloat(e.target.value)
+                          if (!isNaN(lng)) {
+                            setMapLocation(prev => ({ lat: prev?.lat || 13.7563, lng }))
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {mapLocation?.lat && mapLocation?.lng && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <span className="text-green-600 font-medium">✅ GPS บันทึกแล้ว:</span>
+                      <span className="font-mono text-green-700 ml-2">
+                        {mapLocation.lat.toFixed(6)}, {mapLocation.lng.toFixed(6)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Map Location (Required for Staff GPS) */}
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <label className="text-sm font-medium text-blue-900">
+                      🗺️ ปักหมุดตำแหน่งที่แน่นอน (สำหรับ Staff นำทาง)
+                    </label>
+                  </div>
+                  <p className="text-xs text-blue-600 mb-3">
+                    📍 กรุณาปักหมุดตำแหน่งที่แน่นอนเพื่อให้ Staff สามารถนำทางไปได้ถูกต้อง
+                  </p>
+
+                  <div className="bg-white rounded border">
+                    <GoogleMapsPicker
+                      latitude={mapLocation?.lat || null}
+                      longitude={mapLocation?.lng || null}
+                      onLocationChange={(lat, lng) => {
+                        setMapLocation({ lat, lng })
+                      }}
+                      className="h-80"
+                    />
+                  </div>
+
+                  {/* Fallback Manual Coordinates Input */}
+                  <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
+                    <p className="text-xs text-gray-600 mb-2">📱 หรือกรอก GPS พิกัดโดยตรง (ถ้าแผนที่ไม่แสดง):</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-700 mb-1">Latitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="13.7563"
+                          value={mapLocation?.lat || ''}
+                          onChange={(e) => {
+                            const lat = parseFloat(e.target.value)
+                            if (!isNaN(lat) && mapLocation?.lng) {
+                              setMapLocation({ lat, lng: mapLocation.lng })
+                            } else if (!isNaN(lat)) {
+                              setMapLocation({ lat, lng: 100.5018 })
+                            }
+                          }}
+                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-700 mb-1">Longitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="100.5018"
+                          value={mapLocation?.lng || ''}
+                          onChange={(e) => {
+                            const lng = parseFloat(e.target.value)
+                            if (!isNaN(lng) && mapLocation?.lat) {
+                              setMapLocation({ lat: mapLocation.lat, lng })
+                            } else if (!isNaN(lng)) {
+                              setMapLocation({ lat: 13.7563, lng })
+                            }
+                          }}
+                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {mapLocation ? (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs">
+                      <span className="text-green-600">✅ ตำแหน่งบันทึกแล้ว:</span>
+                      <span className="font-mono ml-2 text-green-700">
+                        {mapLocation.lat.toFixed(6)}, {mapLocation.lng.toFixed(6)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                      <span className="text-yellow-600">⚠️ ยังไม่ได้ปักหมุด - คลิกบนแผนที่เพื่อระบุตำแหน่ง</span>
+                    </div>
+                  )}
+                </div>
+                    </div>
+                  )}
+                </div>
+
+            {/* Pricing Summary */}
+            {currentPricing && (
+              <div className="bg-stone-50 border border-stone-200 rounded-lg p-4">
+                <h3 className="font-medium text-stone-900 mb-3">สรุปราคา</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">ค่าบริการ:</span>
+                    <span>{formatCurrency(currentPricing.base_price)}</span>
+                  </div>
+
+
+                  {appliedPromotion && (currentPricing.code_discount ?? 0) > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>ส่วนลดโค้ด:</span>
+                      <span>-{formatCurrency(currentPricing.code_discount ?? 0)}</span>
+                    </div>
+                  )}
+
+                  {currentPricing.discount_amount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>ส่วนลดรวม:</span>
+                      <span>-{formatCurrency(currentPricing.discount_amount)}</span>
+                    </div>
+                  )}
+
+                  <div className="border-t pt-2 flex justify-between font-medium">
+                    <span>ยอดรวม:</span>
+                    <span className="text-[#d29b25] text-lg">
+                      {formatCurrency(currentPricing.final_price)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
+
+        </>
+        )}
+        </div>
+      </div>
 
       <div className="flex justify-between">
         <button
@@ -1639,7 +2124,6 @@ export default function ServiceSelection({
             )}
           </button>
         )}
-      </div>
       </div>
     </div>
   )

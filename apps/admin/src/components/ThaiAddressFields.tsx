@@ -102,6 +102,7 @@ function ThaiAddressFields({
     })
   }
 
+  // Get current selected IDs for dropdown values
   const selectedProvinceValue = useMemo(() => {
     if (!provinceId) return ''
     return String(provinceId)
@@ -118,72 +119,100 @@ function ThaiAddressFields({
     return found ? String(found.id) : ''
   }, [subdistrict, subdistricts])
 
-  const inputClass = (hasError: boolean) =>
-    `w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
+  const selectClass = (hasError: boolean) =>
+    `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
       hasError ? 'border-red-500' : 'border-stone-300'
     }`
 
   return (
     <>
+      {/* Province and District */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">
+        <div data-field="province">
+          <label className="block text-sm font-medium text-stone-700 mb-2">
             จังหวัด <span className="text-red-500">*</span>
           </label>
           <select
             value={selectedProvinceValue}
             onChange={handleProvinceChange}
             disabled={disabled || loadingProvinces}
-            className={inputClass(!!errors.province)}
+            className={selectClass(!!errors.province)}
           >
             <option value="">
               {loadingProvinces ? 'กำลังโหลด...' : '-- เลือกจังหวัด --'}
             </option>
             {provinces.map((p: ThaiProvince) => (
-              <option key={p.id} value={p.id}>{p.name_th}</option>
+              <option key={p.id} value={p.id}>
+                {p.name_th}
+              </option>
             ))}
           </select>
-          {errors.province && <p className="text-xs text-red-600 mt-1">{errors.province}</p>}
+          {errors.province && (
+            <p className="text-xs text-red-600 mt-1">{errors.province}</p>
+          )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">เขต/อำเภอ</label>
+        <div data-field="district">
+          <label className="block text-sm font-medium text-stone-700 mb-2">
+            เขต/อำเภอ
+          </label>
           <select
             value={selectedDistrictValue}
             onChange={handleDistrictChange}
             disabled={disabled || !provinceId || loadingDistricts}
-            className={inputClass(!!errors.district)}
+            className={selectClass(!!errors.district)}
           >
             <option value="">
-              {!provinceId ? '-- เลือกจังหวัดก่อน --' : loadingDistricts ? 'กำลังโหลด...' : '-- เลือกเขต/อำเภอ --'}
+              {!provinceId
+                ? '-- เลือกจังหวัดก่อน --'
+                : loadingDistricts
+                  ? 'กำลังโหลด...'
+                  : '-- เลือกเขต/อำเภอ --'}
             </option>
             {districts.map((d: ThaiDistrict) => (
-              <option key={d.id} value={d.id}>{d.name_th}</option>
+              <option key={d.id} value={d.id}>
+                {d.name_th}
+              </option>
             ))}
           </select>
+          {errors.district && (
+            <p className="text-xs text-red-600 mt-1">{errors.district}</p>
+          )}
         </div>
       </div>
 
+      {/* Subdistrict and Zipcode */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">แขวง/ตำบล</label>
+        <div data-field="subdistrict">
+          <label className="block text-sm font-medium text-stone-700 mb-2">
+            แขวง/ตำบล
+          </label>
           <select
             value={selectedSubdistrictValue}
             onChange={handleSubdistrictChange}
             disabled={disabled || !districtId || loadingSubdistricts}
-            className={inputClass(!!errors.subdistrict)}
+            className={selectClass(!!errors.subdistrict)}
           >
             <option value="">
-              {!districtId ? '-- เลือกเขต/อำเภอก่อน --' : loadingSubdistricts ? 'กำลังโหลด...' : '-- เลือกแขวง/ตำบล --'}
+              {!districtId
+                ? '-- เลือกเขต/อำเภอก่อน --'
+                : loadingSubdistricts
+                  ? 'กำลังโหลด...'
+                  : '-- เลือกแขวง/ตำบล --'}
             </option>
             {subdistricts.map((s: ThaiSubdistrict) => (
-              <option key={s.id} value={s.id}>{s.name_th}</option>
+              <option key={s.id} value={s.id}>
+                {s.name_th}
+              </option>
             ))}
           </select>
+          {errors.subdistrict && (
+            <p className="text-xs text-red-600 mt-1">{errors.subdistrict}</p>
+          )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">
+        <div data-field="zipcode">
+          <label className="block text-sm font-medium text-stone-700 mb-2">
             รหัสไปรษณีย์ <span className="text-red-500">*</span>
           </label>
           <input
@@ -193,9 +222,11 @@ function ThaiAddressFields({
             placeholder="10110"
             maxLength={5}
             disabled={disabled}
-            className={inputClass(!!errors.zipcode)}
+            className={selectClass(!!errors.zipcode)}
           />
-          {errors.zipcode && <p className="text-xs text-red-600 mt-1">{errors.zipcode}</p>}
+          {errors.zipcode && (
+            <p className="text-xs text-red-600 mt-1">{errors.zipcode}</p>
+          )}
         </div>
       </div>
     </>

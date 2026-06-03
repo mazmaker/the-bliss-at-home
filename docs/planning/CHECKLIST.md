@@ -1,6 +1,6 @@
 # The Bliss at Home - Development Checklist
 
-> **Last updated:** 2026-03-04 | **Overall: ~78%** | **Scope: SRS v1.0 only** | **Dashboard:** https://sprint.lightepic.com/
+> **Last updated:** 2026-06-03 | **Overall: ~79%** | **Scope: SRS v1.0 only** | **Dashboard:** https://sprint.lightepic.com/
 >
 > **How to use:** ให้ Claude Code อ่านไฟล์นี้เพื่อรู้ว่าต้องทำอะไรต่อ
 > ```
@@ -19,6 +19,7 @@
 - Staff Journey Tracking — start_staff_journey + customer map display **[95%]**
 - Emergency Booking Banner — responsive design update **[85%]**
 - Extension Service Payment — booking extension pricing + Omise integration **[85%]**
+- Admin Quick Booking — walk-in/phone booking system + customer selection + GPS capture **[100%]**
 
 ### Priorities (ทำต่อ)
 1. Job Status Flow Testing — manual testing workflow (กำลังทำ)
@@ -402,6 +403,12 @@ packages/i18n   → Multi-language support (TH/EN/ZH)
 - [ ] **Report Export** (80%)
   - Remaining: PDF report with charts, scheduled email delivery, custom report builder, report templates
   - Files: `apps/admin/src/lib/comprehensiveExport.ts`
+- [x] **Quick Booking (Admin)** (100%) ✅ เสร็จแล้ว
+  - Admin สามารถจองแทนลูกค้าที่โทรเข้ามาหรือ walk-in ได้เต็มรูปแบบ
+  - เลือกลูกค้าจากระบบ (ไม่สร้างใหม่ใน Quick Booking), เลือกบริการ, ปักหมุด GPS, กรอกข้อมูล, ชำระเงิน
+  - CreateCustomerModal ในหน้า Customers สำหรับสร้างลูกค้าใหม่ก่อนจอง
+  - ไม่แสดงจำนวนค่าคอมมิชชั่น, เก็บข้อมูลลูกค้าและ GPS ถูกต้อง
+  - Files: `apps/admin/src/pages/QuickBooking/`, `apps/admin/src/components/CreateCustomerModal.tsx`
 - [ ] **General Settings** (82%)
   - Remaining: Notification settings (email templates), system maintenance mode, audit log viewer, backup management
   - Files: `apps/admin/src/pages/Settings.tsx`
