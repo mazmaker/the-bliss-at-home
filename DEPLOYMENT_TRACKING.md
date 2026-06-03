@@ -373,19 +373,42 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
    - ✅ **Instructional Messages:** ลบข้อความ "กรุณาสร้างลูกค้าในหน้า Customers ก่อน"
    - ✅ **Clean User Interface:** หน้า Quick Booking เรียบง่าย เน้นการใช้งานจริง
 
+5. **Bookings Table UI Enhancement:**
+   - ✅ **Customer Column Removal:** ลบคอลัมน์ "ลูกค้า" ออกจากตารางการจองทั้งหมด
+   - ✅ **Customer Type Classification:** เปลี่ยนคอลัมน์ "ประเภท" แสดงสถานะลูกค้าแบบทันที
+   - ✅ **Smart Detection Logic:** วัดผลจากจำนวน booking ของลูกค้าคนเดียวกันในระบบ
+   - ✅ **Status Display:** "ลูกค้ารายใหม่" / "ลูกค้ารายเก่า" / "โรงแรม"
+   - ✅ **Admin-Only Feature:** แอดมินเห็นสถานะลูกค้าทันที ไม่ต้องกดดูรายละเอียด
+   - ✅ **Balanced Layout:** ตารางดูเรียบร้อย ไม่มี "ไม่ระบุ" แสดงอีกต่อไป
+   - ✅ **Search & Export Update:** ระบบค้นหาและส่งออกทำงานถูกต้องกับการเปลี่ยนแปลง
+   - ✅ **Revenue Columns Removal:** ลบคอลัมน์ "รายได้พนักงาน" และ "รายได้สุทธิ" เพื่อให้ตารางโล่ง
+   - ✅ **Responsive Table Design:** ใช้ table-fixed layout + percentage widths
+   - ✅ **Font Size Optimization:** ลดขนาด badge เป็น text-[10px] เพื่อไม่ให้ข้อความตกบรรทัด
+   - ✅ **Compact Layout:** ลด padding, ใช้ truncate และ whitespace-nowrap ตามความเหมาะสม
+
+## 🚧 **TODO - PENDING TASKS**
+
+### 6. **Staff Commission vs Discount Code Issue (NEW)**
+   - ❌ **Problem:** หักค่าคอมพนักงาน กรณีลูกค้ากรอกโค้ดส่วนลดไม่มีผล
+   - ❌ **Current Behavior:** รายได้พนักงานเท่าเดิมตามราคาแอดมินกำหนด (ไม่ได้คำนวณจากราคาหลังลดส่วนลด)
+   - ❌ **Required:** ต้องแก้ไขให้ค่าคอมพนักงานคำนวณจากราคาหลังหักส่วนลดแล้ว
+   - ❌ **Impact:** พนักงานได้รับค่าคอมไม่ถูกต้องเมื่อลูกค้าใช้โปรโมชั่น
+
 #### **📁 Files Modified:**
 - ✅ `apps/admin/src/pages/QuickBooking/BookingConfirmation.tsx` - ลบ commission logic
-- ✅ `apps/admin/src/services/bookingService.ts` - เพิ่ม customers table join
+- ✅ `apps/admin/src/services/bookingService.ts` - เพิ่ม customers table join + customer data
 - ✅ `apps/admin/src/pages/QuickBooking/CustomerSearch.tsx` - ลบ create customer + test UI
 - ✅ `apps/admin/src/pages/Customers.tsx` - เพิ่มปุ่มสร้างลูกค้า + import modal
 - ✅ `apps/admin/src/components/CreateCustomerModal.tsx` - **สร้างใหม่ทั้งหมด**
 - ✅ `apps/admin/src/lib/customerQueries.ts` - เพิ่ม createCustomer function
 - ✅ `apps/admin/src/hooks/useCustomers.ts` - เพิ่ม useCreateCustomer hook
+- ✅ `apps/admin/src/pages/Bookings.tsx` - ลบคอลัมน์ลูกค้า + เพิ่มการแสดงประเภทลูกค้า
+- ✅ `apps/admin/src/components/BookingDetailModal.tsx` - แก้การแสดงข้อมูลลูกค้า
 
 #### **📋 Documentation Updates:**
 - ✅ **CHECKLIST.md Updated:** เพิ่มรายการ "Quick Booking (Admin)" 100% เสร็จแล้ว
 - ✅ **Sprint Progress:** อัปเดต Current Sprint เพิ่ม Admin Quick Booking [100%]
-- ✅ **Last Updated:** เปลี่ยนวันที่เป็น 2026-06-03
+- ✅ **Last Updated:** เปลี่ยนวันที่เป็น 2026-06-04
 
 #### **🎯 Workflow Enhancement:**
 - **New Process:** Admin → Customers page → สร้างลูกค้าใหม่ → Quick Booking → เลือกลูกค้า → จอง

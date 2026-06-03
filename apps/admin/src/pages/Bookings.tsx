@@ -6,7 +6,6 @@ import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, typ
 import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
-import CustomerTypeBadge from '../components/CustomerTypeBadge'
 
 function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -83,9 +82,11 @@ function Bookings() {
     const query = searchQuery.toLowerCase()
     return bookingsData.filter((booking) =>
       booking.booking_number.toLowerCase().includes(query) ||
-      booking.customer?.full_name.toLowerCase().includes(query) ||
+      booking.customers?.full_name?.toLowerCase().includes(query) ||
       booking.service?.name_th.toLowerCase().includes(query) ||
-      booking.service?.name_en.toLowerCase().includes(query)
+      booking.service?.name_en.toLowerCase().includes(query) ||
+      booking.hotel?.name_th.toLowerCase().includes(query) ||
+      booking.staff?.name_th.toLowerCase().includes(query)
     )
   }, [bookingsData, searchQuery])
 
@@ -96,11 +97,15 @@ function Bookings() {
     }
 
     // Prepare CSV data
-    const headers = ['รหัสจอง', 'ลูกค้า', 'เบอร์โทร', 'บริการ', 'ระยะเวลา', 'โรงแรม', 'พนักงาน', 'วันที่', 'เวลา', 'จำนวน', 'สถานะ', 'การชำระ']
+    const headers = ['รหัสจอง', 'ประเภท', 'บริการ', 'ระยะเวลา', 'โรงแรม', 'พนักงาน', 'วันที่', 'เวลา', 'จำนวน', 'สถานะ', 'การชำระ']
     const rows = filteredBookings.map(booking => [
       booking.booking_number,
-      booking.customer?.full_name || '-',
-      booking.customer?.phone || '-',
+      booking.is_hotel_booking ? 'โรงแรม' : (() => {
+        const customerBookingsCount = filteredBookings.filter(b =>
+          !b.is_hotel_booking && b.customer_id === booking.customer_id
+        ).length
+        return customerBookingsCount > 1 ? 'รายเก่า' : 'รายใหม่'
+      })(),
       booking.service?.name_th || booking.service?.name_en || '-',
       `${booking.duration} นาที`,
       booking.hotel?.name_th || '-',
@@ -149,7 +154,7 @@ function Bookings() {
       cancelled: 'ยกเลิก',
     }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badges[status as keyof typeof badges]}`}>
+      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${badges[status as keyof typeof badges]}`}>
         {labels[status as keyof typeof labels]}
       </span>
     )
@@ -172,7 +177,7 @@ function Bookings() {
       refunded: 'คืนเงิน',
     }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badges[status as keyof typeof badges]}`}>
+      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${badges[status as keyof typeof badges]}`}>
         {labels[status as keyof typeof labels]}
       </span>
     )
@@ -233,7 +238,7 @@ function Bookings() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
             <input
               type="text"
-              placeholder="ค้นหารหัส, ชื่อลูกค้า, บริการ..."
+              placeholder="ค้นหารหัส, ชื่อลูกค้า, บริการ, โรงแรม, พนักงาน..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
@@ -288,22 +293,19 @@ function Bookings() {
       {/* Bookings Table */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-fixed">
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รหัส</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ประเภท</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">บริการ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">โรงแรม</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่/เวลา</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จำนวน</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้พนักงาน</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้สุทธิ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การชำระ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จัดการ</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[12%]">รหัส</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[8%]">ประเภท</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[15%]">บริการ</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[12%]">โรงแรม</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[10%]">พนักงาน</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[13%]">วันที่/เวลา</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[10%]">จำนวน</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[8%]">สถานะ</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[8%]">การชำระ</th>
+                <th className="text-left py-2 px-2 text-xs font-semibold text-stone-700 w-[4%]">จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -322,98 +324,60 @@ function Bookings() {
               ) : (
                 filteredBookings.map((booking) => (
                   <tr key={booking.id} className="border-b border-stone-100 hover:bg-stone-50">
-                    <td className="py-3 px-4 text-sm font-medium text-stone-900">{booking.booking_number}</td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="text-sm font-medium text-stone-900">{booking.customer?.full_name || 'ไม่ระบุ'}</p>
-                        <p className="text-xs text-stone-500">{booking.customer?.phone || '-'}</p>
+                    <td className="py-2 px-2 text-xs font-medium text-stone-900 truncate">{booking.booking_number}</td>
+                    <td className="py-2 px-2">
+                      {booking.is_hotel_booking ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          โรงแรม
+                        </span>
+                      ) : (() => {
+                        // นับจำนวน booking ของลูกค้าคนนี้ใน filteredBookings
+                        const customerBookingsCount = filteredBookings.filter(b =>
+                          !b.is_hotel_booking && b.customer_id === booking.customer_id
+                        ).length
+
+                        return customerBookingsCount > 1 ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            รายเก่า
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            รายใหม่
+                          </span>
+                        )
+                      })()}
+                    </td>
+                    <td className="py-2 px-2 text-xs text-stone-600">
+                      <div className="truncate">
+                        {booking.booking_services && booking.booking_services.length > 1 ? (
+                          `${booking.booking_services.length} บริการ`
+                        ) : (
+                          booking.service?.name_th || booking.service?.name_en || 'ไม่ระบุ'
+                        )}
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      {booking.is_hotel_booking ? (
-                        <span className="text-xs text-stone-400">-</span>
-                      ) : (
-                        <CustomerTypeBadge
-                          type={booking.customer?.total_bookings > 0 ? 'returning' : 'new'}
-                          totalBookings={booking.customer?.total_bookings || 0}
-                          totalSpent={booking.customer?.total_spent || 0}
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-stone-600">
-                      {booking.booking_services && booking.booking_services.length > 1 ? (
-                        // Couple booking — show per-person services
-                        <div className="space-y-0.5">
-                          {booking.booking_services
-                            .sort((a, b) => a.recipient_index - b.recipient_index)
-                            .map((bs, i) => (
-                              <p key={bs.id} className="text-xs">
-                                <span className="text-stone-400">คนที่ {i + 1}:</span>{' '}
-                                {bs.service?.name_th || 'ไม่ระบุ'} {bs.duration} นาที
-                              </p>
-                            ))}
-                        </div>
-                      ) : (
-                        <>
-                          <p>{booking.service?.name_th || booking.service?.name_en || 'ไม่ระบุ'}</p>
-                          <p className="text-xs text-stone-400">{booking.duration} นาที</p>
-                        </>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-amber-700">{booking.hotel?.name_th || '-'}</td>
-                    <td className="py-3 px-4 text-sm text-stone-600">
+                    <td className="py-2 px-2 text-xs text-amber-700 truncate">{booking.hotel?.name_th || '-'}</td>
+                    <td className="py-2 px-2 text-xs text-stone-600 truncate">
                       {booking.jobs && booking.jobs.length > 1 ? (
-                        <div className="space-y-0.5">
-                          {booking.jobs
-                            .sort((a, b) => a.job_index - b.job_index)
-                            .map((job) => (
-                              <p key={job.id} className="text-xs">
-                                <span className="text-stone-400">คนที่ {job.job_index}:</span>{' '}
-                                {job.staff_name || 'รอมอบหมาย'}
-                              </p>
-                            ))}
-                        </div>
+                        `${booking.jobs.length} คน`
                       ) : (
                         booking.staff?.name_th || 'รอมอบหมาย'
                       )}
                     </td>
-                    <td className="py-3 px-4 text-sm text-stone-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{booking.booking_date}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{booking.booking_time}</span>
-                      </div>
+                    <td className="py-2 px-2 text-xs text-stone-600">
+                      <div className="whitespace-nowrap">{booking.booking_date}</div>
+                      <div className="whitespace-nowrap text-stone-500">{booking.booking_time}</div>
                     </td>
-                    <td className="py-3 px-4 text-sm font-medium text-stone-900">฿{Number(booking.final_price).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-sm text-green-600">
-                      {(() => {
-                        const earnings = booking.jobs && booking.jobs.length > 0
-                          ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
-                          : Number(booking.staff_earnings)
-                        return earnings > 0 ? `฿${earnings.toLocaleString()}` : '-'
-                      })()}
-                    </td>
-                    <td className="py-3 px-4 text-sm font-medium text-purple-700">
-                      {(() => {
-                        const earnings = booking.jobs && booking.jobs.length > 0
-                          ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
-                          : Number(booking.staff_earnings)
-                        const net = Number(booking.final_price) - earnings
-                        return `฿${net.toLocaleString()}`
-                      })()}
-                    </td>
-                    <td className="py-3 px-4">{getStatusBadge(booking.status)}</td>
-                    <td className="py-3 px-4">{getPaymentBadge(booking.payment_status, booking)}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-2 px-2 text-xs font-medium text-stone-900 whitespace-nowrap">฿{Number(booking.final_price).toLocaleString()}</td>
+                    <td className="py-2 px-2">{getStatusBadge(booking.status)}</td>
+                    <td className="py-2 px-2">{getPaymentBadge(booking.payment_status, booking)}</td>
+                    <td className="py-2 px-2 text-center">
                       <button
                         onClick={() => handleOpenDetail(booking)}
-                        className="p-2 hover:bg-stone-100 rounded-lg transition"
+                        className="p-1 hover:bg-stone-100 rounded transition"
                         title="ดูรายละเอียด"
                       >
-                        <Eye className="w-4 h-4 text-stone-600" />
+                        <Eye className="w-3 h-3 text-stone-600" />
                       </button>
                     </td>
                   </tr>
