@@ -6,7 +6,8 @@
 import React from 'react';
 import {
   Clock, User, MapPin, CreditCard, Calendar,
-  CheckCircle, XCircle, AlertCircle, Edit, History
+  CheckCircle, XCircle, AlertCircle, Edit, History,
+  Briefcase, Eye
 } from 'lucide-react';
 import { ExtendSessionButton } from './ExtendSessionButton';
 import { BookingWithExtensions } from '../types/extendSession';

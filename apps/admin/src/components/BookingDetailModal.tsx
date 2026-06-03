@@ -93,14 +93,14 @@ export function BookingDetailModal({ isOpen, onClose, booking }: BookingDetailMo
                     <User className="h-4 w-4" />
                     <span>ชื่อ</span>
                   </div>
-                  <p className="mt-1 font-medium text-gray-900">{booking.customers?.full_name || 'ไม่ระบุ'}</p>
+                  <p className="mt-1 font-medium text-gray-900">{booking.customer_name || 'ไม่ระบุ'}</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Phone className="h-4 w-4" />
                     <span>เบอร์โทร</span>
                   </div>
-                  <p className="mt-1 font-medium text-gray-900">{booking.customers?.phone || 'ไม่ระบุ'}</p>
+                  <p className="mt-1 font-medium text-gray-900">{booking.customer_phone || 'ไม่ระบุ'}</p>
                 </div>
                 {booking.customer_email && (
                   <div>
