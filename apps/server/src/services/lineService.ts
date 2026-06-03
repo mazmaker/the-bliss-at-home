@@ -159,7 +159,7 @@ async function sendNewJobToStaff(lineUserIds: string[], data: JobNotificationDat
     : `📍 สถานที่: ${data.address}`
 
   // Build deep link to staff app
-  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
   let linkText = 'เปิดแอปเพื่อรับงานนี้'
   if (staffLiffUrl && data.jobIds && data.jobIds.length === 1) {
     // Single job: link directly to job detail
@@ -286,7 +286,7 @@ async function sendJobReAvailableToStaff(lineUserIds: string[], data: JobReAvail
     ? `🏨 โรงแรม: ${data.hotelName}${data.roomNumber ? ` ห้อง ${data.roomNumber}` : ''}`
     : `📍 สถานที่: ${data.address}`
 
-  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
   const linkText = staffLiffUrl
     ? `👉 ดูรายละเอียดงาน:\n${staffLiffUrl}/staff/jobs/${data.newJobId}`
     : 'เปิดแอปเพื่อรับงานนี้'
@@ -489,7 +489,7 @@ interface JobReminderData {
  * Send job reminder notification to a staff member via LINE
  */
 async function sendJobReminderToStaff(lineUserId: string, data: JobReminderData): Promise<boolean> {
-  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
   const linkText = staffLiffUrl
     ? `\n👉 ดูรายละเอียด:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
     : ''
@@ -546,7 +546,7 @@ async function sendJobEscalationToStaff(lineUserIds: string[], data: JobEscalati
     ? `🏨 โรงแรม: ${data.hotelName}${data.roomNumber ? ` ห้อง ${data.roomNumber}` : ''}`
     : `📍 สถานที่: ${data.address}`
 
-  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
   const linkText = staffLiffUrl
     ? `👉 กดรับงานเลย:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
     : 'เปิดแอปเพื่อรับงานนี้'
@@ -598,7 +598,7 @@ async function sendBookingRescheduledToStaff(lineUserIds: string[], data: Bookin
     ? `🏨 โรงแรม: ${data.hotelName}`
     : `📍 สถานที่: ${data.address}`
 
-  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
   const linkText = staffLiffUrl && data.jobId
     ? `\n👉 กดรับงานใหม่:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
     : '\n\n⚠️ กรุณาเปิดแอปเพื่อรับงานใหม่อีกครั้ง'
@@ -652,7 +652,7 @@ async function sendPayoutCompletedToStaff(lineUserId: string, data: PayoutComple
     year: 'numeric', month: 'long', day: 'numeric'
   })
 
-  const staffLiffUrl = process.env.STAFF_LIFF_URL || ''
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
   const linkText = staffLiffUrl
     ? `\n👉 ดูรายละเอียด:\n${staffLiffUrl}/staff/earnings`
     : ''
