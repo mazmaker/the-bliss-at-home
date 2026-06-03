@@ -97,6 +97,7 @@ app.get('/health', (req: Request, res: Response) => {
     service: 'bliss-server',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    version: '1.0.1', // Updated for LINE notification fix
   })
 })
 
