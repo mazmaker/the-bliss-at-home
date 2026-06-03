@@ -388,12 +388,12 @@ function Bookings() {
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-stone-900">฿{Number(booking.final_price).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-sm text-red-600">
+                    <td className="py-3 px-4 text-sm text-green-600">
                       {(() => {
                         const earnings = booking.jobs && booking.jobs.length > 0
                           ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
                           : Number(booking.staff_earnings)
-                        return earnings > 0 ? `-฿${earnings.toLocaleString()}` : '-'
+                        return earnings > 0 ? `฿${earnings.toLocaleString()}` : '-'
                       })()}
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-purple-700">
@@ -550,7 +550,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <User className="w-5 h-5 text-stone-400 mt-0.5" />
               <div>
                 <p className="text-sm text-stone-500">ชื่อลูกค้า</p>
-                <p className="font-medium text-stone-900">{booking.customer?.full_name || 'ไม่ระบุ'}</p>
+                <p className="font-medium text-stone-900">{booking.customers?.full_name || 'ไม่ระบุ'}</p>
               </div>
             </div>
 
@@ -558,7 +558,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <Phone className="w-5 h-5 text-stone-400 mt-0.5" />
               <div>
                 <p className="text-sm text-stone-500">เบอร์ติดต่อ</p>
-                <p className="font-medium text-stone-900">{booking.customer?.phone || 'ไม่ระบุ'}</p>
+                <p className="font-medium text-stone-900">{booking.customers?.phone || 'ไม่ระบุ'}</p>
               </div>
             </div>
 
@@ -841,7 +841,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                             .map((job) => (
                               <div key={job.id} className="flex justify-between text-sm pl-2">
                                 <span className="text-red-600">คนที่ {job.job_index}: {job.staff_name || 'รอมอบหมาย'}</span>
-                                <span className="text-red-600">-฿{Number(job.staff_earnings || 0).toLocaleString()}</span>
+                                <span className="text-green-600">฿{Number(job.staff_earnings || 0).toLocaleString()}</span>
                               </div>
                             ))}
                         </>

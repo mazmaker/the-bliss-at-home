@@ -234,6 +234,7 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
+          customers(id, full_name, phone),
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
@@ -321,11 +322,9 @@ class BookingService {
         }))
       }
 
-      // Add parsed customer data
-      const processedData = filteredData.map(booking => ({
-        ...booking,
-        customer: parseCustomerFromNotes(booking.customer_notes)
-      }))
+      // Customer data is now properly joined from the database
+      // No need for parseCustomerFromNotes - use the actual customers table data
+      const processedData = filteredData
 
       return processedData
     } catch (error) {
@@ -340,6 +339,7 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
+          customers(id, full_name, phone),
           hotel:hotels(id, name_th, address, phone, email, rating),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)

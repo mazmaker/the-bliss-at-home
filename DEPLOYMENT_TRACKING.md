@@ -342,6 +342,79 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 ---
 
+## 🆕 **SESSION 2026-06-03** - Admin Quick Booking Polish & Cleanup
+
+### **🎯 ฟีเจอร์: Admin Quick Booking Final Polish**
+
+#### **🧹 UI Cleanup & User Experience Polish - เสร็จสมบูรณ์ ✅**
+
+1. **Commission Display Removal:**
+   - ✅ **Removed Commission Calculations:** เอาการแสดงค่าคอมมิชชั่นออกจาก Quick Booking ตามที่ผู้ใช้ต้องการ
+   - ✅ **Updated BookingConfirmation:** เปลี่ยน `staff_earnings: commissionAmount` เป็น `staff_earnings: 0`
+   - ✅ **Clean Interface:** หน้าจอ Quick Booking ไม่แสดงจำนวนเงินค่าคอม
+
+2. **Customer Information Fix:**
+   - ✅ **Database Join Fix:** แก้ไข `bookingService.ts` เพิ่ม customers join ใน `getBookingById`
+   - ✅ **Bookings.tsx Modal Fix:** แก้ไข `booking.customer` → `booking.customers` (field name mismatch)
+   - ✅ **Customer Data Display:** แก้ปัญหา "ชื่อลูกค้า ไม่ระบุ เบอร์ติดต่อ ไม่ระบุ"
+   - ✅ **Root Cause:** Bookings.tsx มี BookingDetailModal function แยกต่างหาก ไม่ใช่ component
+   - ✅ **Files Fixed:** `bookingService.ts`, `Bookings.tsx`, `BookingDetailModal.tsx`
+   - ✅ **Proper Data Flow:** ใช้ database relationship แทน parsing จาก notes
+
+3. **Customer Creation Workflow Restructure:**
+   - ✅ **Removed Quick Booking Creation:** ลบฟังก์ชันสร้างลูกค้าออกจากหน้า Quick Booking
+   - ✅ **Main Customers Page Enhancement:** เพิ่มปุ่ม "เพิ่มลูกค้าใหม่" ในหน้า Customers หลัก
+   - ✅ **CreateCustomerModal:** สร้าง modal ใหม่สำหรับเพิ่มลูกค้า (ชื่อ, เบอร์, email, วันเกิด, สถานะ)
+   - ✅ **useCreateCustomer Hook:** เพิ่ม hook และ function ใหม่สำหรับสร้างลูกค้า
+   - ✅ **Profile Integration:** เชื่อมต่อ email กับตาราง profiles อัตโนมัติ
+
+4. **Test UI Elements Removal:**
+   - ✅ **Database Test Button:** ลบปุ่ม "🔧 ทดสอบ DB" ออกจาก CustomerSearch
+   - ✅ **Instructional Messages:** ลบข้อความ "กรุณาสร้างลูกค้าในหน้า Customers ก่อน"
+   - ✅ **Clean User Interface:** หน้า Quick Booking เรียบง่าย เน้นการใช้งานจริง
+
+#### **📁 Files Modified:**
+- ✅ `apps/admin/src/pages/QuickBooking/BookingConfirmation.tsx` - ลบ commission logic
+- ✅ `apps/admin/src/services/bookingService.ts` - เพิ่ม customers table join
+- ✅ `apps/admin/src/pages/QuickBooking/CustomerSearch.tsx` - ลบ create customer + test UI
+- ✅ `apps/admin/src/pages/Customers.tsx` - เพิ่มปุ่มสร้างลูกค้า + import modal
+- ✅ `apps/admin/src/components/CreateCustomerModal.tsx` - **สร้างใหม่ทั้งหมด**
+- ✅ `apps/admin/src/lib/customerQueries.ts` - เพิ่ม createCustomer function
+- ✅ `apps/admin/src/hooks/useCustomers.ts` - เพิ่ม useCreateCustomer hook
+
+#### **📋 Documentation Updates:**
+- ✅ **CHECKLIST.md Updated:** เพิ่มรายการ "Quick Booking (Admin)" 100% เสร็จแล้ว
+- ✅ **Sprint Progress:** อัปเดต Current Sprint เพิ่ม Admin Quick Booking [100%]
+- ✅ **Last Updated:** เปลี่ยนวันที่เป็น 2026-06-03
+
+#### **🎯 Workflow Enhancement:**
+- **New Process:** Admin → Customers page → สร้างลูกค้าใหม่ → Quick Booking → เลือกลูกค้า → จอง
+- **User Experience:** เรียบง่าย ไม่มี UI ทดสอบรบกวน
+- **Data Integrity:** ข้อมูลลูกค้าและ GPS coordinates บันทึกถูกต้อง
+- **Professional Interface:** ไม่แสดงค่าคอมมิชชั่น ดูสะอาด
+
+#### **🧪 Testing Status:**
+- ✅ **Customer Creation:** Modal ทำงานถูกต้อง บันทึกข้อมูลลูกค้าใหม่ได้
+- ✅ **Quick Booking Flow:** เลือกลูกค้า → บริการ → GPS → ชำระ → เสร็จสิ้น
+- ✅ **Data Display:** ชื่อลูกค้าและข้อมูลติดต่อแสดงผลถูกต้อง
+- ✅ **No Commission Display:** ไม่แสดงจำนวนเงินค่าคอมมิชชั่นแล้ว
+- ✅ **Clean Interface:** หน้า Quick Booking เรียบร้อย ใช้งานง่าย
+
+#### **🚀 Production Status:**
+- ✅ **Feature Complete:** Admin Quick Booking ครบถ้วนตามต้องการ
+- ✅ **Code Quality:** ลบ debug code และ UI ทดสอบออกหมด
+- ✅ **User Experience:** เวิร์กโฟลว์เรียบง่าย สอดคล้องกับการใช้งานจริง
+- ✅ **Documentation:** อัปเดต checklist และ tracking เรียบร้อย
+- 🚀 **Ready to Deploy:** พร้อมใช้งานใน production
+
+#### **📊 Business Impact:**
+- **Admin Efficiency:** ลดขั้นตอนการสร้างลูกค้าและจอง
+- **Data Quality:** ข้อมูลลูกค้าและตำแหน่ง GPS ถูกต้องครบถ้วน
+- **User Interface:** สะอาด เรียบง่าย ไม่มี element ที่ไม่จำเป็น
+- **Workflow Consistency:** สอดคล้องกับการทำงานของ admin จริง
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
@@ -361,4 +434,4 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
 **🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
-**🕒 Last Updated: 2026-06-02**
+**🕒 Last Updated: 2026-06-03**
