@@ -10,5 +10,15 @@
       "src": "/(.*)",
       "dest": "/src/index.ts"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-payout",
+      "schedule": "1 0 * * *"
+    },
+    {
+      "path": "/api/cron/line-health-check",
+      "schedule": "*/30 * * * *"
+    }
   ]
 }

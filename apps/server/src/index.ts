@@ -148,6 +148,36 @@ app.use('/api/receipts', receiptsRoutes)
 // Invoice email routes
 app.use('/api/invoices', invoicesRoutes)
 
+// Test automated payout endpoint
+app.post('/api/cron/daily-payout', async (req: Request, res: Response) => {
+  try {
+    console.log('🧪 Manual automated payout test triggered')
+
+    // Import the automated payout function
+    const { dailyPayoutCheck } = await import('../../../packages/supabase/src/earnings/automatedPayout.js')
+
+    const result = await dailyPayoutCheck()
+
+    console.log('📊 Automated payout result:', result)
+
+    res.json({
+      success: result.success,
+      processed: result.processed,
+      errors: result.errors,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('💥 Error in automated payout test:', error)
+    res.status(500).json({
+      success: false,
+      processed: 0,
+      errors: [error?.toString() || 'Unknown error'],
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
 // Migration routes (temporary for payout cycles)
 // app.use('/api/migrate', migratePayoutCyclesRoutes) // Temporarily disabled
 
@@ -204,6 +234,66 @@ if (process.env.NODE_ENV !== 'production') {
     }
   })
 }
+
+// LINE Health monitoring endpoint (available in all environments)
+app.get('/api/line/health', async (req, res) => {
+  try {
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
+    if (!token) {
+      return res.status(500).json({
+        success: false,
+        error: 'LINE token not configured',
+        timestamp: new Date().toISOString()
+      })
+    }
+
+    // Test LINE API connectivity
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+    const response = await fetch('https://api.line.me/v2/bot/quota', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.json()
+      return res.status(response.status).json({
+        success: false,
+        status: response.status,
+        error: error,
+        timestamp: new Date().toISOString()
+      })
+    }
+
+    const data = await response.json()
+    res.json({
+      success: true,
+      quota: data,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      return res.status(408).json({
+        success: false,
+        error: 'Timeout - LINE API took too long to respond',
+        timestamp: new Date().toISOString()
+      })
+    }
+
+    res.status(500).json({
+      success: false,
+      error: error?.toString() || 'Unknown error',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
 
 // Dev endpoint to test new job notification with specific link
 if (process.env.NODE_ENV !== 'production') {

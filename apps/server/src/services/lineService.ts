@@ -70,6 +70,10 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
   if (!token) return false
 
   try {
+    // Add timeout and retry logic
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
     const res: any = await fetch(`${API_URL}/push`, {
       method: 'POST',
       headers: {
@@ -77,7 +81,10 @@ async function pushMessage(lineUserId: string, messages: LineMessage[]): Promise
         'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({ to: lineUserId, messages }),
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (!res.ok) {
       const error = await res.json()
@@ -116,6 +123,10 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
 
     let allSuccess = true
     for (const batch of batches) {
+      // Add timeout for multicast
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout for multicast
+
       const res: any = await fetch(`${API_URL}/multicast`, {
         method: 'POST',
         headers: {
@@ -123,7 +134,10 @@ async function multicast(lineUserIds: string[], messages: LineMessage[]): Promis
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ to: batch, messages }),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!res.ok) {
         const error = await res.json()
