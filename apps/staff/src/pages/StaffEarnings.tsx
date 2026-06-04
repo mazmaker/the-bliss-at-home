@@ -140,6 +140,7 @@ function StaffEarnings() {
   )
   const { payouts, isLoading: isPayoutsLoading } = usePayouts(true)
 
+
   // Notify on new payout completion
   useEffect(() => {
     const completedPayout = payouts.find(
@@ -346,20 +347,21 @@ function StaffEarnings() {
 
 
       {/* Daily Earnings Chart */}
-      {chartData.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          {viewPeriod === 'day' ? (
-            // Enhanced design for Day view only
-            <>
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <span className="text-sm font-bold text-amber-700">฿</span>
+      <div className="bg-white rounded-xl shadow-sm p-4">
+        {chartData.length > 0 ? (
+          <>
+            {viewPeriod === 'day' ? (
+              // Enhanced design for Day view only
+              <>
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <span className="text-sm font-bold text-amber-700">฿</span>
+                  </div>
+                  <h3 className="font-semibold text-stone-900">รายได้รายวัน</h3>
                 </div>
-                <h3 className="font-semibold text-stone-900">รายได้รายวัน</h3>
-              </div>
 
-              <div className="flex justify-center">
-                {chartData.map((day) => {
+                <div className="flex justify-center">
+                  {chartData.map((day) => {
                   const dayDate = new Date(day.date)
                   const isToday = day.date === new Date().toISOString().split('T')[0]
                   const hasEarnings = day.earnings > 0
@@ -436,8 +438,23 @@ function StaffEarnings() {
               </div>
             </>
           )}
-        </div>
-      )}
+          </>
+        ) : (
+          // Empty state when no data
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-stone-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl text-stone-400">📊</span>
+            </div>
+            <h3 className="font-semibold text-stone-900 mb-2">ยังไม่มีข้อมูลรายได้</h3>
+            <p className="text-sm text-stone-500">
+              {viewPeriod === 'day' ? 'วันนี้' :
+               viewPeriod === 'week' ? '7 วันนี้' :
+               viewPeriod === '15days' ? '15 วันนี้' :
+               'เดือนนี้'} ยังไม่มีงานที่เสร็จสิ้น
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Service Breakdown */}
       {services.length > 0 && (

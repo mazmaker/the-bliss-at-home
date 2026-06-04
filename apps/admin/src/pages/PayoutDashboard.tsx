@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { Wallet, Users, Banknote, ArrowUpRight, Filter, Download, Check, X, Loader2, Clock, AlertCircle } from 'lucide-react'
+import { Wallet, Users, Banknote, ArrowUpRight, Filter, Download, Check, X, Loader2, Clock, AlertCircle, Settings } from 'lucide-react'
+import AutomatedPayoutDashboard from '../components/AutomatedPayoutDashboard'
 
 // ============================================================
 // Types
@@ -439,6 +440,8 @@ export default function PayoutDashboard() {
     return summary || 'ระบบการจ่ายแบบใหม่: รองรับรอบการจ่ายหลากหลาย'
   }, [payouts])
 
+  const [activeTab, setActiveTab] = useState<'manual' | 'automated'>('automated')
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -449,6 +452,39 @@ export default function PayoutDashboard() {
         </h1>
         <p className="text-gray-500 mt-1">Staff Payout Management</p>
       </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('automated')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'automated'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🤖 ระบบอัตโนมัติ
+          </button>
+          <button
+            onClick={() => setActiveTab('manual')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'manual'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Settings className="w-4 h-4 inline mr-2" />
+            จัดการ Manual
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'automated' ? (
+        <AutomatedPayoutDashboard />
+      ) : (
+        <div className="space-y-6">
 
       {/* Stats Cards */}
       {stats && (
@@ -663,17 +699,19 @@ export default function PayoutDashboard() {
         )}
       </div>
 
-      {/* Batch Payout Modal */}
-      {showBatchModal && selectedPayouts.length > 0 && (
-        <BatchPayoutModal
-          selectedPayouts={selectedPayouts}
-          onClose={() => setShowBatchModal(false)}
-          onComplete={() => {
-            setShowBatchModal(false)
-            setSelectedIds(new Set())
-            refetch()
-          }}
-        />
+        {/* Batch Payout Modal */}
+        {showBatchModal && selectedPayouts.length > 0 && (
+          <BatchPayoutModal
+            selectedPayouts={selectedPayouts}
+            onClose={() => setShowBatchModal(false)}
+            onComplete={() => {
+              setShowBatchModal(false)
+              setSelectedIds(new Set())
+              refetch()
+            }}
+          />
+        )}
+        </div>
       )}
     </div>
   )

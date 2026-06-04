@@ -120,15 +120,22 @@ export function CancelBookingModal({
       }
 
       const checkData = await checkRes.json()
-      setEligibility(checkData.data)
 
-      // Calculate refund amount
-      if (paymentStatus === 'paid' && checkData.data.refundPercentage > 0) {
-        setRefundAmount(Math.round(totalPrice * checkData.data.refundPercentage / 100))
+      // Safe check for API response
+      if (!checkData || !checkData.data) {
+        throw new Error('ข้อมูลการตรวจสอบไม่ถูกต้อง')
+      }
+
+      const eligibilityData = checkData.data
+      setEligibility(eligibilityData)
+
+      // Calculate refund amount with safe checking
+      if (paymentStatus === 'paid' && eligibilityData.refundPercentage && eligibilityData.refundPercentage > 0) {
+        setRefundAmount(Math.round(totalPrice * eligibilityData.refundPercentage / 100))
       }
 
       // Auto move to reason step if eligible
-      if (checkData.data.canCancel) {
+      if (eligibilityData.canCancel) {
         setStep('reason')
       }
     } catch (err: any) {

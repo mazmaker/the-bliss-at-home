@@ -42,7 +42,7 @@ END $$;
 -- 3. Add new columns to staff table
 -- ============================================
 ALTER TABLE staff
-ADD COLUMN IF NOT EXISTS payout_schedule payout_schedule_enum DEFAULT 'bi_monthly',
+ADD COLUMN IF NOT EXISTS payout_schedule payout_schedule_enum DEFAULT 'weekly',
 ADD COLUMN IF NOT EXISTS custom_payout_interval INTEGER DEFAULT 30,
 ADD COLUMN IF NOT EXISTS next_payout_date DATE,
 ADD COLUMN IF NOT EXISTS last_payout_processed_at TIMESTAMPTZ,
