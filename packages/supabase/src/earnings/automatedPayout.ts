@@ -11,7 +11,6 @@ interface StaffPayoutInfo {
   profile_id: string
   name_th: string
   payout_schedule: PayoutSchedule
-  custom_payout_interval?: number
   next_payout_date: string
   payout_start_date?: string
 }
@@ -77,7 +76,7 @@ function calculatePayoutPeriod(staff: StaffPayoutInfo, currentDate: Date = new D
     }
 
     case 'custom_days': {
-      const days = staff.custom_payout_interval || 30
+      const days = 30 // Default to 30 days
       const startDate = staff.payout_start_date ? new Date(staff.payout_start_date) : new Date(currentDate)
       const endDate = new Date(startDate)
       endDate.setDate(startDate.getDate() + days - 1)
@@ -267,7 +266,7 @@ export async function dailyPayoutCheck(): Promise<{ success: boolean; processed:
     // Get all active staff whose next payout date is today
     const { data: dueStaff, error: staffError } = await supabase
       .from('staff')
-      .select('id, profile_id, name_th, payout_schedule, custom_payout_interval, next_payout_date, payout_start_date')
+      .select('id, profile_id, name_th, payout_schedule, next_payout_date, payout_start_date')
       .eq('is_active', true)
       .eq('next_payout_date', today)
 
@@ -322,7 +321,7 @@ export async function dailyPayoutCheck(): Promise<{ success: boolean; processed:
 export async function triggerPayoutForStaff(staffId: string): Promise<void> {
   const { data: staff, error } = await supabase
     .from('staff')
-    .select('id, profile_id, name_th, payout_schedule, custom_payout_interval, next_payout_date, payout_start_date')
+    .select('id, profile_id, name_th, payout_schedule, next_payout_date, payout_start_date')
     .eq('id', staffId)
     .single()
 

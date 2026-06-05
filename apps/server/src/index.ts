@@ -279,7 +279,7 @@ app.get('/api/line/health', async (req, res) => {
     })
 
   } catch (error) {
-    if (error?.name === 'AbortError') {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return res.status(408).json({
         success: false,
         error: 'Timeout - LINE API took too long to respond',
