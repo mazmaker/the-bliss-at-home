@@ -20,9 +20,13 @@ const getDefaultUrl = () => {
   if (typeof process !== 'undefined' && process.env) {
     return process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
   }
-  // Browser environment
-  if (typeof window !== 'undefined' && typeof import.meta !== 'undefined' && (import.meta as any).env) {
-    return (import.meta as any).env.VITE_SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
+  // Browser environment (only check import.meta since window check is already done)
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      return (import.meta as any).env.VITE_SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
+    }
+  } catch {
+    // Ignore import.meta errors in server environment
   }
   return 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
 }
@@ -33,10 +37,14 @@ const getDefaultAnonKey = () => {
     return process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY ||
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
   }
-  // Browser environment
-  if (typeof window !== 'undefined' && typeof import.meta !== 'undefined' && (import.meta as any).env) {
-    return (import.meta as any).env.VITE_SUPABASE_ANON_KEY ||
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
+  // Browser environment (only check import.meta since window check is already done)
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      return (import.meta as any).env.VITE_SUPABASE_ANON_KEY ||
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
+    }
+  } catch {
+    // Ignore import.meta errors in server environment
   }
   return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
 }
@@ -46,9 +54,11 @@ const supabaseAnonKey = getDefaultAnonKey()
 
 // Create singleton instance with unified configuration
 function createSingletonClient(): SupabaseClient<Database> {
-  // Check if instance already exists (survives HMR reloads)
-  if (typeof window !== 'undefined' && window.__supabaseClient) {
-    return window.__supabaseClient
+  // Check if instance already exists (survives HMR reloads) - only in browser
+  if (typeof window !== 'undefined') {
+    if (window.__supabaseClient) {
+      return window.__supabaseClient
+    }
   }
 
   console.log('🔌 Creating unified Supabase client singleton')
@@ -59,7 +69,7 @@ function createSingletonClient(): SupabaseClient<Database> {
       persistSession: true,
       detectSessionInUrl: true, // Enable to automatically handle OAuth callbacks
       flowType: 'pkce', // Use PKCE for better security
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      storage: typeof window !== 'undefined' && typeof window.localStorage !== 'undefined' ? window.localStorage : undefined,
       storageKey: 'bliss-customer-auth', // Custom storage key to avoid conflicts
       debug: false, // Disable auth debugging in production
     },
@@ -75,7 +85,7 @@ function createSingletonClient(): SupabaseClient<Database> {
     },
   })
 
-  // Store in window to survive HMR reloads
+  // Store in window to survive HMR reloads (browser only)
   if (typeof window !== 'undefined') {
     window.__supabaseClient = client
   }
@@ -97,8 +107,14 @@ export const createServiceClient = (serviceRoleKey?: string) => {
       key = process.env.SUPABASE_SERVICE_ROLE_KEY
     }
     // Browser environment (fallback)
-    else if (typeof window !== 'undefined' && typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      key = (import.meta as any).env.SUPABASE_SERVICE_ROLE_KEY
+    else {
+      try {
+        if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+          key = (import.meta as any).env.SUPABASE_SERVICE_ROLE_KEY
+        }
+      } catch {
+        // Ignore import.meta errors
+      }
     }
   }
 
