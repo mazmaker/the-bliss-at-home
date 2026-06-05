@@ -364,7 +364,7 @@ export async function getCustomerBookingHistory(
         name_en,
         category
       ),
-      staff:staff(
+      staff(
         id,
         profile:profiles(full_name)
       )
