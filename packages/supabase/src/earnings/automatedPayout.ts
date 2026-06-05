@@ -3,7 +3,22 @@
  * Runs daily to check for due payouts and generate them automatically
  */
 
-import { supabase } from '../auth/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
+
+// Create server-specific Supabase client (no browser dependencies)
+const createServerSupabaseClient = () => {
+  const supabaseUrl = process.env.SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
+
+  return createClient(supabaseUrl, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+}
+
+const supabase = createServerSupabaseClient()
 import type { PayoutSchedule } from './types'
 
 interface StaffPayoutInfo {
