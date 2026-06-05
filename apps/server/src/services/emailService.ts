@@ -326,13 +326,14 @@ export function bookingCancellationTemplate(data: {
           <p style="margin: 0 0 8px; color: #16a34a;">ยอดเงินคืน (${refundPercentage}%)</p>
           <p class="refund-amount">฿${refundAmount.toLocaleString()}</p>
           <p style="margin: 8px 0 0; font-size: 14px; color: #666;">
-            การคืนเงินจะดำเนินการภายใน 5-7 วันทำการ
+            การคืนเงินจะดำเนินการภายใน 5-14 วันทำการ
           </p>
         </div>
         ` : `
-        <div class="warning-box">
-          <p style="margin: 0; color: #92400e;">
-            การจองนี้ไม่มีการคืนเงินตามเงื่อนไขการยกเลิก
+        <div class="info-box">
+          <p style="margin: 0; color: #666;">
+            การคืนเงินจะดำเนินการตามนโยบายการยกเลิก<br>
+            หากมีสิทธิ์คืนเงิน ยอดเงินจะถูกส่งคืนภายใน 5-14 วันทำการ
           </p>
         </div>
         `}
