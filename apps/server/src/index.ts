@@ -17,7 +17,7 @@ if (!process.env.VERCEL && !process.env.NODE_ENV?.includes('production')) {
 
 import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import cron from 'node-cron'
+// Removed node-cron - using Vercel Cron instead (see vercel.json)
 import paymentRoutes from './routes/payment.js'
 import otpRoutes from './routes/otp.js'
 import hotelRoutes from './routes/hotel.js'
@@ -573,6 +573,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 // === Cron Jobs ===
+// NOTE: Cron jobs are handled by Vercel Cron (see vercel.json) calling API endpoints
+// instead of node-cron for serverless compatibility
+
+/*
+// DISABLED: Traditional cron jobs don't work in serverless environment
+// These are now handled by Vercel Cron calling dedicated API endpoints
 
 // Check for due job reminders every minute
 cron.schedule('* * * * *', async () => {
@@ -676,13 +682,14 @@ cron.schedule('30 1 * * *', async () => {
     console.error('[Cron] Error processing enhanced payouts:', err)
   }
 })
+*/
 
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Staff LINE reminders (1min), Customer email reminders (5min), Job escalations (5min), Credit due reminders (daily 9AM ICT), Points expiry (daily 1AM ICT), Payout cutoff (daily 8AM ICT), Enhanced payouts (daily 8:30AM ICT)`)
+  console.log(`⏰ Cron: Handled by Vercel Cron (see vercel.json) - not node-cron for serverless compatibility`)
 })
 
 export default app
