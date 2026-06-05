@@ -576,113 +576,41 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // NOTE: Cron jobs are handled by Vercel Cron (see vercel.json) calling API endpoints
 // instead of node-cron for serverless compatibility
 
-/*
 // DISABLED: Traditional cron jobs don't work in serverless environment
 // These are now handled by Vercel Cron calling dedicated API endpoints
-
+//
+// All cron functionality has been migrated to Vercel Cron endpoints:
+// - /api/cron/daily-payout (daily at 00:01)
+// - /api/cron/line-health-check (every 30 minutes)
+//
+// Original cron schedules (now handled by separate API endpoints):
+//
 // Check for due job reminders every minute
-cron.schedule('* * * * *', async () => {
-  try {
-    const count = await processJobReminders()
-    if (count > 0) console.log(`[Cron] Sent ${count} job reminders`)
-  } catch (err) {
-    console.error('[Cron] Error processing reminders:', err)
-  }
-})
-
+// cron.schedule('* * * * *', processJobReminders)
+//
 // Check for due customer email reminders every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
-  try {
-    const count = await processCustomerEmailReminders()
-    if (count > 0) console.log(`[Cron] Sent ${count} customer email reminders`)
-  } catch (err) {
-    console.error('[Cron] Error processing customer email reminders:', err)
-  }
-})
-
+// cron.schedule('[star]/5 * * * *', processCustomerEmailReminders)
+//
 // Check for unassigned jobs and escalate every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
-  try {
-    const count = await processJobEscalations()
-    if (count > 0) console.log(`[Cron] Processed ${count} job escalations`)
-  } catch (err) {
-    console.error('[Cron] Error processing job escalations:', err)
-  }
-})
-
+// cron.schedule('[star]/5 * * * *', processJobEscalations)
+//
 // Cleanup old reminder records daily at 3 AM (Thailand time)
-cron.schedule('0 20 * * *', async () => {
-  // 20:00 UTC = 03:00 ICT (Thailand)
-  try {
-    await cleanupOldReminders()
-  } catch (err) {
-    console.error('[Cron] Error cleaning up reminders:', err)
-  }
-})
-
+// cron.schedule('0 20 * * *', cleanupOldReminders)
+//
 // Credit due reminders daily at 9 AM (Thailand time)
-cron.schedule('0 2 * * *', async () => {
-  // 02:00 UTC = 09:00 ICT (Thailand)
-  try {
-    const count = await processCreditDueReminders()
-    if (count > 0) console.log(`[Cron] Sent ${count} credit due reminders`)
-  } catch (err) {
-    console.error('[Cron] Error processing credit due reminders:', err)
-  }
-})
-
+// cron.schedule('0 2 * * *', processCreditDueReminders)
+//
 // Job reminders check every hour (3 days, 1 day, 2 hours before job)
-cron.schedule('0 * * * *', async () => {
-  try {
-    console.log('🔔 [Cron] Checking job reminders (3 days, 1 day, 2 hours)...')
-    await reminderService.sendScheduledReminders()
-    console.log('✅ [Cron] Job reminders processed successfully')
-  } catch (err) {
-    console.error('❌ [Cron] Error processing job reminders:', err)
-  }
-})
-
+// cron.schedule('0 * * * *', reminderService.sendScheduledReminders)
+//
 // Points expiry check daily at 1 AM (Thailand time = 18:00 UTC prev day)
-cron.schedule('0 18 * * *', async () => {
-  // 18:00 UTC = 01:00 ICT (Thailand, next day)
-  try {
-    const supabase = getSupabaseClient()
-    const result = await processPointsExpiry(supabase as any)
-    if (result.expiredCount > 0) {
-      console.log(`[Cron] Points expired: ${result.expiredCount} transactions, ${result.affectedCustomers.length} customers`)
-    }
-    const warnings = await processExpiryWarnings(supabase as any)
-    if (warnings.warningCount > 0) {
-      console.log(`[Cron] Expiry warnings sent: ${warnings.warningCount} customers`)
-    }
-  } catch (err) {
-    console.error('[Cron] Error processing points expiry:', err)
-  }
-})
-
+// cron.schedule('0 18 * * *', processPointsExpiry)
+//
 // Payout cutoff check daily at 8 AM (Thailand time = 01:00 UTC)
-cron.schedule('0 1 * * *', async () => {
-  // 01:00 UTC = 08:00 ICT (Thailand)
-  try {
-    const result = await processPayoutCutoff()
-    if (result.payoutsCreated > 0 || result.carryForwards > 0) {
-      console.log(`[Cron] Payout cutoff: ${result.payoutsCreated} payouts created, ${result.carryForwards} carry-forwards`)
-    }
-  } catch (err) {
-    console.error('[Cron] Error processing payout cutoff:', err)
-  }
-})
-
+// cron.schedule('0 1 * * *', processPayoutCutoff)
+//
 // Enhanced payout processing for new schedule types (daily at 8:30 AM Thailand time = 01:30 UTC)
-cron.schedule('30 1 * * *', async () => {
-  // 01:30 UTC = 08:30 ICT (Thailand) - runs 30 minutes after traditional payout cutoff
-  try {
-    await processEnhancedPayoutCron()
-  } catch (err) {
-    console.error('[Cron] Error processing enhanced payouts:', err)
-  }
-})
-*/
+// cron.schedule('30 1 * * *', processEnhancedPayoutCron)
 
 // Start server
 app.listen(PORT, () => {
