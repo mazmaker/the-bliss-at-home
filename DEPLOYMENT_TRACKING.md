@@ -439,6 +439,84 @@ a52b7e4 - fix: show 'ปัจจุบัน' badge on actual current schedule
 
 ---
 
+## 🆕 **SESSION 2026-06-05** - Booking Cancellation System Fixes
+
+### **🎯 ฟีเจอร์: Booking Cancellation & Email Notification Fixes**
+
+#### **🔧 Cancellation System Fix - เสร็จสมบูรณ์ ✅**
+
+1. **Supabase Query Relationship Errors Fixed:**
+   - ✅ **Problem:** Customer app showing "Failed to fetch" when trying to cancel bookings
+   - ✅ **Root Cause:** Multiple `staff:staff(...)` relationship errors in Supabase queries (400 Bad Request)
+   - ✅ **Solution:** Fixed staff relationship structure across all services
+   - **Technical Details:**
+     - `staff:staff(...)` → `staff(...)` (removed duplicate relationship names)
+     - `staff.profiles` → `staff.profile` (one-to-one FK relationship via profile_id)
+     - Database relationship: `staff.profile_id` (FK) → `profiles.id`
+
+2. **Files Fixed:**
+   - ✅ `packages/supabase/src/services/customerService.ts` - Fixed query syntax
+   - ✅ `packages/supabase/src/services/adminBookingService.ts` - Fixed query syntax
+   - ✅ `packages/supabase/src/services/bookingService.ts` - Updated relationship structure (3 queries)
+   - ✅ `apps/customer/src/pages/BookingDetails.tsx` - Updated data access paths
+   - ✅ `apps/customer/src/components/StaffTrackingMap.tsx` - Fixed profile access
+   - ✅ `apps/admin/src/lib/adminQueries.ts` - Updated profile reference
+   - ✅ Removed duplicate backup file: `adminBookingService 2.ts`
+
+3. **Server Runtime Issues Fixed:**
+   - ✅ **TypeScript Compilation Errors:** Fixed parsing issues in commented cron schedule expressions
+   - ✅ **Node.js/Browser Environment Conflicts:** Resolved `fetch()` Response vs Express Response type conflicts  
+   - ✅ **Serverless Compatibility:** Removed node-cron dependencies for Vercel deployment
+   - ✅ **Build Success:** All TypeScript compilation errors resolved
+
+#### **📧 Email Notification System Fix - เสร็จสมบูรณ์ ✅**
+
+1. **Cancellation Email Template Error Fixed:**
+   - ✅ **Problem:** Email telling customers "การจองนี้ไม่มีการคืนเงินตามเงื่อนไขการยกเลิก" even when refunds exist
+   - ✅ **Root Cause:** Email template showing incorrect "no refund" message instead of policy explanation
+   - ✅ **Solution:** Updated email template with accurate refund messaging
+
+2. **Email Template Updates:**
+   - **Before:** ❌ "การจองนี้ไม่มีการคืนเงินตามเงื่อนไขการยกเลิก" (This booking has no refund)
+   - **After:** ✅ "การคืนเงินจะดำเนินการตามนโยบายการยกเลิก หากมีสิทธิ์คืนเงิน ยอดเงินจะถูกส่งคืนภายใน 5-14 วันทำการ"
+   - ✅ **Timeline Updated:** 5-7 days → 5-14 days (matching UI display)
+   - ✅ **Styling Updated:** warning-box → info-box (neutral tone)
+
+3. **Files Modified:**
+   - ✅ `apps/server/src/services/emailService.ts` - Updated `bookingCancellationTemplate`
+
+#### **🧪 Testing Results:**
+   - ✅ **Cancellation Flow:** Customer app can now cancel bookings successfully
+   - ✅ **Supabase Queries:** All 400 errors resolved, data loads properly
+   - ✅ **Email Content:** Cancellation emails show correct refund policy information
+   - ✅ **Server Deployment:** TypeScript builds successfully, no runtime errors
+   - ✅ **End-to-End Flow:** Booking → Cancel → Refund confirmation → Email notification
+
+#### **📊 Business Impact:**
+   - **Customer Experience:** Cancellation process now works reliably without errors
+   - **Communication:** Customers receive accurate refund information via email
+   - **Support Reduction:** Fewer customer service inquiries about cancellation issues
+   - **System Reliability:** Eliminated 400 errors and deployment failures
+
+#### **🚀 Production Status:**
+   - ✅ **Local Testing:** All cancellation scenarios tested successfully
+   - ✅ **Server Running:** Local server confirmed working (localhost:3000)
+   - ✅ **Code Committed:** All fixes committed to repository
+   - ✅ **Ready for Deploy:** Cancellation system fully functional
+   - 🔒 **Pending Push:** Awaiting deployment authorization
+
+#### **Git Commit History:**
+```bash
+6069ec4 - fix(email): update cancellation email template with correct refund messaging
+a8b5858 - fix: update staff relationship queries and references across all apps  
+d2d0ebf - fix: resolve duplicate staff relationship names in Supabase queries
+dcf7680 - fix(server): resolve TypeScript Response type conflict in LINE health check
+5c5bde4 - fix: sync pnpm-lock.yaml with package.json after removing node-cron
+cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blocks
+```
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
