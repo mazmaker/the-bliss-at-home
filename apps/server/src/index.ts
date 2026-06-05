@@ -251,7 +251,7 @@ app.get('/api/line/health', async (req, res) => {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-    const response = await fetch('https://api.line.me/v2/bot/quota', {
+    const fetchResponse = await fetch('https://api.line.me/v2/bot/quota', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -261,17 +261,17 @@ app.get('/api/line/health', async (req, res) => {
 
     clearTimeout(timeoutId)
 
-    if (!response.ok) {
-      const error = await response.json()
-      return res.status(response.status).json({
+    if (!fetchResponse.ok) {
+      const error = await fetchResponse.json()
+      return res.status(fetchResponse.status).json({
         success: false,
-        status: response.status,
+        status: fetchResponse.status,
         error: error,
         timestamp: new Date().toISOString()
       })
     }
 
-    const data = await response.json()
+    const data = await fetchResponse.json()
     res.json({
       success: true,
       quota: data,
