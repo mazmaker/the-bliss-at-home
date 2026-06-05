@@ -74,26 +74,26 @@ function BookingDetails() {
       provider: (() => {
         // Check for assigned staff in jobs first
         const assignedJob = bookingData.jobs?.find(job => job.staff_id && job.staff);
-        if (assignedJob?.staff?.profiles) {
+        if (assignedJob?.staff?.profile) {
           return {
-            name: assignedJob.staff.profiles.full_name || 'ไม่ระบุชื่อ',
+            name: assignedJob.staff.profile.full_name || 'ไม่ระบุชื่อ',
             rating: assignedJob.staff.rating || 4.8,
             reviews: assignedJob.staff.total_reviews || 0,
-            avatar: assignedJob.staff.profiles.avatar_url,
-            phone: assignedJob.staff.profiles.phone,
+            avatar: assignedJob.staff.profile.avatar_url,
+            phone: assignedJob.staff.profile.phone,
             jobStatus: assignedJob.status,
             jobId: assignedJob.id,
           };
         }
 
         // Fallback to booking-level staff assignment
-        if (bookingData.staff?.profiles) {
+        if (bookingData.staff?.profile) {
           return {
-            name: bookingData.staff.profiles.full_name || 'ไม่ระบุชื่อ',
+            name: bookingData.staff.profile.full_name || 'ไม่ระบุชื่อ',
             rating: bookingData.staff.rating || 4.8,
             reviews: bookingData.staff.total_reviews || 0,
-            avatar: bookingData.staff.profiles.avatar_url,
-            phone: bookingData.staff.profiles.phone,
+            avatar: bookingData.staff.profile.avatar_url,
+            phone: bookingData.staff.profile.phone,
             jobStatus: bookingData.status === 'confirmed' ? 'confirmed' : 'pending', // Default job status based on booking status
           };
         }

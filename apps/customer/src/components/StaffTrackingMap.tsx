@@ -125,7 +125,7 @@ export default function StaffTrackingMap({
           const fallbackJourney: JourneyInfo = {
             id: journeyId,
             status: 'traveling',
-            staff_name: testBooking?.staff?.profiles?.full_name || 'พนักงานทดสอบ',
+            staff_name: testBooking?.staff?.profile?.full_name || 'พนักงานทดสอบ',
             customer_name: testBooking?.customer_name || 'ลูกค้าทดสอบ',
             destination_lat: testBooking?.latitude || 13.75471599,
             destination_lng: testBooking?.longitude || 100.49688619,

@@ -139,7 +139,7 @@ export async function getBookingById(
         status,
         rating,
         total_reviews,
-        profiles(
+        profile:profiles(
           id,
           full_name,
           phone,
@@ -194,7 +194,7 @@ export async function getBookingByNumber(
         status,
         rating,
         total_reviews,
-        profiles(
+        profile:profiles(
           id,
           full_name,
           phone,
@@ -241,7 +241,7 @@ export async function getBookingByNumber(
         status,
         rating,
         total_reviews,
-        profiles(
+        profile:profiles(
           id,
           full_name,
           phone,

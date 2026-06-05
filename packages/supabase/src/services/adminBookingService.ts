@@ -419,7 +419,7 @@ export async function createAdminBooking(
       *,
       customer:customers(*),
       service:services(*),
-      staff(*, profiles(*))
+      staff(*, profile:profiles(*))
     `)
     .single();
 

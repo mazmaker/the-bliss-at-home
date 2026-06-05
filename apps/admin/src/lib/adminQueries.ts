@@ -145,7 +145,7 @@ export async function getPendingStaffApplications(): Promise<PendingStaffApplica
 
     return data?.map((staff: any) => ({
       id: staff.id,
-      full_name: staff.profiles?.full_name || 'Unknown Staff',
+      full_name: staff.profile?.full_name || 'Unknown Staff',
       skills: staff.skills || [],
       experience_years: staff.experience_years || 0,
       rating: staff.rating,
