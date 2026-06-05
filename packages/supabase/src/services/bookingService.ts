@@ -236,7 +236,7 @@ export async function getBookingByNumber(
       created_at,
       updated_at,
       booking_id,
-      staff:staff(
+      staff(
         id,
         status,
         rating,
