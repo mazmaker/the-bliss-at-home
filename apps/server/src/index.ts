@@ -1,12 +1,10 @@
 // Load environment variables FIRST before any other imports (only for local development)
 import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+import { join } from 'path'
 
 // Only load .env file if running locally (not on Vercel)
 if (!process.env.VERCEL && !process.env.NODE_ENV?.includes('production')) {
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = dirname(__filename)
+  // __dirname is available in CommonJS
   try {
     dotenv.config({ path: join(__dirname, '..', '.env') })
     console.log('✅ Loaded .env file for local development')
@@ -262,7 +260,7 @@ app.get('/api/line/health', async (req, res) => {
     clearTimeout(timeoutId)
 
     if (!fetchResponse.ok) {
-      const error = await fetchResponseon()
+      const error = await fetchResponse.json()
       return res.status(fetchResponse.status).json({
         success: false,
         status: fetchResponse.status,
@@ -271,7 +269,7 @@ app.get('/api/line/health', async (req, res) => {
       })
     }
 
-    const data = await fetchResponseon()
+    const data = await fetchResponse.json()
     res.json({
       success: true,
       quota: data,
