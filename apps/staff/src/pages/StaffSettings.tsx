@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, LogOut, Volume2, Check, Clock, Loader2, Wallet, Calendar, Banknote } from 'lucide-react'
+import { Bell, LogOut, Volume2, Check, Clock, Loader2, Wallet, Calendar, Banknote, Timer } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
 import { useStaffNotifications } from '@bliss/supabase/notifications'
@@ -7,6 +7,37 @@ import { getPayoutSchedule, updatePayoutSchedule, getNextPayoutInfo } from '@bli
 import type { PayoutSchedule, NextPayoutInfo } from '@bliss/supabase'
 import { isSoundEnabled, setSoundEnabled, NotificationSounds } from '../utils/soundNotification'
 import { REMINDER_OPTIONS } from '../utils/jobReminder'
+
+// Payout schedule options for staff (only 3 options - admin controls bi_monthly and custom_days)
+const STAFF_PAYOUT_OPTIONS = [
+  {
+    value: 'weekly' as PayoutSchedule,
+    label: 'ทุกสัปดาห์',
+    description: 'รับเงินทุก 7 วัน',
+    icon: Timer,
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-500'
+  },
+  {
+    value: 'bi_weekly' as PayoutSchedule,
+    label: 'ทุก 2 สัปดาห์',
+    description: 'รับเงินทุก 15 วัน',
+    icon: Calendar,
+    color: 'text-stone-700',
+    bgColor: 'bg-stone-50',
+    borderColor: 'border-stone-400'
+  },
+  {
+    value: 'monthly' as PayoutSchedule,
+    label: 'รายเดือน',
+    description: 'รับ 1 ครั้ง/เดือน วันที่ 1',
+    icon: Banknote,
+    color: 'text-stone-700',
+    bgColor: 'bg-stone-50',
+    borderColor: 'border-stone-400'
+  }
+]
 
 function StaffSettings() {
   const { logout, user } = useAuth()
@@ -23,6 +54,7 @@ function StaffSettings() {
 
   // Payout schedule state
   const [payoutSchedule, setPayoutSchedule] = useState<PayoutSchedule>('monthly')
+  const [selectedPayoutSchedule, setSelectedPayoutSchedule] = useState<PayoutSchedule>('monthly')
   const [nextPayoutInfo, setNextPayoutInfo] = useState<NextPayoutInfo | null>(null)
   const [isLoadingPayout, setIsLoadingPayout] = useState(true)
   const [isSavingPayout, setIsSavingPayout] = useState(false)
@@ -42,6 +74,7 @@ function StaffSettings() {
     ])
       .then(([schedule, info]) => {
         setPayoutSchedule(schedule)
+        setSelectedPayoutSchedule(schedule) // Initialize selected to current
         setNextPayoutInfo(info)
       })
       .catch(console.error)
@@ -110,12 +143,16 @@ function StaffSettings() {
     }
   }
 
-  const handlePayoutScheduleChange = async (schedule: PayoutSchedule) => {
-    if (!user?.id || isSavingPayout) return
+  const handlePayoutScheduleSelect = (schedule: PayoutSchedule) => {
+    setSelectedPayoutSchedule(schedule)
+  }
+
+  const handlePayoutScheduleSave = async () => {
+    if (!user?.id || isSavingPayout || selectedPayoutSchedule === payoutSchedule) return
     setIsSavingPayout(true)
     try {
-      await updatePayoutSchedule(user.id, schedule)
-      setPayoutSchedule(schedule)
+      await updatePayoutSchedule(user.id, selectedPayoutSchedule)
+      setPayoutSchedule(selectedPayoutSchedule)
       const info = await getNextPayoutInfo(user.id)
       setNextPayoutInfo(info)
       showSaved()
@@ -396,6 +433,9 @@ function StaffSettings() {
             {isSavingPayout && <Loader2 className="w-4 h-4 animate-spin text-amber-600" />}
           </div>
           <p className="text-sm text-stone-600">เลือกรอบการรับชำระเงินที่ต้องการ</p>
+          <p className="text-xs text-stone-500 mt-1">
+            💡 รอบพิเศษ (กลาง+สิ้นเดือน, กำหนดเอง) ต้องผ่านการอนุมัติจากแอดมิน
+          </p>
 
           {isLoadingPayout ? (
             <div className="mt-4 flex items-center justify-center py-6">
@@ -404,53 +444,97 @@ function StaffSettings() {
           ) : (
             <div className="mt-4 space-y-3">
               {/* Schedule Options */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Bi-monthly */}
-                <button
-                  onClick={() => handlePayoutScheduleChange('bi-monthly')}
-                  disabled={isSavingPayout}
-                  className={`relative p-3 rounded-xl border-2 transition text-left ${
-                    payoutSchedule === 'bi-monthly'
-                      ? 'border-amber-500 bg-amber-50'
-                      : 'border-stone-200 bg-stone-50 hover:border-stone-300'
-                  }`}
-                >
-                  {payoutSchedule === 'bi-monthly' && (
-                    <div className="absolute top-2 right-2">
-                      <Check className="w-4 h-4 text-amber-600" />
-                    </div>
-                  )}
-                  <Banknote className={`w-5 h-5 mb-1.5 ${payoutSchedule === 'bi-monthly' ? 'text-amber-600' : 'text-stone-400'}`} />
-                  <p className={`text-sm font-semibold ${payoutSchedule === 'bi-monthly' ? 'text-amber-800' : 'text-stone-700'}`}>
-                    ครึ่งเดือน
-                  </p>
-                  <p className="text-xs text-stone-500 mt-0.5">รับ 2 ครั้ง/เดือน</p>
-                  <p className="text-xs text-stone-400 mt-0.5">วันที่ 16 + วันที่ 1</p>
-                </button>
+              <div className="space-y-3">
+                {STAFF_PAYOUT_OPTIONS.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = selectedPayoutSchedule === option.value
+                  const isCurrent = payoutSchedule === option.value
 
-                {/* Monthly */}
-                <button
-                  onClick={() => handlePayoutScheduleChange('monthly')}
-                  disabled={isSavingPayout}
-                  className={`relative p-3 rounded-xl border-2 transition text-left ${
-                    payoutSchedule === 'monthly'
-                      ? 'border-amber-500 bg-amber-50'
-                      : 'border-stone-200 bg-stone-50 hover:border-stone-300'
-                  }`}
-                >
-                  {payoutSchedule === 'monthly' && (
-                    <div className="absolute top-2 right-2">
-                      <Check className="w-4 h-4 text-amber-600" />
-                    </div>
-                  )}
-                  <Calendar className={`w-5 h-5 mb-1.5 ${payoutSchedule === 'monthly' ? 'text-amber-600' : 'text-stone-400'}`} />
-                  <p className={`text-sm font-semibold ${payoutSchedule === 'monthly' ? 'text-amber-800' : 'text-stone-700'}`}>
-                    รายเดือน
-                  </p>
-                  <p className="text-xs text-stone-500 mt-0.5">รับ 1 ครั้ง/เดือน</p>
-                  <p className="text-xs text-stone-400 mt-0.5">วันที่ 1</p>
-                </button>
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => handlePayoutScheduleSelect(option.value)}
+                      disabled={isSavingPayout}
+                      className={`relative w-full p-3 rounded-xl border-2 transition text-left ${
+                        isSelected
+                          ? `${option.borderColor} ${option.bgColor}`
+                          : 'border-stone-200 bg-stone-50 hover:border-stone-300'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-2 right-2">
+                          <Check className={`w-4 h-4 ${option.color}`} />
+                        </div>
+                      )}
+
+                      {/* Current active indicator */}
+                      {isCurrent && (
+                        <div className="absolute top-2 left-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      )}
+
+                      <div className="flex items-start space-x-3">
+                        <Icon className={`w-5 h-5 mt-0.5 ${isSelected ? option.color : 'text-stone-400'}`} />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm font-semibold ${isSelected ? option.color.replace('text-', 'text-').replace('-600', '-800') : 'text-stone-700'}`}>
+                              {option.label}
+                            </p>
+                            {isCurrent && (
+                              <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full font-medium">
+                                ปัจจุบัน
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-stone-500 mt-0.5">{option.description}</p>
+
+                          {/* Extra details for specific schedules */}
+                          {option.value === 'weekly' && (
+                            <p className="text-xs text-stone-400 mt-0.5">แนะนำสำหรับกระแสเงินสดเร็ว</p>
+                          )}
+                          {option.value === 'bi_weekly' && (
+                            <p className="text-xs text-stone-400 mt-0.5">สมดุลระหว่างความถี่และจำนวน</p>
+                          )}
+                          {option.value === 'monthly' && (
+                            <p className="text-xs text-stone-400 mt-0.5">ง่ายต่อการวางแผนการเงิน</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
+
+              {/* Save Button - only show when there's a change */}
+              {selectedPayoutSchedule !== payoutSchedule && (
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    onClick={handlePayoutScheduleSave}
+                    disabled={isSavingPayout}
+                    className="flex-1 py-3 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isSavingPayout ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        กำลังบันทึก...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        ยืนยันการเปลี่ยนแปลง
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setSelectedPayoutSchedule(payoutSchedule)}
+                    disabled={isSavingPayout}
+                    className="px-4 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              )}
 
               {/* Next Payout Info */}
               {nextPayoutInfo && (

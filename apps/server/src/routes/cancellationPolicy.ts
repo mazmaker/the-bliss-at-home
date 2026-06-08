@@ -23,13 +23,18 @@ const router = Router()
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    console.log('📋 Cancellation policy endpoint called at:', new Date().toISOString())
+    console.log('🔥 [DEBUG] Cancellation policy route MATCHED at:', new Date().toISOString())
     const policy = await cancellationPolicyService.getCancellationPolicy()
 
-    return res.status(200).json({
+    console.log('🔥 [DEBUG] About to send response with status 200')
+    const response = {
       success: true,
       data: policy,
-    })
+    }
+
+    res.status(200).json(response)
+    console.log('🔥 [DEBUG] Response sent successfully')
+    return
   } catch (error: any) {
     console.error('Error fetching cancellation policy:', error)
     return res.status(500).json({
