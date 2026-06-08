@@ -9,7 +9,7 @@
  * - custom_days (1-90 days)
  */
 
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase.js'
 
 // ============================================================
 // Types

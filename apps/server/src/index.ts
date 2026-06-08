@@ -32,7 +32,7 @@ import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders
 import { reminderService } from './services/reminderService'
 import { processPayoutCutoff } from './services/payoutService'
 import { processEnhancedPayoutCron } from './services/enhancedPayoutService'
-import { getSupabaseClient } from './lib/supabase'
+import { getSupabaseClient } from './lib/supabase.js'
 // Skip shared package imports for Vercel compatibility
 // import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
 

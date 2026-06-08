@@ -8,7 +8,7 @@ dotenv.config()
 
 import { Router, Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { staffAssignmentService } from '../services/staffAssignmentService'
+import { staffAssignmentService } from '../services/staffAssignmentService.js'
 import { sendBookingConfirmedNotifications } from '../services/notificationService.js'
 import { validateBookingDate } from './bookings.js'
 
