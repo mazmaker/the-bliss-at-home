@@ -403,7 +403,7 @@ export async function createBookingWithServices(
     provider_preference: bookingData.provider_preference || 'no-preference',
     status: 'pending',
     payment_status: 'pending',
-    payment_method: 'pending_payment', // Explicitly set to prevent race condition with 'cash' default
+    payment_method: 'other', // Explicitly set to prevent race condition with 'cash' default
   } as any;
 
   // Check for duplicate customer booking (same customer + date + time)

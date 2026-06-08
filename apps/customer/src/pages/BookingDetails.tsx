@@ -346,6 +346,10 @@ function BookingDetails() {
         return t('details.bankTransfer')
       case 'cash':
         return t('details.cash')
+      case 'promptpay':
+        return 'พร้อมเพย์'
+      case 'other':
+        return 'รอการชำระเงิน'
       case 'pending_payment':
         return 'รอชำระเงิน'
       default:
