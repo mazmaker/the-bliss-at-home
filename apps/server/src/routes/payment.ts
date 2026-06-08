@@ -134,8 +134,7 @@ router.post('/create-charge', async (req: Request, res: Response) => {
 
     // If paid immediately (credit card), create job + notify
     if (charge.paid) {
-      try
-
+      try {
         const notifResult = await processBookingConfirmed(booking_id)
         console.log(`📋 Charge notification result:`, notifResult)
       } catch (notifError) {
