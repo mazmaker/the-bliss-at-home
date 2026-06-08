@@ -105,8 +105,25 @@ export function CancelBookingModal({
     try {
       // Fetch cancellation policy
       const policyRes = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/cancellation-policy`)
-      if (policyRes.ok) {
-        const policyData = await policyRes.json()
+
+      // WORKAROUND: Handle case where server returns 404 status but valid JSON data
+      const responseText = await policyRes.text()
+      let policyData = null
+
+      try {
+        const parsed = JSON.parse(responseText)
+        if (parsed.success && parsed.data) {
+          policyData = parsed
+          console.log('📋 Policy data retrieved (status:', policyRes.status, ')')
+        }
+      } catch (parseError) {
+        // If it's not JSON, then it's a real error
+        if (policyRes.ok) {
+          console.error('Failed to parse policy response:', parseError)
+        }
+      }
+
+      if (policyData) {
         setPolicy(policyData.data)
       }
 
@@ -115,11 +132,28 @@ export function CancelBookingModal({
         `${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/cancellation-policy/check/${bookingId}`
       )
 
-      if (!checkRes.ok) {
-        throw new Error('ไม่สามารถตรวจสอบสถานะการยกเลิกได้')
+      // WORKAROUND: Handle case where server returns 404 status but valid JSON data
+      const checkResponseText = await checkRes.text()
+      let checkData = null
+
+      try {
+        const parsed = JSON.parse(checkResponseText)
+        if (parsed.success && parsed.data) {
+          checkData = parsed
+          console.log('✅ Booking eligibility retrieved (status:', checkRes.status, ')')
+        } else if (parsed.success === false) {
+          throw new Error(parsed.error || 'ไม่สามารถตรวจสอบสถานะการยกเลิกได้')
+        }
+      } catch (parseError) {
+        // If it's not JSON, then it's a real error
+        if (!checkRes.ok) {
+          throw new Error('ไม่สามารถตรวจสอบสถานะการยกเลิกได้')
+        }
       }
 
-      const checkData = await checkRes.json()
+      if (!checkData) {
+        throw new Error('ไม่สามารถตรวจสอบสถานะการยกเลิกได้')
+      }
 
       // Safe check for API response
       if (!checkData || !checkData.data) {
