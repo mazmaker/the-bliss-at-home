@@ -23,6 +23,7 @@ const router = Router()
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
+    console.log('📋 Cancellation policy endpoint called at:', new Date().toISOString())
     const policy = await cancellationPolicyService.getCancellationPolicy()
 
     return res.json({
