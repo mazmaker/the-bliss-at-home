@@ -26,7 +26,7 @@ router.get('/', async (req: Request, res: Response) => {
     console.log('📋 Cancellation policy endpoint called at:', new Date().toISOString())
     const policy = await cancellationPolicyService.getCancellationPolicy()
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       data: policy,
     })
@@ -56,7 +56,7 @@ router.get('/check/:bookingId', async (req: Request, res: Response) => {
 
     const eligibility = await cancellationPolicyService.checkCancellationEligibility(bookingId)
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       data: eligibility,
     })
