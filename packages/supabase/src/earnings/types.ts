@@ -6,7 +6,7 @@ export type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
 export type PayoutPeriod = 'daily' | 'weekly' | 'biweekly' | 'monthly'
 
-export type PayoutSchedule = 'weekly' | 'bi_weekly' | 'monthly' | 'custom_days'
+export type PayoutSchedule = 'weekly' | 'bi_weekly' | 'monthly' | 'bi_monthly' | 'custom_days'
 
 export type PayoutRound = 'mid-month' | 'end-month'
 

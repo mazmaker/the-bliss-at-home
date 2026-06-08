@@ -44,6 +44,7 @@ export type PayoutSchedule =
   | 'weekly'        // 7 วัน
   | 'bi_weekly'     // 15 วัน
   | 'monthly'       // 30 วัน
+  | 'bi_monthly'    // กลาง+สิ้นเดือน (15 และ 1)
   | 'custom_days'   // กำหนดเอง
 
 // Staff status enum
@@ -94,6 +95,15 @@ export const PAYOUT_SCHEDULE_OPTIONS: PayoutScheduleOption[] = [
     examples: 'ทุกคนจ่าย: 1 ก.ค., 1 ส.ค., 1 ก.ย. (ไม่ว่าเริ่มงานวันไหน)',
     intervalDays: 30,
     icon: '30d'
+  },
+  {
+    value: 'bi_monthly',
+    label: 'กลาง+สิ้นเดือน',
+    description: 'จ่ายเงิน 2 ครั้งต่อเดือน - กระแสเงินสดดีขึ้น',
+    detailedDescription: 'จ่ายเงินวันที่ 15 และวันที่ 1 ของเดือนถัดไป ช่วยให้พนักงานมีกระแสเงินสดที่สม่ำเสมอขึ้น เหมาะสำหรับพนักงานที่ต้องการเงินบ่อยกว่ารายเดือน',
+    examples: 'งวด 1-15 มิ.ย. → จ่าย 1 ก.ค. | งวด 16-30 มิ.ย. → จ่าย 15 ก.ค.',
+    icon: '15+1',
+    isDefault: false
   },
   {
     value: 'custom_days',
@@ -167,6 +177,16 @@ export const calculateNextPayoutDate = (
     case 'monthly':
       // Return 1st of next month (synchronized for all staff)
       return new Date(base.getFullYear(), base.getMonth() + 1, 1)
+    case 'bi_monthly':
+      // Bi-monthly: 15th and 1st of next month
+      const currentDay = base.getDate()
+      if (currentDay <= 15) {
+        // Before or on 15th → next payout on 1st of next month
+        return new Date(base.getFullYear(), base.getMonth() + 1, 1)
+      } else {
+        // After 15th → next payout on 15th of next month
+        return new Date(base.getFullYear(), base.getMonth() + 1, 15)
+      }
     case 'custom_days':
       const days = customInterval || 30
       return new Date(base.getTime() + days * 24 * 60 * 60 * 1000)

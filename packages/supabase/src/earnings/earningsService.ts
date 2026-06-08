@@ -394,7 +394,7 @@ export async function getPayoutSettings(): Promise<PayoutSettings> {
 }
 
 /**
- * Get staff payout schedule (bi-monthly or monthly)
+ * Get staff payout schedule (bi_monthly or monthly)
  */
 export async function getPayoutSchedule(profileId: string): Promise<PayoutSchedule> {
   const { data, error } = await supabase
@@ -445,7 +445,7 @@ export async function getNextPayoutInfo(profileId: string): Promise<NextPayoutIn
   let nextPayout: Date
   let nextRound: PayoutRound
 
-  if (schedule === 'bi-monthly') {
+  if (schedule === 'bi_monthly') {
     // Bi-monthly: check which cutoff is next
     if (currentDay <= settings.mid_month_cutoff_day) {
       // Before mid-month cutoff → next is mid-month

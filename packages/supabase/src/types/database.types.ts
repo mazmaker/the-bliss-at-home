@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       addresses: {
@@ -76,6 +101,48 @@ export type Database = {
           },
         ]
       }
+      admin_booking_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          booking_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+        }
+        Insert: {
+          action?: string
+          admin_id?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_booking_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_booking_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_name: string
@@ -120,6 +187,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -358,13 +432,64 @@ export type Database = {
           },
         ]
       }
+      booking_state_transitions: {
+        Row: {
+          booking_id: string
+          created_at: string | null
+          from_state: Database["public"]["Enums"]["booking_status_v2"] | null
+          id: string
+          metadata: Json | null
+          to_state: Database["public"]["Enums"]["booking_status_v2"]
+          trigger_source: string
+          triggered_by: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string | null
+          from_state?: Database["public"]["Enums"]["booking_status_v2"] | null
+          id?: string
+          metadata?: Json | null
+          to_state: Database["public"]["Enums"]["booking_status_v2"]
+          trigger_source?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string | null
+          from_state?: Database["public"]["Enums"]["booking_status_v2"] | null
+          id?: string
+          metadata?: Json | null
+          to_state?: Database["public"]["Enums"]["booking_status_v2"]
+          trigger_source?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_state_transitions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_state_transitions_triggered_by_fkey"
+            columns: ["triggered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
+          actual_arrival: string | null
           address: string | null
           admin_notes: string | null
+          admin_override_restrictions: boolean | null
           base_price: number
           booking_date: string
           booking_number: string
+          booking_source: string | null
           booking_time: string
           cancellation_reason: string | null
           cancellation_type: string | null
@@ -373,6 +498,7 @@ export type Database = {
           completed_at: string | null
           confirmed_at: string | null
           created_at: string | null
+          created_by_admin_id: string | null
           customer_id: string | null
           customer_notes: string | null
           discount_amount: number | null
@@ -388,6 +514,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_method_recorded: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           points_discount: number | null
           points_earned: number | null
@@ -401,20 +528,26 @@ export type Database = {
           reschedule_count: number | null
           service_format: string | null
           service_id: string
+          service_started_at: string | null
           staff_earnings: number | null
           staff_id: string | null
           staff_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
+          status_v2: Database["public"]["Enums"]["booking_status_v2"] | null
           total_extensions_price: number | null
+          travel_started_at: string | null
           updated_at: string | null
         }
         Insert: {
+          actual_arrival?: string | null
           address?: string | null
           admin_notes?: string | null
+          admin_override_restrictions?: boolean | null
           base_price: number
           booking_date: string
           booking_number?: string
+          booking_source?: string | null
           booking_time: string
           cancellation_reason?: string | null
           cancellation_type?: string | null
@@ -423,6 +556,7 @@ export type Database = {
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string | null
+          created_by_admin_id?: string | null
           customer_id?: string | null
           customer_notes?: string | null
           discount_amount?: number | null
@@ -438,6 +572,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_method_recorded?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           points_discount?: number | null
           points_earned?: number | null
@@ -451,20 +586,26 @@ export type Database = {
           reschedule_count?: number | null
           service_format?: string | null
           service_id: string
+          service_started_at?: string | null
           staff_earnings?: number | null
           staff_id?: string | null
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          status_v2?: Database["public"]["Enums"]["booking_status_v2"] | null
           total_extensions_price?: number | null
+          travel_started_at?: string | null
           updated_at?: string | null
         }
         Update: {
+          actual_arrival?: string | null
           address?: string | null
           admin_notes?: string | null
+          admin_override_restrictions?: boolean | null
           base_price?: number
           booking_date?: string
           booking_number?: string
+          booking_source?: string | null
           booking_time?: string
           cancellation_reason?: string | null
           cancellation_type?: string | null
@@ -473,6 +614,7 @@ export type Database = {
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string | null
+          created_by_admin_id?: string | null
           customer_id?: string | null
           customer_notes?: string | null
           discount_amount?: number | null
@@ -488,6 +630,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_method_recorded?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           points_discount?: number | null
           points_earned?: number | null
@@ -501,18 +644,28 @@ export type Database = {
           reschedule_count?: number | null
           service_format?: string | null
           service_id?: string
+          service_started_at?: string | null
           staff_earnings?: number | null
           staff_id?: string | null
           staff_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          status_v2?: Database["public"]["Enums"]["booking_status_v2"] | null
           total_extensions_price?: number | null
+          travel_started_at?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "bookings_cancelled_by_fkey"
             columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_created_by_admin_id_fkey"
+            columns: ["created_by_admin_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -551,6 +704,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -1136,6 +1296,7 @@ export type Database = {
           credit_days: number | null
           credit_start_date: string | null
           description: string | null
+          discount_amount: number
           discount_rate: number
           email: string
           hotel_slug: string | null
@@ -1173,6 +1334,7 @@ export type Database = {
           credit_days?: number | null
           credit_start_date?: string | null
           description?: string | null
+          discount_amount?: number
           discount_rate?: number
           email: string
           hotel_slug?: string | null
@@ -1210,6 +1372,7 @@ export type Database = {
           credit_days?: number | null
           credit_start_date?: string | null
           description?: string | null
+          discount_amount?: number
           discount_rate?: number
           email?: string
           hotel_slug?: string | null
@@ -1442,6 +1605,50 @@ export type Database = {
           },
         ]
       }
+      journey_location_updates: {
+        Row: {
+          accuracy: number | null
+          altitude: number | null
+          heading: number | null
+          id: string
+          journey_id: string
+          latitude: number
+          longitude: number
+          recorded_at: string | null
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          altitude?: number | null
+          heading?: number | null
+          id?: string
+          journey_id: string
+          latitude: number
+          longitude: number
+          recorded_at?: string | null
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          altitude?: number | null
+          heading?: number | null
+          id?: string
+          journey_id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string | null
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_location_updates_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "staff_journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_bills: {
         Row: {
           bill_number: string
@@ -1591,6 +1798,73 @@ export type Database = {
           },
         ]
       }
+      payment_records: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          booking_id: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          payment_method: string
+          payment_notes: string | null
+          recorded_at: string
+          recorded_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          booking_id?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          payment_method: string
+          payment_notes?: string | null
+          recorded_at?: string
+          recorded_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          payment_method?: string
+          payment_notes?: string | null
+          recorded_at?: string
+          recorded_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_records_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_jobs: {
         Row: {
           amount: number
@@ -1630,87 +1904,6 @@ export type Database = {
           },
         ]
       }
-      payouts: {
-        Row: {
-          bank_account_id: string | null
-          carry_forward_amount: number | null
-          created_at: string | null
-          gross_earnings: number
-          id: string
-          is_carry_forward: boolean | null
-          net_amount: number
-          notes: string | null
-          payout_round: string | null
-          period_end: string
-          period_start: string
-          platform_fee: number
-          staff_id: string
-          status: Database["public"]["Enums"]["payout_status"] | null
-          total_jobs: number
-          transfer_reference: string | null
-          transfer_slip_url: string | null
-          transferred_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          bank_account_id?: string | null
-          carry_forward_amount?: number
-          created_at?: string | null
-          gross_earnings?: number
-          id?: string
-          is_carry_forward?: boolean
-          net_amount?: number
-          notes?: string | null
-          payout_round?: string | null
-          period_end: string
-          period_start: string
-          platform_fee?: number
-          staff_id: string
-          status?: Database["public"]["Enums"]["payout_status"] | null
-          total_jobs?: number
-          transfer_reference?: string | null
-          transfer_slip_url?: string | null
-          transferred_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          bank_account_id?: string | null
-          carry_forward_amount?: number
-          created_at?: string | null
-          gross_earnings?: number
-          id?: string
-          is_carry_forward?: boolean
-          net_amount?: number
-          notes?: string | null
-          payout_round?: string | null
-          period_end?: string
-          period_start?: string
-          platform_fee?: number
-          staff_id?: string
-          status?: Database["public"]["Enums"]["payout_status"] | null
-          total_jobs?: number
-          transfer_reference?: string | null
-          transfer_slip_url?: string | null
-          transferred_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payouts_bank_account_id_fkey"
-            columns: ["bank_account_id"]
-            isOneToOne: false
-            referencedRelation: "bank_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payouts_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       payout_notifications: {
         Row: {
           created_at: string | null
@@ -1746,6 +1939,48 @@ export type Database = {
           },
         ]
       }
+      payout_schedule_settings: {
+        Row: {
+          created_at: string | null
+          default_interval_days: number | null
+          description_en: string | null
+          description_th: string | null
+          display_name_en: string
+          display_name_th: string
+          id: string
+          is_active: boolean | null
+          schedule_type: Database["public"]["Enums"]["payout_schedule_enum"]
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_interval_days?: number | null
+          description_en?: string | null
+          description_th?: string | null
+          display_name_en: string
+          display_name_th: string
+          id?: string
+          is_active?: boolean | null
+          schedule_type: Database["public"]["Enums"]["payout_schedule_enum"]
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_interval_days?: number | null
+          description_en?: string | null
+          description_th?: string | null
+          display_name_en?: string
+          display_name_th?: string
+          id?: string
+          is_active?: boolean | null
+          schedule_type?: Database["public"]["Enums"]["payout_schedule_enum"]
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payout_settings: {
         Row: {
           description: string | null
@@ -1769,6 +2004,87 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      payouts: {
+        Row: {
+          bank_account_id: string | null
+          carry_forward_amount: number | null
+          created_at: string | null
+          gross_earnings: number
+          id: string
+          is_carry_forward: boolean | null
+          net_amount: number
+          notes: string | null
+          payout_round: string | null
+          period_end: string
+          period_start: string
+          platform_fee: number
+          staff_id: string
+          status: Database["public"]["Enums"]["payout_status"] | null
+          total_jobs: number
+          transfer_reference: string | null
+          transfer_slip_url: string | null
+          transferred_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bank_account_id?: string | null
+          carry_forward_amount?: number | null
+          created_at?: string | null
+          gross_earnings?: number
+          id?: string
+          is_carry_forward?: boolean | null
+          net_amount?: number
+          notes?: string | null
+          payout_round?: string | null
+          period_end: string
+          period_start: string
+          platform_fee?: number
+          staff_id: string
+          status?: Database["public"]["Enums"]["payout_status"] | null
+          total_jobs?: number
+          transfer_reference?: string | null
+          transfer_slip_url?: string | null
+          transferred_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bank_account_id?: string | null
+          carry_forward_amount?: number | null
+          created_at?: string | null
+          gross_earnings?: number
+          id?: string
+          is_carry_forward?: boolean | null
+          net_amount?: number
+          notes?: string | null
+          payout_round?: string | null
+          period_end?: string
+          period_start?: string
+          platform_fee?: number
+          staff_id?: string
+          status?: Database["public"]["Enums"]["payout_status"] | null
+          total_jobs?: number
+          transfer_reference?: string | null
+          transfer_slip_url?: string | null
+          transferred_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       point_transactions: {
         Row: {
@@ -2185,6 +2501,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -2672,6 +2995,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sos_alerts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       sos_reports: {
@@ -2750,6 +3080,7 @@ export type Database = {
           created_at: string | null
           current_location_lat: number | null
           current_location_lng: number | null
+          custom_payout_interval: number | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
@@ -2761,9 +3092,14 @@ export type Database = {
           invite_token_expires_at: string | null
           is_active: boolean | null
           is_available: boolean | null
+          last_payout_processed_at: string | null
           name_en: string | null
           name_th: string
-          payout_schedule: string | null
+          next_payout_date: string | null
+          payout_schedule:
+            | Database["public"]["Enums"]["payout_schedule_enum"]
+            | null
+          payout_start_date: string | null
           phone: string
           profile_id: string | null
           rating: number | null
@@ -2787,6 +3123,7 @@ export type Database = {
           created_at?: string | null
           current_location_lat?: number | null
           current_location_lng?: number | null
+          custom_payout_interval?: number | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
@@ -2798,9 +3135,14 @@ export type Database = {
           invite_token_expires_at?: string | null
           is_active?: boolean | null
           is_available?: boolean | null
+          last_payout_processed_at?: string | null
           name_en?: string | null
           name_th: string
-          payout_schedule?: string | null
+          next_payout_date?: string | null
+          payout_schedule?:
+            | Database["public"]["Enums"]["payout_schedule_enum"]
+            | null
+          payout_start_date?: string | null
           phone: string
           profile_id?: string | null
           rating?: number | null
@@ -2824,6 +3166,7 @@ export type Database = {
           created_at?: string | null
           current_location_lat?: number | null
           current_location_lng?: number | null
+          custom_payout_interval?: number | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
@@ -2835,9 +3178,14 @@ export type Database = {
           invite_token_expires_at?: string | null
           is_active?: boolean | null
           is_available?: boolean | null
+          last_payout_processed_at?: string | null
           name_en?: string | null
           name_th?: string
-          payout_schedule?: string | null
+          next_payout_date?: string | null
+          payout_schedule?:
+            | Database["public"]["Enums"]["payout_schedule_enum"]
+            | null
+          payout_start_date?: string | null
           phone?: string
           profile_id?: string | null
           rating?: number | null
@@ -2990,6 +3338,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "staff_documents_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       staff_documents_audit: {
@@ -3030,6 +3385,73 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_documents"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_journeys: {
+        Row: {
+          arrived_at: string | null
+          booking_id: string
+          completed_at: string | null
+          created_at: string | null
+          current_latitude: number | null
+          current_longitude: number | null
+          id: string
+          last_location_update: string | null
+          staff_id: string
+          started_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          arrived_at?: string | null
+          booking_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          current_latitude?: number | null
+          current_longitude?: number | null
+          id?: string
+          last_location_update?: string | null
+          staff_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          arrived_at?: string | null
+          booking_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          current_latitude?: number | null
+          current_longitude?: number | null
+          id?: string
+          last_location_update?: string | null
+          staff_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_journeys_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_journeys_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_journeys_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -3110,6 +3532,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_performance_metrics_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -3259,6 +3688,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_skills_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_payout_schedule_summary"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -3519,6 +3955,33 @@ export type Database = {
           },
         ]
       }
+      staff_payout_schedule_summary: {
+        Row: {
+          custom_payout_interval: number | null
+          days_until_payout: number | null
+          is_payout_due: boolean | null
+          last_payout_processed_at: string | null
+          name_th: string | null
+          next_payout_date: string | null
+          payout_schedule:
+            | Database["public"]["Enums"]["payout_schedule_enum"]
+            | null
+          payout_start_date: string | null
+          profile_id: string | null
+          schedule_description: string | null
+          schedule_display_name: string | null
+          staff_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       approve_staff_application_v2: {
@@ -3528,6 +3991,10 @@ export type Database = {
           staff_profile_id: string
           success: boolean
         }[]
+      }
+      calculate_distance_meters: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
       }
       calculate_growth: {
         Args: { current_value: number; previous_value: number }
@@ -3540,9 +4007,30 @@ export type Database = {
           total_earnings: number
         }[]
       }
+      calculate_next_payout_date: {
+        Args: {
+          custom_interval?: number
+          last_payout?: string
+          payout_schedule: Database["public"]["Enums"]["payout_schedule_enum"]
+          start_date?: string
+        }
+        Returns: string
+      }
       calculate_staff_performance: {
         Args: { p_month: number; p_staff_id: string; p_year: number }
         Returns: undefined
+      }
+      complete_staff_journey: {
+        Args: {
+          p_final_latitude: number
+          p_final_longitude: number
+          p_journey_id: string
+        }
+        Returns: undefined
+      }
+      confirm_staff_arrival: {
+        Args: { p_booking_id: string; p_location: Json; p_photo_url?: string }
+        Returns: boolean
       }
       create_coupon_codes_for_promotion: {
         Args: { count?: number; promotion_id_param: string }
@@ -3730,6 +4218,7 @@ export type Database = {
           completion_rate: number
           customer_growth: number
           customer_retention_rate: number
+          discount_amount: number
           hotel_id: string
           hotel_name: string
           most_popular_services: string[]
@@ -3963,6 +4452,7 @@ export type Database = {
           time_period: string
         }[]
       }
+      get_user_hotel_id: { Args: never; Returns: string }
       get_visible_reviews: {
         Args: { p_limit?: number; p_min_rating?: number; p_service_id?: string }
         Returns: {
@@ -3996,7 +4486,21 @@ export type Database = {
           total_jobs: number
         }[]
       }
+      start_service_billing: { Args: { p_booking_id: string }; Returns: Json }
+      start_staff_journey: {
+        Args: { p_booking_id: string; p_staff_id: string }
+        Returns: string
+      }
       update_job_totals: { Args: { job_id: string }; Returns: undefined }
+      update_journey_location: {
+        Args: {
+          p_accuracy?: number
+          p_journey_id: string
+          p_latitude: number
+          p_longitude: number
+        }
+        Returns: undefined
+      }
       update_service: {
         Args: {
           p_base_price?: number
@@ -4026,6 +4530,26 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+        | "traveling"
+        | "assigned"
+      booking_status_v2:
+        | "PENDING"
+        | "PAYMENT_REQUIRED"
+        | "CONFIRMED"
+        | "STAFF_MATCHING"
+        | "ASSIGNED"
+        | "STAFF_PREPARING"
+        | "STAFF_EN_ROUTE"
+        | "STAFF_NEARBY"
+        | "STAFF_ARRIVED"
+        | "SERVICE_STARTING"
+        | "SERVICE_IN_PROGRESS"
+        | "SERVICE_PAUSED"
+        | "SERVICE_COMPLETED"
+        | "PAYMENT_PROCESSING"
+        | "COMPLETED"
+        | "CANCELLED"
+        | "NO_STAFF_AVAILABLE"
       customer_status: "active" | "suspended" | "banned"
       hotel_status: "active" | "inactive" | "pending"
       job_payment_status: "pending" | "paid" | "refunded"
@@ -4045,6 +4569,12 @@ export type Database = {
         | "bank_transfer"
         | "other"
       payment_status: "pending" | "processing" | "paid" | "failed" | "refunded"
+      payout_schedule_enum:
+        | "bi_monthly"
+        | "weekly"
+        | "bi_weekly"
+        | "monthly"
+        | "custom_days"
       payout_status: "pending" | "processing" | "completed" | "failed"
       service_category: "massage" | "nail" | "spa" | "facial"
       skill_level: "beginner" | "intermediate" | "advanced" | "expert"
@@ -4176,6 +4706,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       booking_status: [
@@ -4184,6 +4717,27 @@ export const Constants = {
         "in_progress",
         "completed",
         "cancelled",
+        "traveling",
+        "assigned",
+      ],
+      booking_status_v2: [
+        "PENDING",
+        "PAYMENT_REQUIRED",
+        "CONFIRMED",
+        "STAFF_MATCHING",
+        "ASSIGNED",
+        "STAFF_PREPARING",
+        "STAFF_EN_ROUTE",
+        "STAFF_NEARBY",
+        "STAFF_ARRIVED",
+        "SERVICE_STARTING",
+        "SERVICE_IN_PROGRESS",
+        "SERVICE_PAUSED",
+        "SERVICE_COMPLETED",
+        "PAYMENT_PROCESSING",
+        "COMPLETED",
+        "CANCELLED",
+        "NO_STAFF_AVAILABLE",
       ],
       customer_status: ["active", "suspended", "banned"],
       hotel_status: ["active", "inactive", "pending"],
@@ -4206,6 +4760,13 @@ export const Constants = {
         "other",
       ],
       payment_status: ["pending", "processing", "paid", "failed", "refunded"],
+      payout_schedule_enum: [
+        "bi_monthly",
+        "weekly",
+        "bi_weekly",
+        "monthly",
+        "custom_days",
+      ],
       payout_status: ["pending", "processing", "completed", "failed"],
       service_category: ["massage", "nail", "spa", "facial"],
       skill_level: ["beginner", "intermediate", "advanced", "expert"],
