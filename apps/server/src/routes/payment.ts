@@ -108,27 +108,33 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       console.error('Failed to create transaction record:', txnError)
     }
 
-    // Update booking payment status and method
+    // Update booking payment status, method, and confirmation status in single atomic operation
+    const bookingUpdate: any = {
+      payment_status: charge.paid ? 'paid' : 'pending',
+      payment_method: payment_method || 'credit_card',
+    }
+
+    // If paid immediately, also confirm the booking
+    if (charge.paid) {
+      bookingUpdate.status = 'confirmed'
+    }
+
     const { error: updateError } = await getSupabaseClient()
       .from('bookings')
-      .update({
-        payment_status: charge.paid ? 'paid' : 'pending',
-        payment_method: payment_method || 'credit_card',
-      })
+      .update(bookingUpdate)
       .eq('id', booking_id)
 
     if (updateError) {
       console.error('Failed to update booking:', updateError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update booking status',
+      })
     }
 
     // If paid immediately (credit card), create job + notify
     if (charge.paid) {
-      try {
-        // Update booking status to confirmed first
-        await getSupabaseClient()
-          .from('bookings')
-          .update({ status: 'confirmed' })
-          .eq('id', booking_id)
+      try
 
         const notifResult = await processBookingConfirmed(booking_id)
         console.log(`📋 Charge notification result:`, notifResult)
@@ -247,12 +253,13 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
           }
 
         } else {
-          // Regular booking payment
+          // Regular booking payment - preserve the payment_method from transaction
           await getSupabaseClient()
             .from('bookings')
             .update({
               payment_status: 'paid',
               status: 'confirmed', // Auto-confirm on successful payment
+              payment_method: transaction.payment_method || 'credit_card', // Preserve payment method
             })
             .eq('id', transaction.booking_id)
 
@@ -804,6 +811,7 @@ router.get('/status/:chargeId', async (req: Request, res: Response) => {
         .update({
           payment_status: charge.paid ? 'paid' : charge.failureCode ? 'failed' : 'pending',
           status: charge.paid ? 'confirmed' : transaction.status,
+          payment_method: transaction.payment_method || 'credit_card', // Preserve payment method
         })
         .eq('id', transaction.booking_id)
 
