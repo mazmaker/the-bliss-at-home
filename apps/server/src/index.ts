@@ -249,7 +249,7 @@ app.get('/api/line/health', async (req, res) => {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-    const fetchResponse = await fetch('https://api.line.me/v2/bot/quota', {
+    const fetchResponse: any = await fetch('https://api.line.me/v2/bot/quota', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
