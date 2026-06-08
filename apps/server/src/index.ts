@@ -138,6 +138,7 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/bookings', bookingsRoutes)
 
 // Cancellation policy routes
+console.log('📋 Registering cancellation policy routes at /api/cancellation-policy')
 app.use('/api/cancellation-policy', cancellationPolicyRoutes)
 
 // Receipt & Credit Note routes
@@ -555,6 +556,7 @@ app.post('/api/dev/check-migration', async (req: Request, res: Response) => {
 
 // 404 handler
 app.use((req: Request, res: Response) => {
+  console.log('❌ 404 handler called for path:', req.path, 'method:', req.method)
   res.status(404).json({
     error: 'Not Found',
     path: req.path,
