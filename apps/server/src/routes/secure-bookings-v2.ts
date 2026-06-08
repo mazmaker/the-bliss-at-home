@@ -8,9 +8,9 @@ dotenv.config()
 
 import { Router, Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { staffAssignmentService } from '../services/staffAssignmentService.js'
-import { sendBookingConfirmedNotifications } from '../services/notificationService.js'
-import { validateBookingDate } from './bookings.js'
+import { staffAssignmentService } from '../services/staffAssignmentService'
+import { sendBookingConfirmedNotifications } from '../services/notificationService'
+import { validateBookingDate } from './bookings'
 
 // Extend Request interface to include user property
 interface AuthenticatedRequest extends Request {

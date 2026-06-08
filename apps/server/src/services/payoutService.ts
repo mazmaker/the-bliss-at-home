@@ -7,7 +7,7 @@
  * - On cutoff day → create payout records
  */
 
-import { getSupabaseClient } from '../lib/supabase.js'
+import { getSupabaseClient } from '../lib/supabase'
 
 // ============================================================
 // Types

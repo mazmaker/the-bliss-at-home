@@ -17,24 +17,24 @@ if (!process.env.VERCEL && !process.env.NODE_ENV?.includes('production')) {
 
 import express, { type Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-// Removed node-cron - using Vercel Cron instead (see vercel.json)
-import paymentRoutes from './routes/payment.js'
-import otpRoutes from './routes/otp.js'
-import hotelRoutes from './routes/hotel.js'
-import secureBookingsRoutes from './routes/secure-bookings-v2.js'
-import notificationRoutes from './routes/notification.js'
-import bookingsRoutes from './routes/bookings.js'
-import cancellationPolicyRoutes from './routes/cancellationPolicy.js'
-import receiptsRoutes from './routes/receipts.js'
-import invoicesRoutes from './routes/invoices.js'
-// import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles.js' // Temporarily disabled
+// Removed node-cron - using Vercel Cron instead (see vercelon)
+import paymentRoutes from './routes/payment'
+import otpRoutes from './routes/otp'
+import hotelRoutes from './routes/hotel'
+import secureBookingsRoutes from './routes/secure-bookings-v2'
+import notificationRoutes from './routes/notification'
+import bookingsRoutes from './routes/bookings'
+import cancellationPolicyRoutes from './routes/cancellationPolicy'
+import receiptsRoutes from './routes/receipts'
+import invoicesRoutes from './routes/invoices'
+// import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles' // Temporarily disabled
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService'
 import { reminderService } from './services/reminderService'
 import { processPayoutCutoff } from './services/payoutService'
 import { processEnhancedPayoutCron } from './services/enhancedPayoutService'
-import { getSupabaseClient } from './lib/supabase.js'
+import { getSupabaseClient } from './lib/supabase'
 // Skip shared package imports for Vercel compatibility
-// import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService.js'
+// import { processPointsExpiry, processExpiryWarnings } from '../../../packages/supabase/src/services/loyaltyService'
 
 // Placeholder functions for loyalty service (temporarily disabled for Vercel)
 const processPointsExpiry = async (supabase: any) => {
@@ -154,7 +154,7 @@ app.post('/api/cron/daily-payout', async (req: Request, res: Response) => {
     console.log('🧪 Manual automated payout test triggered')
 
     // Import the automated payout function
-    const { dailyPayoutCheck } = await import('../../../packages/supabase/src/earnings/automatedPayout.js')
+    const { dailyPayoutCheck } = await import('../../../packages/supabase/src/earnings/automatedPayout')
 
     const result = await dailyPayoutCheck()
 
@@ -218,7 +218,7 @@ if (process.env.NODE_ENV !== 'production') {
         return res.status(400).json({ success: false, error: 'line_user_id required' })
       }
 
-      const { lineService } = await import('./services/lineService.js')
+      const { lineService } = await import('./services/lineService')
       const success = await lineService.pushMessage(line_user_id, [{
         type: 'text',
         text: '🧪 ทดสอบ LINE Notification\nระบบแจ้งเตือนทำงานปกติ!'
@@ -262,7 +262,7 @@ app.get('/api/line/health', async (req, res) => {
     clearTimeout(timeoutId)
 
     if (!fetchResponse.ok) {
-      const error = await fetchResponse.json()
+      const error = await fetchResponseon()
       return res.status(fetchResponse.status).json({
         success: false,
         status: fetchResponse.status,
@@ -271,7 +271,7 @@ app.get('/api/line/health', async (req, res) => {
       })
     }
 
-    const data = await fetchResponse.json()
+    const data = await fetchResponseon()
     res.json({
       success: true,
       quota: data,
@@ -304,7 +304,7 @@ if (process.env.NODE_ENV !== 'production') {
         return res.status(400).json({ success: false, error: 'line_user_id and job_id required' })
       }
 
-      const { lineService } = await import('./services/lineService.js')
+      const { lineService } = await import('./services/lineService')
 
       // Sample job data
       const jobData = {
@@ -573,7 +573,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 // === Cron Jobs ===
-// NOTE: Cron jobs are handled by Vercel Cron (see vercel.json) calling API endpoints
+// NOTE: Cron jobs are handled by Vercel Cron (see vercelon) calling API endpoints
 // instead of node-cron for serverless compatibility
 
 // DISABLED: Traditional cron jobs don't work in serverless environment
@@ -617,7 +617,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Bliss Server running on port ${PORT}`)
   console.log(`📍 Health check: http://localhost:${PORT}/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`⏰ Cron: Handled by Vercel Cron (see vercel.json) - not node-cron for serverless compatibility`)
+  console.log(`⏰ Cron: Handled by Vercel Cron (see vercelon) - not node-cron for serverless compatibility`)
 })
 
 export default app
