@@ -8,6 +8,14 @@ build/
 .next/
 .turbo/
 
+# Local agents and documentation
+.claude/agents/
+.agents/
+.codex/
+AGENTS.md
+security-scan-report.md
+.claude/scheduled_tasks.lock
+
 # Environment files (IMPORTANT - Never commit secrets!)
 .env
 .env.local

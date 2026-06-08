@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "3b4e251ba1089f8a",
+        "id": "baea5efb59ecb8b2",
         "type": "tabs",
         "children": [
           {
-            "id": "3c2c0c038027d9d3",
+            "id": "e06111d5aa6bdd8e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "wiki/log.md",
+                "file": "Untitled.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "log"
+              "title": "Untitled"
             }
           }
         ]
@@ -183,8 +183,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "3c2c0c038027d9d3",
+  "active": "0a8765e010fb7937",
   "lastOpenFiles": [
+    "Untitled",
+    "Untitled.md",
+    "raw/Product.pdf",
     "wiki/overview.md",
     "wiki/log.md",
     "wiki/index.md",
@@ -198,7 +201,6 @@
     "wiki/projects",
     "wiki/people",
     "wiki/concepts",
-    "wiki",
-    "raw/Product.pdf"
+    "wiki"
   ]
 }
