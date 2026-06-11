@@ -14,7 +14,7 @@ import type {
 } from './types'
 
 // Omise Configuration
-const OMISE_PUBLIC_KEY = import.meta.env.VITE_OMISE_PUBLIC_KEY || 'pkey_test_66i2hvhmgh0xgb0jkjb'
+const OMISE_PUBLIC_KEY = import.meta.env.VITE_OMISE_PUBLIC_KEY || 'pkey_test_67m0vytayaladi9lby5'
 const OMISE_API_URL = 'https://api.omise.co'
 
 // Load Omise.js script dynamically
