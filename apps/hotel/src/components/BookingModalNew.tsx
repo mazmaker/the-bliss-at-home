@@ -342,20 +342,25 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
         {/* Progress Steps */}
         <div className="bg-white px-8 py-6 border-b border-stone-100 flex-shrink-0">
           <div className="flex items-center justify-center max-w-4xl mx-auto">
-            {steps.map((step, index) => (
+            {steps.map((step, index) => {
+              // On the final "สำเร็จ" step the booking is done, so mark every step
+              // (including step 5 itself) as completed — otherwise the last step is
+              // never `currentStep > index` and stays stuck on the "current" style.
+              const isCompleted = currentStep > index || currentStep === steps.length - 1
+              return (
               <div key={index} className="flex items-center">
                 {/* Step Circle */}
                 <div className="flex flex-col items-center">
                   <div
                     className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-bold shadow-sm ${
-                      currentStep > index
+                      isCompleted
                         ? 'bg-green-500 text-white' // Completed - Green
                         : currentStep === index
                         ? 'bg-[#B45309] text-white' // Current - Brown
                         : 'bg-gray-300 text-gray-600' // Upcoming - Gray
                     }`}
                   >
-                    {currentStep > index ? (
+                    {isCompleted ? (
                       <Check className="w-5 h-5" />
                     ) : (
                       <span>{index + 1}</span>
@@ -375,16 +380,17 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                   <div className="flex-1 h-1 mx-6 bg-gray-200 rounded-full min-w-[80px]">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
-                        currentStep > index ? 'bg-green-500' : 'bg-gray-200'
+                        isCompleted ? 'bg-green-500' : 'bg-gray-200'
                       }`}
                       style={{
-                        width: currentStep > index ? '100%' : '0%'
+                        width: isCompleted ? '100%' : '0%'
                       }}
                     />
                   </div>
                 )}
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
