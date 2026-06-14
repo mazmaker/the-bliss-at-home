@@ -54,51 +54,57 @@ export function HotelMapDisplay({
   }
 
   useEffect(() => {
-    // Check if Google Maps API is already loaded
+    let cancelled = false
+    const onReady = () => { if (!cancelled) initializeMap() }
+
+    // Already loaded → just initialize (no new script)
     if (window.google && window.google.maps) {
-      initializeMap()
+      onReady()
       return
     }
 
-    // Load Google Maps API
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-
     if (!apiKey) {
       setError('Google Maps API Key ไม่ถูกตั้งค่า')
       setIsLoading(false)
       return
     }
 
-    // Create script element
+    // Reuse an existing Maps script if one is already on the page. Injecting a
+    // 2nd <script> triggers Google's "included multiple times" error + a map.js
+    // TypeError — happens when multiple maps mount or the effect re-runs / the
+    // route is revisited.
+    const existing = document.querySelector<HTMLScriptElement>('script[data-google-maps="true"]')
+    if (existing) {
+      existing.addEventListener('load', onReady)
+      if (window.google && window.google.maps) onReady()
+      return () => {
+        cancelled = true
+        existing.removeEventListener('load', onReady)
+      }
+    }
+
+    // First map on the page injects the API script exactly once.
     const script = document.createElement('script')
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`
     script.async = true
     script.defer = true
-
-    // Set up callback
-    window.initMap = initializeMap
-
-    script.onload = () => {
-      initializeMap()
-    }
-
-    script.onerror = () => {
-      setError('ไม่สามารถโหลด Google Maps API ได้')
-      setIsLoading(false)
-    }
-
+    script.dataset.googleMaps = 'true'
+    script.addEventListener('load', onReady)
+    script.addEventListener('error', () => {
+      if (!cancelled) {
+        setError('ไม่สามารถโหลด Google Maps API ได้')
+        setIsLoading(false)
+      }
+    })
     document.head.appendChild(script)
 
-    // Cleanup function
     return () => {
-      // Remove the callback
-      delete window.initMap
-
-      // Remove script if it exists
-      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`)
-      if (existingScript && existingScript.parentNode) {
-        existingScript.parentNode.removeChild(existingScript)
-      }
+      cancelled = true
+      script.removeEventListener('load', onReady)
+      // NOTE: do NOT remove the shared Maps <script> on unmount — other map
+      // instances / route revisits reuse it. Removing it forced re-injection and
+      // produced the "included multiple times" / map.js 'HE' error.
     }
   }, [latitude, longitude])
 

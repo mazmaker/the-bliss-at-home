@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Save, Building, MapPin, Phone, Mail, User, Edit, Check, Loader2, AlertCircle, RefreshCw, Globe } from 'lucide-react'
 import { useHotelContext } from '../hooks/useHotelContext'
 import { supabase } from '@bliss/supabase/auth'
-import { createLoadingToast, notifications } from '../utils/notifications'
+import { createLoadingToast, notifications, showError } from '../utils/notifications'
 import { HotelMapDisplay } from '../components/HotelMapDisplay'
 
 // Extended hotel interface for profile editing (excluding read-only fields)
@@ -51,8 +51,30 @@ function HotelProfile() {
     }
   }, [hotelData])
 
+  // Validate editable fields before saving. The Save button calls this handler
+  // directly (not a <form> submit), so the inputs' HTML5 type=email/url checks
+  // never run — we must validate here or invalid values get persisted.
+  const validateProfile = (): string | null => {
+    const email = formData.email.trim()
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'รูปแบบอีเมลไม่ถูกต้อง (เช่น name@hotel.com)'
+    }
+    const website = formData.website.trim()
+    if (website && !/^https?:\/\/[^\s.]+\.[^\s]+$/.test(website)) {
+      return 'รูปแบบเว็บไซต์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย http:// หรือ https://)'
+    }
+    return null
+  }
+
   const handleSave = async () => {
     if (!hotelId) return
+
+    const validationError = validateProfile()
+    if (validationError) {
+      setSaveError(validationError)
+      showError(validationError)
+      return
+    }
 
     const loadingToast = createLoadingToast(notifications.profile.updateLoading)
 
