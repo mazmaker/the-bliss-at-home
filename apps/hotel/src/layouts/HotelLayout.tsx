@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useHotelContext } from '../hooks/useHotelContext'
+import { useUserHotelId } from '../hooks/useUserHotelId'
 import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase/auth'
 import { useQuery } from '@tanstack/react-query'
@@ -23,8 +24,9 @@ import { useQuery } from '@tanstack/react-query'
 function HotelLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const { hotelId, hotelSlug, hotelData, isValidHotel, isLoading, isBlocked, hotelStatus, getHotelName, getHotelNameEn, getHotelSlug } = useHotelContext()
+  const { hotelId, hotelSlug, hotelData, isValidHotel, isLoading, isBlocked, hotelStatus, getHotelName, getHotelNameEn, getHotelSlug, availableHotels } = useHotelContext()
   const { logout, user } = useAuth()
+  const { hotelId: ownHotelId, isLoading: ownHotelLoading } = useUserHotelId()
 
   // Unread notification count
   const { data: unreadCount = 0 } = useQuery({
@@ -53,7 +55,7 @@ function HotelLayout() {
   }
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || ownHotelLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
         <div className="text-center">
@@ -108,6 +110,43 @@ function HotelLayout() {
           >
             ไปยังโรงแรมเริ่มต้น
           </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // 🔒 Ownership guard: a logged-in hotel may only access ITS OWN hotel.
+  // Without this, any authenticated hotel could read another hotel's data (profile, bank
+  // details, bookings) just by changing the :hotelSlug in the URL. This blocks rendering;
+  // the authoritative protection is the RLS policy on the hotels/bookings tables.
+  if (ownHotelId && hotelId && ownHotelId !== hotelId) {
+    const ownHotel = availableHotels.find((h) => h.id === ownHotelId)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">ไม่มีสิทธิ์เข้าถึงโรงแรมนี้</h1>
+          <p className="text-stone-600 mb-6">
+            บัญชีของท่านไม่มีสิทธิ์เข้าถึงข้อมูลของโรงแรมนี้ ท่านสามารถเข้าถึงได้เฉพาะโรงแรมของท่านเท่านั้น
+          </p>
+          {ownHotel ? (
+            <Link
+              to={`/hotel/${ownHotel.hotel_slug}`}
+              className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+            >
+              ไปยังโรงแรมของท่าน
+            </Link>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-stone-700 text-white rounded-lg hover:bg-stone-800 transition"
+            >
+              <LogOut className="w-4 h-4" />
+              ออกจากระบบ
+            </button>
+          )}
         </div>
       </div>
     )

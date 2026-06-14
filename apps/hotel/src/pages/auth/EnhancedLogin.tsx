@@ -43,8 +43,13 @@ const changePasswordSchema = z.object({
     .regex(/[a-z]/, 'ต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว')
     .regex(/\d/, 'ต้องมีตัวเลขอย่างน้อย 1 ตัว')
     .regex(/[!@#$%^&*(),.?":{}|<>]/, 'ต้องมีอักขระพิเศษอย่างน้อย 1 ตัว')
-    .refine((password) => !['password', '12345678', 'admin123', 'hotel123'].includes(password.toLowerCase()), {
-      message: 'รหัสผ่านนี้ไม่ปลอดภัย กรุณาเลือกรหัสผ่านที่แข็งแรงกว่า'
+    .refine((password) => {
+      // Substring (not exact) match, case-insensitive — so trivial variants like
+      // "Hotel123!" of a blacklisted base ("hotel123") are still rejected.
+      const lower = password.toLowerCase()
+      return !['password', '12345678', 'admin123', 'hotel123', 'qwerty', '11111111'].some((weak) => lower.includes(weak))
+    }, {
+      message: 'รหัสผ่านนี้ไม่ปลอดภัย (มีรูปแบบที่เดาง่าย) กรุณาเลือกรหัสผ่านที่แข็งแรงกว่า'
     })
     .refine((password) => !/(.)\1{2,}/.test(password), {
       message: 'รหัสผ่านไม่ควรมีอักขระซ้ำติดกัน 3 ตัวขึ้นไป'
@@ -66,11 +71,16 @@ interface PasswordRequirement {
   test: (password: string) => boolean
 }
 
+// Keep this list in sync with changePasswordSchema.newPassword above — every char-level
+// rule the schema enforces must be shown, otherwise the user sees all checks green yet
+// submit fails (the "special char" gap reported in Module A E7).
 const passwordRequirements: PasswordRequirement[] = [
   { label: 'อย่างน้อย 8 ตัวอักษร', test: (p) => p.length >= 8 },
   { label: 'ตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว', test: (p) => /[A-Z]/.test(p) },
   { label: 'ตัวพิมพ์เล็กอย่างน้อย 1 ตัว', test: (p) => /[a-z]/.test(p) },
   { label: 'ตัวเลขอย่างน้อย 1 ตัว', test: (p) => /\d/.test(p) },
+  { label: 'อักขระพิเศษอย่างน้อย 1 ตัว (เช่น !@#$%)', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+  { label: 'ไม่มีอักขระซ้ำติดกัน 3 ตัวขึ้นไป', test: (p) => p.length > 0 && !/(.)\1{2,}/.test(p) },
 ]
 
 export function EnhancedHotelLogin() {
@@ -393,6 +403,11 @@ export function EnhancedHotelLogin() {
   }
 
   const handleForgotPassword = async () => {
+    // Clear any stale messages first so a previous error/success doesn't linger
+    // alongside this request's result.
+    setSubmitError('')
+    setSubmitSuccess('')
+
     const email = loginForm.getValues('email')
     if (!email) {
       setSubmitError('กรุณากรอกอีเมลก่อนขอรีเซ็ตรหัสผ่าน')
@@ -400,15 +415,23 @@ export function EnhancedHotelLogin() {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+      // Use the hotel server endpoint (tokenised reset tied to the hotel auth flow),
+      // not the generic Supabase recovery email.
+      const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api')
+      const response = await fetch(`${apiUrl}/hotels/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       })
 
-      if (error) {
-        throw new Error(error.message)
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(result.message || 'เกิดข้อผิดพลาดในการส่งลิงก์รีเซ็ตรหัสผ่าน')
       }
 
-      setSubmitSuccess('ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลแล้ว กรุณาตรวจสอบกล่องจดหมาย')
+      // Server intentionally returns success regardless of whether the email exists.
+      setSubmitSuccess('หากอีเมลนี้ลงทะเบียนไว้ ระบบได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลแล้ว กรุณาตรวจสอบกล่องจดหมาย')
     } catch (error: any) {
       console.error('Forgot password error:', error)
       setSubmitError(error.message || 'เกิดข้อผิดพลาดในการส่งลิงก์รีเซ็ตรหัสผ่าน')
