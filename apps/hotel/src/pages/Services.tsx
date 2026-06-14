@@ -50,11 +50,10 @@ function Services() {
   const [selectedService, setSelectedService] = useState<Service | null>(null)
 
   // Get hotel context for discount amount
-  const { getDiscountAmount, getDiscountRate } = useHotelContext()
+  const { getDiscountAmount } = useHotelContext()
 
   // Memoize discount amount to prevent recalculation
   const discountAmount = useMemo(() => getDiscountAmount(), [getDiscountAmount])
-  const discountRate = useMemo(() => getDiscountRate(), [getDiscountRate])
 
   // Calculate discounted price based on hotel's discount amount (fixed amount)
   const calculateDiscountedPrice = useCallback((originalPrice: number): number => {
@@ -106,13 +105,14 @@ function Services() {
     // Create service object with discount information - DON'T modify hotel_price
     const serviceWithDiscount = {
       ...service,
-      original_price: service.hotel_price, // Keep original price for reference
-      discount_rate: discountRate // Add discount rate for enhanced calculations
+      original_price: service.hotel_price // Keep original price for reference
+      // NOTE: discount_rate intentionally NOT attached — hotel discount is discount_amount
+      // (fixed baht) only; the legacy discount_rate(%) path was removed (C1 consistency).
     }
 
     setSelectedService(serviceWithDiscount)
     setIsBookingModalOpen(true)
-  }, [discountRate])
+  }, [])
 
   // Function to close booking modal
   const handleCloseBookingModal = useCallback(() => {

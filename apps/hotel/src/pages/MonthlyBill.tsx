@@ -159,7 +159,11 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
 
   // Get hotel discount information (prefer discount_amount)
   const hotelDiscountAmount = hotelData?.discount_amount || 0
-  const hotelDiscountRate = hotelData?.discount_rate || hotelData?.commission_rate || 0
+  // Legacy discount_rate(%)/commission_rate fallback removed (C1): the per-booking discount on
+  // the bill must be the REAL amount captured at booking time (booking.discount_amount, i.e.
+  // base_price − final_price), never base_price × a stale hotel rate. Forcing 0 collapses the
+  // phantom-discount branches below to booking.discount_amount.
+  const hotelDiscountRate = 0
 
   // Debug: Check if all bookings are from the same hotel
   console.log('🏨 Hotel Discount Check:', {

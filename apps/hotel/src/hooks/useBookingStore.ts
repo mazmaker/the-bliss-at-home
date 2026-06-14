@@ -272,18 +272,11 @@ export const useBookingStore = create<BookingStore>()(
                 const service = updates.service || newSelections[index].service
                 const duration = updates.duration || newSelections[index].duration
 
-                // Use enhanced calculator with hotel discount if available
-                if (service.discount_rate) {
-                  newSelections[index].price = EnhancedPriceCalculator.calculateServicePriceWithDiscount(
-                    service,
-                    duration,
-                    service.discount_rate,
-                    state.serviceConfiguration.mode
-                  )
-                } else {
-                  // Fallback to original calculator
-                  newSelections[index].price = PriceCalculator.calculateServicePrice(service, duration, state.serviceConfiguration.mode)
-                }
+                // Price = admin per-duration price (PriceCalculator). Hotel discount is
+                // discount_amount (fixed baht) only; the legacy discount_rate(%) branch was
+                // removed — it mis-passed the rate as a baht amount to the enhanced calculator
+                // (e.g. Hilton discount_rate=20 → 799−20=779 on recalc). See C1.
+                newSelections[index].price = PriceCalculator.calculateServicePrice(service, duration, state.serviceConfiguration.mode)
               }
 
               const serviceFormat = get().getServiceFormat()

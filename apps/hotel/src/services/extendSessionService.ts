@@ -322,15 +322,13 @@ function calculateServicePriceWithDiscount(service: any, duration: number, hotel
     originalPrice = Math.round(baseRate * duration);
   }
 
-  // Apply discount - prefer discount_amount (fixed baht) over discount_rate (percentage)
+  // Apply discount — discount_amount (fixed baht) ONLY.
+  // The legacy discount_rate(%) fallback was removed for consistency with catalog/booking
+  // pricing (C1): a stale hotels.discount_rate must NOT silently discount extensions
+  // (e.g. Hilton discount_rate=20 was knocking 20% off every extension → 799→639).
   if (hotelDiscountAmount > 0) {
-    // New system: fixed baht discount
     const actualDiscount = Math.min(hotelDiscountAmount, originalPrice);
     return Math.round(originalPrice - actualDiscount);
-  } else if (hotelDiscountRate > 0) {
-    // Legacy system: percentage discount (backward compatibility)
-    const percentDiscount = originalPrice * (hotelDiscountRate / 100);
-    return Math.round(originalPrice - percentDiscount);
   }
 
   return originalPrice;
