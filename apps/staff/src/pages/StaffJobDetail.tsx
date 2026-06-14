@@ -50,6 +50,31 @@ function StaffJobDetail() {
     enabled: !!job?.booking_id
   })
 
+  // Query customer health declaration (ข้อควรระวังก่อนให้บริการ)
+  const { data: healthDeclaration } = useQuery({
+    queryKey: ['health-declaration', job?.booking_id],
+    queryFn: async () => {
+      if (!job?.booking_id) return null
+
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('customer_id')
+        .eq('id', job.booking_id)
+        .single()
+
+      if (!booking?.customer_id) return null
+
+      const { data } = await (supabase as any)
+        .from('customer_health_declarations')
+        .select('conditions, other_detail, has_no_condition')
+        .eq('customer_id', booking.customer_id)
+        .maybeSingle()
+
+      return data
+    },
+    enabled: !!job?.booking_id,
+  })
+
   // Query booking services for extension info (with fallback for missing columns)
   const { data: bookingServices } = useQuery({
     queryKey: ['booking-services', job?.id],
@@ -424,6 +449,42 @@ function StaffJobDetail() {
                 <p className="text-xs text-stone-500">หมายเหตุจากลูกค้า</p>
                 <p className="text-sm text-stone-700 mt-1">{job.customer_notes}</p>
               </div>
+            </div>
+          )}
+
+          {/* Health Declaration (ข้อควรระวังก่อนให้บริการ) */}
+          {healthDeclaration && !healthDeclaration.has_no_condition && healthDeclaration.conditions.length > 0 && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-sm font-semibold text-red-800 mb-2">
+                ข้อควรระวังด้านสุขภาพของลูกค้า
+              </p>
+              <ul className="space-y-1">
+                {healthDeclaration.conditions.map((key: string) => {
+                  const labels: Record<string, string> = {
+                    heart_disease: 'โรคหัวใจ',
+                    blood_pressure: 'โรคความดันโลหิต (สูง / ต่ำ)',
+                    diabetes: 'โรคเบาหวาน',
+                    pregnancy: 'อยู่ระหว่างการตั้งครรภ์',
+                    post_surgery: 'พักฟื้นจากการผ่าตัด / แผลผ่าตัดยังไม่หายดี',
+                    skin_disease: 'โรคผิวหนัง',
+                    other: `อื่น ๆ${healthDeclaration.other_detail ? `: ${healthDeclaration.other_detail}` : ''}`,
+                  }
+                  return (
+                    <li key={key} className="text-sm text-red-700">
+                      • {labels[key] || key}
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="text-xs text-red-600 mt-2">
+                โปรดปรับรูปแบบการนวดให้เหมาะสมเพื่อความปลอดภัยของลูกค้า
+              </p>
+            </div>
+          )}
+          {healthDeclaration?.has_no_condition && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+              <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <p className="text-sm text-green-700">ลูกค้าแจ้งว่าไม่มีโรคประจำตัวหรือข้อควรระวัง</p>
             </div>
           )}
         </div>

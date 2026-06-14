@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ClipboardList, Calendar, Clock } from 'lucide-react'
+import { ClipboardList, Calendar, Clock, X } from 'lucide-react'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerBookings } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation } from '@bliss/i18n'
@@ -14,6 +14,29 @@ function BookingHistory() {
   const { data: customer } = useCurrentCustomer()
   const { data: bookingsData, isLoading, error } = useCustomerBookings(customer?.id)
 
+  // Search filters: date range + service
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [serviceFilter, setServiceFilter] = useState('all')
+
+  const hasActiveFilters = dateFrom !== '' || dateTo !== '' || serviceFilter !== 'all' || statusFilter !== 'all'
+
+  const clearFilters = () => {
+    setDateFrom('')
+    setDateTo('')
+    setServiceFilter('all')
+    setSearchParams({})
+  }
+
+  // Distinct service names for the dropdown (from the customer's own bookings)
+  const serviceOptions = useMemo(() => {
+    if (!bookingsData) return []
+    const names = bookingsData.map(
+      (b) => b.service?.name_th || b.service?.name_en || 'Unknown Service'
+    )
+    return Array.from(new Set(names)).sort()
+  }, [bookingsData])
+
   // Transform and filter bookings
   const bookings = useMemo(() => {
     if (!bookingsData) return []
@@ -22,6 +45,7 @@ function BookingHistory() {
       id: booking.id,
       bookingNumber: booking.booking_number,
       serviceName: booking.service?.name_en || booking.service?.name_th || 'Unknown Service',
+      serviceNameTh: booking.service?.name_th || booking.service?.name_en || 'Unknown Service',
       date: booking.booking_date, // Already in YYYY-MM-DD format
       time: booking.booking_time || '00:00', // Already in HH:MM format
       status: booking.status ?? 'pending',
@@ -32,14 +56,29 @@ function BookingHistory() {
     // Filter by status
     if (statusFilter !== 'all') {
       if (statusFilter === 'upcoming') {
-        filtered = filtered.filter(b => ['confirmed', 'pending'].includes(b.status) && new Date(b.date) >= new Date())
+        // Compare date strings (YYYY-MM-DD) so today's bookings are included
+        const today = new Date().toISOString().split('T')[0]
+        filtered = filtered.filter(b => ['confirmed', 'pending', 'in_progress'].includes(b.status) && b.date >= today)
       } else {
         filtered = filtered.filter(b => b.status === statusFilter)
       }
     }
 
+    // Filter by date range
+    if (dateFrom) {
+      filtered = filtered.filter(b => b.date >= dateFrom)
+    }
+    if (dateTo) {
+      filtered = filtered.filter(b => b.date <= dateTo)
+    }
+
+    // Filter by service
+    if (serviceFilter !== 'all') {
+      filtered = filtered.filter(b => b.serviceNameTh === serviceFilter)
+    }
+
     return filtered
-  }, [bookingsData, statusFilter])
+  }, [bookingsData, statusFilter, dateFrom, dateTo, serviceFilter])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -142,6 +181,84 @@ function BookingHistory() {
           </button>
         </div>
 
+        {/* Search Filters: date range + service */}
+        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1.5">
+                  สถานะ
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) =>
+                    e.target.value === 'all'
+                      ? setSearchParams({})
+                      : setSearchParams({ status: e.target.value })
+                  }
+                  className="w-full px-3 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                >
+                  <option value="all">ทุกสถานะ</option>
+                  <option value="upcoming">กำลังจะมาถึง</option>
+                  <option value="pending">รอยืนยัน</option>
+                  <option value="confirmed">ยืนยันแล้ว</option>
+                  <option value="in_progress">กำลังให้บริการ</option>
+                  <option value="completed">เสร็จสิ้น</option>
+                  <option value="cancelled">ยกเลิกแล้ว</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1.5">
+                  ตั้งแต่วันที่
+                </label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  max={dateTo || undefined}
+                  className="w-full px-3 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1.5">
+                  ถึงวันที่
+                </label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  min={dateFrom || undefined}
+                  className="w-full px-3 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1.5">
+                  บริการ
+                </label>
+                <select
+                  value={serviceFilter}
+                  onChange={(e) => setServiceFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                >
+                  <option value="all">ทุกบริการ</option>
+                  {serviceOptions.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700"
+              >
+                <X className="w-3.5 h-3.5" />
+                ล้างตัวกรอง
+              </button>
+            )}
+        </div>
+
         {/* Error state */}
         {error && (
           <div className="text-center py-12">
@@ -185,10 +302,24 @@ function BookingHistory() {
         ) : !error && (
           <div className="text-center py-12">
             <ClipboardList className="w-16 h-16 text-stone-400 mx-auto" />
-            <p className="text-stone-500 mt-4 mb-4">{t('history.noBookings')}</p>
-            <Link to="/services" className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition">
-              {t('history.viewServices')}
-            </Link>
+            {hasActiveFilters ? (
+              <>
+                <p className="text-stone-500 mt-4 mb-4">ไม่พบรายการจองตามตัวกรองที่เลือก</p>
+                <button
+                  onClick={clearFilters}
+                  className="inline-block bg-stone-100 text-stone-700 px-6 py-3 rounded-xl font-medium hover:bg-stone-200 transition"
+                >
+                  ล้างตัวกรอง
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-stone-500 mt-4 mb-4">{t('history.noBookings')}</p>
+                <Link to="/services" className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition">
+                  {t('history.viewServices')}
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

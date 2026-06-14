@@ -19,6 +19,7 @@ import { VoucherCodeInput } from '../components/VoucherCodeInput'
 import { PointsRedeemSection } from '../components/PointsRedeemSection'
 import ThaiAddressFields from '../components/ThaiAddressFields'
 import { getServiceImage } from '../utils/imageUtils'
+import { HealthDeclarationModal, fetchHealthDeclaration } from '../components/HealthDeclarationModal'
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -87,6 +88,9 @@ function BookingWizard() {
   const [promptpayQRCode, setPromptpayQRCode] = useState<string | null>(null)
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
   const [createdBookingNumber, setCreatedBookingNumber] = useState<string | null>(null)
+  // Health declaration gate — must be completed before first booking
+  const [showHealthModal, setShowHealthModal] = useState(false)
+  const [healthDeclared, setHealthDeclared] = useState(false)
 
   // Fetch person2's service data if different from person1
   const { data: person2ServiceData } = useServiceById(
@@ -483,6 +487,16 @@ function BookingWizard() {
     if (!service || !customer) {
       alert('Please log in to complete booking')
       return
+    }
+
+    // Health declaration gate — block booking until the customer has declared
+    if (!healthDeclared) {
+      const declaration = await fetchHealthDeclaration(customer.id)
+      if (!declaration) {
+        setShowHealthModal(true)
+        return
+      }
+      setHealthDeclared(true)
     }
 
     try {
@@ -1715,6 +1729,19 @@ function BookingWizard() {
           </div>
         )}
       </div>
+
+      {/* Health declaration gate — required before first booking */}
+      {showHealthModal && customer && (
+        <HealthDeclarationModal
+          customerId={customer.id}
+          onCompleted={() => {
+            setHealthDeclared(true)
+            setShowHealthModal(false)
+            handleCompleteBooking()
+          }}
+          onClose={() => setShowHealthModal(false)}
+        />
+      )}
     </div>
   )
 }
