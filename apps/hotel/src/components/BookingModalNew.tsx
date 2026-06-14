@@ -240,8 +240,9 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
         final_price: bookingData.serviceConfiguration.totalPrice,
         // Customer information
         customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Provider: ${getProviderPreferenceLabel(bookingData.providerPreference)}${bookingData.notes ? ', Notes: ' + bookingData.notes : ''}`,
-        // Booking status
-        status: 'confirmed',
+        // Booking status — start as 'pending' until a staff accepts the job.
+        // (Was hardcoded 'confirmed', which falsely showed "ยืนยันแล้ว" before any staff acceptance — C2.)
+        status: 'pending',
         payment_status: 'pending',
         is_hotel_booking: true,
         // Include services for booking_services table
