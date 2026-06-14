@@ -26,11 +26,15 @@ export class PriceCalculator {
    * @returns Calculated price in baht
    */
   static calculateServicePrice(service: Service, duration: number, _mode: BookingMode = 'single'): number {
-    const baseRatePerMinute = this.getBaseRatePerMinute(service)
-    const calculatedPrice = baseRatePerMinute * duration
+    // Prefer admin-set per-duration prices (price_60/90/120) so the booking modal
+    // matches the Services catalog and the discounted calculator. Fall back to
+    // proportional (hotel_price/duration) only when a specific price is not set.
+    if (duration === 60 && service.price_60) return Math.round(service.price_60)
+    if (duration === 90 && service.price_90) return Math.round(service.price_90)
+    if (duration === 120 && service.price_120) return Math.round(service.price_120)
 
-    // Round to nearest baht (no decimals)
-    return Math.round(calculatedPrice)
+    const baseRatePerMinute = this.getBaseRatePerMinute(service)
+    return Math.round(baseRatePerMinute * duration)
   }
 
   /**

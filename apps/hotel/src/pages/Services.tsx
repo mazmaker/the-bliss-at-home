@@ -58,27 +58,22 @@ function Services() {
 
   // Calculate discounted price based on hotel's discount amount (fixed amount)
   const calculateDiscountedPrice = useCallback((originalPrice: number): number => {
+    // ส่วนลดโรงแรม = จำนวนเงินคงที่ (discount_amount) เท่านั้น (ตรงกับ admin form);
+    // ไม่ใช้ discount_rate (%) — เลิก fallback เพื่อให้ catalog ตรงกับ booking
     if (discountAmount > 0) {
-      // ใหม่: ใช้จำนวนเงินคงที่
       const actualDiscount = Math.min(discountAmount, originalPrice)
       return Math.round(originalPrice - actualDiscount)
-    } else if (discountRate > 0) {
-      // Fallback: ใช้เปอร์เซ็นต์ (backward compatibility)
-      const percentDiscount = originalPrice * (discountRate / 100)
-      return Math.round(originalPrice - percentDiscount)
     }
     return originalPrice
-  }, [discountAmount, discountRate])
+  }, [discountAmount])
 
   // Get discount display info
   const getDiscountDisplay = useCallback((): { text: string; amount: number } => {
     if (discountAmount > 0) {
       return { text: `฿${discountAmount.toLocaleString()}`, amount: discountAmount }
-    } else if (discountRate > 0) {
-      return { text: `${discountRate}%`, amount: discountRate }
     }
     return { text: 'ไม่มีส่วนลด', amount: 0 }
-  }, [discountAmount, discountRate])
+  }, [discountAmount])
 
   // Query services from database
   const { data: services = [], isLoading, error, refetch } = useQuery({
