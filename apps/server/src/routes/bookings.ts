@@ -1270,12 +1270,14 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
     }
 
     // 3. Validate booking status and extension limits
-    const allowedStatuses = ['confirmed', 'in_progress']
+    // Extend only while the staff is actively serving (in_progress); 'confirmed' (accepted,
+    // not started) has no in-service job/earnings to update yet.
+    const allowedStatuses = ['in_progress']
     if (!allowedStatuses.includes(booking.status)) {
       return res.status(400).json({
         success: false,
         error: 'invalid_status',
-        message: 'ไม่สามารถเพิ่มเวลาได้ในสถานะปัจจุบัน'
+        message: 'เพิ่มเวลาได้เฉพาะระหว่างที่พนักงานกำลังให้บริการ (เริ่มบริการแล้ว)'
       })
     }
 
@@ -1470,8 +1472,11 @@ router.post('/:bookingId/extend', async (req: Request, res: Response) => {
     }
 
     // 12. Prepare payment response (if needed)
+    // Hotel bookings are settled on the monthly credit bill, not per-extension via Omise
+    // (mirrors the original hotel booking, which has payment_status 'pending' and no charge).
+    // Only customer-paid bookings create an Omise charge for the extension.
     let paymentInfo = undefined
-    if (finalExtensionPrice > 0) {
+    if (finalExtensionPrice > 0 && !booking.is_hotel_booking) {
       try {
         // Import Omise service
         const { omiseService } = await import('../services/omiseService.js')

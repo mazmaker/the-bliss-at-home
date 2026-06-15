@@ -37,97 +37,68 @@ export async function extendBookingSession(
   }
 
   try {
-    // 1. Validate extension request
-    const validation = await validateExtensionRequest(request.bookingId);
-    if (!validation.isValid) {
+    // The extension touches the jobs table (staff/admin territory) which the hotel client
+    // cannot read/write under RLS. Delegate the whole transaction to the server endpoint
+    // (POST /api/bookings/:id/extend, service-role): it validates status/limits/deadline,
+    // prices from admin price_60/90/120 (no phantom discount), inserts the extension
+    // booking_service, updates booking totals, and notifies staff. Hotel bookings are billed
+    // on the monthly credit cycle, so the server skips the per-extension Omise charge.
+    const API_BASE_URL = import.meta.env.VITE_API_URL
+      || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api');
+
+    let token = '';
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      token = session?.access_token || '';
+    } catch { /* endpoint is service-role; token is best-effort */ }
+
+    const response = await fetch(`${API_BASE_URL}/bookings/${request.bookingId}/extend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ additional_duration: request.additionalDuration })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
       throw new ExtensionError(
-        ExtensionErrorCode.INVALID_STATUS,
-        validation.errors.join(', ')
+        ExtensionErrorCode.DATABASE_ERROR,
+        data?.message || data?.error || `เพิ่มเวลาไม่สำเร็จ (HTTP ${response.status})`
       );
     }
 
-    // 2. Get booking with current services
-    const booking = await getBookingWithExtensions(request.bookingId);
-    if (!booking) {
-      throw new ExtensionError(
-        ExtensionErrorCode.BOOKING_NOT_FOUND,
-        EXTENSION_ERROR_MESSAGES.BOOKING_NOT_FOUND
-      );
-    }
+    const ext = data.extension || {};
+    const bk = data.booking || {};
+    const extensionPrice = ext.final_price ?? ext.extension_price ?? 0;
+    const newTotalDuration = bk.new_total_duration ?? request.additionalDuration;
+    const newTotalPrice = bk.new_total_price ?? extensionPrice;
 
-    // 3. Calculate extension price
-    const extensionPrice = await calculateExtensionPrice(
-      booking,
-      request.additionalDuration
-    );
-
-    // 4. Assign staff for extension
-    const staffAssignment = await assignStaffForExtension(
-      request.bookingId,
-      request.additionalDuration
-    );
-
-    // 4.5. Calculate staff earnings for extension (using actual extension price)
-    const staffEarnings = await calculateStaffExtensionEarnings(
-      booking,
-      extensionPrice
-    );
-
-    // 5. Create extension service record
-    const newBookingService = await createExtensionService({
-      bookingId: request.bookingId,
-      serviceId: booking.booking_services[0].service_id, // Use original service
-      duration: request.additionalDuration,
-      price: extensionPrice,
-      recipientIndex: booking.booking_services[0].recipient_index,
-      recipientName: booking.booking_services[0].recipient_name,
-      originalBookingServiceId: booking.booking_services[0].id
-    });
-
-    // 6. Update job total_staff_earnings
-    await updateJobStaffEarnings(request.bookingId, staffEarnings);
-
-    // 7. Calculate new totals
-    const newTotalPrice = booking.final_price + extensionPrice;
-    const originalDuration = booking.booking_services
-      .reduce((sum, service) => sum + service.duration, 0);
-    const newTotalDuration = originalDuration + request.additionalDuration;
-
-    // 8. Calculate estimated end time
-    const estimatedEndTime = calculateEstimatedEndTime(booking, request.additionalDuration);
-
-    // 9. Send notifications (non-blocking)
-    notifyStaffAboutExtension(
-      staffAssignment.assignedStaffId,
-      request.bookingId,
-      request.additionalDuration
-    ).catch(error => {
-      console.warn('Failed to send staff notification:', error);
-    });
-
-    console.log('✅ Extension completed successfully:', {
-      bookingId: request.bookingId,
-      extensionPrice,
-      newTotalDuration,
-      staffAssigned: staffAssignment.assignedStaffId
-    });
+    console.log('✅ Extension completed (server-mediated):', { bookingId: request.bookingId, extensionPrice, newTotalDuration });
 
     return {
       success: true,
-      newBookingService,
-      staffAssignment,
+      newBookingService: { id: ext.id } as any,
+      staffAssignment: {
+        assignedStaffId: '',
+        isOriginalStaff: true,
+        reason: 'Staff เดิมให้บริการต่อ',
+        availability: { available: true }
+      },
       pricing: {
         extensionPrice,
         newTotalPrice,
-        originalPrice: booking.final_price
+        originalPrice: newTotalPrice - extensionPrice
       },
       timing: {
         newTotalDuration,
-        originalDuration,
-        estimatedEndTime
+        originalDuration: newTotalDuration - request.additionalDuration,
+        estimatedEndTime: bk.estimated_end_time ? new Date(bk.estimated_end_time) : new Date()
       },
       metadata: {
-        extensionCount: booking.extension_count + 1,
+        extensionCount: bk.extension_count ?? 0,
         timestamp: new Date()
       }
     };
@@ -233,8 +204,9 @@ async function validateExtensionRequest(bookingId: string): Promise<ExtensionVal
     };
   }
 
-  // Check booking status
-  if (!['confirmed', 'in_progress'].includes(booking.status)) {
+  // Check booking status — extend only while the staff is actively serving (in_progress),
+  // not at 'confirmed' (accepted but service not started → no in-service job/earnings yet).
+  if (booking.status !== 'in_progress') {
     errors.push(EXTENSION_ERROR_MESSAGES.INVALID_STATUS);
   }
 

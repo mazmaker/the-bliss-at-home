@@ -48,7 +48,9 @@ export function BookingCard({
   };
 
   const canShowExtendButton = showExtendButton &&
-    ['confirmed', 'in_progress'].includes(booking.status) &&
+    // Extend is valid only once the staff has STARTED serving (status 'in_progress'),
+    // not merely 'confirmed' (accepted) — you can't add time to a service that hasn't begun.
+    booking.status === 'in_progress' &&
     (booking.extension_count || 0) < 3;
 
   return (

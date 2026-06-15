@@ -1307,8 +1307,8 @@ function BookingHistory() {
                     แก้ไขหมายเหตุ
                   </button>
 
-                  {/* Extend Session Button - Show for confirmed and in_progress bookings */}
-                  {['confirmed', 'in_progress'].includes(selectedBooking.status) && (
+                  {/* Extend Session Button - only while the staff is actively serving (in_progress) */}
+                  {selectedBooking.status === 'in_progress' && (
                     <button
                       onClick={() => setExtendSessionModal({ isOpen: true, booking: selectedBooking })}
                       className="flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition text-sm"
