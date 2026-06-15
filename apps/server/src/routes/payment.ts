@@ -41,9 +41,58 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       })
     }
 
-    // Create Omise charge
+    // [F-4] Ownership: the booking must belong to the caller (hotel bookings have
+    // customer_id = NULL and must never be charged through this customer route)
+    if (!booking.customer_id || booking.customer_id !== customer_id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Booking does not belong to this customer',
+      })
+    }
+
+    // [F-4] Amount integrity: never trust the client amount — use the booking's
+    // server-side final_price, and reject a tampered amount.
+    const serverAmount = Number(booking.final_price)
+    if (!(serverAmount > 0)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking has no payable amount',
+      })
+    }
+    if (Math.round(Number(amount) * 100) !== Math.round(serverAmount * 100)) {
+      return res.status(400).json({
+        success: false,
+        error: `Amount mismatch: expected ${serverAmount}, got ${amount}`,
+      })
+    }
+
+    // [F-5] Idempotency: if this booking already has a successful charge, return it
+    // instead of charging again (guards double-submit / client retries).
+    const { data: existingTxn } = await getSupabaseClient()
+      .from('transactions')
+      .select('id, omise_charge_id, amount, status')
+      .eq('booking_id', booking_id)
+      .eq('status', 'successful')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingTxn) {
+      console.log(`♻️ Idempotent create-charge: booking ${booking_id} already paid (${existingTxn.omise_charge_id})`)
+      return res.json({
+        success: true,
+        charge_id: existingTxn.omise_charge_id,
+        transaction_id: existingTxn.id,
+        status: 'successful',
+        paid: true,
+        amount: Number(existingTxn.amount),
+        idempotent: true,
+      })
+    }
+
+    // Create Omise charge (always use the server-trusted amount)
     const chargeParams: any = {
-      amount: Math.round(amount * 100), // Convert to satangs
+      amount: Math.round(serverAmount * 100), // Convert to satangs (server-trusted)
       currency: 'THB',
       description: `Payment for ${booking.service.name_en || booking.service.name_th} - Booking ${booking.booking_number}`,
       metadata: {
@@ -86,17 +135,51 @@ router.post('/create-charge', async (req: Request, res: Response) => {
 
     const charge = await omiseService.createCharge(chargeParams)
 
-    // Create transaction record in Supabase
+    // [F-8] Decline handling: if Omise did NOT actually capture the payment, do not
+    // report success — record the failed attempt and surface the failure so the client
+    // cannot show a false "payment success".
+    if (!charge.paid) {
+      await getSupabaseClient()
+        .from('transactions')
+        .insert({
+          booking_id,
+          customer_id,
+          amount: serverAmount,
+          currency: 'THB',
+          payment_method: payment_method || 'credit_card',
+          description: `Failed payment for booking ${booking.booking_number}`,
+          status: 'failed',
+          omise_charge_id: charge.id,
+          card_brand: charge.card?.brand,
+          card_last_digits: charge.card?.lastDigits,
+        })
+      await getSupabaseClient()
+        .from('bookings')
+        .update({ payment_status: 'failed' })
+        .eq('id', booking_id)
+
+      return res.status(402).json({
+        success: false,
+        paid: false,
+        charge_id: charge.id,
+        status: charge.status,
+        failure_code: (charge as any).failureCode || null,
+        failure_message: (charge as any).failureMessage || 'Payment was not completed',
+        error: 'Payment was declined or not completed',
+      })
+    }
+
+    // Create transaction record in Supabase (charge succeeded)
     const { data: transaction, error: txnError } = await getSupabaseClient()
       .from('transactions')
       .insert({
         booking_id,
         customer_id,
-        amount,
+        amount: serverAmount,
         currency: 'THB',
         payment_method: payment_method || 'credit_card',
         description: `Payment for booking ${booking.booking_number}`,
-        status: charge.paid ? 'successful' : 'pending',
+        status: 'successful',
         omise_charge_id: charge.id,
         card_brand: charge.card?.brand,
         card_last_digits: charge.card?.lastDigits,
@@ -104,24 +187,32 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       .select()
       .single()
 
-    if (txnError) {
+    // [F-6] If money was captured but the transaction row cannot be persisted, COMPENSATE
+    // by refunding the Omise charge — never silently keep money with no DB record (which
+    // would also make a later refund impossible).
+    if (txnError || !transaction) {
       console.error('Failed to create transaction record:', txnError)
+      try {
+        await omiseService.createRefund(charge.id)
+        console.error(`⚠️ Compensating refund issued for charge ${charge.id} after transaction INSERT failure`)
+      } catch (refundErr) {
+        console.error(`🚨 CRITICAL: charge ${charge.id} captured but transaction INSERT and compensating refund BOTH failed`, refundErr)
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to record transaction; the payment was refunded. Please try again.',
+        charge_id: charge.id,
+      })
     }
 
-    // Update booking payment status, method, and confirmation status in single atomic operation
-    const bookingUpdate: any = {
-      payment_status: charge.paid ? 'paid' : 'pending',
-      payment_method: payment_method || 'credit_card',
-    }
-
-    // If paid immediately, also confirm the booking
-    if (charge.paid) {
-      bookingUpdate.status = 'confirmed'
-    }
-
+    // Update booking → paid + confirmed
     const { error: updateError } = await getSupabaseClient()
       .from('bookings')
-      .update(bookingUpdate)
+      .update({
+        payment_status: 'paid',
+        payment_method: payment_method || 'credit_card',
+        status: 'confirmed',
+      })
       .eq('id', booking_id)
 
     if (updateError) {
@@ -132,22 +223,20 @@ router.post('/create-charge', async (req: Request, res: Response) => {
       })
     }
 
-    // If paid immediately (credit card), create job + notify
-    if (charge.paid) {
-      try {
-        const notifResult = await processBookingConfirmed(booking_id)
-        console.log(`📋 Charge notification result:`, notifResult)
-      } catch (notifError) {
-        console.error('⚠️ Notification failed (non-blocking):', notifError)
-      }
+    // Paid: create job + notify
+    try {
+      const notifResult = await processBookingConfirmed(booking_id)
+      console.log(`📋 Charge notification result:`, notifResult)
+    } catch (notifError) {
+      console.error('⚠️ Notification failed (non-blocking):', notifError)
+    }
 
-      // Send receipt email - must await to prevent Vercel serverless from terminating early
-      if (transaction?.id) {
-        try {
-          await sendReceiptEmailForTransaction(transaction.id)
-        } catch (emailErr) {
-          console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
-        }
+    // Send receipt email - must await to prevent Vercel serverless from terminating early
+    if (transaction?.id) {
+      try {
+        await sendReceiptEmailForTransaction(transaction.id)
+      } catch (emailErr) {
+        console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
       }
     }
 
@@ -174,16 +263,16 @@ router.post('/create-charge', async (req: Request, res: Response) => {
  */
 router.post('/webhooks/omise', async (req: Request, res: Response) => {
   try {
+    // [F-3] Verify webhook signature FIRST — reject forged webhooks (fail-closed).
+    const signature = req.headers['x-omise-signature'] as string
+    if (!omiseService.verifyWebhookSignature(JSON.stringify(req.body), signature)) {
+      return res.status(401).json({ success: false, error: 'Invalid signature' })
+    }
+
     const { key, data } = req.body
 
     console.log('📥 Received Omise webhook:', key)
     console.log('📦 Webhook data:', JSON.stringify(data, null, 2))
-
-    // Verify webhook signature (implement in production)
-    // const signature = req.headers['x-omise-signature'] as string
-    // if (!omiseService.verifyWebhookSignature(JSON.stringify(req.body), signature)) {
-    //   return res.status(401).json({ success: false, error: 'Invalid signature' })
-    // }
 
     // Handle charge.complete event
     if (key === 'charge.complete') {
@@ -590,19 +679,43 @@ router.post('/refund', async (req: Request, res: Response) => {
       })
     }
 
-    // Create refund
-    const refund = await omiseService.createRefund(
-      charge_id,
-      amount ? Math.round(amount * 100) : undefined
-    )
-
-    // Update transaction status
+    // [F-1] Idempotency guard: look up the charge's transaction FIRST and refuse to
+    // refund again if it is already refunded or a refund is already in flight.
     const { data: transaction } = await getSupabaseClient()
       .from('transactions')
       .select('*')
       .eq('omise_charge_id', charge_id)
       .single()
 
+    if (transaction) {
+      if (transaction.status === 'refunded') {
+        return res.status(409).json({
+          success: false,
+          error: 'This charge has already been refunded',
+        })
+      }
+      const { data: existingRefund } = await getSupabaseClient()
+        .from('refund_transactions')
+        .select('id, status')
+        .eq('payment_transaction_id', transaction.id)
+        .in('status', ['processing', 'completed'])
+        .limit(1)
+        .maybeSingle()
+      if (existingRefund) {
+        return res.status(409).json({
+          success: false,
+          error: `A refund is already ${existingRefund.status} for this charge`,
+        })
+      }
+    }
+
+    // Create refund
+    const refund = await omiseService.createRefund(
+      charge_id,
+      amount ? Math.round(amount * 100) : undefined
+    )
+
+    // Update transaction + booking
     if (transaction) {
       await getSupabaseClient()
         .from('transactions')
@@ -722,8 +835,24 @@ router.post('/create-source', async (req: Request, res: Response) => {
       .select()
       .single()
 
-    if (txnError) {
+    // [F-6] If the transaction row cannot be persisted, do not proceed. If the source
+    // charge was already captured, compensate by refunding; a pending source with no DB
+    // record must fail loudly rather than be orphaned (the webhook would never match it).
+    if (txnError || !transaction) {
       console.error('Failed to create transaction record:', txnError)
+      if (charge.paid) {
+        try {
+          await omiseService.createRefund(charge.id)
+          console.error(`⚠️ Compensating refund issued for source charge ${charge.id} after INSERT failure`)
+        } catch (refundErr) {
+          console.error(`🚨 CRITICAL: source charge ${charge.id} captured but INSERT and refund BOTH failed`, refundErr)
+        }
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to record transaction. Please try again.',
+        charge_id: charge.id,
+      })
     }
 
     // Update booking payment status and method

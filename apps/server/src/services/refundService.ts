@@ -221,6 +221,19 @@ export async function processRefund(params: ProcessRefundParams): Promise<Proces
       return { success: false, error: 'No Omise charge ID found - cannot process refund through Omise' }
     }
 
+    // [F-1] Idempotency: refuse if a refund is already in flight or completed for this
+    // booking (defense-in-depth beyond the successful-transaction lookup above).
+    const { data: priorRefund } = await supabase
+      .from('refund_transactions')
+      .select('id, status')
+      .eq('booking_id', bookingId)
+      .in('status', ['processing', 'completed'])
+      .limit(1)
+      .maybeSingle()
+    if (priorRefund) {
+      return { success: false, error: `A refund is already ${priorRefund.status} for this booking` }
+    }
+
     // Calculate refund amount based on option
     let refundAmount: number
     let calculatedPercentage: number | undefined

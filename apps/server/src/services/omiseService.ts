@@ -350,13 +350,13 @@ export function verifyWebhookSignature(payload: string, signature: string): bool
   const secretKey = process.env.OMISE_SECRET_KEY
 
   if (!secretKey) {
-    console.warn('⚠️ OMISE_SECRET_KEY not found, skipping signature verification')
-    return true
+    console.error('❌ OMISE_SECRET_KEY not set — cannot verify webhook; rejecting (fail-closed)')
+    return false
   }
 
   if (!signature) {
-    console.warn('⚠️ No webhook signature provided, skipping verification')
-    return true
+    console.error('❌ No webhook signature provided — rejecting (fail-closed)')
+    return false
   }
 
   try {
@@ -380,12 +380,7 @@ export function verifyWebhookSignature(payload: string, signature: string): bool
     return isValid
   } catch (error) {
     console.error('Error verifying webhook signature:', error)
-    // In development, allow requests without valid signature
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ Skipping signature verification in development mode')
-      return true
-    }
-    return false
+    return false // fail-closed on any error
   }
 }
 
