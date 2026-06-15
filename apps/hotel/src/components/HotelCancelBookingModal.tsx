@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Modal } from '@bliss/ui'
+import { supabase } from '@bliss/supabase/auth'
 import { AlertTriangle, Clock, Ban, CheckCircle, RefreshCw, Info } from 'lucide-react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api')
@@ -122,7 +123,10 @@ export function HotelCancelBookingModal({
         `${API_BASE_URL}/bookings/${bookingId}/cancel`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
           body: JSON.stringify({
             reason,
             refund_option: 'none',

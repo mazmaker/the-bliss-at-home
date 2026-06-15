@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../hooks/useAdminAuth'
+import { supabase } from '../lib/supabase'
 import type { Booking } from '../hooks/useBookings'
 
 // ============================================
@@ -79,7 +80,10 @@ async function cancelBooking(
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+    },
     body: JSON.stringify(data),
   })
   return response.json()

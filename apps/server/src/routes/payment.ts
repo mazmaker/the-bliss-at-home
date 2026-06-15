@@ -8,6 +8,7 @@ import { getSupabaseClient } from '../lib/supabase.js'
 import { omiseService } from '../services/omiseService.js'
 import { processBookingConfirmed } from '../services/notificationService.js'
 import { sendReceiptEmailForTransaction, sendCreditNoteEmailForRefund } from './receipts.js'
+import { paymentAuthGuard } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -15,7 +16,7 @@ const router = Router()
  * POST /api/payments/create-charge
  * Create a payment charge
  */
-router.post('/create-charge', async (req: Request, res: Response) => {
+router.post('/create-charge', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
     const { booking_id, customer_id, amount, token, omise_card_id, payment_method, card_info } = req.body
 
@@ -668,7 +669,7 @@ router.get('/charge/:id', async (req: Request, res: Response) => {
  * POST /api/payments/refund
  * Create a refund
  */
-router.post('/refund', async (req: Request, res: Response) => {
+router.post('/refund', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
     const { charge_id, amount, reason } = req.body
 
@@ -751,7 +752,7 @@ router.post('/refund', async (req: Request, res: Response) => {
  * POST /api/payments/create-source
  * Create a payment source (PromptPay, Internet Banking, Mobile Banking)
  */
-router.post('/create-source', async (req: Request, res: Response) => {
+router.post('/create-source', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
     console.log('📥 Create source request:', { body: req.body })
     const { booking_id, customer_id, amount, source_type, payment_method } = req.body

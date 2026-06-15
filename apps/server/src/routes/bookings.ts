@@ -6,6 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
+import { paymentAuthGuard } from '../middleware/auth.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
 import { sendCreditNoteEmailForRefund } from './receipts.js'
@@ -140,7 +141,7 @@ interface RescheduleBookingBody {
  * - Unassigns staff (they need to re-accept)
  * - Sends notifications to previously assigned staff
  */
-router.post('/:id/reschedule', async (req: Request, res: Response) => {
+router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const body = req.body as RescheduleBookingBody
@@ -604,7 +605,7 @@ router.post('/:id/reschedule', async (req: Request, res: Response) => {
  * POST /api/bookings/:id/cancel
  * Cancel a booking with optional refund
  */
-router.post('/:id/cancel', async (req: Request, res: Response) => {
+router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const body = req.body as CancelBookingBody
@@ -1210,7 +1211,7 @@ interface ExtendBookingResponse {
  * POST /api/bookings/:bookingId/extend
  * Extend a booking session duration
  */
-router.post('/:bookingId/extend', async (req: Request, res: Response) => {
+router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Response) => {
   const { bookingId } = req.params
   const body: ExtendBookingRequest = req.body
 

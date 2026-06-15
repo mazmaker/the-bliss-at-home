@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { CreditCard, Lock } from 'lucide-react'
+import { supabase } from '@bliss/supabase/auth'
 
 // Omise.js types
 declare global {
@@ -120,6 +121,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
               },
               body: JSON.stringify({
                 booking_id: bookingId,

@@ -9,6 +9,7 @@ import { useCreateBookingWithServices } from '@bliss/supabase/hooks/useBookings'
 import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
 import { usePaymentMethods } from '@bliss/supabase/hooks/usePaymentMethods'
 import { Database, PromoValidationResult, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
+import { supabase } from '@bliss/supabase/auth'
 import PaymentForm from '../components/PaymentForm'
 import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
 import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
@@ -320,6 +321,7 @@ function BookingWizard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
         body: JSON.stringify({
           booking_id: createdBookingId,
@@ -364,6 +366,7 @@ function BookingWizard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
         body: JSON.stringify({
           booking_id: createdBookingId,
@@ -442,6 +445,7 @@ function BookingWizard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
         body: JSON.stringify({
           booking_id: createdBookingId,
