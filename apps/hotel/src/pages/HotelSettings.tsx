@@ -12,7 +12,6 @@ interface HotelSettings {
   smsNotifications: boolean
   autoConfirm: boolean
   requireGuestInfo: boolean
-  defaultDuration: number
 }
 
 // Default settings
@@ -20,8 +19,7 @@ const defaultSettings: HotelSettings = {
   emailNotifications: true,
   smsNotifications: false,
   autoConfirm: false,
-  requireGuestInfo: true,
-  defaultDuration: 60
+  requireGuestInfo: true
 }
 
 // Fetch hotel settings from localStorage
@@ -156,6 +154,19 @@ function HotelSettings() {
     })
   }
 
+  // Change-detection: the saved baseline persisted in localStorage (mirrors fetchHotelSettings)
+  const getSavedSettings = (): HotelSettings => {
+    if (!hotelId) return defaultSettings
+    try {
+      const raw = localStorage.getItem(`hotel_settings_${hotelId}`)
+      return raw ? { ...defaultSettings, ...JSON.parse(raw) } : defaultSettings
+    } catch {
+      return defaultSettings
+    }
+  }
+  // Save is enabled only when the current settings differ from what's already saved
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(getSavedSettings())
+
   // Loading state
   if (hotelLoading || isLoading) {
     return (
@@ -197,7 +208,8 @@ function HotelSettings() {
         </div>
         <button
           onClick={handleSave}
-          disabled={saveSettingsMutation.isPending}
+          disabled={saveSettingsMutation.isPending || !isDirty}
+          title={!isDirty ? 'ไม่มีการเปลี่ยนแปลง' : undefined}
           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saveSettingsMutation.isPending ? (
@@ -205,7 +217,7 @@ function HotelSettings() {
           ) : (
             <Save className="w-5 h-5" />
           )}
-          {saveSettingsMutation.isPending ? 'กำลังบันทึก...' : 'บันทึก'}
+          {saveSettingsMutation.isPending ? 'กำลังบันทึก...' : isDirty ? 'บันทึก' : 'บันทึกแล้ว'}
         </button>
       </div>
 

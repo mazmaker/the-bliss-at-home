@@ -16,8 +16,8 @@ interface DashboardStats {
   pendingPayments: number
   // Guest Activity Real Data
   repeatGuests: number
-  averageRating: number
-  customerSatisfaction: number
+  averageRating: number | null
+  customerSatisfaction: number | null
   // Booking Patterns Real Data
   peakHours: { time: string; percentage: number }[]
   popularDays: { day: string; percentage: number }[]
@@ -248,6 +248,21 @@ const fetchDashboardStats = async (hotelId: string): Promise<DashboardStats> => 
     .filter(b => b.payment_status === 'pending' && ['confirmed', 'completed'].includes(b.status))
     .reduce((sum, booking) => sum + (booking.final_price ?? 0), 0)
 
+  // Real average rating from job_ratings (this hotel's jobs); null when there are no reviews yet.
+  // Best-effort: a failed/blocked query yields data=null → averageRating stays null (renders "—"), never crashes.
+  const { data: ratingRows } = await supabase
+    .from('job_ratings')
+    .select('rating, jobs!inner(hotel_id)')
+    .eq('jobs.hotel_id', hotelId)
+  const ratingValues = (ratingRows || [])
+    .map((r: any) => r.rating)
+    .filter((n: any): n is number => typeof n === 'number')
+  const averageRating = ratingValues.length > 0
+    ? Math.round((ratingValues.reduce((s: number, n: number) => s + n, 0) / ratingValues.length) * 10) / 10
+    : null
+  // Satisfaction derived from the REAL rating (out of 5 → %); null when no reviews exist.
+  const customerSatisfaction = averageRating != null ? Math.round((averageRating / 5) * 100) : null
+
   return {
     todayBookings: todayCount || 0,
     monthlyRevenue,
@@ -256,8 +271,8 @@ const fetchDashboardStats = async (hotelId: string): Promise<DashboardStats> => 
 
     // Real Guest Activity Data
     repeatGuests,
-    averageRating: 4.8, // TODO: Calculate from reviews table when available
-    customerSatisfaction: Math.min(96, Math.max(85, 90 + (returnRate * 0.1))), // Calculated based on return rate
+    averageRating,
+    customerSatisfaction,
 
     // Real Booking Patterns Data
     peakHours,
@@ -447,22 +462,25 @@ function Dashboard() {
     {
       name: 'การจองวันนี้',
       value: stats?.todayBookings?.toString() || '0',
-      change: stats?.todayBookings ? '+' + stats.todayBookings : '0',
-      trend: 'up' as const,
+      // Neutral context label (not a fake growth trend)
+      change: 'วันนี้',
+      trend: 'neutral' as const,
       icon: Calendar
     },
     {
       name: 'รายได้เดือนนี้',
       value: `฿${stats?.monthlyRevenue?.toLocaleString() || '0'}`,
-      change: '+12.5%',
-      trend: 'up' as const,
+      // Real month-over-month growth (computed from last month's revenue); 0% when no prior data
+      change: `${(stats?.spendingStats?.monthlyGrowth ?? 0) >= 0 ? '+' : ''}${stats?.spendingStats?.monthlyGrowth ?? 0}%`,
+      trend: (stats?.spendingStats?.monthlyGrowth ?? 0) >= 0 ? 'up' as const : 'neutral' as const,
       icon: DollarSign
     },
     {
       name: 'แขกที่ใช้บริการ',
       value: stats?.totalGuests?.toString() || '0',
-      change: `+${stats?.totalGuests || 0}`,
-      trend: 'up' as const,
+      // Neutral context label (not a fake growth trend)
+      change: 'เดือนนี้',
+      trend: 'neutral' as const,
       icon: Users
     },
     {
@@ -748,9 +766,9 @@ function Dashboard() {
                   <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
                     <Star className="w-6 h-6 text-orange-600 fill-orange-600" />
                   </div>
-                  <p className="text-2xl font-bold text-orange-900">{stats?.averageRating || 0}</p>
+                  <p className="text-2xl font-bold text-orange-900">{stats?.averageRating != null ? stats.averageRating : '—'}</p>
                   <p className="text-sm text-orange-700 font-medium">คะแนนเฉลี่ย</p>
-                  <p className="text-xs text-orange-600/70 mt-1">Average Rating</p>
+                  <p className="text-xs text-orange-600/70 mt-1">{stats?.averageRating != null ? 'Average Rating' : 'ยังไม่มีรีวิว'}</p>
                 </div>
               </div>
 
@@ -758,7 +776,7 @@ function Dashboard() {
               <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100/50">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-stone-600">Customer Satisfaction</span>
-                  <span className="font-medium text-stone-900">{stats?.customerSatisfaction || 0}%</span>
+                  <span className="font-medium text-stone-900">{stats?.customerSatisfaction != null ? `${stats.customerSatisfaction}%` : '—'}</span>
                 </div>
                 <div className="w-full bg-stone-200 rounded-full h-2 mt-2">
                   <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${stats?.customerSatisfaction || 0}%` }}></div>
