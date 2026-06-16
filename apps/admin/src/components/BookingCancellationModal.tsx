@@ -62,7 +62,7 @@ async function getRefundPreview(bookingId: string): Promise<{
   policy?: CancellationPolicy
   error?: string
 }> {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/refund-preview`)
+  const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/refund-preview`)
   return response.json()
 }
 
@@ -78,7 +78,7 @@ async function cancelBooking(
     admin_id?: string
   }
 ): Promise<{ success: boolean; data?: any; error?: string }> {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
+  const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
