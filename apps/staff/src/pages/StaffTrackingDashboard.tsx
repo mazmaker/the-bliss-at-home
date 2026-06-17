@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { RefreshCw, Navigation, ArrowLeft, AlertTriangle, Satellite } from 'lucide-react'
+import { RefreshCw, Navigation } from 'lucide-react'
 import BookingList from '../components/BookingList'
-import DebugJobsData from '../components/DebugJobsData'
 
 export default function StaffTrackingDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -119,9 +117,6 @@ export default function StaffTrackingDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Debug Info */}
-      <DebugJobsData />
 
       {/* Booking List with GPS Tracking */}
       <BookingList />

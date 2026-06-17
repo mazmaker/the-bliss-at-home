@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Clock, User, Phone, Navigation, CheckCircle, XCircle, Play, Loader2, AlertTriangle, ChevronRight } from 'lucide-react'
+import { MapPin, Clock, User, Phone, Navigation, CheckCircle, Loader2, AlertTriangle, ChevronRight } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { SOSButton, JobCancellationModal, ServiceTimer, ExtensionAcceptanceCard, JobStatusBadge } from '../components'
+import { SOSButton, ServiceTimer, ExtensionAcceptanceCard, JobStatusBadge } from '../components'
 import JobGPSControls from '../components/JobGPSControls'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
@@ -25,8 +25,6 @@ function StaffDashboard() {
 
   const [currentJob, setCurrentJob] = useState<Job | null>(null)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   // Initialize audio on first interaction
@@ -121,43 +119,11 @@ function StaffDashboard() {
     }
   }
 
-  const handleCancelJobClick = (job: Job) => {
-    setJobToCancel(job)
-    setShowCancelModal(true)
-  }
-
   // Smart status badge component that includes GPS tracking state
   function SmartJobStatusBadge({ job }: { job: { id: string; status: JobStatus } }) {
     const gpsStatus = useJobGPSStatus(job.id)
     return <JobStatusBadge status={job.status} isGPSTracking={gpsStatus.isTracking} />
   }
-
-  const handleConfirmCancel = async (reason: string, notes?: string) => {
-    if (!jobToCancel) return
-    try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
-      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: jobToCancel.id, reason, notes }),
-      })
-      const data = await res.json()
-      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
-      // Stop background music when job is cancelled
-      stopBackgroundMusic()
-      if (isSoundEnabled()) {
-        NotificationSounds.jobCancelled()
-      }
-      if (currentJob?.id === jobToCancel.id) {
-        setCurrentJob(null)
-      }
-      setJobToCancel(null)
-      refresh()
-    } catch (err: any) {
-      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
-    }
-  }
-
 
   // Filter jobs for display
   const myJobs = jobs.filter(j => ['confirmed', 'traveling', 'arrived'].includes(j.status))
@@ -378,13 +344,6 @@ function StaffDashboard() {
               )}
               เสร็จสิ้นงาน
             </button>
-            <button
-              onClick={() => handleCancelJobClick(currentJob)}
-              disabled={isProcessing === currentJob.id}
-              className="px-4 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium disabled:opacity-50"
-            >
-              <XCircle className="w-5 h-5" />
-            </button>
           </div>
         </div>
       )}
@@ -460,17 +419,6 @@ function StaffDashboard() {
 
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleCancelJobClick(job)}
-                      disabled={isProcessing === job.id}
-                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm flex items-center gap-1 disabled:opacity-50"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      ยกเลิก
-                    </button>
-                    {/* ซ่อนปุ่มเริ่มงาน เพราะ GPS Controls จะจัดการแทน */}
-                  </div>
                 </div>
               </div>
             ))}
@@ -681,17 +629,6 @@ function StaffDashboard() {
       {/* SOS Button */}
       <SOSButton currentJobId={currentJob?.id} />
 
-      {/* Cancel Modal */}
-      <JobCancellationModal
-        isOpen={showCancelModal}
-        onClose={() => {
-          setShowCancelModal(false)
-          setJobToCancel(null)
-        }}
-        onConfirm={handleConfirmCancel}
-        jobId={jobToCancel?.id || ''}
-        serviceName={jobToCancel?.service_name}
-      />
     </div>
   )
 }

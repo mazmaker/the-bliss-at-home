@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import {
   ArrowLeft, MapPin, Clock, User, Phone, Navigation, Calendar,
-  Banknote, FileText, CheckCircle, XCircle, Play, Loader2
+  Banknote, FileText, CheckCircle, Play, Loader2
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
+import { ServiceTimer, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
 import JobGPSControls from '../components/JobGPSControls'
 import JobStatusBadge from '../components/JobStatusBadge'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
@@ -143,7 +143,6 @@ function StaffJobDetail() {
   const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
 
   const [isProcessing, setIsProcessing] = useState(false)
-  const [showCancelModal, setShowCancelModal] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const goBack = () => {
@@ -205,30 +204,6 @@ function StaffJobDetail() {
       if (isSoundEnabled()) NotificationSounds.jobCompleted()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเสร็จสิ้นงานได้')
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleConfirmCancel = async (reason: string, notes?: string) => {
-    if (!job) return
-    setIsProcessing(true)
-    setActionError(null)
-    try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
-      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: job.id, reason, notes }),
-      })
-      const data = await res.json()
-      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
-      stopBackgroundMusic()
-      if (isSoundEnabled()) NotificationSounds.jobCancelled()
-      setShowCancelModal(false)
-      navigate('/staff/jobs', { replace: true })
-    } catch (err: any) {
-      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
     } finally {
       setIsProcessing(false)
     }
@@ -613,14 +588,9 @@ function StaffJobDetail() {
           )}
 
           {isMyJob && !isPending && (
-            <button
-              onClick={() => setShowCancelModal(true)}
-              disabled={isProcessing}
-              className="w-full py-3 bg-stone-100 text-stone-700 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <XCircle className="w-5 h-5" />
-              ยกเลิกงาน
-            </button>
+            <div className="w-full py-3 px-4 bg-stone-50 border border-stone-200 rounded-xl text-center">
+              <p className="text-sm text-stone-500">หากต้องการยกเลิกงาน กรุณาติดต่อ Admin</p>
+            </div>
           )}
         </div>
       )}
@@ -628,26 +598,6 @@ function StaffJobDetail() {
       {/* SOS Button */}
       {isMyJob && !isFinished && <SOSButton currentJobId={job.id} />}
 
-      {/* Cancel Modal — use mid-service variant when job is in_progress */}
-      {job.status === 'in_progress' && job.started_at ? (
-        <MidServiceCancellationModal
-          isOpen={showCancelModal}
-          onClose={() => setShowCancelModal(false)}
-          onConfirm={handleConfirmCancel}
-          jobId={job.id}
-          serviceName={job.service_name}
-          startedAt={job.started_at}
-          durationMinutes={totalDuration}
-        />
-      ) : (
-        <JobCancellationModal
-          isOpen={showCancelModal}
-          onClose={() => setShowCancelModal(false)}
-          onConfirm={handleConfirmCancel}
-          jobId={job.id}
-          serviceName={job.service_name}
-        />
-      )}
     </div>
   )
 }
