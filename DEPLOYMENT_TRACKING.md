@@ -675,6 +675,15 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 ---
 
+## 🆕 **SESSION 2026-06-18 (2)** - เพิ่มส่วนลด Global Discount เป็น 20%
+
+- ✅ `apps/customer/.env` — เปลี่ยน `VITE_GLOBAL_DISCOUNT_PERCENTAGE=15` → `20`
+- ✅ `apps/customer/.env.local` — เปลี่ยน `VITE_GLOBAL_DISCOUNT_PERCENTAGE=15` → `20`
+- **ผล:** Badge "ลด 20%" + ราคา ฿680 (จากเดิม ฿723)
+- ⚠️ **Production:** ต้องอัปเดต Vercel env var `VITE_GLOBAL_DISCOUNT_PERCENTAGE=20` ใน Customer project ด้วย
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
