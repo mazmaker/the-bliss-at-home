@@ -158,7 +158,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
     // Couple booking: fetch booking_services for per-recipient details
     const { data: bookingServices } = await supabase
       .from('booking_services')
-      .select('recipient_index, recipient_name, duration, price, service:services(name_th, name_en, staff_commission_rate)')
+      .select('recipient_index, recipient_name, duration, price, service:services(name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
       .eq('booking_id', bookingId)
       .order('recipient_index', { ascending: true })
 
@@ -168,8 +168,17 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
         const svc = bs.service as any
         const recipientLabel = bs.recipient_name || `คนที่ ${(bs.recipient_index || 0) + 1}`
         const price = Number(bs.price) || 0
-        const commissionRate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * commissionRate)
+        const duration = bs.duration || booking.duration || 90
+        let earnings: number
+        if (svc?.use_fixed_rate) {
+          const fixed = duration === 60 ? svc.staff_earning_60
+            : duration === 120 ? svc.staff_earning_120
+            : svc.staff_earning_90
+          earnings = Math.round(Number(fixed) || 0)
+        } else {
+          const commissionRate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
+          earnings = Math.round(price * commissionRate)
+        }
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -197,10 +206,20 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
       }
     } else {
       // Fallback: no booking_services found, create N identical jobs
-      const fallbackCommissionRate = Number(booking.service?.staff_commission_rate) || 0
+      const fallbackSvc = booking.service as any
+      const fallbackDuration = booking.duration || 90
       for (let i = 0; i < recipientCount; i++) {
         const fallbackAmount = Math.round((booking.final_price || 0) / recipientCount)
-        const fallbackEarnings = Math.round(fallbackAmount * fallbackCommissionRate / 100)
+        let fallbackEarnings: number
+        if (fallbackSvc?.use_fixed_rate) {
+          const fixed = fallbackDuration === 60 ? fallbackSvc.staff_earning_60
+            : fallbackDuration === 120 ? fallbackSvc.staff_earning_120
+            : fallbackSvc.staff_earning_90
+          fallbackEarnings = Math.round(Number(fixed) || 0)
+        } else {
+          const fallbackCommissionRate = Number(fallbackSvc?.staff_commission_rate) || 0
+          fallbackEarnings = Math.round(fallbackAmount * fallbackCommissionRate)
+        }
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -230,10 +249,20 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
   } else {
     // Single booking: 1 job
     const singleAmount = Number(booking.final_price) || 0
-    const singleCommissionRate = Number(booking.service?.staff_commission_rate) || 0
-    const singleEarnings = booking.staff_earnings
-      ? Number(booking.staff_earnings)
-      : Math.round(singleAmount * singleCommissionRate / 100)
+    const singleSvc = booking.service as any
+    const singleDuration = booking.duration || 90
+    let singleEarnings: number
+    if (booking.staff_earnings) {
+      singleEarnings = Number(booking.staff_earnings)
+    } else if (singleSvc?.use_fixed_rate) {
+      const fixed = singleDuration === 60 ? singleSvc.staff_earning_60
+        : singleDuration === 120 ? singleSvc.staff_earning_120
+        : singleSvc.staff_earning_90
+      singleEarnings = Math.round(Number(fixed) || 0)
+    } else {
+      const singleCommissionRate = Number(singleSvc?.staff_commission_rate) || 0
+      singleEarnings = Math.round(singleAmount * singleCommissionRate)
+    }
     const jobData = {
       ...baseJobData,
       staff_id: booking.staff_id || null,
@@ -341,32 +370,49 @@ export async function sendBookingConfirmedNotifications(
   if (isCouple) {
     const { data: bookingServices } = await supabase
       .from('booking_services')
-      .select('recipient_index, recipient_name, duration, price, service:services(name_th, staff_commission_rate)')
+      .select('recipient_index, recipient_name, duration, price, service:services(name_th, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
       .eq('booking_id', bookingId)
       .order('recipient_index', { ascending: true })
 
     if (bookingServices) {
       coupleServices = bookingServices.map(bs => {
-        const price = Number(bs.price) || 0
-        const rate = Number((bs.service as any)?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-        const earnings = Math.round(price * rate)
+        const svc = bs.service as any
+        const duration = bs.duration || booking.duration || 90
+        let earnings: number
+        if (svc?.use_fixed_rate) {
+          const fixed = duration === 60 ? svc.staff_earning_60
+            : duration === 120 ? svc.staff_earning_120
+            : svc.staff_earning_90
+          earnings = Math.round(Number(fixed) || 0)
+        } else {
+          const rate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
+          earnings = Math.round(Number(bs.price) * rate)
+        }
         totalStaffEarnings += earnings
         return {
           recipientIndex: bs.recipient_index || 0,
           recipientName: bs.recipient_name,
-          serviceName: (bs.service as any)?.name_th || serviceName,
-          durationMinutes: bs.duration || booking.duration || 60,
+          serviceName: svc?.name_th || serviceName,
+          durationMinutes: duration,
           staffEarnings: earnings,
         }
       })
     }
   } else {
-    // Single booking earnings
+    // Single booking: use stored staff_earnings (set by trigger with fixed rate logic)
     const singleAmount = Number(booking.final_price) || 0
-    const singleRate = Number(booking.service?.staff_commission_rate) || 0
-    totalStaffEarnings = booking.staff_earnings
-      ? Number(booking.staff_earnings)
-      : Math.round(singleAmount * singleRate)
+    const svc = booking.service as any
+    if (booking.staff_earnings) {
+      totalStaffEarnings = Number(booking.staff_earnings)
+    } else if (svc?.use_fixed_rate) {
+      const dur = booking.duration || 90
+      const fixed = dur === 60 ? svc.staff_earning_60
+        : dur === 120 ? svc.staff_earning_120
+        : svc.staff_earning_90
+      totalStaffEarnings = Math.round(Number(fixed) || 0)
+    } else {
+      totalStaffEarnings = Math.round(singleAmount * (Number(svc?.staff_commission_rate) || 0))
+    }
   }
 
   // === 1. Notify available staff via LINE (filtered by provider preference) ===

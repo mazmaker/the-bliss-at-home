@@ -589,6 +589,101 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 ---
 
+## 🆕 **SESSION 2026-06-17** - Payout Admin-Only, ลบปุ่มยกเลิกงาน Staff, หมายเหตุราคา, Dev Fixes
+
+### **💰 1. ระบบรอบจ่ายเงิน: ยกเลิก Staff Self-Service**
+
+#### **💻 Code:**
+- ✅ `apps/staff/src/pages/StaffSettings.tsx` — ลบ radio buttons เลือกรอบ (weekly/bi_weekly/monthly) ออก เปลี่ยนเป็น read-only display พร้อมข้อความ "รอบการรับเงินกำหนดโดย Admin"
+- ✅ ลบ import `updatePayoutSchedule`, `STAFF_PAYOUT_OPTIONS`, `isSavingPayout`, `selectedPayoutSchedule` และ handler functions ออกทั้งหมด
+
+#### **🗄️ Database (apply ใน production แล้ว):**
+- ✅ Migration `supabase/migrations/20260617_090000_restrict_payout_schedule_to_admin.sql`
+- ✅ Drop policy เก่า + สร้าง RLS policy `staff_update_own_non_payout` — staff UPDATE ไม่ได้แก้ `payout_schedule`, `custom_payout_interval`, `next_payout_date`, `payout_start_date`
+
+### **🚫 2. ลบปุ่มยกเลิกงานออกจาก Staff App ทุกหน้า**
+
+- ✅ `apps/staff/src/pages/StaffJobDetail.tsx` — ลบปุ่ม "ยกเลิกงาน" + `JobCancellationModal` + `MidServiceCancellationModal` + `handleConfirmCancel` แทนด้วยข้อความ "หากต้องการยกเลิกงาน กรุณาติดต่อ Admin"
+- ✅ `apps/staff/src/pages/StaffDashboard.tsx` — ลบปุ่ม XCircle ยกเลิก (2 จุด) + `JobCancellationModal` + `handleCancelJobClick` + `handleConfirmCancel` + state `showCancelModal`, `jobToCancel`
+- ✅ `apps/staff/src/pages/StaffSchedule.tsx` — ลบปุ่มยกเลิกใน popup + `JobCancellationModal` + `handleCancelJobClick` + `handleConfirmCancel` + state ที่เกี่ยวข้อง
+- ✅ `apps/staff/src/pages/StaffTrackingDashboard.tsx` — ลบ `DebugJobsData` (🔍 Database Debug Info) ออกจากหน้า GPS
+
+### **📝 3. หมายเหตุราคาใน Customer App**
+
+- ✅ `apps/customer/src/pages/ServiceDetails.tsx` — เพิ่มหมายเหตุ 2 บรรทัด ด้านล่างส่วน "ระยะเวลาและราคา" คั่นด้วย border-t:
+  - "ราคานี้รวมค่าบริการ และค่าเดินทาง ยกเว้นค่าที่จอดรถ"
+  - "ถ้าลูกค้าต้องการยาหม่อง จะคิดราคาเพิ่ม 100 บาท"
+
+### **🔧 4. Dev Environment Fix**
+
+- ✅ `apps/server/package.json` — แก้ dev script จาก `--ignore node_modules` เป็น `--ignore '**/node_modules/**' --ignore '**/.pnpm/**'` ป้องกัน tsx restart ตอน iconv-lite เปลี่ยนแปลง (ไม่กระทบ production)
+- ✅ `apps/server/.env.local` — เพิ่ม `REQUIRE_PAYMENT_AUTH=true` สำหรับ local dev
+
+### **📋 Pending (รอ commit + push):**
+- 🔒 งาน session 2026-06-12 (health declaration + booking filters) — ยังรอ commit
+- 🔒 งาน session 2026-06-17 ทั้งหมดนี้ — รอ commit
+- ⚠️ **ค้างแก้:** reschedule route ไม่เช็ค payment_status — รอคิว
+
+---
+
+## 🆕 **SESSION 2026-06-18** - Fixed Rate Staff Earnings (ค่าคอมมิชชั่นแบบ Fixed Amount)
+
+### **🎯 ปัญหาที่แก้ไข: Staff Earnings ไม่คำนวณตาม `use_fixed_rate`**
+
+#### **🔍 Root Cause:**
+- Services ที่ตั้ง `use_fixed_rate = true` ยังคำนวณรายได้พนักงานจาก commission % แทนการใช้ fixed amounts (staff_earning_60/90/120)
+- Bug `/100`: `rate` เก็บเป็น decimal (0.30) แต่หาร 100 ซ้ำ → คำนวณผิด ~0.003
+
+#### **🔧 การแก้ไข (ครอบทุก flow):**
+
+1. **Admin App - Service Card Display**
+   - ✅ `apps/admin/src/pages/Services.tsx` — แสดง fixed amounts แทน commission % เมื่อ `use_fixed_rate = true`
+   - ✅ `apps/admin/src/components/ServiceForm.tsx` — เพิ่ม commission debug logs
+
+2. **Admin App - Quick Booking**
+   - ✅ `apps/admin/src/pages/QuickBooking/BookingConfirmation.tsx` — แก้คำนวณ `staff_earnings` ให้เช็ค `use_fixed_rate` ก่อน
+   - ✅ `apps/admin/src/pages/QuickBooking/ServiceSelection.tsx` — เพิ่ม `use_fixed_rate`, `staff_earning_60/90/120` ใน Service interface
+   - ✅ `apps/admin/src/pages/QuickBooking/index.tsx` — เพิ่ม fixed rate fields ใน Service interface
+
+3. **Server - Notification & Job Creation**
+   - ✅ `apps/server/src/services/notificationService.ts` — แก้ `createJobsFromBooking` (3 จุด) + `sendBookingConfirmedNotifications` + แก้ bug `/100`
+
+4. **Server - Reschedule Route**
+   - ✅ `apps/server/src/routes/bookings.ts` — แก้ reschedule route ให้ใช้ fixed rate เมื่อ `use_fixed_rate = true`
+
+5. **Hotel App - Booking & Extension**
+   - ✅ `apps/server/src/routes/secure-bookings-v2.ts` — แก้ Hotel booking สร้าง job ให้ใช้ fixed rate
+   - ✅ `apps/hotel/src/services/extendSessionService.ts` — แก้ Extend Session earnings ทั้ง calculate + update
+
+6. **Staff App**
+   - ✅ `apps/staff/src/pages/StaffJobDetail.tsx` — แก้ extension earnings display ให้ใช้ fixed rate
+
+#### **🗄️ Database:**
+- ✅ Migration `supabase/migrations/20260618_100000_add_fixed_rate_earnings_to_services.sql`
+  - ADD COLUMN `use_fixed_rate`, `staff_earning_60/90/120` (ถ้ายังไม่มี)
+  - อัปเดต trigger `sync_booking_to_job` รองรับ fixed rate
+
+#### **📱 Apps ที่มีการเปลี่ยนแปลง:**
+- ✅ Admin (ServiceForm, Services, QuickBooking)
+- ✅ Server (notificationService, bookings route, secure-bookings-v2)
+- ✅ Hotel (extendSessionService)
+- ✅ Staff (StaffJobDetail)
+
+### **📋 Pending (รอ commit + push):**
+- 🔒 งานทั้งหมดใน session นี้ — รอ commit
+- 🔒 migration `20260618_100000_add_fixed_rate_earnings_to_services.sql` — รอ apply ใน production
+
+---
+
+## 🆕 **SESSION 2026-06-18 (2)** - เพิ่มส่วนลด Global Discount เป็น 20%
+
+- ✅ `apps/customer/.env` — เปลี่ยน `VITE_GLOBAL_DISCOUNT_PERCENTAGE=15` → `20`
+- ✅ `apps/customer/.env.local` — เปลี่ยน `VITE_GLOBAL_DISCOUNT_PERCENTAGE=15` → `20`
+- **ผล:** Badge "ลด 20%" + ราคา ฿680 (จากเดิม ฿723)
+- ⚠️ **Production:** ต้องอัปเดต Vercel env var `VITE_GLOBAL_DISCOUNT_PERCENTAGE=20` ใน Customer project ด้วย
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
@@ -608,4 +703,4 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
 **🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
-**🕒 Last Updated: 2026-06-12**
+**🕒 Last Updated: 2026-06-18**

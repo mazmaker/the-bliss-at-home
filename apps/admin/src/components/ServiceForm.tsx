@@ -65,6 +65,23 @@ const serviceFormSchema = z.object({
     .number({ required_error: 'ระบุเปอร์เซ็นต์เป็นตัวเลข' })
     .min(0, 'เปอร์เซ็นต์ขั้นต่ำ 0%')
     .max(100, 'เปอร์เซ็นต์สูงสุด 100%'),
+  // Fixed rate earnings fields
+  use_fixed_rate: z.boolean().default(false),
+  staff_earning_60: z.coerce
+    .number({ required_error: 'ระบุรายได้ staff 60 นาทีเป็นตัวเลข' })
+    .min(50, 'รายได้ขั้นต่ำ 50 บาท')
+    .max(10000, 'รายได้สูงสุด 10,000 บาท')
+    .nullish(),
+  staff_earning_90: z.coerce
+    .number({ required_error: 'ระบุรายได้ staff 90 นาทีเป็นตัวเลข' })
+    .min(50, 'รายได้ขั้นต่ำ 50 บาท')
+    .max(10000, 'รายได้สูงสุด 10,000 บาท')
+    .nullish(),
+  staff_earning_120: z.coerce
+    .number({ required_error: 'ระบุรายได้ staff 120 นาทีเป็นตัวเลข' })
+    .min(50, 'รายได้ขั้นต่ำ 50 บาท')
+    .max(10000, 'รายได้สูงสุด 10,000 บาท')
+    .nullish(),
   image_url: z.string().optional(),
   is_active: z.boolean(),
   sort_order: z.number().optional(),
@@ -151,6 +168,10 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       price_90: undefined,
       price_120: undefined,
       staff_commission_rate: 25.00, // Default 25%
+      use_fixed_rate: false, // Default to commission
+      staff_earning_60: undefined,
+      staff_earning_90: undefined,
+      staff_earning_120: undefined,
       image_url: '',
       is_active: true,
       sort_order: 0,
@@ -165,6 +186,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
   const nameEn = watch('name_en')
   const staffCommissionRate = watch('staff_commission_rate')
   const selectedDurations = watch('duration_options') || []
+  const useFixedRate = watch('use_fixed_rate')
 
   // Load form data when editing
   useEffect(() => {
@@ -199,6 +221,10 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         price_90: editData.price_90 || undefined,
         price_120: editData.price_120 || undefined,
         staff_commission_rate: editData.staff_commission_rate != null ? editData.staff_commission_rate * 100 : 25.00,
+        use_fixed_rate: editData.use_fixed_rate || false,
+        staff_earning_60: editData.staff_earning_60 || undefined,
+        staff_earning_90: editData.staff_earning_90 || undefined,
+        staff_earning_120: editData.staff_earning_120 || undefined,
         image_url: editData.image_url || '',
         is_active: editData.is_active !== undefined ? editData.is_active : true,
         sort_order: editData.sort_order || 0,
@@ -218,6 +244,10 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         price_90: undefined,
         price_120: undefined,
         staff_commission_rate: 25.00,
+        use_fixed_rate: false,
+        staff_earning_60: undefined,
+        staff_earning_90: undefined,
+        staff_earning_120: undefined,
         image_url: '',
         is_active: true,
         sort_order: 0,
@@ -231,26 +261,6 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       setValue('slug', generateSlug(nameEn))
     }
   }, [nameEn, setValue, editData])
-
-  // Calculate staff commission for each duration
-  const calculateCommission = (price: number | undefined) => {
-    if (!price || !staffCommissionRate) return 0
-    return Math.round((price * (staffCommissionRate / 100)) * 100) / 100
-  }
-
-  const calculateCompanyRevenue = (price: number | undefined) => {
-    if (!price) return 0
-    const commission = calculateCommission(price)
-    return Math.round((price - commission) * 100) / 100
-  }
-
-  const commission60 = calculateCommission(price60)
-  const commission90 = calculateCommission(price90)
-  const commission120 = calculateCommission(price120)
-
-  const revenue60 = calculateCompanyRevenue(price60)
-  const revenue90 = calculateCompanyRevenue(price90)
-  const revenue120 = calculateCompanyRevenue(price120)
 
   // Handle image upload success
   const handleUploadComplete = (imageUrl: string) => {
@@ -280,6 +290,11 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         hotel_price: data.base_price ?? data.price_60 ?? data.price_90 ?? data.price_120,
         // Convert commission from percentage (25) to fraction (0.25) for DB storage
         staff_commission_rate: data.staff_commission_rate / 100,
+        // Fixed rate earnings fields
+        use_fixed_rate: data.use_fixed_rate || false,
+        staff_earning_60: data.staff_earning_60 || null,
+        staff_earning_90: data.staff_earning_90 || null,
+        staff_earning_120: data.staff_earning_120 || null,
         // Set duration from the first selected option for backward compatibility
         duration: data.duration_options[0], // Primary duration for backward compatibility
         // duration_options is now included since database column exists
@@ -292,16 +307,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       console.log('  - Available options (SAVING):', data.duration_options)
       console.log('  - Will save to database:', cleanData.duration_options)
 
-      // Debug pricing values
-      console.log('💰 PRICING DEBUG:')
-      console.log('  - Original price_60:', data.price_60)
-      console.log('  - Original price_90:', data.price_90)
-      console.log('  - Original price_120:', data.price_120)
-      console.log('  - CleanData price_60:', cleanData.price_60)
-      console.log('  - CleanData price_90:', cleanData.price_90)
-      console.log('  - CleanData price_120:', cleanData.price_120)
-      console.log('  - Calculated base_price:', cleanData.base_price)
-      console.log('  - Calculated hotel_price:', cleanData.hotel_price)
+      // Debug commission/earnings
+      console.log('👩‍💼 COMMISSION DEBUG:')
+      console.log('  - Form staff_commission_rate (%):', data.staff_commission_rate)
+      console.log('  - CleanData staff_commission_rate (decimal):', cleanData.staff_commission_rate)
+      console.log('  - use_fixed_rate:', cleanData.use_fixed_rate)
+      console.log('  - staff_earning_60:', cleanData.staff_earning_60)
+      console.log('  - staff_earning_90:', cleanData.staff_earning_90)
+      console.log('  - staff_earning_120:', cleanData.staff_earning_120)
 
       if (editData?.id) {
         // Update existing service
@@ -313,12 +326,12 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
         console.log('✅ Update result:', result)
         if (result && result[0]) {
-          console.log('💰 DATABASE RETURNED PRICES:')
-          console.log('  - DB price_60:', result[0].price_60)
-          console.log('  - DB price_90:', result[0].price_90)
-          console.log('  - DB price_120:', result[0].price_120)
-          console.log('  - DB base_price:', result[0].base_price)
-          console.log('  - DB hotel_price:', result[0].hotel_price)
+          console.log('👩‍💼 DB RETURNED COMMISSION:')
+          console.log('  - DB staff_commission_rate:', result[0].staff_commission_rate, '→', (result[0].staff_commission_rate * 100).toFixed(1) + '%')
+          console.log('  - DB use_fixed_rate:', result[0].use_fixed_rate)
+          console.log('  - DB staff_earning_60:', result[0].staff_earning_60)
+          console.log('  - DB staff_earning_90:', result[0].staff_earning_90)
+          console.log('  - DB staff_earning_120:', result[0].staff_earning_120)
         }
         if (error) {
           console.error('❌ Update error:', error)
@@ -734,120 +747,125 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               </div>
             )}
 
-            {/* Commission Section */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            {/* Staff Earnings */}
+            <div className="mb-6">
+              <p className="text-sm font-medium text-gray-700 mb-3">
                 <TrendingUp className="w-4 h-4 inline mr-1" />
-                ค่าคอมมิชชั่น Staff
-              </label>
-              <div className="space-y-4">
-                {/* Commission Rate Input */}
+                รายได้ Staff
+              </p>
+
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setValue('use_fixed_rate', false, { shouldValidate: true })}
+                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition ${
+                    !useFixedRate
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  Commission (%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('use_fixed_rate', true, { shouldValidate: true })}
+                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition ${
+                    useFixedRate
+                      ? 'border-amber-500 bg-amber-50 text-amber-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  Fixed Rate (฿)
+                </button>
+              </div>
+
+              {!useFixedRate && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    เปอร์เซ็นต์ (%)
-                  </label>
-                  <input
-                    {...register('staff_commission_rate')}
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    placeholder="25.00"
-                  />
+                  <div className="flex items-center gap-3">
+                    <input
+                      {...register('staff_commission_rate')}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg font-semibold"
+                      placeholder="25"
+                    />
+                    <span className="text-gray-600 font-medium text-lg">%</span>
+                    <span className="text-sm text-gray-400">จากราคาที่ลูกค้าจ่าย</span>
+                  </div>
                   {errors.staff_commission_rate && (
                     <p className="mt-1 text-sm text-red-600">{errors.staff_commission_rate.message}</p>
                   )}
                 </div>
+              )}
 
-                {/* Commission Breakdown by Duration */}
-                {(price60 || price90 || price120) && (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-700">คอมมิชชั่นแยกตามระยะเวลา:</h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {/* 60 minutes */}
-                      {selectedDurations.includes('60') && price60 && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-medium text-blue-800">60 นาที</span>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-blue-600">ราคา:</span>
-                              <span className="font-medium text-blue-800">{price60} บาท</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-blue-600">Staff:</span>
-                              <span className="font-medium text-blue-800">{commission60} บาท</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-blue-600">บริษัท:</span>
-                              <span className="font-medium text-blue-800">{revenue60} บาท</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 90 minutes */}
-                      {selectedDurations.includes('90') && price90 && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-4 h-4 text-green-600" />
-                            <span className="text-sm font-medium text-green-800">90 นาที</span>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-green-600">ราคา:</span>
-                              <span className="font-medium text-green-800">{price90} บาท</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-green-600">Staff:</span>
-                              <span className="font-medium text-green-800">{commission90} บาท</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-green-600">บริษัท:</span>
-                              <span className="font-medium text-green-800">{revenue90} บาท</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 120 minutes */}
-                      {selectedDurations.includes('120') && price120 && (
-                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-4 h-4 text-purple-600" />
-                            <span className="text-sm font-medium text-purple-800">120 นาที</span>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-purple-600">ราคา:</span>
-                              <span className="font-medium text-purple-800">{price120} บาท</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-purple-600">Staff:</span>
-                              <span className="font-medium text-purple-800">{commission120} บาท</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-purple-600">บริษัท:</span>
-                              <span className="font-medium text-purple-800">{revenue120} บาท</span>
-                            </div>
-                          </div>
-                        </div>
+              {useFixedRate && (
+                <div className="space-y-3">
+                  {selectedDurations.length === 0 && (
+                    <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      กรุณาเลือกระยะเวลาบริการก่อน
+                    </p>
+                  )}
+                  {selectedDurations.includes('60') && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-700 w-16 shrink-0">60 นาที</span>
+                      <span className="text-gray-400 shrink-0">→ Staff ได้</span>
+                      <input
+                        {...register('staff_earning_60')}
+                        type="number"
+                        min="50"
+                        max="10000"
+                        step="10"
+                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center font-semibold"
+                        placeholder="400"
+                      />
+                      <span className="text-gray-600 shrink-0">บาท</span>
+                      {errors.staff_earning_60 && (
+                        <p className="text-sm text-red-600">{errors.staff_earning_60.message}</p>
                       )}
                     </div>
-                  </div>
-                )}
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                💡 Staff จะได้รับค่าคอมมิชชั่น {staffCommissionRate || 0}% จากราคาแต่ละระยะเวลาที่ลูกค้าเลือก
-                <br />
-                <span className="text-amber-600">
-                  ✨ ระบบคิดคอมมิชชั่นแยกสำหรับแต่ละระยะเวลา เพื่อความยุติธรรม
-                </span>
-              </p>
+                  )}
+                  {selectedDurations.includes('90') && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-700 w-16 shrink-0">90 นาที</span>
+                      <span className="text-gray-400 shrink-0">→ Staff ได้</span>
+                      <input
+                        {...register('staff_earning_90')}
+                        type="number"
+                        min="50"
+                        max="10000"
+                        step="10"
+                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center font-semibold"
+                        placeholder="600"
+                      />
+                      <span className="text-gray-600 shrink-0">บาท</span>
+                      {errors.staff_earning_90 && (
+                        <p className="text-sm text-red-600">{errors.staff_earning_90.message}</p>
+                      )}
+                    </div>
+                  )}
+                  {selectedDurations.includes('120') && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-700 w-16 shrink-0">120 นาที</span>
+                      <span className="text-gray-400 shrink-0">→ Staff ได้</span>
+                      <input
+                        {...register('staff_earning_120')}
+                        type="number"
+                        min="50"
+                        max="10000"
+                        step="10"
+                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center font-semibold"
+                        placeholder="800"
+                      />
+                      <span className="text-gray-600 shrink-0">บาท</span>
+                      {errors.staff_earning_120 && (
+                        <p className="text-sm text-red-600">{errors.staff_earning_120.message}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Image Upload */}
@@ -930,6 +948,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                                 {field === 'price_90' && 'ราคา 90 นาที'}
                                 {field === 'price_120' && 'ราคา 120 นาที'}
                                 {field === 'staff_commission_rate' && 'คอมมิชชั่น'}
+                                {field === 'staff_earning_60' && 'รายได้ Staff 60 นาที'}
+                                {field === 'staff_earning_90' && 'รายได้ Staff 90 นาที'}
+                                {field === 'staff_earning_120' && 'รายได้ Staff 120 นาที'}
                                 {field === 'image_url' && 'รูปภาพ'}
                               </strong>: {error?.message}
                             </li>

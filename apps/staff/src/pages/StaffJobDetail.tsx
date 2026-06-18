@@ -40,12 +40,12 @@ function StaffJobDetail() {
 
       const { data, error } = await supabase
         .from('bookings')
-        .select('service_id, services!inner(staff_commission_rate)')
+        .select('service_id, services!inner(staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
         .eq('id', job.booking_id)
         .single()
 
       if (error || !data) return null
-      return data.services.staff_commission_rate || 30
+      return data.services
     },
     enabled: !!job?.booking_id
   })
@@ -134,12 +134,22 @@ function StaffJobDetail() {
   const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
 
-  // Get commission rate from service query (fallback to 30%)
-  const rawCommissionRate = serviceData || 30;
+  // Get earnings config from service query
+  const svcData = serviceData as any
+  const useFixedRate = svcData?.use_fixed_rate || false
+  const rawCommissionRate = svcData?.staff_commission_rate || 30;
   const commissionRate = normalizeCommissionRate(rawCommissionRate);
 
-  // Calculate extension earnings using utility function
-  const extensionEarnings = calculateExtensionEarnings(extensionServices, commissionRate);
+  // Calculate extension earnings: fixed rate or commission %
+  const extensionEarnings = useFixedRate
+    ? extensionServices.reduce((sum: number, ext: any) => {
+        const dur = ext.duration || 90
+        const fixed = dur === 60 ? svcData?.staff_earning_60
+          : dur === 120 ? svcData?.staff_earning_120
+          : svcData?.staff_earning_90
+        return sum + Math.round(Number(fixed) || 0)
+      }, 0)
+    : calculateExtensionEarnings(extensionServices, commissionRate);
   const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
 
   const [isProcessing, setIsProcessing] = useState(false)

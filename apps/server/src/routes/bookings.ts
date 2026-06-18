@@ -202,7 +202,11 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         service:services(
           name_th,
           name_en,
-          staff_commission_rate
+          staff_commission_rate,
+          use_fixed_rate,
+          staff_earning_60,
+          staff_earning_90,
+          staff_earning_120
         )
       `)
       .eq('id', id)
@@ -386,7 +390,17 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
           new_date: body.new_date,
           new_time: body.new_time,
           duration_minutes: booking.duration || 60,
-          staff_earnings: Math.round(Number(booking.final_price) * (Number((booking.service as any)?.staff_commission_rate) || 0.3) / (assignedJobs?.length || 1)),
+          staff_earnings: (() => {
+            const svc = booking.service as any
+            const duration = booking.duration || 90
+            if (svc?.use_fixed_rate) {
+              const fixed = duration === 60 ? svc.staff_earning_60
+                : duration === 120 ? svc.staff_earning_120
+                : svc.staff_earning_90
+              return Math.round(Number(fixed) || 0)
+            }
+            return Math.round(Number(booking.final_price) * (Number(svc?.staff_commission_rate) || 0.3) / (assignedJobs?.length || 1))
+          })(),
           assigned_staff_id: staffInfo.staff_id,
           staff_profile_id: staffInfo.profile_id,
           staff_line_user_id: staffInfo.line_user_id ?? undefined,
