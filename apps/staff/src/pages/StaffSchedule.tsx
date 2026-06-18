@@ -11,7 +11,6 @@ import {
   Phone,
   Navigation,
   X,
-  XCircle,
   Filter,
   List,
   Grid3X3,
@@ -21,7 +20,6 @@ import {
 } from 'lucide-react'
 import { useJobs, type Job, type JobStatus } from '@bliss/supabase'
 import { useAuth } from '@bliss/supabase/auth'
-import { JobCancellationModal } from '../components'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { stopBackgroundMusic } from '../utils/backgroundMusic'
 
@@ -51,37 +49,8 @@ function StaffSchedule() {
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
-
-  // Handle cancel job
-  const handleCancelJobClick = (job: Job) => {
-    setJobToCancel(job)
-    setShowCancelModal(true)
-    setSelectedJob(null) // Close detail modal
-  }
-
-  const handleConfirmCancel = async (reason: string, notes?: string) => {
-    if (!jobToCancel) return
-    try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
-      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: jobToCancel.id, reason, notes }),
-      })
-      const data = await res.json()
-      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
-      stopBackgroundMusic()
-      if (isSoundEnabled()) NotificationSounds.jobCancelled()
-      setJobToCancel(null)
-      refresh()
-    } catch (err: any) {
-      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
-    }
-  }
 
   // Calculate date range based on view mode
   const dateRange = useMemo(() => {
@@ -879,15 +848,6 @@ function StaffSchedule() {
                 <ExternalLink className="w-4 h-4" />
                 ดูรายละเอียด
               </button>
-              {['confirmed', 'assigned', 'traveling', 'arrived'].includes(selectedJob.status) && (
-                <button
-                  onClick={() => handleCancelJobClick(selectedJob)}
-                  className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-medium flex items-center gap-2 text-sm"
-                >
-                  <XCircle className="w-4 h-4" />
-                  ยกเลิก
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -899,18 +859,6 @@ function StaffSchedule() {
           {actionError}
         </div>
       )}
-
-      {/* Cancel Modal */}
-      <JobCancellationModal
-        isOpen={showCancelModal}
-        onClose={() => {
-          setShowCancelModal(false)
-          setJobToCancel(null)
-        }}
-        onConfirm={handleConfirmCancel}
-        jobId={jobToCancel?.id || ''}
-        serviceName={jobToCancel?.service_name}
-      />
 
       {/* Custom CSS for animation */}
       <style>{`

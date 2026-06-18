@@ -38,6 +38,30 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
     enabled: isOpen,
   })
 
+  // Health declaration (ข้อมูลสุขภาพก่อนรับบริการ)
+  const { data: healthDeclaration } = useQuery({
+    queryKey: ['admin', 'customer-health', customer.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('customer_health_declarations')
+        .select('conditions, other_detail, has_no_condition, confirmed_at')
+        .eq('customer_id', customer.id)
+        .maybeSingle()
+      return data
+    },
+    enabled: isOpen,
+  })
+
+  const HEALTH_LABELS: Record<string, string> = {
+    heart_disease: 'โรคหัวใจ',
+    blood_pressure: 'โรคความดันโลหิต (สูง / ต่ำ)',
+    diabetes: 'โรคเบาหวาน',
+    pregnancy: 'อยู่ระหว่างการตั้งครรภ์',
+    post_surgery: 'พักฟื้นจากการผ่าตัด / แผลผ่าตัดยังไม่หายดี',
+    skin_disease: 'โรคผิวหนัง',
+    other: 'อื่น ๆ',
+  }
+
   const handleAdjustPoints = async () => {
     const pts = parseInt(adjustAmount)
     if (isNaN(pts) || pts <= 0 || !adjustReason.trim()) return
@@ -236,6 +260,40 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
                       </p>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Health Declaration */}
+            <div className="bg-stone-50 rounded-xl p-4">
+              <h3 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-600" />
+                ข้อมูลสุขภาพก่อนรับบริการ
+              </h3>
+              {!healthDeclaration ? (
+                <p className="text-stone-500 text-sm text-center py-4">ยังไม่ได้กรอกข้อมูลสุขภาพ</p>
+              ) : healthDeclaration.has_no_condition ? (
+                <div className="bg-white rounded-lg p-3">
+                  <p className="text-sm text-green-700">ไม่มีอาการหรือโรคประจำตัว</p>
+                  <p className="text-xs text-stone-400 mt-1">
+                    ยืนยันเมื่อ {new Date(healthDeclaration.confirmed_at).toLocaleDateString('th-TH')}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg p-3">
+                  <ul className="space-y-1">
+                    {healthDeclaration.conditions.map((key: string) => (
+                      <li key={key} className="text-sm text-red-700">
+                        • {HEALTH_LABELS[key] || key}
+                        {key === 'other' && healthDeclaration.other_detail && (
+                          <span className="text-stone-700">: {healthDeclaration.other_detail}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-stone-400 mt-2">
+                    ยืนยันเมื่อ {new Date(healthDeclaration.confirmed_at).toLocaleDateString('th-TH')}
+                  </p>
                 </div>
               )}
             </div>

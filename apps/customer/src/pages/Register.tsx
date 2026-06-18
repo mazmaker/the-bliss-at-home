@@ -1,10 +1,18 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, Check, AlertCircle } from 'lucide-react'
+import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, Check, AlertCircle, HeartPulse } from 'lucide-react'
 import { authService } from '@bliss/supabase/auth'
 import type { RegisterCredentials } from '@bliss/supabase/auth'
+import { supabase, getCurrentCustomer } from '@bliss/supabase'
 import { useTranslation } from '@bliss/i18n'
 import { RefundPolicyConsent } from '../components/RefundPolicyConsent'
+import {
+  HealthChecklistFields,
+  createEmptyHealthForm,
+  isHealthFormValid,
+  saveHealthDeclaration,
+  type HealthFormState,
+} from '../components/HealthDeclarationModal'
 
 function Register() {
   const { t } = useTranslation('auth')
@@ -22,6 +30,8 @@ function Register() {
     agreeToTerms: false,
     agreeToRefundPolicy: false,
   })
+  // Health declaration — required at first registration (ข้อควรระวังและข้อมูลสุขภาพ)
+  const [healthForm, setHealthForm] = useState<HealthFormState>(() => createEmptyHealthForm())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +58,17 @@ function Register() {
       // Register with authService
       await authService.register(credentials)
 
+      // Save health declaration (creates the customer record if needed).
+      // Non-fatal: if it fails, the booking-time gate will ask again.
+      try {
+        const customer = await getCurrentCustomer(supabase as any)
+        if (customer?.id) {
+          await saveHealthDeclaration(customer.id, healthForm)
+        }
+      } catch (healthErr) {
+        console.error('Failed to save health declaration during registration:', healthErr)
+      }
+
       // Success - redirect to services page
       navigate('/services')
     } catch (err: any) {
@@ -66,7 +87,9 @@ function Register() {
       formData.password &&
       formData.password === formData.confirmPassword &&
       formData.agreeToTerms &&
-      formData.agreeToRefundPolicy
+      formData.agreeToRefundPolicy &&
+      // Must check at least one health condition (or "no condition") + confirmation
+      isHealthFormValid(healthForm)
     )
   }
 
@@ -253,6 +276,21 @@ function Register() {
               onAcceptedChange={(accepted) => setFormData({ ...formData, agreeToRefundPolicy: accepted })}
               hideAcceptButton
             />
+
+            {/* Health Declaration — required before submit */}
+            <div className="border border-stone-200 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <HeartPulse className="w-5 h-5 text-amber-700" />
+                <h2 className="font-semibold text-stone-900">
+                  ข้อควรระวังและข้อมูลสุขภาพก่อนรับบริการ
+                </h2>
+              </div>
+              <HealthChecklistFields
+                value={healthForm}
+                onChange={setHealthForm}
+                disabled={isLoading}
+              />
+            </div>
 
             {/* Submit Button */}
             <button

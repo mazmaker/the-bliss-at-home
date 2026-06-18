@@ -222,6 +222,7 @@ function ServiceCatalog() {
                       {t('services:catalog.book')}
                     </button>
                   </div>
+
                 </div>
               </Link>
             ))}

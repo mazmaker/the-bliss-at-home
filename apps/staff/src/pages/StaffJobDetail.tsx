@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import {
   ArrowLeft, MapPin, Clock, User, Phone, Navigation, Calendar,
-  Banknote, FileText, CheckCircle, XCircle, Play, Loader2
+  Banknote, FileText, CheckCircle, Play, Loader2
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { ServiceTimer, JobCancellationModal, MidServiceCancellationModal, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
+import { ServiceTimer, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
 import JobGPSControls from '../components/JobGPSControls'
 import JobStatusBadge from '../components/JobStatusBadge'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
@@ -48,6 +48,31 @@ function StaffJobDetail() {
       return data.services.staff_commission_rate || 30
     },
     enabled: !!job?.booking_id
+  })
+
+  // Query customer health declaration (ข้อควรระวังก่อนให้บริการ)
+  const { data: healthDeclaration } = useQuery({
+    queryKey: ['health-declaration', job?.booking_id],
+    queryFn: async () => {
+      if (!job?.booking_id) return null
+
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('customer_id')
+        .eq('id', job.booking_id)
+        .single()
+
+      if (!booking?.customer_id) return null
+
+      const { data } = await (supabase as any)
+        .from('customer_health_declarations')
+        .select('conditions, other_detail, has_no_condition')
+        .eq('customer_id', booking.customer_id)
+        .maybeSingle()
+
+      return data
+    },
+    enabled: !!job?.booking_id,
   })
 
   // Query booking services for extension info (with fallback for missing columns)
@@ -118,7 +143,6 @@ function StaffJobDetail() {
   const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
 
   const [isProcessing, setIsProcessing] = useState(false)
-  const [showCancelModal, setShowCancelModal] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const goBack = () => {
@@ -180,30 +204,6 @@ function StaffJobDetail() {
       if (isSoundEnabled()) NotificationSounds.jobCompleted()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเสร็จสิ้นงานได้')
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleConfirmCancel = async (reason: string, notes?: string) => {
-    if (!job) return
-    setIsProcessing(true)
-    setActionError(null)
-    try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
-      const res = await fetch(`${serverUrl}/api/notifications/job-cancelled`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: job.id, reason, notes }),
-      })
-      const data = await res.json()
-      if (!data.success) throw new Error(data.error || 'ไม่สามารถยกเลิกงานได้')
-      stopBackgroundMusic()
-      if (isSoundEnabled()) NotificationSounds.jobCancelled()
-      setShowCancelModal(false)
-      navigate('/staff/jobs', { replace: true })
-    } catch (err: any) {
-      setActionError(err.message || 'ไม่สามารถยกเลิกงานได้')
     } finally {
       setIsProcessing(false)
     }
@@ -426,6 +426,42 @@ function StaffJobDetail() {
               </div>
             </div>
           )}
+
+          {/* Health Declaration (ข้อควรระวังก่อนให้บริการ) */}
+          {healthDeclaration && !healthDeclaration.has_no_condition && healthDeclaration.conditions.length > 0 && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-sm font-semibold text-red-800 mb-2">
+                ข้อควรระวังด้านสุขภาพของลูกค้า
+              </p>
+              <ul className="space-y-1">
+                {healthDeclaration.conditions.map((key: string) => {
+                  const labels: Record<string, string> = {
+                    heart_disease: 'โรคหัวใจ',
+                    blood_pressure: 'โรคความดันโลหิต (สูง / ต่ำ)',
+                    diabetes: 'โรคเบาหวาน',
+                    pregnancy: 'อยู่ระหว่างการตั้งครรภ์',
+                    post_surgery: 'พักฟื้นจากการผ่าตัด / แผลผ่าตัดยังไม่หายดี',
+                    skin_disease: 'โรคผิวหนัง',
+                    other: `อื่น ๆ${healthDeclaration.other_detail ? `: ${healthDeclaration.other_detail}` : ''}`,
+                  }
+                  return (
+                    <li key={key} className="text-sm text-red-700">
+                      • {labels[key] || key}
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="text-xs text-red-600 mt-2">
+                โปรดปรับรูปแบบการนวดให้เหมาะสมเพื่อความปลอดภัยของลูกค้า
+              </p>
+            </div>
+          )}
+          {healthDeclaration?.has_no_condition && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+              <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <p className="text-sm text-green-700">ลูกค้าแจ้งว่าไม่มีโรคประจำตัวหรือข้อควรระวัง</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -552,14 +588,9 @@ function StaffJobDetail() {
           )}
 
           {isMyJob && !isPending && (
-            <button
-              onClick={() => setShowCancelModal(true)}
-              disabled={isProcessing}
-              className="w-full py-3 bg-stone-100 text-stone-700 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <XCircle className="w-5 h-5" />
-              ยกเลิกงาน
-            </button>
+            <div className="w-full py-3 px-4 bg-stone-50 border border-stone-200 rounded-xl text-center">
+              <p className="text-sm text-stone-500">หากต้องการยกเลิกงาน กรุณาติดต่อ Admin</p>
+            </div>
           )}
         </div>
       )}
@@ -567,26 +598,6 @@ function StaffJobDetail() {
       {/* SOS Button */}
       {isMyJob && !isFinished && <SOSButton currentJobId={job.id} />}
 
-      {/* Cancel Modal — use mid-service variant when job is in_progress */}
-      {job.status === 'in_progress' && job.started_at ? (
-        <MidServiceCancellationModal
-          isOpen={showCancelModal}
-          onClose={() => setShowCancelModal(false)}
-          onConfirm={handleConfirmCancel}
-          jobId={job.id}
-          serviceName={job.service_name}
-          startedAt={job.started_at}
-          durationMinutes={totalDuration}
-        />
-      ) : (
-        <JobCancellationModal
-          isOpen={showCancelModal}
-          onClose={() => setShowCancelModal(false)}
-          onConfirm={handleConfirmCancel}
-          jobId={job.id}
-          serviceName={job.service_name}
-        />
-      )}
     </div>
   )
 }

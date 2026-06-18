@@ -517,6 +517,78 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 ---
 
+## 🆕 **SESSION 2026-06-08 → 06-11** - Production Server Crash Fix & Omise Account Switch
+
+### **🚨 Critical Fix: Production Server ล่มทั้งหมด (FUNCTION_INVOCATION_FAILED)**
+
+#### **🔍 Root Cause (จาก Vercel runtime logs จริง):**
+- `bookings.ts` static import `refundPoints` ข้าม package ไปยัง `packages/supabase` ซึ่งประกาศ `"type": "module"` (ESM)
+- Server compile เป็น CommonJS → `require()` ESM ไม่ได้ → **ERR_REQUIRE_ESM → server crash ทุก request**
+- อาการที่เห็น: payment โดน CORS block, cancellation 404, /health 500 — ทั้งหมดคือสาเหตุเดียวกัน
+- Local ไม่พังเพราะ dev mode ใช้ tsx ที่แปลง ESM/CJS อัตโนมัติ
+
+#### **🔧 การแก้ไข:**
+- ✅ สร้าง `apps/server/src/services/loyaltyRefundService.ts` (สำเนา refundPoints ฝั่ง server)
+- ✅ ตัด cross-package import ออกจาก `bookings.ts`
+- ✅ **พิสูจน์ด้วย A/B test:** จำลองสภาพ Vercel ใน local — โค้ดเก่าพังด้วย error เดียวกัน / โค้ดใหม่รอด
+- ✅ ลบ `/api` directory ที่เป็น Vercel functions ทับซ้อนกับ Express routes
+
+#### **💳 Omise Account Switch (Test Mode บัญชีใหม่):**
+- ✅ อัปเดต keys ใหม่: `pkey_test_67m0vyt...` / `skey_test_67m0vyt...`
+- ✅ อัปเดตครบ 4 ที่: local server `.env`, local customer `.env`, Vercel server, Vercel customer
+- ✅ แก้ hardcoded fallback key เก่าใน `packages/supabase/src/payment/omiseService.ts`
+- ✅ Redeploy customer app + ตรวจ JS bundle ยืนยัน key ใหม่ฝังแล้ว
+
+#### **🚀 Deploy Status:**
+- ✅ **DEPLOYED + VERIFIED** — /health 200, CORS ผ่าน, cancellation API 200
+- Commits: `56d6a9c` (ESM fix + Omise fallback), `906b633`, `8f11073`, `d7cbb32`
+
+---
+
+## 🆕 **SESSION 2026-06-12** - Payment Gate Trigger Fix, Health Declaration, Booking Filters
+
+### **🔒 1. Database: ปิดช่อง "สร้าง job ก่อนจ่ายเงิน" สมบูรณ์**
+
+#### **🔍 พบ trigger ตัวที่สองที่หลุดรอด:**
+- การแก้วันที่ 8 มิ.ย. drop `create_job_from_booking` ถูกต้อง **แต่ใน DB จริงมี trigger ซ้ำอีกตัวชื่อ `trigger_sync_booking_to_job`** (AFTER INSERT ไม่มีเงื่อนไข) ที่ไม่อยู่ใน migration files
+- หลักฐาน: job เกิดวินาทีเดียวกับ booking ที่ payment_status = pending (4 รายการ 9-11 มิ.ย.)
+
+#### **🔧 การแก้ไข (apply ใน production DB แล้วผ่าน Management API):**
+- ✅ `DROP TRIGGER trigger_sync_booking_to_job` — เหลือเฉพาะ trigger ที่ gate ด้วย payment
+- ✅ ลบ job เสีย 19 ตัว (unassigned + pending + booking ยังไม่จ่าย รวม test data เก่า)
+- ✅ ยืนยันแล้ว: booking ค้างจ่าย + มี job = **0 รายการ**
+- 📝 Migration record: `supabase/migrations/20260612_drop_insert_job_trigger.sql`
+- ⚠️ **ค้างแก้:** reschedule route ไม่เช็ค payment_status (ส่ง LINE แจ้งงานได้แม้ยังไม่จ่าย) — รอคิว
+
+### **🩺 2. ฟีเจอร์ใหม่: แบบฟอร์มข้อมูลสุขภาพก่อนรับบริการ (ตามสเปค Sarinya)**
+
+#### **🗄️ Database (apply ใน production แล้ว — additive ไม่กระทบของเดิม):**
+- ✅ ตาราง `customer_health_declarations` + CHECK constraint (ต้องเลือกอย่างน้อย 1 ข้อ)
+- ✅ RLS 3 ระดับ: ลูกค้าเห็นของตัวเอง / หมอนวดเห็นเฉพาะงานที่รับ / admin เห็นหมด
+- ✅ ทดสอบ constraint แล้ว (เจอ + แก้บั๊ก `array_length` → `cardinality`)
+- 📝 Migration: `supabase/migrations/20260612_120000_create_customer_health_declarations.sql`
+
+#### **💻 Code (รอ commit + deploy):**
+- ✅ **NEW:** `apps/customer/src/components/HealthDeclarationModal.tsx` — checklist 7 โรค + "อื่น ๆ ระบุ" + "ไม่มีโรค" (exclusive) + ติ๊กยืนยัน — Submit ไม่ได้จนกว่าจะครบเงื่อนไข
+- ✅ `BookingWizard.tsx` — gate บังคับกรอกก่อนยืนยันจองครั้งแรก (ครอบลูกค้าใหม่+เก่าทุก flow)
+- ✅ `StaffJobDetail.tsx` (staff app) — กล่องแดงแสดงข้อควรระวังสุขภาพลูกค้าใน job detail
+- ✅ `CustomerDetailModal.tsx` (admin app) — section ข้อมูลสุขภาพ + วันที่ยืนยัน
+
+### **🔍 3. ฟีเจอร์ใหม่: ฟิลเตอร์ค้นหาหน้าประวัติการจอง (Customer App)**
+
+- ✅ `BookingHistory.tsx` — แผงกรองแสดงตลอด (ไม่ซ่อน): **สถานะ (dropdown ครบทุกสถานะ) / ตั้งแต่วันที่ / ถึงวันที่ / บริการ**
+- ✅ เพิ่มสถานะ "กำลังให้บริการ" ที่ tab เดิมไม่มี
+- ✅ **แก้บั๊ก:** tab "กำลังจะมาถึง" ไม่แสดงการจองของวันนี้ (เทียบ date string แทน Date object)
+- ✅ Empty state แยกกรณี "กรองแล้วไม่เจอ" กับ "ไม่มีการจองเลย"
+
+### **📋 Pending (รอคำสั่ง):**
+- 🔒 **รอ commit + push:** migration 2 ไฟล์ + health declaration (3 apps) + booking filters
+- ⏳ ทดสอบจองจริง + ฟอร์มสุขภาพบน localhost:3008
+- ⏳ Google Maps Embed API ยังไม่ enable (ลูกค้าต้องเปิด 2SV เข้า Google Cloud ก่อน) — แผนที่ติดตามพนักงานบน production ยังพัง
+- ⏳ แผนงานใหญ่ 8 รายการ "ทำเลย" (~48 ชม.) เส้นตาย 19 มิ.ย. — Commission Fix Rate รอเรทจากพี่เอ
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
@@ -536,4 +608,4 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
 **🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
-**🕒 Last Updated: 2026-06-03**
+**🕒 Last Updated: 2026-06-12**

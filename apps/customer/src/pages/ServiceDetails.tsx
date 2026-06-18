@@ -247,6 +247,11 @@ function ServiceDetails() {
                     )
                   })}
                 </div>
+
+                <div className="mt-4 pt-4 border-t border-stone-100 space-y-1.5">
+                  <p className="text-xs text-stone-400">• ราคานี้รวมค่าบริการ และค่าเดินทาง ยกเว้นค่าที่จอดรถ</p>
+                  <p className="text-xs text-stone-400">• ถ้าลูกค้าต้องการยาหม่อง จะคิดราคาเพิ่ม 100 บาท</p>
+                </div>
               </div>
             )}
 

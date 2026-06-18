@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { User, Bell, Globe, MapPin, CreditCard, Plus, FileText, Building2, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, Bell, Globe, MapPin, CreditCard, Plus, FileText, Building2, ChevronDown, ChevronUp, HeartPulse } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation, changeAppLanguage, getStoredLanguage } from '@bliss/i18n'
 import { useCurrentCustomer, useUpdateCustomer } from '@bliss/supabase/hooks/useCustomer'
@@ -14,6 +14,12 @@ import ThaiAddressFields from '../components/ThaiAddressFields'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { Database } from '@bliss/supabase/types/database.types'
 import { PointsWidget } from '../components/PointsWidget'
+import {
+  HealthDeclarationModal,
+  fetchHealthDeclaration,
+  HEALTH_CONDITION_LABELS,
+  type HealthDeclaration,
+} from '../components/HealthDeclarationModal'
 
 type Address = Database['public']['Tables']['addresses']['Row']
 
@@ -26,6 +32,10 @@ function Profile() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+
+  // Health declaration state
+  const [isHealthModalOpen, setIsHealthModalOpen] = useState(false)
+  const [healthDeclaration, setHealthDeclaration] = useState<HealthDeclaration | null>(null)
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -107,6 +117,8 @@ function Profile() {
       if (prefs.notifications) {
         setNotificationPrefs(prev => ({ ...prev, ...prefs.notifications }))
       }
+      // Load health declaration
+      fetchHealthDeclaration(customer.id).then(setHealthDeclaration)
     }
   }, [customer])
 
@@ -389,6 +401,40 @@ function Profile() {
                   >
                     {t('personal.save')}
                   </button>
+                </div>
+
+                {/* Health Declaration */}
+                <div className="border-t border-stone-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+                      <HeartPulse className="w-5 h-5 text-amber-700" />
+                      ข้อมูลสุขภาพก่อนรับบริการ
+                    </h3>
+                    <button
+                      onClick={() => setIsHealthModalOpen(true)}
+                      className="text-sm text-amber-700 hover:text-amber-800 font-medium"
+                    >
+                      {healthDeclaration ? 'แก้ไข' : 'กรอกข้อมูล'}
+                    </button>
+                  </div>
+                  {!healthDeclaration ? (
+                    <p className="text-sm text-stone-500">
+                      ยังไม่ได้กรอกข้อมูลสุขภาพ — จำเป็นต้องกรอกก่อนทำการจอง
+                    </p>
+                  ) : healthDeclaration.has_no_condition ? (
+                    <p className="text-sm text-green-700">ไม่มีอาการหรือโรคประจำตัว</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {healthDeclaration.conditions.map((key) => (
+                        <li key={key} className="text-sm text-stone-700">
+                          • {HEALTH_CONDITION_LABELS[key] || key}
+                          {key === 'other' && healthDeclaration.other_detail && (
+                            <span className="text-stone-500">: {healthDeclaration.other_detail}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 <div className="border-t border-stone-200 pt-6">
@@ -877,6 +923,20 @@ function Profile() {
           cancelText={t('confirm.cancel')}
           variant="danger"
         />
+
+        {/* Health Declaration edit modal */}
+        {isHealthModalOpen && customer && (
+          <HealthDeclarationModal
+            customerId={customer.id}
+            initial={healthDeclaration}
+            onCompleted={(declaration) => {
+              setHealthDeclaration(declaration)
+              setIsHealthModalOpen(false)
+              toast.success('บันทึกข้อมูลสุขภาพเรียบร้อย')
+            }}
+            onClose={() => setIsHealthModalOpen(false)}
+          />
+        )}
       </div>
     </div>
   )

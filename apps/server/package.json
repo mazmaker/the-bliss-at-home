@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
-    "dev": "tsx watch --ignore node_modules src/index.ts",
+    "dev": "tsx watch --ignore '**/node_modules/**' --ignore '**/.pnpm/**' src/index.ts",
     "build": "tsc",
     "start": "node dist/apps/server/src/index.js",
     "lint": "eslint .",
