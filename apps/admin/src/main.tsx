@@ -59,3 +59,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // Force admin deployment - enhanced payout features Fri May 29 17:48:00 +07 2026
 // cache bust: deploy d5674a7 (BookingCancellationModal /api path fix) under F-2 — 2026-06-16
 // cache bust: force admin deploy of 3478022 (/admin/staff "พร้อมรับงาน" count) — merge 84b369e's Ignored Build Step skipped admin — 2026-06-18
+// cache bust #2: parent is now a non-merge commit so Ignored Build Step's `git diff HEAD~1 HEAD -- apps/admin` sees the change — 2026-06-18
