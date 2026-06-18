@@ -22,7 +22,11 @@ interface Service {
   image_url?: string
   is_active: boolean
   sort_order: number
-  staff_commission_rate: number // Commission rate percentage (e.g., 0.25 for 0.25%)
+  staff_commission_rate: number // Commission rate as decimal (e.g., 0.30 for 30%)
+  use_fixed_rate?: boolean
+  staff_earning_60?: number
+  staff_earning_90?: number
+  staff_earning_120?: number
 }
 
 interface ServiceSelection {

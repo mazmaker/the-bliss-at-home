@@ -285,12 +285,21 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
         // Get service name and commission rate for each job
         const { data: svcDetail } = await serviceSupabase
           .from('services')
-          .select('name_th, name_en, staff_commission_rate')
+          .select('name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120')
           .eq('id', svc.service_id)
           .single()
 
-        const commissionRate = Number(svcDetail?.staff_commission_rate) || 0.3
-        const earnings = Math.round(Number(svc.price) * commissionRate)
+        let earnings: number
+        if (svcDetail?.use_fixed_rate) {
+          const duration = svc.duration || 90
+          const fixed = duration === 60 ? svcDetail.staff_earning_60
+            : duration === 120 ? svcDetail.staff_earning_120
+            : svcDetail.staff_earning_90
+          earnings = Math.round(Number(fixed) || 0)
+        } else {
+          const commissionRate = Number(svcDetail?.staff_commission_rate) || 0.3
+          earnings = Math.round(Number(svc.price) * commissionRate)
+        }
 
         return {
           booking_id: booking.id,

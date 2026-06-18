@@ -313,10 +313,10 @@ async function calculateStaffExtensionEarnings(
   booking: BookingWithExtensions,
   additionalDuration: number
 ): Promise<number> {
-  // Get service with commission rate and regular prices
+  // Get service with earnings config and regular prices
   const { data: service } = await supabase
     .from('services')
-    .select('staff_commission_rate, price_60, price_90, price_120, base_price, duration')
+    .select('staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, price_60, price_90, price_120, base_price, duration')
     .eq('id', booking.booking_services[0].service_id)
     .single();
 
@@ -327,31 +327,35 @@ async function calculateStaffExtensionEarnings(
     );
   }
 
-  // Get regular customer price (same logic as customer bookings)
-  let regularPrice: number;
+  let staffEarnings: number;
 
-  if (additionalDuration === 60 && service.price_60) {
-    regularPrice = service.price_60;
-  } else if (additionalDuration === 90 && service.price_90) {
-    regularPrice = service.price_90;
-  } else if (additionalDuration === 120 && service.price_120) {
-    regularPrice = service.price_120;
+  if (service.use_fixed_rate) {
+    // Fixed rate: use the fixed amount for this duration
+    const fixed = additionalDuration === 60 ? service.staff_earning_60
+      : additionalDuration === 120 ? service.staff_earning_120
+      : service.staff_earning_90;
+    staffEarnings = Math.round(Number(fixed) || 0);
   } else {
-    // Fallback: calculate proportional price from base
-    const baseRate = service.base_price / service.duration;
-    regularPrice = Math.round(baseRate * additionalDuration);
+    // Commission %: calculate from regular customer price
+    let regularPrice: number;
+    if (additionalDuration === 60 && service.price_60) {
+      regularPrice = service.price_60;
+    } else if (additionalDuration === 90 && service.price_90) {
+      regularPrice = service.price_90;
+    } else if (additionalDuration === 120 && service.price_120) {
+      regularPrice = service.price_120;
+    } else {
+      const baseRate = service.base_price / service.duration;
+      regularPrice = Math.round(baseRate * additionalDuration);
+    }
+    const commissionRate = Number(service.staff_commission_rate) || 0.30;
+    const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
+    staffEarnings = Math.round(regularPrice * (normalizedRate / 100));
   }
 
-  // Calculate staff earnings from regular customer price (not hotel discounted price)
-  const commissionRate = Number(service.staff_commission_rate) || 0.30;
-  const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
-  const staffEarnings = Math.round(regularPrice * (normalizedRate / 100));
-
-  console.log('💰 Hotel Extension Staff Earnings (Regular Price-based):', {
+  console.log('💰 Hotel Extension Staff Earnings:', {
     additionalDuration,
-    regularPrice,
-    hotelPaysLess: 'but staff gets commission from regular price',
-    commissionRate: normalizedRate,
+    use_fixed_rate: service.use_fixed_rate,
     staffEarnings
   });
 
@@ -385,15 +389,25 @@ async function updateJobStaffEarnings(
   // Get all extension services with actual prices paid
   const { data: allExtensions } = await supabase
     .from('booking_services')
-    .select('price, service_id, services!inner(staff_commission_rate)')
+    .select('price, duration, service_id, services!inner(staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
     .eq('booking_id', bookingId)
     .eq('is_extension', true);
 
-  // Calculate total extension earnings using actual prices paid (same as final_price logic)
+  // Calculate total extension earnings
   const totalExtensionEarnings = (allExtensions || []).reduce((sum, ext) => {
-    const commissionRate = ext.services?.staff_commission_rate || 30;
-    const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
-    const earnings = Math.round((ext.price || 0) * (normalizedRate / 100));
+    const svc = ext.services as any;
+    let earnings: number;
+    if (svc?.use_fixed_rate) {
+      const dur = ext.duration || 90;
+      const fixed = dur === 60 ? svc.staff_earning_60
+        : dur === 120 ? svc.staff_earning_120
+        : svc.staff_earning_90;
+      earnings = Math.round(Number(fixed) || 0);
+    } else {
+      const commissionRate = svc?.staff_commission_rate || 0.30;
+      const normalizedRate = commissionRate < 1 ? commissionRate * 100 : commissionRate;
+      earnings = Math.round((ext.price || 0) * (normalizedRate / 100));
+    }
     return sum + earnings;
   }, 0);
 

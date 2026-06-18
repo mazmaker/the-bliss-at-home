@@ -113,16 +113,26 @@ export default function BookingConfirmation({
       if (!bookingData.bookingTime) throw new Error('Booking time missing')
       if (!bookingData.basePricing) throw new Error('Pricing information missing')
 
-      // Calculate staff earnings from service commission rate
+      // Calculate staff earnings
       const finalPrice = bookingData.basePricing?.final_price || 0
-      const commissionRate = bookingData.service?.staff_commission_rate || 0
-      const staffEarnings = Math.round(finalPrice * commissionRate)
+      const svc = bookingData.service as any
+      let staffEarnings: number
+      if (svc?.use_fixed_rate) {
+        const dur = svc.duration || 90
+        const fixed = dur === 60 ? svc.staff_earning_60
+          : dur === 120 ? svc.staff_earning_120
+          : svc.staff_earning_90
+        staffEarnings = Math.round(Number(fixed) || 0)
+      } else {
+        const commissionRate = Number(svc?.staff_commission_rate) || 0
+        staffEarnings = Math.round(finalPrice * commissionRate)
+      }
 
       // Create booking directly in database
       console.log('💾 Creating booking in database...')
       console.log('💰 Staff earnings calculation:', {
         finalPrice,
-        commissionRate: `${commissionRate * 100}%`,
+        useFixedRate: svc?.use_fixed_rate,
         staffEarnings
       })
 

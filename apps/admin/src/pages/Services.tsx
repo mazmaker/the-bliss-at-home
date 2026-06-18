@@ -38,6 +38,10 @@ interface Service {
   price_120?: number
   hotel_price: number
   staff_commission_rate: number
+  use_fixed_rate?: boolean
+  staff_earning_60?: number
+  staff_earning_90?: number
+  staff_earning_120?: number
   image_url?: string
   slug?: string
   is_active: boolean
@@ -461,10 +465,25 @@ function Services() {
                   <span>เริ่มต้น:</span>
                   <span className="font-medium">{getMinimumPriceInfo(service).duration} นาที</span>
                 </div>
-                <div className="flex justify-between text-xs text-blue-600">
-                  <span>คอมมิชชั่น Staff:</span>
-                  <span className="font-medium">{((service.staff_commission_rate ?? 0) * 100).toFixed(0)}%</span>
-                </div>
+                {service.use_fixed_rate ? (
+                  <div className="text-xs text-blue-600">
+                    <div className="flex justify-between">
+                      <span>รายได้ Staff (Fixed):</span>
+                      <span className="font-medium text-right">
+                        {[
+                          service.staff_earning_60 ? `60น: ฿${service.staff_earning_60}` : null,
+                          service.staff_earning_90 ? `90น: ฿${service.staff_earning_90}` : null,
+                          service.staff_earning_120 ? `120น: ฿${service.staff_earning_120}` : null,
+                        ].filter(Boolean).join(' / ')}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-xs text-blue-600">
+                    <span>คอมมิชชั่น Staff:</span>
+                    <span className="font-medium">{((service.staff_commission_rate ?? 0) * 100).toFixed(0)}%</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs text-stone-600">
                   <span>ระยะเวลาที่มี:</span>
                   <span className="font-medium">{formatDurationOptions(service)}</span>
