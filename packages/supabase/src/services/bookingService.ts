@@ -35,17 +35,19 @@ interface BookingDetails extends Booking {
     updated_at: string;
     booking_id: string;
     staff?: {
+      // jobs.staff_id → profiles (NOT staff): this object IS the provider's profiles row.
       id: string;
-      status: string;
-      rating: number;
-      total_reviews: number;
-      profiles: {
+      full_name: string | null;
+      phone: string | null;
+      avatar_url: string | null;
+      metadata: any;
+      // staff-table record (rating/reviews) via profiles ← staff.profile_id reverse-embed.
+      staff_record: {
         id: string;
-        full_name: string | null;
-        phone: string | null;
-        avatar_url: string | null;
-        metadata: any;
-      };
+        status: string;
+        rating: number;
+        total_reviews: number;
+      } | null;
     };
   }>;
   addons?: Array<{
@@ -236,17 +238,17 @@ export async function getBookingByNumber(
       created_at,
       updated_at,
       booking_id,
-      staff(
+      staff:profiles!jobs_staff_id_fkey(
         id,
-        status,
-        rating,
-        total_reviews,
-        profile:profiles(
+        full_name,
+        phone,
+        avatar_url,
+        metadata,
+        staff_record:staff!staff_profile_id_fkey(
           id,
-          full_name,
-          phone,
-          avatar_url,
-          metadata
+          status,
+          rating,
+          total_reviews
         )
       )
     `)

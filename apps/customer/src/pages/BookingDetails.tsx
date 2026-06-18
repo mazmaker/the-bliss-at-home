@@ -74,13 +74,16 @@ function BookingDetails() {
       provider: (() => {
         // Check for assigned staff in jobs first
         const assignedJob = bookingData.jobs?.find(job => job.staff_id && job.staff);
-        if (assignedJob?.staff?.profile) {
+        if (assignedJob?.staff) {
+          // jobs.staff_id → profiles, so assignedJob.staff IS the provider's profile;
+          // rating/reviews live in the nested staff_record (profiles ← staff.profile_id).
+          const prov = assignedJob.staff as any;
           return {
-            name: assignedJob.staff.profile.full_name || 'ไม่ระบุชื่อ',
-            rating: assignedJob.staff.rating || 4.8,
-            reviews: assignedJob.staff.total_reviews || 0,
-            avatar: assignedJob.staff.profile.avatar_url,
-            phone: assignedJob.staff.profile.phone,
+            name: prov.full_name || 'ไม่ระบุชื่อ',
+            rating: prov.staff_record?.rating || 4.8,
+            reviews: prov.staff_record?.total_reviews || 0,
+            avatar: prov.avatar_url,
+            phone: prov.phone,
             jobStatus: assignedJob.status,
             jobId: assignedJob.id,
           };

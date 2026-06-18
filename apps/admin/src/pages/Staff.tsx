@@ -190,6 +190,9 @@ function StaffPage() {
                 {statsData?.active || 0}
               </p>
               <p className="text-xs text-stone-500">พนักงานทำงาน</p>
+              <p className="text-xs text-stone-400 mt-0.5">
+                พร้อมรับงาน: {statsData?.available ?? 0} คน
+              </p>
             </div>
           </div>
         </div>

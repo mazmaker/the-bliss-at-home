@@ -474,6 +474,7 @@ export const staffService = {
       const stats = {
         total: data.length,
         active: data.filter(s => s.status === 'active').length,
+        available: data.filter(s => s.status === 'active' && s.is_available === true).length,
         pending: data.filter(s => s.status === 'pending').length,
         inactive: data.filter(s => s.status === 'inactive').length,
         suspended: data.filter(s => s.status === 'suspended').length,
@@ -487,13 +488,16 @@ export const staffService = {
 
     const { data, error } = await supabase
       .from('staff')
-      .select('status, rating')
+      .select('status, rating, is_available')
 
     if (error) throw error
 
     const stats = {
       total: data.length,
       active: data.filter(s => s.status === 'active').length,
+      // Available = employed (status active) AND currently accepting new jobs (is_available).
+      // Mirrors the admin Dashboard availableStaff + the dispatch gate exactly.
+      available: data.filter(s => s.status === 'active' && s.is_available === true).length,
       pending: data.filter(s => s.status === 'pending').length,
       inactive: data.filter(s => s.status === 'inactive').length,
       suspended: data.filter(s => s.status === 'suspended').length,

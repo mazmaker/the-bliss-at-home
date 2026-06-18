@@ -268,10 +268,10 @@ describe('staffService', () => {
   describe('getStaffStats (non-mock mode)', () => {
     it('should calculate stats from staff data', async () => {
       const mockData = [
-        { status: 'active', rating: 4.5 },
-        { status: 'active', rating: 4.0 },
-        { status: 'pending', rating: 0 },
-        { status: 'inactive', rating: 3.5 },
+        { status: 'active', rating: 4.5, is_available: true },
+        { status: 'active', rating: 4.0, is_available: false },
+        { status: 'pending', rating: 0, is_available: true },
+        { status: 'inactive', rating: 3.5, is_available: true },
       ]
 
       mockSelect.mockResolvedValueOnce({ data: mockData, error: null })
@@ -280,6 +280,7 @@ describe('staffService', () => {
 
       expect(stats.total).toBe(4)
       expect(stats.active).toBe(2)
+      expect(stats.available).toBe(1) // only active + is_available (pending/inactive excluded)
       expect(stats.pending).toBe(1)
       expect(stats.inactive).toBe(1)
       expect(stats.suspended).toBe(0)
