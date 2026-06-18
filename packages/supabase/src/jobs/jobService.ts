@@ -516,7 +516,7 @@ export async function reportSOS(
   jobId: string | null,
   location: { latitude: number; longitude: number } | null,
   message?: string
-): Promise<void> {
+): Promise<string | null> {
   // sos_alerts.staff_id FK references staff(id), not profiles(id)
   const { data: staffRecord } = await supabase
     .from('staff')
@@ -524,18 +524,25 @@ export async function reportSOS(
     .eq('profile_id', profileId)
     .single()
 
-  const { error } = await supabase.from('sos_alerts').insert({
-    staff_id: staffRecord?.id || null,
-    booking_id: jobId,
-    latitude: location?.latitude || null,
-    longitude: location?.longitude || null,
-    message: message || 'SOS Emergency from Staff',
-    status: 'pending',
-    priority: 'high',
-  })
+  // .select('id').single() so the caller can POST /api/sos/notify with the new id
+  const { data, error } = await supabase
+    .from('sos_alerts')
+    .insert({
+      staff_id: staffRecord?.id || null,
+      booking_id: jobId,
+      latitude: location?.latitude || null,
+      longitude: location?.longitude || null,
+      message: message || 'SOS Emergency from Staff',
+      status: 'pending',
+      priority: 'high',
+    })
+    .select('id')
+    .single()
 
   if (error) {
     console.error('Error reporting SOS:', error)
     throw error
   }
+
+  return data?.id ?? null
 }

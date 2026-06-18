@@ -1,4 +1,5 @@
 // Load environment variables FIRST before any other imports (only for local development)
+// [touch] R1 payment-channel allowlist (enabled_payment_channels) + extend gate wired 2026-06-17
 import dotenv from 'dotenv'
 import { join } from 'path'
 
@@ -25,6 +26,8 @@ import bookingsRoutes from './routes/bookings'
 import cancellationPolicyRoutes from './routes/cancellationPolicy'
 import receiptsRoutes from './routes/receipts'
 import invoicesRoutes from './routes/invoices'
+import adminRoutes from './routes/admin'
+import sosRoutes from './routes/sos'
 // import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles' // Temporarily disabled
 import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService'
 import { reminderService } from './services/reminderService'
@@ -79,8 +82,8 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions))
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '8mb' })) // [R2] allow base64 avatar uploads (admin set staff photo)
+app.use(express.urlencoded({ extended: true, limit: '8mb' }))
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -146,6 +149,10 @@ app.use('/api/receipts', receiptsRoutes)
 
 // Invoice email routes
 app.use('/api/invoices', invoicesRoutes)
+app.use('/api/admin', adminRoutes)
+
+// SOS alert email route (R3)
+app.use('/api/sos', sosRoutes)
 
 // Test automated payout endpoint
 app.post('/api/cron/daily-payout', async (req: Request, res: Response) => {

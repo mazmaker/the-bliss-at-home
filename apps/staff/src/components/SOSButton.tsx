@@ -18,9 +18,20 @@ export function SOSButton({ currentJobId }: SOSButtonProps) {
 
   const handleSOS = useCallback(async () => {
     try {
-      await sendSOS(currentJobId || null, 'SOS Emergency from Staff')
+      const alertId = await sendSOS(currentJobId || null, 'SOS Emergency from Staff')
       setShowConfirm(false)
       setShowSuccess(true)
+      // Best-effort: ask the server to email the admin-configured SOS recipient (R3).
+      // Fire-and-forget — must NOT block the success UI; the insert + in-app admin
+      // fan-out already happened. Unset sos_notification_email = server skips email.
+      if (alertId) {
+        const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+        fetch(`${serverUrl}/api/sos/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sos_alert_id: alertId }),
+        }).catch(() => {})
+      }
       // Auto-hide success after 3 seconds
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err) {

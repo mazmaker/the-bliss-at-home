@@ -7,6 +7,7 @@ import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
 import { paymentAuthGuard } from '../middleware/auth.js'
+import { getEnabledPaymentChannels } from '../lib/paymentChannels.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
 import { sendCreditNoteEmailForRefund } from './receipts.js'
@@ -1482,21 +1483,58 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
         // Import Omise service
         const { omiseService } = await import('../services/omiseService.js')
 
-        // Create Omise charge for extension payment
-        const charge = await omiseService.createCharge({
-          amount: Math.round(finalExtensionPrice * 100), // Convert to satangs
-          currency: 'THB',
-          description: `Extension ${body.additional_duration}min - Booking ${booking.booking_number}`,
-          metadata: {
-            booking_id: bookingId,
-            customer_id: booking.customer_id,
-            is_extension: true,
-            extension_duration: body.additional_duration,
-            original_price: finalExtensionPrice
-          },
-          capture: true, // Auto-capture for extensions
-          returnUri: `${process.env.CLIENT_URL || 'http://localhost:3008'}/payment-confirmation?booking_id=${bookingId}&transaction_type=extension`
-        })
+        // [R1] Honour the admin payment-channel allowlist for the per-extension charge too —
+        // a customer must not be able to pay for an extension through a disabled channel.
+        const enabledChannels = await getEnabledPaymentChannels()
+        const amountSatang = Math.round(finalExtensionPrice * 100) // Convert to satangs
+        const extDescription = `Extension ${body.additional_duration}min - Booking ${booking.booking_number}`
+        const extMetadata = {
+          booking_id: bookingId,
+          customer_id: booking.customer_id,
+          is_extension: true,
+          extension_duration: body.additional_duration,
+          original_price: finalExtensionPrice
+        }
+        const extReturnUri = `${process.env.CLIENT_URL || 'http://localhost:3008'}/payment-confirmation?booking_id=${bookingId}&transaction_type=extension`
+
+        let charge: any
+        let extensionPaymentMethod: string
+        let paymentUrl: string
+
+        if (enabledChannels.includes('credit_card')) {
+          // Card path (kept; gated). Auto-capture as before.
+          extensionPaymentMethod = (body as any).paymentMethod || 'credit_card'
+          charge = await omiseService.createCharge({
+            amount: amountSatang,
+            currency: 'THB',
+            description: extDescription,
+            metadata: extMetadata,
+            capture: true,
+            returnUri: extReturnUri
+          })
+          paymentUrl = `https://dashboard.omise.co/charges/${charge.id}`
+        } else if (enabledChannels.includes('promptpay')) {
+          // PromptPay path: create a source charge and return its QR for the customer to scan.
+          extensionPaymentMethod = 'promptpay'
+          const source = await omiseService.createSource('promptpay', amountSatang, 'THB')
+          charge = await omiseService.createChargeWithSource({
+            amount: amountSatang,
+            currency: 'THB',
+            source: source.id,
+            description: extDescription,
+            metadata: extMetadata,
+            returnUri: extReturnUri
+          })
+          const updatedSource = await omiseService.getSource(source.id)
+          paymentUrl = updatedSource.scannable_code?.image?.download_uri || extReturnUri
+        } else {
+          // No instant-pay channel enabled → fail loudly rather than silently use card.
+          return res.status(400).json({
+            success: false,
+            error: 'payment_channel_disabled',
+            message: 'ขณะนี้ไม่มีช่องทางการชำระเงินสำหรับการต่อเวลา กรุณาติดต่อแอดมิน'
+          })
+        }
 
         // Create transaction record for extension payment
         const { data: transaction, error: transactionError } = await supabase
@@ -1506,7 +1544,7 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
             customer_id: booking.customer_id,
             amount: finalExtensionPrice,
             currency: 'THB',
-            payment_method: (body as any).paymentMethod || 'credit_card',
+            payment_method: extensionPaymentMethod,
             description: `Extension payment for ${body.additional_duration} minutes - Booking ${booking.booking_number}`,
             status: charge.paid ? 'successful' : 'pending',
             omise_charge_id: charge.id,
@@ -1526,7 +1564,7 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
 
         paymentInfo = {
           requires_payment: true,
-          payment_url: `https://dashboard.omise.co/charges/${charge.id}`,
+          payment_url: paymentUrl,
           payment_reference: charge.id,
           transaction_id: transaction.id,
           charge_status: charge.status

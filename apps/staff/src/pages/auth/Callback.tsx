@@ -241,7 +241,9 @@ export function StaffAuthCallback() {
                 id: session.user.id,
                 email: session.user.email!,
                 full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email,
-                avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+                // [R2] keep LINE pic in line_picture_url; only seed avatar_url when empty (don't clobber an upload)
+                line_picture_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+                ...(profile?.avatar_url ? {} : { avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture }),
                 role: expectedRole,
                 status: 'ACTIVE',
                 language: 'th',
@@ -269,7 +271,7 @@ export function StaffAuthCallback() {
                   name_th: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Staff',
                   name_en: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Staff',
                   phone: session.user.phone || '0000000000',
-                  avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+                  // [R2] deprecate staff.avatar_url — source of truth is profiles.avatar_url
                   status: 'pending', // Requires admin approval
                 })
 

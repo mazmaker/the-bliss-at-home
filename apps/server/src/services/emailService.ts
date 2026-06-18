@@ -1160,6 +1160,111 @@ export function creditDueReminderEmailTemplate(data: {
   `)
 }
 
+/**
+ * SOS / emergency alert email template (R3)
+ */
+export function sosAlertEmailTemplate(data: {
+  alertId: string
+  sourceLabel: string
+  sourceName: string
+  sourcePhone?: string
+  message?: string
+  priority?: string
+  status?: string
+  latitude?: number | null
+  longitude?: number | null
+  mapLink?: string | null
+  locationAccuracy?: number | null
+  createdAt?: string
+}): string {
+  const {
+    alertId,
+    sourceLabel,
+    sourceName,
+    sourcePhone,
+    message,
+    priority = 'high',
+    status = 'pending',
+    latitude,
+    longitude,
+    mapLink,
+    locationAccuracy,
+    createdAt,
+  } = data
+
+  const hasLocation = latitude != null && longitude != null
+
+  return baseTemplate(`
+    <div class="card">
+      <div class="header" style="background:#dc2626;">
+        <h1>🚨 SOS Emergency Alert</h1>
+        <p>แจ้งเหตุฉุกเฉิน — ต้องดำเนินการทันที</p>
+      </div>
+
+      <div class="content">
+        <p style="font-size:16px;font-weight:bold;color:#dc2626;">
+          มีการแจ้งเหตุฉุกเฉิน (SOS) เข้ามาในระบบ กรุณาตรวจสอบและติดต่อกลับโดยด่วน
+        </p>
+
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">รายละเอียดการแจ้งเหตุ</h3>
+          <div class="info-row">
+            <span class="info-label">ผู้แจ้ง</span>
+            <span class="info-value">${sourceLabel}: ${sourceName}</span>
+          </div>
+          ${sourcePhone ? `
+          <div class="info-row">
+            <span class="info-label">เบอร์ติดต่อ</span>
+            <span class="info-value">${sourcePhone}</span>
+          </div>` : ''}
+          <div class="info-row">
+            <span class="info-label">ข้อความ</span>
+            <span class="info-value">${message || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">ระดับความเร่งด่วน</span>
+            <span class="info-value">${priority}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">สถานะ</span>
+            <span class="info-value">${status}</span>
+          </div>
+          ${createdAt ? `
+          <div class="info-row">
+            <span class="info-label">เวลาที่แจ้ง</span>
+            <span class="info-value">${createdAt}</span>
+          </div>` : ''}
+        </div>
+
+        ${hasLocation ? `
+        <div class="info-box">
+          <h3 style="margin: 0 0 12px;">ตำแหน่ง (GPS)</h3>
+          <div class="info-row">
+            <span class="info-label">พิกัด</span>
+            <span class="info-value">${latitude}, ${longitude}${locationAccuracy != null ? ` (±${Math.round(locationAccuracy)} ม.)` : ''}</span>
+          </div>
+          ${mapLink ? `<p style="margin-top:12px;"><a href="${mapLink}" style="color:#dc2626;font-weight:bold;">เปิดแผนที่ Google Maps →</a></p>` : ''}
+        </div>` : `
+        <div class="info-box">
+          <p style="margin:0;color:#666;">ไม่มีข้อมูลพิกัด GPS (ผู้แจ้งอาจปิดการเข้าถึงตำแหน่ง)</p>
+        </div>`}
+
+        <p style="margin-top:24px;font-size:12px;color:#999;">Alert ID: ${alertId}</p>
+      </div>
+
+      <div class="footer">
+        <p>
+          The Bliss at Home - ระบบแจ้งเตือนเหตุฉุกเฉิน<br>
+          <a href="https://theblissathome.com">www.theblissathome.com</a>
+        </p>
+        <p style="font-size: 12px; color: #999;">
+          อีเมลนี้ถูกส่งโดยอัตโนมัติจากระบบ SOS กรุณาอย่าตอบกลับ
+        </p>
+      </div>
+    </div>
+  `)
+}
+
 function isReady(): boolean {
   return !!getEmailConfig().resendApiKey
 }
@@ -1178,5 +1283,6 @@ export const emailService = {
     creditNote: creditNoteEmailTemplate,
     invoice: invoiceEmailTemplate,
     creditDueReminder: creditDueReminderEmailTemplate,
+    sosAlert: sosAlertEmailTemplate,
   },
 }

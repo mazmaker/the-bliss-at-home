@@ -118,7 +118,7 @@ function Dashboard() {
       name: 'พนักงานทั้งหมด',
       nameEn: 'Total Staff',
       value: data?.totalStaff ?? '-',
-      subtitle: `ใช้งาน: ${data?.activeStaff ?? '-'} คน`,
+      subtitle: `ใช้งาน: ${data?.activeStaff ?? '-'} • พร้อมรับงาน: ${data?.availableStaff ?? '-'} คน`,
       icon: Users,
       color: 'from-purple-500 to-purple-600',
     },

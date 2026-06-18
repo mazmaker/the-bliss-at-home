@@ -44,6 +44,15 @@ function Profile() {
   const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
   const { data: addresses = [], isLoading: addressesLoading } = useAddresses(customer?.id)
   const { data: paymentMethods = [], isLoading: paymentLoading } = usePaymentMethods(customer?.id)
+  // [R1] Hide card-management UI unless 'credit_card' is an enabled channel (default: hidden).
+  const [cardChannelEnabled, setCardChannelEnabled] = useState(false)
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+    fetch(`${apiBase}/api/payments/enabled-channels`)
+      .then(r => r.json())
+      .then(d => { if (d?.success && Array.isArray(d.channels)) setCardChannelEnabled(d.channels.includes('credit_card')) })
+      .catch(() => {})
+  }, [])
   const { data: taxInformation, isLoading: taxLoading } = useTaxInformation(customer?.id)
 
   // Mutations
@@ -608,6 +617,7 @@ function Profile() {
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-stone-900">{t('payment.title')}</h3>
+                  {cardChannelEnabled && (
                   <button
                     onClick={handleAddPaymentMethod}
                     className="bg-amber-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-amber-800 transition flex items-center gap-2"
@@ -615,7 +625,13 @@ function Profile() {
                     <Plus className="w-4 h-4" />
                     {t('payment.addNew')}
                   </button>
+                  )}
                 </div>
+                {!cardChannelEnabled && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-stone-600">
+                    ขณะนี้รองรับการชำระเงินผ่าน PromptPay (QR) เท่านั้น — การชำระด้วยบัตรถูกปิดใช้งานชั่วคราว
+                  </div>
+                )}
 
                 {paymentLoading ? (
                   <div className="text-center py-8">
@@ -672,6 +688,7 @@ function Profile() {
                   <div className="text-center py-12 bg-stone-50 rounded-xl">
                     <CreditCard className="w-12 h-12 text-stone-400 mx-auto" />
                     <p className="text-stone-500 mt-4">{t('payment.noMethods')}</p>
+                    {cardChannelEnabled && (
                     <button
                       onClick={handleAddPaymentMethod}
                       className="mt-4 bg-amber-700 text-white px-6 py-2 rounded-xl font-medium hover:bg-amber-800 transition flex items-center gap-2 mx-auto"
@@ -679,6 +696,7 @@ function Profile() {
                       <Plus className="w-4 h-4" />
                       {t('payment.addFirst')}
                     </button>
+                    )}
                   </div>
                 )}
               </div>

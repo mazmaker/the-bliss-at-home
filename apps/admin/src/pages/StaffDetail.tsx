@@ -98,12 +98,29 @@ function StaffDetail() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false) // [R2] admin set staff photo
 
   const {
     data: staff,
     isLoading,
     error,
   } = useStaffDetail(id!)
+
+  // [R2] Admin changes a staff member's photo → writes profiles.avatar_url (single source).
+  const handlePhotoChange = async (e: any) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      await staffService.updateStaffAvatar(id!, file)
+      await queryClient.invalidateQueries()
+    } catch (err: any) {
+      alert('ไม่สามารถอัปโหลดรูปได้: ' + (err?.message || 'unknown'))
+    } finally {
+      setUploadingPhoto(false)
+      e.target.value = ''
+    }
+  }
 
   if (isLoading) {
     return (
@@ -181,8 +198,18 @@ function StaffDetail() {
         <div className="px-6 pb-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 -mt-16">
             <div className="flex items-end gap-4">
-              <div className="w-32 h-32 bg-white rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-amber-700">
-                {staff.name_th.charAt(0)}
+              <div className="relative w-32 h-32">
+                {staff.avatar_url ? (
+                  <img src={staff.avatar_url} alt={staff.name_th} className="w-32 h-32 object-cover bg-white rounded-2xl border-4 border-white shadow-lg" />
+                ) : (
+                  <div className="w-32 h-32 bg-white rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-amber-700">
+                    {staff.name_th.charAt(0)}
+                  </div>
+                )}
+                <label className="absolute bottom-1 right-1 bg-amber-600 hover:bg-amber-700 text-white text-xs px-2 py-1 rounded-lg cursor-pointer shadow transition">
+                  {uploadingPhoto ? '...' : 'เปลี่ยนรูป'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={uploadingPhoto} />
+                </label>
               </div>
               <div className="pb-2 pt-16">
                 <h2 className="text-2xl font-bold text-stone-900">{staff.name_th}</h2>

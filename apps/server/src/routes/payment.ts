@@ -9,8 +9,25 @@ import { omiseService } from '../services/omiseService.js'
 import { processBookingConfirmed } from '../services/notificationService.js'
 import { sendReceiptEmailForTransaction, sendCreditNoteEmailForRefund } from './receipts.js'
 import { paymentAuthGuard } from '../middleware/auth.js'
+import { getEnabledPaymentChannels, sourceTypeToChannel, DEFAULT_ENABLED_CHANNELS, type PaymentChannel } from '../lib/paymentChannels.js'
 
 const router = Router()
+
+/**
+ * GET /api/payments/enabled-channels
+ * Returns the admin-controlled allowlist of enabled payment channels (R1).
+ * Read by the customer booking wizard / pay-later page to render only enabled channels.
+ */
+router.get('/enabled-channels', async (_req: Request, res: Response) => {
+  try {
+    const channels = await getEnabledPaymentChannels()
+    return res.json({ success: true, channels })
+  } catch (error: any) {
+    console.error('Get enabled channels error:', error)
+    // Fail safe → still return a usable channel so the wizard can render.
+    return res.json({ success: true, channels: DEFAULT_ENABLED_CHANNELS })
+  }
+})
 
 /**
  * POST /api/payments/create-charge
@@ -25,6 +42,16 @@ router.post('/create-charge', paymentAuthGuard, async (req: Request, res: Respon
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: booking_id, customer_id, amount, and either token or omise_card_id',
+      })
+    }
+
+    // [R1] Channel allowlist: card charges only when 'credit_card' is enabled.
+    const enabledChannels = await getEnabledPaymentChannels()
+    if (!enabledChannels.includes('credit_card')) {
+      return res.status(410).json({
+        success: false,
+        error: 'Card payments are not currently enabled',
+        code: 'CHANNEL_DISABLED',
       })
     }
 
@@ -766,6 +793,18 @@ router.post('/create-source', paymentAuthGuard, async (req: Request, res: Respon
       })
     }
 
+    // [R1] Channel allowlist: reject a source_type whose channel is not enabled.
+    const channel = sourceTypeToChannel(source_type)
+    const enabledChannels = await getEnabledPaymentChannels()
+    if (!enabledChannels.includes(channel as PaymentChannel)) {
+      console.warn(`🚫 Rejected create-source: channel '${channel}' (source_type '${source_type}') not in`, enabledChannels)
+      return res.status(400).json({
+        success: false,
+        error: `Payment channel '${channel}' is not currently enabled`,
+        code: 'CHANNEL_DISABLED',
+      })
+    }
+
     console.log('✅ Fields validated, fetching booking...')
     // Get booking details
     const { data: booking, error: bookingError } = await getSupabaseClient()
@@ -991,6 +1030,16 @@ router.post('/add-payment-method', async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: customer_id, card_token',
+      })
+    }
+
+    // [R1] Channel allowlist: only allow saving a card when 'credit_card' is enabled.
+    const enabledChannels = await getEnabledPaymentChannels()
+    if (!enabledChannels.includes('credit_card')) {
+      return res.status(410).json({
+        success: false,
+        error: 'Card payments are not currently enabled',
+        code: 'CHANNEL_DISABLED',
       })
     }
 

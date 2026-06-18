@@ -11,6 +11,7 @@ export interface DashboardOverview {
   monthRevenue: number
   totalStaff: number
   activeStaff: number
+  availableStaff: number
   totalHotels: number
   totalServices: number
   activeServices: number
@@ -93,7 +94,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     // Staff counts
     supabase
       .from('staff')
-      .select('status'),
+      .select('status, is_available'),
 
     // Hotels count
     supabase
@@ -132,6 +133,9 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   const monthRevenue = monthBookings.reduce((sum, b) => sum + (Number(b.final_price) || 0), 0)
   const totalStaff = staffData.length
   const activeStaff = staffData.filter(s => s.status === 'active').length
+  // Available = employed (status active) AND currently accepting new jobs (is_available).
+  // Mirrors the dispatch gate exactly (.eq('is_available',true).eq('status','active')).
+  const availableStaff = staffData.filter(s => s.status === 'active' && s.is_available === true).length
   const totalServices = servicesData.length
   const activeServices = servicesData.filter(s => s.is_active).length
 
@@ -142,6 +146,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     monthRevenue,
     totalStaff,
     activeStaff,
+    availableStaff,
     totalHotels: hotelsResult.count || 0,
     totalServices,
     activeServices,

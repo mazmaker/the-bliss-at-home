@@ -39,15 +39,12 @@ interface SettingsState {
   company_email: string
   company_address: string
   company_phone: string
+  sos_notification_email: string
 
-  // Payment Settings
-  omise_public_key: string
-  omise_secret_key: string
-  google_maps_api_key: string
+  // Payment Settings — Google Calendar only (credit reminders; consumed by server googleCalendarService).
+  // Omise / Google Maps / Email Provider keys removed: all consumers read from env, not these settings (R5).
   google_calendar_id: string
   google_service_account_key: string
-  email_provider_api_key: string
-  email_provider_domain: string
 
   // Report Settings
   report_monthly_target: string
@@ -70,13 +67,9 @@ function Settings() {
     company_email: '',
     company_address: '',
     company_phone: '',
-    omise_public_key: '',
-    omise_secret_key: '',
-    google_maps_api_key: '',
+    sos_notification_email: '',
     google_calendar_id: '',
     google_service_account_key: '',
-    email_provider_api_key: '',
-    email_provider_domain: '',
     report_monthly_target: '500000',
     report_cost_percentage: '30',
     fee_credit_card: '3.65',
@@ -129,6 +122,11 @@ function Settings() {
   const [payoutLoading, setPayoutLoading] = useState(false)
   const [payoutSaving, setPayoutSaving] = useState(false)
 
+  // Payment channels (R1) — admin-controlled allowlist (settings key enabled_payment_channels)
+  const [enabledChannels, setEnabledChannels] = useState<string[]>(['promptpay'])
+  const [channelsLoading, setChannelsLoading] = useState(false)
+  const [channelsSaving, setChannelsSaving] = useState(false)
+
   const tabs = [
     { id: 'general', name: 'ทั่วไป', nameEn: 'General Settings', icon: Globe },
     { id: 'payment', name: 'การชำระเงิน', nameEn: 'Payment Settings', icon: CreditCard },
@@ -146,7 +144,60 @@ function Settings() {
     loadRefundPolicy()
     loadLoyaltySettings()
     loadPayoutSettings()
+    loadEnabledChannels()
   }, [])
+
+  // ─── Payment channels (R1) ───
+  const CHANNEL_OPTIONS: { key: string; label: string }[] = [
+    { key: 'promptpay', label: 'PromptPay (QR)' },
+    { key: 'credit_card', label: 'บัตรเครดิต/เดบิต' },
+    { key: 'internet_banking', label: 'Internet Banking' },
+    { key: 'mobile_banking', label: 'Mobile Banking' },
+  ]
+
+  const loadEnabledChannels = async () => {
+    setChannelsLoading(true)
+    try {
+      const { data } = await supabase.from('settings').select('value').eq('key', 'enabled_payment_channels').maybeSingle()
+      const raw: any = data?.value
+      const arr: any[] | null = Array.isArray(raw) ? raw : Array.isArray(raw?.value) ? raw.value : null
+      if (arr && arr.length > 0) setEnabledChannels(arr)
+    } catch (err) {
+      console.error('Failed to load enabled payment channels:', err)
+    } finally {
+      setChannelsLoading(false)
+    }
+  }
+
+  const toggleChannel = (key: string) => {
+    setEnabledChannels(prev => prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key])
+  }
+
+  const saveEnabledChannels = async () => {
+    if (enabledChannels.length === 0) {
+      setError('ต้องเปิดอย่างน้อย 1 ช่องทางการชำระเงิน')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+    setChannelsSaving(true)
+    try {
+      const { error } = await supabase.from('settings').upsert({
+        key: 'enabled_payment_channels',
+        value: { value: enabledChannels },
+        description: 'Enabled customer payment channels (R1 allowlist)',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'key' })
+      if (error) throw error
+      setMessage('บันทึกช่องทางการชำระเงินเรียบร้อยแล้ว')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err: any) {
+      console.error('Failed to save enabled payment channels:', err)
+      setError(`ไม่สามารถบันทึกช่องทางได้: ${err.message}`)
+      setTimeout(() => setError(''), 3000)
+    } finally {
+      setChannelsSaving(false)
+    }
+  }
 
   const loadPayoutSettings = async () => {
     setPayoutLoading(true)
@@ -509,13 +560,9 @@ function Settings() {
         company_email: settingsMap.company_email || '',
         company_address: settingsMap.company_address || '',
         company_phone: settingsMap.company_phone || '',
-        omise_public_key: settingsMap.omise_public_key || '',
-        omise_secret_key: settingsMap.omise_secret_key || '',
-        google_maps_api_key: settingsMap.google_maps_api_key || '',
+        sos_notification_email: settingsMap.sos_notification_email || '',
         google_calendar_id: settingsMap.google_calendar_id || '',
         google_service_account_key: settingsMap.google_service_account_key || '',
-        email_provider_api_key: settingsMap.email_provider_api_key || '',
-        email_provider_domain: settingsMap.email_provider_domain || '',
         report_monthly_target: settingsMap.report_monthly_target || '500000',
         report_cost_percentage: settingsMap.report_cost_percentage || '30',
         fee_credit_card: settingsMap.fee_credit_card || '3.65',
@@ -547,13 +594,9 @@ function Settings() {
         { key: 'company_email', value: { value: settings.company_email || '' }, description: 'Company email address' },
         { key: 'company_address', value: { value: settings.company_address || '' }, description: 'Company address' },
         { key: 'company_phone', value: { value: settings.company_phone || '' }, description: 'Company phone number' },
-        { key: 'omise_public_key', value: { key: settings.omise_public_key || '' }, description: 'Omise public key' },
-        { key: 'omise_secret_key', value: { key: settings.omise_secret_key || '' }, description: 'Omise secret key' },
-        { key: 'google_maps_api_key', value: { key: settings.google_maps_api_key || '' }, description: 'Google Maps API key' },
+        { key: 'sos_notification_email', value: { value: settings.sos_notification_email || '' }, description: 'Email address to receive SOS / emergency alerts (R3)' },
         { key: 'google_calendar_id', value: settings.google_calendar_id || '', description: 'Google Calendar ID for credit reminders' },
         { key: 'google_service_account_key', value: settings.google_service_account_key || '', description: 'Google Service Account key (base64)' },
-        { key: 'email_provider_api_key', value: { key: settings.email_provider_api_key || '' }, description: 'Email provider API key' },
-        { key: 'email_provider_domain', value: { domain: settings.email_provider_domain || '' }, description: 'Email provider domain' },
         { key: 'report_monthly_target', value: { value: settings.report_monthly_target || '500000' }, description: 'Monthly revenue target (THB)' },
         { key: 'report_cost_percentage', value: { value: settings.report_cost_percentage || '30' }, description: 'Estimated cost percentage (%)' },
         { key: 'fee_credit_card', value: { value: settings.fee_credit_card || '3.65', type: 'percentage' }, description: 'Credit/Debit card processing fee (%)' },
@@ -790,6 +833,18 @@ function Settings() {
                     />
                     <p className="text-xs text-stone-500 mt-1">เบอร์โทรศัพท์ติดต่อ สามารถใส่หลายหมายเลข</p>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">อีเมลรับแจ้งเตือน SOS / ฉุกเฉิน</label>
+                    <input
+                      type="email"
+                      value={settings.sos_notification_email}
+                      onChange={(e) => setSettings({ ...settings, sos_notification_email: e.target.value })}
+                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="emergency@theblissathome.com"
+                    />
+                    <p className="text-xs text-stone-500 mt-1">อีเมลที่จะรับการแจ้งเตือนเมื่อมีการกด SOS จากลูกค้า/พนักงาน (เว้นว่าง = ไม่ส่งอีเมล แต่การแจ้งเตือนในระบบยังทำงานตามปกติ)</p>
+                  </div>
                 </div>
               </div>
             )}
@@ -799,46 +854,37 @@ function Settings() {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-stone-900 mb-4">การตั้งค่าการชำระเงิน</h2>
 
-                {/* Omise Settings */}
+                {/* Enabled Payment Channels (R1) */}
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <h3 className="font-medium text-stone-900 mb-3">Omise Payment Gateway</h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">Public Key</label>
-                      <input
-                        type="text"
-                        value={settings.omise_public_key}
-                        onChange={(e) => setSettings({ ...settings, omise_public_key: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                        placeholder="pkey_test_..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">Secret Key</label>
-                      <input
-                        type="password"
-                        value={settings.omise_secret_key}
-                        onChange={(e) => setSettings({ ...settings, omise_secret_key: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                        placeholder="skey_test_..."
-                      />
-                    </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-medium text-stone-900">ช่องทางการชำระเงินที่เปิดใช้</h3>
+                    <button
+                      onClick={saveEnabledChannels}
+                      disabled={channelsSaving || channelsLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-lg text-sm font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />
+                      {channelsSaving ? 'กำลังบันทึก...' : 'บันทึกช่องทาง'}
+                    </button>
                   </div>
-                </div>
-
-                {/* Google Maps */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <h3 className="font-medium text-stone-900 mb-3">Google Maps API</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">API Key</label>
-                    <input
-                      type="password"
-                      value={settings.google_maps_api_key}
-                      onChange={(e) => setSettings({ ...settings, google_maps_api_key: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="AIza..."
-                    />
+                  <p className="text-xs text-stone-500 mb-3">เลือกช่องทางที่ลูกค้าใช้ชำระเงินได้ (มีผลทันที ไม่ต้อง deploy)</p>
+                  <div className="space-y-2">
+                    {CHANNEL_OPTIONS.map((opt) => (
+                      <label key={opt.key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-amber-100/50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enabledChannels.includes(opt.key)}
+                          onChange={() => toggleChannel(opt.key)}
+                          className="w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                        />
+                        <span className="text-sm text-stone-700">{opt.label}</span>
+                        <span className="text-xs text-stone-400">({opt.key})</span>
+                      </label>
+                    ))}
                   </div>
+                  {enabledChannels.length === 0 && (
+                    <p className="text-xs text-red-500 mt-2">⚠️ ต้องเปิดอย่างน้อย 1 ช่องทาง</p>
+                  )}
                 </div>
 
                 {/* Google Calendar */}
@@ -877,33 +923,6 @@ function Settings() {
                       <span className="w-2 h-2 rounded-full bg-stone-300" /> ยังไม่ได้เชื่อมต่อ
                     </div>
                   )}
-                </div>
-
-                {/* Email Provider */}
-                <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
-                  <h3 className="font-medium text-stone-900 mb-3">Email Provider</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">Provider Domain</label>
-                      <input
-                        type="text"
-                        value={settings.email_provider_domain}
-                        onChange={(e) => setSettings({ ...settings, email_provider_domain: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="mg.mailgun.org"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">API Key</label>
-                      <input
-                        type="password"
-                        value={settings.email_provider_api_key}
-                        onChange={(e) => setSettings({ ...settings, email_provider_api_key: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="key-..."
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             )}

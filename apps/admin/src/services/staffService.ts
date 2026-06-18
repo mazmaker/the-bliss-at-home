@@ -145,6 +145,8 @@ export interface Staff {
   profile?: {
     email: string
     full_name?: string
+    avatar_url?: string | null
+    line_picture_url?: string | null
   }
 }
 
@@ -214,6 +216,7 @@ export const staffService = {
       .from('staff')
       .select(`
         *,
+        profile:profiles!staff_profile_id_fkey(avatar_url, email, full_name, line_picture_url),
         skills:staff_skills(
           id,
           skill_id,
@@ -235,7 +238,11 @@ export const staffService = {
     const { data, error } = await query
 
     if (error) throw error
-    return data as Staff[]
+    // [R2] avatar single source = profiles.avatar_url (→ line_picture_url → legacy staff.avatar_url)
+    return (data || []).map((s: any) => ({
+      ...s,
+      avatar_url: s.profile?.avatar_url || s.profile?.line_picture_url || s.avatar_url || null,
+    })) as Staff[]
   },
 
   // Get staff by ID
@@ -251,6 +258,7 @@ export const staffService = {
       .from('staff')
       .select(`
         *,
+        profile:profiles!staff_profile_id_fkey(avatar_url, email, full_name, line_picture_url),
         skills:staff_skills(
           id,
           skill_id,
@@ -263,7 +271,33 @@ export const staffService = {
       .single()
 
     if (error) throw error
-    return data as Staff
+    // [R2] avatar single source = profiles.avatar_url (→ line_picture_url → legacy staff.avatar_url)
+    const sd = data as any
+    return { ...sd, avatar_url: sd?.profile?.avatar_url || sd?.profile?.line_picture_url || sd?.avatar_url || null } as Staff
+  },
+
+  // [R2] Admin sets a staff member's photo. Routed through the server (service-role) because
+  // the admin browser client is blocked by the self-only RLS on profiles/storage. The server
+  // resolves profile_id, uploads to `avatars`, and writes profiles.avatar_url.
+  async updateStaffAvatar(staffId: string, file: File): Promise<string> {
+    const apiBase = `${import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')}/api/admin`
+    const adminToken = import.meta.env.VITE_ADMIN_API_TOKEN || 'admin-secret-token-2026'
+
+    const image_base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(new Error('อ่านไฟล์รูปไม่สำเร็จ'))
+      reader.readAsDataURL(file)
+    })
+
+    const res = await fetch(`${apiBase}/staff/${staffId}/avatar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ image_base64, content_type: file.type, ext: file.name.split('.').pop() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.success) throw new Error(data.error || `อัปโหลดไม่สำเร็จ (HTTP ${res.status})`)
+    return data.avatar_url as string
   },
 
   // Create new staff

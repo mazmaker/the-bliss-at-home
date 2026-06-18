@@ -82,6 +82,9 @@ function BookingWizard() {
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null)
   const [showManualPaymentForm, setShowManualPaymentForm] = useState(false)
   const [selectedPaymentChannel, setSelectedPaymentChannel] = useState<string | null>(null)
+  // [R1] Admin-controlled allowlist of payment channels (fetched from server); default = PromptPay only.
+  const [enabledChannels, setEnabledChannels] = useState<string[]>(['promptpay'])
+  const [channelsLoaded, setChannelsLoaded] = useState(false)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [promptpayQRCode, setPromptpayQRCode] = useState<string | null>(null)
@@ -306,6 +309,23 @@ function BookingWizard() {
   const handleLocationChange = (lat: number, lng: number) => {
     setManualAddressLocation({ latitude: lat, longitude: lng })
   }
+
+  // [R1] Fetch the admin-enabled payment channels once on mount.
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+    fetch(`${apiBase}/api/payments/enabled-channels`)
+      .then(r => r.json())
+      .then(d => { if (d?.success && Array.isArray(d.channels) && d.channels.length > 0) setEnabledChannels(d.channels) })
+      .catch(err => console.error('Failed to fetch enabled payment channels:', err))
+      .finally(() => setChannelsLoaded(true))
+  }, [])
+
+  // [R1] When only one channel is enabled, auto-select it so the chooser is skipped.
+  useEffect(() => {
+    if (currentStep === 6 && channelsLoaded && !selectedPaymentChannel && enabledChannels.length === 1) {
+      setSelectedPaymentChannel(enabledChannels[0])
+    }
+  }, [currentStep, channelsLoaded, selectedPaymentChannel, enabledChannels])
 
   const handlePayWithPromptPay = async () => {
     if (!customer || !createdBookingId) {
@@ -1300,6 +1320,7 @@ function BookingWizard() {
                   {/* Payment Channel Options */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Credit/Debit Card */}
+                    {enabledChannels.includes('credit_card') && (
                     <button
                       onClick={() => setSelectedPaymentChannel('credit_card')}
                       className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
@@ -1312,8 +1333,10 @@ function BookingWizard() {
                         <p className="text-xs text-stone-600">{t('wizard.payment.creditCardEn')}</p>
                       </div>
                     </button>
+                    )}
 
                     {/* PromptPay QR */}
+                    {enabledChannels.includes('promptpay') && (
                     <button
                       onClick={() => setSelectedPaymentChannel('promptpay')}
                       className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
@@ -1326,8 +1349,10 @@ function BookingWizard() {
                         <p className="text-xs text-stone-600">{t('wizard.payment.promptpayEn')}</p>
                       </div>
                     </button>
+                    )}
 
                     {/* Internet Banking */}
+                    {enabledChannels.includes('internet_banking') && (
                     <button
                       onClick={() => setSelectedPaymentChannel('internet_banking')}
                       className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
@@ -1340,8 +1365,10 @@ function BookingWizard() {
                         <p className="text-xs text-stone-600">{t('wizard.payment.internetBankingEn')}</p>
                       </div>
                     </button>
+                    )}
 
                     {/* Mobile Banking */}
+                    {enabledChannels.includes('mobile_banking') && (
                     <button
                       onClick={() => setSelectedPaymentChannel('mobile_banking')}
                       className="p-4 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-amber-50 transition text-left flex items-center gap-3"
@@ -1354,6 +1381,7 @@ function BookingWizard() {
                         <p className="text-xs text-stone-600">{t('wizard.payment.mobileBankingEn')}</p>
                       </div>
                     </button>
+                    )}
                   </div>
                 </div>
               ) : selectedPaymentChannel === 'credit_card' ? (
@@ -1485,6 +1513,7 @@ function BookingWizard() {
               ) : selectedPaymentChannel === 'promptpay' ? (
                 /* PromptPay QR Payment */
                 <div className="space-y-4">
+                  {enabledChannels.length > 1 && (
                   <button
                     onClick={() => {
                       setSelectedPaymentChannel(null)
@@ -1496,6 +1525,7 @@ function BookingWizard() {
                     <ChevronLeft className="w-4 h-4" />
                     {t('wizard.payment.changeChannel')}
                   </button>
+                  )}
 
                   {!promptpayQRCode ? (
                     <div className="text-center py-8">

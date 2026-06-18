@@ -5,9 +5,10 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, CreditCard, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, CreditCard, AlertTriangle, QrCode } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
+import { supabase } from '@bliss/supabase/auth'
 import PaymentForm from '../components/PaymentForm'
 import { useTranslation } from '@bliss/i18n'
 
@@ -21,6 +22,75 @@ function CompletePayment() {
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // [R1] Admin-controlled payment-channel allowlist (default = PromptPay only).
+  const [enabledChannels, setEnabledChannels] = useState<string[]>(['promptpay'])
+  const [promptpayQR, setPromptpayQR] = useState<string | null>(null)
+  const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/payments/enabled-channels`)
+      .then(r => r.json())
+      .then(d => { if (d?.success && Array.isArray(d.channels) && d.channels.length > 0) setEnabledChannels(d.channels) })
+      .catch(err => console.error('Failed to fetch enabled payment channels:', err))
+  }, [])
+
+  const cardEnabled = enabledChannels.includes('credit_card')
+  const promptpayEnabled = enabledChannels.includes('promptpay')
+
+  const pollPromptPayStatus = (chargeId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`${apiBase}/api/payments/status/${chargeId}`)
+        const data = await res.json()
+        if (data.status === 'successful') {
+          clearInterval(pollInterval)
+          navigate(`/bookings/${bookingData?.booking_number}?payment=success`)
+        } else if (data.status === 'failed') {
+          clearInterval(pollInterval)
+          setIsProcessing(false)
+          setError('การชำระเงินล้มเหลว กรุณาลองใหม่')
+          setPromptpayQR(null)
+        }
+      } catch (err) {
+        console.error('Error polling payment status:', err)
+      }
+    }, 3000)
+    setTimeout(() => clearInterval(pollInterval), 10 * 60 * 1000)
+  }
+
+  const handlePayWithPromptPay = async () => {
+    if (!customer || !bookingData) return
+    setIsProcessing(true)
+    setError(null)
+    try {
+      const res = await fetch(`${apiBase}/api/payments/create-source`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          booking_id: bookingData.id,
+          customer_id: customer.id,
+          amount: bookingData.final_price || 0,
+          source_type: 'promptpay',
+          payment_method: 'promptpay',
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.qr_code_url) {
+        setPromptpayQR(data.qr_code_url)
+        pollPromptPayStatus(data.charge_id)
+      } else {
+        throw new Error(data.error || 'ไม่สามารถสร้าง QR PromptPay ได้')
+      }
+    } catch (err: any) {
+      console.error('PromptPay payment error:', err)
+      setError(err.message || 'การชำระเงินล้มเหลว')
+      setIsProcessing(false)
+    }
+  }
 
   // Redirect if booking not found or payment already completed
   useEffect(() => {
@@ -138,26 +208,57 @@ function CompletePayment() {
           </div>
         </div>
 
-        {/* Payment Form */}
+        {/* Payment Form — gated by the admin payment-channel allowlist (R1) */}
         <div className="bg-white rounded-xl p-6 border border-stone-200">
-          <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
-            <CreditCard className="w-5 h-5" />
-            ชำระเงินด้วยบัตรเครดิต
-          </h3>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
+          {cardEnabled ? (
+            <>
+              <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                ชำระเงินด้วยบัตรเครดิต
+              </h3>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              )}
+              <PaymentForm
+                amount={bookingData.final_price || 0}
+                bookingId={bookingData.id}
+                customerId={customer.id}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            </>
+          ) : promptpayEnabled ? (
+            <>
+              <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
+                <QrCode className="w-5 h-5" />
+                ชำระเงินด้วย PromptPay
+              </h3>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              )}
+              {!promptpayQR ? (
+                <button
+                  onClick={handlePayWithPromptPay}
+                  disabled={isProcessing}
+                  className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                >
+                  {isProcessing ? 'กำลังสร้าง QR...' : `สร้าง QR PromptPay (฿${bookingData.final_price?.toLocaleString()})`}
+                </button>
+              ) : (
+                <div className="text-center">
+                  <img src={promptpayQR} alt="PromptPay QR Code" className="w-64 h-64 mx-auto" />
+                  <p className="text-sm text-stone-600 mt-3">สแกน QR เพื่อชำระเงิน • กำลังรอการชำระเงิน...</p>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-700 mx-auto mt-3"></div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-stone-600 text-center py-4">ขณะนี้ยังไม่มีช่องทางการชำระเงินที่เปิดให้บริการ</p>
           )}
-
-          <PaymentForm
-            amount={bookingData.final_price || 0}
-            bookingId={bookingData.id}
-            customerId={customer.id}
-            onSuccess={handlePaymentSuccess}
-            onError={handlePaymentError}
-          />
         </div>
 
         {/* Security Notice */}

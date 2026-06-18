@@ -25,6 +25,15 @@ export function ExtendServiceModal({
   const [notes, setNotes] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [appliedPromo, setAppliedPromo] = useState<PromoValidationResult | null>(null)
+  // [R1] Reflect the admin payment-channel allowlist in the extension payment display.
+  const [cardEnabled, setCardEnabled] = useState(false)
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+    fetch(`${apiBase}/api/payments/enabled-channels`)
+      .then(r => r.json())
+      .then(d => { if (d?.success && Array.isArray(d.channels)) setCardEnabled(d.channels.includes('credit_card')) })
+      .catch(() => {})
+  }, [])
 
   const {
     loading,
@@ -324,7 +333,7 @@ export function ExtendServiceModal({
                   {(!selectedOption.discount || selectedOption.discount === 0) && (
                     <div>💳 จำนวนเงิน: ฿{selectedOption.price.toLocaleString()}</div>
                   )}
-                  <div>📱 วิธีชำระ: {booking.payment_method === 'credit_card' ? 'บัตรเครดิต' : booking.payment_method === 'bank_transfer' ? 'โอนเงิน' : 'เงินสด'}</div>
+                  <div>📱 วิธีชำระ: {cardEnabled ? (booking.payment_method === 'credit_card' ? 'บัตรเครดิต' : booking.payment_method === 'bank_transfer' ? 'โอนเงิน' : 'เงินสด') : 'PromptPay (QR)'}</div>
                   <div>⚡ ชำระทันทีหลังยืนยัน</div>
                 </div>
               </div>

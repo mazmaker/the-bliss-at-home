@@ -308,7 +308,8 @@ export function useSOS() {
           }
         }
 
-        await reportSOS(user.id, jobId, location, message)
+        const alertId = await reportSOS(user.id, jobId, location, message)
+        return alertId
       } catch (err) {
         setError(err as Error)
         throw err

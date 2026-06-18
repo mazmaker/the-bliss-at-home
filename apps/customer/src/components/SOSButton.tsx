@@ -51,7 +51,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
       }
 
       // Create SOS alert in database
-      await createSOSAlert.mutateAsync({
+      const alert = await createSOSAlert.mutateAsync({
         customer_id: customer.id,
         latitude: location.lat || undefined,
         longitude: location.lng || undefined,
@@ -60,6 +60,18 @@ function SOSButton({ className = '' }: SOSButtonProps) {
         priority: 'high',
         message: 'Emergency alert from customer',
       })
+
+      // Best-effort: ask the server to email the admin-configured SOS recipient (R3).
+      // Fire-and-forget — must NOT block the success UI; the insert + in-app admin
+      // fan-out already happened. Unset sos_notification_email = server skips email.
+      if (alert?.id) {
+        const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+        fetch(`${apiUrl}/api/sos/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sos_alert_id: alert.id }),
+        }).catch(() => {})
+      }
 
       setSent(true)
       setTimeout(() => {

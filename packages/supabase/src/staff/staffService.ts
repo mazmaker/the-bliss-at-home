@@ -695,6 +695,53 @@ export async function updateEmergencyContact(
   if (error) throw error
 }
 
+// ============================================
+// Availability (พร้อมรับงาน / หยุดรับงาน)
+// ============================================
+
+/**
+ * Read the staff member's current availability by profile id.
+ * Returns false when unset/not found — consistent with the dispatch gates,
+ * which only treat is_available === true as available.
+ */
+export async function getAvailability(profileId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('staff')
+    .select('is_available')
+    .eq('profile_id', profileId)
+    .single()
+
+  if (error || !data) return false
+  return data.is_available ?? false
+}
+
+/**
+ * Toggle the staff member's availability for NEW jobs (พร้อมรับงาน/หยุดรับงาน).
+ * Writes staff.is_available ONLY — never status (status is the employment state
+ * that the admin active-count and every dispatch gate pair with is_available).
+ * Selects the row back to confirm the write actually landed: an RLS-filtered
+ * update returns no error AND no rows, so a silent no-op would otherwise look
+ * like success.
+ */
+export async function updateAvailability(
+  profileId: string,
+  isAvailable: boolean
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('staff')
+    .update({
+      is_available: isAvailable,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('profile_id', profileId)
+    .select('is_available')
+    .single()
+
+  if (error) throw error
+  if (!data) throw new Error('Staff record not found or update blocked by policy')
+  return data.is_available ?? isAvailable
+}
+
 // Export service
 export const staffService = {
   updateProfile,
@@ -716,4 +763,6 @@ export const staffService = {
   canStaffStartWork,
   getEmergencyContact,
   updateEmergencyContact,
+  getAvailability,
+  updateAvailability,
 }

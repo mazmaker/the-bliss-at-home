@@ -408,7 +408,8 @@ async function loginWithLine(
           id: signInData.user.id,
           email: syntheticEmail,
           full_name: displayName,
-          avatar_url: pictureUrl,
+          avatar_url: pictureUrl, // [R2] first-login seed (profile was missing → avatar empty)
+          line_picture_url: pictureUrl,
           role: expectedRole,
           status: 'ACTIVE',
           language: 'th',
@@ -450,7 +451,10 @@ async function loginWithLine(
       .from('profiles')
       .update({
         full_name: nameToUse,
-        avatar_url: pictureUrl,
+        // [R2] Don't clobber an uploaded/admin-set avatar on every login. Keep the LINE
+        // picture in line_picture_url; only seed avatar_url on first login (when empty).
+        line_picture_url: pictureUrl,
+        ...(profile.avatar_url ? {} : { avatar_url: pictureUrl }),
         line_user_id: lineUserId,
         line_display_name: displayName,
         updated_at: new Date().toISOString(),
@@ -510,7 +514,7 @@ async function loginWithLine(
         .from('staff')
         .update({
           profile_id: signInData.user.id,
-          avatar_url: pictureUrl,
+          // [R2] deprecate staff.avatar_url — source of truth is profiles.avatar_url
           invite_token: null,
           invite_token_expires_at: null,
           updated_at: new Date().toISOString(),
@@ -546,7 +550,8 @@ async function loginWithLine(
       profile: {
         ...profile,
         full_name: nameToUse,
-        avatar_url: pictureUrl,
+        // [R2] return the DB avatar (uploaded/admin-set); fall back to LINE pic only if empty
+        avatar_url: profile.avatar_url || pictureUrl,
       } as Profile,
       session: {
         access_token: signInData.session.access_token,
@@ -567,7 +572,8 @@ async function loginWithLine(
       emailRedirectTo: undefined, // Disable email confirmation redirect
       data: {
         full_name: displayName,
-        avatar_url: pictureUrl,
+        avatar_url: pictureUrl, // [R2] first-login seed (new signup)
+        line_picture_url: pictureUrl,
         role: expectedRole,
         line_user_id: lineUserId,
         ...(inviteStaffId ? { invite_staff_id: inviteStaffId } : {}),
@@ -624,7 +630,8 @@ async function loginWithLine(
       id: authData.user.id,
       email: syntheticEmail,
       full_name: displayName,
-      avatar_url: pictureUrl,
+      avatar_url: pictureUrl, // [R2] first-login seed (new signup)
+      line_picture_url: pictureUrl,
       role: expectedRole,
       status: 'ACTIVE',
       language: 'th',
@@ -688,7 +695,7 @@ async function loginWithLine(
         .from('staff')
         .update({
           profile_id: authData.user.id,
-          avatar_url: pictureUrl,
+          // [R2] deprecate staff.avatar_url — source of truth is profiles.avatar_url
           invite_token: null,
           invite_token_expires_at: null,
           updated_at: new Date().toISOString(),

@@ -9,11 +9,14 @@ import {
   LogOut,
   Bell,
   Navigation,
+  Power,
 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
 import { useStaffNotifications } from '@bliss/supabase/notifications'
-import { NotificationPanel, type Notification } from '../components'
+import { getAvailability, updateAvailability } from '@bliss/supabase'
+import { NotificationPanel, ConfirmDialog, type Notification } from '../components'
 
 const navigation = [
   { name: 'หน้าแรก', nameEn: 'Home', href: '/staff', icon: Home },
@@ -30,6 +33,9 @@ function StaffLayout() {
   const { logout, user } = useAuth()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [isAvailable, setIsAvailable] = useState(true)
+  const [showAvailabilityConfirm, setShowAvailabilityConfirm] = useState(false)
+  const [availabilitySaving, setAvailabilitySaving] = useState(false)
 
   // Clean up deep link redirect after successfully reaching a protected page.
   // This is the ONLY place where staff_redirect_after_login should be removed
@@ -38,6 +44,18 @@ function StaffLayout() {
   useEffect(() => {
     localStorage.removeItem('staff_redirect_after_login')
   }, [])
+
+  // Load current availability (พร้อมรับงาน) for the header toggle. useAuth().user
+  // is a profiles row and does NOT carry is_available, so fetch it from the staff
+  // table by profile_id (user.id).
+  useEffect(() => {
+    if (!user?.id) return
+    let active = true
+    getAvailability(user.id)
+      .then((value) => { if (active) setIsAvailable(value) })
+      .catch(() => { /* keep default; the toggle surfaces write errors via toast */ })
+    return () => { active = false }
+  }, [user?.id])
 
   const {
     notifications: dbNotifications,
@@ -60,6 +78,27 @@ function StaffLayout() {
     })),
     [dbNotifications]
   )
+
+  const handleToggleAvailability = async () => {
+    if (!user?.id) return
+    const next = !isAvailable
+    setAvailabilitySaving(true)
+    try {
+      const saved = await updateAvailability(user.id, next)
+      setIsAvailable(saved)
+      setShowAvailabilityConfirm(false)
+      toast.success(
+        saved
+          ? 'กลับมาพร้อมรับงานแล้ว ✓ คุณจะได้รับงานใหม่อีกครั้ง'
+          : 'หยุดรับงานแล้ว — จะไม่ได้รับงานใหม่ชั่วคราว (งานที่รับไว้แล้วยังต้องทำตามปกติ)'
+      )
+    } catch (error) {
+      console.error('[Availability] toggle failed:', error)
+      toast.error('ไม่สามารถเปลี่ยนสถานะได้ กรุณาลองใหม่')
+    } finally {
+      setAvailabilitySaving(false)
+    }
+  }
 
   const handleLogout = async () => {
     // Close modal first
@@ -125,11 +164,44 @@ function StaffLayout() {
         </div>
       )}
 
+      {/* Availability Confirmation Modal (พร้อมรับงาน / หยุดรับงาน) */}
+      <ConfirmDialog
+        isOpen={showAvailabilityConfirm}
+        variant={isAvailable ? 'danger' : 'primary'}
+        icon={<Power className="w-6 h-6" />}
+        title={isAvailable ? 'หยุดรับงาน?' : 'กลับมาพร้อมรับงาน?'}
+        message={
+          isAvailable
+            ? 'คุณจะไม่ได้รับงานใหม่จนกว่าจะกลับมาเปิด "พร้อมรับงาน" (งานที่รับไว้แล้วยังต้องทำตามปกติ)'
+            : 'คุณจะเริ่มได้รับงานใหม่อีกครั้ง'
+        }
+        confirmText={isAvailable ? 'หยุดรับงาน' : 'พร้อมรับงาน'}
+        isLoading={availabilitySaving}
+        onConfirm={handleToggleAvailability}
+        onCancel={() => setShowAvailabilityConfirm(false)}
+      />
+
       {/* Header */}
       <header className="bg-gradient-to-r from-amber-700 to-amber-800 text-white sticky top-0 z-30">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold">The Bliss Massage at Home</h1>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowAvailabilityConfirm(true)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition ${
+                isAvailable
+                  ? 'bg-green-500/90 text-white hover:bg-green-500'
+                  : 'bg-white/15 text-amber-100 hover:bg-white/25'
+              }`}
+              title={
+                isAvailable
+                  ? 'กำลังพร้อมรับงาน — แตะเพื่อหยุดรับงาน'
+                  : 'กำลังหยุดรับงาน — แตะเพื่อกลับมาพร้อมรับงาน'
+              }
+            >
+              <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-white' : 'bg-amber-300'}`} />
+              {isAvailable ? 'พร้อมรับงาน' : 'หยุดรับงาน'}
+            </button>
             <button
               onClick={() => setShowNotifications(true)}
               className="p-2 hover:bg-white/10 rounded-lg transition relative"
