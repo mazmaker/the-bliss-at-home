@@ -86,12 +86,16 @@ export async function updateStaffData(
     }
   }
 
-  // Update staff table
+  // Update staff table — convert empty strings to null to avoid unique constraint violations
   const { error } = await supabase
     .from('staff')
     .update({
       ...data,
-      id_card: data.id_card || null, // empty string → null to avoid unique constraint violation
+      phone: data.phone || null,
+      id_card: data.id_card || null,
+      address: data.address || null,
+      bio_th: data.bio_th || null,
+      bio_en: data.bio_en || null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', staffData.id)

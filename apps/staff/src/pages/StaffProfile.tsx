@@ -582,7 +582,7 @@ function StaffProfile() {
                         ? 'text-green-700'
                         : 'text-amber-700'
                     }`}>
-                      {eligibility.reasons.map((reason, index) => (
+                      {eligibility.reasons.filter(r => !r.includes('บุคคลอ้างอิง')).map((reason, index) => (
                         <li key={index} className="flex items-start gap-1">
                           <span className="mt-0.5">•</span>
                           <span>{reason}</span>
@@ -592,13 +592,19 @@ function StaffProfile() {
                         <>
                           <li className="flex items-start gap-1">
                             <span className="mt-0.5">•</span>
-                            <span>เตรียมใบตรวจสอบประวัติอาชญากรรม</span>
+                            <span>ยังไม่ได้อัปโหลดใบตรวจสอบประวัติอาชญากรรม</span>
                           </li>
                           <li className="flex items-start gap-1">
                             <span className="mt-0.5">•</span>
-                            <span>เตรียมใบอนุญาตนวด (ถ้ามี)</span>
+                            <span>ยังไม่ได้อัปโหลดใบอนุญาตนวด</span>
                           </li>
                         </>
+                      )}
+                      {eligibility.reasons.some(r => r.includes('บุคคลอ้างอิง')) && (
+                        <li className="flex items-start gap-1">
+                          <span className="mt-0.5">•</span>
+                          <span>กรุณากรอกข้อมูลบุคคลอ้างอิง (ชื่อ, เบอร์โทร, ความสัมพันธ์)</span>
+                        </li>
                       )}
                     </ul>
                   )}
