@@ -40,6 +40,7 @@ function StaffPage() {
   const [selectedSkill, setSelectedSkill] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'suspended'>('all')
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [inviteModalStaff, setInviteModalStaff] = useState<{ id: string; name: string } | null>(null)
 
@@ -84,6 +85,11 @@ function StaffPage() {
     }
 
     return staffData?.filter((staff) => {
+      // R7: availability filter (พร้อมรับงาน/หยุดรับงาน) — client-side; is_available===true is the
+      // positive test so null coerces to "หยุดรับงาน" (matches getStaffStats + the dispatch gate).
+      if (availabilityFilter === 'available' && staff.is_available !== true) return false
+      if (availabilityFilter === 'unavailable' && staff.is_available === true) return false
+
       if (selectedSkill === 'all') return true
 
       return staff.skills?.some(skill => {
@@ -97,7 +103,7 @@ function StaffPage() {
         )
       })
     }) || []
-  }, [staffData, selectedSkill])
+  }, [staffData, selectedSkill, availabilityFilter])
 
   const getStatusBadge = (status: Staff['status']) => {
     const badges = {
@@ -117,10 +123,6 @@ function StaffPage() {
         {labels[status]}
       </span>
     )
-  }
-
-  const formatSkillName = (skill: any) => {
-    return skill.skill?.name_th || skill.skill?.name_en || 'Unknown'
   }
 
   // Initial loading state (only show spinner if there's no data yet)
@@ -187,11 +189,11 @@ function StaffPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">
-                {statsData?.active || 0}
+                {statsData?.available ?? 0}
               </p>
-              <p className="text-xs text-stone-500">พนักงานทำงาน</p>
+              <p className="text-xs text-stone-500">พร้อมรับงาน</p>
               <p className="text-xs text-stone-400 mt-0.5">
-                พร้อมรับงาน: {statsData?.available ?? 0} คน
+                พนักงานทำงาน: {statsData?.active ?? 0} คน
               </p>
             </div>
           </div>
@@ -279,6 +281,17 @@ function StaffPage() {
             <option value="inactive">ไม่ใช้งาน</option>
             <option value="suspended">ระงับการใช้งาน</option>
           </select>
+
+          {/* R7: availability filter (การรับงาน) */}
+          <select
+            value={availabilityFilter}
+            onChange={(e) => setAvailabilityFilter(e.target.value as any)}
+            className="px-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="all">การรับงานทั้งหมด</option>
+            <option value="available">พร้อมรับงาน</option>
+            <option value="unavailable">หยุดรับงาน</option>
+          </select>
         </div>
       </div>
 
@@ -295,7 +308,7 @@ function StaffPage() {
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เพศ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ทักษะ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การรับงาน</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เรตติ้ง</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">งานที่เสร็จ</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้รวม</th>
@@ -342,20 +355,18 @@ function StaffPage() {
                       )}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {staff.skills?.length ? (
-                          staff.skills.map((skill) => (
-                            <span
-                              key={skill.id}
-                              className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"
-                            >
-                              {formatSkillName(skill)}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-stone-400">ไม่ระบุ</span>
-                        )}
-                      </div>
+                      {/* R7: การรับงาน (availability) badge from staff.is_available; null -> หยุดรับงาน */}
+                      {staff.is_available === true ? (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          พร้อมรับงาน
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+                          หยุดรับงาน
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
