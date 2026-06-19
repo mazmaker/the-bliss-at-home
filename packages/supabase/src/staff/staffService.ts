@@ -91,6 +91,7 @@ export async function updateStaffData(
     .from('staff')
     .update({
       ...data,
+      id_card: data.id_card || null, // empty string → null to avoid unique constraint violation
       updated_at: new Date().toISOString(),
     })
     .eq('id', staffData.id)
