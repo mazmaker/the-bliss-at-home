@@ -3,7 +3,7 @@
  */
 
 // Document types (match Admin app)
-export type DocumentType = 'id_card' | 'house_registration' | 'license' | 'certificate' | 'bank_statement' | 'other'
+export type DocumentType = 'id_card' | 'house_registration' | 'license' | 'criminal_record' | 'certificate' | 'bank_statement' | 'other'
 export type DocumentStatus = 'pending' | 'reviewing' | 'verified' | 'rejected'
 
 export interface StaffDocument {
@@ -60,6 +60,7 @@ export const DOCUMENT_TYPES: Record<DocumentType, { th: string; en: string }> = 
   id_card: { th: 'สำเนาบัตรประชาชน', en: 'ID Card' },
   house_registration: { th: 'สำเนาทะเบียนบ้าน', en: 'House Registration' },
   license: { th: 'ใบประกอบวิชาชีพ', en: 'Professional License' },
+  criminal_record: { th: 'ใบตรวจสอบประวัติอาชญากรรม', en: 'Criminal Record Check' },
   certificate: { th: 'ใบรับรองการอบรม', en: 'Training Certificate' },
   bank_statement: { th: 'สำเนาบัญชีธนาคาร', en: 'Bank Statement' },
   other: { th: 'เอกสารอื่นๆ', en: 'Other Documents' },
@@ -162,6 +163,8 @@ export interface StaffEligibility {
     id_card: { uploaded: boolean; verified: boolean; status?: string }
     house_registration: { uploaded: boolean; verified: boolean; status?: string }
     bank_statement: { uploaded: boolean; verified: boolean; status?: string }
+    license: { uploaded: boolean; verified: boolean; status?: string }
+    criminal_record: { uploaded: boolean; verified: boolean; status?: string }
   }
   emergencyContact: {
     name: string | null

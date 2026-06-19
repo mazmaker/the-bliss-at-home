@@ -6,6 +6,7 @@
 import { supabase } from '../auth/supabaseClient'
 import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
 import { isJobMatchingStaffGender } from '../utils/providerPreference'
+import { canStaffStartWork } from '../staff/staffService'
 
 // Helper: batch-fetch provider_preference from bookings and attach to jobs
 async function attachProviderPreference(jobs: Job[]): Promise<Job[]> {
@@ -184,6 +185,16 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
       throw new Error('งานนี้ถูกยกเลิกแล้ว')
     }
     throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
+  }
+
+  // Eligibility gate (App-enforced): a staff must have status='active', gender, emergency
+  // contact, and id_card + house_registration + bank_statement + license + criminal_record
+  // ALL admin-verified before they can accept a job. staffId here is the profile_id.
+  // Mirrors the staff-app UI gate and the server dispatch filter so all paths agree.
+  const eligibility = await canStaffStartWork(staffId)
+  if (!eligibility.canWork) {
+    const detail = eligibility.reasons[0] || 'ข้อมูล/เอกสารยังไม่ครบหรือยังไม่ได้รับการอนุมัติ'
+    throw new Error(`ยังรับงานไม่ได้: ${detail} (ตรวจสอบที่หน้าโปรไฟล์)`)
   }
 
   // Check provider_preference vs staff gender (hard requirements only)

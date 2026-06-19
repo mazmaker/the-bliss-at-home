@@ -570,6 +570,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
       id_card: 'สำเนาบัตรประชาชน',
       house_registration: 'สำเนาทะเบียนบ้าน',
       license: 'ใบประกอบวิชาชีพ',
+      criminal_record: 'ใบตรวจสอบประวัติอาชญากรรม',
       certificate: 'ใบรับรองการอบรม',
       bank_statement: 'สำเนาบัญชีธนาคาร',
       other: 'เอกสารอื่นๆ',

@@ -206,6 +206,16 @@ function StaffDashboard() {
                 {!eligibility.documents?.bank_statement?.verified && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบสำเนาบัญชีธนาคาร</li>
                 )}
+                {!eligibility.documents?.license?.verified && (
+                  <li className="list-disc">
+                    <Link to="/staff/profile" className="underline hover:text-amber-900">อัปโหลด/รออนุมัติ ใบประกอบวิชาชีพ</Link>
+                  </li>
+                )}
+                {!eligibility.documents?.criminal_record?.verified && (
+                  <li className="list-disc">
+                    <Link to="/staff/profile" className="underline hover:text-amber-900">อัปโหลด/รออนุมัติ ใบตรวจสอบประวัติอาชญากรรม</Link>
+                  </li>
+                )}
                 {!eligibility.emergencyContact?.filled && (
                   <li className="list-disc">
                     <Link to="/staff/profile" className="underline hover:text-amber-900">กรอกข้อมูลบุคคลอ้างอิง</Link>

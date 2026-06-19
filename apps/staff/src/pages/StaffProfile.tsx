@@ -432,26 +432,12 @@ function StaffProfile() {
               เพื่อให้พร้อมรับงาน กรุณากรอกข้อมูลส่วนตัวและอัปโหลดเอกสารให้ครบถ้วน
             </p>
             <ul className="text-sm text-stone-700 space-y-1 mb-4 bg-amber-50 rounded-xl p-3">
-                {eligibility?.reasons?.filter(r => !r.includes('บุคคลอ้างอิง')).map((reason, i) => (
+                {eligibility?.reasons?.map((reason, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span className="text-amber-500 mt-0.5">•</span>
                     <span>{reason}</span>
                   </li>
                 ))}
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
-                  <span>ยังไม่ได้อัปโหลดใบตรวจสอบประวัติอาชญากรรม</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
-                  <span>ยังไม่ได้อัปโหลดใบอนุญาตนวด</span>
-                </li>
-                {eligibility?.reasons?.some(r => r.includes('บุคคลอ้างอิง')) && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">•</span>
-                    <span>กรุณากรอกข้อมูลบุคคลอ้างอิง (ชื่อ, เบอร์โทร, ความสัมพันธ์)</span>
-                  </li>
-                )}
               </ul>
             <div className="flex gap-2">
               <button
@@ -588,18 +574,6 @@ function StaffProfile() {
                           <span>{reason}</span>
                         </li>
                       ))}
-                      {!eligibility.canWork && (
-                        <>
-                          <li className="flex items-start gap-1">
-                            <span className="mt-0.5">•</span>
-                            <span>เตรียมใบตรวจสอบประวัติอาชญากรรม</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="mt-0.5">•</span>
-                            <span>เตรียมใบอนุญาตนวด (ถ้ามี)</span>
-                          </li>
-                        </>
-                      )}
                     </ul>
                   )}
 
@@ -633,6 +607,28 @@ function StaffProfile() {
                       {eligibility.documents.bank_statement.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.bank_statement.uploaded ? (
+                        <span className="text-amber-600">รอตรวจ</span>
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>ใบประกอบวิชาชีพ:</span>
+                      {eligibility.documents.license.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                      ) : eligibility.documents.license.uploaded ? (
+                        <span className="text-amber-600">รอตรวจ</span>
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>ใบตรวจประวัติอาชญากรรม:</span>
+                      {eligibility.documents.criminal_record.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                      ) : eligibility.documents.criminal_record.uploaded ? (
                         <span className="text-amber-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />

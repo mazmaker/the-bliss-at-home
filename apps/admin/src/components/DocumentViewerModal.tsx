@@ -74,7 +74,9 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
   const getDocumentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       id_card: 'สำเนาบัตรประชาชน',
+      house_registration: 'สำเนาทะเบียนบ้าน',
       license: 'ใบประกอบวิชาชีพ',
+      criminal_record: 'ใบตรวจสอบประวัติอาชญากรรม',
       certificate: 'ใบรับรองการอบรม',
       bank_statement: 'สำเนาบัญชีธนาคาร',
       other: 'เอกสารอื่นๆ',

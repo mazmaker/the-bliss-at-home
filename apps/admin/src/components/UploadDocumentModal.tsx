@@ -31,6 +31,7 @@ export function UploadDocumentModal({
     { value: 'id_card', label: 'สำเนาบัตรประชาชน' },
     { value: 'house_registration', label: 'สำเนาทะเบียนบ้าน' },
     { value: 'license', label: 'ใบประกอบวิชาชีพ' },
+    { value: 'criminal_record', label: 'ใบตรวจสอบประวัติอาชญากรรม' },
     { value: 'certificate', label: 'ใบรับรองการอบรม' },
     { value: 'bank_statement', label: 'สำเนาบัญชีธนาคาร' },
     { value: 'other', label: 'เอกสารอื่นๆ' },

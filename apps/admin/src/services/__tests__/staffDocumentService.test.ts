@@ -114,6 +114,12 @@ describe('staffDocumentService', () => {
       expect(label.en).toBe('Professional License')
     })
 
+    it('should return correct labels for criminal_record', () => {
+      const label = staffDocumentService.getDocumentTypeLabel('criminal_record')
+      expect(label.th).toBe('ใบตรวจสอบประวัติอาชญากรรม')
+      expect(label.en).toBe('Criminal Record Check')
+    })
+
     it('should return correct labels for certificate', () => {
       const label = staffDocumentService.getDocumentTypeLabel('certificate')
       expect(label.th).toBe('ใบรับรองการอบรม')
@@ -268,8 +274,8 @@ describe('staffDocumentService', () => {
 
   describe('type validation', () => {
     it('should validate DocumentType values', () => {
-      const types: DocumentType[] = ['id_card', 'license', 'certificate', 'bank_statement', 'other']
-      expect(types).toHaveLength(5)
+      const types: DocumentType[] = ['id_card', 'house_registration', 'license', 'criminal_record', 'certificate', 'bank_statement', 'other']
+      expect(types).toHaveLength(7)
     })
 
     it('should validate DocumentStatus values', () => {
