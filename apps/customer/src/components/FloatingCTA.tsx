@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Phone, MessageCircle, X } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 
 interface FloatingCTAProps {
   onContactAdmin?: (method: 'phone' | 'line' | 'facebook') => void
@@ -21,6 +22,7 @@ export default function FloatingCTA({
   facebookUrl = 'your-facebook-page',
   colors = {}
 }: FloatingCTAProps) {
+  const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(false)
 
   // Default colors that can be overridden
@@ -78,7 +80,7 @@ export default function FloatingCTA({
             className={`flex items-center gap-3 ${buttonColors.phone} text-white px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105`}
           >
             <Phone className="w-6 h-6" />
-            <span className="text-sm font-medium">โทร</span>
+            <span className="text-sm font-medium">{t('common:contactMethod.phone')}</span>
           </button>
         </div>
       )}

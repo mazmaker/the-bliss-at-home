@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from '@bliss/i18n'
 import { authService } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase/auth'
 
 export function AuthCallback() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState('Processing authentication...')
+  const { t } = useTranslation()
+  const [status, setStatus] = useState(t('auth:callback.processingAuth'))
 
   useEffect(() => {
     let cancelled = false
@@ -27,7 +29,7 @@ export function AuthCallback() {
 
         // Supabase automatically handles the OAuth callback
         // Just wait a bit for it to process and get the session
-        setStatus('Completing sign in...')
+        setStatus(t('auth:callback.completingSignIn'))
 
         // Give Supabase a moment to process the callback
         await new Promise(resolve => setTimeout(resolve, 1000))
@@ -50,7 +52,7 @@ export function AuthCallback() {
         console.log('User authenticated:', user.id, user.email)
 
         // Check if profile exists
-        setStatus('Setting up your account...')
+        setStatus(t('auth:callback.settingUpAccount'))
         let profile = await authService.getCurrentProfile()
 
         // Create profile if it doesn't exist
@@ -125,13 +127,13 @@ export function AuthCallback() {
         }
 
         // Success
-        setStatus('Success! Redirecting...')
+        setStatus(t('auth:callback.successRedirecting'))
         await new Promise(resolve => setTimeout(resolve, 300))
         navigate('/', { replace: true })
 
       } catch (error) {
         console.error('OAuth callback error:', error)
-        setStatus('Authentication failed')
+        setStatus(t('auth:callback.authenticationFailed'))
         await new Promise(resolve => setTimeout(resolve, 1000))
         navigate('/login?error=oauth_failed', { replace: true })
       }
@@ -149,7 +151,7 @@ export function AuthCallback() {
       <div className="text-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mb-4"></div>
         <p className="text-stone-600 font-medium">{status}</p>
-        <p className="text-stone-500 text-sm mt-2">Please wait a moment</p>
+        <p className="text-stone-500 text-sm mt-2">{t('common:loading.pleaseWait')}</p>
       </div>
     </div>
   )

@@ -43,11 +43,11 @@ export default function EmergencyBooking() {
         window.open('tel:+66-XX-XXX-XXXX')
         break
       case 'line':
-        const message = `🚨 ฉุกเฉิน - ต้องการนวดภายใน 30 นาที\n\nเวลาขณะนี้: ${currentTime.toLocaleTimeString('th-TH')}\nพื้ที่: กรุงเทพ\nประเภทบริการ: ไม่ระบุ`
+        const message = `${t('emergency:lineMessageTitle')}\n\n${t('emergency:lineMessageCurrentTime')} ${currentTime.toLocaleTimeString('th-TH')}\n${t('emergency:lineMessageArea')} ${t('emergency:lineMessageBangkok')}\n${t('emergency:lineMessageServiceType')} ${t('emergency:lineMessageNotSpecified')}`
         window.open(`https://line.me/ti/p/@blissathome?text=${encodeURIComponent(message)}`)
         break
       case 'whatsapp':
-        const whatsappMessage = `🚨 URGENT - Need massage within 30 minutes!\n\nCurrent time: ${currentTime.toLocaleString()}\nArea: Bangkok\nService: Traditional Thai Massage`
+        const whatsappMessage = `${t('emergency:whatsappMessageTitle')}\n\n${t('emergency:whatsappMessageCurrentTime')} ${currentTime.toLocaleString()}\n${t('emergency:whatsappMessageArea')} ${t('emergency:whatsappMessageBangkok')}\n${t('emergency:whatsappMessageService')} ${t('emergency:whatsappMessageThaiMassage')}`
         window.open(`https://wa.me/66XXXXXXXXX?text=${encodeURIComponent(whatsappMessage)}`)
         break
     }
@@ -65,11 +65,11 @@ export default function EmergencyBooking() {
             >
               <ArrowLeft className="w-6 h-6 text-stone-600" />
             </Link>
-            <h1 className="text-xl font-bold text-stone-900">การจองฉุกเฉิน</h1>
+            <h1 className="text-xl font-bold text-stone-900">{t('emergency:pageTitle')}</h1>
             <div className="ml-auto">
               <div className="flex items-center gap-1 text-red-500 text-sm font-semibold">
                 <Clock className="w-4 h-4 animate-pulse" />
-                URGENT
+                {t('emergency:urgentBadge')}
               </div>
             </div>
           </div>
@@ -89,27 +89,27 @@ export default function EmergencyBooking() {
           </div>
 
           <h2 className="text-3xl font-bold text-stone-900 mb-2">
-            ต้องการนวดภายใน
+            {t('emergency:heroTitle')}
           </h2>
           <div className="text-4xl font-black text-red-500 mb-4">
-            30 นาทีนี้?
+            {t('emergency:heroMinutes')}
           </div>
 
           <p className="text-stone-600 text-lg leading-relaxed">
-            ไม่ทันจองล่วงหน้า 3 ชั่วโมง?<br />
-            <span className="font-semibold text-red-600">เราช่วยคุณได้เลย!</span>
+            {t('emergency:noAdvanceNotice')}<br />
+            <span className="font-semibold text-red-600">{t('emergency:heroCta')}</span>
           </p>
         </div>
 
         {/* Current Time Display */}
         <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-4 mb-6">
           <div className="text-center">
-            <div className="text-stone-500 text-sm mb-1">เวลาขณะนี้</div>
+            <div className="text-stone-500 text-sm mb-1">{t('emergency:currentTimeLabel')}</div>
             <div className="text-2xl font-mono font-bold text-stone-900">
               {currentTime.toLocaleTimeString('th-TH')}
             </div>
             <div className="text-red-500 text-sm font-semibold">
-              ต้องการบริการ: {new Date(currentTime.getTime() + 30*60*1000).toLocaleTimeString('th-TH')}
+              {t('emergency:desiredServiceTimeLabel')} {new Date(currentTime.getTime() + 30*60*1000).toLocaleTimeString('th-TH')}
             </div>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function EmergencyBooking() {
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
             <Heart className="w-5 h-5 text-red-500" />
-            เราจะช่วยคุณอย่างไร
+            {t('emergency:howWeHelpTitle')}
           </h3>
 
           <div className="space-y-3">
@@ -127,8 +127,8 @@ export default function EmergencyBooking() {
                 <span className="text-green-600 font-bold text-sm">1</span>
               </div>
               <div>
-                <div className="font-semibold text-stone-900">ตรวจสอบคิวนักนวด</div>
-                <div className="text-stone-600 text-sm">หาคนที่ใกล้คุณและว่างในขณะนี้</div>
+                <div className="font-semibold text-stone-900">{t('emergency:step1Title')}</div>
+                <div className="text-stone-600 text-sm">{t('emergency:step1Description')}</div>
               </div>
             </div>
 
@@ -137,8 +137,8 @@ export default function EmergencyBooking() {
                 <span className="text-blue-600 font-bold text-sm">2</span>
               </div>
               <div>
-                <div className="font-semibold text-stone-900">จองทันที</div>
-                <div className="text-stone-600 text-sm">ยืนยันการจองภายใน 5 นาที</div>
+                <div className="font-semibold text-stone-900">{t('emergency:step2Title')}</div>
+                <div className="text-stone-600 text-sm">{t('emergency:step2Description')}</div>
               </div>
             </div>
 
@@ -147,8 +147,8 @@ export default function EmergencyBooking() {
                 <span className="text-purple-600 font-bold text-sm">3</span>
               </div>
               <div>
-                <div className="font-semibold text-stone-900">เริ่มบริการ</div>
-                <div className="text-stone-600 text-sm">นักนวดมาถึงภายใน 30 นาที</div>
+                <div className="font-semibold text-stone-900">{t('emergency:step3Title')}</div>
+                <div className="text-stone-600 text-sm">{t('emergency:step3Description')}</div>
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function EmergencyBooking() {
         {/* Contact Options */}
         <div className="space-y-4 mb-6">
           <h3 className="text-lg font-bold text-stone-900 text-center">
-            📞 ติดต่อเราเลย
+            {t('emergency:contactUsTitle')}
           </h3>
 
           <button
@@ -166,8 +166,8 @@ export default function EmergencyBooking() {
           >
             <div className="flex items-center justify-between">
               <div className="text-left">
-                <div className="font-bold text-xl mb-1">📞 โทรศัพท์</div>
-                <div className="opacity-90 text-sm">ตอบรับทันที 24/7</div>
+                <div className="font-bold text-xl mb-1">{t('emergency:phoneButton')}</div>
+                <div className="opacity-90 text-sm">{t('emergency:phoneSubtext')}</div>
               </div>
               <Phone className="w-8 h-8" />
             </div>
@@ -179,8 +179,8 @@ export default function EmergencyBooking() {
           >
             <div className="flex items-center justify-between">
               <div className="text-left">
-                <div className="font-bold text-xl mb-1">💬 LINE Chat</div>
-                <div className="opacity-90 text-sm">ตอบภายใน 2 นาที</div>
+                <div className="font-bold text-xl mb-1">{t('emergency:lineButton')}</div>
+                <div className="opacity-90 text-sm">{t('emergency:lineSubtext')}</div>
               </div>
               <MessageCircle className="w-8 h-8" />
             </div>
@@ -192,8 +192,8 @@ export default function EmergencyBooking() {
           >
             <div className="flex items-center justify-between">
               <div className="text-left">
-                <div className="font-bold text-xl mb-1">📱 WhatsApp</div>
-                <div className="opacity-90 text-sm">รวดเร็วที่สุด</div>
+                <div className="font-bold text-xl mb-1">{t('emergency:whatsappButton')}</div>
+                <div className="opacity-90 text-sm">{t('emergency:whatsappSubtext')}</div>
               </div>
               <MessageCircle className="w-8 h-8" />
             </div>
@@ -206,11 +206,11 @@ export default function EmergencyBooking() {
             <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <Star className="w-6 h-6 text-yellow-900" />
             </div>
-            <h3 className="font-bold text-stone-900 mb-2">รับประกันบริการ</h3>
+            <h3 className="font-bold text-stone-900 mb-2">{t('emergency:guaranteeTitle')}</h3>
             <p className="text-stone-700 text-sm">
-              หากเราไม่สามารถจัดนักนวดให้คุณภายใน 30 นาทีได้
+              {t('emergency:guaranteeCondition')}
               <br />
-              <span className="font-bold text-red-600">คืนเงิน 100% ทันที!</span>
+              <span className="font-bold text-red-600">{t('emergency:guaranteeRefund')}</span>
             </p>
           </div>
         </div>
@@ -219,9 +219,9 @@ export default function EmergencyBooking() {
         {requestSent && (
           <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6 text-center">
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-            <h3 className="font-bold text-green-800 mb-2">ส่งคำขอแล้ว!</h3>
+            <h3 className="font-bold text-green-800 mb-2">{t('emergency:requestSentTitle')}</h3>
             <p className="text-green-700 text-sm">
-              เราจะติดต่อกลับภายใน 5 นาที
+              {t('emergency:requestSentMessage')}
             </p>
           </div>
         )}
@@ -230,13 +230,13 @@ export default function EmergencyBooking() {
         <div className="text-center mt-8 text-stone-500">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Users className="w-4 h-4" />
-            <span className="text-sm">เราช่วยลูกค้าฉุกเฉิน <strong>50+ คน</strong> ต่อวัน</span>
+            <span className="text-sm">{t('emergency:socialProofCustomers')}</span>
           </div>
           <div className="flex items-center justify-center gap-1">
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             ))}
-            <span className="ml-2 text-sm">4.9/5 จากลูกค้า 2,847 คน</span>
+            <span className="ml-2 text-sm">{t('emergency:socialProofRating')}</span>
           </div>
         </div>
       </div>

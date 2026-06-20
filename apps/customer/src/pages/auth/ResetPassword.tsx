@@ -6,12 +6,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '@bliss/ui'
+import { useTranslation } from '@bliss/i18n'
 import { APP_CONFIGS, authService, supabase } from '@bliss/supabase/auth'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 
 type PageState = 'loading' | 'form' | 'success' | 'error'
 
 export function ResetPasswordPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const config = APP_CONFIGS.CUSTOMER
   const [pageState, setPageState] = useState<PageState>('loading')
@@ -89,11 +91,11 @@ export function ResetPasswordPage() {
 
   const validate = (): boolean => {
     if (newPassword.length < 8) {
-      setValidationError('Password must be at least 8 characters')
+      setValidationError(t('auth:resetPassword.validation.passwordTooShort'))
       return false
     }
     if (newPassword !== confirmPassword) {
-      setValidationError('Passwords do not match')
+      setValidationError(t('auth:register.passwordMismatch'))
       return false
     }
     setValidationError('')
@@ -112,7 +114,7 @@ export function ResetPasswordPage() {
       setPageState('success')
       setTimeout(() => navigate('/login'), 3000)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to update password')
+      setErrorMessage(err instanceof Error ? err.message : t('auth:resetPassword.error.updateFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -129,7 +131,7 @@ export function ResetPasswordPage() {
       {pageState === 'loading' && (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-700 mx-auto mb-4" />
-          <p className="text-gray-600">Verifying your reset link...</p>
+          <p className="text-gray-600">{t('auth:resetPassword.status.verifying')}</p>
         </div>
       )}
 
@@ -142,16 +144,16 @@ export function ResetPasswordPage() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Invalid or Expired Link
+            {t('auth:resetPassword.error.linkTitle')}
           </h3>
           <p className="text-gray-600 mb-6 text-sm">
-            This password reset link is no longer valid. Please request a new one.
+            {t('auth:resetPassword.error.linkDescription')}
           </p>
           <button
             onClick={() => navigate('/login')}
             className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
           >
-            Back to Login
+            {t('auth:forgotPassword.backToLogin')}
           </button>
         </div>
       )}
@@ -165,10 +167,10 @@ export function ResetPasswordPage() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Password Updated
+            {t('auth:resetPassword.success.title')}
           </h3>
           <p className="text-gray-600 text-sm">
-            Your password has been changed successfully. Redirecting to login...
+            {t('auth:resetPassword.success.message')}
           </p>
         </div>
       )}
@@ -181,10 +183,10 @@ export function ResetPasswordPage() {
               <Lock className="h-6 w-6 text-amber-700" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-1">
-              Set New Password
+              {t('auth:resetPassword.form.title')}
             </h3>
             <p className="text-sm text-gray-600">
-              Enter your new password below.
+              {t('auth:resetPassword.form.description')}
             </p>
           </div>
 
@@ -203,7 +205,7 @@ export function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
-                New Password
+                {t('auth:resetPassword.form.newPasswordLabel')}
               </label>
               <div className="relative">
                 <input
@@ -211,7 +213,7 @@ export function ResetPasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => { setNewPassword(e.target.value); setValidationError('') }}
-                  placeholder="At least 8 characters"
+                  placeholder={t('auth:resetPassword.form.passwordPlaceholder')}
                   required
                   minLength={8}
                   disabled={isSubmitting}
@@ -231,7 +233,7 @@ export function ResetPasswordPage() {
 
             <div>
               <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+                {t('auth:resetPassword.form.confirmPasswordLabel')}
               </label>
               <div className="relative">
                 <input
@@ -239,7 +241,7 @@ export function ResetPasswordPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setValidationError('') }}
-                  placeholder="Re-enter your password"
+                  placeholder={t('auth:resetPassword.form.confirmPasswordPlaceholder')}
                   required
                   minLength={8}
                   disabled={isSubmitting}
@@ -265,10 +267,10 @@ export function ResetPasswordPage() {
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  Updating...
+                  {t('auth:resetPassword.button.updating')}
                 </span>
               ) : (
-                'Update Password'
+                t('auth:resetPassword.button.updatePassword')
               )}
             </button>
           </form>
@@ -279,7 +281,7 @@ export function ResetPasswordPage() {
               disabled={isSubmitting}
               className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
             >
-              Back to login
+              {t('auth:forgotPassword.backToLogin')}
             </button>
           </div>
         </div>

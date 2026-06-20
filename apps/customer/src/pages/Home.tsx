@@ -277,14 +277,14 @@ function HomePage() {
             <div className="bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 rounded-2xl p-6 text-center shadow-lg">
               <div className="flex items-center justify-center mb-2">
                 <span className="bg-white text-amber-800 px-4 py-2 rounded-full font-bold text-lg">
-                  ลด {getGlobalDiscountPercentage()}%
+                  {t('home:globalDiscount.badge', { percentage: getGlobalDiscountPercentage() })}
                 </span>
               </div>
               <h3 className="text-white font-semibold text-xl mb-1">
-                ส่วนลดพิเศษทุกบริการ
+                {t('home:globalDiscount.title')}
               </h3>
               <p className="text-yellow-100 text-sm">
-                เพียงแค่กรอกโค้ด DISCOUNT15
+                {t('home:globalDiscount.subtitle')}
               </p>
             </div>
           </div>
@@ -355,7 +355,7 @@ function HomePage() {
                       size="sm"
                       className=""
                     />
-                    <span className="text-xs text-stone-500">เริ่มต้น {service.minDuration} นาที</span>
+                    <span className="text-xs text-stone-500">{t('services:durationLabel', { duration: service.minDuration })}</span>
                   </div>
                   <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-amber-100 hover:text-amber-800 transition mt-2 inline-block text-center w-full">
                     {t('home:popular.book')}

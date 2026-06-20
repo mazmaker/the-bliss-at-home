@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from '@bliss/i18n'
 import {
   useProvinces,
   useDistricts,
@@ -32,6 +33,7 @@ function ThaiAddressFields({
   disabled = false,
   errors = {},
 }: ThaiAddressFieldsProps) {
+  const { t } = useTranslation()
   const [provinceId, setProvinceId] = useState<number | null>(null)
   const [districtId, setDistrictId] = useState<number | null>(null)
 
@@ -130,7 +132,7 @@ function ThaiAddressFields({
       <div className="grid grid-cols-2 gap-4">
         <div data-field="province">
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            จังหวัด <span className="text-red-500">*</span>
+            {t('common:address.province')} <span className="text-red-500">*</span>
           </label>
           <select
             value={selectedProvinceValue}
@@ -139,7 +141,7 @@ function ThaiAddressFields({
             className={selectClass(!!errors.province)}
           >
             <option value="">
-              {loadingProvinces ? 'กำลังโหลด...' : '-- เลือกจังหวัด --'}
+              {loadingProvinces ? t('common:address.loading') : t('common:address.selectProvince')}
             </option>
             {provinces.map((p: ThaiProvince) => (
               <option key={p.id} value={p.id}>
@@ -154,7 +156,7 @@ function ThaiAddressFields({
 
         <div data-field="district">
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            เขต/อำเภอ
+            {t('common:address.district')}
           </label>
           <select
             value={selectedDistrictValue}
@@ -164,10 +166,10 @@ function ThaiAddressFields({
           >
             <option value="">
               {!provinceId
-                ? '-- เลือกจังหวัดก่อน --'
+                ? t('common:address.selectProvinceFirst')
                 : loadingDistricts
-                  ? 'กำลังโหลด...'
-                  : '-- เลือกเขต/อำเภอ --'}
+                  ? t('common:address.loading')
+                  : t('common:address.selectDistrict')}
             </option>
             {districts.map((d: ThaiDistrict) => (
               <option key={d.id} value={d.id}>
@@ -185,7 +187,7 @@ function ThaiAddressFields({
       <div className="grid grid-cols-2 gap-4">
         <div data-field="subdistrict">
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            แขวง/ตำบล
+            {t('common:address.subdistrict')}
           </label>
           <select
             value={selectedSubdistrictValue}
@@ -195,10 +197,10 @@ function ThaiAddressFields({
           >
             <option value="">
               {!districtId
-                ? '-- เลือกเขต/อำเภอก่อน --'
+                ? t('common:address.selectDistrictFirst')
                 : loadingSubdistricts
-                  ? 'กำลังโหลด...'
-                  : '-- เลือกแขวง/ตำบล --'}
+                  ? t('common:address.loading')
+                  : t('common:address.selectSubdistrict')}
             </option>
             {subdistricts.map((s: ThaiSubdistrict) => (
               <option key={s.id} value={s.id}>
@@ -213,13 +215,13 @@ function ThaiAddressFields({
 
         <div data-field="zipcode">
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            รหัสไปรษณีย์ <span className="text-red-500">*</span>
+            {t('common:address.zipcode')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={zipcode}
             onChange={handleZipcodeChange}
-            placeholder="10110"
+            placeholder={t('common:address.zipcodePlaceholder')}
             maxLength={5}
             disabled={disabled}
             className={selectClass(!!errors.zipcode)}

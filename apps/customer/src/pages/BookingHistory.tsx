@@ -102,7 +102,7 @@ function BookingHistory() {
       case 'confirmed':
         return t('common:status.confirmed')
       case 'in_progress':
-        return 'กำลังให้บริการ'
+        return t('common:status.inProgress')
       case 'completed':
         return t('common:status.completed')
       case 'pending':
@@ -186,7 +186,7 @@ function BookingHistory() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium text-stone-500 mb-1.5">
-                  สถานะ
+                  {t('common:filters.status')}
                 </label>
                 <select
                   value={statusFilter}
@@ -197,18 +197,18 @@ function BookingHistory() {
                   }
                   className="w-full px-3 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
                 >
-                  <option value="all">ทุกสถานะ</option>
-                  <option value="upcoming">กำลังจะมาถึง</option>
-                  <option value="pending">รอยืนยัน</option>
-                  <option value="confirmed">ยืนยันแล้ว</option>
-                  <option value="in_progress">กำลังให้บริการ</option>
-                  <option value="completed">เสร็จสิ้น</option>
-                  <option value="cancelled">ยกเลิกแล้ว</option>
+                  <option value="all">{t('booking:history.filterAllStatuses')}</option>
+                  <option value="upcoming">{t('booking:history.upcoming')}</option>
+                  <option value="pending">{t('common:status.pending')}</option>
+                  <option value="confirmed">{t('common:status.confirmed')}</option>
+                  <option value="in_progress">{t('common:status.inProgress')}</option>
+                  <option value="completed">{t('common:status.completed')}</option>
+                  <option value="cancelled">{t('common:status.cancelled')}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-stone-500 mb-1.5">
-                  ตั้งแต่วันที่
+                  {t('booking:history.filters.fromDate')}
                 </label>
                 <input
                   type="date"
@@ -220,7 +220,7 @@ function BookingHistory() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-stone-500 mb-1.5">
-                  ถึงวันที่
+                  {t('booking:history.filters.toDate')}
                 </label>
                 <input
                   type="date"
@@ -232,14 +232,14 @@ function BookingHistory() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-stone-500 mb-1.5">
-                  บริการ
+                  {t('booking:history.filters.service')}
                 </label>
                 <select
                   value={serviceFilter}
                   onChange={(e) => setServiceFilter(e.target.value)}
                   className="w-full px-3 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
                 >
-                  <option value="all">ทุกบริการ</option>
+                  <option value="all">{t('booking:history.filters.allServices')}</option>
                   {serviceOptions.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -254,7 +254,7 @@ function BookingHistory() {
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700"
               >
                 <X className="w-3.5 h-3.5" />
-                ล้างตัวกรอง
+                {t('common:buttons.clearFilters')}
               </button>
             )}
         </div>
@@ -304,12 +304,12 @@ function BookingHistory() {
             <ClipboardList className="w-16 h-16 text-stone-400 mx-auto" />
             {hasActiveFilters ? (
               <>
-                <p className="text-stone-500 mt-4 mb-4">ไม่พบรายการจองตามตัวกรองที่เลือก</p>
+                <p className="text-stone-500 mt-4 mb-4">{t('booking:history.noResultsFiltered')}</p>
                 <button
                   onClick={clearFilters}
                   className="inline-block bg-stone-100 text-stone-700 px-6 py-3 rounded-xl font-medium hover:bg-stone-200 transition"
                 >
-                  ล้างตัวกรอง
+                  {t('common:buttons.clearFilters')}
                 </button>
               </>
             ) : (

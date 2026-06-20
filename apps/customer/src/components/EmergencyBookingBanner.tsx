@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Phone, MessageCircle, Clock, X, Sparkles, Star } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 
 interface EmergencyBookingBannerProps {
   onContactAdmin?: (method: 'phone' | 'line' | 'chat') => void
@@ -8,6 +9,7 @@ interface EmergencyBookingBannerProps {
 // Force customer app redeploy - CORS fix 2026-05-22 15:15
 
 export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBookingBannerProps) {
+  const { t } = useTranslation()
   const [isVisible, setIsVisible] = useState(true)
   const [currentStats, setCurrentStats] = useState(42)
 
@@ -32,7 +34,7 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
         window.open('https://line.me/ti/p/@blissathome')
         break
       case 'chat':
-        window.open('https://wa.me/66XXXXXXXXX?text=ต้องการนวดด่วนภายใน 30 นาที')
+        window.open(`https://wa.me/66XXXXXXXXX?text=${encodeURIComponent(t('emergency:bannerWhatsappText'))}`)
         break
     }
   }
@@ -43,17 +45,17 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
       <div className="relative p-6 text-center">
         {/* White badge */}
         <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-amber-800 text-sm font-medium mb-4">
-          บริการฉุกเฉิน
+          {t('services:emergencyService.badge')}
         </div>
 
         {/* Main heading */}
         <h3 className="text-xl font-semibold text-white mb-2">
-          ต้องการนวดภายใน 30 นาที?
+          {t('services:emergencyService.heading')}
         </h3>
 
         {/* Subtitle */}
         <p className="text-white/90 text-sm mb-6">
-          ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ
+          {t('services:emergencyService.subtitle')}
         </p>
 
         {/* Contact buttons */}
@@ -63,7 +65,7 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
           >
             <Phone className="w-4 h-4" />
-            โทร
+            {t('common:emergencyService.callButton')}
           </button>
 
           <button
@@ -71,7 +73,7 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
           >
             <MessageCircle className="w-4 h-4" />
-            LINE
+            {t('common:emergencyService.lineButton')}
           </button>
 
           <button
@@ -79,7 +81,7 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
           >
             <MessageCircle className="w-4 h-4" />
-            WhatsApp
+            {t('common:emergencyService.whatsappButton')}
           </button>
         </div>
       </div>

@@ -236,7 +236,7 @@ function ServiceDetails() {
                           <div className="text-left">
                             <span className="font-medium text-stone-900">{dur} {t('services:details.minutes')}</span>
                             <span className="text-sm text-stone-500 ml-2">
-                              ({dur / 60 >= 1 ? `${Math.floor(dur / 60)}${dur % 60 > 0 ? `.${dur % 60}` : ''} ${isThai ? 'ชั่วโมง' : 'hr'}` : ''})
+                              ({dur / 60 >= 1 ? `${Math.floor(dur / 60)}${dur % 60 > 0 ? `.${dur % 60}` : ''} ${t('services:details.hour')}` : ''})
                             </span>
                           </div>
                         </div>
@@ -249,8 +249,8 @@ function ServiceDetails() {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-stone-100 space-y-1.5">
-                  <p className="text-xs text-stone-400">• ราคานี้รวมค่าบริการ และค่าเดินทาง ยกเว้นค่าที่จอดรถ</p>
-                  <p className="text-xs text-stone-400">• ถ้าลูกค้าต้องการยาหม่อง จะคิดราคาเพิ่ม 100 บาท</p>
+                  <p className="text-xs text-stone-400">• {t('services:details.priceIncludesServiceAndTransport')}</p>
+                  <p className="text-xs text-stone-400">• {t('services:details.oilSurchargeNote')}</p>
                 </div>
               </div>
             )}

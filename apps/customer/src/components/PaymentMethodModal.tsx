@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from '@bliss/i18n'
 import { Modal } from '@bliss/ui'
 import { omiseService, type CardDetails } from '@bliss/supabase/payment'
 import { useQueryClient } from '@tanstack/react-query'
@@ -12,6 +13,7 @@ interface PaymentMethodModalProps {
 }
 
 function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalProps) {
+  const { t } = useTranslation()
   const [isDefault, setIsDefault] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const queryClient = useQueryClient()
@@ -38,7 +40,7 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to add payment method')
+        throw new Error(data.error || t('profile:toast.paymentAddFailed'))
       }
 
       // Invalidate payment methods cache to refetch
@@ -46,13 +48,13 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
         queryKey: ['paymentMethods', 'customer', customerId],
       })
 
-      toast.success('เพิ่มวิธีชำระเงินสำเร็จ')
+      toast.success(t('profile:toast.paymentAdded'))
       onClose()
       // Reset form
       setIsDefault(false)
     } catch (error: any) {
       console.error('Failed to add payment method:', error)
-      toast.error(error.message || 'Failed to add payment method')
+      toast.error(error.message || t('profile:toast.paymentAddFailed'))
     } finally {
       setIsProcessing(false)
     }
@@ -62,14 +64,14 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="เพิ่มวิธีชำระเงิน"
+      title={t('profile:payment.addNew')}
       size="md"
     >
       <div className="space-y-4">
         <CreditCardForm
           onSubmit={handleCardSubmit}
           isLoading={isProcessing}
-          submitButtonText="เพิ่มวิธีชำระเงิน"
+          submitButtonText={t('profile:payment.addNew')}
         />
 
         {/* Set as Default Checkbox */}
@@ -86,7 +88,7 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
             htmlFor="is-default-payment"
             className="text-sm text-stone-700 cursor-pointer"
           >
-            ตั้งเป็นวิธีชำระเงินหลัก
+            {t('profile:payment.setAsDefault')}
           </label>
         </div>
       </div>

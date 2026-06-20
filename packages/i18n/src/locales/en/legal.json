@@ -1,0 +1,385 @@
+{
+  "terms": {
+    "title": "Terms of Service",
+    "subtitle": "Terms of Service",
+    "lastUpdated": "Last updated: {{date}}",
+    "readPrivacy": "Read the Privacy Policy",
+    "s1": {
+      "heading": "1. Acceptance of Terms",
+      "p1": "Welcome to The Bliss Massage at Home. By using our services, you acknowledge that you have read, understood, and accepted all of these Terms of Service. If you do not agree with any of these terms, please do not use our services.",
+      "p2": "These Terms of Service govern the use of the entire online platform, application, and at-home spa services, including the handling of personal data, payments, and the various rights of service users."
+    },
+    "s2": {
+      "heading": "2. Registration and User Accounts",
+      "h1": "2.1 Registration Requirements",
+      "li1": "You must be at least 18 years of age.",
+      "li2": "The information you provide must be accurate, complete, and current.",
+      "li3": "You must keep your password and account information confidential.",
+      "li4": "You must not use a username that is inappropriate, offensive, or infringes upon the rights of others.",
+      "h2": "2.2 User Responsibilities",
+      "p2": "You are responsible for all activities that occur under your account. If you discover any unauthorized use of your account, please notify us immediately.",
+      "h3": "2.3 Account Termination",
+      "p3": "We reserve the right to suspend or terminate your account if we find any violation of the Terms of Service or any inappropriate conduct."
+    },
+    "s3": {
+      "heading": "3. Use of Services",
+      "h1": "3.1 Services Provided",
+      "p1": "The Bliss Massage at Home provides at-home spa and massage services through an online platform on which users can:",
+      "li1": "Browse and select a variety of spa services",
+      "li2": "Book appointments and choose convenient time slots",
+      "li3": "Make secure online payments",
+      "li4": "Track booking status",
+      "li5": "Rate and review services",
+      "h2": "3.2 Service Booking",
+      "li6": "A booking becomes valid only when confirmed by the system.",
+      "li7": "Please book at least 24 hours in advance.",
+      "li8": "You must provide accurate address and contact information.",
+      "li9": "You must notify us in advance of any underlying medical conditions or special health circumstances.",
+      "h3": "3.3 Prohibitions",
+      "p3": "You agree not to:",
+      "li10": "Use the services for any unlawful or inappropriate purpose",
+      "li11": "Disrupt or interfere with the operation of the system",
+      "li12": "Attempt to access unauthorized data",
+      "li13": "Copy, modify, or reproduce any of our content without authorization",
+      "li14": "Use automated systems or bots to book services"
+    },
+    "s4": {
+      "heading": "4. Pricing and Payment",
+      "h1": "4.1 Service Pricing",
+      "li1": "The prices displayed are starting prices and are subject to change.",
+      "li2": "Prices do not include special travel surcharges for remote areas.",
+      "li3": "Prices are inclusive of VAT 7%.",
+      "li4": "We reserve the right to change prices without prior notice.",
+      "h2": "4.2 Payment Methods",
+      "li5": "Credit/debit card (Visa, MasterCard, JCB)",
+      "li6": "Bank transfer",
+      "li7": "PromptPay",
+      "li8": "Cash (paid upon receiving the service - for regular customers only)",
+      "h3": "4.3 Refund Policy",
+      "p3": "Refunds will be processed within 7-14 business days in the following cases:",
+      "li9": "The service does not match what was advertised",
+      "li10": "The therapist fails to arrive at the appointed time without prior notice",
+      "li11": "The service quality is clearly below standard"
+    },
+    "s5": {
+      "heading": "5. Cancellation and Booking Changes",
+      "h1": "5.1 Cancellation by the Customer",
+      "li1": {
+        "label": "Cancellation more than 24 hours in advance:",
+        "text": "100% refund"
+      },
+      "li2": {
+        "label": "Cancellation more than 12 hours in advance:",
+        "text": "50% refund"
+      },
+      "li3": {
+        "label": "Cancellation less than 12 hours in advance:",
+        "text": "No refund"
+      },
+      "li4": {
+        "label": "No Show:",
+        "text": "No refund and may result in a temporary suspension of service"
+      },
+      "h2": "5.2 Cancellation by the Company",
+      "p2": "If we must cancel a booking due to force majeure (such as therapist illness or an accident), we will:",
+      "li5": "Notify you as soon as possible",
+      "li6": "Offer a new booking at an alternative time",
+      "li7": "Or provide a full refund within 7 business days"
+    },
+    "s6": {
+      "heading": "6. Liability and Limitations",
+      "h1": "6.1 Service Provision",
+      "p1": "We make every effort to provide quality service, but we cannot guarantee individual-specific results. The outcome of a service may vary depending on each individual's physical condition and health.",
+      "h2": "6.2 Limitation of Liability",
+      "p2": "We shall not be liable for:",
+      "li1": "Injuries arising from the concealment of health information",
+      "li2": "Damage to personal property",
+      "li3": "Indirect, punitive, or special losses",
+      "li4": "Errors caused by third parties",
+      "h3": "6.3 Insurance",
+      "p3": "All of our therapists are covered by accident and personal liability insurance. If an accident occurs during service, we will process the insurance claim in accordance with the established procedure."
+    },
+    "s7": {
+      "heading": "7. Intellectual Property",
+      "p1": "All content on this platform, including text, images, logos, icons, and software, is the property of The Bliss Massage at Home or its licensors and is protected under intellectual property law.",
+      "p2": "You may not copy, reproduce, distribute, or use it for commercial purposes without our prior written permission."
+    },
+    "s8": {
+      "heading": "8. Privacy",
+      "p1pre": "The collection, use, and disclosure of your personal data shall be in accordance with our Privacy Policy. Please read the",
+      "p1link": "Privacy Policy",
+      "p1post": "to understand how we handle your information."
+    },
+    "s9": {
+      "heading": "9. Changes to the Terms",
+      "p1": "We reserve the right to amend or change these Terms of Service at any time. Changes take effect immediately upon publication on the website.",
+      "p2": "We will notify you of any material changes via email or platform notification. Continued use of the services constitutes your acceptance of the new terms."
+    },
+    "s10": {
+      "heading": "10. Governing Law",
+      "p1": "These Terms of Service are governed by and construed in accordance with the laws of Thailand.",
+      "p2": "Any dispute arising out of or in connection with these terms shall be subject to the exclusive jurisdiction of the courts of Thailand."
+    },
+    "s11": {
+      "heading": "11. Contact Us",
+      "p1": "If you have any questions or concerns regarding these Terms of Service, please contact us at:",
+      "company": "The Bliss Massage at Home",
+      "email": "Email: support@theblissathome.com",
+      "phone": "Phone: 02-XXX-XXXX",
+      "line": "LINE: @theblissathome",
+      "hours": "Business hours: Monday-Sunday 09:00-21:00"
+    },
+    "footer": "Thank you for using The Bliss Massage at Home - relaxation and happiness are what we care about."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "subtitle": "Privacy Policy",
+    "lastUpdated": "Last updated: {{date}}",
+    "readTerms": "Read the Terms of Service",
+    "importantLabel": "Important:",
+    "importantText": "The Bliss Massage at Home values the privacy and security of your data. This policy explains how we collect, use, and protect your personal data.",
+    "tocHeading": "Contents of this Policy",
+    "toc": {
+      "collect": "Information We Collect",
+      "use": "How We Use Information",
+      "disclose": "Disclosure of Information",
+      "security": "Security",
+      "rights": "Your Rights",
+      "cookies": "Cookies and Technologies"
+    },
+    "s1": {
+      "heading": "1. Information We Collect",
+      "h1": "1.1 Information You Provide Directly",
+      "p1": "When you register and use our services, we collect the following information:",
+      "li1": {
+        "label": "Personal information:",
+        "text": "Full name, email, phone number, date of birth, gender"
+      },
+      "li2": {
+        "label": "Address:",
+        "text": "Service address, postal code"
+      },
+      "li3": {
+        "label": "Health information:",
+        "text": "Underlying medical conditions, allergy history, health limitations (for safety)"
+      },
+      "li4": {
+        "label": "Payment information:",
+        "text": "Credit/debit card number (encrypted), transaction information"
+      },
+      "li5": {
+        "label": "Profile picture:",
+        "text": "If you choose to upload one"
+      },
+      "h2": "1.2 Information Collected Automatically",
+      "p2": "When you use our platform, we may collect the following information automatically:",
+      "li6": {
+        "label": "Device information:",
+        "text": "Device type, operating system, browser"
+      },
+      "li7": {
+        "label": "Usage information:",
+        "text": "Pages visited, time spent, clicks, search history"
+      },
+      "li8": {
+        "label": "Location information:",
+        "text": "GPS location (when permitted), IP Address"
+      },
+      "li9": {
+        "label": "Cookies:",
+        "text": "See details in the \"Cookies and Tracking Technologies\" section"
+      },
+      "h3": "1.3 Information from Other Sources",
+      "li10": {
+        "label": "Social media:",
+        "text": "If you sign in with Google or Facebook"
+      },
+      "li11": {
+        "label": "Business partners:",
+        "text": "Such as payment systems, identity verification services"
+      },
+      "li12": {
+        "label": "Public sources:",
+        "text": "Information made publicly available"
+      }
+    },
+    "s2": {
+      "heading": "2. How We Use Your Information",
+      "h1": "2.1 Service Provision",
+      "li1": "Create and manage user accounts",
+      "li2": "Process bookings and payments",
+      "li3": "Dispatch a therapist to your address",
+      "li4": "Communicate with you regarding bookings and services",
+      "li5": "Provide customer service and resolve issues",
+      "h2": "2.2 Improvement and Development",
+      "li6": "Analyze usage behavior to improve our services",
+      "li7": "Develop new features and services",
+      "li8": "Conduct research and statistics",
+      "li9": "Recommend services suitable for you",
+      "h3": "2.3 Marketing and Communication",
+      "li10": "Send news, promotions, and special offers (with your consent)",
+      "li11": "Notify you about new services",
+      "li12": "Conduct satisfaction surveys",
+      "h4": "2.4 Security and Legal Compliance",
+      "li13": "Prevent fraud and inappropriate use",
+      "li14": "Comply with laws and regulations",
+      "li15": "Act on court orders or government authorities",
+      "li16": "Protect the rights and safety of ourselves and others"
+    },
+    "s3": {
+      "heading": "3. Disclosure and Sharing of Information",
+      "h1": "3.1 Persons with Whom We May Share Information",
+      "li1": {
+        "label": "Therapist:",
+        "text": "Information necessary for service provision (name, address, phone number, health information)"
+      },
+      "li2": {
+        "label": "Payment service providers:",
+        "text": "Necessary transaction information (securely encrypted)"
+      },
+      "li3": {
+        "label": "Cloud service providers:",
+        "text": "For data storage and hosting"
+      },
+      "li4": {
+        "label": "Analytics providers:",
+        "text": "Such as Google Analytics (anonymized data)"
+      },
+      "li5": {
+        "label": "Affiliated companies:",
+        "text": "For business operations"
+      },
+      "h2": "3.2 Cases in Which We May Disclose Information",
+      "li6": {
+        "label": "With consent:",
+        "text": "When you authorize us to disclose information"
+      },
+      "li7": {
+        "label": "By law:",
+        "text": "When requested by a court order or law enforcement authority"
+      },
+      "li8": {
+        "label": "Protecting rights:",
+        "text": "To protect the rights, property, or safety of ourselves or others"
+      },
+      "li9": {
+        "label": "Sale of business:",
+        "text": "In the event of a merger or sale of assets"
+      },
+      "h3": "3.3 Cross-Border Data Transfers",
+      "p3": "Your information may be stored and processed in Thailand or other countries where we have service providers. We will ensure that your information is protected in accordance with international standards."
+    },
+    "s4": {
+      "heading": "4. Data Security",
+      "measuresLabel": "Our security measures:",
+      "li1": "SSL/TLS data encryption for data transmission",
+      "li2": "Encryption of data stored in the database",
+      "li3": "Strict access control",
+      "li4": "Regular security audits",
+      "li5": "Employee training on privacy",
+      "p1": "Although we use appropriate security measures, no system is 100% secure. If you notice any suspicious behavior, please notify us immediately.",
+      "h1": "4.1 Protecting Your Own Security",
+      "li6": "Use a strong password that is not reused for other services",
+      "li7": "Enable two-factor authentication (2FA)",
+      "li8": "Do not share your password with others",
+      "li9": "Log out when you finish using the service, especially on public devices",
+      "li10": "Beware of phishing emails or messages"
+    },
+    "s5": {
+      "heading": "5. Your Rights under the Personal Data Protection Act B.E. 2562 (PDPA)",
+      "p1": "You have various rights to manage your personal data, as follows:",
+      "h1": "5.1 Right of Access",
+      "p1text": "You may request access to and obtain a copy of the personal data we hold about you.",
+      "h2": "5.2 Right to Rectification",
+      "p2text": "You may request the correction or update of information that is inaccurate or incomplete.",
+      "h3": "5.3 Right to Erasure",
+      "p3text": "You may request that we delete your information, except where we are required to retain it by law.",
+      "h4": "5.4 Right to Restriction of Processing",
+      "p4text": "You may request that we restrict the use of your information in certain cases.",
+      "h5": "5.5 Right to Data Portability",
+      "p5text": "You may request to receive your information in a machine-readable format, or request that we transfer your information to another data controller.",
+      "h6": "5.6 Right to Object to Processing",
+      "p6text": "You may object to the processing of your information, such as direct marketing.",
+      "h7": "5.7 Right to Withdraw Consent",
+      "p7text": "You may withdraw the consent you have given at any time, without affecting the lawfulness of processing already carried out.",
+      "howToLabel": "How to exercise your rights:",
+      "howToText": "If you wish to exercise any of the above rights, please contact us at privacy@theblissathome.com or through our customer relations channels. We will respond within 30 days."
+    },
+    "s6": {
+      "heading": "6. Cookies and Tracking Technologies",
+      "h1": "6.1 What Are Cookies",
+      "p1": "Cookies are small files that a website stores on your device to remember settings and improve your user experience.",
+      "h2": "6.2 Types of Cookies We Use",
+      "li1": {
+        "label": "Necessary cookies:",
+        "text": "Necessary for the operation of the website (such as storing login status)"
+      },
+      "li2": {
+        "label": "Analytics cookies:",
+        "text": "Help us understand how users interact with the website"
+      },
+      "li3": {
+        "label": "Marketing cookies:",
+        "text": "Used to display relevant advertisements"
+      },
+      "li4": {
+        "label": "Personalization cookies:",
+        "text": "Remember your settings, such as language"
+      },
+      "h3": "6.3 Managing Cookies",
+      "p3": "You may control or delete cookies as you wish through your browser settings. However, disabling certain types of cookies may affect the functioning of the website."
+    },
+    "s7": {
+      "heading": "7. Data Retention",
+      "p1": "We will retain your personal data only as long as necessary to fulfill the purposes set out in this policy, or as required by law.",
+      "li1": {
+        "label": "Active account data:",
+        "text": "Retained for as long as the account remains active"
+      },
+      "li2": {
+        "label": "Transaction data:",
+        "text": "At least 5 years (in accordance with tax law)"
+      },
+      "li3": {
+        "label": "Communication records:",
+        "text": "2 years"
+      },
+      "li4": {
+        "label": "Marketing data:",
+        "text": "Until you withdraw your consent"
+      }
+    },
+    "s8": {
+      "heading": "8. Children and Minors",
+      "p1": "Our services are not directed at children under 18 years of age. We do not intentionally collect personal data directly from children.",
+      "p2": "If you are a parent or guardian and believe that your child has provided personal data to us, please contact us so that we may delete that information."
+    },
+    "s9": {
+      "heading": "9. Changes to This Policy",
+      "p1": "We may update this Privacy Policy from time to time to reflect changes in laws, practices, or our services.",
+      "p2": "We will notify you of significant changes via email or notifications on the platform. Continued use of the services after such changes constitutes your acceptance of the new policy."
+    },
+    "s10": {
+      "heading": "10. Contacting the Data Protection Officer",
+      "p1": "If you have any questions, concerns, or wish to exercise your rights under the PDPA, please contact:",
+      "dpo": "Data Protection Officer (DPO)",
+      "company": "The Bliss Massage at Home Co., Ltd.",
+      "email": "Email: privacy@theblissathome.com",
+      "phone": "Phone: 02-XXX-XXXX ext. 123",
+      "line": "LINE: @theblissathome",
+      "hours": "Business hours: Monday-Friday 09:00-18:00",
+      "responseNote": "We will endeavor to respond to your request within 30 days. If more time is required, we will notify you."
+    },
+    "s11": {
+      "heading": "11. Complaints",
+      "p1": "If you are not satisfied with our response regarding your personal data, you have the right to file a complaint with:",
+      "office": "Office of the Personal Data Protection Committee",
+      "website": "Website: www.pdpc.or.th",
+      "phone": "Phone: 02-141-6993"
+    },
+    "footer": {
+      "heading": "Our Commitment to Privacy",
+      "text": "The Bliss Massage at Home is committed to protecting your privacy and your data. We will use your information responsibly and transparently. If you have any questions or need further information, please contact us at any time."
+    }
+  }
+}

@@ -8,6 +8,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { CheckCircle, FileText, Loader2 } from 'lucide-react'
 import { supabase } from '@bliss/supabase/auth'
+import { useTranslation } from '@bliss/i18n'
 
 interface RefundPolicyConsentProps {
   /** Called when user accepts the policy */
@@ -31,6 +32,7 @@ export function RefundPolicyConsent({
   onAcceptedChange,
   hideAcceptButton = false,
 }: RefundPolicyConsentProps) {
+  const { t } = useTranslation()
   const [policyContent, setPolicyContent] = useState('')
   const [policyVersion, setPolicyVersion] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -117,7 +119,7 @@ export function RefundPolicyConsent({
     <div className={asModal ? '' : 'mt-4'}>
       <div className="flex items-center gap-2 mb-3">
         <FileText className="w-5 h-5 text-amber-600" />
-        <h3 className="font-semibold text-stone-900">เงื่อนไขการคืนเงิน</h3>
+        <h3 className="font-semibold text-stone-900">{t('common:refundPolicy.title')}</h3>
         {policyVersion && <span className="text-xs text-stone-400">v{policyVersion}</span>}
       </div>
 
@@ -138,7 +140,7 @@ export function RefundPolicyConsent({
 
           {!hasScrolledToBottom && (
             <p className="text-xs text-amber-600 mt-1 text-center animate-pulse">
-              กรุณาเลื่อนอ่านเงื่อนไขให้ครบก่อน
+              {t('common:refundPolicy.scrollPrompt')}
             </p>
           )}
 
@@ -152,7 +154,7 @@ export function RefundPolicyConsent({
               className="mt-0.5 w-4 h-4 text-amber-600 focus:ring-amber-500 rounded"
             />
             <span className="text-sm text-stone-700">
-              ข้าพเจ้าได้อ่านและยอมรับเงื่อนไขการคืนเงินข้างต้นแล้ว
+              {t('common:refundPolicy.acceptanceLabel')}
             </span>
             {isAccepted && <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />}
           </label>
@@ -165,7 +167,7 @@ export function RefundPolicyConsent({
               className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              ยืนยันยอมรับเงื่อนไข
+              {t('common:refundPolicy.acceptButton')}
             </button>
           )}
         </>

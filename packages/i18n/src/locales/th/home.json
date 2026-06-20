@@ -32,7 +32,27 @@
     "used": "ใช้แล้ว",
     "limitPerUser": "จำกัด {{count}} ครั้งต่อผู้ใช้",
     "termsTitle": "เงื่อนไขการใช้งาน",
-    "share": "แชร์โปรโมชั่น"
+    "share": "แชร์โปรโมชั่น",
+    "loading": "กำลังโหลดโปรโมชั่น...",
+    "pageTitle": "โปรโมชั่นทั้งหมด",
+    "pageSubtitle": "ข้อเสนอพิเศษสำหรับคุณ",
+    "searchPlaceholder": "ค้นหาโปรโมชั่น...",
+    "filterAll": "ทุกประเภท",
+    "filterPercentage": "ลดเปอร์เซ็นต์",
+    "filterFixedAmount": "ลดยอดคงที่",
+    "filterBuyXGetY": "ซื้อแล้วได้ฟรี",
+    "sortNewest": "ใหม่ล่าสุด",
+    "sortHighestDiscount": "ส่วนลดสูงสุด",
+    "sortExpiring": "หมดอายุเร็วสุด",
+    "empty": {
+      "heading": "ไม่พบโปรโมชั่น",
+      "message": "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+    },
+    "daysLeftBadge": "{{daysLeft}} วันสุดท้าย",
+    "discountOverlay": "OFF",
+    "expiryLabel": "ถึง {{date}}",
+    "usageLabel": "ใช้แล้ว {{used}}/{{limit}}",
+    "offText": "OFF"
   },
   "categories": {
     "title": "บริการของเรา",
@@ -65,5 +85,34 @@
     "title": "พร้อมเติมเต็มความสุขแล้วหรือยัง?",
     "subtitle1": "จองบริการนวด สปา หรือทำเล็บวันนี้",
     "subtitle2": "สัมผัสความหรูหราที่บ้านของคุณ"
+  },
+  "pointsWidget": {
+    "title": "แต้มสะสม",
+    "viewHistory": "ดูประวัติ",
+    "pointsUnit": "แต้ม",
+    "valueLabel": "มูลค่า ฿",
+    "expiringLabel": "แต้มหมดอายุ"
+  },
+  "backToHome": "กลับหน้าหลัก",
+  "globalDiscount": {
+    "badge": "ลด {{percentage}}%",
+    "title": "ส่วนลดพิเศษทุกบริการ",
+    "subtitle": "เพียงแค่กรอกโค้ด DISCOUNT15"
+  },
+  "promotion": {
+    "label": "โปรโมชั่น",
+    "promoCodeLabel": "รหัสโปรโมชั่น",
+    "codeCopied": "คัดลอกแล้ว!",
+    "discountLabel": "ส่วนลด",
+    "daysLeftLabel": "วันเหลือ",
+    "usedLabel": "ใช้แล้ว",
+    "usageProgressLabel": "การใช้งาน",
+    "termsTitle": "เงื่อนไข",
+    "minimumOrderLabel": "ยอดขั้นต่ำ:",
+    "maximumDiscountLabel": "ลดสูงสุด:",
+    "bookNowButton": "จองเลย",
+    "shareText": "ใช้รหัส:",
+    "shareButton": "แชร์",
+    "closeButton": "ปิด"
   }
 }

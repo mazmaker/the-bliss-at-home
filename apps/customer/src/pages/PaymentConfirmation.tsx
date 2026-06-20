@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { CheckCircle, Download, ArrowRight, Home, Mail, Loader2 } from 'lucide-react'
 import { downloadReceipt } from '../utils/receiptPdfGenerator'
-import { getStoredLanguage } from '@bliss/i18n'
+import { getStoredLanguage, useTranslation } from '@bliss/i18n'
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
@@ -41,6 +41,7 @@ interface ReceiptData {
 }
 
 function PaymentConfirmation() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
@@ -119,10 +120,10 @@ function PaymentConfirmation() {
       if (result.success) {
         setEmailSent(true)
       } else {
-        alert(result.error || 'ไม่สามารถส่งอีเมลได้')
+        alert(result.error || t('booking:paymentConfirmation.emailError'))
       }
     } catch {
-      alert('เกิดข้อผิดพลาดในการส่งอีเมล')
+      alert(t('booking:paymentConfirmation.emailErrorGeneral'))
     } finally {
       setEmailSending(false)
     }
@@ -143,9 +144,9 @@ function PaymentConfirmation() {
   }
 
   const formatPaymentMethod = (method: string, cardLastDigits?: string): string => {
-    if (method === 'credit_card') return `บัตรเครดิต${cardLastDigits ? ` •••• ${cardLastDigits}` : ''}`
-    if (method === 'promptpay') return 'พร้อมเพย์'
-    if (method === 'internet_banking') return 'โอนผ่านธนาคาร'
+    if (method === 'credit_card') return `${t('booking:paymentMethod.creditCard')}${cardLastDigits ? ` •••• ${cardLastDigits}` : ''}`
+    if (method === 'promptpay') return t('booking:paymentMethod.promptpay')
+    if (method === 'internet_banking') return t('booking:paymentMethod.internetBanking')
     return method
   }
 
@@ -154,7 +155,7 @@ function PaymentConfirmation() {
       <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-amber-700 mb-4"></div>
-          <p className="text-stone-600">กำลังโหลดข้อมูลการชำระเงิน...</p>
+          <p className="text-stone-600">{t('common:loading.paymentData')}</p>
         </div>
       </div>
     )
@@ -164,12 +165,12 @@ function PaymentConfirmation() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-stone-600 mb-4">ไม่พบข้อมูลการชำระเงิน</p>
+          <p className="text-stone-600 mb-4">{t('common:error.paymentDataNotFound')}</p>
           <Link
             to="/bookings"
             className="inline-flex items-center gap-2 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800"
           >
-            ไปที่รายการจอง
+            {t('booking:goToBookings')}
           </Link>
         </div>
       </div>
@@ -184,39 +185,39 @@ function PaymentConfirmation() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4 animate-in zoom-in duration-300">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-stone-900 mb-2">ชำระเงินสำเร็จ!</h1>
-          <p className="text-stone-600">การจองของคุณได้รับการยืนยันแล้ว</p>
+          <h1 className="text-3xl font-bold text-stone-900 mb-2">{t('booking:paymentConfirmation.title')}</h1>
+          <p className="text-stone-600">{t('booking:paymentConfirmation.subtitle')}</p>
         </div>
 
         {/* Payment Details Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
-          <h2 className="text-xl font-bold text-stone-900 mb-6">รายละเอียดการชำระเงิน</h2>
+          <h2 className="text-xl font-bold text-stone-900 mb-6">{t('booking:paymentDetails.title')}</h2>
 
           <div className="space-y-4">
             <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">บริการ</span>
+              <span className="text-stone-600">{t('booking:paymentDetails.service')}</span>
               <span className="font-medium text-stone-900">{receiptData.service_name}</span>
             </div>
 
             <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">ยอดชำระ</span>
+              <span className="text-stone-600">{t('booking:paymentDetails.amount')}</span>
               <span className="text-xl font-bold text-amber-700">฿{receiptData.amount.toLocaleString()}</span>
             </div>
 
             <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">วิธีการชำระ</span>
+              <span className="text-stone-600">{t('booking:paymentDetails.method')}</span>
               <span className="font-medium text-stone-900">
                 {formatPaymentMethod(receiptData.payment_method, receiptData.card_last_digits)}
               </span>
             </div>
 
             <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">เลขที่ใบเสร็จ</span>
+              <span className="text-stone-600">{t('booking:paymentDetails.receiptNumber')}</span>
               <span className="font-medium text-stone-900">{receiptData.receipt_number}</span>
             </div>
 
             <div className="flex justify-between py-3">
-              <span className="text-stone-600">วันที่</span>
+              <span className="text-stone-600">{t('booking:paymentDetails.date')}</span>
               <span className="font-medium text-stone-900">
                 {formatDate(receiptData.transaction_date)}
               </span>
@@ -231,7 +232,7 @@ function PaymentConfirmation() {
             className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
           >
             <Download className="w-5 h-5" />
-            ดาวน์โหลดใบเสร็จ
+            {t('booking:paymentConfirmation.downloadReceipt')}
           </button>
 
           <button
@@ -246,7 +247,7 @@ function PaymentConfirmation() {
             ) : (
               <Mail className="w-5 h-5" />
             )}
-            {emailSending ? 'กำลังส่ง...' : emailSent ? 'ส่งอีเมลแล้ว' : 'ส่งใบเสร็จทางอีเมล'}
+            {emailSending ? t('booking:paymentConfirmation.emailSending') : emailSent ? t('booking:paymentConfirmation.emailSent') : t('booking:paymentConfirmation.sendReceipt')}
           </button>
         </div>
 
@@ -256,7 +257,7 @@ function PaymentConfirmation() {
             to={`/bookings/${bookingId}`}
             className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
           >
-            ดูรายละเอียดการจอง
+            {t('booking:paymentConfirmation.viewBookingDetails')}
             <ArrowRight className="w-5 h-5" />
           </Link>
 
@@ -265,17 +266,17 @@ function PaymentConfirmation() {
             className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
           >
             <Home className="w-5 h-5" />
-            กลับหน้าหลัก
+            {t('home:backToHome')}
           </Link>
         </div>
 
         {/* Additional Info */}
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
-          <p className="font-medium mb-1">ขั้นตอนต่อไป</p>
+          <p className="font-medium mb-1">{t('booking:paymentConfirmation.nextSteps')}</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>ใบเสร็จรับเงินถูกส่งไปยังอีเมลของคุณแล้ว</li>
-            <li>พนักงานของเราจะติดต่อคุณ 1 วันก่อนวันนัดหมาย</li>
-            <li>คุณสามารถดูหรือยกเลิกการจองได้ที่หน้ารายการจอง</li>
+            <li>{t('booking:paymentConfirmation.receiptEmailSent')}</li>
+            <li>{t('booking:paymentConfirmation.staffContactInfo')}</li>
+            <li>{t('booking:paymentConfirmation.bookingManageInfo')}</li>
           </ul>
         </div>
       </div>

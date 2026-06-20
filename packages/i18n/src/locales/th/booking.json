@@ -42,7 +42,10 @@
       "pleaseSelect": "กรุณาเลือกวันที่และเวลา",
       "serviceOn": "บริการวันที่ {{date}} เวลา {{time}}",
       "selectedDateTime": "บริการวันที่ {{date}} เวลา {{time}}",
-      "hours": "ชั่วโมง"
+      "hours": "ชั่วโมง",
+      "advanceBookingLimit": "สามารถจองล่วงหน้าได้สูงสุด 14 วัน (2 อาทิตย์)",
+      "selectHour": "เลือกชั่วโมง",
+      "selectMinute": "เลือกนาที"
     },
     "step3": {
       "title": "ความต้องการผู้ให้บริการ",
@@ -77,7 +80,19 @@
       "notes": "หมายเหตุเพิ่มเติม",
       "notesPlaceholder": "เช่น รหัสเข้าตึก จุดนัดพบ หรือข้อมูลสำคัญอื่นๆ",
       "arrivalNote": "ทีมงานจะเดินทางถึงสถานที่ของคุณตรงเวลา",
-      "default": "ค่าเริ่มต้น"
+      "default": "ค่าเริ่มต้น",
+      "loadingAddresses": "กำลังโหลดที่อยู่...",
+      "markerTitle": "ตำแหน่งที่อยู่",
+      "searchPlaceholder": "ค้นหาสถานที่...",
+      "locatingButton": "กำลังค้นหา...",
+      "currentLocationButton": "ตำแหน่งปัจจุบัน",
+      "howToUseTitle": "วิธีใช้งาน:",
+      "howToUseStep1": "• กดปุ่ม \"ตำแหน่งปัจจุบัน\" เพื่อใช้ตำแหน่งของคุณ",
+      "howToUseStep2": "• คลิกบนแผนที่เพื่อกำหนดตำแหน่ง",
+      "howToUseStep3": "• ลากหมุดสีแดงเพื่อปรับตำแหน่ง",
+      "howToUseStep4": "• ค้นหาสถานที่ด้วยช่องค้นหาด้านบนแผนที่",
+      "latitudeLabel": "ละติจูด:",
+      "longitudeLabel": "ลองจิจูด:"
     },
     "step5": {
       "title": "ยืนยันการจอง",
@@ -98,7 +113,10 @@
       "voucherInvalid": "รหัสไม่ถูกต้องหรือหมดอายุ",
       "voucherMinOrder": "ยอดขั้นต่ำ ฿{{amount}}",
       "voucherUsed": "รหัสนี้ถูกใช้ไปแล้ว",
-      "voucherNotApplicable": "รหัสนี้ไม่สามารถใช้กับบริการนี้ได้"
+      "voucherNotApplicable": "รหัสนี้ไม่สามารถใช้กับบริการนี้ได้",
+      "providerPreference": "ความต้องการผู้ให้บริการ",
+      "pointsDiscount": "ส่วนลดจากแต้ม ({{points}} แต้ม)",
+      "discountAmount": "-฿{{amount}}"
     },
     "payment": {
       "title": "ชำระเงิน",
@@ -152,7 +170,15 @@
     "cancelled": "ยกเลิกแล้ว",
     "bookingNumber": "การจอง #{{number}}",
     "noBookings": "ยังไม่มีการจอง",
-    "viewServices": "ดูบริการ"
+    "viewServices": "ดูบริการ",
+    "filterAllStatuses": "ทุกสถานะ",
+    "filters": {
+      "fromDate": "ตั้งแต่วันที่",
+      "toDate": "ถึงวันที่",
+      "service": "บริการ",
+      "allServices": "ทุกบริการ"
+    },
+    "noResultsFiltered": "ไม่พบรายการจองตามตัวกรองที่เลือก"
   },
   "details": {
     "title": "รายละเอียดการจอง",
@@ -188,5 +214,429 @@
     "notFound": "ไม่พบการจอง",
     "notFoundMessage": "ไม่พบการจองที่คุณกำลังค้นหา",
     "hours": "ชั่วโมง"
+  },
+  "healthDeclaration": {
+    "conditions": {
+      "heartDisease": "โรคหัวใจ",
+      "bloodPressure": "โรคความดันโลหิต (สูง / ต่ำ)",
+      "diabetes": "โรคเบาหวาน",
+      "pregnancy": "อยู่ระหว่างการตั้งครรภ์",
+      "postSurgery": "อยู่ระหว่างการพักฟื้นจากการผ่าตัด หรือมีแผลผ่าตัดที่ยังไม่หายดี",
+      "skinDisease": "โรคผิวหนัง",
+      "other": "อื่น ๆ (โปรดระบุ)"
+    },
+    "intro": "เพื่อความปลอดภัยในการรับบริการ หากท่านมีโรคประจำตัว หรือเงื่อนไขทางสุขภาพดังต่อไปนี้ โปรดแจ้งให้เจ้าหน้าที่ทราบก่อนทำการจองนวดทุกครั้ง",
+    "otherDetailPlaceholder": "โปรดระบุอาการหรือโรคประจำตัว",
+    "noCondition": "ไม่มีอาการหรือโรคประจำตัวข้างต้น",
+    "confirmationSectionTitle": "การยืนยันข้อมูล",
+    "confirmAccuracy": "ข้าพเจ้าขอรับรองว่าข้อมูลข้างต้นเป็นความจริงทุกประการ",
+    "confirmAdjustment": "หากมีเงื่อนไขสุขภาพข้างต้น ข้าพเจ้ายินยอมให้ผู้ให้บริการปรับรูปแบบการนวดให้เหมาะสมเพื่อความปลอดภัย",
+    "privacyNote": "ข้อมูลทั้งหมดจะถูกเก็บเป็นความลับ และใช้เพื่อความปลอดภัยในการให้บริการเท่านั้น",
+    "saveError": "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "title": "ข้อควรระวังและข้อมูลสุขภาพก่อนรับบริการ",
+    "saving": "กำลังบันทึก...",
+    "confirmData": "ยืนยันข้อมูล"
+  },
+  "cancelReason": {
+    "urgent": "ติดธุระกะทันหัน",
+    "travelPlanChange": "เปลี่ยนแผนการเดินทาง",
+    "notConvenient": "ไม่สะดวกในวันที่เลือก",
+    "health": "มีปัญหาสุขภาพ",
+    "other": "อื่นๆ"
+  },
+  "cancelBooking": {
+    "checkError": "ไม่สามารถตรวจสอบสถานะการยกเลิกได้",
+    "invalidData": "ข้อมูลการตรวจสอบไม่ถูกต้อง",
+    "checkFailed": "เกิดข้อผิดพลาดในการตรวจสอบ",
+    "reasonRequired": "กรุณาระบุเหตุผลในการยกเลิก",
+    "cancelFailed": "เกิดข้อผิดพลาดในการยกเลิก",
+    "title": "ยกเลิกการจอง",
+    "checking": "กำลังตรวจสอบเงื่อนไขการยกเลิก...",
+    "cannotCancel": "ไม่สามารถยกเลิกได้",
+    "notEligible": "การจองนี้ไม่สามารถยกเลิกได้ในขณะนี้",
+    "hoursUntilBooking": "เหลือเวลา {{hours}} ชั่วโมงก่อนนัด",
+    "policyMessage": "ตามนโยบาย ต้องยกเลิกล่วงหน้าอย่างน้อย 3 ชั่วโมงก่อนเวลานัด",
+    "rescheduleOption": "หากต้องการเปลี่ยนเวลา สามารถเลื่อนนัดแทนการยกเลิกได้",
+    "bookingSummary": "การจองที่จะยกเลิก",
+    "refundAmount": "จำนวนเงินที่จะได้รับคืน",
+    "refundPercentage": "{{percentage}}% ของยอดชำระ",
+    "refundProcessing": "การคืนเงินอยู่ระหว่างดำเนินการ",
+    "noRefund": "ไม่มีการคืนเงิน",
+    "noRefundReason": "ตามเงื่อนไข การยกเลิกในช่วงเวลานี้จะไม่ได้รับเงินคืน",
+    "reasonLabel": "เหตุผลในการยกเลิก",
+    "reasonPlaceholder": "ระบุเหตุผล...",
+    "confirmTitle": "ยืนยันการยกเลิกการจอง",
+    "confirmMessage": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "service": "บริการ:",
+    "date": "วันที่:",
+    "time": "เวลา:",
+    "reason": "เหตุผล:",
+    "refund": "เงินคืน:",
+    "processing": "กำลังดำเนินการ...",
+    "confirmButton": "ยืนยันยกเลิกการจอง",
+    "successTitle": "ยกเลิกการจองเรียบร้อยแล้ว",
+    "successMessage": "การจองหมายเลข {{bookingNumber}} ถูกยกเลิกเรียบร้อยแล้ว",
+    "refundInfo": "คุณจะได้รับเงินคืน ฿{{amount}} ภายใน {{days}} วันทำการ",
+    "refundWithinDays": "(ภายใน {{days}} วันทำการ)",
+    "error": "ไม่สามารถยกเลิกการจองได้"
+  },
+  "reschedule": {
+    "checkError": "ไม่สามารถตรวจสอบสถานะการเลื่อนนัดได้",
+    "checkFailed": "เกิดข้อผิดพลาดในการตรวจสอบ",
+    "selectDateTimeRequired": "กรุณาเลือกวันและเวลาใหม่",
+    "error": "เกิดข้อผิดพลาดในการเลื่อนนัด",
+    "modalTitle": "เลื่อนนัดหมาย",
+    "checking": "กำลังตรวจสอบเงื่อนไขการเลื่อนนัด...",
+    "cannotReschedule": "ไม่สามารถเลื่อนนัดได้",
+    "notEligibleDefault": "การจองนี้ไม่สามารถเลื่อนนัดได้ในขณะนี้",
+    "hoursUntilBooking": "เหลือเวลา {{hours}} ชั่วโมงก่อนนัด",
+    "policyMessage": "ตามนโยบาย ต้องเลื่อนนัดล่วงหน้าอย่างน้อย 3 ชั่วโมงก่อนเวลานัด",
+    "currentBooking": "การจองปัจจุบัน",
+    "selectNewDate": "เลือกวันใหม่",
+    "selectNewTime": "เลือกเวลาใหม่",
+    "continue": "ดำเนินการต่อ",
+    "confirmTitle": "ยืนยันการเลื่อนนัด",
+    "confirmMessage": "กรุณาตรวจสอบรายละเอียดการเลื่อนนัดก่อนยืนยัน",
+    "originalDateTime": "วันเวลาเดิม",
+    "newDateTime": "วันเวลาใหม่",
+    "confirmButton": "ยืนยันเลื่อนนัด",
+    "processing": "กำลังดำเนินการ...",
+    "successTitle": "เลื่อนนัดเรียบร้อยแล้ว",
+    "successMessage": "การจองหมายเลข {{number}} ได้เปลี่ยนเป็นวันเวลาใหม่แล้ว",
+    "newAppointment": "นัดหมายใหม่",
+    "unableTitle": "ไม่สามารถเลื่อนนัดได้"
+  },
+  "review": {
+    "ratingRequired": "กรุณาให้คะแนนรวม",
+    "alreadyReviewed": "คุณรีวิวการจองนี้แล้ว",
+    "modalTitle": "ให้คะแนนและรีวิว",
+    "bookingNumber": "หมายเลข",
+    "overallRating": "คะแนนรวม",
+    "cleanliness": "ความสะอาด",
+    "professionalism": "ความเป็นมืออาชีพ",
+    "skill": "ทักษะ",
+    "reviewMessage": "ข้อความรีวิว",
+    "forBooking": "รีวิวสำหรับการจอง",
+    "subRatingsOptional": "คะแนนรายด้าน (ไม่จำเป็น)",
+    "reviewMessageOptional": "ข้อความรีวิว (ไม่จำเป็น)",
+    "sharePlaceholder": "แชร์ประสบการณ์ของคุณ...",
+    "submit": "ส่งรีวิว",
+    "thankYou": "ขอบคุณสำหรับรีวิว!",
+    "helpText": "รีวิวของคุณจะช่วยให้เราพัฒนาบริการได้ดียิ่งขึ้น"
+  },
+  "dateTime": "{{date}} เวลา {{time}}",
+  "bookingNumberLabel": "หมายเลข:",
+  "staffLabel": "พนักงาน:",
+  "error": {
+    "missingRequired": "ข้อมูลไม่ครบถ้วน กรุณากรอกให้ครบ",
+    "paymentFailedAlert": "การชำระเงินล้มเหลว: {{error}}",
+    "paymentFailed": "การชำระเงินล้มเหลว กรุณาลองใหม่อีกครั้ง",
+    "paymentTimeout": "หมดเวลาการชำระเงิน กรุณาลองใหม่อีกครั้ง",
+    "loginRequired": "กรุณาเข้าสู่ระบบเพื่อทำการจอง",
+    "bookingFailed": "ไม่สามารถสร้างการจองได้: {{error}}"
+  },
+  "provider": {
+    "unnamedProvider": "ไม่ระบุชื่อ",
+    "notAssigned": "ยังไม่ได้มอบหมายพนักงาน",
+    "assignedStaffInfo": "ข้อมูลพนักงานที่ได้รับมอบหมาย",
+    "avatarInitial": "พ",
+    "reviews": "รีวิว"
+  },
+  "recipient": {
+    "default": "ผู้รับบริการ"
+  },
+  "paymentMethod": {
+    "promptpay": "พร้อมเพย์",
+    "pendingPayment": "รอชำระเงิน",
+    "creditCard": "บัตรเครดิต",
+    "internetBanking": "โอนผ่านธนาคาร"
+  },
+  "jobStatus": {
+    "pending": "รอพนักงานยืนยัน",
+    "confirmed": "พนักงานยืนยันแล้ว",
+    "traveling": "กำลังเดินทาง",
+    "inProgress": "กำลังให้บริการ",
+    "completed": "เสร็จสิ้น",
+    "cancelled": "ยกเลิกแล้ว",
+    "description": {
+      "pending": "🔄 รอพนักงานตอบรับการจอง",
+      "confirmed": "พนักงานรับงานแล้ว กำลังเตรียมตัวเดินทาง",
+      "traveling": "🚗 พนักงานกำลังเดินทางไปยังสถานที่ของคุณ",
+      "inProgress": "💆‍♀️ พนักงานกำลังให้บริการ",
+      "completed": "🎉 การให้บริการเสร็จสิ้นแล้ว"
+    }
+  },
+  "receipt": {
+    "noTransaction": "ไม่พบข้อมูลธุรกรรม"
+  },
+  "creditNote": {
+    "noRefundData": "ไม่พบข้อมูลการคืนเงิน"
+  },
+  "tracking": {
+    "title": "ติดตามการเดินทางของพนักงาน",
+    "description": "พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง",
+    "loading": "กำลังตรวจสอบการเดินทางของพนักงาน..."
+  },
+  "paymentStatus": {
+    "paid": "ชำระแล้ว",
+    "refunded": "คืนเงินแล้ว",
+    "failed": "ชำระไม่สำเร็จ",
+    "pending": "รอชำระเงิน"
+  },
+  "paymentAction": {
+    "payNow": "ชำระเงินตอนนี้",
+    "note": "งานจะถูกส่งให้สตาฟเมื่อชำระเงินเสร็จสิ้น"
+  },
+  "downloadReceipt": {
+    "label": "ดาวน์โหลดใบเสร็จ"
+  },
+  "downloadCreditNote": {
+    "label": "ดาวน์โหลดใบลดหนี้"
+  },
+  "extension": {
+    "inProgressLabel": "บริการกำลังดำเนินการ",
+    "note": "คุณสามารถเพิ่มเวลาบริการได้หากต้องการเวลาเพิ่มเติม",
+    "times": "+{{count}} ครั้ง",
+    "totalExtensionPrice": "รวมค่าเพิ่มเวลา: ฿{{amount}}"
+  },
+  "status": {
+    "pending": {
+      "title": "รอการยืนยัน",
+      "description": "เรากำลังตรวจสอบการจองของคุณ",
+      "billingStatus": "รอการชำระเงิน"
+    },
+    "confirmed": {
+      "title": "รอการมอบหมายพนักงาน",
+      "description": "เรากำลังหาพนักงานที่เหมาะสมให้คุณ",
+      "billingStatus": "ชำระเงินเสร็จแล้ว"
+    },
+    "assigned": {
+      "title": "พนักงานรับงานแล้ว",
+      "description": "พนักงานกำลังเตรียมตัวเดินทาง",
+      "billingStatus": "ชำระเงินเสร็จแล้ว"
+    },
+    "ASSIGNED": {
+      "title": "พนักงานรับงานแล้ว",
+      "description": "พนักงานกำลังเตรียมตัวเดินทาง",
+      "billingStatus": "ชำระเงินเสร็จแล้ว"
+    },
+    "STAFF_EN_ROUTE": {
+      "title": "พนักงานกำลังเดินทาง",
+      "description": "ติดตามการเดินทางได้ในแผนที่ด้านล่าง",
+      "billingStatus": "ชำระเงินเสร็จแล้ว - รอเริ่มบริการ"
+    },
+    "STAFF_ARRIVED": {
+      "title": "พนักงานมาถึงแล้ว",
+      "description": "พนักงานมาถึงจุดหมายแล้ว กำลังเตรียมเริ่มบริการ",
+      "billingStatus": "ชำระเงินเสร็จแล้ว - รอเริ่มบริการ"
+    },
+    "SERVICE_IN_PROGRESS": {
+      "title": "กำลังให้บริการ",
+      "description": "บริการกำลังดำเนินอยู่ โปรดผ่อนคลายและเพลิดเพลิน",
+      "billingStatus": "เริ่มคิดค่าบริการแล้ว"
+    },
+    "COMPLETED": {
+      "title": "บริการเสร็จสิ้น",
+      "description": "ขอบคุณที่ใช้บริการ หวังว่าคุณจะพอใจ",
+      "billingStatus": "คิดค่าบริการเสร็จแล้ว"
+    },
+    "cancelled": {
+      "title": "การจองถูกยกเลิก",
+      "description": "การจองของคุณถูกยกเลิกแล้ว",
+      "billingStatus": "ไม่มีค่าใช้จ่าย"
+    },
+    "staffReady": "พนักงานพร้อมให้บริการแล้ว",
+    "staffReadyMessage": "กำลังเตรียมอุปกรณ์และเริ่มบริการ รอสักครู่นะคะ"
+  },
+  "payment": {
+    "warningIncomplete": "⚠️ กรุณาชำระเงินให้เสร็จสมบูรณ์",
+    "incompleteHeading": "การชำระเงินยังไม่เสร็จสมบูรณ์",
+    "incompleteMessage": "งานถูก confirm แล้ว แต่ยังรอการชำระเงิน กรุณาติดต่อทีมงานหากมีปัญหา",
+    "failed": "การชำระเงินล้มเหลว กรุณาลองใหม่",
+    "qrGenerationFailed": "ไม่สามารถสร้าง QR PromptPay ได้",
+    "errorGeneric": "การชำระเงินล้มเหลว",
+    "pageTitle": "ชำระเงิน",
+    "creditCard": "ชำระเงินด้วยบัตรเครดิต",
+    "promptpay": "ชำระเงินด้วย PromptPay",
+    "generateQRButton": "สร้าง QR PromptPay (฿{{amount}})",
+    "qrCodeAlt": "PromptPay QR Code",
+    "waitingForPayment": "สแกน QR เพื่อชำระเงิน • กำลังรอการชำระเงิน...",
+    "noChannelsAvailable": "ขณะนี้ยังไม่มีช่องทางการชำระเงินที่เปิดให้บริการ",
+    "validation": {
+      "fillAllFields": "กรุณากรอกข้อมูลบัตรให้ครบถ้วน",
+      "invalidCardNumber": "หมายเลขบัตรไม่ถูกต้อง",
+      "invalidCvv": "CVV ไม่ถูกต้อง"
+    },
+    "error": {
+      "paymentFailed": "การชำระเงินล้มเหลว",
+      "paymentFailedRetry": "การชำระเงินล้มเหลว กรุณาลองใหม่อีกครั้ง",
+      "cardValidationFailed": "ตรวจสอบบัตรไม่สำเร็จ กรุณาตรวจสอบข้อมูลบัตรของคุณ"
+    },
+    "securePayment": {
+      "title": "ชำระเงินปลอดภัย",
+      "description": "ข้อมูลบัตรของคุณถูกเข้ารหัสและประมวลผลอย่างปลอดภัยโดย Omise เราไม่เก็บข้อมูลบัตรเต็มของคุณ"
+    },
+    "form": {
+      "cardholderName": "ชื่อบนบัตร",
+      "cardholderNamePlaceholder": "JOHN DOE",
+      "cardNumber": "หมายเลขบัตร",
+      "cardNumberPlaceholder": "1234 5678 9012 3456",
+      "expiryMonth": "เดือน",
+      "expiryMonthPlaceholder": "MM",
+      "expiryYear": "ปี",
+      "expiryYearPlaceholder": "YYYY",
+      "cvv": "CVV",
+      "cvvPlaceholder": "123",
+      "saveCardForFuture": "บันทึกบัตรนี้สำหรับการชำระเงินครั้งต่อไป",
+      "processing": "กำลังประมวลผล...",
+      "payButton": "ชำระเงิน"
+    },
+    "testMode": {
+      "title": "โหมดทดสอบ - ใช้บัตรทดสอบ:",
+      "testCardNumber": "หมายเลข: 4242 4242 4242 4242",
+      "testCardDetails": "วันหมดอายุ: วันที่ในอนาคต | CVV: เลข 3 หลักใดก็ได้"
+    },
+    "secureCheckout": "ชำระเงินอย่างปลอดภัย",
+    "cardName": {
+      "required": "กรุณากรอกชื่อบนบัตร",
+      "label": "ชื่อบนบัตร",
+      "placeholder": "JOHN DOE"
+    },
+    "cardNumber": {
+      "invalid": "หมายเลขบัตรไม่ถูกต้อง",
+      "label": "หมายเลขบัตร",
+      "placeholder": "1234 5678 9012 3456"
+    },
+    "expiration": {
+      "month": {
+        "invalid": "เดือนไม่ถูกต้อง",
+        "label": "เดือน",
+        "placeholder": "MM"
+      },
+      "year": {
+        "invalid": "ปีไม่ถูกต้อง",
+        "label": "ปี",
+        "placeholder": "YYYY"
+      }
+    },
+    "cvv": {
+      "invalid": "CVV ไม่ถูกต้อง",
+      "label": "CVV",
+      "placeholder": "123"
+    },
+    "security": {
+      "note": "ข้อมูลบัตรของคุณได้รับการรักษาความปลอดภัย เราใช้บริการ Omise ระบบชำระเงินที่ได้มาตรฐานสากล"
+    },
+    "generatingQR": "กำลังสร้าง QR..."
+  },
+  "progress": {
+    "step": {
+      "booking": "การจอง",
+      "findStaff": "หาพนักงาน",
+      "travel": "เดินทาง",
+      "service": "บริการ"
+    }
+  },
+  "action": {
+    "call": "โทร"
+  },
+  "duration": {
+    "travelTime": "เวลาเดินทาง",
+    "notCountedAsServiceTime": "ไม่นับเป็นเวลาบริการ",
+    "serviceTime": "เวลาบริการ"
+  },
+  "booking": {
+    "travelStartedAt": "เริ่มเดินทาง: ",
+    "serviceStartedAt": "เริ่มบริการ: "
+  },
+  "billing": {
+    "inProgress": "กำลังคิดค่าบริการ"
+  },
+  "bookingNotFound": {
+    "title": "ไม่พบการจอง",
+    "message": "ไม่สามารถหาการจองที่ต้องการชำระเงินได้"
+  },
+  "bookingSummary": {
+    "title": "สรุปการจอง",
+    "bookingNumber": "หมายเลขจอง",
+    "date": "วันที่",
+    "amount": "ยอดชำระ"
+  },
+  "goToBookings": "ไปที่รายการจอง",
+  "paymentConfirmation": {
+    "title": "ชำระเงินสำเร็จ!",
+    "subtitle": "การจองของคุณได้รับการยืนยันแล้ว",
+    "downloadReceipt": "ดาวน์โหลดใบเสร็จ",
+    "emailSending": "กำลังส่ง...",
+    "emailSent": "ส่งอีเมลแล้ว",
+    "sendReceipt": "ส่งใบเสร็จทางอีเมล",
+    "viewBookingDetails": "ดูรายละเอียดการจอง",
+    "nextSteps": "ขั้นตอนต่อไป",
+    "receiptEmailSent": "ใบเสร็จรับเงินถูกส่งไปยังอีเมลของคุณแล้ว",
+    "staffContactInfo": "พนักงานของเราจะติดต่อคุณ 1 วันก่อนวันนัดหมาย",
+    "bookingManageInfo": "คุณสามารถดูหรือยกเลิกการจองได้ที่หน้ารายการจอง",
+    "emailError": "ไม่สามารถส่งอีเมลได้",
+    "emailErrorGeneral": "เกิดข้อผิดพลาดในการส่งอีเมล"
+  },
+  "paymentDetails": {
+    "title": "รายละเอียดการชำระเงิน",
+    "service": "บริการ",
+    "amount": "ยอดชำระ",
+    "method": "วิธีการชำระ",
+    "receiptNumber": "เลขที่ใบเสร็จ",
+    "date": "วันที่"
+  },
+  "transactionHistory": {
+    "title": "ประวัติธุรกรรม",
+    "subtitle": "ดูธุรกรรมการชำระเงินและใบเสร็จทั้งหมดของคุณ",
+    "filterSuccessful": "สำเร็จ",
+    "filterRefunded": "คืนเงิน",
+    "filterFailed": "ล้มเหลว",
+    "statusSuccessful": "สำเร็จ",
+    "statusRefunded": "คืนเงิน",
+    "statusFailed": "ล้มเหลว",
+    "statusPending": "รอดำเนินการ",
+    "cardFallback": "บัตร",
+    "paymentMethodPromptpay": "พร้อมเพย์",
+    "paymentMethodInternetBanking": "โอนผ่านธนาคาร",
+    "paymentMethodCash": "เงินสด",
+    "noTransactions": "ไม่พบธุรกรรม",
+    "noTransactionsMessage": "คุณยังไม่มีธุรกรรม",
+    "receipt": "ใบเสร็จ",
+    "viewBooking": "ดูการจอง",
+    "refundedAlert": "ธุรกรรมนี้ได้รับการคืนเงินไปยังวิธีการชำระเงินเดิมของคุณ",
+    "summaryHeading": "สรุป",
+    "totalTransactions": "ธุรกรรมทั้งหมด",
+    "totalSpent": "ยอดใช้จ่ายทั้งหมด",
+    "successfulLabel": "สำเร็จ",
+    "refundedLabel": "คืนเงิน"
+  },
+  "transactionTypes": {
+    "earn": "ได้รับจากการจอง",
+    "bonus": "โบนัส",
+    "redeem": "แลกส่วนลด",
+    "refund": "คืนแต้ม",
+    "expire": "หมดอายุ",
+    "adminAdjust": "ปรับปรุงโดยแอดมิน"
+  },
+  "pointsFilter": {
+    "all": "ทั้งหมด",
+    "earned": "ได้รับ",
+    "redeemed": "ใช้แต้ม",
+    "expired": "หมดอายุ"
+  },
+  "pointsRedeem": {
+    "errorInvalidAmount": "กรุณาใส่จำนวนแต้ม",
+    "errorCannotRedeemPoints": "ไม่สามารถใช้แต้มได้",
+    "errorMinimumPointsRequired": "แต้มขั้นต่ำ {{count}} แต้ม",
+    "sectionTitle": "ใช้แต้มสะสม",
+    "yourPoints": "แต้มของคุณ: ",
+    "pointsUnit": "แต้ม",
+    "appliedPoints": "ใช้ {{points}} แต้ม",
+    "discountPrefix": "= ส่วนลด ฿",
+    "placeholderMinimumPoints": "ขั้นต่ำ {{count}} แต้ม",
+    "applyButton": "ใช้แต้ม",
+    "useAllButton": "ใช้แต้มทั้งหมด",
+    "maxDiscountHint": "(สูงสุด {{percent}}% ของราคา)"
   }
 }

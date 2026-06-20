@@ -282,7 +282,7 @@ function Register() {
               <div className="flex items-center gap-2 mb-3">
                 <HeartPulse className="w-5 h-5 text-amber-700" />
                 <h2 className="font-semibold text-stone-900">
-                  ข้อควรระวังและข้อมูลสุขภาพก่อนรับบริการ
+                  {t('auth:register.healthDeclarationTitle')}
                 </h2>
               </div>
               <HealthChecklistFields

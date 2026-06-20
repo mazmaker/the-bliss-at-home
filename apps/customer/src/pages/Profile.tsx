@@ -408,21 +408,21 @@ function Profile() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                       <HeartPulse className="w-5 h-5 text-amber-700" />
-                      ข้อมูลสุขภาพก่อนรับบริการ
+                      {t('profile:health.title')}
                     </h3>
                     <button
                       onClick={() => setIsHealthModalOpen(true)}
                       className="text-sm text-amber-700 hover:text-amber-800 font-medium"
                     >
-                      {healthDeclaration ? 'แก้ไข' : 'กรอกข้อมูล'}
+                      {healthDeclaration ? t('profile:health.editButton') : t('profile:health.fillButton')}
                     </button>
                   </div>
                   {!healthDeclaration ? (
                     <p className="text-sm text-stone-500">
-                      ยังไม่ได้กรอกข้อมูลสุขภาพ — จำเป็นต้องกรอกก่อนทำการจอง
+                      {t('profile:health.notFilledYet')}
                     </p>
                   ) : healthDeclaration.has_no_condition ? (
-                    <p className="text-sm text-green-700">ไม่มีอาการหรือโรคประจำตัว</p>
+                    <p className="text-sm text-green-700">{t('profile:health.noCondition')}</p>
                   ) : (
                     <ul className="space-y-1">
                       {healthDeclaration.conditions.map((key) => (
@@ -675,7 +675,7 @@ function Profile() {
                 </div>
                 {!cardChannelEnabled && (
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-stone-600">
-                    ขณะนี้รองรับการชำระเงินผ่าน PromptPay (QR) เท่านั้น — การชำระด้วยบัตรถูกปิดใช้งานชั่วคราว
+                    {t('profile:payment.cardDisabledMessage')}
                   </div>
                 )}
 
@@ -932,7 +932,7 @@ function Profile() {
             onCompleted={(declaration) => {
               setHealthDeclaration(declaration)
               setIsHealthModalOpen(false)
-              toast.success('บันทึกข้อมูลสุขภาพเรียบร้อย')
+              toast.success(t('profile:toast.healthDeclarationSaved'))
             }}
             onClose={() => setIsHealthModalOpen(false)}
           />

@@ -16,7 +16,8 @@
     "book": "预约",
     "reviews": "评价",
     "min": "分钟",
-    "clearFilters": "清除筛选"
+    "clearFilters": "清除筛选",
+    "startingFrom": "起价"
   },
   "details": {
     "backToServices": "返回服务列表",
@@ -45,7 +46,10 @@
     "startingFrom": "起价",
     "noDescription": "暂无此服务的描述",
     "questions": "有问题？",
-    "askMore": "咨询更多"
+    "askMore": "咨询更多",
+    "hour": "小时",
+    "priceIncludesServiceAndTransport": "价格包括服务费和交通费，不包括停车费",
+    "oilSurchargeNote": "如需油类产品额外收费 100 泰铢"
   },
   "reviews": {
     "title": "客户评价",
@@ -56,5 +60,17 @@
     "cleanliness": "清洁度",
     "professionalism": "专业度",
     "skill": "技术"
+  },
+  "service": {
+    "label": "服务"
+  },
+  "emergencyService": {
+    "badge": "紧急服务",
+    "heading": "需要在30分钟内进行按摩吗？",
+    "subtitle": "无法提前3小时预订？我们的特殊团队随时准备帮助"
+  },
+  "durationLabel": "{{duration}} 分钟起",
+  "discount": {
+    "badge": "节省 {{percentage}}%"
   }
 }

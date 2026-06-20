@@ -1,4 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 
 interface ErrorMessageProps {
   message?: string
@@ -8,11 +9,14 @@ interface ErrorMessageProps {
 }
 
 function ErrorMessage({
-  message = 'เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง',
-  title = 'เกิดข้อผิดพลาด',
+  message,
+  title,
   onRetry,
   className = '',
 }: ErrorMessageProps) {
+  const { t } = useTranslation()
+  const finalMessage = message ?? t('common:error.loadDataFailed')
+  const finalTitle = title ?? t('common:error.title')
   return (
     <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
       <div className="max-w-md w-full bg-red-50 border border-red-200 rounded-2xl p-6">
@@ -23,15 +27,15 @@ function ErrorMessage({
             </div>
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-red-900 mb-1">{title}</h3>
-            <p className="text-sm text-red-800 mb-4">{message}</p>
+            <h3 className="text-lg font-semibold text-red-900 mb-1">{finalTitle}</h3>
+            <p className="text-sm text-red-800 mb-4">{finalMessage}</p>
             {onRetry && (
               <button
                 onClick={onRetry}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>ลองใหม่อีกครั้ง</span>
+                <span>{t('common:button.retry')}</span>
               </button>
             )}
           </div>

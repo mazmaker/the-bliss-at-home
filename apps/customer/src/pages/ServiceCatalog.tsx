@@ -209,7 +209,7 @@ function ServiceCatalog() {
                   )}
 
                   <div className="flex items-center justify-between text-sm text-stone-500 mb-4">
-                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> เริ่มต้น {service.minDuration} {t('services:catalog.min')}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {t('services:catalog.startingFrom')} {service.minDuration} {t('services:catalog.min')}</span>
                   </div>
 
                   <div className="flex items-center justify-between">

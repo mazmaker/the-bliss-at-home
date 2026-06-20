@@ -49,7 +49,7 @@ function CompletePayment() {
         } else if (data.status === 'failed') {
           clearInterval(pollInterval)
           setIsProcessing(false)
-          setError('การชำระเงินล้มเหลว กรุณาลองใหม่')
+          setError(t('booking:payment.failed'))
           setPromptpayQR(null)
         }
       } catch (err) {
@@ -83,11 +83,11 @@ function CompletePayment() {
         setPromptpayQR(data.qr_code_url)
         pollPromptPayStatus(data.charge_id)
       } else {
-        throw new Error(data.error || 'ไม่สามารถสร้าง QR PromptPay ได้')
+        throw new Error(data.error || t('booking:payment.qrGenerationFailed'))
       }
     } catch (err: any) {
       console.error('PromptPay payment error:', err)
-      setError(err.message || 'การชำระเงินล้มเหลว')
+      setError(err.message || t('booking:payment.errorGeneric'))
       setIsProcessing(false)
     }
   }
@@ -128,13 +128,13 @@ function CompletePayment() {
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl p-6 text-center max-w-md w-full">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-stone-900 mb-2">ไม่พบการจอง</h1>
-          <p className="text-stone-600 mb-4">ไม่สามารถหาการจองที่ต้องการชำระเงินได้</p>
+          <h1 className="text-xl font-semibold text-stone-900 mb-2">{t('booking:bookingNotFound.title')}</h1>
+          <p className="text-stone-600 mb-4">{t('booking:bookingNotFound.message')}</p>
           <Link
             to="/bookings"
             className="text-amber-700 hover:text-amber-800 font-medium"
           >
-            กลับไปยังรายการจอง
+            {t('common:backToBookings')}
           </Link>
         </div>
       </div>
@@ -146,13 +146,13 @@ function CompletePayment() {
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl p-6 text-center max-w-md w-full">
           <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-stone-900 mb-2">กรุณาเข้าสู่ระบบ</h1>
-          <p className="text-stone-600 mb-4">กรุณาเข้าสู่ระบบเพื่อชำระเงิน</p>
+          <h1 className="text-xl font-semibold text-stone-900 mb-2">{t('auth:signInRequired.title')}</h1>
+          <p className="text-stone-600 mb-4">{t('auth:signInRequired.message')}</p>
           <Link
             to="/auth/signin"
             className="text-amber-700 hover:text-amber-800 font-medium"
           >
-            เข้าสู่ระบบ
+            {t('auth:signIn')}
           </Link>
         </div>
       </div>
@@ -171,7 +171,7 @@ function CompletePayment() {
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-stone-900">ชำระเงิน</h1>
+            <h1 className="text-lg font-semibold text-stone-900">{t('booking:payment.pageTitle')}</h1>
           </div>
         </div>
       </div>
@@ -179,21 +179,21 @@ function CompletePayment() {
       <div className="max-w-md mx-auto p-4">
         {/* Booking Summary */}
         <div className="bg-white rounded-xl p-6 mb-6 border border-stone-200">
-          <h2 className="text-lg font-semibold text-stone-900 mb-4">สรุปการจอง</h2>
+          <h2 className="text-lg font-semibold text-stone-900 mb-4">{t('booking:bookingSummary.title')}</h2>
 
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-stone-600">หมายเลขจอง</span>
+              <span className="text-stone-600">{t('booking:bookingSummary.bookingNumber')}</span>
               <span className="font-medium">{bookingData.booking_number}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-stone-600">บริการ</span>
+              <span className="text-stone-600">{t('services:service.label')}</span>
               <span className="font-medium">{bookingData.service?.name_th}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-stone-600">วันที่</span>
+              <span className="text-stone-600">{t('booking:bookingSummary.date')}</span>
               <span className="font-medium">
                 {new Date(bookingData.booking_date).toLocaleDateString('th-TH')} {bookingData.booking_time}
               </span>
@@ -201,7 +201,7 @@ function CompletePayment() {
 
             <div className="border-t border-stone-200 pt-3 mt-3">
               <div className="flex justify-between text-lg font-semibold">
-                <span>ยอดชำระ</span>
+                <span>{t('booking:bookingSummary.amount')}</span>
                 <span className="text-amber-700">฿{bookingData.final_price?.toLocaleString()}</span>
               </div>
             </div>
@@ -214,7 +214,7 @@ function CompletePayment() {
             <>
               <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
-                ชำระเงินด้วยบัตรเครดิต
+                {t('booking:payment.creditCard')}
               </h3>
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
@@ -233,7 +233,7 @@ function CompletePayment() {
             <>
               <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
-                ชำระเงินด้วย PromptPay
+                {t('booking:payment.promptpay')}
               </h3>
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
@@ -246,25 +246,25 @@ function CompletePayment() {
                   disabled={isProcessing}
                   className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
                 >
-                  {isProcessing ? 'กำลังสร้าง QR...' : `สร้าง QR PromptPay (฿${bookingData.final_price?.toLocaleString()})`}
+                  {isProcessing ? t('booking:payment.generatingQR') : t('booking:payment.generateQRButton', { amount: bookingData.final_price?.toLocaleString() })}
                 </button>
               ) : (
                 <div className="text-center">
-                  <img src={promptpayQR} alt="PromptPay QR Code" className="w-64 h-64 mx-auto" />
-                  <p className="text-sm text-stone-600 mt-3">สแกน QR เพื่อชำระเงิน • กำลังรอการชำระเงิน...</p>
+                  <img src={promptpayQR} alt={t('booking:payment.qrCodeAlt')} className="w-64 h-64 mx-auto" />
+                  <p className="text-sm text-stone-600 mt-3">{t('booking:payment.waitingForPayment')}</p>
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-700 mx-auto mt-3"></div>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-stone-600 text-center py-4">ขณะนี้ยังไม่มีช่องทางการชำระเงินที่เปิดให้บริการ</p>
+            <p className="text-stone-600 text-center py-4">{t('booking:payment.noChannelsAvailable')}</p>
           )}
         </div>
 
         {/* Security Notice */}
         <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-stone-50 border border-amber-200 rounded-xl">
           <p className="text-sm text-stone-600 text-center">
-            🔒 การชำระเงินปลอดภัยด้วยระบบ SSL และ Omise
+            {t('common:payment.securityNotice')}
           </p>
         </div>
       </div>
