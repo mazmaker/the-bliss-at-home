@@ -214,6 +214,7 @@ export function UploadDocumentModal({
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,application/pdf"
+                onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={uploadMutation.isPending}

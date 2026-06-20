@@ -499,7 +499,7 @@ function StaffProfile() {
               >
                 <Camera className="w-4 h-4 text-stone-600" />
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+              <input ref={fileInputRef} type="file" accept="image/*" onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }} onChange={handleAvatarChange} className="hidden" />
             </div>
             <h2 className="text-xl font-bold">{user?.full_name || 'Staff'}</h2>
             <p className="text-sm opacity-90">
@@ -940,25 +940,25 @@ function StaffProfile() {
             </div>
             <div className="bg-yellow-50 rounded-lg p-2">
               <p className="text-xl font-bold text-yellow-900">
-                {documents.filter(d => d.status === 'pending').length}
+                {documents.filter(d => d.verification_status === 'pending').length}
               </p>
               <p className="text-xs text-yellow-600">รอตรวจสอบ</p>
             </div>
             <div className="bg-blue-50 rounded-lg p-2">
               <p className="text-xl font-bold text-blue-900">
-                {documents.filter(d => d.status === 'reviewing').length}
+                {documents.filter(d => d.verification_status === 'reviewing').length}
               </p>
               <p className="text-xs text-blue-600">กำลังตรวจ</p>
             </div>
             <div className="bg-green-50 rounded-lg p-2">
               <p className="text-xl font-bold text-green-900">
-                {documents.filter(d => d.status === 'approved').length}
+                {documents.filter(d => d.verification_status === 'verified').length}
               </p>
               <p className="text-xs text-green-600">อนุมัติแล้ว</p>
             </div>
             <div className="bg-red-50 rounded-lg p-2">
               <p className="text-xl font-bold text-red-900">
-                {documents.filter(d => d.status === 'rejected').length}
+                {documents.filter(d => d.verification_status === 'rejected').length}
               </p>
               <p className="text-xs text-red-600">ปฏิเสธ</p>
             </div>
@@ -1393,6 +1393,7 @@ function StaffProfile() {
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/jpg,image/png,application/pdf"
+                    onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
                     onChange={(e) => setNewDocument({ ...newDocument, file: e.target.files?.[0] || null })}
                     className="hidden"
                   />

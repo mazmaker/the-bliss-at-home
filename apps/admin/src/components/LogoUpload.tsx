@@ -174,6 +174,7 @@ export function LogoUpload({
         ref={fileInputRef}
         type="file"
         accept={accept}
+        onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) {
