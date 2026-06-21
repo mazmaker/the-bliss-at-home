@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@bliss/supabase/auth'
 import {
   ArrowLeft, MapPin, Clock, User, Phone, Navigation, Calendar,
-  Banknote, FileText, CheckCircle, Play, Loader2
+  Banknote, FileText, CheckCircle, Play, Loader2, AlertTriangle
 } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
@@ -23,7 +23,7 @@ function StaffJobDetail() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { job, isLoading, error, refetch } = useJob(id || null)
-  const { acceptJob, startJob, completeJob } = useJobs({ realtime: false })
+  const { acceptJob, startJob, completeJob, getScheduleConflict } = useJobs({ realtime: false })
   const { eligibility } = useStaffEligibility()
 
   // Get GPS tracking status for this specific job
@@ -564,11 +564,18 @@ function StaffJobDetail() {
       {/* Action Buttons */}
       {!isFinished && (
         <div className="space-y-2">
+          {isPending && job && getScheduleConflict(job) && (
+            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว — ไม่สามารถรับงานนี้ได้</span>
+            </div>
+          )}
           {isPending && (
             <button
               onClick={handleAccept}
-              disabled={isProcessing || !eligibility?.canWork}
+              disabled={isProcessing || !eligibility?.canWork || !!(job && getScheduleConflict(job))}
               className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              title={job && getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : undefined}
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
               รับงานนี้

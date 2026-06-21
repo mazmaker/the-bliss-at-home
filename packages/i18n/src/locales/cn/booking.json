@@ -340,7 +340,8 @@
     "notAssigned": "还未分配服务技师",
     "assignedStaffInfo": "分配的服务技师信息",
     "avatarInitial": "服",
-    "reviews": "评价"
+    "reviews": "评价",
+    "noReviews": "暂无评价"
   },
   "recipient": {
     "default": "服务接收者"

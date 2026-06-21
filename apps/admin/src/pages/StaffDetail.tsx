@@ -217,13 +217,19 @@ function StaffDetail() {
                 <div className="flex items-center gap-2 mt-2">
                   {getStatusBadge(staff.status)}
                   <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm font-medium text-stone-700">
-                      {staff.rating.toFixed(1)}
-                    </span>
-                    <span className="text-xs text-stone-400">
-                      ({staff.total_reviews} รีวิว)
-                    </span>
+                    {staff.total_reviews > 0 ? (
+                      <>
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        <span className="text-sm font-medium text-stone-700">
+                          {staff.rating.toFixed(1)}
+                        </span>
+                        <span className="text-xs text-stone-400">
+                          ({staff.total_reviews} รีวิว)
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-stone-400">ยังไม่มีรีวิว</span>
+                    )}
                   </div>
                 </div>
               </div>

@@ -842,8 +842,10 @@ export async function getStaffPerformance(days: number = 30, limit: number = 10)
 
       // Skills & Specializations
       specializations: staff.specializations || [],
+      // Use the staff's real overall rating for each specialization (no per-skill
+      // breakdown exists in the data) instead of fabricating random numbers.
       skill_ratings: (staff.specializations || []).reduce((acc: any, skill: string) => ({
-        ...acc, [skill]: 4.0 + Math.random() * 1
+        ...acc, [skill]: Number(staff.avg_rating) || 0
       }), {}),
 
       // Geographic & Availability

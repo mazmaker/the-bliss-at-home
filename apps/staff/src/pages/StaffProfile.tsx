@@ -461,9 +461,15 @@ function StaffProfile() {
                 : user?.email}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-yellow-300">★</span>
-              <span className="font-semibold">{stats?.average_rating?.toFixed(1) || '0.0'}</span>
-              <span className="text-sm opacity-80">({stats?.rating_count || 0} รีวิว)</span>
+              {stats?.rating_count ? (
+                <>
+                  <span className="text-yellow-300">★</span>
+                  <span className="font-semibold">{stats.average_rating.toFixed(1)}</span>
+                  <span className="text-sm opacity-80">({stats.rating_count} รีวิว)</span>
+                </>
+              ) : (
+                <span className="text-sm opacity-80">ยังไม่มีรีวิว</span>
+              )}
             </div>
           </div>
         </div>
@@ -481,7 +487,7 @@ function StaffProfile() {
               <p className="text-xs text-stone-500">รายได้รวม</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-amber-600">{stats?.average_rating?.toFixed(1) || '0.0'}</p>
+              <p className="text-xl font-bold text-amber-600">{stats?.rating_count ? stats.average_rating.toFixed(1) : '–'}</p>
               <p className="text-xs text-stone-500">คะแนน</p>
             </div>
           </div>

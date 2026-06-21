@@ -340,7 +340,8 @@
     "notAssigned": "Staff Not Assigned Yet",
     "assignedStaffInfo": "Assigned Staff Information",
     "avatarInitial": "S",
-    "reviews": "reviews"
+    "reviews": "reviews",
+    "noReviews": "No reviews yet"
   },
   "recipient": {
     "default": "Service Recipient"

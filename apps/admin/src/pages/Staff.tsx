@@ -231,7 +231,7 @@ function StaffPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-900">
-                {statsData?.averageRating?.toFixed(1) || '0.0'}
+                {statsData?.averageRating ? statsData.averageRating.toFixed(1) : '–'}
               </p>
               <p className="text-xs text-stone-500">คะแนนเฉลี่ย</p>
             </div>
@@ -370,13 +370,19 @@ function StaffPage() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span className="text-sm font-medium text-stone-700">
-                          {staff.rating.toFixed(1)}
-                        </span>
-                        <span className="text-xs text-stone-400">
-                          ({staff.total_reviews})
-                        </span>
+                        {staff.total_reviews > 0 ? (
+                          <>
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                            <span className="text-sm font-medium text-stone-700">
+                              {staff.rating.toFixed(1)}
+                            </span>
+                            <span className="text-xs text-stone-400">
+                              ({staff.total_reviews})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-stone-400">ยังไม่มีรีวิว</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-stone-900">

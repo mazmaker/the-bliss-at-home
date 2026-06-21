@@ -340,7 +340,8 @@
     "notAssigned": "ยังไม่ได้มอบหมายพนักงาน",
     "assignedStaffInfo": "ข้อมูลพนักงานที่ได้รับมอบหมาย",
     "avatarInitial": "พ",
-    "reviews": "รีวิว"
+    "reviews": "รีวิว",
+    "noReviews": "ยังไม่มีรีวิว"
   },
   "recipient": {
     "default": "ผู้รับบริการ"

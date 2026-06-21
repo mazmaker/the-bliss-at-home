@@ -25,6 +25,7 @@ interface BookingStatusCardEnhancedProps {
       phone?: string
       avatar?: string
       rating?: number
+      reviews?: number
     }
   } | null
   bookingData?: any
@@ -253,11 +254,11 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
             )}
             <div className="flex-1">
               <p className="font-medium text-gray-900">{booking.provider.name}</p>
-              {booking.provider.rating && (
+              {booking.provider.reviews ? (
                 <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <span>⭐ {booking.provider.rating.toFixed(1)}</span>
+                  <span>⭐ {booking.provider.rating?.toFixed(1)}</span>
                 </div>
-              )}
+              ) : null}
             </div>
             {config.showContact && booking.provider.phone && (
               <a

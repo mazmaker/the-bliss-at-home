@@ -115,12 +115,15 @@ export async function getAllCustomers() {
   // Calculate real total_bookings and total_spent for each customer
   const customerStats = await Promise.all(
     customers.map(async (customer) => {
-      const { data: successfulBookings } = await supabase
+      // A "valid" customer booking = not cancelled AND actually paid.
+      // (payment_status enum has no 'completed' — using it errors the whole query.)
+      const { data: successfulBookings, error: bookingsError } = await supabase
         .from('bookings')
         .select('id, final_price')
         .eq('customer_id', customer.id)
-        .eq('status', 'completed')
-        .in('payment_status', ['completed', 'paid'])
+        .neq('status', 'cancelled')
+        .eq('payment_status', 'paid')
+      if (bookingsError) throw bookingsError
 
       const realTotalBookings = successfulBookings?.length || 0
       const realTotalSpent = successfulBookings?.reduce((sum, b) => sum + Number(b.final_price || 0), 0) || 0
@@ -163,14 +166,16 @@ export async function getCustomerById(id: string) {
 export async function getCustomerWithStats(id: string): Promise<CustomerWithStats> {
   const customer = await getCustomerById(id)
 
-  // Fetch only successful bookings for this customer (completed + paid)
-  const { data: bookings } = await supabase
+  // Fetch only successful bookings for this customer (not cancelled + paid).
+  // (payment_status enum has no 'completed' — using it errors the whole query.)
+  const { data: bookings, error: bookingsError } = await supabase
     .from('bookings')
     .select('id, created_at, final_price, status, payment_status')
     .eq('customer_id', id)
-    .eq('status', 'completed')
-    .in('payment_status', ['completed', 'paid'])
+    .neq('status', 'cancelled')
+    .eq('payment_status', 'paid')
     .order('created_at', { ascending: true })
+  if (bookingsError) throw bookingsError
 
   const totalBookings = bookings?.length || 0
   const totalSpent = bookings?.reduce((sum, b) => sum + Number(b.final_price || 0), 0) || 0
@@ -394,12 +399,14 @@ export async function getCustomerStatistics() {
   const suspended = customers?.filter((c) => c.status === 'suspended').length || 0
   const banned = customers?.filter((c) => c.status === 'banned').length || 0
 
-  // Calculate real statistics from successful bookings
-  const { data: allBookings } = await supabase
+  // Calculate real statistics from successful bookings (not cancelled + paid).
+  // (payment_status enum has no 'completed' — using it errors the whole query.)
+  const { data: allBookings, error: bookingsError } = await supabase
     .from('bookings')
     .select('customer_id, final_price')
-    .eq('status', 'completed')
-    .in('payment_status', ['completed', 'paid'])
+    .neq('status', 'cancelled')
+    .eq('payment_status', 'paid')
+  if (bookingsError) throw bookingsError
 
   const bookingsByCustomer = (allBookings || []).reduce((acc, booking) => {
     if (!acc[booking.customer_id]) {

@@ -12,6 +12,7 @@ import BookingStatusCardEnhanced from '../components/BookingStatusCardEnhanced'
 import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 import { BookingWithExtensions } from '../types/extendService'
+import { LINE_CONTACT_URL } from '../config/contact'
 import { getServiceImage } from '../utils/imageUtils'
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
@@ -80,7 +81,7 @@ function BookingDetails() {
           const prov = assignedJob.staff as any;
           return {
             name: prov.full_name || t('booking:provider.unnamedProvider'),
-            rating: prov.staff_record?.rating || 4.8,
+            rating: Number(prov.staff_record?.rating) || 0,
             reviews: prov.staff_record?.total_reviews || 0,
             avatar: prov.avatar_url,
             phone: prov.phone,
@@ -93,7 +94,7 @@ function BookingDetails() {
         if (bookingData.staff?.profile) {
           return {
             name: bookingData.staff.profile.full_name || t('booking:provider.unnamedProvider'),
-            rating: bookingData.staff.rating || 4.8,
+            rating: Number(bookingData.staff.rating) || 0,
             reviews: bookingData.staff.total_reviews || 0,
             avatar: bookingData.staff.profile.avatar_url,
             phone: bookingData.staff.profile.phone,
@@ -743,7 +744,11 @@ function BookingDetails() {
                     {/* Rating */}
                     <div className="flex items-center gap-2 text-sm text-stone-600">
                       <Star className="w-4 h-4 text-amber-500" />
-                      <span>{booking.provider.rating.toFixed(1)} ({booking.provider.reviews} {t('booking:provider.reviews')})</span>
+                      {booking.provider.reviews > 0 ? (
+                        <span>{booking.provider.rating.toFixed(1)} ({booking.provider.reviews} {t('booking:provider.reviews')})</span>
+                      ) : (
+                        <span>{t('booking:provider.noReviews')}</span>
+                      )}
                     </div>
 
                     {/* Phone */}
@@ -974,7 +979,7 @@ function BookingDetails() {
               </button>
 
               <button
-                onClick={() => window.open('mailto:support@theblissathome.com')}
+                onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
                 className="w-full text-stone-500 py-2 text-sm hover:text-stone-700"
               >
                 {t('details.contactSupport')}

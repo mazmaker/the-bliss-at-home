@@ -339,7 +339,7 @@ function StaffEarnings() {
             <p className="text-xs opacity-80">เฉลี่ย/งาน</p>
           </div>
           <div>
-            <p className="text-lg font-bold">★{summary?.average_rating?.toFixed(1) || '0.0'}</p>
+            <p className="text-lg font-bold">{summary?.average_rating ? `★${summary.average_rating.toFixed(1)}` : '–'}</p>
             <p className="text-xs opacity-80">คะแนน</p>
           </div>
         </div>
