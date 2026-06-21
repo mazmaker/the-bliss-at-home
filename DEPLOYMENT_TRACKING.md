@@ -803,6 +803,23 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 ---
 
+## 🆕 **SESSION 2026-06-22 (2)** - Staff Table UI Fix
+
+### **🎨 แก้การแสดงผลตารางรายชื่อพนักงาน**
+
+- ✅ `apps/admin/src/pages/Staff.tsx`
+  - Header ทุกคอลัมน์ → `whitespace-nowrap` (หัวตารางไม่ตกบรรทัดอีก)
+  - Email LINE ยาว → `max-w-[180px] truncate` (ตัดแสดงแค่ส่วนต้น ไม่ดันตาราง)
+  - Badge "พร้อมรับงาน/หยุดรับงาน" → `whitespace-nowrap` + dot `flex-shrink-0`
+  - Badge สถานะ/เพศ → `whitespace-nowrap`
+  - คอลัมน์งานที่เสร็จ + รายได้รวม → `whitespace-nowrap`
+
+### **📋 Pending (รอ commit + push):**
+- 🔒 งาน session ก่อนหน้าทั้งหมด — ยังรอ push
+- 🔒 งาน session 2026-06-22 ทั้งหมด — รอ push
+
+---
+
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
 **🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
 **🕒 Last Updated: 2026-06-22**

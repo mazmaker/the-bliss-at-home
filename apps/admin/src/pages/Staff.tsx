@@ -119,7 +119,7 @@ function StaffPage() {
       suspended: 'ระงับการใช้งาน',
     }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badges[status]}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badges[status]}`}>
         {labels[status]}
       </span>
     )
@@ -306,14 +306,14 @@ function StaffPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">พนักงาน</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เพศ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การรับงาน</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เรตติ้ง</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">งานที่เสร็จ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้รวม</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จัดการ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">พนักงาน</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">เพศ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">การรับงาน</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">เรตติ้ง</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">งานที่เสร็จ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">รายได้รวม</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">สถานะ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700 whitespace-nowrap">จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -334,12 +334,12 @@ function StaffPage() {
                         <div>
                           <p className="font-medium text-stone-900">{staff.name_th}</p>
                           <div className="flex items-center gap-2 text-xs text-stone-500">
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 whitespace-nowrap">
                               <Phone className="w-3 h-3" />
                               {staff.phone}
                             </span>
                             {staff.profile?.email && (
-                              <span>• {staff.profile.email}</span>
+                              <span className="max-w-[180px] truncate">• {staff.profile.email}</span>
                             )}
                           </div>
                         </div>
@@ -347,23 +347,23 @@ function StaffPage() {
                     </td>
                     <td className="py-3 px-4">
                       {staff.gender === 'female' ? (
-                        <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-medium">หญิง</span>
+                        <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-medium whitespace-nowrap">หญิง</span>
                       ) : staff.gender === 'male' ? (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">ชาย</span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium whitespace-nowrap">ชาย</span>
                       ) : (
-                        <span className="text-xs text-stone-400">ไม่ระบุ</span>
+                        <span className="text-xs text-stone-400 whitespace-nowrap">ไม่ระบุ</span>
                       )}
                     </td>
                     <td className="py-3 px-4">
                       {/* R7: การรับงาน (availability) badge from staff.is_available; null -> หยุดรับงาน */}
                       {staff.is_available === true ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                           พร้อมรับงาน
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-medium whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400 flex-shrink-0" />
                           หยุดรับงาน
                         </span>
                       )}
@@ -385,10 +385,10 @@ function StaffPage() {
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm font-medium text-stone-900">
+                    <td className="py-3 px-4 text-sm font-medium text-stone-900 whitespace-nowrap">
                       {staff.total_jobs}
                     </td>
-                    <td className="py-3 px-4 text-sm font-medium text-amber-700">
+                    <td className="py-3 px-4 text-sm font-medium text-amber-700 whitespace-nowrap">
                       ฿{staff.total_earnings.toLocaleString()}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(staff.status)}</td>
