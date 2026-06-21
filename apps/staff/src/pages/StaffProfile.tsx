@@ -80,7 +80,6 @@ function StaffProfile() {
   const { eligibility, isLoading: isEligibilityLoading, refetch: refetchEligibility } = useStaffEligibility()
   const { contact: emergencyContact, isLoading: isEmergencyLoading, isSaving: isEmergencySaving, saveContact: saveEmergencyContact } = useEmergencyContact()
 
-  const [showIncompletePopup, setShowIncompletePopup] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingEmergency, setIsEditingEmergency] = useState(false)
   const [showAddBank, setShowAddBank] = useState(false)
@@ -184,13 +183,6 @@ function StaffProfile() {
     fetchStaffData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
-
-  // Show popup once when eligibility loads and profile is incomplete
-  useEffect(() => {
-    if (!isEligibilityLoading && eligibility && !eligibility.canWork) {
-      setShowIncompletePopup(true)
-    }
-  }, [isEligibilityLoading, eligibility])
 
   const handleSave = async () => {
     try {
@@ -417,45 +409,6 @@ function StaffProfile() {
 
   return (
     <div className="space-y-4 pb-4">
-
-      {/* Incomplete Profile Popup */}
-      {showIncompletePopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-amber-100 p-2 rounded-full">
-                <AlertCircle className="w-6 h-6 text-amber-600" />
-              </div>
-              <h3 className="text-lg font-bold text-stone-900">กรุณากรอกข้อมูลให้ครบ</h3>
-            </div>
-            <p className="text-sm text-stone-600 mb-3">
-              เพื่อให้พร้อมรับงาน กรุณากรอกข้อมูลส่วนตัวและอัปโหลดเอกสารให้ครบถ้วน
-            </p>
-            <ul className="text-sm text-stone-700 space-y-1 mb-4 bg-amber-50 rounded-xl p-3">
-                {eligibility?.reasons?.map((reason, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">•</span>
-                    <span>{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setShowIncompletePopup(false); setIsEditing(true) }}
-                className="flex-1 bg-amber-500 text-white font-semibold py-2.5 rounded-xl text-sm"
-              >
-                กรอกข้อมูลเลย
-              </button>
-              <button
-                onClick={() => setShowIncompletePopup(false)}
-                className="px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-600"
-              >
-                ภายหลัง
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <div>
