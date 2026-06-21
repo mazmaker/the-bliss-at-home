@@ -5,6 +5,7 @@ import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useServiceReviewStats, useServiceReviews } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
+import { LINE_CONTACT_URL } from '../config/contact'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -409,7 +410,7 @@ function ServiceDetails() {
               <div className="mt-6 pt-6 border-t border-stone-200 text-center">
                 <p className="text-sm text-stone-500">{t('services:details.questions')}</p>
                 <button
-                  onClick={() => window.open('mailto:support@theblissathome.com')}
+                  onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
                   className="text-amber-700 font-medium text-sm hover:underline mt-1"
                 >
                   {t('services:details.askMore')}

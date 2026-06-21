@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Phone, MessageCircle, X } from 'lucide-react'
 import { useTranslation } from '@bliss/i18n'
+import { LINE_CONTACT_URL } from '../config/contact'
 
 interface FloatingCTAProps {
   onContactAdmin?: (method: 'phone' | 'line' | 'facebook') => void
@@ -41,7 +42,8 @@ export default function FloatingCTA({
         window.open(`tel:${phoneNumber}`)
         break
       case 'line':
-        window.open(`https://line.me/ti/p/${lineId}`)
+        // Canonical customer LINE OA contact link (single source). lineId kept for back-compat.
+        window.open(lineId && lineId !== '@blissathome' ? `https://line.me/ti/p/${lineId}` : LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')
         break
       case 'facebook':
         window.open(`https://m.me/${facebookUrl}`)
