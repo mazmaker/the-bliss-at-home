@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '@bliss/supabase'
+import { useTranslation } from '@bliss/i18n'
 import { ArrowLeft, Share2, Phone } from 'lucide-react'
 import StaffTrackingMap from '../components/StaffTrackingMap'
 
@@ -17,6 +18,7 @@ interface JourneyDetails {
 }
 
 export default function TrackStaff() {
+  const { t } = useTranslation()
   const { journeyId } = useParams<{ journeyId: string }>()
   const navigate = useNavigate()
   const [journey, setJourney] = useState<JourneyDetails | null>(null)
@@ -25,7 +27,7 @@ export default function TrackStaff() {
 
   useEffect(() => {
     if (!journeyId) {
-      setError('ไม่พบข้อมูลการเดินทาง')
+      setError(t('common:errors.journeyNotFound'))
       setIsLoading(false)
       return
     }
@@ -46,7 +48,7 @@ export default function TrackStaff() {
         .single()
 
       if (journeyError) throw journeyError
-      if (!journeyData) throw new Error('ไม่พบข้อมูลการเดินทาง')
+      if (!journeyData) throw new Error(t('common:errors.journeyNotFound'))
 
       console.log('📊 Journey data:', journeyData)
 
@@ -67,7 +69,7 @@ export default function TrackStaff() {
         .single()
 
       if (bookingError) throw bookingError
-      if (!bookingData) throw new Error('ไม่พบข้อมูลการจอง')
+      if (!bookingData) throw new Error(t('common:errors.bookingNotFound'))
 
       console.log('📊 Booking data:', bookingData)
 
@@ -79,7 +81,7 @@ export default function TrackStaff() {
         .single()
 
       if (staffError) throw staffError
-      if (!staffData) throw new Error('ไม่พบข้อมูลพนักงาน')
+      if (!staffData) throw new Error(t('common:errors.staffNotFound'))
 
       console.log('📊 Staff data:', staffData)
 
@@ -98,19 +100,19 @@ export default function TrackStaff() {
         id: journeyData.id,
         status: journeyData.status,
         started_at: journeyData.started_at,
-        staff_name: profileData?.full_name || 'ไม่ระบุชื่อ',
-        customer_name: bookingData.customer_name || 'ไม่ระบุชื่อลูกค้า',
+        staff_name: profileData?.full_name || t('common:fallback.nameNotSpecified'),
+        customer_name: bookingData.customer_name || t('common:fallback.customerNameNotSpecified'),
         customer_phone: bookingData.customer_phone,
         destination_name: bookingData.hotel_name
-          ? `${bookingData.hotel_name}${bookingData.room_number ? ` ห้อง ${bookingData.room_number}` : ''}`
-          : bookingData.address || 'ไม่ระบุที่อยู่',
-        service_name: bookingData.service_name || 'ไม่ระบุบริการ',
+          ? `${bookingData.hotel_name}${bookingData.room_number ? ` ${t('common:labels.room')} ${bookingData.room_number}` : ''}`
+          : bookingData.address || t('common:fallback.addressNotSpecified'),
+        service_name: bookingData.service_name || t('common:fallback.serviceNotSpecified'),
         estimated_duration: bookingData.duration_minutes
       })
 
     } catch (err: any) {
       console.error('Error fetching journey details:', err)
-      setError(err.message || 'ไม่สามารถโหลดข้อมูลการเดินทางได้')
+      setError(err.message || t('common:errors.failedToLoadJourney'))
     } finally {
       setIsLoading(false)
     }
@@ -118,10 +120,10 @@ export default function TrackStaff() {
 
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      traveling: 'กำลังเดินทาง',
-      arrived: 'มาถึงแล้ว',
-      completed: 'เสร็จสิ้น',
-      cancelled: 'ยกเลิก'
+      traveling: t('common:journeyStatus.traveling'),
+      arrived: t('common:journeyStatus.arrived'),
+      completed: t('common:status.completed'),
+      cancelled: t('common:status.cancelled')
     }
     return statusMap[status] || status
   }
@@ -151,17 +153,17 @@ export default function TrackStaff() {
       // Fallback to copy to clipboard
       try {
         await navigator.clipboard.writeText(window.location.href)
-        alert('ลิงก์ถูกคัดลอกแล้ว')
+        alert(t('common:messages.linkCopied'))
       } catch {
-        alert('ไม่สามารถคัดลอกลิงก์ได้')
+        alert(t('common:errors.failedToCopyLink'))
       }
       return
     }
 
     try {
       await navigator.share({
-        title: 'ติดตามการเดินทางพนักงาน - The Bliss at Home',
-        text: journey ? `ติดตามการเดินทางของ ${journey.staff_name} มาให้บริการ ${journey.service_name}` : 'ติดตามการเดินทางพนักงาน',
+        title: t('common:share.journeyTrackingTitle'),
+        text: journey ? t('common:share.journeyTrackingText', { staffName: journey.staff_name, serviceName: journey.service_name }) : t('common:share.journeyTrackingDefault'),
         url: window.location.href
       })
     } catch {
@@ -182,7 +184,7 @@ export default function TrackStaff() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลดข้อมูลการเดินทาง...</p>
+          <p className="text-gray-600">{t('common:loading.journey')}</p>
         </div>
       </div>
     )
@@ -194,14 +196,14 @@ export default function TrackStaff() {
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
             <div className="text-6xl mb-4">😔</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">ไม่พบข้อมูล</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">{t('common:errors.dataNotFound')}</h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <button
               onClick={goBack}
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               <ArrowLeft className="w-4 h-4" />
-              กลับ
+              {t('common:buttons.back')}
             </button>
           </div>
         </div>
@@ -222,13 +224,13 @@ export default function TrackStaff() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-gray-900">ติดตามการเดินทาง</h1>
+              <h1 className="text-lg font-semibold text-gray-900">{t('common:tracking.pageTitle')}</h1>
               <p className="text-sm text-gray-600">The Bliss at Home</p>
             </div>
             <button
               onClick={shareLink}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-              title="แชร์ลิงก์"
+              title={t('common:buttons.shareLink')}
             >
               <Share2 className="w-5 h-5" />
             </button>
@@ -242,7 +244,7 @@ export default function TrackStaff() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-800">{journey.service_name}</h2>
-              <p className="text-gray-600 text-sm">ลูกค้า: {journey.customer_name}</p>
+              <p className="text-gray-600 text-sm">{t('common:labels.customer')}{journey.customer_name}</p>
             </div>
             <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(journey.status)}`}>
               {getStatusEmoji(journey.status)} {getStatusText(journey.status)}
@@ -251,21 +253,21 @@ export default function TrackStaff() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-500">พนักงานผู้ให้บริการ</p>
+              <p className="text-gray-500">{t('common:labels.serviceStaff')}</p>
               <p className="font-medium">{journey.staff_name}</p>
             </div>
             <div>
-              <p className="text-gray-500">ปลายทาง</p>
+              <p className="text-gray-500">{t('common:labels.destination')}</p>
               <p className="font-medium">{journey.destination_name}</p>
             </div>
             <div>
-              <p className="text-gray-500">เริ่มเดินทาง</p>
+              <p className="text-gray-500">{t('common:labels.startTime')}</p>
               <p className="font-medium">{new Date(journey.started_at).toLocaleString('th-TH')}</p>
             </div>
             {journey.estimated_duration && (
               <div>
-                <p className="text-gray-500">ระยะเวลาบริการ</p>
-                <p className="font-medium">{journey.estimated_duration} นาที</p>
+                <p className="text-gray-500">{t('common:labels.serviceDuration')}</p>
+                <p className="font-medium">{journey.estimated_duration}{t('common:unit.minutes')}</p>
               </div>
             )}
           </div>
@@ -277,7 +279,7 @@ export default function TrackStaff() {
                 className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm"
               >
                 <Phone className="w-4 h-4" />
-                โทรหาพนักงาน: {journey.customer_phone}
+                {t('common:buttons.callStaff')}{journey.customer_phone}
               </a>
             </div>
           )}
@@ -289,8 +291,8 @@ export default function TrackStaff() {
             <div className="flex items-center gap-2">
               <span className="text-2xl">🚗</span>
               <div>
-                <p className="font-medium text-blue-800">พนักงานกำลังเดินทางมาหาคุณ</p>
-                <p className="text-blue-600 text-sm">แผนที่จะอัพเดทตำแหน่งอัตโนมัติ</p>
+                <p className="font-medium text-blue-800">{t('common:tracking.statusTraveling')}</p>
+                <p className="text-blue-600 text-sm">{t('common:tracking.mapAutoUpdate')}</p>
               </div>
             </div>
           </div>
@@ -301,8 +303,8 @@ export default function TrackStaff() {
             <div className="flex items-center gap-2">
               <span className="text-2xl">📍</span>
               <div>
-                <p className="font-medium text-purple-800">พนักงานมาถึงแล้ว!</p>
-                <p className="text-purple-600 text-sm">กรุณาเตรียมตัวรับบริการ</p>
+                <p className="font-medium text-purple-800">{t('common:tracking.statusArrived')}</p>
+                <p className="text-purple-600 text-sm">{t('common:tracking.prepareForService')}</p>
               </div>
             </div>
           </div>
@@ -313,8 +315,8 @@ export default function TrackStaff() {
             <div className="flex items-center gap-2">
               <span className="text-2xl">✅</span>
               <div>
-                <p className="font-medium text-green-800">บริการเสร็จสิ้นแล้ว</p>
-                <p className="text-green-600 text-sm">ขอบคุณที่ใช้บริการ The Bliss at Home</p>
+                <p className="font-medium text-green-800">{t('common:tracking.statusCompleted')}</p>
+                <p className="text-green-600 text-sm">{t('common:tracking.thankYouMessage')}</p>
               </div>
             </div>
           </div>
@@ -325,8 +327,8 @@ export default function TrackStaff() {
             <div className="flex items-center gap-2">
               <span className="text-2xl">❌</span>
               <div>
-                <p className="font-medium text-red-800">การเดินทางถูกยกเลิก</p>
-                <p className="text-red-600 text-sm">หากมีข้อสงสัยกรุณาติดต่อเรา</p>
+                <p className="font-medium text-red-800">{t('common:tracking.statusCancelled')}</p>
+                <p className="text-red-600 text-sm">{t('common:tracking.contactSupport')}</p>
               </div>
             </div>
           </div>
@@ -337,7 +339,7 @@ export default function TrackStaff() {
 
         {/* Footer */}
         <div className="text-center text-gray-500 text-sm py-4">
-          <p>© 2026 The Bliss at Home - Premium Spa & Massage Service</p>
+          <p>{t('common:footer.copyright')}</p>
         </div>
       </div>
     </div>

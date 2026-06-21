@@ -120,8 +120,20 @@ export async function fetchComprehensiveReportData(
 
     if (staffError) throw staffError
 
+    // Fetch canonical per-service review stats (avg computed from the reviews table via
+    // RPC) so the export shows real ratings instead of a hardcoded placeholder.
+    const { data: serviceReviewStats } = await supabase.rpc('get_service_review_stats', {
+      p_service_id: null,
+    })
+
     // Process the data
-    const processedData = processReportData(bookingsData || [], servicesData || [], staffData || [], days)
+    const processedData = processReportData(
+      bookingsData || [],
+      servicesData || [],
+      staffData || [],
+      days,
+      serviceReviewStats || []
+    )
     return processedData
 
   } catch (error) {
@@ -135,8 +147,21 @@ function processReportData(
   bookings: any[],
   services: any[],
   staff: any[],
-  days: number
+  days: number,
+  serviceReviewStats: any[] = []
 ): ComprehensiveReportData {
+  // Real ratings: per-service avg from the reviews RPC (keyed by service_id → name),
+  // per-staff from the canonical staff.rating column. No fabricated defaults.
+  const serviceRatingById = new Map(
+    (serviceReviewStats || []).map((s: any) => [s.service_id, Number(s.avg_rating) || 0])
+  )
+  const serviceRatingByName = new Map(
+    (services || []).map((s: any) => [s.name_th, serviceRatingById.get(s.id) ?? 0])
+  )
+  const staffRatingByName = new Map(
+    (staff || []).map((s: any) => [s.name_th, Number(s.rating) || 0])
+  )
+
   const today = new Date()
   const period = days <= 7 ? 'รายสัปดาห์' : days <= 30 ? 'รายเดือน' : days <= 90 ? '3 เดือน' : '6 เดือน'
 
@@ -184,7 +209,7 @@ function processReportData(
     name,
     total_bookings: data.total_bookings,
     total_revenue: data.total_revenue,
-    avg_rating: 4.5, // Default rating - you can calculate this from reviews
+    avg_rating: serviceRatingByName.get(name) ?? 0,
     completion_rate: data.total_bookings > 0 ? (data.completed_count / data.total_bookings) * 100 : 0
   }))
 
@@ -213,7 +238,7 @@ function processReportData(
     name,
     total_bookings: data.total_bookings,
     total_earnings: data.total_earnings,
-    avg_rating: 4.5, // Default - can be calculated from reviews
+    avg_rating: staffRatingByName.get(name) ?? 0,
     completion_rate: data.total_bookings > 0 ? (data.completed_count / data.total_bookings) * 100 : 0
   }))
 

@@ -18,6 +18,7 @@ import {
   getStaffStats,
   subscribeToJobs,
   reportSOS,
+  findScheduleConflict,
 } from './jobService'
 
 interface UseJobsOptions {
@@ -38,6 +39,9 @@ interface UseJobsReturn {
   startJob: (jobId: string) => Promise<void>
   completeJob: (jobId: string) => Promise<void>
   cancelJob: (jobId: string, reason: string, notes?: string) => Promise<void>
+  // B7: returns the staff's already-held job whose time window overlaps `job`, else null.
+  // Lets the UI pre-disable an accept button before the acceptJob hard block fires.
+  getScheduleConflict: (job: Job) => Job | null
 }
 
 export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
@@ -195,6 +199,15 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     [staffId]
   )
 
+  const getScheduleConflict = useCallback(
+    (job: Job): Job | null => {
+      // Check the candidate job against the staff's currently-held jobs (findScheduleConflict
+      // skips completed/cancelled and the job itself). Returns the conflicting held job or null.
+      return (findScheduleConflict(job, jobs) as Job) || null
+    },
+    [jobs]
+  )
+
   return {
     jobs,
     pendingJobs,
@@ -206,6 +219,7 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     startJob: handleStartJob,
     completeJob: handleCompleteJob,
     cancelJob: handleCancelJob,
+    getScheduleConflict,
   }
 }
 

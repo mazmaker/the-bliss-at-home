@@ -181,7 +181,7 @@ export function UniversalPromotionModal({
                       </div>
                       <div class="text-4xl font-bold mb-2">${formatDiscount()}</div>
                       <div class="text-lg font-medium opacity-90">
-                        ${variant === 'international' ? 'PROMOTION' : 'โปรโมชั่น'}
+                        ${t('home:promotion.label')}
                       </div>
                     </div>
                   `
@@ -202,7 +202,7 @@ export function UniversalPromotionModal({
                 </div>
                 <div className="text-4xl font-bold mb-2">{formatDiscount()}</div>
                 <div className="text-lg font-medium opacity-90">
-                  {variant === 'international' ? 'PROMOTION' : 'โปรโมชั่น'}
+                  {t('home:promotion.label')}
                 </div>
               </div>
             </div>
@@ -247,7 +247,7 @@ export function UniversalPromotionModal({
           <div className={`${currentVariant.cardBg} rounded-xl p-4 border-2 ${currentVariant.cardBorder}`}>
             <div className="text-center">
               <div className={`text-xs font-medium ${currentVariant.text.muted} mb-3 uppercase tracking-wide`}>
-                {variant === 'international' ? 'PROMO CODE' : 'รหัสโปรโมชั่น'}
+                {t('home:promotion.promoCodeLabel')}
               </div>
               <div className="flex items-center justify-center gap-3">
                 <code className={`text-xl font-mono font-bold ${currentVariant.text.primary} bg-white px-4 py-3 rounded-xl shadow-sm border border-stone-200`}>
@@ -266,7 +266,7 @@ export function UniversalPromotionModal({
               </div>
               {copied && (
                 <div className="text-sm text-emerald-600 mt-3 font-medium">
-                  {variant === 'international' ? 'CODE COPIED!' : 'คัดลอกแล้ว!'}
+                  {t('home:promotion.codeCopied')}
                 </div>
               )}
             </div>
@@ -280,7 +280,7 @@ export function UniversalPromotionModal({
                   {formatDiscount()}
                 </div>
                 <div className={`text-xs ${currentVariant.text.muted} uppercase tracking-wide mt-1`}>
-                  {variant === 'international' ? 'Discount' : 'ส่วนลด'}
+                  {t('home:promotion.discountLabel')}
                 </div>
               </div>
               <div>
@@ -288,7 +288,7 @@ export function UniversalPromotionModal({
                   {daysLeft}
                 </div>
                 <div className={`text-xs ${currentVariant.text.muted} uppercase tracking-wide mt-1`}>
-                  {variant === 'international' ? 'Days Left' : 'วันเหลือ'}
+                  {t('home:promotion.daysLeftLabel')}
                 </div>
               </div>
               <div>
@@ -296,7 +296,7 @@ export function UniversalPromotionModal({
                   {promotion.usage_count || 0}
                 </div>
                 <div className={`text-xs ${currentVariant.text.muted} uppercase tracking-wide mt-1`}>
-                  {variant === 'international' ? 'Used' : 'ใช้แล้ว'}
+                  {t('home:promotion.usedLabel')}
                 </div>
               </div>
             </div>
@@ -306,7 +306,7 @@ export function UniversalPromotionModal({
           {promotion.usage_limit && (
             <div className="bg-white rounded-xl p-4 border border-stone-200">
               <div className="flex justify-between text-sm text-stone-700 font-medium mb-3">
-                <span>{variant === 'international' ? 'Usage Progress' : 'การใช้งาน'}</span>
+                <span>{t('home:promotion.usageProgressLabel')}</span>
                 <span>{Math.round(usagePercentage)}%</span>
               </div>
               <div className="w-full bg-stone-200 rounded-full h-2">
@@ -324,12 +324,12 @@ export function UniversalPromotionModal({
           {(promotion.min_order_amount || promotion.max_discount) && (
             <div className="bg-white rounded-xl p-4 border border-stone-200">
               <h3 className={`text-lg font-medium ${currentVariant.text.primary} mb-3`}>
-                {variant === 'international' ? 'Terms & Conditions' : 'เงื่อนไข'}
+                {t('home:promotion.termsTitle')}
               </h3>
               <div className="space-y-2">
                 {promotion.min_order_amount && (
                   <div className={`text-sm ${currentVariant.text.secondary} flex justify-between`}>
-                    <span>{variant === 'international' ? 'Minimum Order:' : 'ยอดขั้นต่ำ:'}</span>
+                    <span>{t('home:promotion.minimumOrderLabel')}</span>
                     <span className={`font-semibold ${currentVariant.text.accent}`}>
                       {variant === 'international'
                         ? `$${promotion.min_order_amount}`
@@ -340,7 +340,7 @@ export function UniversalPromotionModal({
                 )}
                 {promotion.max_discount && (
                   <div className={`text-sm ${currentVariant.text.secondary} flex justify-between`}>
-                    <span>{variant === 'international' ? 'Maximum Discount:' : 'ลดสูงสุด:'}</span>
+                    <span>{t('home:promotion.maximumDiscountLabel')}</span>
                     <span className={`font-semibold ${currentVariant.text.accent}`}>
                       {variant === 'international'
                         ? `$${promotion.max_discount}`
@@ -360,15 +360,13 @@ export function UniversalPromotionModal({
               onClick={onClose}
               className={`block w-full ${currentVariant.accent} ${currentVariant.accentText} text-center py-4 rounded-xl font-medium ${currentVariant.accentHover} shadow-md`}
             >
-              {variant === 'international' ? 'BOOK NOW' : 'จองเลย'}
+              {t('home:promotion.bookNowButton')}
             </Link>
 
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => {
-                  const text = variant === 'international'
-                    ? `${name} - Use code: ${promotion.code}`
-                    : `${name} - ใช้รหัส: ${promotion.code}`
+                  const text = `${name} - ${t('home:promotion.shareText')} ${promotion.code}`
                   if (navigator.share) {
                     navigator.share({ title: name, text })
                   } else {
@@ -378,7 +376,7 @@ export function UniversalPromotionModal({
                 className="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2 border border-stone-200"
               >
                 <Share2 className="w-4 h-4" />
-                {variant === 'international' ? 'SHARE' : 'แชร์'}
+                {t('home:promotion.shareButton')}
               </button>
 
               <button
@@ -386,7 +384,7 @@ export function UniversalPromotionModal({
                 className="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2 border border-stone-200"
               >
                 <X className="w-4 h-4" />
-                {variant === 'international' ? 'CLOSE' : 'ปิด'}
+                {t('home:promotion.closeButton')}
               </button>
             </div>
           </div>

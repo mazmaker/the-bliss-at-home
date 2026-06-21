@@ -16,7 +16,8 @@
     "book": "จอง",
     "reviews": "รีวิว",
     "min": "นาที",
-    "clearFilters": "ล้างตัวกรอง"
+    "clearFilters": "ล้างตัวกรอง",
+    "startingFrom": "เริ่มต้น"
   },
   "details": {
     "backToServices": "กลับไปดูบริการ",
@@ -45,7 +46,10 @@
     "startingFrom": "เริ่มต้น",
     "noDescription": "ยังไม่มีรายละเอียดบริการนี้",
     "questions": "มีคำถาม?",
-    "askMore": "สอบถามเพิ่มเติม"
+    "askMore": "สอบถามเพิ่มเติม",
+    "hour": "ชั่วโมง",
+    "priceIncludesServiceAndTransport": "ราคานี้รวมค่าบริการ และค่าเดินทาง ยกเว้นค่าที่จอดรถ",
+    "oilSurchargeNote": "ถ้าลูกค้าต้องการยาหม่อง จะคิดราคาเพิ่ม 100 บาท"
   },
   "reviews": {
     "title": "รีวิวจากลูกค้า",
@@ -56,5 +60,17 @@
     "cleanliness": "ความสะอาด",
     "professionalism": "ความเป็นมืออาชีพ",
     "skill": "ทักษะ"
+  },
+  "service": {
+    "label": "บริการ"
+  },
+  "emergencyService": {
+    "badge": "บริการฉุกเฉิน",
+    "heading": "ต้องการนวดภายใน 30 นาที?",
+    "subtitle": "ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือ"
+  },
+  "durationLabel": "เริ่มต้น {{duration}} นาที",
+  "discount": {
+    "badge": "ลด {{percentage}}%"
   }
 }

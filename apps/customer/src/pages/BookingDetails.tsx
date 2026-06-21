@@ -12,6 +12,7 @@ import BookingStatusCardEnhanced from '../components/BookingStatusCardEnhanced'
 import { supabase, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { downloadReceipt, downloadCreditNote, type ReceiptPdfData, type CreditNotePdfData } from '../utils/receiptPdfGenerator'
 import { BookingWithExtensions } from '../types/extendService'
+import { LINE_CONTACT_URL } from '../config/contact'
 import { getServiceImage } from '../utils/imageUtils'
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
@@ -130,8 +131,8 @@ function BookingDetails() {
           // rating/reviews live in the nested staff_record (profiles ← staff.profile_id).
           const prov = assignedJob.staff as any;
           return {
-            name: prov.full_name || 'ไม่ระบุชื่อ',
-            rating: prov.staff_record?.rating || 4.8,
+            name: prov.full_name || t('booking:provider.unnamedProvider'),
+            rating: Number(prov.staff_record?.rating) || 0,
             reviews: prov.staff_record?.total_reviews || 0,
             avatar: prov.avatar_url,
             phone: prov.phone,
@@ -143,8 +144,8 @@ function BookingDetails() {
         // Fallback to booking-level staff assignment
         if (bookingData.staff?.profile) {
           return {
-            name: bookingData.staff.profile.full_name || 'ไม่ระบุชื่อ',
-            rating: bookingData.staff.rating || 4.8,
+            name: bookingData.staff.profile.full_name || t('booking:provider.unnamedProvider'),
+            rating: Number(bookingData.staff.rating) || 0,
             reviews: bookingData.staff.total_reviews || 0,
             avatar: bookingData.staff.profile.avatar_url,
             phone: bookingData.staff.profile.phone,
@@ -154,7 +155,7 @@ function BookingDetails() {
 
         // No staff assigned
         return {
-          name: 'ยังไม่ได้มอบหมายพนักงาน',
+          name: t('booking:provider.notAssigned'),
           rating: 0,
           reviews: 0,
           avatar: null,
@@ -276,7 +277,7 @@ function BookingDetails() {
         is_extension: bs.is_extension || false,
         extended_at: bs.extended_at,
         recipient_index: bs.recipient_index || 0,
-        recipient_name: bs.recipient_name || 'ผู้รับบริการ',
+        recipient_name: bs.recipient_name || t('booking:recipient.default'),
         created_at: bs.created_at,
         services: {
           name_th: bs.service?.name_th || bookingData.service?.name_th || '',
@@ -370,18 +371,18 @@ function BookingDetails() {
   const getStatusText = (status: string, hasActiveJourney: boolean = false) => {
     // If there's an active journey, show traveling status
     if (hasActiveJourney && status === 'confirmed') {
-      return 'กำลังเดินทาง'
+      return t('common:status.traveling')
     }
 
     switch (status) {
       case 'confirmed':
         return t('common:status.confirmed')
       case 'traveling':
-        return 'กำลังเดินทาง'
+        return t('common:status.traveling')
       case 'arrived':
-        return 'ถึงแล้ว'
+        return t('common:status.arrived')
       case 'in_progress':
-        return 'กำลังให้บริการ'
+        return t('common:status.inProgress')
       case 'completed':
         return t('common:status.completed')
       case 'pending':
@@ -402,11 +403,11 @@ function BookingDetails() {
       case 'cash':
         return t('details.cash')
       case 'promptpay':
-        return 'พร้อมเพย์'
+        return t('booking:paymentMethod.promptpay')
       case 'other':
-        return 'รอการชำระเงิน'
+        return t('booking:paymentMethod.pendingPayment')
       case 'pending_payment':
-        return 'รอชำระเงิน'
+        return t('booking:paymentMethod.pendingPayment')
       default:
         return method
     }
@@ -415,17 +416,17 @@ function BookingDetails() {
   const getJobStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'รอพนักงานยืนยัน'
+        return t('booking:jobStatus.pending')
       case 'confirmed':
-        return 'พนักงานยืนยันแล้ว'
+        return t('booking:jobStatus.confirmed')
       case 'traveling':
-        return 'กำลังเดินทาง'
+        return t('booking:jobStatus.traveling')
       case 'in_progress':
-        return 'กำลังให้บริการ'
+        return t('booking:jobStatus.inProgress')
       case 'completed':
-        return 'เสร็จสิ้น'
+        return t('booking:jobStatus.completed')
       case 'cancelled':
-        return 'ยกเลิกแล้ว'
+        return t('booking:jobStatus.cancelled')
       default:
         return status
     }
@@ -457,7 +458,7 @@ function BookingDetails() {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.error || 'ไม่สามารถยกเลิกการจองได้')
+      throw new Error(errorData.error || t('booking:cancelBooking.error'))
     }
 
     // Refetch booking data to update UI
@@ -487,7 +488,7 @@ function BookingDetails() {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.error || 'ไม่สามารถเลื่อนนัดได้')
+      throw new Error(errorData.error || t('booking:reschedule.unableTitle'))
     }
 
     const result = await response.json()
@@ -511,7 +512,7 @@ function BookingDetails() {
         .single()
 
       if (!txn) {
-        alert('ไม่พบข้อมูลธุรกรรม')
+        alert(t('booking:receipt.noTransaction'))
         return
       }
 
@@ -567,7 +568,7 @@ function BookingDetails() {
         .single()
 
       if (!refundTxn) {
-        alert('ไม่พบข้อมูลการคืนเงิน')
+        alert(t('booking:creditNote.noRefundData'))
         return
       }
 
@@ -674,14 +675,14 @@ function BookingDetails() {
                     </p>
                     {extendableBooking && extendableBooking.extension_count > 0 && (
                       <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-medium">
-                        +{extendableBooking.extension_count} ครั้ง
+                        {t('booking:extension.times', { count: extendableBooking.extension_count })}
                       </span>
                     )}
                   </div>
                   <p className="text-lg font-bold text-amber-700">฿{booking.price}</p>
                   {extendableBooking && extendableBooking.total_extensions_price > 0 && (
                     <p className="text-sm text-amber-600 mt-1">
-                      รวมค่าเพิ่มเวลา: ฿{extendableBooking.total_extensions_price.toLocaleString()}
+                      {t('booking:extension.totalExtensionPrice', { amount: extendableBooking.total_extensions_price.toLocaleString() })}
                     </p>
                   )}
                 </div>
@@ -845,10 +846,10 @@ function BookingDetails() {
             />
 
             {/* Staff Assignment Info - Show when staff is assigned */}
-            {booking.provider && booking.provider.name !== 'ยังไม่ได้มอบหมายพนักงาน' && (
+            {booking.provider && booking.provider.name !== t('booking:provider.notAssigned') && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5" /> ข้อมูลพนักงานที่ได้รับมอบหมาย
+                  <Users className="w-5 h-5" /> {t('booking:provider.assignedStaffInfo')}
                 </h2>
 
                 <div className="flex items-start gap-4">
@@ -862,7 +863,7 @@ function BookingDetails() {
                       />
                     ) : (
                       <span className="text-amber-700 font-medium text-lg">
-                        {booking.provider.name?.charAt(0) || 'พ'}
+                        {booking.provider.name?.charAt(0) || t('booking:provider.avatarInitial')}
                       </span>
                     )}
                   </div>
@@ -882,7 +883,11 @@ function BookingDetails() {
                     {/* Rating */}
                     <div className="flex items-center gap-2 text-sm text-stone-600">
                       <Star className="w-4 h-4 text-amber-500" />
-                      <span>{booking.provider.rating.toFixed(1)} ({booking.provider.reviews} รีวิว)</span>
+                      {booking.provider.reviews > 0 ? (
+                        <span>{booking.provider.rating.toFixed(1)} ({booking.provider.reviews} {t('booking:provider.reviews')})</span>
+                      ) : (
+                        <span>{t('booking:provider.noReviews')}</span>
+                      )}
                     </div>
 
                     {/* Phone */}
@@ -898,11 +903,11 @@ function BookingDetails() {
                 {booking.provider.jobStatus && (
                   <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-stone-50 border border-amber-200 rounded-lg">
                     <p className="text-amber-700 text-sm">
-                      {booking.provider.jobStatus === 'pending' && '🔄 รอพนักงานตอบรับการจอง'}
-                      {booking.provider.jobStatus === 'confirmed' && 'พนักงานรับงานแล้ว กำลังเตรียมตัวเดินทาง'}
-                      {booking.provider.jobStatus === 'traveling' && '🚗 พนักงานกำลังเดินทางไปยังสถานที่ของคุณ'}
-                      {booking.provider.jobStatus === 'in_progress' && '💆‍♀️ พนักงานกำลังให้บริการ'}
-                      {booking.provider.jobStatus === 'completed' && '🎉 การให้บริการเสร็จสิ้นแล้ว'}
+                      {booking.provider.jobStatus === 'pending' && t('booking:jobStatus.description.pending')}
+                      {booking.provider.jobStatus === 'confirmed' && t('booking:jobStatus.description.confirmed')}
+                      {booking.provider.jobStatus === 'traveling' && t('booking:jobStatus.description.traveling')}
+                      {booking.provider.jobStatus === 'in_progress' && t('booking:jobStatus.description.inProgress')}
+                      {booking.provider.jobStatus === 'completed' && t('booking:jobStatus.description.completed')}
                     </p>
                   </div>
                 )}
@@ -918,11 +923,11 @@ function BookingDetails() {
             {activeJourneyId && (booking?.status === 'confirmed' || booking?.status === 'in_progress') && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                  <Car className="w-5 h-5" /> ติดตามการเดินทางของพนักงาน
+                  <Car className="w-5 h-5" /> {t('booking:tracking.title')}
                 </h2>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                   <p className="text-amber-700 text-sm">
-                    พนักงานกำลังเดินทางมาให้บริการ คุณสามารถติดตามตำแหน่งปัจจุบันได้ในแผนที่ด้านล่าง
+                    {t('booking:tracking.description')}
                   </p>
                 </div>
                 <StaffTrackingMap
@@ -938,7 +943,7 @@ function BookingDetails() {
                 <div className="flex items-center justify-center py-8">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600 mx-auto mb-2"></div>
-                    <p className="text-gray-600 text-sm">กำลังตรวจสอบการเดินทางของพนักงาน...</p>
+                    <p className="text-gray-600 text-sm">{t('booking:tracking.loading')}</p>
                   </div>
                 </div>
               </div>
@@ -998,12 +1003,12 @@ function BookingDetails() {
                           : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                   }`}>
                     {booking.payment.status === 'paid'
-                      ? 'ชำระแล้ว'
+                      ? t('booking:paymentStatus.paid')
                       : booking.payment.status === 'refunded'
-                        ? 'คืนเงินแล้ว'
+                        ? t('booking:paymentStatus.refunded')
                         : booking.payment.status === 'failed'
-                          ? 'ชำระไม่สำเร็จ'
-                          : 'รอชำระเงิน'
+                          ? t('booking:paymentStatus.failed')
+                          : t('booking:paymentStatus.pending')
                     }
                   </span>
                 </div>
@@ -1017,10 +1022,10 @@ function BookingDetails() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
                   >
                     <CreditCard className="w-5 h-5" />
-                    ชำระเงินตอนนี้
+                    {t('booking:paymentAction.payNow')}
                   </button>
                   <p className="text-center text-xs text-stone-500 mt-2">
-                    งานจะถูกส่งให้สตาฟเมื่อชำระเงินเสร็จสิ้น
+                    {t('booking:paymentAction.note')}
                   </p>
                 </div>
               )}
@@ -1033,7 +1038,7 @@ function BookingDetails() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-medium hover:bg-amber-100 transition text-sm"
                   >
                     <Download className="w-4 h-4" />
-                    ดาวน์โหลดใบเสร็จ
+                    {t('booking:downloadReceipt.label')}
                   </button>
 
                   {(bookingData as any)?.refund_status === 'completed' && (
@@ -1042,7 +1047,7 @@ function BookingDetails() {
                       className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-50 text-purple-700 rounded-xl font-medium hover:bg-purple-100 transition text-sm"
                     >
                       <FileText className="w-4 h-4" />
-                      ดาวน์โหลดใบลดหนี้
+                      {t('booking:downloadCreditNote.label')}
                     </button>
                   )}
                 </div>
@@ -1082,10 +1087,10 @@ function BookingDetails() {
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
                     <div className="flex items-center gap-2 text-amber-700">
                       <Sparkles className="w-5 h-5" />
-                      <span className="font-medium">บริการกำลังดำเนินการ</span>
+                      <span className="font-medium">{t('booking:extension.inProgressLabel')}</span>
                     </div>
                     <p className="text-sm text-amber-600 mt-1">
-                      คุณสามารถเพิ่มเวลาบริการได้หากต้องการเวลาเพิ่มเติม
+                      {t('booking:extension.note')}
                     </p>
                   </div>
                 </>
@@ -1113,7 +1118,7 @@ function BookingDetails() {
               </button>
 
               <button
-                onClick={() => window.open('mailto:support@theblissathome.com')}
+                onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
                 className="w-full text-stone-500 py-2 text-sm hover:text-stone-700"
               >
                 {t('details.contactSupport')}

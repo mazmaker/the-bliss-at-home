@@ -32,7 +32,27 @@
     "used": "已使用",
     "limitPerUser": "每人限 {{count}} 次",
     "termsTitle": "使用条款",
-    "share": "分享促销"
+    "share": "分享促销",
+    "loading": "正在加载促销...",
+    "pageTitle": "所有促销",
+    "pageSubtitle": "为您提供的特别优惠",
+    "searchPlaceholder": "搜索促销...",
+    "filterAll": "所有类型",
+    "filterPercentage": "百分比优惠",
+    "filterFixedAmount": "固定金额优惠",
+    "filterBuyXGetY": "购买即送",
+    "sortNewest": "最新",
+    "sortHighestDiscount": "最高优惠",
+    "sortExpiring": "即将过期",
+    "empty": {
+      "heading": "未找到促销",
+      "message": "尝试更改搜索词或筛选条件"
+    },
+    "daysLeftBadge": "剩余 {{daysLeft}} 天",
+    "discountOverlay": "优惠",
+    "expiryLabel": "有效期至 {{date}}",
+    "usageLabel": "已使用 {{used}}/{{limit}}",
+    "offText": "优惠"
   },
   "categories": {
     "title": "服务项目",
@@ -65,5 +85,34 @@
     "title": "准备好享受了吗？",
     "subtitle1": "立即预约按摩、水疗或美甲服务",
     "subtitle2": "在家中体验奢华"
+  },
+  "pointsWidget": {
+    "title": "积累的积分",
+    "viewHistory": "查看历史",
+    "pointsUnit": "积分",
+    "valueLabel": "价值",
+    "expiringLabel": "即将过期的积分"
+  },
+  "backToHome": "返回首页",
+  "globalDiscount": {
+    "badge": "立减 {{percentage}}%",
+    "title": "所有服务特别折扣",
+    "subtitle": "只需输入代码 DISCOUNT15"
+  },
+  "promotion": {
+    "label": "推广活动",
+    "promoCodeLabel": "优惠代码",
+    "codeCopied": "已复制代码！",
+    "discountLabel": "优惠",
+    "daysLeftLabel": "剩余天数",
+    "usedLabel": "已使用",
+    "usageProgressLabel": "使用进度",
+    "termsTitle": "条款和条件",
+    "minimumOrderLabel": "最低订单额：",
+    "maximumDiscountLabel": "最高优惠：",
+    "bookNowButton": "立即预订",
+    "shareText": "使用代码：",
+    "shareButton": "分享",
+    "closeButton": "关闭"
   }
 }

@@ -32,7 +32,27 @@
     "used": "Used",
     "limitPerUser": "Limited {{count}} per user",
     "termsTitle": "Terms & Conditions",
-    "share": "Share Promotion"
+    "share": "Share Promotion",
+    "loading": "Loading promotions...",
+    "pageTitle": "All Promotions",
+    "pageSubtitle": "Special offers for you",
+    "searchPlaceholder": "Search promotions...",
+    "filterAll": "All types",
+    "filterPercentage": "Percentage discount",
+    "filterFixedAmount": "Fixed amount discount",
+    "filterBuyXGetY": "Buy and get free",
+    "sortNewest": "Newest",
+    "sortHighestDiscount": "Highest discount",
+    "sortExpiring": "Expiring soon",
+    "empty": {
+      "heading": "No promotions found",
+      "message": "Try changing your search term or filter"
+    },
+    "daysLeftBadge": "{{daysLeft}} days left",
+    "discountOverlay": "OFF",
+    "expiryLabel": "Until {{date}}",
+    "usageLabel": "Used {{used}}/{{limit}}",
+    "offText": "OFF"
   },
   "categories": {
     "title": "SERVICES",
@@ -65,5 +85,34 @@
     "title": "Ready to Indulge?",
     "subtitle1": "Book your massage, spa or nail service today",
     "subtitle2": "Experience luxury at your home"
+  },
+  "pointsWidget": {
+    "title": "Points Collected",
+    "viewHistory": "View History",
+    "pointsUnit": "Points",
+    "valueLabel": "Value",
+    "expiringLabel": "Points Expiring"
+  },
+  "backToHome": "Back to Home",
+  "globalDiscount": {
+    "badge": "{{percentage}}% OFF",
+    "title": "Special Discount on All Services",
+    "subtitle": "Simply enter code DISCOUNT15"
+  },
+  "promotion": {
+    "label": "PROMOTION",
+    "promoCodeLabel": "PROMO CODE",
+    "codeCopied": "CODE COPIED!",
+    "discountLabel": "Discount",
+    "daysLeftLabel": "Days Left",
+    "usedLabel": "Used",
+    "usageProgressLabel": "Usage Progress",
+    "termsTitle": "Terms & Conditions",
+    "minimumOrderLabel": "Minimum Order:",
+    "maximumDiscountLabel": "Maximum Discount:",
+    "bookNowButton": "BOOK NOW",
+    "shareText": "Use code:",
+    "shareButton": "SHARE",
+    "closeButton": "CLOSE"
   }
 }

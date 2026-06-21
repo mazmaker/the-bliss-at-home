@@ -452,7 +452,7 @@ function StaffProfile() {
               >
                 <Camera className="w-4 h-4 text-stone-600" />
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+              <input ref={fileInputRef} type="file" accept="image/*" onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }} onChange={handleAvatarChange} className="hidden" />
             </div>
             <h2 className="text-xl font-bold">{user?.full_name || 'Staff'}</h2>
             <p className="text-sm opacity-90">
@@ -461,9 +461,15 @@ function StaffProfile() {
                 : user?.email}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-yellow-300">★</span>
-              <span className="font-semibold">{stats?.average_rating?.toFixed(1) || '0.0'}</span>
-              <span className="text-sm opacity-80">({stats?.rating_count || 0} รีวิว)</span>
+              {stats?.rating_count ? (
+                <>
+                  <span className="text-yellow-300">★</span>
+                  <span className="font-semibold">{stats.average_rating.toFixed(1)}</span>
+                  <span className="text-sm opacity-80">({stats.rating_count} รีวิว)</span>
+                </>
+              ) : (
+                <span className="text-sm opacity-80">ยังไม่มีรีวิว</span>
+              )}
             </div>
           </div>
         </div>
@@ -481,7 +487,7 @@ function StaffProfile() {
               <p className="text-xs text-stone-500">รายได้รวม</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-amber-600">{stats?.average_rating?.toFixed(1) || '0.0'}</p>
+              <p className="text-xl font-bold text-amber-600">{stats?.rating_count ? stats.average_rating.toFixed(1) : '–'}</p>
               <p className="text-xs text-stone-500">คะแนน</p>
             </div>
           </div>
@@ -521,30 +527,12 @@ function StaffProfile() {
                         ? 'text-green-700'
                         : 'text-amber-700'
                     }`}>
-                      {eligibility.reasons.filter(r => !r.includes('บุคคลอ้างอิง')).map((reason, index) => (
+                      {eligibility.reasons.map((reason, index) => (
                         <li key={index} className="flex items-start gap-1">
                           <span className="mt-0.5">•</span>
                           <span>{reason}</span>
                         </li>
                       ))}
-                      {!eligibility.canWork && (
-                        <>
-                          <li className="flex items-start gap-1">
-                            <span className="mt-0.5">•</span>
-                            <span>ยังไม่ได้อัปโหลดใบตรวจสอบประวัติอาชญากรรม</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="mt-0.5">•</span>
-                            <span>ยังไม่ได้อัปโหลดใบอนุญาตนวด</span>
-                          </li>
-                        </>
-                      )}
-                      {eligibility.reasons.some(r => r.includes('บุคคลอ้างอิง')) && (
-                        <li className="flex items-start gap-1">
-                          <span className="mt-0.5">•</span>
-                          <span>กรุณากรอกข้อมูลบุคคลอ้างอิง (ชื่อ, เบอร์โทร, ความสัมพันธ์)</span>
-                        </li>
-                      )}
                     </ul>
                   )}
 
@@ -578,6 +566,28 @@ function StaffProfile() {
                       {eligibility.documents.bank_statement.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.bank_statement.uploaded ? (
+                        <span className="text-amber-600">รอตรวจ</span>
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>ใบประกอบวิชาชีพ:</span>
+                      {eligibility.documents.license.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                      ) : eligibility.documents.license.uploaded ? (
+                        <span className="text-amber-600">รอตรวจ</span>
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>ใบตรวจประวัติอาชญากรรม:</span>
+                      {eligibility.documents.criminal_record.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                      ) : eligibility.documents.criminal_record.uploaded ? (
                         <span className="text-amber-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />
@@ -889,25 +899,25 @@ function StaffProfile() {
             </div>
             <div className="bg-yellow-50 rounded-lg p-2">
               <p className="text-xl font-bold text-yellow-900">
-                {documents.filter(d => d.status === 'pending').length}
+                {documents.filter(d => d.verification_status === 'pending').length}
               </p>
               <p className="text-xs text-yellow-600">รอตรวจสอบ</p>
             </div>
             <div className="bg-blue-50 rounded-lg p-2">
               <p className="text-xl font-bold text-blue-900">
-                {documents.filter(d => d.status === 'reviewing').length}
+                {documents.filter(d => d.verification_status === 'reviewing').length}
               </p>
               <p className="text-xs text-blue-600">กำลังตรวจ</p>
             </div>
             <div className="bg-green-50 rounded-lg p-2">
               <p className="text-xl font-bold text-green-900">
-                {documents.filter(d => d.status === 'approved').length}
+                {documents.filter(d => d.verification_status === 'verified').length}
               </p>
               <p className="text-xs text-green-600">อนุมัติแล้ว</p>
             </div>
             <div className="bg-red-50 rounded-lg p-2">
               <p className="text-xl font-bold text-red-900">
-                {documents.filter(d => d.status === 'rejected').length}
+                {documents.filter(d => d.verification_status === 'rejected').length}
               </p>
               <p className="text-xs text-red-600">ปฏิเสธ</p>
             </div>
@@ -1342,6 +1352,7 @@ function StaffProfile() {
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/jpg,image/png,application/pdf"
+                    onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
                     onChange={(e) => setNewDocument({ ...newDocument, file: e.target.files?.[0] || null })}
                     className="hidden"
                   />

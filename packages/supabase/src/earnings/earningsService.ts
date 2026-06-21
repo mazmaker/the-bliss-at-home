@@ -85,15 +85,16 @@ export async function getEarningsSummary(staffId: string): Promise<EarningsSumma
 
   const pendingPayout = pendingPayouts?.reduce((sum, p) => sum + (p.net_amount || 0), 0) || 0
 
-  // Get average rating
-  const { data: ratings } = await supabase
-    .from('job_ratings')
+  // Get average rating from the canonical staff table (maintained by the reviews
+  // trigger). job_ratings is dead/empty — do NOT read it. staffId is a profiles.id
+  // (jobs.staff_id -> profiles.id), so match staff.profile_id.
+  const { data: staffRow } = await supabase
+    .from('staff')
     .select('rating')
-    .eq('staff_id', staffId)
+    .eq('profile_id', staffId)
+    .maybeSingle()
 
-  const avgRating = ratings?.length
-    ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-    : 0
+  const avgRating = Number(staffRow?.rating) || 0
 
   return {
     today_earnings: todayEarnings,

@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Star, ChevronRight, Clock } from 'lucide-react'
 import { useCustomerPoints, useLoyaltySettings, useNearestExpiry } from '@bliss/supabase/hooks/useLoyalty'
+import { useTranslation } from '@bliss/i18n'
 
 interface PointsWidgetProps {
   customerId: string
 }
 
 export function PointsWidget({ customerId }: PointsWidgetProps) {
+  const { t } = useTranslation()
   const { data: points } = useCustomerPoints(customerId)
   const { data: settings } = useLoyaltySettings()
   const { data: nearestExpiry } = useNearestExpiry(customerId)
@@ -21,29 +23,29 @@ export function PointsWidget({ customerId }: PointsWidgetProps) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Star className="w-5 h-5" />
-          <span className="font-semibold">แต้มสะสม</span>
+          <span className="font-semibold">{t('home:pointsWidget.title')}</span>
         </div>
         <Link
           to="/points"
           className="flex items-center gap-1 text-sm text-amber-100 hover:text-white transition"
         >
-          ดูประวัติ
+          {t('home:pointsWidget.viewHistory')}
           <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
 
       <div className="flex items-baseline gap-2 mb-1">
         <span className="text-3xl font-bold">{totalPoints.toLocaleString()}</span>
-        <span className="text-amber-200">แต้ม</span>
+        <span className="text-amber-200">{t('home:pointsWidget.pointsUnit')}</span>
       </div>
 
-      <p className="text-amber-200 text-sm">มูลค่า ฿{pointsValue.toLocaleString()}</p>
+      <p className="text-amber-200 text-sm">{t('home:pointsWidget.valueLabel')}{pointsValue.toLocaleString()}</p>
 
       {nearestExpiry && (
         <div className="flex items-center gap-1 mt-3 text-xs text-amber-200 bg-amber-800/30 rounded-lg px-3 py-1.5">
           <Clock className="w-3 h-3" />
           <span>
-            {nearestExpiry.points} แต้มหมดอายุ{' '}
+            {nearestExpiry.points} {t('home:pointsWidget.expiringLabel')}{' '}
             {new Date(nearestExpiry.expires_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
         </div>

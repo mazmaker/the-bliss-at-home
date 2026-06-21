@@ -3,7 +3,9 @@
     "home": "首页",
     "services": "服务",
     "bookings": "预约",
-    "profile": "个人资料"
+    "profile": "个人资料",
+    "promotions": "促销",
+    "notifications": "通知"
   },
   "footer": {
     "copyright": "© 2026 The Bliss Massage at Home. 版权所有。",
@@ -26,7 +28,10 @@
     "register": "注册",
     "viewAll": "查看全部",
     "clearFilters": "清除筛选",
-    "goBack": "返回上一页"
+    "goBack": "返回上一页",
+    "retry": "重试",
+    "shareLink": "分享链接",
+    "callStaff": "拨打员工："
   },
   "status": {
     "confirmed": "已确认",
@@ -34,14 +39,22 @@
     "pending": "待处理",
     "cancelled": "已取消",
     "paid": "已支付",
-    "label": "状态"
+    "label": "状态",
+    "traveling": "运输中",
+    "arrived": "已到达",
+    "inProgress": "进行中"
   },
   "loading": {
-    "services": "正在加载服务...",
+    "default": "加载中...",
     "bookings": "正在加载预约...",
-    "profile": "正在加载个人资料...",
     "bookingDetails": "正在加载预约详情...",
-    "data": "正在加载数据..."
+    "services": "正在加载服务...",
+    "profile": "正在加载个人资料...",
+    "paymentData": "正在加载付款信息...",
+    "transactions": "正在加载交易记录...",
+    "journey": "正在加载行程信息...",
+    "pleaseWait": "请稍候",
+    "map": "加载地图中..."
   },
   "errors": {
     "failedToLoadServices": "加载服务失败，请重试。",
@@ -49,7 +62,20 @@
     "noServicesAvailable": "目前没有可用的服务。",
     "serviceNotFound": "未找到服务",
     "cannotLoadService": "无法加载服务信息",
-    "backToServices": "← 返回所有服务"
+    "backToServices": "← 返回所有服务",
+    "failedToLoadTransactions": "加载交易记录失败",
+    "journeyNotFound": "找不到行程信息",
+    "bookingNotFound": "找不到预约信息",
+    "staffNotFound": "找不到员工信息",
+    "failedToLoadJourney": "加载行程信息失败",
+    "failedToCopyLink": "复制链接失败",
+    "dataNotFound": "找不到数据",
+    "failedToLoadJourneyDetail": "无法加载行程数据：{{error}}",
+    "failedToLoadTestMode": "无法加载数据（测试模式）",
+    "googleMapsApiKeyNotConfigured": "Google Maps API 密钥未配置",
+    "failedToLoadGoogleMapsApi": "加载 Google Maps API 失败",
+    "failedToLoadMap": "加载地图出错",
+    "checkGoogleMapsApiKeyInEnv": "请检查 .env 中的 Google Maps API 密钥"
   },
   "auth": {
     "signedInAs": "已登录为",
@@ -71,7 +97,154 @@
     "sending": "正在发送...",
     "success": "警报发送成功",
     "successMessage": "我们的团队已收到通知\n将尽快与您联系",
-    "failedAlert": "SOS警报发送失败，请重试或联系客服。"
+    "failedAlert": "SOS警报发送失败，请重试或联系客服。",
+    "buttonTooltip": "紧急警报"
   },
-  "currency": "฿"
+  "currency": "฿",
+  "button": {
+    "close": "关闭",
+    "cancel": "取消",
+    "continue": "继续",
+    "back": "返回",
+    "retry": "重试"
+  },
+  "action": {
+    "close": "关闭",
+    "cancel": "取消",
+    "back": "返回",
+    "refresh": "刷新数据"
+  },
+  "dayOfWeek": {
+    "sun": "日",
+    "mon": "一",
+    "tue": "二",
+    "wed": "三",
+    "thu": "四",
+    "fri": "五",
+    "sat": "六"
+  },
+  "error": {
+    "generic": "发生错误。请重试",
+    "tryAgain": "请重试。",
+    "paymentDataNotFound": "未找到付款信息",
+    "loadDataFailed": "加载数据时出错。请重试。",
+    "title": "发生错误"
+  },
+  "close": "关闭",
+  "cancel": "取消",
+  "submitting": "正在提交...",
+  "refundPolicy": {
+    "title": "退款政策",
+    "scrollPrompt": "请滚动阅读完整内容",
+    "acceptanceLabel": "我已阅读并接受上述退款政策",
+    "acceptButton": "确认接受"
+  },
+  "filters": {
+    "status": "状态"
+  },
+  "time": {
+    "hours": "小时",
+    "minutes": "分钟"
+  },
+  "unit": {
+    "baht": "泰铢",
+    "minutes": " 分钟"
+  },
+  "backToBookings": "返回预订列表",
+  "payment": {
+    "securityNotice": "🔒 通过 SSL 和 Omise 安全付款"
+  },
+  "processing": "处理中...",
+  "fallback": {
+    "nameNotSpecified": "未指定姓名",
+    "customerNameNotSpecified": "未指定客户姓名",
+    "addressNotSpecified": "未指定地址",
+    "serviceNotSpecified": "未指定服务",
+    "staff": "员工",
+    "customer": "客户",
+    "customerAddress": "客户地址",
+    "staffTest": "测试员工",
+    "customerTest": "测试客户",
+    "addressTest": "测试地址"
+  },
+  "journeyStatus": {
+    "traveling": "行进中",
+    "arrived": "已到达"
+  },
+  "messages": {
+    "linkCopied": "链接已复制"
+  },
+  "share": {
+    "journeyTrackingTitle": "跟踪员工行程 - The Bliss at Home",
+    "journeyTrackingText": "跟踪 {{staffName}} 的行程以提供 {{serviceName}}",
+    "journeyTrackingDefault": "跟踪员工行程"
+  },
+  "tracking": {
+    "pageTitle": "跟踪行程",
+    "statusTraveling": "员工正在前往您的位置",
+    "mapAutoUpdate": "地图将自动更新位置",
+    "statusArrived": "员工已到达！",
+    "prepareForService": "请为服务做好准备",
+    "statusCompleted": "服务已完成",
+    "thankYouMessage": "感谢使用 The Bliss at Home",
+    "statusCancelled": "行程已取消",
+    "contactSupport": "如有任何疑问，请联系我们"
+  },
+  "labels": {
+    "customer": "客户：",
+    "serviceStaff": "服务员工",
+    "destination": "目的地",
+    "startTime": "开始时间",
+    "serviceDuration": "服务时长",
+    "room": "房间"
+  },
+  "emergencyService": {
+    "callButton": "拨打",
+    "lineButton": "LINE",
+    "whatsappButton": "WhatsApp"
+  },
+  "trackingMap": {
+    "loadingMap": "正在加载地图...",
+    "errorTitle": "发生错误",
+    "title": "跟踪员工的行程",
+    "refreshMap": "刷新地图",
+    "lastUpdated": "最后更新：",
+    "noLocationData": "暂无位置数据",
+    "updating": "正在更新...",
+    "currentLocation": "当前位置",
+    "coordinates": "坐标：",
+    "navigateGoogleMaps": "使用 Google 地图导航",
+    "autoRefreshNotice": "地图每5分钟自动更新一次以显示员工的最新位置",
+    "testDataLabel": "测试数据（非真实 GPS）",
+    "debugUpdateLabel": "🕒 更新：",
+    "noTimeData": "无时间数据",
+    "debugStatusLabel": "📡 状态：",
+    "testData": "🔴 测试数据",
+    "realGps": "🟢 真实 GPS"
+  },
+  "appName": "The Bliss Massage at Home",
+  "or": "或",
+  "legal": {
+    "acceptancePrefix": "登录意味着您接受"
+  },
+  "address": {
+    "province": "省份",
+    "loading": "加载中...",
+    "selectProvince": "-- 选择省份 --",
+    "district": "区",
+    "selectProvinceFirst": "-- 先选择省份 --",
+    "selectDistrict": "-- 选择区 --",
+    "subdistrict": "次区",
+    "selectDistrictFirst": "-- 先选择区 --",
+    "selectSubdistrict": "-- 选择次区 --",
+    "zipcode": "邮政编码",
+    "zipcodePlaceholder": "10110"
+  },
+  "brand": {
+    "name": "The Bliss 居家按摩服务",
+    "tagline": "按摩及水疗"
+  },
+  "contactMethod": {
+    "phone": "电话"
+  }
 }

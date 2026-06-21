@@ -3,7 +3,9 @@
     "home": "หน้าแรก",
     "services": "บริการ",
     "bookings": "การจอง",
-    "profile": "โปรไฟล์"
+    "profile": "โปรไฟล์",
+    "promotions": "โปรโมชั่น",
+    "notifications": "การแจ้งเตือน"
   },
   "footer": {
     "copyright": "© 2026 The Bliss Massage at Home สงวนลิขสิทธิ์",
@@ -26,7 +28,10 @@
     "register": "ลงทะเบียน",
     "viewAll": "ดูทั้งหมด",
     "clearFilters": "ล้างตัวกรอง",
-    "goBack": "กลับไปหน้าก่อนหน้า"
+    "goBack": "กลับไปหน้าก่อนหน้า",
+    "retry": "ลองใหม่",
+    "shareLink": "แชร์ลิงก์",
+    "callStaff": "โทรหาพนักงาน: "
   },
   "status": {
     "confirmed": "ยืนยันแล้ว",
@@ -34,14 +39,22 @@
     "pending": "รอดำเนินการ",
     "cancelled": "ยกเลิกแล้ว",
     "paid": "ชำระแล้ว",
-    "label": "สถานะ"
+    "label": "สถานะ",
+    "traveling": "กำลังเดินทาง",
+    "arrived": "ถึงแล้ว",
+    "inProgress": "กำลังให้บริการ"
   },
   "loading": {
-    "services": "กำลังโหลดบริการ...",
+    "default": "กำลังโหลด...",
     "bookings": "กำลังโหลดการจอง...",
-    "profile": "กำลังโหลดโปรไฟล์...",
     "bookingDetails": "กำลังโหลดรายละเอียดการจอง...",
-    "data": "กำลังโหลดข้อมูล..."
+    "services": "กำลังโหลดบริการ...",
+    "profile": "กำลังโหลดโปรไฟล์...",
+    "paymentData": "กำลังโหลดข้อมูลการชำระเงิน...",
+    "transactions": "กำลังโหลดธุรกรรม...",
+    "journey": "กำลังโหลดข้อมูลการเดินทาง...",
+    "pleaseWait": "กรุณารอสักครู่",
+    "map": "กำลังโหลดแผนที่..."
   },
   "errors": {
     "failedToLoadServices": "ไม่สามารถโหลดบริการได้ กรุณาลองใหม่อีกครั้ง",
@@ -49,7 +62,20 @@
     "noServicesAvailable": "ไม่มีบริการในขณะนี้",
     "serviceNotFound": "ไม่พบบริการที่ต้องการ",
     "cannotLoadService": "ไม่สามารถโหลดข้อมูลบริการได้",
-    "backToServices": "← กลับไปดูบริการทั้งหมด"
+    "backToServices": "← กลับไปดูบริการทั้งหมด",
+    "failedToLoadTransactions": "เกิดข้อผิดพลาดในการโหลดธุรกรรม",
+    "journeyNotFound": "ไม่พบข้อมูลการเดินทาง",
+    "bookingNotFound": "ไม่พบข้อมูลการจอง",
+    "staffNotFound": "ไม่พบข้อมูลพนักงาน",
+    "failedToLoadJourney": "ไม่สามารถโหลดข้อมูลการเดินทางได้",
+    "failedToCopyLink": "ไม่สามารถคัดลอกลิงก์ได้",
+    "dataNotFound": "ไม่พบข้อมูล",
+    "failedToLoadJourneyDetail": "ไม่สามารถดึงข้อมูลการเดินทางได้: {{error}}",
+    "failedToLoadTestMode": "ไม่สามารถโหลดข้อมูลได้ (ระบบทดสอบ)",
+    "googleMapsApiKeyNotConfigured": "Google Maps API Key ไม่ถูกตั้งค่า",
+    "failedToLoadGoogleMapsApi": "ไม่สามารถโหลด Google Maps API ได้",
+    "failedToLoadMap": "เกิดข้อผิดพลาดในการโหลดแผนที่",
+    "checkGoogleMapsApiKeyInEnv": "กรุณาตรวจสอบ Google Maps API Key ใน .env"
   },
   "auth": {
     "signedInAs": "เข้าสู่ระบบในชื่อ",
@@ -71,7 +97,154 @@
     "sending": "กำลังส่ง...",
     "success": "ส่งสัญญาณสำเร็จ",
     "successMessage": "ทีมงานได้รับการแจ้งเตือนแล้ว\nและจะติดต่อกลับโดยเร็วที่สุด",
-    "failedAlert": "ไม่สามารถส่งสัญญาณ SOS ได้ กรุณาลองใหม่หรือติดต่อฝ่ายสนับสนุน"
+    "failedAlert": "ไม่สามารถส่งสัญญาณ SOS ได้ กรุณาลองใหม่หรือติดต่อฝ่ายสนับสนุน",
+    "buttonTooltip": "แจ้งเหตุฉุกเฉิน"
   },
-  "currency": "฿"
+  "currency": "฿",
+  "button": {
+    "close": "ปิด",
+    "cancel": "ยกเลิก",
+    "continue": "ดำเนินการต่อ",
+    "back": "กลับ",
+    "retry": "ลองใหม่อีกครั้ง"
+  },
+  "action": {
+    "close": "ปิด",
+    "cancel": "ยกเลิก",
+    "back": "กลับ",
+    "refresh": "รีเฟรชข้อมูล"
+  },
+  "dayOfWeek": {
+    "sun": "อา",
+    "mon": "จ",
+    "tue": "อ",
+    "wed": "พ",
+    "thu": "พฤ",
+    "fri": "ศ",
+    "sat": "ส"
+  },
+  "error": {
+    "generic": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+    "tryAgain": "กรุณาลองใหม่อีกครั้ง",
+    "paymentDataNotFound": "ไม่พบข้อมูลการชำระเงิน",
+    "loadDataFailed": "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง",
+    "title": "เกิดข้อผิดพลาด"
+  },
+  "close": "ปิด",
+  "cancel": "ยกเลิก",
+  "submitting": "กำลังส่ง...",
+  "refundPolicy": {
+    "title": "เงื่อนไขการคืนเงิน",
+    "scrollPrompt": "กรุณาเลื่อนอ่านเงื่อนไขให้ครบก่อน",
+    "acceptanceLabel": "ข้าพเจ้าได้อ่านและยอมรับเงื่อนไขการคืนเงินข้างต้นแล้ว",
+    "acceptButton": "ยืนยันยอมรับเงื่อนไข"
+  },
+  "filters": {
+    "status": "สถานะ"
+  },
+  "time": {
+    "hours": "ชม.",
+    "minutes": "นาที"
+  },
+  "unit": {
+    "baht": "บาท",
+    "minutes": " นาที"
+  },
+  "backToBookings": "กลับไปยังรายการจอง",
+  "payment": {
+    "securityNotice": "🔒 การชำระเงินปลอดภัยด้วยระบบ SSL และ Omise"
+  },
+  "processing": "กำลังประมวลผล...",
+  "fallback": {
+    "nameNotSpecified": "ไม่ระบุชื่อ",
+    "customerNameNotSpecified": "ไม่ระบุชื่อลูกค้า",
+    "addressNotSpecified": "ไม่ระบุที่อยู่",
+    "serviceNotSpecified": "ไม่ระบุบริการ",
+    "staff": "พนักงาน",
+    "customer": "ลูกค้า",
+    "customerAddress": "ที่อยู่ลูกค้า",
+    "staffTest": "พนักงานทดสอบ",
+    "customerTest": "ลูกค้าทดสอบ",
+    "addressTest": "ที่อยู่ทดสอบ"
+  },
+  "journeyStatus": {
+    "traveling": "กำลังเดินทาง",
+    "arrived": "มาถึงแล้ว"
+  },
+  "messages": {
+    "linkCopied": "ลิงก์ถูกคัดลอกแล้ว"
+  },
+  "share": {
+    "journeyTrackingTitle": "ติดตามการเดินทางพนักงาน - The Bliss at Home",
+    "journeyTrackingText": "ติดตามการเดินทางของ {{staffName}} มาให้บริการ {{serviceName}}",
+    "journeyTrackingDefault": "ติดตามการเดินทางพนักงาน"
+  },
+  "tracking": {
+    "pageTitle": "ติดตามการเดินทาง",
+    "statusTraveling": "พนักงานกำลังเดินทางมาหาคุณ",
+    "mapAutoUpdate": "แผนที่จะอัพเดทตำแหน่งอัตโนมัติ",
+    "statusArrived": "พนักงานมาถึงแล้ว!",
+    "prepareForService": "กรุณาเตรียมตัวรับบริการ",
+    "statusCompleted": "บริการเสร็จสิ้นแล้ว",
+    "thankYouMessage": "ขอบคุณที่ใช้บริการ The Bliss at Home",
+    "statusCancelled": "การเดินทางถูกยกเลิก",
+    "contactSupport": "หากมีข้อสงสัยกรุณาติดต่อเรา"
+  },
+  "labels": {
+    "customer": "ลูกค้า: ",
+    "serviceStaff": "พนักงานผู้ให้บริการ",
+    "destination": "ปลายทาง",
+    "startTime": "เริ่มเดินทาง",
+    "serviceDuration": "ระยะเวลาบริการ",
+    "room": "ห้อง"
+  },
+  "emergencyService": {
+    "callButton": "โทร",
+    "lineButton": "LINE",
+    "whatsappButton": "WhatsApp"
+  },
+  "trackingMap": {
+    "loadingMap": "กำลังโหลดแผนที่...",
+    "errorTitle": "เกิดข้อผิดพลาด",
+    "title": "ติดตามการเดินทางของพนักงาน",
+    "refreshMap": "รีเฟรชแผนที่",
+    "lastUpdated": "อัพเดทล่าสุด:",
+    "noLocationData": "ยังไม่มีข้อมูลตำแหน่ง",
+    "updating": "กำลังอัพเดท...",
+    "currentLocation": "ตำแหน่งปัจจุบัน",
+    "coordinates": "พิกัด:",
+    "navigateGoogleMaps": "นำทางด้วย Google Maps",
+    "autoRefreshNotice": "แผนที่จะอัพเดทอัตโนมัติทุก 5 นาทีเพื่อแสดงตำแหน่งพนักงานล่าสุด",
+    "testDataLabel": "ข้อมูลทดสอบ (ไม่ใช่ GPS จริง)",
+    "debugUpdateLabel": "🕒 อัพเดท:",
+    "noTimeData": "ไม่มีข้อมูลเวลา",
+    "debugStatusLabel": "📡 สถานะ:",
+    "testData": "🔴 ข้อมูลทดสอบ",
+    "realGps": "🟢 GPS จริง"
+  },
+  "appName": "The Bliss Massage at Home",
+  "or": "หรือ",
+  "legal": {
+    "acceptancePrefix": "เข้าสู่ระบบหมายถึงคุณยอมรับ"
+  },
+  "address": {
+    "province": "จังหวัด",
+    "loading": "กำลังโหลด...",
+    "selectProvince": "-- เลือกจังหวัด --",
+    "district": "เขต/อำเภอ",
+    "selectProvinceFirst": "-- เลือกจังหวัดก่อน --",
+    "selectDistrict": "-- เลือกเขต/อำเภอ --",
+    "subdistrict": "แขวง/ตำบล",
+    "selectDistrictFirst": "-- เลือกเขต/อำเภอก่อน --",
+    "selectSubdistrict": "-- เลือกแขวง/ตำบล --",
+    "zipcode": "รหัสไปรษณีย์",
+    "zipcodePlaceholder": "10110"
+  },
+  "brand": {
+    "name": "The Bliss Massage at Home",
+    "tagline": "Massage & Spa"
+  },
+  "contactMethod": {
+    "phone": "โทร"
+  }
 }

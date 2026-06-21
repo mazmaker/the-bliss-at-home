@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { MapPin, Loader2, LocateFixed } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 
 interface GoogleMapsPickerProps {
   latitude?: number | null
@@ -21,6 +22,7 @@ export function GoogleMapsPicker({
   onLocationChange,
   className = '',
 }: GoogleMapsPickerProps) {
+  const { t } = useTranslation()
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
@@ -45,7 +47,7 @@ export function GoogleMapsPicker({
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
     if (!apiKey) {
-      setError('Google Maps API Key ไม่ถูกตั้งค่า')
+      setError(t('common:errors.googleMapsApiKeyNotConfigured'))
       setIsLoading(false)
       return
     }
@@ -55,7 +57,7 @@ export function GoogleMapsPicker({
     script.async = true
     script.defer = true
     script.onerror = () => {
-      setError('ไม่สามารถโหลด Google Maps API ได้')
+      setError(t('common:errors.failedToLoadGoogleMapsApi'))
       setIsLoading(false)
     }
     script.onload = () => {
@@ -105,7 +107,7 @@ export function GoogleMapsPicker({
         map: map,
         draggable: true, // Allow dragging marker
         animation: window.google.maps.Animation.DROP,
-        title: 'ตำแหน่งที่อยู่',
+        title: t('booking:wizard.step4.markerTitle'),
       })
       markerRef.current = marker
 
@@ -129,7 +131,7 @@ export function GoogleMapsPicker({
       // Add search box for easy location finding
       const input = document.createElement('input')
       input.type = 'text'
-      input.placeholder = 'ค้นหาสถานที่...'
+      input.placeholder = t('booking:wizard.step4.searchPlaceholder')
       input.className = 'w-80 px-4 py-2 mt-2 ml-2 bg-white rounded-lg shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500'
 
       const searchBox = new window.google.maps.places.SearchBox(input)
@@ -161,7 +163,7 @@ export function GoogleMapsPicker({
       setIsLoading(false)
     } catch (err) {
       console.error('Error initializing map:', err)
-      setError('เกิดข้อผิดพลาดในการโหลดแผนที่')
+      setError(t('common:errors.failedToLoadMap'))
       setIsLoading(false)
     }
   }
@@ -198,7 +200,7 @@ export function GoogleMapsPicker({
         <MapPin className="w-12 h-12 text-red-500 mb-3" />
         <p className="text-red-600 text-sm font-medium">{error}</p>
         <p className="text-gray-500 text-xs mt-2">
-          กรุณาตรวจสอบ Google Maps API Key ใน .env
+          {t('common:errors.checkGoogleMapsApiKeyInEnv')}
         </p>
       </div>
     )
@@ -211,7 +213,7 @@ export function GoogleMapsPicker({
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">กำลังโหลดแผนที่...</p>
+              <p className="text-sm text-gray-600">{t('common:loading.map')}</p>
             </div>
           </div>
         )}
@@ -229,7 +231,7 @@ export function GoogleMapsPicker({
             ) : (
               <LocateFixed className="w-4 h-4" />
             )}
-            {isLocating ? 'กำลังค้นหา...' : 'ตำแหน่งปัจจุบัน'}
+            {isLocating ? t('booking:wizard.step4.locatingButton') : t('booking:wizard.step4.currentLocationButton')}
           </button>
         )}
       </div>
@@ -237,12 +239,12 @@ export function GoogleMapsPicker({
       <div className="flex items-start gap-2 text-xs text-gray-600 bg-amber-50 p-3 rounded-lg">
         <MapPin className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="font-medium text-amber-900 mb-1">วิธีใช้งาน:</p>
+          <p className="font-medium text-amber-900 mb-1">{t('booking:wizard.step4.howToUseTitle')}</p>
           <ul className="space-y-1 text-amber-700">
-            <li>• กดปุ่ม "ตำแหน่งปัจจุบัน" เพื่อใช้ตำแหน่งของคุณ</li>
-            <li>• คลิกบนแผนที่เพื่อกำหนดตำแหน่ง</li>
-            <li>• ลากหมุดสีแดงเพื่อปรับตำแหน่ง</li>
-            <li>• ค้นหาสถานที่ด้วยช่องค้นหาด้านบนแผนที่</li>
+            <li>{t('booking:wizard.step4.howToUseStep1')}</li>
+            <li>{t('booking:wizard.step4.howToUseStep2')}</li>
+            <li>{t('booking:wizard.step4.howToUseStep3')}</li>
+            <li>{t('booking:wizard.step4.howToUseStep4')}</li>
           </ul>
         </div>
       </div>
@@ -250,11 +252,11 @@ export function GoogleMapsPicker({
       {latitude && longitude && (
         <div className="flex gap-2 text-xs">
           <div className="flex-1 bg-gray-50 p-2 rounded border border-gray-200">
-            <span className="text-gray-500">Latitude:</span>{' '}
+            <span className="text-gray-500">{t('booking:wizard.step4.latitudeLabel')}</span>{' '}
             <span className="font-mono font-medium text-gray-900">{latitude.toFixed(6)}</span>
           </div>
           <div className="flex-1 bg-gray-50 p-2 rounded border border-gray-200">
-            <span className="text-gray-500">Longitude:</span>{' '}
+            <span className="text-gray-500">{t('booking:wizard.step4.longitudeLabel')}</span>{' '}
             <span className="font-mono font-medium text-gray-900">{longitude.toFixed(6)}</span>
           </div>
         </div>

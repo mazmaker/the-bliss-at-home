@@ -123,7 +123,7 @@ const PromotionsPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลดโปรโมชั่น...</p>
+          <p className="text-gray-600">{t('home:promotions.loading')}</p>
         </div>
       </div>
     )
@@ -139,8 +139,8 @@ const PromotionsPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">โปรโมชั่นทั้งหมด</h1>
-              <p className="text-gray-600">ข้อเสนอพิเศษสำหรับคุณ</p>
+              <h1 className="text-2xl font-bold text-gray-800">{t('home:promotions.pageTitle')}</h1>
+              <p className="text-gray-600">{t('home:promotions.pageSubtitle')}</p>
             </div>
           </div>
 
@@ -150,7 +150,7 @@ const PromotionsPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="ค้นหาโปรโมชั่น..."
+                placeholder={t('home:promotions.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -162,10 +162,10 @@ const PromotionsPage = () => {
               onChange={(e) => setFilterType(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             >
-              <option value="all">ทุกประเภท</option>
-              <option value="percentage">ลดเปอร์เซ็นต์</option>
-              <option value="fixed_amount">ลดยอดคงที่</option>
-              <option value="buy_x_get_y">ซื้อแล้วได้ฟรี</option>
+              <option value="all">{t('home:promotions.filterAll')}</option>
+              <option value="percentage">{t('home:promotions.filterPercentage')}</option>
+              <option value="fixed_amount">{t('home:promotions.filterFixedAmount')}</option>
+              <option value="buy_x_get_y">{t('home:promotions.filterBuyXGetY')}</option>
             </select>
 
             <select
@@ -173,9 +173,9 @@ const PromotionsPage = () => {
               onChange={(e) => setSortBy(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             >
-              <option value="newest">ใหม่ล่าสุด</option>
-              <option value="discount">ส่วนลดสูงสุด</option>
-              <option value="expiring">หมดอายุเร็วสุด</option>
+              <option value="newest">{t('home:promotions.sortNewest')}</option>
+              <option value="discount">{t('home:promotions.sortHighestDiscount')}</option>
+              <option value="expiring">{t('home:promotions.sortExpiring')}</option>
             </select>
           </div>
         </div>
@@ -186,8 +186,8 @@ const PromotionsPage = () => {
         {filteredAndSortedPromotions.length === 0 ? (
           <div className="text-center py-16">
             <Gift className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">ไม่พบโปรโมชั่น</h3>
-            <p className="text-gray-500">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('home:promotions.empty.heading')}</h3>
+            <p className="text-gray-500">{t('home:promotions.empty.message')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -220,7 +220,7 @@ const PromotionsPage = () => {
                     {daysLeft > 0 && daysLeft <= 7 && (
                       <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
                         <Clock className="w-3 h-3 inline mr-1" />
-                        {daysLeft} วันสุดท้าย
+                        {t('home:promotions.daysLeftBadge', { daysLeft })}
                       </div>
                     )}
 
@@ -228,7 +228,7 @@ const PromotionsPage = () => {
                     <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                       <div className="text-center text-white">
                         <div className="text-3xl font-bold">{formatDiscount(promo)}</div>
-                        <div className="text-sm opacity-90">OFF</div>
+                        <div className="text-sm opacity-90">{t('home:promotions.discountOverlay')}</div>
                       </div>
                     </div>
                   </div>
@@ -243,7 +243,7 @@ const PromotionsPage = () => {
 
                     {/* Promo Code */}
                     <div className="bg-amber-50 rounded-lg p-2 mb-3 border border-amber-200">
-                      <p className="text-xs text-gray-600 mb-1">รหัสโปรโมชั่น</p>
+                      <p className="text-xs text-gray-600 mb-1">{t('home:promotions.promoCode')}</p>
                       <code className="font-mono font-bold text-amber-700">{promo.code}</code>
                     </div>
 
@@ -251,13 +251,13 @@ const PromotionsPage = () => {
                     <div className="flex justify-between items-center text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        ถึง {new Date(promo.end_date).toLocaleDateString('th-TH')}
+                        {t('home:promotions.expiryLabel', { date: new Date(promo.end_date).toLocaleDateString('th-TH') })}
                       </span>
 
                       {promo.usage_count !== undefined && promo.usage_limit && (
                         <span className="flex items-center gap-1">
                           <Star className="w-3 h-3" />
-                          ใช้แล้ว {promo.usage_count}/{promo.usage_limit}
+                          {t('home:promotions.usageLabel', { used: promo.usage_count, limit: promo.usage_limit })}
                         </span>
                       )}
                     </div>

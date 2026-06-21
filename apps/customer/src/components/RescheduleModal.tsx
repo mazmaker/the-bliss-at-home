@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Modal } from '@bliss/ui'
+import { useTranslation } from '@bliss/i18n'
 import { AlertTriangle, Clock, Ban, CheckCircle, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface CancellationEligibility {
@@ -57,6 +58,7 @@ export function RescheduleModal({
   currentTime,
   duration,
 }: RescheduleModalProps) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<'check' | 'select' | 'confirm' | 'result'>('check')
   const [eligibility, setEligibility] = useState<CancellationEligibility | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')
@@ -96,7 +98,7 @@ export function RescheduleModal({
       )
 
       if (!checkRes.ok) {
-        throw new Error('ไม่สามารถตรวจสอบสถานะการเลื่อนนัดได้')
+        throw new Error(t('booking:reschedule.checkError'))
       }
 
       const checkData = await checkRes.json()
@@ -107,7 +109,7 @@ export function RescheduleModal({
         setStep('select')
       }
     } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการตรวจสอบ')
+      setError(err.message || t('booking:reschedule.checkFailed'))
     } finally {
       setLoading(false)
     }
@@ -115,7 +117,7 @@ export function RescheduleModal({
 
   const handleConfirmReschedule = async () => {
     if (!selectedDate || !selectedTime) {
-      setError('กรุณาเลือกวันและเวลาใหม่')
+      setError(t('booking:reschedule.selectDateTimeRequired'))
       return
     }
 
@@ -127,7 +129,7 @@ export function RescheduleModal({
       setSuccess(true)
       setStep('result')
     } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการเลื่อนนัด')
+      setError(err.message || t('booking:reschedule.error'))
     } finally {
       setLoading(false)
     }
@@ -199,13 +201,13 @@ export function RescheduleModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="เลื่อนนัดหมาย" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('booking:reschedule.modalTitle')} size="md">
       <div className="py-4 max-h-[70vh] overflow-y-auto">
         {/* Loading State */}
         {loading && step === 'check' && (
           <div className="text-center py-8">
             <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
-            <p className="text-stone-600">กำลังตรวจสอบเงื่อนไขการเลื่อนนัด...</p>
+            <p className="text-stone-600">{t('booking:reschedule.checking')}</p>
           </div>
         )}
 
@@ -223,19 +225,19 @@ export function RescheduleModal({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Ban className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">ไม่สามารถเลื่อนนัดได้</h3>
+            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:reschedule.cannotReschedule')}</h3>
             <p className="text-stone-600 mb-4">
-              {eligibility.reason || 'การจองนี้ไม่สามารถเลื่อนนัดได้ในขณะนี้'}
+              {eligibility.reason || t('booking:reschedule.notEligibleDefault')}
             </p>
 
             {eligibility.hoursUntilBooking > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6">
                 <div className="flex items-center gap-2 text-amber-800 mb-2">
                   <Clock className="w-5 h-5" />
-                  <span className="font-medium">เหลือเวลา {eligibility.hoursUntilBooking.toFixed(1)} ชั่วโมงก่อนนัด</span>
+                  <span className="font-medium">{t('booking:reschedule.hoursUntilBooking', { hours: eligibility.hoursUntilBooking.toFixed(1) })}</span>
                 </div>
                 <p className="text-sm text-amber-700">
-                  ตามนโยบาย ต้องเลื่อนนัดล่วงหน้าอย่างน้อย 3 ชั่วโมงก่อนเวลานัด
+                  {t('booking:reschedule.policyMessage')}
                 </p>
               </div>
             )}
@@ -244,7 +246,7 @@ export function RescheduleModal({
               onClick={onClose}
               className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
             >
-              ปิด
+              {t('common:action.close')}
             </button>
           </div>
         )}
@@ -254,15 +256,15 @@ export function RescheduleModal({
           <div className="space-y-6">
             {/* Current Booking Info */}
             <div className="bg-stone-50 rounded-xl p-4">
-              <p className="text-sm text-stone-500 mb-1">การจองปัจจุบัน</p>
+              <p className="text-sm text-stone-500 mb-1">{t('booking:reschedule.currentBooking')}</p>
               <p className="font-medium text-stone-900">{serviceName}</p>
-              <p className="text-sm text-stone-600">{formatDate(currentDate)} เวลา {currentTime}</p>
+              <p className="text-sm text-stone-600">{t('booking:dateTime', { date: formatDate(currentDate), time: currentTime })}</p>
             </div>
 
             {/* Date Selection */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-3">
-                เลือกวันใหม่
+                {t('booking:reschedule.selectNewDate')}
               </label>
               <div className="bg-white border border-stone-200 rounded-xl p-4">
                 {/* Month Navigation */}
@@ -286,9 +288,9 @@ export function RescheduleModal({
 
                 {/* Day Headers */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                  {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((day) => (
-                    <div key={day} className="text-center text-xs font-medium text-stone-500 py-2">
-                      {day}
+                  {['common:dayOfWeek.sun', 'common:dayOfWeek.mon', 'common:dayOfWeek.tue', 'common:dayOfWeek.wed', 'common:dayOfWeek.thu', 'common:dayOfWeek.fri', 'common:dayOfWeek.sat'].map((dayKey) => (
+                    <div key={dayKey} className="text-center text-xs font-medium text-stone-500 py-2">
+                      {t(dayKey)}
                     </div>
                   ))}
                 </div>
@@ -334,7 +336,7 @@ export function RescheduleModal({
             {selectedDate && (
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-3">
-                  เลือกเวลาใหม่
+                  {t('booking:reschedule.selectNewTime')}
                 </label>
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
                   {TIME_SLOTS.map((time) => {
@@ -364,14 +366,14 @@ export function RescheduleModal({
                 onClick={onClose}
                 className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
               >
-                ยกเลิก
+                {t('common:action.cancel')}
               </button>
               <button
                 onClick={() => setStep('confirm')}
                 disabled={!selectedDate || !selectedTime}
                 className="flex-1 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                ดำเนินการต่อ
+                {t('booking:reschedule.continue')}
               </button>
             </div>
           </div>
@@ -383,16 +385,16 @@ export function RescheduleModal({
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8 text-amber-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">ยืนยันการเลื่อนนัด</h3>
+            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:reschedule.confirmTitle')}</h3>
             <p className="text-stone-600 mb-6">
-              กรุณาตรวจสอบรายละเอียดการเลื่อนนัดก่อนยืนยัน
+              {t('booking:reschedule.confirmMessage')}
             </p>
 
             <div className="bg-stone-50 rounded-xl p-4 text-left mb-6 space-y-4">
               <div>
-                <p className="text-sm text-stone-500 mb-1">วันเวลาเดิม</p>
+                <p className="text-sm text-stone-500 mb-1">{t('booking:reschedule.originalDateTime')}</p>
                 <p className="font-medium text-stone-900 line-through opacity-60">
-                  {formatDate(currentDate)} เวลา {currentTime}
+                  {t('booking:dateTime', { date: formatDate(currentDate), time: currentTime })}
                 </p>
               </div>
               <div className="flex items-center justify-center">
@@ -401,9 +403,9 @@ export function RescheduleModal({
                 </div>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">วันเวลาใหม่</p>
+                <p className="text-sm text-stone-500 mb-1">{t('booking:reschedule.newDateTime')}</p>
                 <p className="font-bold text-amber-700 text-lg">
-                  {formatDate(selectedDate)} เวลา {selectedTime}
+                  {t('booking:dateTime', { date: formatDate(selectedDate), time: selectedTime })}
                 </p>
               </div>
             </div>
@@ -414,7 +416,7 @@ export function RescheduleModal({
                 disabled={loading}
                 className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
               >
-                กลับ
+                {t('common:action.back')}
               </button>
               <button
                 onClick={handleConfirmReschedule}
@@ -424,10 +426,10 @@ export function RescheduleModal({
                 {loading ? (
                   <>
                     <RefreshCw className="w-5 h-5 animate-spin" />
-                    กำลังดำเนินการ...
+                    {t('booking:reschedule.processing')}
                   </>
                 ) : (
-                  'ยืนยันเลื่อนนัด'
+                  t('booking:reschedule.confirmButton')
                 )}
               </button>
             </div>
@@ -440,18 +442,18 @@ export function RescheduleModal({
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">เลื่อนนัดเรียบร้อยแล้ว</h3>
+            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:reschedule.successTitle')}</h3>
             <p className="text-stone-600 mb-4">
-              การจองหมายเลข {bookingNumber} ได้เปลี่ยนเป็นวันเวลาใหม่แล้ว
+              {t('booking:reschedule.successMessage', { number: bookingNumber })}
             </p>
 
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-left mb-6">
               <div className="flex items-start gap-2">
                 <Calendar className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-green-800">นัดหมายใหม่</p>
+                  <p className="font-medium text-green-800">{t('booking:reschedule.newAppointment')}</p>
                   <p className="text-sm text-green-700">
-                    {formatDate(selectedDate)} เวลา {selectedTime}
+                    {t('booking:dateTime', { date: formatDate(selectedDate), time: selectedTime })}
                   </p>
                 </div>
               </div>
@@ -461,7 +463,7 @@ export function RescheduleModal({
               onClick={onClose}
               className="px-8 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
             >
-              ปิด
+              {t('common:action.close')}
             </button>
           </div>
         )}

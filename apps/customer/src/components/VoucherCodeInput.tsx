@@ -71,7 +71,7 @@ export function VoucherCodeInput({
             <CheckCircle className="w-5 h-5 text-green-600" />
             <div>
               <span className="font-medium text-green-700">{appliedPromo.promotion?.code}</span>
-              <span className="text-sm text-green-600 ml-2">-฿{appliedPromo.discountAmount.toLocaleString()}</span>
+              <span className="text-sm text-green-600 ml-2">{t('booking:wizard.step5.discountAmount', { amount: appliedPromo.discountAmount.toLocaleString() })}</span>
             </div>
           </div>
           <button

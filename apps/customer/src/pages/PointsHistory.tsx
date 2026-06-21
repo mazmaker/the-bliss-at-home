@@ -1,27 +1,29 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from '@bliss/i18n'
 import { Star, Plus, Minus, Clock, Gift, Undo, Settings, TrendingUp, ArrowDownLeft, ArrowUpRight, ChevronLeft } from 'lucide-react'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerPoints, useLoyaltySettings, usePointTransactions } from '@bliss/supabase/hooks/useLoyalty'
 import type { PointTransaction } from '@bliss/supabase/hooks/useLoyalty'
 
-const TYPE_CONFIG: Record<string, { label: string; icon: typeof Plus; color: string }> = {
-  earn: { label: 'ได้รับจากการจอง', icon: ArrowDownLeft, color: 'text-green-600 bg-green-100' },
-  bonus: { label: 'โบนัส', icon: Gift, color: 'text-purple-600 bg-purple-100' },
-  redeem: { label: 'แลกส่วนลด', icon: ArrowUpRight, color: 'text-blue-600 bg-blue-100' },
-  refund: { label: 'คืนแต้ม', icon: Undo, color: 'text-amber-600 bg-amber-100' },
-  expire: { label: 'หมดอายุ', icon: Clock, color: 'text-red-600 bg-red-100' },
-  admin_adjust: { label: 'ปรับปรุงโดยแอดมิน', icon: Settings, color: 'text-stone-600 bg-stone-100' },
+const TYPE_CONFIG: Record<string, { labelKey: string; icon: typeof Plus; color: string }> = {
+  earn: { labelKey: 'booking:transactionTypes.earn', icon: ArrowDownLeft, color: 'text-green-600 bg-green-100' },
+  bonus: { labelKey: 'booking:transactionTypes.bonus', icon: Gift, color: 'text-purple-600 bg-purple-100' },
+  redeem: { labelKey: 'booking:transactionTypes.redeem', icon: ArrowUpRight, color: 'text-blue-600 bg-blue-100' },
+  refund: { labelKey: 'booking:transactionTypes.refund', icon: Undo, color: 'text-amber-600 bg-amber-100' },
+  expire: { labelKey: 'booking:transactionTypes.expire', icon: Clock, color: 'text-red-600 bg-red-100' },
+  admin_adjust: { labelKey: 'booking:transactionTypes.adminAdjust', icon: Settings, color: 'text-stone-600 bg-stone-100' },
 }
 
 const FILTER_OPTIONS = [
-  { value: 'all', label: 'ทั้งหมด' },
-  { value: 'earn', label: 'ได้รับ' },
-  { value: 'redeem', label: 'ใช้แต้ม' },
-  { value: 'expire', label: 'หมดอายุ' },
+  { value: 'all', labelKey: 'booking:pointsFilter.all' },
+  { value: 'earn', labelKey: 'booking:pointsFilter.earned' },
+  { value: 'redeem', labelKey: 'booking:pointsFilter.redeemed' },
+  { value: 'expire', labelKey: 'booking:pointsFilter.expired' },
 ]
 
 function PointsHistory() {
+  const { t } = useTranslation()
   const { data: customer } = useCurrentCustomer()
   const { data: points } = useCustomerPoints(customer?.id)
   const { data: settings } = useLoyaltySettings()
@@ -56,7 +58,7 @@ function PointsHistory() {
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-stone-900">{config.label}</p>
+          <p className="font-medium text-stone-900">{t(config.labelKey)}</p>
           {tx.description && <p className="text-sm text-stone-500 truncate">{tx.description}</p>}
           <p className="text-xs text-stone-400 mt-0.5">{formatDate(tx.created_at)}</p>
         </div>
@@ -74,10 +76,10 @@ function PointsHistory() {
         <div className="mb-6">
           <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-amber-700 hover:text-amber-800 font-medium mb-3 transition">
             <ChevronLeft className="w-4 h-4" />
-            กลับไปหน้าโปรไฟล์
+            {t('profile:pointsHistory.backToProfile')}
           </Link>
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">แต้มสะสม</h1>
-          <p className="text-stone-600">ดูยอดแต้มสะสมและประวัติการได้รับ/ใช้แต้มของคุณ</p>
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">{t('profile:pointsHistory.title')}</h1>
+          <p className="text-stone-600">{t('profile:pointsHistory.subtitle')}</p>
         </div>
 
         {/* Summary Cards */}
@@ -85,34 +87,34 @@ function PointsHistory() {
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <Star className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-stone-500">คงเหลือ</span>
+              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.remaining')}</span>
             </div>
             <p className="text-3xl font-bold text-amber-700">{totalPoints.toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">มูลค่า ฿{pointsValue.toLocaleString()}</p>
+            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.value')} ฿{pointsValue.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-stone-500">สะสมทั้งหมด</span>
+              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.totalEarned')}</span>
             </div>
             <p className="text-3xl font-bold text-stone-900">{(points?.lifetime_earned || 0).toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">แต้ม</p>
+            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.points')}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <ArrowUpRight className="w-5 h-5 text-blue-600" />
-              <span className="text-sm text-stone-500">ใช้ไปแล้ว</span>
+              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.redeemed')}</span>
             </div>
             <p className="text-3xl font-bold text-stone-900">{(points?.lifetime_redeemed || 0).toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">แต้ม</p>
+            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.pointsLabel')}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-red-500" />
-              <span className="text-sm text-stone-500">หมดอายุ</span>
+              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.expired')}</span>
             </div>
             <p className="text-3xl font-bold text-stone-900">{(points?.lifetime_expired || 0).toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">แต้ม</p>
+            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.pointsLabelExpired')}</p>
           </div>
         </div>
 
@@ -128,7 +130,7 @@ function PointsHistory() {
                   : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
               }`}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
@@ -136,21 +138,21 @@ function PointsHistory() {
         {/* Transactions List */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-stone-100">
-            <h3 className="font-semibold text-stone-900">ประวัติแต้ม</h3>
+            <h3 className="font-semibold text-stone-900">{t('profile:pointsHistory.section.title')}</h3>
           </div>
           <div className="px-6">
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3" />
-                <p className="text-sm text-stone-500">กำลังโหลด...</p>
+                <p className="text-sm text-stone-500">{t('profile:pointsHistory.loading')}</p>
               </div>
             ) : txData?.transactions && txData.transactions.length > 0 ? (
               <div>{txData.transactions.map(renderTransaction)}</div>
             ) : (
               <div className="text-center py-12">
                 <Star className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-                <p className="text-stone-500 font-medium">ยังไม่มีประวัติแต้ม</p>
-                <p className="text-sm text-stone-400 mt-1">เมื่อจองบริการเสร็จสมบูรณ์ คุณจะได้รับแต้มสะสมที่นี่</p>
+                <p className="text-stone-500 font-medium">{t('profile:pointsHistory.empty.title')}</p>
+                <p className="text-sm text-stone-400 mt-1">{t('profile:pointsHistory.empty.description')}</p>
               </div>
             )}
           </div>

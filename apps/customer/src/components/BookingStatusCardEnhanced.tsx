@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Clock, User, MapPin, Car, Sparkles, CheckCircle, Phone, RefreshCw } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 
 type BookingStatus =
   | 'pending'
@@ -24,6 +25,7 @@ interface BookingStatusCardEnhancedProps {
       phone?: string
       avatar?: string
       rating?: number
+      reviews?: number
     }
   } | null
   bookingData?: any
@@ -32,6 +34,7 @@ interface BookingStatusCardEnhancedProps {
 }
 
 const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJourneyId }: BookingStatusCardEnhancedProps) => {
+  const { t } = useTranslation()
   const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
@@ -52,90 +55,90 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
   const getStatusConfig = (status: BookingStatus) => {
     const configs = {
       'pending': {
-        title: 'รอการยืนยัน',
-        description: 'เรากำลังตรวจสอบการจองของคุณ',
+        title: t('booking:status.pending.title'),
+        description: t('booking:status.pending.description'),
         icon: '',
         color: 'gray',
         showProgress: true,
         currentStep: 0,
-        billing: 'รอการชำระเงิน'
+        billing: t('booking:status.pending.billingStatus')
       },
       'confirmed': {
-        title: 'รอการมอบหมายพนักงาน',
-        description: 'เรากำลังหาพนักงานที่เหมาะสมให้คุณ',
+        title: t('booking:status.confirmed.title'),
+        description: t('booking:status.confirmed.description'),
         icon: '',
         color: 'amber',
         showProgress: true,
         currentStep: 1,
-        billing: 'ชำระเงินเสร็จแล้ว'
+        billing: t('booking:status.confirmed.billingStatus')
       },
       'assigned': {
-        title: 'พนักงานรับงานแล้ว',
-        description: 'พนักงานกำลังเตรียมตัวเดินทาง',
+        title: t('booking:status.assigned.title'),
+        description: t('booking:status.assigned.description'),
         icon: '',
         color: 'blue',
         showStaff: true,
         showProgress: true,
         currentStep: 2,
-        billing: 'ชำระเงินเสร็จแล้ว'
+        billing: t('booking:status.assigned.billingStatus')
       },
       'ASSIGNED': {
-        title: 'พนักงานรับงานแล้ว',
-        description: 'พนักงานกำลังเตรียมตัวเดินทาง',
+        title: t('booking:status.ASSIGNED.title'),
+        description: t('booking:status.ASSIGNED.description'),
         icon: '',
         color: 'blue',
         showStaff: true,
         showProgress: true,
         currentStep: 2,
-        billing: 'ชำระเงินเสร็จแล้ว'
+        billing: t('booking:status.ASSIGNED.billingStatus')
       },
       'STAFF_EN_ROUTE': {
-        title: 'พนักงานกำลังเดินทาง',
-        description: 'ติดตามการเดินทางได้ในแผนที่ด้านล่าง',
+        title: t('booking:status.STAFF_EN_ROUTE.title'),
+        description: t('booking:status.STAFF_EN_ROUTE.description'),
         icon: '',
         color: 'amber',
         showStaff: true,
         showETA: true,
         showProgress: true,
         currentStep: 2,
-        billing: 'ชำระเงินเสร็จแล้ว - รอเริ่มบริการ'
+        billing: t('booking:status.STAFF_EN_ROUTE.billingStatus')
       },
       'STAFF_ARRIVED': {
-        title: 'พนักงานมาถึงแล้ว',
-        description: 'พนักงานมาถึงจุดหมายแล้ว กำลังเตรียมเริ่มบริการ',
+        title: t('booking:status.STAFF_ARRIVED.title'),
+        description: t('booking:status.STAFF_ARRIVED.description'),
         icon: '',
         color: 'green',
         showStaff: true,
         showContact: true,
         showProgress: true,
         currentStep: 3.5,
-        billing: 'ชำระเงินเสร็จแล้ว - รอเริ่มบริการ'
+        billing: t('booking:status.STAFF_ARRIVED.billingStatus')
       },
       'SERVICE_IN_PROGRESS': {
-        title: 'กำลังให้บริการ',
-        description: 'บริการกำลังดำเนินอยู่ โปรดผ่อนคลายและเพลิดเพลิน',
+        title: t('booking:status.SERVICE_IN_PROGRESS.title'),
+        description: t('booking:status.SERVICE_IN_PROGRESS.description'),
         icon: '',
         color: 'emerald',
         showStaff: true,
         showTimer: true,
         showProgress: true,
         currentStep: 4,
-        billing: 'เริ่มคิดค่าบริการแล้ว'
+        billing: t('booking:status.SERVICE_IN_PROGRESS.billingStatus')
       },
       'COMPLETED': {
-        title: 'บริการเสร็จสิ้น',
-        description: 'ขอบคุณที่ใช้บริการ หวังว่าคุณจะพอใจ',
+        title: t('booking:status.COMPLETED.title'),
+        description: t('booking:status.COMPLETED.description'),
         icon: '',
         color: 'violet',
         showReview: true,
-        billing: 'คิดค่าบริการเสร็จแล้ว'
+        billing: t('booking:status.COMPLETED.billingStatus')
       },
       'cancelled': {
-        title: 'การจองถูกยกเลิก',
-        description: 'การจองของคุณถูกยกเลิกแล้ว',
+        title: t('booking:status.cancelled.title'),
+        description: t('booking:status.cancelled.description'),
         icon: '',
         color: 'red',
-        billing: 'ไม่มีค่าใช้จ่าย'
+        billing: t('booking:status.cancelled.billingStatus')
       }
     }
 
@@ -151,9 +154,9 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
 
   // Override billing message if payment is pending
   if (isPaymentPending && isBookingConfirmed) {
-    config.billing = '⚠️ กรุณาชำระเงินให้เสร็จสมบูรณ์'
+    config.billing = t('booking:payment.warningIncomplete')
   }
-  const progressSteps = ['การจอง', 'หาพนักงาน', 'เดินทาง', 'บริการ']
+  const progressSteps = [t('booking:progress.step.booking'), t('booking:progress.step.findStaff'), t('booking:progress.step.travel'), t('booking:progress.step.service')]
 
   // Calculate durations
   const calculateDuration = (startTime: string, endTime?: Date) => {
@@ -165,7 +168,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
   const formatDuration = (minutes: number) => {
     const hrs = Math.floor(minutes / 60)
     const mins = minutes % 60
-    return hrs > 0 ? `${hrs} ชม. ${mins} นาที` : `${mins} นาที`
+    return hrs > 0 ? `${hrs} ${t('common:time.hours')} ${mins} ${t('common:time.minutes')}` : `${mins} ${t('common:time.minutes')}`
   }
 
   const travelDuration = booking.travel_started_at && booking.service_started_at ?
@@ -195,7 +198,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
           <button
             onClick={onRefresh}
             className={`p-2 rounded-lg bg-${config.color}-100 hover:bg-${config.color}-200 transition-colors`}
-            title="รีเฟรชข้อมูล"
+            title={t('common:action.refresh')}
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -234,7 +237,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
       )}
 
       {/* Staff Info & Travel Status */}
-      {config.showStaff && booking.provider.name !== 'ยังไม่ได้มอบหมายพนักงาน' && (
+      {config.showStaff && booking.provider.name !== t('booking:provider.notAssigned') && (
         <div className="bg-white rounded-xl p-4 mb-4">
           {/* Staff Basic Info */}
           <div className="flex items-center gap-3 mb-4">
@@ -251,11 +254,11 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
             )}
             <div className="flex-1">
               <p className="font-medium text-gray-900">{booking.provider.name}</p>
-              {booking.provider.rating && (
+              {booking.provider.reviews ? (
                 <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <span>⭐ {booking.provider.rating.toFixed(1)}</span>
+                  <span>⭐ {booking.provider.rating?.toFixed(1)}</span>
                 </div>
-              )}
+              ) : null}
             </div>
             {config.showContact && booking.provider.phone && (
               <a
@@ -263,7 +266,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
                 className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg text-sm transition-colors"
               >
                 <Phone className="w-4 h-4" />
-                โทร
+                {t('booking:action.call')}
               </a>
             )}
           </div>
@@ -273,7 +276,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <Car className="w-5 h-5 text-amber-600" />
-                <span className="font-medium text-gray-900">เวลาเดินทาง</span>
+                <span className="font-medium text-gray-900">{t('booking:duration.travelTime')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -281,12 +284,12 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
                     {formatDuration(travelDuration)}
                   </div>
                   <div className="text-sm text-gray-600">
-                    เริ่มเดินทาง: {new Date(booking.travel_started_at).toLocaleTimeString('th-TH')}
+                    {t('booking:booking.travelStartedAt')}{new Date(booking.travel_started_at).toLocaleTimeString('th-TH')}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-amber-600">เวลาเดินทาง</div>
-                  <div className="text-xs text-amber-500">ไม่นับเป็นเวลาบริการ</div>
+                  <div className="text-sm text-amber-600">{t('booking:duration.travelTime')}</div>
+                  <div className="text-xs text-amber-500">{t('booking:duration.notCountedAsServiceTime')}</div>
                 </div>
               </div>
             </div>
@@ -299,7 +302,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         <div className="bg-white rounded-xl p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-emerald-600" />
-            <span className="font-medium text-gray-900">เวลาบริการ</span>
+            <span className="font-medium text-gray-900">{t('booking:duration.serviceTime')}</span>
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -307,13 +310,13 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
                 {formatDuration(serviceDuration)}
               </div>
               <div className="text-sm text-gray-600">
-                เริ่มบริการ: {new Date(booking.service_started_at).toLocaleTimeString('th-TH')}
+                {t('booking:booking.serviceStartedAt')}{new Date(booking.service_started_at).toLocaleTimeString('th-TH')}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-emerald-600">กำลังคิดค่าบริการ</div>
+              <div className="text-sm text-emerald-600">{t('booking:billing.inProgress')}</div>
               <div className="text-xs text-emerald-500">
-                ~{(serviceDuration * 30).toLocaleString()} บาท
+                ~{(serviceDuration * 30).toLocaleString()} {t('common:unit.baht')}
               </div>
             </div>
           </div>
@@ -326,9 +329,9 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
           <div className="flex items-center gap-2 text-red-700">
             <span className="text-lg">⚠️</span>
             <div>
-              <p className="font-medium">การชำระเงินยังไม่เสร็จสมบูรณ์</p>
+              <p className="font-medium">{t('booking:payment.incompleteHeading')}</p>
               <p className="text-sm text-red-600 mt-1">
-                งานถูก confirm แล้ว แต่ยังรอการชำระเงิน กรุณาติดต่อทีมงานหากมีปัญหา
+                {t('booking:payment.incompleteMessage')}
               </p>
             </div>
           </div>
@@ -341,10 +344,10 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         <div className="mt-4 bg-green-100 border border-green-200 rounded-xl p-4">
           <div className="flex items-center gap-2 text-green-700">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">พนักงานพร้อมให้บริการแล้ว</span>
+            <span className="font-medium">{t('booking:status.staffReady')}</span>
           </div>
           <p className="text-sm text-green-600 mt-1">
-            กำลังเตรียมอุปกรณ์และเริ่มบริการ รอสักครู่นะคะ
+            {t('booking:status.staffReadyMessage')}
           </p>
         </div>
       )}

@@ -7,6 +7,7 @@ import { useAuth } from '@bliss/supabase/auth'
 import Header from './components/Header'
 import { RefundPolicyConsent, useRefundPolicyConsent } from './components/RefundPolicyConsent'
 import FloatingCTA from './components/FloatingCTA'
+import { LINE_CONTACT_URL } from './config/contact'
 import './debug-session' // Load debug utilities
 import HomePage from './pages/Home'
 import ServiceCatalog from './pages/ServiceCatalog'
@@ -187,7 +188,7 @@ function App() {
                 {t('footer.privacy')}
               </Link>
               <span>|</span>
-              <a href="mailto:support@theblissathome.com" className="hover:text-amber-700 transition font-medium">
+              <a href={LINE_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="hover:text-amber-700 transition font-medium">
                 {t('footer.contact')}
               </a>
             </div>

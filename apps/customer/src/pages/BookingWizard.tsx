@@ -333,7 +333,7 @@ function BookingWizard() {
 
   const handlePayWithPromptPay = async () => {
     if (!customer || !createdBookingId) {
-      alert('Missing required information')
+      alert(t('booking:error.missingRequired'))
       return
     }
 
@@ -369,14 +369,14 @@ function BookingWizard() {
       }
     } catch (error: any) {
       console.error('PromptPay payment error:', error)
-      alert(`Payment failed: ${error.message || 'Please try again.'}`)
+      alert(t('booking:error.paymentFailedAlert', { error: error.message || t('common:error.tryAgain') }))
       setIsProcessingPayment(false)
     }
   }
 
   const handlePayWithBank = async (bankCode: string, isMobile: boolean) => {
     if (!customer || !createdBookingId) {
-      alert('Missing required information')
+      alert(t('booking:error.missingRequired'))
       return
     }
 
@@ -411,7 +411,7 @@ function BookingWizard() {
       }
     } catch (error: any) {
       console.error('Banking payment error:', error)
-      alert(`Payment failed: ${error.message || 'Please try again.'}`)
+      alert(t('booking:error.paymentFailedAlert', { error: error.message || t('common:error.tryAgain') }))
       setIsProcessingPayment(false)
     }
   }
@@ -430,7 +430,7 @@ function BookingWizard() {
         } else if (data.status === 'failed') {
           clearInterval(pollInterval)
           setIsProcessingPayment(false)
-          alert('Payment failed. Please try again.')
+          alert(t('booking:error.paymentFailed'))
           setPromptpayQRCode(null)
         }
       } catch (error) {
@@ -443,7 +443,7 @@ function BookingWizard() {
       clearInterval(pollInterval)
       if (isProcessingPayment) {
         setIsProcessingPayment(false)
-        alert('Payment timeout. Please try again.')
+        alert(t('booking:error.paymentTimeout'))
         setPromptpayQRCode(null)
       }
     }, 600000)
@@ -451,7 +451,7 @@ function BookingWizard() {
 
   const handlePayWithSavedCard = async () => {
     if (!customer || !createdBookingId || !selectedPaymentMethodId) {
-      alert('Missing required information')
+      alert(t('booking:error.missingRequired'))
       return
     }
 
@@ -493,11 +493,11 @@ function BookingWizard() {
         // Payment successful, navigate to bookings page
         navigate(`/bookings?success=true`)
       } else {
-        throw new Error(data.error || 'Payment failed')
+        throw new Error(data.error || t('common:error.tryAgain'))
       }
     } catch (error: any) {
       console.error('Payment error:', error)
-      alert(`Payment failed: ${error.message || 'Please try again.'}`)
+      alert(t('booking:error.paymentFailedAlert', { error: error.message || t('common:error.tryAgain') }))
     } finally {
       setIsProcessingPayment(false)
     }
@@ -505,7 +505,7 @@ function BookingWizard() {
 
   const handleCompleteBooking = async () => {
     if (!service || !customer) {
-      alert('Please log in to complete booking')
+      alert(t('booking:error.loginRequired'))
       return
     }
 
@@ -630,7 +630,7 @@ function BookingWizard() {
         hint: error?.hint,
         full: error,
       })
-      alert(`Failed to create booking: ${error?.message || 'Please try again.'}`)
+      alert(t('booking:error.bookingFailed', { error: error?.message || t('common:error.tryAgain') }))
     }
   }
 
@@ -809,7 +809,7 @@ function BookingWizard() {
               <div className="mb-6">
                 <h3 className="font-semibold text-stone-900 mb-3">{t('wizard.step2.date')}</h3>
                 <p className="text-sm text-stone-500 mb-3">
-                  สามารถจองล่วงหน้าได้สูงสุด 14 วัน (2 อาทิตย์)
+                  {t('booking:wizard.step2.advanceBookingLimit')}
                 </p>
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {availableDates.map((date) => {
@@ -845,7 +845,7 @@ function BookingWizard() {
 
               {/* Time Selection - Step 1: Hour */}
               <div>
-                <h3 className="font-semibold text-stone-900 mb-3">เลือกชั่วโมง</h3>
+                <h3 className="font-semibold text-stone-900 mb-3">{t('booking:wizard.step2.selectHour')}</h3>
                 <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
                   {availableHours.map((hour) => (
                     <button
@@ -869,7 +869,7 @@ function BookingWizard() {
               {/* Time Selection - Step 2: Minute */}
               {selectedHour && (
                 <div>
-                  <h3 className="font-semibold text-stone-900 mb-3">เลือกนาที</h3>
+                  <h3 className="font-semibold text-stone-900 mb-3">{t('booking:wizard.step2.selectMinute')}</h3>
                   <div className="grid grid-cols-4 gap-3">
                     {availableMinutes.map((minute) => (
                       <button
@@ -956,7 +956,7 @@ function BookingWizard() {
                 <div className="flex items-center justify-center py-8">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3"></div>
-                    <p className="text-stone-600 text-sm">{t('wizard.step4.loadingAddresses') || 'กำลังโหลดที่อยู่...'}</p>
+                    <p className="text-stone-600 text-sm">{t('booking:wizard.step4.loadingAddresses')}</p>
                   </div>
                 </div>
               ) : addresses && addresses.length > 0 && !showManualAddressForm ? (
@@ -1247,7 +1247,7 @@ function BookingWizard() {
                 {isSpecificPreference(providerPreference) && (
                   <div>
                     <h4 className="font-medium text-stone-900 mb-2 flex items-center gap-2">
-                      <User className="w-4 h-4" /> {t('wizard.step5.providerPreference', 'ความต้องการผู้ให้บริการ')}
+                      <User className="w-4 h-4" /> {t('booking:wizard.step5.providerPreference')}
                     </h4>
                     <span className={`inline-block text-sm px-3 py-1 rounded-full font-medium ${getProviderPreferenceBadgeStyle(providerPreference)}`}>
                       {getProviderPreferenceLabel(providerPreference)}
@@ -1308,7 +1308,7 @@ function BookingWizard() {
                   )}
                   {pointsDiscount > 0 && (
                     <div className="flex justify-between items-center text-amber-600">
-                      <span>ส่วนลดจากแต้ม ({pointsRedeemed.toLocaleString()} แต้ม)</span>
+                      <span>{t('booking:wizard.step5.pointsDiscount', { points: pointsRedeemed.toLocaleString() })}</span>
                       <span className="font-medium">-฿{pointsDiscount.toLocaleString()}</span>
                     </div>
                   )}
@@ -1518,7 +1518,7 @@ function BookingWizard() {
                           navigate(`/bookings?success=true`)
                         }}
                         onError={(error) => {
-                          alert(`Payment failed: ${error}`)
+                          alert(t('booking:error.paymentFailedAlert', { error }))
                         }}
                       />
                     </div>

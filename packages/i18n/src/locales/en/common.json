@@ -3,7 +3,9 @@
     "home": "Home",
     "services": "Services",
     "bookings": "Bookings",
-    "profile": "Profile"
+    "profile": "Profile",
+    "promotions": "Promotions",
+    "notifications": "Notifications"
   },
   "footer": {
     "copyright": "© 2026 The Bliss Massage at Home. All rights reserved.",
@@ -26,7 +28,10 @@
     "register": "Register",
     "viewAll": "View All",
     "clearFilters": "Clear Filters",
-    "goBack": "Go Back"
+    "goBack": "Go Back",
+    "retry": "Try Again",
+    "shareLink": "Share Link",
+    "callStaff": "Call Staff: "
   },
   "status": {
     "confirmed": "Confirmed",
@@ -34,14 +39,22 @@
     "pending": "Pending",
     "cancelled": "Cancelled",
     "paid": "Paid",
-    "label": "Status"
+    "label": "Status",
+    "traveling": "En Route",
+    "arrived": "Arrived",
+    "inProgress": "In Progress"
   },
   "loading": {
-    "services": "Loading services...",
+    "default": "Loading...",
     "bookings": "Loading bookings...",
-    "profile": "Loading profile...",
     "bookingDetails": "Loading booking details...",
-    "data": "Loading data..."
+    "services": "Loading services...",
+    "profile": "Loading profile...",
+    "paymentData": "Loading payment information...",
+    "transactions": "Loading transactions...",
+    "journey": "Loading journey information...",
+    "pleaseWait": "Please wait a moment",
+    "map": "Loading map..."
   },
   "errors": {
     "failedToLoadServices": "Failed to load services. Please try again.",
@@ -49,7 +62,20 @@
     "noServicesAvailable": "No services available at the moment.",
     "serviceNotFound": "Service not found",
     "cannotLoadService": "Unable to load service information",
-    "backToServices": "← Back to All Services"
+    "backToServices": "← Back to All Services",
+    "failedToLoadTransactions": "Error Loading Transactions",
+    "journeyNotFound": "Journey information not found",
+    "bookingNotFound": "Booking information not found",
+    "staffNotFound": "Staff information not found",
+    "failedToLoadJourney": "Failed to load journey information",
+    "failedToCopyLink": "Failed to copy link",
+    "dataNotFound": "Data not found",
+    "failedToLoadJourneyDetail": "Failed to load journey data: {{error}}",
+    "failedToLoadTestMode": "Failed to load data (test mode)",
+    "googleMapsApiKeyNotConfigured": "Google Maps API Key is not configured",
+    "failedToLoadGoogleMapsApi": "Failed to load Google Maps API",
+    "failedToLoadMap": "Error loading map",
+    "checkGoogleMapsApiKeyInEnv": "Please check Google Maps API Key in .env"
   },
   "auth": {
     "signedInAs": "Signed in as",
@@ -71,7 +97,154 @@
     "sending": "Sending...",
     "success": "Alert Sent Successfully",
     "successMessage": "Our team has been notified\nand will contact you as soon as possible",
-    "failedAlert": "Failed to send SOS alert. Please try again or contact support."
+    "failedAlert": "Failed to send SOS alert. Please try again or contact support.",
+    "buttonTooltip": "Emergency Alert"
   },
-  "currency": "฿"
+  "currency": "฿",
+  "button": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "retry": "Try Again"
+  },
+  "action": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "back": "Back",
+    "refresh": "Refresh data"
+  },
+  "dayOfWeek": {
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat"
+  },
+  "error": {
+    "generic": "An error occurred. Please try again",
+    "tryAgain": "Please try again.",
+    "paymentDataNotFound": "Payment information not found",
+    "loadDataFailed": "An error occurred while loading data. Please try again.",
+    "title": "An error occurred"
+  },
+  "close": "Close",
+  "cancel": "Cancel",
+  "submitting": "Submitting...",
+  "refundPolicy": {
+    "title": "Refund Policy",
+    "scrollPrompt": "Please scroll to the bottom to read the full policy",
+    "acceptanceLabel": "I have read and accept the refund policy above",
+    "acceptButton": "Confirm Acceptance"
+  },
+  "filters": {
+    "status": "Status"
+  },
+  "time": {
+    "hours": "hrs",
+    "minutes": "mins"
+  },
+  "unit": {
+    "baht": "THB",
+    "minutes": " minutes"
+  },
+  "backToBookings": "Back to bookings",
+  "payment": {
+    "securityNotice": "🔒 Secure payment with SSL and Omise"
+  },
+  "processing": "Processing...",
+  "fallback": {
+    "nameNotSpecified": "Name not specified",
+    "customerNameNotSpecified": "Customer name not specified",
+    "addressNotSpecified": "Address not specified",
+    "serviceNotSpecified": "Service not specified",
+    "staff": "Staff",
+    "customer": "Customer",
+    "customerAddress": "Customer address",
+    "staffTest": "Test Staff",
+    "customerTest": "Test Customer",
+    "addressTest": "Test address"
+  },
+  "journeyStatus": {
+    "traveling": "On the way",
+    "arrived": "Arrived"
+  },
+  "messages": {
+    "linkCopied": "Link copied"
+  },
+  "share": {
+    "journeyTrackingTitle": "Track Staff Journey - The Bliss at Home",
+    "journeyTrackingText": "Track {{staffName}}'s journey to provide {{serviceName}}",
+    "journeyTrackingDefault": "Track Staff Journey"
+  },
+  "tracking": {
+    "pageTitle": "Track Journey",
+    "statusTraveling": "Staff is on the way to you",
+    "mapAutoUpdate": "Map will update location automatically",
+    "statusArrived": "Staff has arrived!",
+    "prepareForService": "Please prepare for the service",
+    "statusCompleted": "Service completed",
+    "thankYouMessage": "Thank you for using The Bliss at Home",
+    "statusCancelled": "Journey cancelled",
+    "contactSupport": "If you have any questions, please contact us"
+  },
+  "labels": {
+    "customer": "Customer: ",
+    "serviceStaff": "Service Staff",
+    "destination": "Destination",
+    "startTime": "Start Time",
+    "serviceDuration": "Service Duration",
+    "room": "Room"
+  },
+  "emergencyService": {
+    "callButton": "Call",
+    "lineButton": "LINE",
+    "whatsappButton": "WhatsApp"
+  },
+  "trackingMap": {
+    "loadingMap": "Loading map...",
+    "errorTitle": "An error occurred",
+    "title": "Track Staff's Journey",
+    "refreshMap": "Refresh map",
+    "lastUpdated": "Last updated:",
+    "noLocationData": "No location data yet",
+    "updating": "Updating...",
+    "currentLocation": "Current Location",
+    "coordinates": "Coordinates:",
+    "navigateGoogleMaps": "Navigate with Google Maps",
+    "autoRefreshNotice": "The map updates automatically every 5 minutes to show the staff's latest location",
+    "testDataLabel": "Test Data (not real GPS)",
+    "debugUpdateLabel": "🕒 Updated:",
+    "noTimeData": "No time data",
+    "debugStatusLabel": "📡 Status:",
+    "testData": "🔴 Test Data",
+    "realGps": "🟢 Real GPS"
+  },
+  "appName": "The Bliss Massage at Home",
+  "or": "Or",
+  "legal": {
+    "acceptancePrefix": "Signing in means you accept the"
+  },
+  "address": {
+    "province": "Province",
+    "loading": "Loading...",
+    "selectProvince": "-- Select Province --",
+    "district": "District",
+    "selectProvinceFirst": "-- Select Province First --",
+    "selectDistrict": "-- Select District --",
+    "subdistrict": "Subdistrict",
+    "selectDistrictFirst": "-- Select District First --",
+    "selectSubdistrict": "-- Select Subdistrict --",
+    "zipcode": "Postal Code",
+    "zipcodePlaceholder": "10110"
+  },
+  "brand": {
+    "name": "The Bliss Massage at Home",
+    "tagline": "Massage & Spa"
+  },
+  "contactMethod": {
+    "phone": "Phone"
+  }
 }

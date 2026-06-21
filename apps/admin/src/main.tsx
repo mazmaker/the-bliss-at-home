@@ -60,3 +60,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // cache bust: deploy d5674a7 (BookingCancellationModal /api path fix) under F-2 — 2026-06-16
 // cache bust: force admin deploy of 3478022 (/admin/staff "พร้อมรับงาน" count) — merge 84b369e's Ignored Build Step skipped admin — 2026-06-18
 // cache bust #2: parent is now a non-merge commit so Ignored Build Step's `git diff HEAD~1 HEAD -- apps/admin` sees the change — 2026-06-18
+
+// force prod build 2026-06-21 (B4/B6/B7 — ignore-step cache-bust)

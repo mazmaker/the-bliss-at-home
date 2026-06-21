@@ -31,6 +31,7 @@ export function UploadDocumentModal({
     { value: 'id_card', label: 'สำเนาบัตรประชาชน' },
     { value: 'house_registration', label: 'สำเนาทะเบียนบ้าน' },
     { value: 'license', label: 'ใบประกอบวิชาชีพ' },
+    { value: 'criminal_record', label: 'ใบตรวจสอบประวัติอาชญากรรม' },
     { value: 'certificate', label: 'ใบรับรองการอบรม' },
     { value: 'bank_statement', label: 'สำเนาบัญชีธนาคาร' },
     { value: 'other', label: 'เอกสารอื่นๆ' },
@@ -213,6 +214,7 @@ export function UploadDocumentModal({
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,application/pdf"
+                onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={uploadMutation.isPending}

@@ -16,7 +16,8 @@
     "book": "Book",
     "reviews": "reviews",
     "min": "min",
-    "clearFilters": "Clear Filters"
+    "clearFilters": "Clear Filters",
+    "startingFrom": "Starting from"
   },
   "details": {
     "backToServices": "Back to Services",
@@ -45,7 +46,10 @@
     "startingFrom": "Starting from",
     "noDescription": "No description available for this service",
     "questions": "Have a question?",
-    "askMore": "Ask Us"
+    "askMore": "Ask Us",
+    "hour": "hour",
+    "priceIncludesServiceAndTransport": "Price includes service and transportation fees, excluding parking",
+    "oilSurchargeNote": "Additional 100 THB charge applies if oil is requested"
   },
   "reviews": {
     "title": "Customer Reviews",
@@ -56,5 +60,17 @@
     "cleanliness": "Cleanliness",
     "professionalism": "Professionalism",
     "skill": "Skill"
+  },
+  "service": {
+    "label": "Service"
+  },
+  "emergencyService": {
+    "badge": "Emergency Service",
+    "heading": "Need a massage within 30 minutes?",
+    "subtitle": "Couldn't book 3 hours in advance? Our special team is ready to help"
+  },
+  "durationLabel": "From {{duration}} min",
+  "discount": {
+    "badge": "Save {{percentage}}%"
   }
 }

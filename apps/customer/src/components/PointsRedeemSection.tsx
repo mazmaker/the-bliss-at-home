@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Star, X } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 import { useCustomerPoints, useLoyaltySettings } from '@bliss/supabase/hooks/useLoyalty'
 import { validateRedemption } from '@bliss/supabase/services'
 
@@ -10,6 +11,7 @@ interface PointsRedeemSectionProps {
 }
 
 export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }: PointsRedeemSectionProps) {
+  const { t } = useTranslation()
   const { data: customerPoints } = useCustomerPoints(customerId)
   const { data: settings } = useLoyaltySettings()
   const [inputPoints, setInputPoints] = useState('')
@@ -34,13 +36,13 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
     if (!settings) return
     const points = parseInt(inputPoints)
     if (isNaN(points) || points <= 0) {
-      setError('กรุณาใส่จำนวนแต้ม')
+      setError(t('booking:pointsRedeem.errorInvalidAmount'))
       return
     }
 
     const validation = validateRedemption(points, availablePoints, orderAmount, settings)
     if (!validation.valid) {
-      setError(validation.error || 'ไม่สามารถใช้แต้มได้')
+      setError(validation.error || t('booking:pointsRedeem.errorCannotRedeemPoints'))
       return
     }
 
@@ -58,7 +60,7 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
     const pointsToUse = Math.min(availablePoints, maxPoints)
 
     if (pointsToUse < settings.min_redeem_points) {
-      setError(`แต้มขั้นต่ำ ${settings.min_redeem_points} แต้ม`)
+      setError(t('booking:pointsRedeem.errorMinimumPointsRequired', { count: settings.min_redeem_points }))
       return
     }
 
@@ -88,14 +90,14 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Star className="w-4 h-4 text-amber-600" />
-        <span className="font-medium text-stone-900">ใช้แต้มสะสม</span>
+        <span className="font-medium text-stone-900">{t('booking:pointsRedeem.sectionTitle')}</span>
       </div>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-sm text-stone-600">แต้มของคุณ: </span>
-            <span className="font-bold text-amber-700">{availablePoints.toLocaleString()} แต้ม</span>
+            <span className="text-sm text-stone-600">{t('booking:pointsRedeem.yourPoints')}</span>
+            <span className="font-bold text-amber-700">{availablePoints.toLocaleString()} {t('booking:pointsRedeem.pointsUnit')}</span>
             <span className="text-xs text-stone-500 ml-1">(฿{pointsValue.toLocaleString()})</span>
           </div>
         </div>
@@ -103,8 +105,8 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
         {appliedPoints > 0 ? (
           <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
             <div>
-              <span className="text-green-700 font-medium">ใช้ {appliedPoints.toLocaleString()} แต้ม</span>
-              <span className="text-green-600 text-sm ml-2">= ส่วนลด ฿{appliedDiscount.toLocaleString()}</span>
+              <span className="text-green-700 font-medium">{t('booking:pointsRedeem.appliedPoints', { points: appliedPoints.toLocaleString() })}</span>
+              <span className="text-green-600 text-sm ml-2">{t('booking:pointsRedeem.discountPrefix')}{appliedDiscount.toLocaleString()}</span>
             </div>
             <button onClick={handleClear} className="text-stone-400 hover:text-red-500 transition">
               <X className="w-4 h-4" />
@@ -117,7 +119,7 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
                 type="number"
                 value={inputPoints}
                 onChange={(e) => { setInputPoints(e.target.value); setError('') }}
-                placeholder={`ขั้นต่ำ ${settings.min_redeem_points} แต้ม`}
+                placeholder={t('booking:pointsRedeem.placeholderMinimumPoints', { count: settings.min_redeem_points })}
                 className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 min={settings.min_redeem_points}
                 max={availablePoints}
@@ -126,7 +128,7 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
                 onClick={handleApply}
                 className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
               >
-                ใช้แต้ม
+                {t('booking:pointsRedeem.applyButton')}
               </button>
             </div>
             <div className="flex items-center gap-2">
@@ -134,10 +136,10 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
                 onClick={handleUseAll}
                 className="text-xs text-amber-600 hover:text-amber-700 font-medium underline"
               >
-                ใช้แต้มทั้งหมด
+                {t('booking:pointsRedeem.useAllButton')}
               </button>
               <span className="text-xs text-stone-400">
-                (สูงสุด {settings.max_discount_percent}% ของราคา)
+                {t('booking:pointsRedeem.maxDiscountHint', { percent: settings.max_discount_percent })}
               </span>
             </div>
             {error && <p className="text-xs text-red-500">{error}</p>}

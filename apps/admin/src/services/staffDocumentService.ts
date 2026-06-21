@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { lineMessagingService } from '@bliss/supabase/notifications/lineMessagingService'
 
-export type DocumentType = 'id_card' | 'house_registration' | 'license' | 'certificate' | 'bank_statement' | 'other'
+export type DocumentType = 'id_card' | 'house_registration' | 'license' | 'criminal_record' | 'certificate' | 'bank_statement' | 'other'
 export type DocumentStatus = 'pending' | 'reviewing' | 'verified' | 'rejected'
 
 export interface StaffDocument {
@@ -379,6 +379,7 @@ class StaffDocumentService {
       id_card: { th: 'สำเนาบัตรประชาชน', en: 'ID Card' },
       house_registration: { th: 'สำเนาทะเบียนบ้าน', en: 'House Registration' },
       license: { th: 'ใบประกอบวิชาชีพ', en: 'Professional License' },
+      criminal_record: { th: 'ใบตรวจสอบประวัติอาชญากรรม', en: 'Criminal Record Check' },
       certificate: { th: 'ใบรับรองการอบรม', en: 'Training Certificate' },
       bank_statement: { th: 'สำเนาบัญชีธนาคาร', en: 'Bank Statement' },
       other: { th: 'เอกสารอื่นๆ', en: 'Other Documents' },

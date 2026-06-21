@@ -492,6 +492,10 @@ export const staffService = {
 
     if (error) throw error
 
+    // Average only over staff who actually have a rating (>0), so unrated staff
+    // (rating 0 = no reviews yet) don't dilute the platform average toward 0.
+    const ratedStaff = data.filter(s => (s.rating || 0) > 0)
+
     const stats = {
       total: data.length,
       active: data.filter(s => s.status === 'active').length,
@@ -501,8 +505,8 @@ export const staffService = {
       pending: data.filter(s => s.status === 'pending').length,
       inactive: data.filter(s => s.status === 'inactive').length,
       suspended: data.filter(s => s.status === 'suspended').length,
-      averageRating: data.length > 0
-        ? data.reduce((acc, s) => acc + (s.rating || 0), 0) / data.length
+      averageRating: ratedStaff.length > 0
+        ? ratedStaff.reduce((acc, s) => acc + (s.rating || 0), 0) / ratedStaff.length
         : 0
     }
 

@@ -6,6 +6,58 @@
 import { supabase } from '../auth/supabaseClient'
 import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
 import { isJobMatchingStaffGender } from '../utils/providerPreference'
+import { canStaffStartWork } from '../staff/staffService'
+
+// ============================================================================
+// Schedule-overlap helpers (B7): a staff must NOT hold two jobs whose service
+// time windows overlap. A job's window = [scheduled_date+scheduled_time,
+// +COALESCE(total_duration_minutes, duration_minutes) minutes). total_duration_minutes
+// is used so a customer/hotel "extend" (which bumps the existing job's total via the
+// trigger_job_totals_on_extension trigger — NOT a new accept) is reflected in the
+// staff's busy window. Extend never re-accepts, so it never hits this guard.
+// Pure functions are exported so the staff UI can pre-disable overlapping accept buttons.
+// ============================================================================
+export interface JobWindowInput {
+  id?: string
+  scheduled_date: string
+  scheduled_time: string
+  duration_minutes?: number | null
+  total_duration_minutes?: number | null
+  status?: string | null
+}
+
+export function jobDurationMinutes(j: JobWindowInput): number {
+  return j.total_duration_minutes ?? j.duration_minutes ?? 60
+}
+
+export function jobWindowMs(j: JobWindowInput): { start: number; end: number } {
+  // scheduled_time may be 'HH:MM' or 'HH:MM:SS'
+  const time = (j.scheduled_time || '00:00:00').slice(0, 8)
+  const start = new Date(`${j.scheduled_date}T${time}`).getTime()
+  return { start, end: start + jobDurationMinutes(j) * 60_000 }
+}
+
+export function jobsOverlap(a: JobWindowInput, b: JobWindowInput): boolean {
+  const wa = jobWindowMs(a)
+  const wb = jobWindowMs(b)
+  if (Number.isNaN(wa.start) || Number.isNaN(wb.start)) return false
+  // Back-to-back (a.end === b.start) does NOT overlap.
+  return wa.start < wb.end && wb.start < wa.end
+}
+
+// Return the first of the staff's already-held jobs whose window overlaps `target`,
+// or null if none. Held jobs that are completed/cancelled (or the target itself) are ignored.
+export function findScheduleConflict(
+  target: JobWindowInput,
+  heldJobs: JobWindowInput[]
+): JobWindowInput | null {
+  for (const j of heldJobs) {
+    if (target.id && j.id === target.id) continue
+    if (j.status === 'completed' || j.status === 'cancelled') continue
+    if (jobsOverlap(target, j)) return j
+  }
+  return null
+}
 
 // Helper: batch-fetch provider_preference from bookings and attach to jobs
 async function attachProviderPreference(jobs: Job[]): Promise<Job[]> {
@@ -169,7 +221,7 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
   // First, check current job status and booking info
   const { data: currentJob, error: checkError } = await supabase
     .from('jobs')
-    .select('id, status, staff_id, booking_id, total_jobs')
+    .select('id, status, staff_id, booking_id, total_jobs, scheduled_date, scheduled_time, duration_minutes, total_duration_minutes')
     .eq('id', jobId)
     .single()
 
@@ -184,6 +236,16 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
       throw new Error('งานนี้ถูกยกเลิกแล้ว')
     }
     throw new Error('งานนี้ถูกรับไปแล้ว กรุณาเลือกงานอื่น')
+  }
+
+  // Eligibility gate (App-enforced): a staff must have status='active', gender, emergency
+  // contact, and id_card + house_registration + bank_statement + license + criminal_record
+  // ALL admin-verified before they can accept a job. staffId here is the profile_id.
+  // Mirrors the staff-app UI gate and the server dispatch filter so all paths agree.
+  const eligibility = await canStaffStartWork(staffId)
+  if (!eligibility.canWork) {
+    const detail = eligibility.reasons[0] || 'ข้อมูล/เอกสารยังไม่ครบหรือยังไม่ได้รับการอนุมัติ'
+    throw new Error(`ยังรับงานไม่ได้: ${detail} (ตรวจสอบที่หน้าโปรไฟล์)`)
   }
 
   // Check provider_preference vs staff gender (hard requirements only)
@@ -220,6 +282,39 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
 
     if (!existingError && existingJobs && existingJobs.length > 0) {
       throw new Error('คุณรับงานจากการจองนี้ไปแล้ว ไม่สามารถรับงานซ้ำได้ (งาน couple ต้องใช้หมอนวด 2 คน)')
+    }
+  }
+
+  // Time-overlap guard (B7): a staff cannot accept a job whose service time window
+  // overlaps a job they already hold (any other booking, or one accepted earlier).
+  // Fetches the staff's active (not completed/cancelled) jobs and checks in JS so a
+  // window crossing midnight is handled. Uses total_duration_minutes so extensions count.
+  {
+    const { data: heldJobs, error: heldError } = await supabase
+      .from('jobs')
+      .select('id, scheduled_date, scheduled_time, duration_minutes, total_duration_minutes, status, service_name')
+      .eq('staff_id', staffId)
+      .not('status', 'in', '(completed,cancelled)')
+      .neq('id', jobId)
+
+    if (heldError) {
+      console.error('Error checking schedule overlap:', heldError)
+      throw new Error('ไม่สามารถตรวจสอบตารางงานได้ กรุณาลองใหม่อีกครั้ง')
+    }
+
+    const conflict = findScheduleConflict(
+      {
+        id: jobId,
+        scheduled_date: currentJob.scheduled_date,
+        scheduled_time: currentJob.scheduled_time,
+        duration_minutes: currentJob.duration_minutes,
+        total_duration_minutes: currentJob.total_duration_minutes,
+      },
+      (heldJobs || []) as JobWindowInput[]
+    )
+
+    if (conflict) {
+      throw new Error('ไม่สามารถรับงานนี้ได้ เนื่องจากเวลาทับซ้อนกับงานที่คุณรับไว้แล้ว กรุณาตรวจสอบตารางงานของคุณ')
     }
   }
 
@@ -408,19 +503,21 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
     console.error('Error fetching total stats:', totalError)
   }
 
-  // Get ratings
-  const { data: ratings, error: ratingError } = await supabase
-    .from('job_ratings')
-    .select('rating')
-    .eq('staff_id', staffId)
+  // Get canonical rating from the staff table (maintained by the reviews trigger
+  // update_staff_review_stats). NOTE: job_ratings is dead/empty — do NOT read it.
+  // staffId here is a profiles.id (jobs.staff_id -> profiles.id), so match staff.profile_id.
+  const { data: staffRow, error: ratingError } = await supabase
+    .from('staff')
+    .select('rating, total_reviews')
+    .eq('profile_id', staffId)
+    .maybeSingle()
 
   if (ratingError) {
-    console.error('Error fetching ratings:', ratingError)
+    console.error('Error fetching staff rating:', ratingError)
   }
 
   const todayJobsList = todayJobs || []
   const totalJobsList = totalJobs || []
-  const ratingsList = ratings || []
 
   const todayCompleted = todayJobsList.filter((j: any) => j.status === 'completed')
 
@@ -430,10 +527,8 @@ export async function getStaffStats(staffId: string): Promise<StaffStats> {
     today_completed: todayCompleted.length,
     total_jobs: totalJobsList.length,
     total_earnings: totalJobsList.reduce((sum: number, j: any) => sum + (j.total_staff_earnings || j.staff_earnings || 0), 0),
-    average_rating: ratingsList.length > 0
-      ? ratingsList.reduce((sum: number, r: any) => sum + r.rating, 0) / ratingsList.length
-      : 0,
-    rating_count: ratingsList.length,
+    average_rating: Number(staffRow?.rating) || 0,
+    rating_count: staffRow?.total_reviews || 0,
   }
 }
 

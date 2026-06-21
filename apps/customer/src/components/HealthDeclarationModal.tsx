@@ -11,15 +11,16 @@
 import { useState } from 'react'
 import { HeartPulse, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react'
 import { supabase } from '@bliss/supabase'
+import { useTranslation } from '@bliss/i18n'
 
 export const HEALTH_CONDITIONS = [
-  { key: 'heart_disease', label: 'โรคหัวใจ' },
-  { key: 'blood_pressure', label: 'โรคความดันโลหิต (สูง / ต่ำ)' },
-  { key: 'diabetes', label: 'โรคเบาหวาน' },
-  { key: 'pregnancy', label: 'อยู่ระหว่างการตั้งครรภ์' },
-  { key: 'post_surgery', label: 'อยู่ระหว่างการพักฟื้นจากการผ่าตัด หรือมีแผลผ่าตัดที่ยังไม่หายดี' },
-  { key: 'skin_disease', label: 'โรคผิวหนัง' },
-  { key: 'other', label: 'อื่น ๆ (โปรดระบุ)' },
+  { key: 'heart_disease', label: 'โรคหัวใจ', i18nKey: 'booking:healthDeclaration.conditions.heartDisease' },
+  { key: 'blood_pressure', label: 'โรคความดันโลหิต (สูง / ต่ำ)', i18nKey: 'booking:healthDeclaration.conditions.bloodPressure' },
+  { key: 'diabetes', label: 'โรคเบาหวาน', i18nKey: 'booking:healthDeclaration.conditions.diabetes' },
+  { key: 'pregnancy', label: 'อยู่ระหว่างการตั้งครรภ์', i18nKey: 'booking:healthDeclaration.conditions.pregnancy' },
+  { key: 'post_surgery', label: 'อยู่ระหว่างการพักฟื้นจากการผ่าตัด หรือมีแผลผ่าตัดที่ยังไม่หายดี', i18nKey: 'booking:healthDeclaration.conditions.postSurgery' },
+  { key: 'skin_disease', label: 'โรคผิวหนัง', i18nKey: 'booking:healthDeclaration.conditions.skinDisease' },
+  { key: 'other', label: 'อื่น ๆ (โปรดระบุ)', i18nKey: 'booking:healthDeclaration.conditions.other' },
 ] as const
 
 export const HEALTH_CONDITION_LABELS: Record<string, string> = Object.fromEntries(
@@ -104,6 +105,7 @@ interface HealthChecklistFieldsProps {
 }
 
 export function HealthChecklistFields({ value, onChange, disabled }: HealthChecklistFieldsProps) {
+  const { t } = useTranslation()
   const toggleCondition = (key: string) => {
     const has = value.conditions.includes(key)
     const conditions = has
@@ -131,9 +133,7 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
   return (
     <div className="space-y-4">
       <p className="text-sm text-stone-600">
-        เพื่อความปลอดภัยในการรับบริการ หากท่านมีโรคประจำตัว
-        หรือเงื่อนไขทางสุขภาพดังต่อไปนี้
-        โปรดแจ้งให้เจ้าหน้าที่ทราบก่อนทำการจองนวดทุกครั้ง
+        {t('booking:healthDeclaration.intro')}
       </p>
 
       {/* Condition checkboxes */}
@@ -154,14 +154,14 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
                 disabled={disabled}
                 className="w-4 h-4 mt-0.5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
               />
-              <span className="text-sm text-stone-800">{condition.label}</span>
+              <span className="text-sm text-stone-800">{t(condition.i18nKey)}</span>
             </label>
             {condition.key === 'other' && value.conditions.includes('other') && (
               <input
                 type="text"
                 value={value.otherDetail}
                 onChange={(e) => onChange({ ...value, otherDetail: e.target.value })}
-                placeholder="โปรดระบุอาการหรือโรคประจำตัว"
+                placeholder={t('booking:healthDeclaration.otherDetailPlaceholder')}
                 disabled={disabled}
                 className="mt-2 w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
               />
@@ -186,13 +186,13 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
           className="w-4 h-4 mt-0.5 text-green-700 rounded focus:ring-2 focus:ring-green-500"
         />
         <span className="text-sm font-medium text-stone-800">
-          ไม่มีอาการหรือโรคประจำตัวข้างต้น
+          {t('booking:healthDeclaration.noCondition')}
         </span>
       </label>
 
       {/* Confirmation */}
       <div className="border-t border-stone-100 pt-4">
-        <p className="text-sm font-semibold text-stone-900 mb-2">การยืนยันข้อมูล</p>
+        <p className="text-sm font-semibold text-stone-900 mb-2">{t('booking:healthDeclaration.confirmationSectionTitle')}</p>
         <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -202,10 +202,9 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
             className="w-4 h-4 mt-0.5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
           />
           <span className="text-sm text-stone-700">
-            ข้าพเจ้าขอรับรองว่าข้อมูลข้างต้นเป็นความจริงทุกประการ
+            {t('booking:healthDeclaration.confirmAccuracy')}
             <span className="block text-xs text-stone-500 mt-1">
-              (หากมีเงื่อนไขสุขภาพข้างต้น
-              ข้าพเจ้ายินยอมให้ผู้ให้บริการปรับรูปแบบการนวดให้เหมาะสมเพื่อความปลอดภัย)
+              ({t('booking:healthDeclaration.confirmAdjustment')})
             </span>
           </span>
         </label>
@@ -215,7 +214,7 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
       <div className="flex items-start gap-2 p-3 bg-stone-50 rounded-xl">
         <ShieldCheck className="w-4 h-4 text-stone-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-stone-500">
-          ข้อมูลทั้งหมดจะถูกเก็บเป็นความลับ และใช้เพื่อความปลอดภัยในการให้บริการเท่านั้น
+          {t('booking:healthDeclaration.privacyNote')}
         </p>
       </div>
     </div>
@@ -240,6 +239,7 @@ export function HealthDeclarationModal({
   onClose,
   initial,
 }: HealthDeclarationModalProps) {
+  const { t } = useTranslation()
   const [form, setForm] = useState<HealthFormState>(() => createEmptyHealthForm(initial))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -255,7 +255,7 @@ export function HealthDeclarationModal({
     setIsSaving(false)
 
     if (!result.success) {
-      setError('บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
+      setError(t('booking:healthDeclaration.saveError'))
       return
     }
 
@@ -276,7 +276,7 @@ export function HealthDeclarationModal({
               <HeartPulse className="w-5 h-5 text-amber-700" />
             </div>
             <h2 className="text-lg font-bold text-stone-900">
-              ข้อควรระวังและข้อมูลสุขภาพก่อนรับบริการ
+              {t('booking:healthDeclaration.title')}
             </h2>
           </div>
         </div>
@@ -301,7 +301,7 @@ export function HealthDeclarationModal({
               disabled={isSaving}
               className="flex-1 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
             >
-              ยกเลิก
+              {t('common:buttons.cancel')}
             </button>
           )}
           <button
@@ -313,10 +313,10 @@ export function HealthDeclarationModal({
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>กำลังบันทึก...</span>
+                <span>{t('booking:healthDeclaration.saving')}</span>
               </>
             ) : (
-              'ยืนยันข้อมูล'
+              t('booking:healthDeclaration.confirmData')
             )}
           </button>
         </div>

@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { CreditCard, Lock } from 'lucide-react'
 import { supabase } from '@bliss/supabase/auth'
+import { useTranslation } from '@bliss/i18n'
 
 // Omise.js types
 declare global {
@@ -24,6 +25,7 @@ export interface PaymentFormProps {
 }
 
 function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: PaymentFormProps) {
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const [cardName, setCardName] = useState('')
   const [cardNumber, setCardNumber] = useState('')
@@ -92,15 +94,15 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
     try {
       // Validate inputs
       if (!cardName || !cardNumber || !expiryMonth || !expiryYear || !cvv) {
-        throw new Error('Please fill in all card details')
+        throw new Error(t('booking:payment.validation.fillAllFields'))
       }
 
       if (cardNumber.length !== 16) {
-        throw new Error('Invalid card number')
+        throw new Error(t('booking:payment.validation.invalidCardNumber'))
       }
 
       if (cvv.length < 3) {
-        throw new Error('Invalid CVV')
+        throw new Error(t('booking:payment.validation.invalidCvv'))
       }
 
       // Tokenize card with Omise.js
@@ -144,23 +146,23 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
             if (data.success) {
               onSuccess?.(data)
             } else {
-              throw new Error(data.error || 'Payment failed')
+              throw new Error(data.error || t('booking:payment.error.paymentFailed'))
             }
           } catch (error: any) {
             console.error('Payment API error:', error)
-            onError?.(error.message || 'Payment failed. Please try again.')
+            onError?.(error.message || t('booking:payment.error.paymentFailedRetry'))
           }
         } else {
           // Tokenization failed
           console.error('Omise tokenization error:', response)
-          onError?.(response.message || 'Card validation failed. Please check your card details.')
+          onError?.(response.message || t('booking:payment.error.cardValidationFailed'))
         }
 
         setIsLoading(false)
       })
     } catch (error: any) {
       console.error('Payment error:', error)
-      onError?.(error.message || 'Payment failed. Please try again.')
+      onError?.(error.message || t('booking:payment.error.paymentFailedRetry'))
       setIsLoading(false)
     }
   }
@@ -171,9 +173,9 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
         <div className="flex items-start gap-3">
           <Lock className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-stone-700">
-            <p className="font-medium mb-1">Secure Payment</p>
+            <p className="font-medium mb-1">{t('booking:payment.securePayment.title')}</p>
             <p className="text-xs text-stone-600">
-              Your card information is encrypted and processed securely by Omise. We never store your full card details.
+              {t('booking:payment.securePayment.description')}
             </p>
           </div>
         </div>
@@ -182,13 +184,13 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       {/* Cardholder Name */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          ชื่อบนบัตร <span className="text-red-500">*</span>
+          {t('booking:payment.form.cardholderName')} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={cardName}
           onChange={(e) => setCardName(e.target.value)}
-          placeholder="JOHN DOE"
+          placeholder={t('booking:payment.form.cardholderNamePlaceholder')}
           className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase"
           required
           disabled={isLoading}
@@ -198,14 +200,14 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       {/* Card Number */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          หมายเลขบัตร <span className="text-red-500">*</span>
+          {t('booking:payment.form.cardNumber')} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
             type="text"
             value={formatCardNumber(cardNumber)}
             onChange={handleCardNumberChange}
-            placeholder="1234 5678 9012 3456"
+            placeholder={t('booking:payment.form.cardNumberPlaceholder')}
             className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent pl-12"
             required
             disabled={isLoading}
@@ -218,13 +220,13 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            เดือน <span className="text-red-500">*</span>
+            {t('booking:payment.form.expiryMonth')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={expiryMonth}
             onChange={handleExpiryMonthChange}
-            placeholder="MM"
+            placeholder={t('booking:payment.form.expiryMonthPlaceholder')}
             className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-center"
             required
             disabled={isLoading}
@@ -232,13 +234,13 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            ปี <span className="text-red-500">*</span>
+            {t('booking:payment.form.expiryYear')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={expiryYear}
             onChange={handleExpiryYearChange}
-            placeholder="YYYY"
+            placeholder={t('booking:payment.form.expiryYearPlaceholder')}
             className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-center"
             required
             disabled={isLoading}
@@ -246,13 +248,13 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            CVV <span className="text-red-500">*</span>
+            {t('booking:payment.form.cvv')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={cvv}
             onChange={handleCvvChange}
-            placeholder="123"
+            placeholder={t('booking:payment.form.cvvPlaceholder')}
             className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-center"
             required
             disabled={isLoading}
@@ -271,7 +273,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
           disabled={isLoading}
         />
         <label htmlFor="saveCard" className="text-sm text-stone-700">
-          บันทึกบัตรนี้สำหรับการชำระเงินครั้งต่อไป
+          {t('booking:payment.form.saveCardForFuture')}
         </label>
       </div>
 
@@ -284,12 +286,12 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
         {isLoading ? (
           <>
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            กำลังประมวลผล...
+            {t('booking:payment.form.processing')}
           </>
         ) : (
           <>
             <Lock className="w-4 h-4" />
-            ชำระเงิน ฿{amount.toLocaleString()}
+            {t('booking:payment.form.payButton')} ฿{amount.toLocaleString()}
           </>
         )}
       </button>
@@ -297,9 +299,9 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       {/* Test Card Info */}
       {import.meta.env.DEV && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
-          <p className="font-medium mb-1">Test Mode - Use test card:</p>
-          <p>Number: 4242 4242 4242 4242</p>
-          <p>Expiry: Any future date | CVV: Any 3 digits</p>
+          <p className="font-medium mb-1">{t('booking:payment.testMode.title')}</p>
+          <p>{t('booking:payment.testMode.testCardNumber')}</p>
+          <p>{t('booking:payment.testMode.testCardDetails')}</p>
         </div>
       )}
     </form>

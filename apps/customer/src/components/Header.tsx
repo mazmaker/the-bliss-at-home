@@ -80,7 +80,7 @@ function Header() {
   const navItems = [
     { path: '/', label: t('nav.home'), icon: Home },
     { path: '/services', label: t('nav.services'), icon: Briefcase },
-    { path: '/promotions', label: 'โปรโมชั่น', icon: Tag },
+    { path: '/promotions', label: t('common:nav.promotions'), icon: Tag },
     { path: '/bookings', label: t('nav.bookings'), icon: ClipboardList },
     { path: '/profile', label: t('nav.profile'), icon: User },
   ]
@@ -99,8 +99,8 @@ function Header() {
               className="w-12 h-12 object-contain"
             />
             <div>
-              <h1 className="text-lg font-semibold text-stone-900 tracking-tight">The Bliss Massage at Home</h1>
-              <p className="text-xs text-stone-500 hidden sm:block font-light">Massage & Spa</p>
+              <h1 className="text-lg font-semibold text-stone-900 tracking-tight">{t('common:brand.name')}</h1>
+              <p className="text-xs text-stone-500 hidden sm:block font-light">{t('common:brand.tagline')}</p>
             </div>
           </Link>
 
@@ -242,7 +242,7 @@ function Header() {
                   }`}
                 >
                   <Bell className="w-5 h-5" />
-                  <span>การแจ้งเตือน</span>
+                  <span>{t('common:nav.notifications')}</span>
                   {unreadCount > 0 && (
                     <span className="ml-auto min-w-[20px] h-[20px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
                       {unreadCount > 99 ? '99+' : unreadCount}

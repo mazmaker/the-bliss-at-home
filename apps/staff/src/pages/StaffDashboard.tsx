@@ -13,7 +13,7 @@ import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMus
 function StaffDashboard() {
   const { user } = useAuth()
   const { eligibility, isLoading: isEligibilityLoading } = useStaffEligibility()
-  const { jobs, pendingJobs, isLoading, error, refresh, acceptJob, startJob, completeJob } = useJobs({
+  const { jobs, pendingJobs, isLoading, error, refresh, acceptJob, startJob, completeJob, getScheduleConflict } = useJobs({
     realtime: true,
     staffGender: eligibility?.gender,
     onNewJob: handleNewJob,
@@ -170,10 +170,14 @@ function StaffDashboard() {
             </p>
           </div>
           <div className="text-right">
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-300">★</span>
-              <span className="font-semibold">{stats?.average_rating?.toFixed(1) || '0.0'}</span>
-            </div>
+            {stats?.rating_count ? (
+              <div className="flex items-center gap-1">
+                <span className="text-yellow-300">★</span>
+                <span className="font-semibold">{stats.average_rating.toFixed(1)}</span>
+              </div>
+            ) : (
+              <span className="text-sm font-medium opacity-80">ใหม่</span>
+            )}
           </div>
         </div>
       </div>
@@ -205,6 +209,16 @@ function StaffDashboard() {
                 )}
                 {!eligibility.documents?.bank_statement?.verified && (
                   <li className="list-disc">อัพโหลดและรอการตรวจสอบสำเนาบัญชีธนาคาร</li>
+                )}
+                {!eligibility.documents?.license?.verified && (
+                  <li className="list-disc">
+                    <Link to="/staff/profile" className="underline hover:text-amber-900">อัปโหลด/รออนุมัติ ใบประกอบวิชาชีพ</Link>
+                  </li>
+                )}
+                {!eligibility.documents?.criminal_record?.verified && (
+                  <li className="list-disc">
+                    <Link to="/staff/profile" className="underline hover:text-amber-900">อัปโหลด/รออนุมัติ ใบตรวจสอบประวัติอาชญากรรม</Link>
+                  </li>
                 )}
                 {!eligibility.emergencyContact?.filled && (
                   <li className="list-disc">
@@ -475,6 +489,12 @@ function StaffDashboard() {
                   </div>
                 </Link>
 
+                {getScheduleConflict(job) && (
+                  <div className="mb-2 flex items-center gap-1.5 text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว — รับงานนี้ไม่ได้</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                   <div className="flex items-center gap-2">
@@ -487,9 +507,9 @@ function StaffDashboard() {
                     </Link>
                     <button
                       onClick={() => handleAcceptJob(job.id)}
-                      disabled={isProcessing === job.id || !eligibility?.canWork}
+                      disabled={isProcessing === job.id || !eligibility?.canWork || !!getScheduleConflict(job)}
                       className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-1"
-                      title={!eligibility?.canWork ? 'คุณยังไม่สามารถรับงานได้ในขณะนี้' : undefined}
+                      title={getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : !eligibility?.canWork ? 'คุณยังไม่สามารถรับงานได้ในขณะนี้' : undefined}
                     >
                       {isProcessing === job.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

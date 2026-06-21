@@ -248,12 +248,14 @@ const fetchDashboardStats = async (hotelId: string): Promise<DashboardStats> => 
     .filter(b => b.payment_status === 'pending' && ['confirmed', 'completed'].includes(b.status))
     .reduce((sum, booking) => sum + (booking.final_price ?? 0), 0)
 
-  // Real average rating from job_ratings (this hotel's jobs); null when there are no reviews yet.
+  // Real average rating from customer reviews of THIS hotel's bookings (reviews →
+  // bookings.hotel_id); null when there are no reviews yet. job_ratings is dead/empty,
+  // so aggregate the canonical reviews table instead.
   // Best-effort: a failed/blocked query yields data=null → averageRating stays null (renders "—"), never crashes.
   const { data: ratingRows } = await supabase
-    .from('job_ratings')
-    .select('rating, jobs!inner(hotel_id)')
-    .eq('jobs.hotel_id', hotelId)
+    .from('reviews')
+    .select('rating, bookings!inner(hotel_id)')
+    .eq('bookings.hotel_id', hotelId)
   const ratingValues = (ratingRows || [])
     .map((r: any) => r.rating)
     .filter((n: any): n is number => typeof n === 'number')

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@bliss/supabase'
+import { useTranslation } from '@bliss/i18n'
 import { RefreshCw, MapPin, Phone, Navigation } from 'lucide-react'
 
 // สำหรับ GPS tracking ใช้ regular client แล้วแก้ RLS policies แทน
@@ -28,6 +29,7 @@ export default function StaffTrackingMap({
   journeyId,
   height = "400px"
 }: StaffTrackingMapProps) {
+  const { t } = useTranslation()
   const [journey, setJourney] = useState<JourneyInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -52,20 +54,20 @@ export default function StaffTrackingMap({
 
       if (journeyError) {
         console.error('Journey query error:', journeyError)
-        throw new Error(`ไม่สามารถดึงข้อมูลการเดินทางได้: ${journeyError.message}`)
+        throw new Error(t('common:errors.failedToLoadJourneyDetail', { error: journeyError.message }))
       }
 
       if (!journeyData) {
-        throw new Error('ไม่พบข้อมูลการเดินทางสำหรับงานนี้')
+        throw new Error(t('common:errors.journeyNotFound'))
       }
 
       // ใช้ข้อมูล fallback แบบง่าย (จะปรับปรุงภายหลัง)
-      const staffName = 'พนักงาน'
+      const staffName = t('common:fallback.staff')
       const booking = {
-        customer_name: 'ลูกค้า',
+        customer_name: t('common:fallback.customer'),
         latitude: 13.75471599,
         longitude: 100.49688619,
-        customer_address: 'ที่อยู่ลูกค้า'
+        customer_address: t('common:fallback.customerAddress')
       }
 
       console.log('📋 Journey data from DB:', {
@@ -80,10 +82,10 @@ export default function StaffTrackingMap({
         id: journeyData.id,
         status: journeyData.status,
         staff_name: staffName,
-        customer_name: booking?.customer_name || 'ลูกค้า',
+        customer_name: booking?.customer_name || t('common:fallback.customer'),
         destination_lat: booking?.latitude || 13.75471599, // fallback เก่า
         destination_lng: booking?.longitude || 100.49688619, // fallback เก่า
-        destination_name: booking?.customer_address || 'ที่อยู่ลูกค้า',
+        destination_name: booking?.customer_address || t('common:fallback.customerAddress'),
         started_at: journeyData.started_at,
         current_latitude: journeyData.current_latitude,
         current_longitude: journeyData.current_longitude,
@@ -125,11 +127,11 @@ export default function StaffTrackingMap({
           const fallbackJourney: JourneyInfo = {
             id: journeyId,
             status: 'traveling',
-            staff_name: testBooking?.staff?.profile?.full_name || 'พนักงานทดสอบ',
-            customer_name: testBooking?.customer_name || 'ลูกค้าทดสอบ',
+            staff_name: testBooking?.staff?.profile?.full_name || t('common:fallback.staffTest'),
+            customer_name: testBooking?.customer_name || t('common:fallback.customerTest'),
             destination_lat: testBooking?.latitude || 13.75471599,
             destination_lng: testBooking?.longitude || 100.49688619,
-            destination_name: testBooking?.customer_address || 'ที่อยู่ทดสอบ',
+            destination_name: testBooking?.customer_address || t('common:fallback.addressTest'),
             started_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
             current_latitude: 13.7563,
             current_longitude: 100.5018,
@@ -141,10 +143,10 @@ export default function StaffTrackingMap({
           setMapKey(prev => prev + 1)
         } catch (fallbackError) {
           console.error('Even fallback failed:', fallbackError)
-          setError('ไม่สามารถโหลดข้อมูลได้ (ระบบทดสอบ)')
+          setError(t('common:errors.failedToLoadTestMode'))
         }
       } else {
-        setError(err.message || 'ไม่สามารถโหลดข้อมูลการเดินทางได้')
+        setError(err.message || t('common:errors.failedToLoadJourney'))
       }
     } finally {
       setIsLoading(false)
@@ -231,10 +233,10 @@ export default function StaffTrackingMap({
 
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      traveling: 'กำลังเดินทาง',
-      arrived: 'มาถึงแล้ว',
-      completed: 'เสร็จสิ้น',
-      cancelled: 'ยกเลิก'
+      traveling: t('common:journeyStatus.traveling'),
+      arrived: t('common:journeyStatus.arrived'),
+      completed: t('common:status.completed'),
+      cancelled: t('common:status.cancelled')
     }
     return statusMap[status] || status
   }
@@ -259,7 +261,7 @@ export default function StaffTrackingMap({
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
-            <p className="text-gray-600">กำลังโหลดแผนที่...</p>
+            <p className="text-gray-600">{t('common:trackingMap.loadingMap')}</p>
           </div>
         </div>
       </div>
@@ -271,13 +273,13 @@ export default function StaffTrackingMap({
       <div className="bg-white rounded-lg shadow-md p-6" style={{ height }}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-red-600">
-            <p className="mb-2">เกิดข้อผิดพลาด</p>
+            <p className="mb-2">{t('common:trackingMap.errorTitle')}</p>
             <p className="text-sm">{error}</p>
             <button
               onClick={refreshMap}
               className="mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 transition"
             >
-              ลองใหม่
+              {t('common:buttons.retry')}
             </button>
           </div>
         </div>
@@ -295,7 +297,7 @@ export default function StaffTrackingMap({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold flex items-center gap-2">
-                ติดตามการเดินทางของพนักงาน
+                {t('common:trackingMap.title')}
               </h3>
               <p className="text-amber-100 text-sm">{journey.staff_name}</p>
             </div>
@@ -307,14 +309,14 @@ export default function StaffTrackingMap({
                 onClick={refreshMap}
                 disabled={isLoading}
                 className="p-1 hover:bg-amber-800 rounded transition"
-                title="รีเฟรชแผนที่"
+                title={t('common:trackingMap.refreshMap')}
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
           {lastUpdate && (
-            <p className="text-amber-100 text-xs mt-2">อัพเดทล่าสุด: {lastUpdate}</p>
+            <p className="text-amber-100 text-xs mt-2">{t('common:trackingMap.lastUpdated')} {lastUpdate}</p>
           )}
         </div>
       )}
@@ -342,7 +344,7 @@ export default function StaffTrackingMap({
           <div className="flex items-center justify-center h-full bg-gray-50">
             <div className="text-center text-gray-500">
               <MapPin className="w-8 h-8 mx-auto mb-2" />
-              <p>ยังไม่มีข้อมูลตำแหน่ง</p>
+              <p>{t('common:trackingMap.noLocationData')}</p>
             </div>
           </div>
         )}
@@ -352,7 +354,7 @@ export default function StaffTrackingMap({
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
             <div className="text-center">
               <RefreshCw className="w-6 h-6 animate-spin text-amber-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">กำลังอัพเดท...</p>
+              <p className="text-sm text-gray-600">{t('common:trackingMap.updating')}</p>
             </div>
           </div>
         )}
@@ -366,10 +368,10 @@ export default function StaffTrackingMap({
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-700 font-medium text-sm">ตำแหน่งปัจจุบัน</span>
+                <span className="text-green-700 font-medium text-sm">{t('common:trackingMap.currentLocation')}</span>
               </div>
               <p className="text-xs text-green-600">
-                พิกัด: {journey.current_latitude.toFixed(6)}, {journey.current_longitude.toFixed(6)}
+                {t('common:trackingMap.coordinates')} {journey.current_latitude.toFixed(6)}, {journey.current_longitude.toFixed(6)}
               </p>
             </div>
           )}
@@ -380,7 +382,7 @@ export default function StaffTrackingMap({
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="w-4 h-4 text-amber-700" />
-                  <span className="text-amber-700 font-medium text-sm">ปลายทาง</span>
+                  <span className="text-amber-700 font-medium text-sm">{t('common:labels.destination')}</span>
                 </div>
                 <p className="text-sm text-amber-600">{journey.destination_name}</p>
               </div>
@@ -392,7 +394,7 @@ export default function StaffTrackingMap({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-amber-100 text-amber-700 p-2 rounded hover:bg-amber-200 transition"
-                    title="นำทางด้วย Google Maps"
+                    title={t('common:trackingMap.navigateGoogleMaps')}
                   >
                     <Navigation className="w-4 h-4" />
                   </a>
@@ -404,7 +406,7 @@ export default function StaffTrackingMap({
           {/* Map provider และ Auto-refresh notice */}
           <div className="text-center space-y-1">
             <p className="text-xs text-gray-500">
-              แผนที่จะอัพเดทอัตโนมัติทุก 5 นาทีเพื่อแสดงตำแหน่งพนักงานล่าสุด
+              {t('common:trackingMap.autoRefreshNotice')}
             </p>
 
             {/* GPS Status Debug */}
@@ -412,16 +414,16 @@ export default function StaffTrackingMap({
               <p className="font-mono text-xs text-gray-600">
                 🎯 GPS: {journey?.current_latitude ?
                   `${journey.current_latitude.toFixed(6)}, ${journey.current_longitude?.toFixed(6)}` :
-                  'Test Data (ไม่ใช่ GPS จริง)'
+                  t('common:trackingMap.testDataLabel')
                 }
               </p>
               <p className="font-mono text-xs text-gray-600">
-                🕒 อัพเดท: {lastUpdate || 'ไม่มีข้อมูลเวลา'}
+                {t('common:trackingMap.debugUpdateLabel')} {lastUpdate || t('common:trackingMap.noTimeData')}
               </p>
               <p className="font-mono text-xs text-gray-600">
-                📡 สถานะ: {journey?.id?.includes('test') ?
-                  '🔴 ข้อมูลทดสอบ' :
-                  '🟢 GPS จริง'
+                {t('common:trackingMap.debugStatusLabel')} {journey?.id?.includes('test') ?
+                  t('common:trackingMap.testData') :
+                  t('common:trackingMap.realGps')
                 }
               </p>
             </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from '@bliss/i18n'
 import { Modal } from '@bliss/ui'
 import { User, Phone, MapPin } from 'lucide-react'
 import { useCreateAddress, useUpdateAddress } from '@bliss/supabase/hooks/useAddresses'
@@ -36,6 +37,7 @@ function AddressFormModal({
   customerId,
   addressToEdit,
 }: AddressFormModalProps) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<AddressFormData>({
     label: 'Home',
     recipient_name: '',
@@ -114,32 +116,32 @@ function AddressFormModal({
 
     // Required fields
     if (!formData.recipient_name.trim()) {
-      newErrors.recipient_name = 'กรุณากรอกชื่อผู้รับ'
+      newErrors.recipient_name = t('profile:addresses.validation.recipientNameRequired')
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'กรุณากรอกเบอร์โทรศัพท์'
+      newErrors.phone = t('profile:addresses.validation.phoneRequired')
     } else {
       // Thai phone validation: Support all Thai phone formats
       const phoneDigits = formData.phone.replace(/\D/g, '')
       const phoneRegex = /^((06|08|09)[0-9]{8}|(02)[0-9]{7}|(03|04|05|07)[0-9]{6}|1[0-9]{3,5})$/
       if (!phoneRegex.test(phoneDigits)) {
-        newErrors.phone = 'เบอร์โทรศัพท์ไม่ถูกต้อง (เบอร์มือถือ: 06/08/09, เบอร์บ้าน: 02/03/04/05/07, เบอร์พิเศษ: 1xxx)'
+        newErrors.phone = t('profile:addresses.validation.phoneInvalid')
       }
     }
 
     if (!formData.address_line.trim()) {
-      newErrors.address_line = 'กรุณากรอกที่อยู่'
+      newErrors.address_line = t('profile:addresses.validation.addressRequired')
     }
 
     if (!formData.province.trim()) {
-      newErrors.province = 'กรุณาเลือกจังหวัด'
+      newErrors.province = t('profile:addresses.validation.provinceRequired')
     }
 
     if (!formData.zipcode.trim()) {
-      newErrors.zipcode = 'กรุณากรอกรหัสไปรษณีย์'
+      newErrors.zipcode = t('profile:addresses.validation.zipcodeRequired')
     } else if (!/^\d{5}$/.test(formData.zipcode.trim())) {
-      newErrors.zipcode = 'รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก'
+      newErrors.zipcode = t('profile:addresses.validation.zipcodeFormat')
     }
 
     setErrors(newErrors)
@@ -184,13 +186,13 @@ function AddressFormModal({
           addressId: addressToEdit!.id,
           updates: trimmedData,
         })
-        toast.success('อัปเดตที่อยู่สำเร็จ')
+        toast.success(t('profile:toast.addressUpdated'))
       } else {
         await createAddressMutation.mutateAsync({
           ...trimmedData,
           customer_id: customerId,
         })
-        toast.success('เพิ่มที่อยู่สำเร็จ')
+        toast.success(t('profile:toast.addressAdded'))
       }
       onClose()
     } catch (error: any) {
@@ -204,7 +206,7 @@ function AddressFormModal({
         statusText: error?.statusText,
       })
       toast.error(
-        isEditMode ? 'ไม่สามารถอัปเดตที่อยู่ได้ กรุณาลองอีกครั้ง' : 'ไม่สามารถเพิ่มที่อยู่ได้ กรุณาลองอีกครั้ง'
+        isEditMode ? t('profile:toast.addressUpdateFailed') : t('profile:toast.addressAddFailed')
       )
     }
   }
@@ -213,7 +215,7 @@ function AddressFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditMode ? 'แก้ไขที่อยู่' : 'เพิ่มที่อยู่ใหม่'}
+      title={isEditMode ? t('profile:addresses.editTitle') : t('profile:addresses.addNewTitle')}
       size="lg"
     >
       <form onSubmit={handleSubmit} className="flex flex-col">
@@ -223,7 +225,7 @@ function AddressFormModal({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-2">
-              ป้ายกำกับ <span className="text-red-500">*</span>
+              {t('profile:addresses.label')} <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.label}
@@ -231,9 +233,9 @@ function AddressFormModal({
               disabled={mutation.isPending}
               className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed"
             >
-              <option value="Home">บ้าน</option>
-              <option value="Office">ที่ทำงาน</option>
-              <option value="Other">อื่นๆ</option>
+              <option value="Home">{t('profile:addresses.labelHome')}</option>
+              <option value="Office">{t('profile:addresses.labelWork')}</option>
+              <option value="Other">{t('profile:addresses.labelOther')}</option>
             </select>
           </div>
 
@@ -246,7 +248,7 @@ function AddressFormModal({
                 disabled={mutation.isPending}
                 className="w-4 h-4 text-amber-700 border-stone-300 rounded focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
               />
-              <span className="text-sm text-stone-700">ตั้งเป็นค่าเริ่มต้น</span>
+              <span className="text-sm text-stone-700">{t('profile:addresses.setAsDefault')}</span>
             </label>
           </div>
         </div>
@@ -255,13 +257,13 @@ function AddressFormModal({
         <div data-field="recipient_name">
           <label className="block text-sm font-medium text-stone-700 mb-2">
             <User className="w-4 h-4 inline mr-1" />
-            ชื่อผู้รับ <span className="text-red-500">*</span>
+            {t('profile:addresses.recipientName')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.recipient_name}
             onChange={(e) => handleInputChange('recipient_name', e.target.value)}
-            placeholder="ชื่อ นามสกุล"
+            placeholder={t('profile:addresses.recipientNamePlaceholder')}
             disabled={mutation.isPending}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
               errors.recipient_name ? 'border-red-500' : 'border-stone-300'
@@ -276,7 +278,7 @@ function AddressFormModal({
         <div data-field="phone">
           <label className="block text-sm font-medium text-stone-700 mb-2">
             <Phone className="w-4 h-4 inline mr-1" />
-            เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+            {t('profile:addresses.phone')} <span className="text-red-500">*</span>
           </label>
           <input
             type="tel"
@@ -297,13 +299,13 @@ function AddressFormModal({
         <div data-field="address_line">
           <label className="block text-sm font-medium text-stone-700 mb-2">
             <MapPin className="w-4 h-4 inline mr-1" />
-            ที่อยู่ <span className="text-red-500">*</span>
+            {t('profile:addresses.address')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.address_line}
             onChange={(e) => handleInputChange('address_line', e.target.value)}
-            placeholder="บ้านเลขที่ ซอย ถนน"
+            placeholder={t('profile:addresses.addressPlaceholder')}
             disabled={mutation.isPending}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
               errors.address_line ? 'border-red-500' : 'border-stone-300'
@@ -338,7 +340,7 @@ function AddressFormModal({
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
             <MapPin className="w-4 h-4 inline mr-1" />
-            เลือกตำแหน่งบนแผนที่ (ไม่บังคับ)
+            {t('profile:addresses.mapLocation')}
           </label>
           <GoogleMapsPicker
             latitude={formData.latitude}
@@ -356,7 +358,7 @@ function AddressFormModal({
             disabled={mutation.isPending}
             className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ยกเลิก
+            {t('profile:addresses.buttonCancel')}
           </button>
           <button
             type="submit"
@@ -366,10 +368,10 @@ function AddressFormModal({
             {mutation.isPending ? (
               <>
                 <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>กำลังบันทึก...</span>
+                <span>{t('profile:addresses.buttonSaving')}</span>
               </>
             ) : (
-              <span>{isEditMode ? 'อัปเดตที่อยู่' : 'เพิ่มที่อยู่'}</span>
+              <span>{isEditMode ? t('profile:addresses.buttonUpdate') : t('profile:addresses.buttonAdd')}</span>
             )}
           </button>
         </div>

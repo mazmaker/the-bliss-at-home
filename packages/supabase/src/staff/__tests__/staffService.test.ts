@@ -251,13 +251,23 @@ describe('staffService', () => {
 
   describe('canStaffStartWork', () => {
     it('should return canWork=true when all conditions met', async () => {
-      // Staff lookup - must include gender for canWork to be true
-      mockFromFn.mockReturnValueOnce(createBuilder({ data: { id: 'sid-1', status: 'active', gender: 'female' }, error: null }))
-      // Documents
+      // Staff lookup - must include gender + emergency contact for canWork to be true
+      mockFromFn.mockReturnValueOnce(createBuilder({ data: {
+        id: 'sid-1',
+        status: 'active',
+        gender: 'female',
+        emergency_contact_name: 'แม่',
+        emergency_contact_phone: '0812345678',
+        emergency_contact_relationship: 'มารดา',
+      }, error: null }))
+      // Documents - ALL required docs must be verified
       mockFromFn.mockReturnValueOnce(createBuilder({
         data: [
           { document_type: 'id_card', verification_status: 'verified' },
+          { document_type: 'house_registration', verification_status: 'verified' },
           { document_type: 'bank_statement', verification_status: 'verified' },
+          { document_type: 'license', verification_status: 'verified' },
+          { document_type: 'criminal_record', verification_status: 'verified' },
         ],
         error: null,
       }))
@@ -268,7 +278,65 @@ describe('staffService', () => {
       expect(result.status).toBe('active')
       expect(result.reasons).toHaveLength(0)
       expect(result.documents.id_card.verified).toBe(true)
+      expect(result.documents.house_registration.verified).toBe(true)
       expect(result.documents.bank_statement.verified).toBe(true)
+      expect(result.documents.license.verified).toBe(true)
+      expect(result.documents.criminal_record.verified).toBe(true)
+    })
+
+    it('should return canWork=false when criminal_record missing', async () => {
+      mockFromFn.mockReturnValueOnce(createBuilder({ data: {
+        id: 'sid-1',
+        status: 'active',
+        gender: 'female',
+        emergency_contact_name: 'แม่',
+        emergency_contact_phone: '0812345678',
+        emergency_contact_relationship: 'มารดา',
+      }, error: null }))
+      // All verified EXCEPT criminal_record, which is omitted entirely
+      mockFromFn.mockReturnValueOnce(createBuilder({
+        data: [
+          { document_type: 'id_card', verification_status: 'verified' },
+          { document_type: 'house_registration', verification_status: 'verified' },
+          { document_type: 'bank_statement', verification_status: 'verified' },
+          { document_type: 'license', verification_status: 'verified' },
+        ],
+        error: null,
+      }))
+
+      const result = await canStaffStartWork('profile-1')
+
+      expect(result.canWork).toBe(false)
+      expect(result.documents.criminal_record.uploaded).toBe(false)
+      expect(result.reasons).toContain('ยังไม่ได้อัปโหลดใบตรวจสอบประวัติอาชญากรรม')
+    })
+
+    it('should return canWork=false when license unverified (pending)', async () => {
+      mockFromFn.mockReturnValueOnce(createBuilder({ data: {
+        id: 'sid-1',
+        status: 'active',
+        gender: 'female',
+        emergency_contact_name: 'แม่',
+        emergency_contact_phone: '0812345678',
+        emergency_contact_relationship: 'มารดา',
+      }, error: null }))
+      // All verified EXCEPT license, which is still pending
+      mockFromFn.mockReturnValueOnce(createBuilder({
+        data: [
+          { document_type: 'id_card', verification_status: 'verified' },
+          { document_type: 'house_registration', verification_status: 'verified' },
+          { document_type: 'bank_statement', verification_status: 'verified' },
+          { document_type: 'license', verification_status: 'pending' },
+          { document_type: 'criminal_record', verification_status: 'verified' },
+        ],
+        error: null,
+      }))
+
+      const result = await canStaffStartWork('profile-1')
+
+      expect(result.canWork).toBe(false)
+      expect(result.documents.license.verified).toBe(false)
+      expect(result.reasons).toContain('ใบประกอบวิชาชีพรอการตรวจสอบ')
     })
 
     it('should return canWork=false when staff not active', async () => {

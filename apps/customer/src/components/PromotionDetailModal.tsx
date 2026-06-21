@@ -131,7 +131,7 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 drop-shadow-lg">
                     {formatDiscount()}
                   </h1>
-                  <p className="text-base sm:text-lg opacity-90 font-semibold drop-shadow">OFF</p>
+                  <p className="text-base sm:text-lg opacity-90 font-semibold drop-shadow">{t('home:promotions.offText')}</p>
                 </div>
               </div>
             </>
@@ -144,7 +144,7 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
                   {formatDiscount()}
                 </h1>
-                <p className="text-base sm:text-lg opacity-90">OFF</p>
+                <p className="text-base sm:text-lg opacity-90">{t('home:promotions.offText')}</p>
               </div>
             </div>
           )}

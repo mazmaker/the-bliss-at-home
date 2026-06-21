@@ -1,3 +1,4 @@
+import { useTranslation } from '@bliss/i18n'
 import { shouldShowDiscount, calculateDiscountedPrice, getGlobalDiscountPercentage } from '../utils/discountUtils'
 
 interface DiscountPriceProps {
@@ -13,6 +14,7 @@ export function DiscountPrice({
   size = 'md',
   showBadge = true
 }: DiscountPriceProps) {
+  const { t } = useTranslation()
   const hasDiscount = shouldShowDiscount(originalPrice)
   const discountedPrice = calculateDiscountedPrice(originalPrice)
   const discountPercentage = getGlobalDiscountPercentage()
@@ -41,7 +43,7 @@ export function DiscountPrice({
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <span className={`font-semibold text-stone-900 ${sizes.price}`}>
-          ฿{originalPrice.toLocaleString()}
+          {t('common:currency')}{originalPrice.toLocaleString()}
         </span>
       </div>
     )
@@ -52,19 +54,19 @@ export function DiscountPrice({
       {/* Discount Badge */}
       {showBadge && (
         <span className={`bg-amber-500 text-white font-bold rounded-full ${sizes.badge}`}>
-          ลด {discountPercentage}%
+          {t('services:discount.badge', { percentage: discountPercentage })}
         </span>
       )}
 
       <div className="flex items-center gap-2">
         {/* Original Price (Strikethrough) */}
         <span className={`text-gray-400 line-through ${sizes.original}`}>
-          ฿{originalPrice.toLocaleString()}
+          {t('common:currency')}{originalPrice.toLocaleString()}
         </span>
 
         {/* Discounted Price */}
         <span className={`font-bold text-amber-700 ${sizes.price}`}>
-          ฿{discountedPrice.toLocaleString()}
+          {t('common:currency')}{discountedPrice.toLocaleString()}
         </span>
       </div>
     </div>

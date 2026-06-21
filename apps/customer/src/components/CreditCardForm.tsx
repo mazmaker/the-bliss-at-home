@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CreditCard, Lock } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 import type { CardDetails } from '@bliss/supabase/payment'
 
 interface CreditCardFormProps {
@@ -8,7 +9,8 @@ interface CreditCardFormProps {
   submitButtonText?: string
 }
 
-function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระเงินอย่างปลอดภัย' }: CreditCardFormProps) {
+function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFormProps) {
+  const { t } = useTranslation()
   const [cardDetails, setCardDetails] = useState<CardDetails>({
     name: '',
     number: '',
@@ -64,31 +66,31 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
 
     // Name validation
     if (!cardDetails.name.trim()) {
-      newErrors.name = 'กรุณากรอกชื่อบนบัตร'
+      newErrors.name = t('booking:payment.cardName.required')
     }
 
     // Card number validation (simple check for 13-19 digits)
     const cardNumberClean = cardDetails.number.replace(/\s/g, '')
     if (cardNumberClean.length < 13 || cardNumberClean.length > 19) {
-      newErrors.number = 'หมายเลขบัตรไม่ถูกต้อง'
+      newErrors.number = t('booking:payment.cardNumber.invalid')
     }
 
     // Expiry month validation
     const month = parseInt(cardDetails.expiration_month)
     if (!cardDetails.expiration_month || month < 1 || month > 12) {
-      newErrors.expiration_month = 'เดือนไม่ถูกต้อง'
+      newErrors.expiration_month = t('booking:payment.expiration.month.invalid')
     }
 
     // Expiry year validation
     const currentYear = new Date().getFullYear()
     const year = parseInt(cardDetails.expiration_year)
     if (!cardDetails.expiration_year || year < currentYear || year > currentYear + 20) {
-      newErrors.expiration_year = 'ปีไม่ถูกต้อง'
+      newErrors.expiration_year = t('booking:payment.expiration.year.invalid')
     }
 
     // CVV validation
     if (!cardDetails.security_code || cardDetails.security_code.length < 3) {
-      newErrors.security_code = 'CVV ไม่ถูกต้อง'
+      newErrors.security_code = t('booking:payment.cvv.invalid')
     }
 
     setErrors(newErrors)
@@ -107,7 +109,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
       {/* Cardholder Name */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          ชื่อบนบัตร <span className="text-red-500">*</span>
+          {t('booking:payment.cardName.label')} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -116,7 +118,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
             setCardDetails({ ...cardDetails, name: e.target.value })
             if (errors.name) setErrors({ ...errors, name: '' })
           }}
-          placeholder="JOHN DOE"
+          placeholder={t('booking:payment.cardName.placeholder')}
           disabled={isLoading}
           className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase disabled:bg-stone-50 disabled:cursor-not-allowed ${
             errors.name ? 'border-red-500' : 'border-stone-300'
@@ -128,14 +130,14 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
       {/* Card Number */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">
-          หมายเลขบัตร <span className="text-red-500">*</span>
+          {t('booking:payment.cardNumber.label')} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
             type="text"
             value={cardDetails.number}
             onChange={handleCardNumberChange}
-            placeholder="1234 5678 9012 3456"
+            placeholder={t('booking:payment.cardNumber.placeholder')}
             disabled={isLoading}
             className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
               errors.number ? 'border-red-500' : 'border-stone-300'
@@ -150,13 +152,13 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            เดือน <span className="text-red-500">*</span>
+            {t('booking:payment.expiration.month.label')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={cardDetails.expiration_month}
             onChange={(e) => handleExpiryChange('month', e.target.value)}
-            placeholder="MM"
+            placeholder={t('booking:payment.expiration.month.placeholder')}
             maxLength={2}
             disabled={isLoading}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
@@ -168,13 +170,13 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
 
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            ปี <span className="text-red-500">*</span>
+            {t('booking:payment.expiration.year.label')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={cardDetails.expiration_year}
             onChange={(e) => handleExpiryChange('year', e.target.value)}
-            placeholder="YYYY"
+            placeholder={t('booking:payment.expiration.year.placeholder')}
             maxLength={4}
             disabled={isLoading}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
@@ -186,13 +188,13 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
 
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">
-            CVV <span className="text-red-500">*</span>
+            {t('booking:payment.cvv.label')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={cardDetails.security_code}
             onChange={handleCVVChange}
-            placeholder="123"
+            placeholder={t('booking:payment.cvv.placeholder')}
             maxLength={4}
             disabled={isLoading}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
@@ -207,7 +209,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
       <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
         <Lock className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <p>
-          ข้อมูลบัตรของคุณได้รับการรักษาความปลอดภัย เราใช้บริการ Omise ระบบชำระเงินที่ได้มาตรฐานสากล
+          {t('booking:payment.security.note')}
         </p>
       </div>
 
@@ -220,12 +222,12 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText = 'ชำระ�
         {isLoading ? (
           <>
             <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>กำลังประมวลผล...</span>
+            <span>{t('common:processing')}</span>
           </>
         ) : (
           <>
             <Lock className="w-4 h-4" />
-            <span>{submitButtonText}</span>
+            <span>{submitButtonText || t('booking:payment.secureCheckout')}</span>
           </>
         )}
       </button>

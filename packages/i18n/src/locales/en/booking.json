@@ -42,7 +42,10 @@
       "pleaseSelect": "Please select date and time",
       "serviceOn": "Service on {{date}} at {{time}}",
       "selectedDateTime": "Service on {{date}} at {{time}}",
-      "hours": "hours"
+      "hours": "hours",
+      "advanceBookingLimit": "Can book up to 14 days in advance",
+      "selectHour": "Select Hour",
+      "selectMinute": "Select Minute"
     },
     "step3": {
       "title": "Provider Preference",
@@ -77,7 +80,19 @@
       "notes": "Additional Notes",
       "notesPlaceholder": "E.g., building access code, meeting point, or other important information",
       "arrivalNote": "Our team will arrive at your location on time",
-      "default": "Default"
+      "default": "Default",
+      "loadingAddresses": "Loading addresses...",
+      "markerTitle": "Location Pin",
+      "searchPlaceholder": "Search location...",
+      "locatingButton": "Locating...",
+      "currentLocationButton": "Current Location",
+      "howToUseTitle": "How to Use:",
+      "howToUseStep1": "Click the \"Current Location\" button to use your location",
+      "howToUseStep2": "Click on the map to set a location",
+      "howToUseStep3": "Drag the red pin to adjust location",
+      "howToUseStep4": "Search for locations using the search box above the map",
+      "latitudeLabel": "Latitude:",
+      "longitudeLabel": "Longitude:"
     },
     "step5": {
       "title": "Confirm Booking",
@@ -98,7 +113,10 @@
       "voucherInvalid": "Invalid or expired code",
       "voucherMinOrder": "Minimum order ฿{{amount}} required",
       "voucherUsed": "This code has already been used",
-      "voucherNotApplicable": "This code is not applicable for this service"
+      "voucherNotApplicable": "This code is not applicable for this service",
+      "providerPreference": "Provider Preference",
+      "pointsDiscount": "Points Discount ({{points}} points)",
+      "discountAmount": "-฿{{amount}}"
     },
     "payment": {
       "title": "Payment",
@@ -152,7 +170,15 @@
     "cancelled": "Cancelled",
     "bookingNumber": "Booking #{{number}}",
     "noBookings": "No bookings yet",
-    "viewServices": "View Services"
+    "viewServices": "View Services",
+    "filterAllStatuses": "All Statuses",
+    "filters": {
+      "fromDate": "From Date",
+      "toDate": "To Date",
+      "service": "Service",
+      "allServices": "All Services"
+    },
+    "noResultsFiltered": "No bookings found matching the selected filters"
   },
   "details": {
     "title": "Booking Details",
@@ -188,5 +214,430 @@
     "notFound": "Booking Not Found",
     "notFoundMessage": "The booking you're looking for doesn't exist",
     "hours": "hours"
+  },
+  "healthDeclaration": {
+    "conditions": {
+      "heartDisease": "Heart disease",
+      "bloodPressure": "High or low blood pressure",
+      "diabetes": "Diabetes",
+      "pregnancy": "Pregnancy",
+      "postSurgery": "Post-surgical recovery or unhealed surgical wounds",
+      "skinDisease": "Skin disease",
+      "other": "Other (please specify)"
+    },
+    "intro": "For your safety, if you have any medical conditions or health concerns listed below, please inform our staff before booking a massage every time.",
+    "otherDetailPlaceholder": "Please specify your symptoms or condition",
+    "noCondition": "I have none of the above conditions",
+    "confirmationSectionTitle": "Confirmation",
+    "confirmAccuracy": "I confirm that the above information is accurate and true",
+    "confirmAdjustment": "If I have any of the above conditions, I consent to the service provider adjusting the massage accordingly for safety",
+    "privacyNote": "All information will be kept confidential and used only for the safety of service delivery",
+    "saveError": "Failed to save information. Please try again.",
+    "title": "Health Declaration & Precautions Before Service",
+    "saving": "Saving...",
+    "confirmData": "Confirm Information"
+  },
+  "cancelReason": {
+    "urgent": "Urgent matter",
+    "travelPlanChange": "Changed travel plans",
+    "notConvenient": "Not convenient on selected date",
+    "health": "Health issue",
+    "other": "Other"
+  },
+  "cancelBooking": {
+    "checkError": "Unable to check cancellation status",
+    "invalidData": "Invalid verification data",
+    "checkFailed": "Verification failed",
+    "reasonRequired": "Please provide a cancellation reason",
+    "cancelFailed": "Cancellation failed",
+    "title": "Cancel Booking",
+    "checking": "Checking cancellation conditions...",
+    "cannotCancel": "Cannot Cancel",
+    "notEligible": "This booking cannot be cancelled at this time",
+    "hoursUntilBooking": "{{hours}} hours until appointment",
+    "policyMessage": "According to policy, cancellation must be made at least 3 hours before appointment",
+    "rescheduleOption": "To change the time, you can reschedule instead of cancelling",
+    "bookingSummary": "Booking to be cancelled",
+    "refundAmount": "Refund amount",
+    "refundPercentage": "{{percentage}}% of payment",
+    "refundProcessing": "Refund in progress",
+    "noRefund": "No refund",
+    "noRefundReason": "According to terms, cancellation at this time is not eligible for refund",
+    "reasonLabel": "Cancellation reason",
+    "reasonPlaceholder": "Specify reason...",
+    "confirmTitle": "Confirm Booking Cancellation",
+    "confirmMessage": "Are you sure you want to cancel this booking? This action cannot be undone.",
+    "service": "Service:",
+    "date": "Date:",
+    "time": "Time:",
+    "reason": "Reason:",
+    "refund": "Refund:",
+    "processing": "Processing...",
+    "confirmButton": "Confirm Cancellation",
+    "successTitle": "Booking Cancelled Successfully",
+    "successMessage": "Booking number {{bookingNumber}} has been cancelled",
+    "refundInfo": "You will receive a refund of ฿{{amount}} within {{days}} business days",
+    "refundWithinDays": "(within {{days}} business days)",
+    "error": "Unable to Cancel Booking"
+  },
+  "reschedule": {
+    "checkError": "Unable to check rescheduling eligibility",
+    "checkFailed": "Error checking eligibility",
+    "selectDateTimeRequired": "Please select a new date and time",
+    "error": "Error rescheduling booking",
+    "modalTitle": "Reschedule Booking",
+    "checking": "Checking rescheduling eligibility...",
+    "cannotReschedule": "Cannot reschedule",
+    "notEligibleDefault": "This booking cannot be rescheduled at this time",
+    "hoursUntilBooking": "{{hours}} hours until appointment",
+    "policyMessage": "According to policy, rescheduling must be done at least 3 hours before the booking time",
+    "currentBooking": "Current booking",
+    "selectNewDate": "Select new date",
+    "selectNewTime": "Select new time",
+    "continue": "Continue",
+    "confirmTitle": "Confirm reschedule",
+    "confirmMessage": "Please review the rescheduling details before confirming",
+    "originalDateTime": "Original date and time",
+    "newDateTime": "New date and time",
+    "confirmButton": "Confirm reschedule",
+    "processing": "Processing...",
+    "successTitle": "Rescheduled successfully",
+    "successMessage": "Booking number {{number}} has been rescheduled",
+    "newAppointment": "New appointment",
+    "unableTitle": "Unable to Reschedule"
+  },
+  "review": {
+    "ratingRequired": "Please provide an overall rating",
+    "alreadyReviewed": "You have already reviewed this booking",
+    "modalTitle": "Rate & Review",
+    "bookingNumber": "Number",
+    "overallRating": "Overall Rating",
+    "cleanliness": "Cleanliness",
+    "professionalism": "Professionalism",
+    "skill": "Skill",
+    "reviewMessage": "Review Message",
+    "forBooking": "Review for Booking",
+    "subRatingsOptional": "Sub-ratings (Optional)",
+    "reviewMessageOptional": "Review Message (Optional)",
+    "sharePlaceholder": "Share your experience...",
+    "submit": "Submit Review",
+    "thankYou": "Thank you for your review!",
+    "helpText": "Your review will help us improve our services"
+  },
+  "dateTime": "{{date}} at {{time}}",
+  "bookingNumberLabel": "Number:",
+  "staffLabel": "Staff:",
+  "error": {
+    "missingRequired": "Missing required information",
+    "paymentFailedAlert": "Payment failed: {{error}}",
+    "paymentFailed": "Payment failed. Please try again.",
+    "paymentTimeout": "Payment timeout. Please try again.",
+    "loginRequired": "Please log in to complete booking",
+    "bookingFailed": "Failed to create booking: {{error}}"
+  },
+  "provider": {
+    "unnamedProvider": "Unnamed Provider",
+    "notAssigned": "Staff Not Assigned Yet",
+    "assignedStaffInfo": "Assigned Staff Information",
+    "avatarInitial": "S",
+    "reviews": "reviews",
+    "noReviews": "No reviews yet"
+  },
+  "recipient": {
+    "default": "Service Recipient"
+  },
+  "paymentMethod": {
+    "promptpay": "PromptPay",
+    "pendingPayment": "Pending Payment",
+    "creditCard": "Credit Card",
+    "internetBanking": "Internet Banking"
+  },
+  "jobStatus": {
+    "pending": "Awaiting Staff Confirmation",
+    "confirmed": "Staff Confirmed",
+    "traveling": "En Route",
+    "inProgress": "Providing Service",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "description": {
+      "pending": "🔄 Waiting for staff confirmation",
+      "confirmed": "Staff confirmed. Preparing to travel.",
+      "traveling": "🚗 Staff is on the way to your location",
+      "inProgress": "💆‍♀️ Staff is providing service",
+      "completed": "🎉 Service completed"
+    }
+  },
+  "receipt": {
+    "noTransaction": "Transaction data not found"
+  },
+  "creditNote": {
+    "noRefundData": "Refund data not found"
+  },
+  "tracking": {
+    "title": "Track Staff Journey",
+    "description": "Staff is on the way to provide service. You can track their current location on the map below.",
+    "loading": "Checking staff journey..."
+  },
+  "paymentStatus": {
+    "paid": "Paid",
+    "refunded": "Refunded",
+    "failed": "Payment Failed",
+    "pending": "Pending Payment"
+  },
+  "paymentAction": {
+    "payNow": "Pay Now",
+    "note": "Job will be sent to staff upon successful payment"
+  },
+  "downloadReceipt": {
+    "label": "Download Receipt"
+  },
+  "downloadCreditNote": {
+    "label": "Download Credit Note"
+  },
+  "extension": {
+    "inProgressLabel": "Service In Progress",
+    "note": "You can extend service time if you need more time",
+    "times": "+{{count}} times",
+    "totalExtensionPrice": "Extension total: ฿{{amount}}"
+  },
+  "status": {
+    "pending": {
+      "title": "Pending Confirmation",
+      "description": "We are verifying your booking",
+      "billingStatus": "Payment Pending"
+    },
+    "confirmed": {
+      "title": "Waiting for Staff Assignment",
+      "description": "We are finding the right staff for you",
+      "billingStatus": "Payment Complete"
+    },
+    "assigned": {
+      "title": "Staff Assigned",
+      "description": "Staff is preparing for travel",
+      "billingStatus": "Payment Complete"
+    },
+    "ASSIGNED": {
+      "title": "Staff Assigned",
+      "description": "Staff is preparing for travel",
+      "billingStatus": "Payment Complete"
+    },
+    "STAFF_EN_ROUTE": {
+      "title": "Staff En Route",
+      "description": "Track the journey on the map below",
+      "billingStatus": "Payment Complete - Awaiting Service Start"
+    },
+    "STAFF_ARRIVED": {
+      "title": "Staff Arrived",
+      "description": "Staff has arrived at destination and is preparing to start service",
+      "billingStatus": "Payment Complete - Awaiting Service Start"
+    },
+    "SERVICE_IN_PROGRESS": {
+      "title": "Service in Progress",
+      "description": "Service is underway. Please relax and enjoy",
+      "billingStatus": "Billing Started"
+    },
+    "COMPLETED": {
+      "title": "Service Complete",
+      "description": "Thank you for using our service. We hope you were satisfied",
+      "billingStatus": "Billing Complete"
+    },
+    "cancelled": {
+      "title": "Booking Cancelled",
+      "description": "Your booking has been cancelled",
+      "billingStatus": "No Charges"
+    },
+    "staffReady": "Staff Ready for Service",
+    "staffReadyMessage": "Preparing equipment and starting service. Please wait a moment"
+  },
+  "payment": {
+    "warningIncomplete": "Please complete your payment",
+    "incompleteHeading": "Payment Not Complete",
+    "incompleteMessage": "Booking confirmed but payment pending. Please contact support if there are any issues",
+    "failed": "Payment failed. Please try again.",
+    "qrGenerationFailed": "Unable to generate PromptPay QR code.",
+    "errorGeneric": "Payment error.",
+    "pageTitle": "Payment",
+    "creditCard": "Pay by credit card",
+    "promptpay": "Pay by PromptPay",
+    "generateQRButton": "Generate PromptPay QR (฿{{amount}})",
+    "qrCodeAlt": "PromptPay QR Code",
+    "waitingForPayment": "Scan QR to pay • Waiting for payment...",
+    "noChannelsAvailable": "No payment channels are currently available.",
+    "validation": {
+      "fillAllFields": "Please fill in all card details",
+      "invalidCardNumber": "Invalid card number",
+      "invalidCvv": "Invalid CVV"
+    },
+    "error": {
+      "paymentFailed": "Payment failed",
+      "paymentFailedRetry": "Payment failed. Please try again.",
+      "cardValidationFailed": "Card validation failed. Please check your card details."
+    },
+    "securePayment": {
+      "title": "Secure Payment",
+      "description": "Your card information is encrypted and processed securely by Omise. We never store your full card details."
+    },
+    "form": {
+      "cardholderName": "Cardholder Name",
+      "cardholderNamePlaceholder": "JOHN DOE",
+      "cardNumber": "Card Number",
+      "cardNumberPlaceholder": "1234 5678 9012 3456",
+      "expiryMonth": "Month",
+      "expiryMonthPlaceholder": "MM",
+      "expiryYear": "Year",
+      "expiryYearPlaceholder": "YYYY",
+      "cvv": "CVV",
+      "cvvPlaceholder": "123",
+      "saveCardForFuture": "Save this card for future payments",
+      "processing": "Processing...",
+      "payButton": "Pay"
+    },
+    "testMode": {
+      "title": "Test Mode - Use test card:",
+      "testCardNumber": "Number: 4242 4242 4242 4242",
+      "testCardDetails": "Expiry: Any future date | CVV: Any 3 digits"
+    },
+    "secureCheckout": "Secure Checkout",
+    "cardName": {
+      "required": "Please enter the name on the card",
+      "label": "Cardholder Name",
+      "placeholder": "JOHN DOE"
+    },
+    "cardNumber": {
+      "invalid": "Card number is invalid",
+      "label": "Card Number",
+      "placeholder": "1234 5678 9012 3456"
+    },
+    "expiration": {
+      "month": {
+        "invalid": "Month is invalid",
+        "label": "Month",
+        "placeholder": "MM"
+      },
+      "year": {
+        "invalid": "Year is invalid",
+        "label": "Year",
+        "placeholder": "YYYY"
+      }
+    },
+    "cvv": {
+      "invalid": "CVV is invalid",
+      "label": "CVV",
+      "placeholder": "123"
+    },
+    "security": {
+      "note": "Your card information is secure. We use Omise, a globally certified payment processing service."
+    },
+    "generatingQR": "Generating QR..."
+  },
+  "progress": {
+    "step": {
+      "booking": "Booking",
+      "findStaff": "Find Staff",
+      "travel": "Travel",
+      "service": "Service"
+    }
+  },
+  "action": {
+    "call": "Call"
+  },
+  "duration": {
+    "travelTime": "Travel Time",
+    "notCountedAsServiceTime": "Not counted as service time",
+    "serviceTime": "Service Time"
+  },
+  "booking": {
+    "travelStartedAt": "Started travel: ",
+    "serviceStartedAt": "Started service: "
+  },
+  "billing": {
+    "inProgress": "Billing in Progress"
+  },
+  "bookingNotFound": {
+    "title": "Booking not found",
+    "message": "Unable to find the booking for payment."
+  },
+  "bookingSummary": {
+    "title": "Booking summary",
+    "bookingNumber": "Booking number",
+    "date": "Date",
+    "amount": "Amount to pay"
+  },
+  "goToBookings": "Go to Bookings",
+  "paymentConfirmation": {
+    "title": "Payment Successful!",
+    "subtitle": "Your booking has been confirmed",
+    "downloadReceipt": "Download Receipt",
+    "emailSending": "Sending...",
+    "emailSent": "Email Sent",
+    "sendReceipt": "Send Receipt via Email",
+    "viewBookingDetails": "View Booking Details",
+    "nextSteps": "Next Steps",
+    "receiptEmailSent": "Receipt has been sent to your email",
+    "staffContactInfo": "Our staff will contact you 1 day before the appointment",
+    "bookingManageInfo": "You can view or cancel your booking on the bookings page",
+    "emailError": "Unable to send email",
+    "emailErrorGeneral": "An error occurred while sending email"
+  },
+  "paymentDetails": {
+    "title": "Payment Details",
+    "service": "Service",
+    "amount": "Amount",
+    "method": "Payment Method",
+    "receiptNumber": "Receipt Number",
+    "date": "Date"
+  },
+  "transactionHistory": {
+    "title": "Transaction History",
+    "subtitle": "View all your payment transactions and receipts",
+    "filterSuccessful": "Successful",
+    "filterRefunded": "Refunded",
+    "filterFailed": "Failed",
+    "statusSuccessful": "Successful",
+    "statusRefunded": "Refunded",
+    "statusFailed": "Failed",
+    "statusPending": "Pending",
+    "cardFallback": "Card",
+    "paymentMethodPromptpay": "PromptPay",
+    "paymentMethodInternetBanking": "Internet Banking",
+    "paymentMethodCash": "Cash",
+    "noTransactions": "No Transactions Found",
+    "noTransactionsMessage": "You don't have any transactions yet",
+    "receipt": "Receipt",
+    "viewBooking": "View Booking",
+    "refundedAlert": "This transaction has been refunded to your original payment method",
+    "summaryHeading": "Summary",
+    "totalTransactions": "Total Transactions",
+    "totalSpent": "Total Spent",
+    "successfulLabel": "Successful",
+    "refundedLabel": "Refunded"
+  },
+  "transactionTypes": {
+    "earn": "Earned from booking",
+    "bonus": "Bonus",
+    "redeem": "Redeemed for discount",
+    "refund": "Points refunded",
+    "expire": "Points expired",
+    "adminAdjust": "Adjusted by admin"
+  },
+  "pointsFilter": {
+    "all": "All",
+    "earned": "Earned",
+    "redeemed": "Redeemed",
+    "expired": "Expired"
+  },
+  "pointsRedeem": {
+    "errorInvalidAmount": "Please enter a valid points amount",
+    "errorCannotRedeemPoints": "Cannot redeem points",
+    "errorMinimumPointsRequired": "Minimum {{count}} points required",
+    "sectionTitle": "Use Accumulated Points",
+    "yourPoints": "Your points: ",
+    "pointsUnit": "pts",
+    "appliedPoints": "Used {{points}} points",
+    "discountPrefix": "= Discount ฿",
+    "placeholderMinimumPoints": "Minimum {{count}} points",
+    "applyButton": "Apply Points",
+    "useAllButton": "Use All Points",
+    "maxDiscountHint": "(Maximum {{percent}}% of price)"
   }
 }

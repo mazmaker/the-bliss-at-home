@@ -5,6 +5,7 @@ import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useServiceReviewStats, useServiceReviews } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
+import { LINE_CONTACT_URL } from '../config/contact'
 
 // Map category to icon
 const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
@@ -236,7 +237,7 @@ function ServiceDetails() {
                           <div className="text-left">
                             <span className="font-medium text-stone-900">{dur} {t('services:details.minutes')}</span>
                             <span className="text-sm text-stone-500 ml-2">
-                              ({dur / 60 >= 1 ? `${Math.floor(dur / 60)}${dur % 60 > 0 ? `.${dur % 60}` : ''} ${isThai ? 'ชั่วโมง' : 'hr'}` : ''})
+                              ({dur / 60 >= 1 ? `${Math.floor(dur / 60)}${dur % 60 > 0 ? `.${dur % 60}` : ''} ${t('services:details.hour')}` : ''})
                             </span>
                           </div>
                         </div>
@@ -249,8 +250,8 @@ function ServiceDetails() {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-stone-100 space-y-1.5">
-                  <p className="text-xs text-stone-400">• ราคานี้รวมค่าบริการ และค่าเดินทาง ยกเว้นค่าที่จอดรถ</p>
-                  <p className="text-xs text-stone-400">• ถ้าลูกค้าต้องการยาหม่อง จะคิดราคาเพิ่ม 100 บาท</p>
+                  <p className="text-xs text-stone-400">• {t('services:details.priceIncludesServiceAndTransport')}</p>
+                  <p className="text-xs text-stone-400">• {t('services:details.oilSurchargeNote')}</p>
                 </div>
               </div>
             )}
@@ -409,7 +410,7 @@ function ServiceDetails() {
               <div className="mt-6 pt-6 border-t border-stone-200 text-center">
                 <p className="text-sm text-stone-500">{t('services:details.questions')}</p>
                 <button
-                  onClick={() => window.open('mailto:support@theblissathome.com')}
+                  onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
                   className="text-amber-700 font-medium text-sm hover:underline mt-1"
                 >
                   {t('services:details.askMore')}

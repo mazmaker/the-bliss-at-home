@@ -90,7 +90,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
       <button
         onClick={() => setShowConfirm(true)}
         className={`flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full font-medium hover:bg-red-700 transition shadow-md hover:shadow-lg ${className}`}
-        title="Emergency Alert"
+        title={t('common:sos.buttonTooltip')}
       >
         <ShieldAlert className="w-4 h-4" />
         <span>{t('sos.button')}</span>

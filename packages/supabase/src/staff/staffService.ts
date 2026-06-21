@@ -533,6 +533,8 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
         id_card: { uploaded: false, verified: false },
         house_registration: { uploaded: false, verified: false },
         bank_statement: { uploaded: false, verified: false },
+        license: { uploaded: false, verified: false },
+        criminal_record: { uploaded: false, verified: false },
       },
       emergencyContact: {
         name: null,
@@ -569,6 +571,8 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
   const idCard = docs.find((d) => d.document_type === 'id_card')
   const houseRegistration = docs.find((d) => d.document_type === 'house_registration')
   const bankStatement = docs.find((d) => d.document_type === 'bank_statement')
+  const license = docs.find((d) => d.document_type === 'license')
+  const criminalRecord = docs.find((d) => d.document_type === 'criminal_record')
 
   const idCardUploaded = !!idCard
   const idCardVerified = idCard?.verification_status === 'verified'
@@ -576,6 +580,10 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
   const houseRegistrationVerified = houseRegistration?.verification_status === 'verified'
   const bankStatementUploaded = !!bankStatement
   const bankStatementVerified = bankStatement?.verification_status === 'verified'
+  const licenseUploaded = !!license
+  const licenseVerified = license?.verification_status === 'verified'
+  const criminalRecordUploaded = !!criminalRecord
+  const criminalRecordVerified = criminalRecord?.verification_status === 'verified'
 
   // Check 3: Required documents
   if (!idCardUploaded) {
@@ -614,6 +622,30 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     }
   }
 
+  if (!licenseUploaded) {
+    reasons.push('ยังไม่ได้อัปโหลดใบประกอบวิชาชีพ')
+  } else if (!licenseVerified) {
+    if (license.verification_status === 'pending') {
+      reasons.push('ใบประกอบวิชาชีพรอการตรวจสอบ')
+    } else if (license.verification_status === 'rejected') {
+      reasons.push('ใบประกอบวิชาชีพถูกปฏิเสธ กรุณาอัปโหลดใหม่')
+    } else if (license.verification_status === 'reviewing') {
+      reasons.push('ใบประกอบวิชาชีพกำลังตรวจสอบ')
+    }
+  }
+
+  if (!criminalRecordUploaded) {
+    reasons.push('ยังไม่ได้อัปโหลดใบตรวจสอบประวัติอาชญากรรม')
+  } else if (!criminalRecordVerified) {
+    if (criminalRecord.verification_status === 'pending') {
+      reasons.push('ใบตรวจสอบประวัติอาชญากรรมรอการตรวจสอบ')
+    } else if (criminalRecord.verification_status === 'rejected') {
+      reasons.push('ใบตรวจสอบประวัติอาชญากรรมถูกปฏิเสธ กรุณาอัปโหลดใหม่')
+    } else if (criminalRecord.verification_status === 'reviewing') {
+      reasons.push('ใบตรวจสอบประวัติอาชญากรรมกำลังตรวจสอบ')
+    }
+  }
+
   // Check 4: Emergency contact must be filled
   const emergencyContactFilled = !!(
     staffData.emergency_contact_name &&
@@ -630,9 +662,11 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     idCardVerified &&
     houseRegistrationVerified &&
     bankStatementVerified &&
+    licenseVerified &&
+    criminalRecordVerified &&
     emergencyContactFilled
 
-  console.log('[Eligibility] Result:', { canWork, status: staffData.status, gender: staffData.gender, idCardVerified, houseRegistrationVerified, bankStatementVerified, emergencyContactFilled, reasons })
+  console.log('[Eligibility] Result:', { canWork, status: staffData.status, gender: staffData.gender, idCardVerified, houseRegistrationVerified, bankStatementVerified, licenseVerified, criminalRecordVerified, emergencyContactFilled, reasons })
 
   return {
     canWork,
@@ -654,6 +688,16 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
         uploaded: bankStatementUploaded,
         verified: bankStatementVerified,
         status: bankStatement?.verification_status,
+      },
+      license: {
+        uploaded: licenseUploaded,
+        verified: licenseVerified,
+        status: license?.verification_status,
+      },
+      criminal_record: {
+        uploaded: criminalRecordUploaded,
+        verified: criminalRecordVerified,
+        status: criminalRecord?.verification_status,
       },
     },
     emergencyContact: {

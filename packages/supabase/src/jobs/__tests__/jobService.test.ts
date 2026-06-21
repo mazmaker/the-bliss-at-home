@@ -34,6 +34,9 @@ import {
   getStaffStats,
   subscribeToJobs,
   reportSOS,
+  jobDurationMinutes,
+  jobsOverlap,
+  findScheduleConflict,
 } from '../jobService'
 
 describe('jobService', () => {
@@ -240,6 +243,67 @@ describe('jobService', () => {
     it('should throw on error', async () => {
       mockFromFn.mockReturnValueOnce(createBuilder({ error: { message: 'Err' } }))
       await expect(reportSOS('s1', null, null)).rejects.toBeTruthy()
+    })
+  })
+
+  // B7: a staff must not hold two jobs whose service windows overlap
+  describe('schedule overlap helpers (B7)', () => {
+    const j = (id: string, date: string, time: string, dur?: number, total?: number, status?: string) =>
+      ({ id, scheduled_date: date, scheduled_time: time, duration_minutes: dur, total_duration_minutes: total, status })
+
+    describe('jobDurationMinutes', () => {
+      it('prefers total_duration_minutes (extensions) over duration_minutes', () => {
+        expect(jobDurationMinutes(j('a', '2026-07-01', '10:00', 60, 120))).toBe(120)
+      })
+      it('falls back to duration_minutes, then 60', () => {
+        expect(jobDurationMinutes(j('a', '2026-07-01', '10:00', 90))).toBe(90)
+        expect(jobDurationMinutes(j('a', '2026-07-01', '10:00'))).toBe(60)
+      })
+    })
+
+    describe('jobsOverlap', () => {
+      it('detects overlapping windows', () => {
+        expect(jobsOverlap(j('a', '2026-07-01', '10:00:00', 60), j('b', '2026-07-01', '10:30:00', 60))).toBe(true)
+      })
+      it('treats back-to-back (a.end === b.start) as NOT overlapping', () => {
+        expect(jobsOverlap(j('a', '2026-07-01', '10:00:00', 60), j('b', '2026-07-01', '11:00:00', 60))).toBe(false)
+      })
+      it('non-overlapping different times', () => {
+        expect(jobsOverlap(j('a', '2026-07-01', '10:00:00', 60), j('b', '2026-07-01', '13:00:00', 60))).toBe(false)
+      })
+      it('different dates do not overlap', () => {
+        expect(jobsOverlap(j('a', '2026-07-01', '10:00:00', 60), j('b', '2026-07-02', '10:30:00', 60))).toBe(false)
+      })
+      it('uses total_duration_minutes so an extended job overlaps a later job', () => {
+        // base 60 would NOT reach 11:30, but extended to 120 (ends 12:00) DOES overlap 11:30
+        expect(jobsOverlap(j('a', '2026-07-01', '10:00:00', 60, 120), j('b', '2026-07-01', '11:30:00', 60))).toBe(true)
+      })
+      it('handles HH:MM (no seconds) times', () => {
+        expect(jobsOverlap(j('a', '2026-07-01', '10:00', 60), j('b', '2026-07-01', '10:30', 60))).toBe(true)
+      })
+    })
+
+    describe('findScheduleConflict', () => {
+      const target = j('new', '2026-07-01', '10:00:00', 60)
+      it('returns the conflicting held job', () => {
+        const held = [j('h1', '2026-07-01', '13:00:00', 60), j('h2', '2026-07-01', '10:30:00', 60, undefined, 'confirmed')]
+        expect(findScheduleConflict(target, held)?.id).toBe('h2')
+      })
+      it('returns null when no held job overlaps', () => {
+        const held = [j('h1', '2026-07-01', '13:00:00', 60, undefined, 'confirmed')]
+        expect(findScheduleConflict(target, held)).toBeNull()
+      })
+      it('ignores completed/cancelled held jobs', () => {
+        const held = [
+          j('h1', '2026-07-01', '10:30:00', 60, undefined, 'completed'),
+          j('h2', '2026-07-01', '10:30:00', 60, undefined, 'cancelled'),
+        ]
+        expect(findScheduleConflict(target, held)).toBeNull()
+      })
+      it('ignores the target job itself (same id)', () => {
+        const held = [j('new', '2026-07-01', '10:00:00', 60, undefined, 'confirmed')]
+        expect(findScheduleConflict(target, held)).toBeNull()
+      })
     })
   })
 })

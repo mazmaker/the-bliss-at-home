@@ -621,6 +621,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
                 onChange={handleImageUpload}
                 className="hidden"
               />

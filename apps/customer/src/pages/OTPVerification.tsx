@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Smartphone, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 
 interface OTPVerificationProps {
   phoneNumber?: string
@@ -8,6 +9,7 @@ interface OTPVerificationProps {
 }
 
 function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerificationProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -71,7 +73,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
   const handleVerify = async () => {
     const otpCode = otp.join('')
     if (otpCode.length !== 6) {
-      setError('กรุณากรอก OTP ให้ครบ 6 หลัก')
+      setError(t('auth:otpVerification.errorIncomplete'))
       return
     }
 
@@ -92,7 +94,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
       const data = await response.json()
 
       if (!data.success) {
-        setError(data.error || 'การยืนยัน OTP ล้มเหลว')
+        setError(data.error || t('auth:otpVerification.errorVerificationFailed'))
         return
       }
 
@@ -108,7 +110,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
         }, 2000)
       }
     } catch (err: any) {
-      setError(err.message || 'การยืนยัน OTP ล้มเหลว กรุณาลองใหม่อีกครั้ง')
+      setError(err.message || t('auth:otpVerification.errorVerificationFailedRetry'))
     } finally {
       setIsVerifying(false)
     }
@@ -133,13 +135,13 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
       const data = await response.json()
 
       if (!data.success) {
-        setError(data.error || 'ไม่สามารถส่ง OTP ใหม่ได้')
+        setError(data.error || t('auth:otpVerification.errorResendFailed'))
         setCountdown(0)
         setCanResend(true)
       }
     } catch (err) {
       console.error('Failed to resend OTP:', err)
-      setError('เกิดข้อผิดพลาดในการส่ง OTP ใหม่')
+      setError(t('auth:otpVerification.errorResendError'))
       setCountdown(0)
       setCanResend(true)
     }
@@ -158,8 +160,8 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
             <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">ยืนยันสำเร็จ!</h2>
-            <p className="text-stone-600">หมายเลขโทรศัพท์ของคุณได้รับการยืนยันแล้ว</p>
+            <h2 className="text-2xl font-bold text-stone-900 mb-2">{t('auth:otpVerification.successTitle')}</h2>
+            <p className="text-stone-600">{t('auth:otpVerification.successMessage')}</p>
           </div>
         </div>
       </div>
@@ -175,7 +177,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
           className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-900 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>ย้อนกลับ</span>
+          <span>{t('common:buttons.back')}</span>
         </button>
 
         {/* OTP Card */}
@@ -185,9 +187,9 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
               <Smartphone className="w-8 h-8 text-amber-700" />
             </div>
-            <h1 className="text-2xl font-bold text-stone-900 mb-2">ยืนยันเบอร์โทรศัพท์</h1>
+            <h1 className="text-2xl font-bold text-stone-900 mb-2">{t('auth:otpVerification.pageTitle')}</h1>
             <p className="text-stone-600 text-sm">
-              เราได้ส่งรหัส OTP 6 หลักไปยัง
+              {t('auth:otpVerification.descriptionPrefix')}
             </p>
             <p className="text-stone-900 font-medium mt-1">
               {maskPhoneNumber(phoneNumber)}
@@ -205,7 +207,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
           {/* OTP Input */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-stone-700 mb-3 text-center">
-              กรุณากรอกรหัส OTP
+              {t('auth:otpVerification.inputLabel')}
             </label>
             <div className="flex gap-2 justify-center" onPaste={handlePaste}>
               {otp.map((digit, index) => (
@@ -234,10 +236,10 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
             {isVerifying ? (
               <>
                 <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>กำลังตรวจสอบ...</span>
+                <span>{t('auth:otpVerification.verifying')}</span>
               </>
             ) : (
-              'ยืนยัน OTP'
+              t('auth:otpVerification.verifyButton')
             )}
           </button>
 
@@ -248,12 +250,12 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
                 onClick={handleResendOTP}
                 className="text-amber-700 hover:text-amber-900 font-medium text-sm"
               >
-                ส่งรหัส OTP อีกครั้ง
+                {t('auth:otpVerification.resendButton')}
               </button>
             ) : (
               <p className="text-stone-500 text-sm">
-                ส่งรหัสใหม่ได้ในอีก{' '}
-                <span className="font-medium text-amber-700">{countdown}</span> วินาที
+                {t('auth:otpVerification.resendCountdownPrefix')}{' '}
+                <span className="font-medium text-amber-700">{countdown}</span> {t('auth:otpVerification.resendCountdownSuffix')}
               </p>
             )}
           </div>
@@ -261,12 +263,12 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
           {/* Help Text */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <p className="text-sm text-blue-800">
-              <strong>ไม่ได้รับรหัส OTP?</strong>
+              <strong>{t('auth:otpVerification.helpTitle')}</strong>
               <br />
-              • ตรวจสอบว่าเบอร์โทรศัพท์ถูกต้อง
+              {t('auth:otpVerification.helpText1')}
               <br />
-              • รอสักครู่แล้วลองอีกครั้ง
-              <br />• ติดต่อฝ่ายสนับสนุนหากยังมีปัญหา
+              {t('auth:otpVerification.helpText2')}
+              <br />{t('auth:otpVerification.helpText3')}
             </p>
           </div>
         </div>

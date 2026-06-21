@@ -8,6 +8,8 @@ import thAuth from './locales/th/auth.json'
 import thServices from './locales/th/services.json'
 import thBooking from './locales/th/booking.json'
 import thProfile from './locales/th/profile.json'
+import thEmergency from './locales/th/emergency.json'
+import thLegal from './locales/th/legal.json'
 
 import enCommon from './locales/en/common.json'
 import enHome from './locales/en/home.json'
@@ -15,6 +17,8 @@ import enAuth from './locales/en/auth.json'
 import enServices from './locales/en/services.json'
 import enBooking from './locales/en/booking.json'
 import enProfile from './locales/en/profile.json'
+import enEmergency from './locales/en/emergency.json'
+import enLegal from './locales/en/legal.json'
 
 import cnCommon from './locales/cn/common.json'
 import cnHome from './locales/cn/home.json'
@@ -22,6 +26,8 @@ import cnAuth from './locales/cn/auth.json'
 import cnServices from './locales/cn/services.json'
 import cnBooking from './locales/cn/booking.json'
 import cnProfile from './locales/cn/profile.json'
+import cnEmergency from './locales/cn/emergency.json'
+import cnLegal from './locales/cn/legal.json'
 
 const STORAGE_KEY = 'bliss-language'
 
@@ -50,6 +56,8 @@ i18n.use(initReactI18next).init({
       services: thServices,
       booking: thBooking,
       profile: thProfile,
+      emergency: thEmergency,
+      legal: thLegal,
     },
     en: {
       common: enCommon,
@@ -58,6 +66,8 @@ i18n.use(initReactI18next).init({
       services: enServices,
       booking: enBooking,
       profile: enProfile,
+      emergency: enEmergency,
+      legal: enLegal,
     },
     cn: {
       common: cnCommon,
@@ -66,12 +76,14 @@ i18n.use(initReactI18next).init({
       services: cnServices,
       booking: cnBooking,
       profile: cnProfile,
+      emergency: cnEmergency,
+      legal: cnLegal,
     },
   },
   lng: getStoredLanguage(),
   fallbackLng: 'th',
   defaultNS: 'common',
-  ns: ['common', 'home', 'auth', 'services', 'booking', 'profile'],
+  ns: ['common', 'home', 'auth', 'services', 'booking', 'profile', 'emergency', 'legal'],
   interpolation: {
     escapeValue: false,
   },
