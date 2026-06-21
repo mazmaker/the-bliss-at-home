@@ -999,7 +999,7 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                       ฿{job.amount.toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-purple-700">
-                      ฿{Number(job.staff_earnings).toLocaleString()}
+                      ฿{Number(job.total_staff_earnings ?? job.staff_earnings).toLocaleString()}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(job.status)}</td>
                   </tr>
@@ -1012,7 +1012,7 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                     ฿{jobs.reduce((sum, j) => sum + Number(j.amount), 0).toLocaleString()}
                   </td>
                   <td className="py-3 px-4 text-sm font-bold text-purple-700">
-                    ฿{jobs.reduce((sum, j) => sum + Number(j.staff_earnings), 0).toLocaleString()}
+                    ฿{jobs.reduce((sum, j) => sum + Number(j.total_staff_earnings ?? j.staff_earnings), 0).toLocaleString()}
                   </td>
                   <td></td>
                 </tr>

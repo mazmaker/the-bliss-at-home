@@ -47,7 +47,6 @@ export function ExtensionAlertBanner({ jobId, className = "" }: ExtensionAlertBa
 
   // Calculate totals for this job's extensions
   const totalDuration = jobPendingExtensions.reduce((sum, ext) => sum + ext.duration, 0)
-  const totalPrice = jobPendingExtensions.reduce((sum, ext) => sum + ext.price, 0)
 
   return (
     <div className={`bg-orange-50 border-l-4 border-orange-500 rounded-r-lg p-4 shadow-sm ${className}`}>
@@ -75,7 +74,7 @@ export function ExtensionAlertBanner({ jobId, className = "" }: ExtensionAlertBa
             <div className="flex items-center gap-1">
               <DollarSign className="w-4 h-4 text-green-600" />
               <span className="text-sm text-green-600 font-medium">
-                รายได้เพิ่ม +฿{totalPrice.toLocaleString()}
+                รายได้อัปเดตในรายละเอียดงาน
               </span>
             </div>
           </div>
@@ -183,7 +182,7 @@ function MultipleExtensionsDetails({
       {extensions.map((ext, index) => (
         <div key={ext.acknowledgmentId} className="text-sm text-orange-700">
           <span className="font-medium">
-            {index + 1}. +{ext.duration} นาที (+฿{ext.price.toLocaleString()})
+            {index + 1}. +{ext.duration} นาที
           </span>
           <span className="text-orange-600 text-xs ml-2">
             🕐 {formatTime(ext.extendedAt)}

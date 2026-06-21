@@ -57,6 +57,19 @@ interface BookingDetails extends Booking {
     total_price: number;
     addon: Database['public']['Tables']['service_addons']['Row'];
   }>;
+  booking_services?: Array<{
+    id: string;
+    service_id: string | null;
+    duration: number;
+    price: number;
+    is_extension: boolean;
+    extended_at: string | null;
+    recipient_index: number;
+    recipient_name: string | null;
+    sort_order: number | null;
+    created_at: string | null;
+    service?: { name_th: string | null; name_en: string | null } | null;
+  }>;
 }
 
 /**
@@ -254,10 +267,30 @@ export async function getBookingByNumber(
     `)
     .eq('booking_id', booking.id);
 
+  // Get booking_services (includes extension rows with is_extension = true)
+  const { data: bookingServices } = await client
+    .from('booking_services')
+    .select(`
+      id,
+      service_id,
+      duration,
+      price,
+      is_extension,
+      extended_at,
+      recipient_index,
+      recipient_name,
+      sort_order,
+      created_at,
+      service:services(name_th, name_en)
+    `)
+    .eq('booking_id', booking.id)
+    .order('sort_order', { ascending: true });
+
   return {
     ...booking,
     addons: addons as any,
-    jobs: jobs || []
+    jobs: jobs || [],
+    booking_services: bookingServices || []
   } as BookingDetails;
 }
 

@@ -5,13 +5,13 @@
 
 import React from 'react';
 import { Clock, DollarSign, Calendar, TrendingUp } from 'lucide-react';
-import { normalizeCommissionRate, calculateStaffEarnings, calculateExtensionEarnings } from '../utils/commissionUtils';
+import { normalizeCommissionRate, calculateStaffEarnings } from '../utils/commissionUtils';
 
 interface ExtensionService {
   id: string;
   duration: number;
   price: number; // Customer price
-  extended_at: string;
+  extended_at: string | null;
   sort_order: number;
 }
 
@@ -21,8 +21,32 @@ interface ExtensionInfoProps {
   extensions: ExtensionService[];
   totalDuration: number;
   totalPrice: number;
-  staffCommissionRate?: number; // Add commission rate back
+  // Fixed-rate config (from services table)
+  useFixedRate?: boolean;
+  staffEarning60?: number;
+  staffEarning90?: number;
+  staffEarning120?: number;
+  // Fallback commission rate
+  staffCommissionRate?: number;
   className?: string;
+}
+
+function calcExtensionEarningsPerItem(
+  duration: number,
+  customerPrice: number,
+  useFixedRate: boolean,
+  earning60: number,
+  earning90: number,
+  earning120: number,
+  commissionRate: number
+): number {
+  if (useFixedRate) {
+    const fixed = duration === 60 ? earning60
+      : duration === 120 ? earning120
+      : earning90
+    return Math.round(Number(fixed) || 0)
+  }
+  return Math.round(customerPrice * (normalizeCommissionRate(commissionRate) / 100))
 }
 
 export function ExtensionInfo({
@@ -31,17 +55,23 @@ export function ExtensionInfo({
   extensions,
   totalDuration,
   totalPrice,
-  staffCommissionRate = 30, // Default 30% commission
+  useFixedRate = false,
+  staffEarning60 = 0,
+  staffEarning90 = 0,
+  staffEarning120 = 0,
+  staffCommissionRate = 0,
   className = ""
 }: ExtensionInfoProps) {
   if (extensions.length === 0) {
     return null;
   }
 
-  // Normalize commission rate and calculate earnings
-  const adjustedCommissionRate = normalizeCommissionRate(staffCommissionRate);
   const totalExtensionTime = extensions.reduce((sum, ext) => sum + ext.duration, 0);
-  const totalExtensionPrice = calculateExtensionEarnings(extensions, staffCommissionRate);
+  const totalExtensionPrice = extensions.reduce((sum, ext) =>
+    sum + calcExtensionEarningsPerItem(
+      ext.duration, ext.price, useFixedRate,
+      staffEarning60, staffEarning90, staffEarning120, staffCommissionRate
+    ), 0);
 
   return (
     <div className={`bg-amber-50 border border-amber-200 rounded-lg p-4 ${className}`}>
@@ -73,7 +103,7 @@ export function ExtensionInfo({
           </div>
           <div className="font-bold text-green-600">+฿{(totalExtensionPrice || 0).toLocaleString()}</div>
           <div className="text-xs text-gray-500">
-            ฿{(originalPrice || 0).toLocaleString()} → ฿{(totalPrice || 0).toLocaleString()}
+            ฿{(originalPrice || 0).toLocaleString()} → ฿{(originalPrice + totalExtensionPrice).toLocaleString()}
           </div>
         </div>
       </div>
@@ -86,7 +116,7 @@ export function ExtensionInfo({
         </h4>
         <div className="space-y-2">
           {extensions
-            .sort((a, b) => new Date(a.extended_at).getTime() - new Date(b.extended_at).getTime())
+            .sort((a, b) => new Date(a.extended_at ?? 0).getTime() - new Date(b.extended_at ?? 0).getTime())
             .map((extension, index) => (
               <div
                 key={extension.id}
@@ -97,7 +127,7 @@ export function ExtensionInfo({
                     {index + 1}
                   </span>
                   <span className="text-gray-600">
-                    {new Date(extension.extended_at).toLocaleString('th-TH', {
+                    {extension.extended_at && new Date(extension.extended_at).toLocaleString('th-TH', {
                       month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
@@ -107,7 +137,12 @@ export function ExtensionInfo({
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-amber-700 font-medium">+{extension.duration} นาที</span>
-                  <span className="text-green-600 font-medium">+฿{calculateStaffEarnings(extension.price || 0, staffCommissionRate).toLocaleString()}</span>
+                  <span className="text-green-600 font-medium">
+                    +฿{calcExtensionEarningsPerItem(
+                      extension.duration, extension.price || 0, useFixedRate,
+                      staffEarning60, staffEarning90, staffEarning120, staffCommissionRate
+                    ).toLocaleString()}
+                  </span>
                 </div>
               </div>
             ))}
@@ -116,7 +151,10 @@ export function ExtensionInfo({
 
       {/* Note */}
       <div className="mt-3 p-2 bg-amber-100 rounded text-xs text-amber-700">
-        💡 รายได้ที่แสดงเป็นส่วนแบ่ง {adjustedCommissionRate}% จากราคาการเพิ่มเวลา
+        {useFixedRate
+          ? '💡 รายได้ตามอัตราที่แอดมินกำหนดต่อช่วงเวลา'
+          : `💡 รายได้ส่วนแบ่ง ${normalizeCommissionRate(staffCommissionRate)}% จากราคาการเพิ่มเวลา`
+        }
       </div>
     </div>
   );

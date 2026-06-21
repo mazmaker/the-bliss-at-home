@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, XCircle, Download, FileText, Users, Car } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation, getStoredLanguage } from '@bliss/i18n'
@@ -21,6 +21,7 @@ function BookingDetails() {
   const { t } = useTranslation(['booking', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Modal states
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -31,6 +32,11 @@ function BookingDetails() {
   const [activeJourneyId, setActiveJourneyId] = useState<string | null>(null)
   const [isTrackingLoading, setIsTrackingLoading] = useState(false)
 
+  // Extension payment polling (for banking redirect return)
+  const [extensionPolling, setExtensionPolling] = useState(false)
+  const [extensionSuccess, setExtensionSuccess] = useState(false)
+  const extPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   // Fetch booking data from Supabase with cache busting
   const { data: bookingData, isLoading, error, refetch } = useBookingByNumber(id)
 
@@ -38,6 +44,51 @@ function BookingDetails() {
   useEffect(() => {
     refetch()
   }, [id, refetch])
+
+  // Poll extension payment status after banking redirect return
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('type') !== 'extension' || !id) return
+
+    const chargeId = sessionStorage.getItem(`ext_charge_${id}`)
+    if (!chargeId) return
+
+    setExtensionPolling(true)
+    sessionStorage.removeItem(`ext_charge_${id}`)
+
+    // Remove query params from URL without navigation
+    window.history.replaceState({}, '', `/bookings/${id}`)
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/payments/status/${chargeId}`)
+        const data = await res.json()
+        if (data.status === 'successful') {
+          if (extPollRef.current) clearInterval(extPollRef.current)
+          setExtensionPolling(false)
+          setExtensionSuccess(true)
+          refetch()
+        } else if (data.status === 'failed') {
+          if (extPollRef.current) clearInterval(extPollRef.current)
+          setExtensionPolling(false)
+        }
+      } catch {
+        // transient error — keep polling
+      }
+    }
+
+    poll()
+    extPollRef.current = setInterval(poll, 3000)
+    const timeout = setTimeout(() => {
+      if (extPollRef.current) clearInterval(extPollRef.current)
+      setExtensionPolling(false)
+    }, 10 * 60 * 1000)
+
+    return () => {
+      if (extPollRef.current) clearInterval(extPollRef.current)
+      clearTimeout(timeout)
+    }
+  }, [id, location.search, refetch])
 
   // Transform booking data to match UI format
   const booking = useMemo(() => {
@@ -214,6 +265,7 @@ function BookingDetails() {
         name_th: bookingData.service?.name_th || '',
         name_en: bookingData.service?.name_en || '',
         slug: bookingData.service?.slug || '',
+        category: bookingData.service?.category || '',
         image_url: bookingData.service?.image_url
       },
       booking_services: bookingData.booking_services?.map(bs => ({
@@ -568,6 +620,22 @@ function BookingDetails() {
           <h1 className="text-2xl font-bold text-stone-900">{t('details.title')}</h1>
         </div>
 
+        {/* Extension payment polling banner */}
+        {extensionPolling && (
+          <div className="p-4 rounded-xl mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center gap-2">
+            <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            กำลังตรวจสอบการชำระเงิน กรุณารอสักครู่...
+          </div>
+        )}
+        {extensionSuccess && (
+          <div className="p-4 rounded-xl mb-4 bg-green-50 border border-green-200 text-green-800 text-sm font-medium">
+            ชำระเงินการขยายเวลาสำเร็จ ข้อมูลการจองได้รับการอัปเดตแล้ว
+          </div>
+        )}
+
         {/* Status Banner */}
         <div className={`p-6 rounded-2xl mb-6 ${
           booking.status === 'confirmed'
@@ -631,6 +699,77 @@ function BookingDetails() {
                 </div>
               )}
             </div>
+
+            {/* Extension History */}
+            {extendableBooking && extendableBooking.booking_services?.some(bs => bs.is_extension) && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                  การเพิ่มเวลาบริการ
+                  <span className="ml-auto text-sm font-normal text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                    {extendableBooking.extension_count} ครั้ง
+                  </span>
+                </h2>
+
+                <div className="space-y-3">
+                  {extendableBooking.booking_services
+                    .filter(bs => bs.is_extension)
+                    .map((ext, index) => (
+                      <div key={ext.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-bold text-sm shrink-0">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-stone-900">+{ext.duration} นาที</p>
+                            {ext.extended_at && (
+                              <p className="text-xs text-stone-500">
+                                {new Date(ext.extended_at).toLocaleDateString('th-TH', {
+                                  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <p className="font-bold text-amber-700">+฿{Number(ext.price).toLocaleString()}</p>
+                      </div>
+                    ))
+                  }
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-stone-100 flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-stone-500">เวลารวมทั้งหมด</p>
+                    <p className="font-semibold text-stone-900">
+                      {Math.floor(
+                        (extendableBooking.duration +
+                          extendableBooking.booking_services
+                            .filter(bs => bs.is_extension)
+                            .reduce((sum, bs) => sum + bs.duration, 0)) / 60
+                      )} ชม.{' '}
+                      {(extendableBooking.duration +
+                        extendableBooking.booking_services
+                          .filter(bs => bs.is_extension)
+                          .reduce((sum, bs) => sum + bs.duration, 0)) % 60 > 0 &&
+                        `${(extendableBooking.duration +
+                          extendableBooking.booking_services
+                            .filter(bs => bs.is_extension)
+                            .reduce((sum, bs) => sum + bs.duration, 0)) % 60} นาที`
+                      }
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-stone-500">ค่าเพิ่มเวลารวม</p>
+                    <p className="font-bold text-lg text-amber-700">
+                      +฿{extendableBooking.booking_services
+                        .filter(bs => bs.is_extension)
+                        .reduce((sum, bs) => sum + Number(bs.price), 0)
+                        .toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Date & Time */}
             <div className="bg-white rounded-2xl shadow-lg p-6">

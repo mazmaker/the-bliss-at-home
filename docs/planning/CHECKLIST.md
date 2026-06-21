@@ -18,7 +18,7 @@
 - 22-Status State Machine — useBookingStateMachine + transition validation **[90%]**
 - Staff Journey Tracking — start_staff_journey + customer map display **[95%]**
 - Emergency Booking Banner — responsive design update **[85%]**
-- Extension Service Payment — booking extension pricing + Omise integration **[85%]**
+- Extension Service Payment — booking extension pricing + Omise integration + earnings calculation **[100%]** ✅
 - Admin Quick Booking — walk-in/phone booking system + customer selection + GPS capture **[100%]**
 
 ### Priorities (ทำต่อ)

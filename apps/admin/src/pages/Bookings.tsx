@@ -782,7 +782,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
           {/* Revenue Info */}
           {(() => {
             const totalStaffEarnings = booking.jobs && booking.jobs.length > 0
-              ? booking.jobs.reduce((sum, j) => sum + Number(j.staff_earnings || 0), 0)
+              ? booking.jobs.reduce((sum, j) => sum + Number(j.total_staff_earnings ?? j.staff_earnings ?? 0), 0)
               : Number(booking.staff_earnings)
             const revenue = Number(booking.final_price)
             const netRevenue = revenue - totalStaffEarnings
@@ -805,7 +805,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                             .map((job) => (
                               <div key={job.id} className="flex justify-between text-sm pl-2">
                                 <span className="text-red-600">คนที่ {job.job_index}: {job.staff_name || 'รอมอบหมาย'}</span>
-                                <span className="text-green-600">฿{Number(job.staff_earnings || 0).toLocaleString()}</span>
+                                <span className="text-green-600">฿{Number(job.total_staff_earnings ?? job.staff_earnings ?? 0).toLocaleString()}</span>
                               </div>
                             ))}
                         </>

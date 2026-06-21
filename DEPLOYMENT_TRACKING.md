@@ -684,6 +684,35 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 ---
 
+## 🆕 **SESSION 2026-06-19** - ลบ Popup โปรไฟล์ไม่ครบ + แก้ 409 Staff Profile + แก้ Yellow Box
+
+### **🗑️ 1. ลบ Popup "กรุณากรอกข้อมูลให้ครบ" ออกจาก Staff App (ตามคำขอ)**
+
+- ✅ `apps/staff/src/pages/StaffProfile.tsx` — ลบออกทั้งหมด:
+  - state `showIncompletePopup`
+  - `useEffect` trigger เมื่อ eligibility โหลดและ `canWork === false`
+  - JSX popup ทั้งก้อน (overlay + card + ปุ่ม)
+- **Commit:** `fa823f0b`
+
+### **🔧 2. แก้ 409 Conflict ตอนสตาฟบันทึกโปรไฟล์**
+
+- **Root Cause:** field `id_card`, `phone`, `address`, `bio_th`, `bio_en` ส่ง empty string `""` ไปยัง DB → unique constraint reject (DB ยอมรับ NULL หลายแถว แต่ `""` ถือเป็น duplicate)
+- ✅ `packages/supabase/src/staff/staffService.ts` — `updateStaffData` แปลง `|| null` สำหรับ field string ทุกตัว
+- **ผล:** สตาฟใหม่กดบันทึกสำเร็จ ไม่มี 409 อีก
+
+### **📋 3. ปรับ Yellow Warning Box ใน StaffProfile**
+
+- ✅ Filter `บุคคลอ้างอิง` ออกจาก list หลัก
+- ✅ เพิ่ม 2 รายการตายตัว: "ยังไม่ได้อัปโหลดใบตรวจสอบประวัติอาชญากรรม" + "ยังไม่ได้อัปโหลดใบอนุญาตนวด"
+- ✅ แสดง "กรุณากรอกข้อมูลบุคคลอ้างอิง" ไว้อันสุดท้าย
+
+### **📋 Pending:**
+- 🔒 งาน session 2026-06-12 + 17 + 18 (fixed rate, discount 20%, health declaration) — ยังรอ push
+- 🔒 migration `20260618_100000_add_fixed_rate_earnings_to_services.sql` — รอ apply production
+- ⚠️ Customer app Google Maps production — ต้อง Promote to Production ใน Vercel Customer project
+
+---
+
 ## 🔒 **DEPLOYMENT RULES - สำคัญมาก**
 
 ### **❌ ห้ามทำโดยเด็ดขาด:**
@@ -701,6 +730,79 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
 
 ---
 
+## 🆕 **SESSION 2026-06-22** - Extension Time Earnings: Full Fix (Server + DB + Staff + Admin)
+
+### **🎯 ปัญหาที่แก้ไข: ยอดรายได้พนักงานจากการเพิ่มเวลาบริการคำนวณผิดทุกจุด**
+
+#### **🔍 Root Cause:**
+- Server ใช้ additive update (`currentTotal += newEarnings`) แทนการคำนวณใหม่จาก scratch → ยอดสะสมเพิ่มผิดเรื่อยทุกครั้ง
+- `services!inner` join ใน `StaffJobDetail.tsx` return null เมื่อ `bookings.service_id = null` (bookings ใหม่ใช้ `booking_services` แทน)
+- ข้อมูลเก่าใน DB ที่ถูกคำนวณผิดไม่ได้รับการแก้ไข
+
+---
+
+#### **🗄️ 1. Database — Data Fix Migration (apply แล้วใน production)**
+
+- ✅ `supabase/migrations/20260622_000000_fix_job_total_staff_earnings_from_extensions.sql`
+  - วนลูปทุก job ที่มี extension → คำนวณ `total_staff_earnings` และ `total_duration_minutes` ใหม่จาก scratch
+  - ใช้ `bookings.service_id` → `services` join พร้อม fallback ผ่าน `booking_services`
+  - ผลลัพธ์: นวดแผนไทย ฿1,055 (ผิด) → ฿800 (400 original + 400 extension) ✓
+  - Apply ด้วย `supabase db query --linked --file` (ไม่ใช้ `db push` เพราะ migration history mismatch)
+
+---
+
+#### **🖥️ 2. Server — Scratch Recalculation (แทน additive update)**
+
+- ✅ `apps/server/src/routes/payment.ts` (`applyExtensionAfterPayment`)
+  - เปลี่ยนจาก `currentTotal += newEarnings` เป็น fetch ทุก extension → sum ใหม่ → `staff_earnings + totalExtEarnings`
+  - เพิ่ม `resolvedServiceId` fallback chain: `meta.service_id` → `booking_services` (non-extension) → `bookings.service_id`
+- ✅ `apps/server/src/routes/bookings.ts` (hotel/free extension path)
+  - ใช้ logic scratch recalculation เดียวกัน
+
+---
+
+#### **📱 3. Staff App — Display Fixes**
+
+- ✅ `apps/staff/src/components/ExtensionAcceptanceCard.tsx`
+  - ลบ `totalExtraEarnings` (เดิมดึงราคาลูกค้า ไม่ใช่ค่าคอม)
+  - Wrap `ExtensionItem` เป็น `<Link>` ไปหน้า job detail
+  - ปุ่ม Acknowledge ใช้ `e.preventDefault() + e.stopPropagation()` ป้องกัน navigate
+  - ข้อความ: "รายได้อัปเดตในรายละเอียดงาน" (แทนราคาที่ผิด)
+- ✅ `apps/staff/src/components/ExtensionInfo.tsx`
+  - "→ total" คำนวณ fresh: `originalPrice + totalExtensionPrice` (ไม่ใช้ค่า stale จาก DB)
+- ✅ `apps/staff/src/pages/StaffJobDetail.tsx`
+  - เปลี่ยน `services!inner(...)` → left join `services(...)` + fallback ผ่าน `booking_services`
+  - คำนวณ `totalPrice` fresh จาก svcData เมื่อมี extensionServices
+- ✅ `apps/staff/src/pages/StaffSchedule.tsx`
+  - ลบ breakdown ผิด (`total_staff_earnings - staff_earnings = ฿655`)
+  - แสดงยอดรวมพร้อม "รวมค่าเพิ่มเวลาบริการแล้ว"
+
+---
+
+#### **🖥️ 4. Admin App — Type Fixes + Display Fixes**
+
+- ✅ `apps/admin/src/hooks/useStaffJobs.ts` — เพิ่ม `total_staff_earnings?: number`, `total_duration_minutes?: number` ใน `Job` interface
+- ✅ `apps/admin/src/services/bookingService.ts` — เพิ่ม `total_staff_earnings?: number` ใน jobs type + อัปเดต DB query ให้ fetch field นี้
+- ✅ `apps/admin/src/components/JobDetailModal.tsx` — `total_staff_earnings ?? staff_earnings`
+- ✅ `apps/admin/src/pages/Bookings.tsx` — revenue section ใช้ `total_staff_earnings ?? staff_earnings ?? 0`
+- ✅ `apps/admin/src/pages/StaffDetail.tsx` — sum earnings ใช้ `total_staff_earnings ?? staff_earnings`
+- ✅ `apps/admin/src/components/CreatePayoutModal.tsx`
+  - เพิ่ม `total_staff_earnings?` ใน `UnpaidJob` type
+  - อัปเดต DB query fetch `total_staff_earnings`
+  - `grossEarnings` ใช้ `total_staff_earnings ?? staff_earnings`
+  - Per-job row ใช้ `total_staff_earnings ?? staff_earnings` (ก่อนหน้าแสดงยอดต่ำกว่าความจริง)
+
+---
+
+#### **🧪 Agent Audit ผล:**
+ผ่านทุกจุด — Server ✓ Staff ✓ Admin ✓ Hotel ✓ Customer ✓ DB ✓ TypeScript ✓
+
+#### **📋 Pending (รอ commit + push):**
+- 🔒 งาน session 2026-06-12 + 17 + 18 + 19 (ทั้งหมดก่อนหน้า) — ยังรอ push
+- 🔒 งาน session 2026-06-22 ทั้งหมดนี้ — รอ commit
+
+---
+
 **📌 REMINDER: รัน SQL script ก่อน Deploy Admin App เสมอ!**
 **🔒 IMPORTANT: รอคำสั่ง deploy เท่านั้น - อย่า deploy เอง!**
-**🕒 Last Updated: 2026-06-18**
+**🕒 Last Updated: 2026-06-22**

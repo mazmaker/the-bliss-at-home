@@ -13,6 +13,8 @@ export interface Job {
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
   amount: number
   staff_earnings: number
+  total_staff_earnings?: number
+  total_duration_minutes?: number
   staff_id: string
   created_at: string
   updated_at: string

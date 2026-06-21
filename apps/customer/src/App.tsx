@@ -29,6 +29,7 @@ import PointsHistory from './pages/PointsHistory'
 import EmergencyBooking from './pages/EmergencyBooking'
 import TrackStaff from './pages/TrackStaff'
 import CompletePayment from './pages/CompletePayment'
+import ExtensionPayment from './pages/ExtensionPayment'
 
 function App() {
   const { t } = useTranslation('common')
@@ -108,6 +109,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
               <CompletePaymentWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/extension-payment"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']} redirectTo="/login">
+              <ExtensionPaymentWrapper />
             </ProtectedRoute>
           }
         />
@@ -328,6 +337,10 @@ function PaymentConfirmationWrapper() {
 
 function CompletePaymentWrapper() {
   return <CompletePayment />
+}
+
+function ExtensionPaymentWrapper() {
+  return <ExtensionPayment />
 }
 
 function TransactionHistoryWrapper() {

@@ -38,14 +38,27 @@ function StaffJobDetail() {
     queryFn: async () => {
       if (!job?.booking_id) return null
 
-      const { data, error } = await supabase
+      const SERVICE_FIELDS = 'staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120'
+
+      // Try direct join via bookings.service_id first
+      const { data } = await supabase
         .from('bookings')
-        .select('service_id, services!inner(staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
+        .select(`service_id, services(${SERVICE_FIELDS})`)
         .eq('id', job.booking_id)
         .single()
 
-      if (error || !data) return null
-      return data.services
+      if (data?.services) return data.services
+
+      // Fallback: get service from original (non-extension) booking_services row
+      const { data: bsList } = await supabase
+        .from('booking_services')
+        .select(`service_id, services(${SERVICE_FIELDS}), is_extension`)
+        .eq('booking_id', job.booking_id)
+        .order('sort_order', { ascending: true })
+
+      // Pick first row that is NOT an extension (handle null is_extension for older rows)
+      const original = (bsList || []).find(bs => !bs.is_extension)
+      return (original as any)?.services || null
     },
     enabled: !!job?.booking_id
   })
@@ -150,7 +163,11 @@ function StaffJobDetail() {
         return sum + Math.round(Number(fixed) || 0)
       }, 0)
     : calculateExtensionEarnings(extensionServices, commissionRate);
-  const totalPrice = job?.total_staff_earnings || (originalPrice + extensionEarnings)
+  // Always calculate from fixed rates when extension data + service config are loaded
+  // Avoids showing stale/wrong total_staff_earnings from DB (e.g., from old test runs)
+  const totalPrice = (extensionServices.length > 0 && svcData != null)
+    ? (originalPrice + extensionEarnings)
+    : (job?.total_staff_earnings ?? originalPrice)
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -497,7 +514,11 @@ function StaffJobDetail() {
           extensions={extensionServices}
           totalDuration={totalDuration}
           totalPrice={totalPrice}
-          staffCommissionRate={commissionRate} // Use actual service commission rate
+          useFixedRate={useFixedRate}
+          staffEarning60={Number(svcData?.staff_earning_60 ?? 0)}
+          staffEarning90={Number(svcData?.staff_earning_90 ?? 0)}
+          staffEarning120={Number(svcData?.staff_earning_120 ?? 0)}
+          staffCommissionRate={commissionRate}
           className=""
         />
       )}

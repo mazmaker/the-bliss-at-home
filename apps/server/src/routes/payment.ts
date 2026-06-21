@@ -14,6 +14,244 @@ import { getEnabledPaymentChannels, sourceTypeToChannel, DEFAULT_ENABLED_CHANNEL
 const router = Router()
 
 /**
+ * Shared helper: apply a confirmed extension payment to the booking.
+ * Safe to call from both webhook and polling — idempotent via extension_count check.
+ */
+export async function applyExtensionAfterPayment(transactionId: string): Promise<void> {
+  const supabase = getSupabaseClient()
+
+  const { data: transaction } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('id', transactionId)
+    .single()
+
+  if (!transaction || transaction.metadata?.is_extension !== true) return
+
+  const meta = transaction.metadata || {}
+
+  // Idempotency: if booking.extension_count already exceeds the pre-payment count,
+  // the extension was already applied (by webhook or a prior poll). Skip.
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('extension_count')
+    .eq('id', transaction.booking_id)
+    .single()
+
+  const alreadyApplied = (booking?.extension_count || 0) > (meta.current_extension_count || 0)
+  if (alreadyApplied) {
+    console.log(`[applyExtension] Already applied for transaction ${transactionId}, skipping`)
+    return
+  }
+
+  console.log(`[applyExtension] Applying extension for transaction ${transactionId}`)
+
+  try {
+    const { data: extensionService, error: extErr } = await supabase
+      .from('booking_services')
+      .insert({
+        booking_id: transaction.booking_id,
+        service_id: meta.service_id,
+        duration: meta.extension_duration,
+        price: meta.extension_price,
+        recipient_index: meta.recipient_index ?? 0,
+        recipient_name: meta.recipient_name || null,
+        sort_order: meta.sort_order ?? 1,
+        is_extension: true,
+        extended_at: new Date().toISOString(),
+        original_booking_service_id: meta.original_booking_service_id || null
+      })
+      .select('id')
+      .single()
+
+    if (extErr) {
+      console.error('[applyExtension] Failed to create extension booking_service:', extErr)
+      return
+    }
+
+    const newTotalDuration = (meta.current_total_duration || 0) + (meta.extension_duration || 0)
+    const newTotalPrice    = (meta.current_total_price || 0) + (meta.extension_price || 0)
+    const newExtensionCount = (meta.current_extension_count || 0) + 1
+
+    // Calculate extension staff earnings using same logic as regular bookings
+    let extensionStaffEarnings = 0
+    // Resolve service_id: use metadata first, fallback to booking_services table
+    let resolvedServiceId = meta.service_id || null
+    if (!resolvedServiceId) {
+      const { data: bs } = await supabase
+        .from('booking_services')
+        .select('service_id')
+        .eq('booking_id', transaction.booking_id)
+        .eq('is_extension', false)
+        .order('sort_order', { ascending: true })
+        .limit(1)
+        .single()
+      resolvedServiceId = bs?.service_id || null
+      if (!resolvedServiceId) {
+        // Last fallback: bookings.service_id
+        const { data: bk } = await supabase
+          .from('bookings')
+          .select('service_id')
+          .eq('id', transaction.booking_id)
+          .single()
+        resolvedServiceId = bk?.service_id || null
+      }
+    }
+
+    if (resolvedServiceId) {
+      const { data: svc } = await supabase
+        .from('services')
+        .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
+        .eq('id', resolvedServiceId)
+        .single()
+
+      if (svc) {
+        const dur = meta.extension_duration || 0
+        if (svc.use_fixed_rate) {
+          const fixed = dur === 60 ? svc.staff_earning_60
+            : dur === 120 ? svc.staff_earning_120
+            : svc.staff_earning_90
+          extensionStaffEarnings = Math.round(Number(fixed) || 0)
+        } else {
+          const rate = Number(svc.staff_commission_rate) || 0
+          extensionStaffEarnings = Math.round((meta.extension_price || 0) * rate)
+        }
+        console.log(`[applyExtension] Service ${resolvedServiceId}: useFixedRate=${svc.use_fixed_rate}, dur=${dur}min, earnings=฿${extensionStaffEarnings}`)
+      }
+    }
+
+    // Recalculate total_staff_earnings from scratch using ALL extensions
+    // (not additive — avoids compounding errors from stale DB values)
+    const [{ data: bookingJobs }, { data: allExtensions }] = await Promise.all([
+      supabase
+        .from('jobs')
+        .select('id, staff_earnings, duration_minutes')
+        .eq('booking_id', transaction.booking_id)
+        .not('status', 'eq', 'cancelled'),
+      supabase
+        .from('booking_services')
+        .select('duration, price')
+        .eq('booking_id', transaction.booking_id)
+        .eq('is_extension', true)
+    ])
+
+    if (bookingJobs && bookingJobs.length > 0) {
+      // Sum earnings for ALL extensions from scratch
+      let totalExtEarnings = 0
+      let totalExtDuration = 0
+
+      if (allExtensions && resolvedServiceId) {
+        const { data: svcFull } = await supabase
+          .from('services')
+          .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
+          .eq('id', resolvedServiceId)
+          .single()
+
+        if (svcFull) {
+          for (const ext of allExtensions) {
+            const dur = ext.duration || 0
+            totalExtDuration += dur
+            if (svcFull.use_fixed_rate) {
+              const fixed = dur === 60 ? svcFull.staff_earning_60
+                : dur === 120 ? svcFull.staff_earning_120
+                : svcFull.staff_earning_90
+              totalExtEarnings += Math.round(Number(fixed) || 0)
+            } else {
+              const rate = Number(svcFull.staff_commission_rate) || 0
+              totalExtEarnings += Math.round((ext.price || 0) * rate)
+            }
+          }
+        }
+      }
+
+      for (const job of bookingJobs) {
+        const originalEarnings = Number(job.staff_earnings ?? 0)
+        const originalDuration = Number(job.duration_minutes ?? 0)
+        await supabase
+          .from('jobs')
+          .update({
+            total_staff_earnings: originalEarnings + totalExtEarnings,
+            total_duration_minutes: originalDuration + totalExtDuration,
+          })
+          .eq('id', job.id)
+      }
+      console.log(`[applyExtension] Jobs recalculated from scratch: original+฿${bookingJobs[0]?.staff_earnings} + ext฿${totalExtEarnings} = ฿${(bookingJobs[0]?.staff_earnings||0)+totalExtEarnings}, +${totalExtDuration}min total ext`)
+    }
+
+    await supabase
+      .from('bookings')
+      .update({
+        final_price: newTotalPrice,
+        extension_count: newExtensionCount,
+        last_extended_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', transaction.booking_id)
+
+    if (meta.promotion_id && meta.discount_amount > 0) {
+      await supabase
+        .from('booking_promotions')
+        .insert({
+          booking_id: transaction.booking_id,
+          promotion_id: meta.promotion_id,
+          discount_amount: meta.discount_amount,
+          applied_at: new Date().toISOString(),
+          applied_by: 'customer',
+          booking_type: 'extension'
+        })
+    }
+
+    let estimatedEndTimeStr = ''
+    if (meta.booking_date && meta.booking_time) {
+      const bookingDateTime = new Date(`${meta.booking_date}T${meta.booking_time}`)
+      const estimatedEnd = new Date(bookingDateTime.getTime() + (newTotalDuration * 60 * 1000))
+      estimatedEndTimeStr = estimatedEnd.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+    }
+
+    if (Array.isArray(meta.staff_profiles) && meta.staff_profiles.length > 0) {
+      const staffNotifications = meta.staff_profiles.map((staff: { profile_id: string; full_name: string }) => ({
+        user_id: staff.profile_id,
+        type: 'booking_extended',
+        title: 'การจองขยายเวลา',
+        message: `ลูกค้า ${meta.customer_name || ''} ขยายเวลาบริการเพิ่ม ${meta.extension_duration} นาที${estimatedEndTimeStr ? ` เวลาสิ้นสุดใหม่: ${estimatedEndTimeStr}` : ''}`,
+        data: {
+          booking_id: transaction.booking_id,
+          additional_duration: meta.extension_duration,
+          extension_count: newExtensionCount
+        },
+        is_read: false
+      }))
+      await supabase.from('notifications').insert(staffNotifications)
+      console.log(`[applyExtension] Staff notifications sent: ${staffNotifications.length}`)
+    }
+
+    await supabase.from('notifications').insert({
+      user_id: meta.customer_profile_id || transaction.customer_id,
+      type: 'extension_payment_completed',
+      title: 'ชำระเงินการขยายเวลาสำเร็จ',
+      message: `การชำระเงินสำหรับการขยายเวลา ${meta.extension_duration || 0} นาทีเสร็จสมบูรณ์ จำนวนเงิน ฿${transaction.amount.toLocaleString()}`,
+      data: {
+        booking_id: transaction.booking_id,
+        transaction_id: transaction.id,
+        extension_duration: meta.extension_duration,
+        amount: transaction.amount
+      },
+      is_read: false
+    })
+
+    try {
+      await sendReceiptEmailForTransaction(transaction.id)
+    } catch (emailErr) {
+      console.error('⚠️ Extension receipt email failed (non-blocking):', emailErr)
+    }
+
+    console.log(`[applyExtension] Done: +${meta.extension_duration}min, booking_service ${extensionService?.id}`)
+  } catch (err) {
+    console.error('[applyExtension] Failed:', err)
+  }
+}
+
+/**
  * GET /api/payments/enabled-channels
  * Returns the admin-controlled allowlist of enabled payment channels (R1).
  * Read by the customer booking wizard / pay-later page to render only enabled channels.
@@ -335,39 +573,8 @@ router.post('/webhooks/omise', async (req: Request, res: Response) => {
       // Update booking status
       if (charge.paid) {
         if (isExtensionPayment) {
-          // Extension payment completed - don't change main booking status
           console.log(`💳 Extension payment completed for booking ${transaction.booking_id}`)
-
-          // Send extension payment confirmation notification
-          try {
-            await getSupabaseClient()
-              .from('notifications')
-              .insert({
-                user_id: transaction.customer_id,
-                type: 'extension_payment_completed',
-                title: 'ชำระเงินการขยายเวลาสำเร็จ',
-                message: `การชำระเงินสำหรับการขยายเวลา ${transaction.metadata?.extension_duration || 0} นาทีเสร็จสมบูรณ์ จำนวนเงิน ฿${transaction.amount.toLocaleString()}`,
-                data: {
-                  booking_id: transaction.booking_id,
-                  transaction_id: transaction.id,
-                  extension_duration: transaction.metadata?.extension_duration,
-                  amount: transaction.amount
-                },
-                is_read: false
-              })
-
-            console.log('📱 Extension payment notification sent')
-          } catch (notifError) {
-            console.error('⚠️ Extension notification failed (non-blocking):', notifError)
-          }
-
-          // Send extension receipt email
-          try {
-            await sendReceiptEmailForTransaction(transaction.id)
-          } catch (emailErr) {
-            console.error('⚠️ Extension receipt email failed (non-blocking):', emailErr)
-          }
-
+          await applyExtensionAfterPayment(transaction.id)
         } else {
           // Regular booking payment - preserve the payment_method from transaction
           await getSupabaseClient()
@@ -974,29 +1181,40 @@ router.get('/status/:chargeId', async (req: Request, res: Response) => {
         .update({ status })
         .eq('id', transaction.id)
 
+      const isExtensionTx = transaction.metadata?.is_extension === true
       await getSupabaseClient()
         .from('bookings')
         .update({
           payment_status: charge.paid ? 'paid' : charge.failureCode ? 'failed' : 'pending',
-          status: charge.paid ? 'confirmed' : transaction.status,
-          payment_method: transaction.payment_method || 'credit_card', // Preserve payment method
+          // Don't change booking status for extensions — booking stays in_progress
+          ...(isExtensionTx ? {} : { status: charge.paid ? 'confirmed' : transaction.status }),
+          payment_method: transaction.payment_method || 'credit_card',
         })
         .eq('id', transaction.booking_id)
 
-      // If newly paid, create job + notify
+      // If newly paid, apply extension or confirm booking
       if (charge.paid && transaction.status !== 'successful') {
-        try {
-          const notifResult = await processBookingConfirmed(transaction.booking_id)
-          console.log(`📋 Status poll notification result:`, notifResult)
-        } catch (notifError) {
-          console.error('⚠️ Notification failed (non-blocking):', notifError)
-        }
+        if (transaction.metadata?.is_extension === true) {
+          // Extension payment: apply via shared helper (idempotent)
+          try {
+            await applyExtensionAfterPayment(transaction.id)
+          } catch (extErr) {
+            console.error('⚠️ Extension apply failed (non-blocking):', extErr)
+          }
+        } else {
+          // Regular booking: create job + notify
+          try {
+            const notifResult = await processBookingConfirmed(transaction.booking_id)
+            console.log(`📋 Status poll notification result:`, notifResult)
+          } catch (notifError) {
+            console.error('⚠️ Notification failed (non-blocking):', notifError)
+          }
 
-        // Send receipt email - must await to prevent Vercel serverless from terminating early
-        try {
-          await sendReceiptEmailForTransaction(transaction.id)
-        } catch (emailErr) {
-          console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+          try {
+            await sendReceiptEmailForTransaction(transaction.id)
+          } catch (emailErr) {
+            console.error('⚠️ Receipt email failed (non-blocking):', emailErr)
+          }
         }
       }
     }

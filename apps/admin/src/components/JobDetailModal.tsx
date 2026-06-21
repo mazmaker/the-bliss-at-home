@@ -143,7 +143,14 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
               </div>
               <div className="flex justify-between border-t border-green-200 pt-2">
                 <span className="text-sm text-green-700">รายได้พนักงาน</span>
-                <span className="font-bold text-lg text-green-900">฿{job.staff_earnings.toLocaleString()}</span>
+                <div className="text-right">
+                  <span className="font-bold text-lg text-green-900">
+                    ฿{(job.total_staff_earnings ?? job.staff_earnings).toLocaleString()}
+                  </span>
+                  {job.total_staff_earnings && job.total_staff_earnings !== job.staff_earnings && (
+                    <p className="text-xs text-green-600">รวมค่าเพิ่มเวลาบริการแล้ว</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -48,8 +48,6 @@ export function ExtensionAcceptanceCard() {
     })
   }
 
-  const totalExtraEarnings = pendingExtensions.reduce((sum, ext) => sum + ext.price, 0)
-
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
       {/* Header */}
@@ -76,7 +74,7 @@ export function ExtensionAcceptanceCard() {
             <div className="flex items-center gap-1">
               <DollarSign className="w-4 h-4 text-green-600" />
               <span className="text-sm text-green-600 font-medium">
-                +฿{totalExtraEarnings.toLocaleString()}
+                รายได้อัปเดตในรายละเอียดงาน
               </span>
             </div>
           </div>
@@ -120,7 +118,7 @@ export function ExtensionAcceptanceCard() {
       <div className="mt-4 p-2 bg-amber-100 rounded-lg text-xs text-amber-700 flex items-start gap-2">
         <Bell className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <span>
-          💡 การเพิ่มเวลาเหล่านี้ถูกจัดการโดยโรงแรมและจะส่งผลต่อรายได้ของคุณ
+          💡 การเพิ่มเวลาเหล่านี้ได้รับการชำระเงินแล้ว และจะส่งผลต่อรายได้ของคุณ
           กรุณารับทราบเพื่อยืนยันว่าคุณได้เห็นการอัพเดทแล้ว
         </span>
       </div>
@@ -145,7 +143,10 @@ function ExtensionItem({
   formatTime
 }: ExtensionItemProps) {
   return (
-    <div className="bg-white rounded-lg p-3 border border-amber-100">
+    <Link
+      to={`/staff/jobs/${extension.jobId}`}
+      className="block bg-white rounded-lg p-3 border border-amber-100 active:bg-amber-50 transition-colors"
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -168,10 +169,6 @@ function ExtensionItem({
                 <Clock className="w-3 h-3" />
                 <span>+{extension.duration} นาที</span>
               </div>
-              <div className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-green-600" />
-                <span className="text-green-600 font-medium">+฿{extension.price.toLocaleString()}</span>
-              </div>
             </div>
             <div className="text-xs text-gray-500">
               🕐 เพิ่มเมื่อ: {formatTime(extension.extendedAt)}
@@ -179,9 +176,13 @@ function ExtensionItem({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 ml-4">
+        <div className="flex flex-col gap-2 ml-4" onClick={e => e.stopPropagation()}>
           <button
-            onClick={() => onAcknowledge(extension.acknowledgmentId, extension.serviceName)}
+            onClick={async (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              await onAcknowledge(extension.acknowledgmentId, extension.serviceName)
+            }}
             disabled={isAcknowledging}
             className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1"
           >
@@ -192,15 +193,9 @@ function ExtensionItem({
             )}
             รับทราบ
           </button>
-
-          <Link
-            to={`/staff/job/${extension.jobId}`}
-            className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm text-center hover:bg-gray-200 transition-colors"
-          >
-            ดูรายละเอียด
-          </Link>
+          <span className="text-xs text-center text-gray-400">กดเพื่อดูงาน</span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }

@@ -11,6 +11,7 @@ import { getEnabledPaymentChannels } from '../lib/paymentChannels.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
 import { sendCreditNoteEmailForRefund } from './receipts.js'
+import { applyExtensionAfterPayment } from './payment.js'
 import { lineService } from '../services/lineService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
 import type {
@@ -173,6 +174,7 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         booking_date,
         booking_time,
         status,
+        payment_status,
         duration,
         final_price,
         staff_id,
@@ -421,8 +423,16 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
     const hasAssignedStaff = staffToNotify.length > 0 || !!previousStaffId
 
     // 4b. Send new_job notifications to all eligible staff (so they can accept the rescheduled job)
+    // Skip if booking has not been paid yet — payment webhook will notify staff after payment confirms.
     let newJobStaffNotified = 0
-    try {
+    // Treat null payment_status as paid — legacy bookings without the field are already confirmed.
+    // Only explicitly 'pending' means "awaiting payment".
+    const paymentStatus = (booking as any).payment_status
+    const bookingIsPaid = paymentStatus !== 'pending'
+    if (!bookingIsPaid) {
+      console.log('[Reschedule] Booking not yet paid — skipping staff new_job notifications')
+    }
+    if (bookingIsPaid) try {
       const { data: allAvailableStaff } = await supabase
         .from('staff')
         .select('id, profile_id, gender')
@@ -1194,6 +1204,9 @@ interface ExtendBookingRequest {
   promotion_id?: string       // promotion applied
   discount_amount?: number    // discount from promotion
   requested_by?: 'customer' | 'hotel_staff'
+  payment_method?: string     // 'promptpay' | 'credit_card' | 'internet_banking' | 'mobile_banking'
+  omise_token?: string        // credit card token from Omise.js frontend
+  bank_code?: string          // e.g. 'scb', 'kbank', 'bbl', 'ktb', 'bay', 'ttb'
 }
 
 interface ExtendBookingResponse {
@@ -1215,6 +1228,7 @@ interface ExtendBookingResponse {
     requires_payment: boolean
     payment_url?: string
     payment_reference?: string
+    authorize_uri?: string
   }
   notifications: {
     staff_notified: number
@@ -1355,11 +1369,339 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
     const discountAmount = body.discount_amount || 0
     const finalExtensionPrice = Math.max(0, extensionPrice - discountAmount)
 
-    // 7. Create extension booking service record
-    // Handle both old structure (direct service_id) and new structure (booking_services)
+    // 7. Gather context needed for both payment path and hotel/free path
     const serviceId = booking.booking_services?.[0]?.service_id || booking.service_id
     const hasBookingServices = booking.booking_services && booking.booking_services.length > 0
+    const newTotalDuration = currentTotalDuration + body.additional_duration
+    const newTotalPrice = booking.final_price + finalExtensionPrice
+    const newExtensionCount = currentExtensionCount + 1
+    const estimatedEndTime = new Date(bookingDateTime.getTime() + (newTotalDuration * 60 * 1000))
 
+    // Collect staff profiles for post-payment notifications (used in both paths)
+    let staffProfilesForWebhook: Array<{ profile_id: string; full_name: string }> = []
+    if (booking.jobs && booking.jobs.length > 0) {
+      const staffIds = booking.jobs.map((job: any) => job.staff_id).filter(Boolean)
+      if (staffIds.length > 0) {
+        const { data: staffProfiles } = await supabase
+          .from('staff')
+          .select('profile_id, full_name')
+          .in('id', staffIds)
+        if (staffProfiles) {
+          staffProfilesForWebhook = staffProfiles.filter((s: any) => s.profile_id)
+        }
+      }
+    }
+
+    // 8. Customer-paid extensions: create payment FIRST, apply extension only after webhook confirms
+    // Hotel bookings settle on monthly credit bill — apply immediately without Omise charge.
+    if (finalExtensionPrice > 0 && !booking.is_hotel_booking) {
+      try {
+        const { omiseService } = await import('../services/omiseService.js')
+        const enabledChannels = await getEnabledPaymentChannels()
+
+        const amountSatang = Math.round(finalExtensionPrice * 100)
+        const extDescription = `Extension ${body.additional_duration}min - Booking ${booking.booking_number}`
+        const extMetadata = {
+          booking_id: bookingId,
+          customer_id: booking.customer_id,
+          is_extension: true,
+          extension_duration: body.additional_duration,
+          original_price: finalExtensionPrice
+        }
+        const extReturnUri = `${process.env.CLIENT_URL || 'http://localhost:3008'}/payment-confirmation?booking_id=${bookingId}&transaction_type=extension`
+        const extTransactionMetadata = {
+          is_extension: true,
+          extension_duration: body.additional_duration,
+          extension_price: finalExtensionPrice,
+          discount_amount: discountAmount,
+          promotion_id: body.promotion_id || null,
+          // Fields for booking_services record creation in webhook
+          service_id: serviceId,
+          has_booking_services: hasBookingServices,
+          recipient_index: hasBookingServices ? booking.booking_services[0].recipient_index : 0,
+          recipient_name: hasBookingServices ? booking.booking_services[0].recipient_name : null,
+          sort_order: hasBookingServices ? booking.booking_services.length + 1 : 1,
+          original_booking_service_id: hasBookingServices ? booking.booking_services[0].id : null,
+          // Fields for booking totals update in webhook
+          current_total_duration: currentTotalDuration,
+          current_extension_count: currentExtensionCount,
+          current_total_price: booking.final_price,
+          // Fields for notifications in webhook
+          staff_profiles: staffProfilesForWebhook,
+          customer_profile_id: booking.customers?.profile_id || null,
+          customer_name: booking.customers?.full_name || booking.customers?.phone || '',
+          booking_number: booking.booking_number,
+          booking_date: booking.booking_date,
+          booking_time: booking.booking_time
+        }
+
+        if (body.omise_token || body.payment_method === 'credit_card') {
+          // ── Credit card path: charge synchronously with frontend token ──
+          if (!body.omise_token) {
+            return res.status(400).json({
+              success: false,
+              error: 'missing_token',
+              message: 'กรุณาระบุ token บัตรเครดิต'
+            })
+          }
+
+          const charge = await omiseService.createCharge({
+            amount: amountSatang,
+            currency: 'THB',
+            token: body.omise_token,
+            description: extDescription,
+            metadata: extMetadata,
+            returnUri: extReturnUri
+          })
+
+          const chargeStatus = charge.paid ? 'successful' : 'pending'
+
+          const { data: transaction, error: transactionError } = await supabase
+            .from('transactions')
+            .insert({
+              booking_id: bookingId,
+              customer_id: booking.customer_id,
+              amount: finalExtensionPrice,
+              currency: 'THB',
+              payment_method: 'credit_card',
+              description: `Extension payment for ${body.additional_duration} minutes - Booking ${booking.booking_number}`,
+              status: chargeStatus,
+              omise_charge_id: charge.id,
+              metadata: extTransactionMetadata
+            })
+            .select()
+            .single()
+
+          if (transactionError || !transaction) {
+            console.error('[ExtendBooking] Failed to create credit card transaction:', transactionError)
+            return res.status(500).json({
+              success: false,
+              error: 'database_error',
+              message: 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงิน'
+            })
+          }
+
+          console.log(`[ExtendBooking] Credit card charge for booking ${bookingId}:`, {
+            charge_id: charge.id,
+            paid: charge.paid,
+            status: charge.status
+          })
+
+          // Credit card charges are instantly paid — apply extension immediately
+          if (charge.paid) {
+            try {
+              await applyExtensionAfterPayment(transaction.id)
+            } catch (applyErr) {
+              console.error('[ExtendBooking] Failed to apply extension after credit card payment:', applyErr)
+            }
+          }
+
+          return res.json({
+            success: true,
+            extension: {
+              id: transaction.id,
+              additional_duration: body.additional_duration,
+              extension_price: finalExtensionPrice,
+              discount_amount: discountAmount,
+              final_price: finalExtensionPrice
+            },
+            booking: {
+              new_total_duration: newTotalDuration,
+              new_total_price: newTotalPrice,
+              estimated_end_time: estimatedEndTime.toISOString(),
+              extension_count: newExtensionCount
+            },
+            payment: {
+              requires_payment: !charge.paid,
+              payment_url: charge.paid ? undefined : extReturnUri,
+              payment_reference: charge.id,
+              transaction_id: transaction.id,
+              charge_status: charge.status
+            },
+            notifications: {
+              staff_notified: 0,
+              customer_notified: false
+            }
+          } as ExtendBookingResponse)
+        }
+
+        // ── Internet / Mobile Banking path ───────────────────────────────
+
+        if (body.payment_method === 'internet_banking' || body.payment_method === 'mobile_banking') {
+          if (!body.bank_code) {
+            return res.status(400).json({
+              success: false,
+              error: 'missing_bank_code',
+              message: 'กรุณาระบุธนาคาร'
+            })
+          }
+          if (!enabledChannels.includes(body.payment_method)) {
+            return res.status(400).json({
+              success: false,
+              error: 'payment_channel_disabled',
+              message: 'ช่องทางการชำระเงินนี้ถูกปิดใช้งาน'
+            })
+          }
+
+          const sourceType = `${body.payment_method}_${body.bank_code}`
+          const bankReturnUri = `${process.env.FRONTEND_URL || 'https://the-bliss-at-home-customer.vercel.app'}/bookings/${booking.booking_number}?payment=success&type=extension`
+          const bankSource = await omiseService.createSource(sourceType, amountSatang, 'THB')
+          const bankCharge = await omiseService.createChargeWithSource({
+            amount: amountSatang,
+            currency: 'THB',
+            source: bankSource.id,
+            description: extDescription,
+            metadata: extMetadata,
+            returnUri: bankReturnUri
+          })
+
+          const { data: bankTransaction, error: bankTransactionError } = await supabase
+            .from('transactions')
+            .insert({
+              booking_id: bookingId,
+              customer_id: booking.customer_id,
+              amount: finalExtensionPrice,
+              currency: 'THB',
+              payment_method: body.payment_method,
+              description: `Extension payment for ${body.additional_duration} minutes - Booking ${booking.booking_number}`,
+              status: 'pending',
+              omise_charge_id: bankCharge.id,
+              metadata: extTransactionMetadata
+            })
+            .select()
+            .single()
+
+          if (bankTransactionError || !bankTransaction) {
+            console.error('[ExtendBooking] Failed to create banking transaction:', bankTransactionError)
+            return res.status(500).json({
+              success: false,
+              error: 'database_error',
+              message: 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงิน'
+            })
+          }
+
+          return res.json({
+            success: true,
+            extension: {
+              id: bankTransaction.id,
+              additional_duration: body.additional_duration,
+              extension_price: finalExtensionPrice,
+              discount_amount: discountAmount,
+              final_price: finalExtensionPrice
+            },
+            booking: {
+              new_total_duration: newTotalDuration,
+              new_total_price: newTotalPrice,
+              estimated_end_time: estimatedEndTime.toISOString(),
+              extension_count: newExtensionCount
+            },
+            payment: {
+              requires_payment: true,
+              authorize_uri: bankSource.authorize_uri,
+              payment_reference: bankCharge.id,
+              transaction_id: bankTransaction.id
+            },
+            notifications: {
+              staff_notified: 0,
+              customer_notified: false
+            }
+          } as ExtendBookingResponse)
+        }
+
+        // ── PromptPay path ────────────────────────────────────────────────
+
+        if (!enabledChannels.includes('promptpay')) {
+          return res.status(400).json({
+            success: false,
+            error: 'payment_channel_disabled',
+            message: 'ขณะนี้ไม่มีช่องทางการชำระเงินสำหรับการต่อเวลา กรุณาติดต่อแอดมิน'
+          })
+        }
+
+        const source = await omiseService.createSource('promptpay', amountSatang, 'THB')
+        const charge = await omiseService.createChargeWithSource({
+          amount: amountSatang,
+          currency: 'THB',
+          source: source.id,
+          description: extDescription,
+          metadata: extMetadata,
+          returnUri: extReturnUri
+        })
+        const updatedSource = await omiseService.getSource(source.id)
+        const paymentUrl = updatedSource.scannable_code?.image?.download_uri || extReturnUri
+
+        // Store all extension data in transaction metadata so webhook can apply the extension
+        const { data: transaction, error: transactionError } = await supabase
+          .from('transactions')
+          .insert({
+            booking_id: bookingId,
+            customer_id: booking.customer_id,
+            amount: finalExtensionPrice,
+            currency: 'THB',
+            payment_method: 'promptpay',
+            description: `Extension payment for ${body.additional_duration} minutes - Booking ${booking.booking_number}`,
+            status: 'pending',
+            omise_charge_id: charge.id,
+            metadata: extTransactionMetadata
+          })
+          .select()
+          .single()
+
+        if (transactionError || !transaction) {
+          console.error('[ExtendBooking] Failed to create transaction:', transactionError)
+          return res.status(500).json({
+            success: false,
+            error: 'database_error',
+            message: 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงิน'
+          })
+        }
+
+        console.log(`[ExtendBooking] Payment pending for booking ${bookingId}:`, {
+          charge_id: charge.id,
+          transaction_id: transaction.id,
+          amount: finalExtensionPrice
+        })
+
+        return res.json({
+          success: true,
+          extension: {
+            id: transaction.id,
+            additional_duration: body.additional_duration,
+            extension_price: finalExtensionPrice,
+            discount_amount: discountAmount,
+            final_price: finalExtensionPrice
+          },
+          booking: {
+            new_total_duration: newTotalDuration,
+            new_total_price: newTotalPrice,
+            estimated_end_time: estimatedEndTime.toISOString(),
+            extension_count: newExtensionCount
+          },
+          payment: {
+            requires_payment: true,
+            payment_url: paymentUrl,
+            payment_reference: charge.id,
+            transaction_id: transaction.id,
+            charge_status: charge.status
+          },
+          notifications: {
+            staff_notified: 0,
+            customer_notified: false
+          }
+        } as ExtendBookingResponse)
+
+      } catch (paymentError) {
+        console.error('❌ Extension payment creation failed:', paymentError)
+        return res.status(500).json({
+          success: false,
+          error: 'payment_creation_failed',
+          message: 'ไม่สามารถสร้างการชำระเงินได้ กรุณาลองใหม่อีกครั้ง',
+          details: paymentError instanceof Error ? paymentError.message : 'Unknown error'
+        })
+      }
+    }
+
+    // Hotel bookings or free extensions (finalExtensionPrice === 0): apply immediately, no payment needed
     const { data: extensionService, error: extensionError } = await supabase
       .from('booking_services')
       .insert({
@@ -1386,12 +1728,6 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       })
     }
 
-    // 8. Update booking totals
-    const newTotalDuration = currentTotalDuration + body.additional_duration
-    const newTotalPrice = booking.final_price + finalExtensionPrice
-    const newExtensionCount = currentExtensionCount + 1
-    const estimatedEndTime = new Date(bookingDateTime.getTime() + (newTotalDuration * 60 * 1000))
-
     const { error: updateError } = await supabase
       .from('bookings')
       .update({
@@ -1411,7 +1747,6 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       })
     }
 
-    // 9. Update promotion usage if promotion was applied
     if (body.promotion_id && discountAmount > 0) {
       await supabase
         .from('booking_promotions')
@@ -1425,47 +1760,28 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
         })
     }
 
-    // 10. Send notifications to staff
     let staffNotifiedCount = 0
-    if (booking.jobs && booking.jobs.length > 0) {
-      const staffIds = booking.jobs.map((job: any) => job.staff_id).filter(Boolean)
-
-      if (staffIds.length > 0) {
-        // Get staff profile IDs for notifications
-        const { data: staffProfiles } = await supabase
-          .from('staff')
-          .select('profile_id, full_name')
-          .in('id', staffIds)
-
-        if (staffProfiles && staffProfiles.length > 0) {
-          // Create in-app notifications
-          const staffNotifications = staffProfiles.map(staff => ({
-            user_id: staff.profile_id,
-            type: 'booking_extended',
-            title: 'การจองขยายเวลา',
-            message: `ลูกค้า ${booking.customers.full_name || booking.customers.phone} ขยายเวลาบริการเพิ่ม ${body.additional_duration} นาที เวลาสิ้นสุดใหม่: ${estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
-            data: {
-              booking_id: bookingId,
-              additional_duration: body.additional_duration,
-              new_end_time: estimatedEndTime.toISOString(),
-              extension_count: newExtensionCount
-            },
-            is_read: false
-          }))
-
-          const { error: notifError } = await supabase
-            .from('notifications')
-            .insert(staffNotifications)
-
-          if (!notifError) {
-            staffNotifiedCount = staffNotifications.length
-            console.log(`[ExtendBooking] Notifications sent to ${staffNotifiedCount} staff members`)
-          }
-        }
+    if (staffProfilesForWebhook.length > 0) {
+      const staffNotifications = staffProfilesForWebhook.map(staff => ({
+        user_id: staff.profile_id,
+        type: 'booking_extended',
+        title: 'การจองขยายเวลา',
+        message: `ลูกค้า ${booking.customers?.full_name || booking.customers?.phone} ขยายเวลาบริการเพิ่ม ${body.additional_duration} นาที เวลาสิ้นสุดใหม่: ${estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
+        data: {
+          booking_id: bookingId,
+          additional_duration: body.additional_duration,
+          new_end_time: estimatedEndTime.toISOString(),
+          extension_count: newExtensionCount
+        },
+        is_read: false
+      }))
+      const { error: notifError } = await supabase.from('notifications').insert(staffNotifications)
+      if (!notifError) {
+        staffNotifiedCount = staffNotifications.length
+        console.log(`[ExtendBooking] Notifications sent to ${staffNotifiedCount} staff members`)
       }
     }
 
-    // 11. Send notification to customer
     let customerNotified = false
     if (booking.customers?.profile_id) {
       const { error: customerNotifError } = await supabase
@@ -1483,133 +1799,68 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
           },
           is_read: false
         })
-
       customerNotified = !customerNotifError
     }
 
-    // 12. Prepare payment response (if needed)
-    // Hotel bookings are settled on the monthly credit bill, not per-extension via Omise
-    // (mirrors the original hotel booking, which has payment_status 'pending' and no charge).
-    // Only customer-paid bookings create an Omise charge for the extension.
-    let paymentInfo = undefined
-    if (finalExtensionPrice > 0 && !booking.is_hotel_booking) {
-      try {
-        // Import Omise service
-        const { omiseService } = await import('../services/omiseService.js')
-
-        // [R1] Honour the admin payment-channel allowlist for the per-extension charge too —
-        // a customer must not be able to pay for an extension through a disabled channel.
-        const enabledChannels = await getEnabledPaymentChannels()
-        const amountSatang = Math.round(finalExtensionPrice * 100) // Convert to satangs
-        const extDescription = `Extension ${body.additional_duration}min - Booking ${booking.booking_number}`
-        const extMetadata = {
-          booking_id: bookingId,
-          customer_id: booking.customer_id,
-          is_extension: true,
-          extension_duration: body.additional_duration,
-          original_price: finalExtensionPrice
-        }
-        const extReturnUri = `${process.env.CLIENT_URL || 'http://localhost:3008'}/payment-confirmation?booking_id=${bookingId}&transaction_type=extension`
-
-        let charge: any
-        let extensionPaymentMethod: string
-        let paymentUrl: string
-
-        if (enabledChannels.includes('credit_card')) {
-          // Card path (kept; gated). Auto-capture as before.
-          extensionPaymentMethod = (body as any).paymentMethod || 'credit_card'
-          charge = await omiseService.createCharge({
-            amount: amountSatang,
-            currency: 'THB',
-            description: extDescription,
-            metadata: extMetadata,
-            capture: true,
-            returnUri: extReturnUri
-          })
-          paymentUrl = `https://dashboard.omise.co/charges/${charge.id}`
-        } else if (enabledChannels.includes('promptpay')) {
-          // PromptPay path: create a source charge and return its QR for the customer to scan.
-          extensionPaymentMethod = 'promptpay'
-          const source = await omiseService.createSource('promptpay', amountSatang, 'THB')
-          charge = await omiseService.createChargeWithSource({
-            amount: amountSatang,
-            currency: 'THB',
-            source: source.id,
-            description: extDescription,
-            metadata: extMetadata,
-            returnUri: extReturnUri
-          })
-          const updatedSource = await omiseService.getSource(source.id)
-          paymentUrl = updatedSource.scannable_code?.image?.download_uri || extReturnUri
-        } else {
-          // No instant-pay channel enabled → fail loudly rather than silently use card.
-          return res.status(400).json({
-            success: false,
-            error: 'payment_channel_disabled',
-            message: 'ขณะนี้ไม่มีช่องทางการชำระเงินสำหรับการต่อเวลา กรุณาติดต่อแอดมิน'
-          })
-        }
-
-        // Create transaction record for extension payment
-        const { data: transaction, error: transactionError } = await supabase
-          .from('transactions')
-          .insert({
-            booking_id: bookingId,
-            customer_id: booking.customer_id,
-            amount: finalExtensionPrice,
-            currency: 'THB',
-            payment_method: extensionPaymentMethod,
-            description: `Extension payment for ${body.additional_duration} minutes - Booking ${booking.booking_number}`,
-            status: charge.paid ? 'successful' : 'pending',
-            omise_charge_id: charge.id,
-            metadata: {
-              is_extension: true,
-              extension_duration: body.additional_duration,
-              extension_service_id: extensionService.id
-            }
-          })
-          .select()
+    // Recalculate total_staff_earnings from scratch using ALL extensions
+    // (not additive — avoids compounding errors from stale DB values)
+    try {
+      const [{ data: bookingJobs }, { data: allExtensions }, { data: svc }] = await Promise.all([
+        supabase
+          .from('jobs')
+          .select('id, staff_earnings, duration_minutes')
+          .eq('booking_id', bookingId)
+          .not('status', 'eq', 'cancelled'),
+        supabase
+          .from('booking_services')
+          .select('duration, price')
+          .eq('booking_id', bookingId)
+          .eq('is_extension', true),
+        supabase
+          .from('services')
+          .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
+          .eq('id', serviceId)
           .single()
+      ])
 
-        if (transactionError) {
-          console.error('[ExtendBooking] Failed to create extension transaction:', transactionError)
-          throw new Error('Failed to create payment transaction')
+      if (bookingJobs && bookingJobs.length > 0 && svc) {
+        let totalExtEarnings = 0
+        let totalExtDuration = 0
+
+        for (const ext of (allExtensions || [])) {
+          const dur = ext.duration || 0
+          totalExtDuration += dur
+          if (svc.use_fixed_rate) {
+            const fixed = dur === 60 ? svc.staff_earning_60
+              : dur === 120 ? svc.staff_earning_120
+              : svc.staff_earning_90
+            totalExtEarnings += Math.round(Number(fixed) || 0)
+          } else {
+            totalExtEarnings += Math.round((ext.price || 0) * (Number(svc.staff_commission_rate) || 0))
+          }
         }
 
-        paymentInfo = {
-          requires_payment: true,
-          payment_url: paymentUrl,
-          payment_reference: charge.id,
-          transaction_id: transaction.id,
-          charge_status: charge.status
+        for (const job of bookingJobs) {
+          const originalEarnings = Number(job.staff_earnings ?? 0)
+          const originalDuration = Number(job.duration_minutes ?? 0)
+          await supabase
+            .from('jobs')
+            .update({
+              total_staff_earnings: originalEarnings + totalExtEarnings,
+              total_duration_minutes: originalDuration + totalExtDuration,
+            })
+            .eq('id', job.id)
         }
-
-        console.log('💳 Extension payment created:', {
-          charge_id: charge.id,
-          transaction_id: transaction.id,
-          amount: finalExtensionPrice,
-          status: charge.status
-        })
-
-      } catch (paymentError) {
-        console.error('❌ Extension payment creation failed:', paymentError)
-
-        // Return error response for payment failure
-        return res.status(500).json({
-          success: false,
-          error: 'payment_creation_failed',
-          message: 'ไม่สามารถสร้างการชำระเงินได้ กรุณาลองใหม่อีกครั้ง',
-          details: paymentError instanceof Error ? paymentError.message : 'Unknown error'
-        })
+        console.log(`[ExtendBooking] Jobs recalculated from scratch: ฿${(bookingJobs[0]?.staff_earnings||0)+totalExtEarnings} total, +${totalExtDuration}min total ext`)
       }
+    } catch (jobErr) {
+      console.error('[ExtendBooking] Failed to update job earnings (non-blocking):', jobErr)
     }
 
-    console.log(`[ExtendBooking] Successfully extended booking ${bookingId}:`, {
+    console.log(`[ExtendBooking] Extension applied immediately for booking ${bookingId}:`, {
       additional_duration: body.additional_duration,
       extension_price: finalExtensionPrice,
-      new_total_duration: newTotalDuration,
-      new_total_price: newTotalPrice,
-      staff_notified: staffNotifiedCount
+      new_total_duration: newTotalDuration
     })
 
     return res.json({
@@ -1627,7 +1878,7 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
         estimated_end_time: estimatedEndTime.toISOString(),
         extension_count: newExtensionCount
       },
-      payment: paymentInfo,
+      payment: undefined,
       notifications: {
         staff_notified: staffNotifiedCount,
         customer_notified: customerNotified

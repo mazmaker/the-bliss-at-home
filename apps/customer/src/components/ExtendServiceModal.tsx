@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, Clock, CreditCard, AlertTriangle, CheckCircle, User, Calendar, Sparkles, Tag } from 'lucide-react'
 import { useExtendBooking } from '../hooks/useExtendBooking'
 import { BookingWithExtensions, ExtensionOption } from '../types/extendService'
@@ -21,25 +22,16 @@ export function ExtendServiceModal({
   onConfirm,
   onCancel
 }: ExtendServiceModalProps) {
+  const navigate = useNavigate()
   const [selectedDuration, setSelectedDuration] = useState<number>()
   const [notes, setNotes] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [appliedPromo, setAppliedPromo] = useState<PromoValidationResult | null>(null)
-  // [R1] Reflect the admin payment-channel allowlist in the extension payment display.
-  const [cardEnabled, setCardEnabled] = useState(false)
-  useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
-    fetch(`${apiBase}/api/payments/enabled-channels`)
-      .then(r => r.json())
-      .then(d => { if (d?.success && Array.isArray(d.channels)) setCardEnabled(d.channels.includes('credit_card')) })
-      .catch(() => {})
-  }, [])
 
   const {
     loading,
     error,
     extensionOptions,
-    extendBooking,
     loadExtensionOptions,
     clearError
   } = useExtendBooking()
@@ -82,57 +74,48 @@ export function ExtendServiceModal({
     }
   }, [extensionOptions, selectedDuration, appliedPromo])
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!selectedDuration) {
       alert('กรุณาเลือกเวลาที่ต้องการเพิ่ม')
       return
     }
 
-    if (!acceptTerms) {
+    const finalPrice = selectedOption ? (selectedOption.discountedPrice ?? selectedOption.price) : 0
+
+    if (finalPrice > 0 && !acceptTerms) {
       alert('กรุณายอมรับเงื่อนไขการชำระเงินเพิ่มเติม')
       return
     }
 
-    try {
-      const result = await extendBooking({
-        bookingId: booking.id,
-        additionalDuration: selectedDuration,
-        notes: notes.trim() || undefined,
-        requestedBy: 'customer',
-        paymentMethod: booking.payment_method,
-        promotionId: appliedPromo?.valid ? appliedPromo.promotion?.id : undefined,
-        discountAmount: appliedPromo?.valid ? appliedPromo.discountAmount : 0
+    if (finalPrice === 0) {
+      // Free extension: navigate to extension-payment with zero amount so it handles immediately
+      const params = new URLSearchParams({
+        booking_id: booking.id,
+        booking_number: booking.booking_number || '',
+        duration: String(selectedDuration),
+        amount: '0',
       })
-
-      if (result) {
-        // Handle payment if required
-        if (result.paymentStatus.requiresPayment) {
-          if (result.paymentStatus.paymentUrl) {
-            // Show success message before payment redirect
-            const paymentMsg = `✅ การขยายเวลาสำเร็จ!\n\n• เพิ่มเวลา: ${selectedDuration} นาที\n• ราคา: ${result.pricing.extensionPrice} บาท\n• อ้างอิง: ${result.paymentStatus.paymentReference}\n\nกำลังพาคุณไปหน้าชำระเงิน...`
-            alert(paymentMsg)
-
-            console.log('💳 Redirecting to payment:', result.paymentStatus.paymentUrl)
-
-            // เพิ่ม delay เล็กน้อยเพื่อให้ผู้ใช้เห็นข้อความ
-            setTimeout(() => {
-              window.location.href = result.paymentStatus.paymentUrl
-            }, 2000)
-          } else {
-            console.error('❌ Payment required but no payment URL provided')
-            alert(`✅ การขยายเวลาสำเร็จ!\n\nเพิ่มเวลา ${selectedDuration} นาที (${result.pricing.extensionPrice} บาท)\nแต่ยังต้องชำระเงิน กรุณารอการแจ้งเตือนสำหรับลิงค์การชำระเงิน`)
-            onConfirm()
-          }
-        } else {
-          console.log('✅ Extension completed without payment required')
-          alert(`🎉 การขยายเวลาสำเร็จ!\n\nเพิ่มเวลา ${selectedDuration} นาที\nไม่มีค่าใช้จ่ายเพิ่มเติม`)
-          onConfirm()
-        }
-      }
-    } catch (error) {
-      // Error is already handled in the hook
-      console.error('Extension failed:', error)
+      if (notes.trim()) params.set('notes', notes.trim())
+      navigate(`/extension-payment?${params.toString()}`)
+      onConfirm()
+      return
     }
+
+    // Paid extension: navigate to payment page for method selection
+    const params = new URLSearchParams({
+      booking_id: booking.id,
+      booking_number: booking.booking_number || '',
+      duration: String(selectedDuration),
+      amount: String(finalPrice),
+    })
+    if (appliedPromo?.valid && appliedPromo.promotion?.id) {
+      params.set('promotion_id', appliedPromo.promotion.id)
+    }
+    if (appliedPromo?.valid && appliedPromo.discountAmount && appliedPromo.discountAmount > 0) {
+      params.set('discount_amount', String(appliedPromo.discountAmount))
+    }
+    if (notes.trim()) params.set('notes', notes.trim())
+    navigate(`/extension-payment?${params.toString()}`)
   }
 
   const handleCancel = () => {
@@ -325,16 +308,15 @@ export function ExtendServiceModal({
                 <div className="text-sm text-blue-700 space-y-1">
                   {selectedOption.discount > 0 && (
                     <>
-                      <div className="line-through text-blue-500">💳 ราคาเต็ม: ฿{selectedOption.price.toLocaleString()}</div>
-                      <div className="text-green-600 font-medium">🎟️ ส่วนลด: -฿{selectedOption.discount.toLocaleString()}</div>
-                      <div className="font-bold">💰 จำนวนเงิน: ฿{(selectedOption.discountedPrice || 0).toLocaleString()}</div>
+                      <div className="line-through text-blue-500">ราคาเต็ม: ฿{selectedOption.price.toLocaleString()}</div>
+                      <div className="text-green-600 font-medium">ส่วนลด: -฿{selectedOption.discount.toLocaleString()}</div>
+                      <div className="font-bold">จำนวนเงิน: ฿{(selectedOption.discountedPrice || 0).toLocaleString()}</div>
                     </>
                   )}
                   {(!selectedOption.discount || selectedOption.discount === 0) && (
-                    <div>💳 จำนวนเงิน: ฿{selectedOption.price.toLocaleString()}</div>
+                    <div>จำนวนเงิน: ฿{selectedOption.price.toLocaleString()}</div>
                   )}
-                  <div>📱 วิธีชำระ: {cardEnabled ? (booking.payment_method === 'credit_card' ? 'บัตรเครดิต' : booking.payment_method === 'bank_transfer' ? 'โอนเงิน' : 'เงินสด') : 'PromptPay (QR)'}</div>
-                  <div>⚡ ชำระทันทีหลังยืนยัน</div>
+                  <div>ชำระทันทีหลังยืนยัน</div>
                 </div>
               </div>
 
@@ -358,14 +340,14 @@ export function ExtendServiceModal({
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
               <h5 className="font-medium text-green-800 mb-2">สรุปการเพิ่มเวลา:</h5>
               <div className="text-sm text-green-700 space-y-1">
-                <div>⏱️ เวลาเดิม: {currentTotals.duration} นาที → เวลาใหม่: {selectedOption.totalNewDuration} นาที</div>
-                <div>💰 ราคาเดิม: ฿{currentTotals.price.toLocaleString()} → ราคาใหม่: ฿{(selectedOption.discountedTotalPrice || selectedOption.totalNewPrice).toLocaleString()}</div>
-                <div>➕ ค่าเพิ่มเติม: ฿{(selectedOption.discountedPrice || selectedOption.price).toLocaleString()}</div>
+                <div>เวลาเดิม: {currentTotals.duration} นาที → เวลาใหม่: {selectedOption.totalNewDuration} นาที</div>
+                <div>ราคาเดิม: ฿{currentTotals.price.toLocaleString()} → ราคาใหม่: ฿{(selectedOption.discountedTotalPrice || selectedOption.totalNewPrice).toLocaleString()}</div>
+                <div>ค่าเพิ่มเติม: ฿{(selectedOption.discountedPrice || selectedOption.price).toLocaleString()}</div>
                 {selectedOption.discount > 0 && (
-                  <div className="text-green-600 font-medium">🎟️ ประหยัด: ฿{selectedOption.discount.toLocaleString()}</div>
+                  <div className="text-green-600 font-medium">ประหยัด: ฿{selectedOption.discount.toLocaleString()}</div>
                 )}
                 {(selectedOption.discountedPrice || selectedOption.price) === 0 && (
-                  <div className="text-green-600 font-medium">🎉 ไม่มีค่าใช้จ่ายเพิ่มเติม</div>
+                  <div className="text-green-600 font-medium">ไม่มีค่าใช้จ่ายเพิ่มเติม</div>
                 )}
               </div>
             </div>
@@ -384,19 +366,20 @@ export function ExtendServiceModal({
             onClick={handleConfirm}
             disabled={
               !selectedDuration ||
-              loading ||
               extensionOptions.length === 0 ||
-              (selectedOption && (selectedOption.discountedPrice || selectedOption.price) > 0 && !acceptTerms)
+              (selectedOption && (selectedOption.discountedPrice ?? selectedOption.price) > 0 && !acceptTerms)
             }
             className={`
               flex-1 px-4 py-3 rounded-xl font-medium transition-colors
-              ${(!selectedDuration || loading || extensionOptions.length === 0 || (selectedOption && (selectedOption.discountedPrice || selectedOption.price) > 0 && !acceptTerms))
+              ${(!selectedDuration || extensionOptions.length === 0 || (selectedOption && (selectedOption.discountedPrice ?? selectedOption.price) > 0 && !acceptTerms))
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/20'
               }
             `}
           >
-            {loading ? 'กำลังดำเนินการ...' : selectedOption && (selectedOption.discountedPrice || selectedOption.price) > 0 ? `ยืนยันและชำระ ฿${(selectedOption.discountedPrice || selectedOption.price).toLocaleString()}` : 'ยืนยันเพิ่มเวลา'}
+            {selectedOption && (selectedOption.discountedPrice ?? selectedOption.price) > 0
+              ? `ยืนยัน — เลือกวิธีชำระเงิน ฿${(selectedOption.discountedPrice ?? selectedOption.price).toLocaleString()}`
+              : 'ยืนยันเพิ่มเวลา'}
           </button>
         </div>
       </div>

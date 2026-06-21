@@ -811,17 +811,17 @@ function StaffSchedule() {
               {/* Earnings */}
               <div className="bg-green-50 rounded-xl px-3 py-2">
                 {selectedJob.total_staff_earnings && selectedJob.total_staff_earnings !== selectedJob.staff_earnings ? (
-                  // Show extension earnings breakdown
+                  // Has extensions — show total from DB (correctly recalculated by server)
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="text-green-700 text-sm">รายได้รวม</span>
                       <span className="text-xl font-bold text-green-700">
-                        ฿{selectedJob.total_staff_earnings}
+                        ฿{selectedJob.total_staff_earnings.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">รายได้เดิม: ฿{selectedJob.staff_earnings}</span>
-                      <span className="text-amber-600">+เพิ่มเวลาบริการ: ฿{selectedJob.total_staff_earnings - selectedJob.staff_earnings}</span>
+                      <span className="text-green-600">รายได้เดิม: ฿{selectedJob.staff_earnings?.toLocaleString()}</span>
+                      <span className="text-amber-600">รวมค่าเพิ่มเวลาบริการแล้ว</span>
                     </div>
                   </div>
                 ) : (
@@ -829,7 +829,7 @@ function StaffSchedule() {
                   <div className="flex items-center justify-between">
                     <span className="text-green-700 text-sm">รายได้</span>
                     <span className="text-xl font-bold text-green-700">
-                      ฿{selectedJob.staff_earnings}
+                      ฿{selectedJob.staff_earnings?.toLocaleString()}
                     </span>
                   </div>
                 )}

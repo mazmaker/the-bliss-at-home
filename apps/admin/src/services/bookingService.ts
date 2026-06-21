@@ -147,6 +147,7 @@ export interface Booking {
     service_name: string
     staff_name?: string
     staff_earnings?: number
+    total_staff_earnings?: number
   }>
 }
 
@@ -165,7 +166,7 @@ class BookingService {
     try {
       const { data, error } = await supabase
         .from('jobs')
-        .select('id, booking_id, staff_id, job_index, total_jobs, status, service_name, staff_earnings')
+        .select('id, booking_id, staff_id, job_index, total_jobs, status, service_name, staff_earnings, total_staff_earnings')
         .in('booking_id', bookingIds)
         .order('job_index', { ascending: true })
 

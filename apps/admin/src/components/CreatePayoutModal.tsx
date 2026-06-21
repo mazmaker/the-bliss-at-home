@@ -11,6 +11,7 @@ interface UnpaidJob {
   service_name: string
   scheduled_date: string
   staff_earnings: number
+  total_staff_earnings?: number
   status: string
   booking_id: string
 }
@@ -68,7 +69,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       // Get completed jobs for this staff
       const { data: jobs, error: jobsError } = await supabase
         .from('jobs')
-        .select('id, service_name, scheduled_date, staff_earnings, status, booking_id')
+        .select('id, service_name, scheduled_date, staff_earnings, total_staff_earnings, status, booking_id')
         .eq('staff_id', staffData.profile_id)
         .eq('status', 'completed')
         .order('scheduled_date', { ascending: false })
@@ -104,7 +105,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       if (updateError) throw updateError
 
       // Calculate totals
-      const grossEarnings = unpaidJobs.reduce((sum, j) => sum + (j.staff_earnings || 0), 0)
+      const grossEarnings = unpaidJobs.reduce((sum, j) => sum + (j.total_staff_earnings ?? j.staff_earnings ?? 0), 0)
       const totalJobs = unpaidJobs.length
 
       // Determine period from job dates
@@ -367,7 +368,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                           </td>
                           <td className="py-2 px-3 text-stone-900">{job.service_name}</td>
                           <td className="py-2 px-3 text-right font-medium text-green-700">
-                            ฿{Number(job.staff_earnings || 0).toLocaleString()}
+                            ฿{Number(job.total_staff_earnings ?? job.staff_earnings ?? 0).toLocaleString()}
                           </td>
                         </tr>
                       ))}
