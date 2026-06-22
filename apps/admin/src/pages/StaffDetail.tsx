@@ -1003,7 +1003,10 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                       <p className="text-sm text-stone-600 max-w-xs truncate">{job.address}</p>
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-amber-700">
-                      ฿{job.amount.toLocaleString()}
+                      ฿{(job.amount + (job.total_extensions_price || 0)).toLocaleString()}
+                      {job.total_extensions_price ? (
+                        <span className="text-xs text-stone-400 ml-1">(+{job.total_extensions_price.toLocaleString()})</span>
+                      ) : null}
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-purple-700">
                       ฿{Number(job.total_staff_earnings ?? job.staff_earnings).toLocaleString()}
@@ -1014,12 +1017,15 @@ function ScheduleTab({ staff }: { staff: Staff }) {
               </tbody>
               <tfoot>
                 <tr className="bg-stone-50 border-t-2 border-stone-300">
-                  <td colSpan={5} className="py-3 px-4 text-sm font-bold text-stone-900 text-right">รวม</td>
+                  <td colSpan={5} className="py-3 px-4 text-right">
+                    <span className="text-sm font-bold text-stone-900">รวม</span>
+                    <span className="text-xs text-stone-400 ml-2">(เฉพาะเสร็จสิ้น)</span>
+                  </td>
                   <td className="py-3 px-4 text-sm font-bold text-amber-700">
-                    ฿{jobs.reduce((sum, j) => sum + Number(j.amount), 0).toLocaleString()}
+                    ฿{jobs.filter(j => j.status === 'completed').reduce((sum, j) => sum + Number(j.amount) + Number(j.total_extensions_price || 0), 0).toLocaleString()}
                   </td>
                   <td className="py-3 px-4 text-sm font-bold text-purple-700">
-                    ฿{jobs.reduce((sum, j) => sum + Number(j.total_staff_earnings ?? j.staff_earnings), 0).toLocaleString()}
+                    ฿{jobs.filter(j => j.status === 'completed').reduce((sum, j) => sum + Number(j.total_staff_earnings ?? j.staff_earnings), 0).toLocaleString()}
                   </td>
                   <td></td>
                 </tr>

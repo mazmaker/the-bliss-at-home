@@ -12,6 +12,7 @@ export interface Job {
   scheduled_time: string
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
   amount: number
+  total_extensions_price?: number | null
   staff_earnings: number
   total_staff_earnings?: number
   total_duration_minutes?: number
@@ -50,10 +51,10 @@ export function useStaffJobs(staffId: string, filters?: {
       if (staffError) throw staffError
       if (!staffData?.profile_id) return []
 
-      // Build query
+      // Build query — join bookings to get extension price
       let query = supabase
         .from('jobs')
-        .select('*')
+        .select('*, bookings(total_extensions_price)')
         .eq('staff_id', staffData.profile_id)
         .order('scheduled_date', { ascending: true })
 
@@ -78,15 +79,22 @@ export function useStaffJobs(staffId: string, filters?: {
       // Batch-fetch provider_preference from bookings
       const bookingIds = [...new Set(jobs.map((j: any) => j.booking_id).filter(Boolean))]
       if (bookingIds.length > 0) {
-        const { data: bookings } = await supabase
+        const { data: bookingsData } = await supabase
           .from('bookings')
           .select('id, provider_preference')
           .in('id', bookingIds)
-        const prefMap = new Map((bookings || []).map(b => [b.id, b.provider_preference]))
-        return jobs.map((j: any) => ({ ...j, provider_preference: prefMap.get(j.booking_id) || null }))
+        const prefMap = new Map((bookingsData || []).map(b => [b.id, b.provider_preference]))
+        return jobs.map((j: any) => ({
+          ...j,
+          provider_preference: prefMap.get(j.booking_id) || null,
+          total_extensions_price: j.bookings?.total_extensions_price ?? null,
+        }))
       }
 
-      return jobs
+      return jobs.map((j: any) => ({
+        ...j,
+        total_extensions_price: j.bookings?.total_extensions_price ?? null,
+      }))
     },
     enabled: !!staffId,
     staleTime: 1000 * 60, // 1 minute
