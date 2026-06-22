@@ -399,6 +399,7 @@ export function StaffLoginPage() {
     return (
       <AuthLayout
         appTitle={config.name}
+        appLogo="/logo.jpg"
         backgroundVariant="gradient"
         showBackLink={false}
       >
@@ -413,6 +414,7 @@ export function StaffLoginPage() {
   return (
     <AuthLayout
       appTitle={config.name}
+      appLogo="/logo.jpg"
       backgroundVariant="gradient"
       showBackLink={false}
     >

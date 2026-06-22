@@ -123,7 +123,7 @@ export function ResetPasswordPage() {
   return (
     <AuthLayout
       appTitle={config.name}
-      appLogo="/logo.svg"
+      appLogo="/logo.jpg"
       backgroundVariant="default"
       showBackLink={false}
     >

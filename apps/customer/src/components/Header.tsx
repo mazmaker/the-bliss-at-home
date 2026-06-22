@@ -94,7 +94,7 @@ function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="https://rbdvlfriqjnwpxmmgisf.supabase.co/storage/v1/object/public/public-assets/logos/the-bliss-logo.png"
+              src="/logo.jpg"
               alt="The Bliss Massage at Home"
               className="w-12 h-12 object-contain"
             />
