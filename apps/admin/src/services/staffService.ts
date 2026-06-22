@@ -238,10 +238,31 @@ export const staffService = {
     const { data, error } = await query
 
     if (error) throw error
+
+    const staffList = (data || []) as any[]
+
+    // Fetch real earnings from jobs (including extension via total_staff_earnings)
+    const profileIds = staffList.map(s => s.profile_id).filter(Boolean)
+    let earningsMap = new Map<string, number>()
+    if (profileIds.length > 0) {
+      const { data: jobsData } = await supabase
+        .from('jobs')
+        .select('staff_id, staff_earnings, total_staff_earnings')
+        .in('staff_id', profileIds)
+        .eq('status', 'completed')
+      if (jobsData) {
+        for (const j of jobsData) {
+          const prev = earningsMap.get(j.staff_id) || 0
+          earningsMap.set(j.staff_id, prev + (parseFloat(j.total_staff_earnings ?? j.staff_earnings) || 0))
+        }
+      }
+    }
+
     // [R2] avatar single source = profiles.avatar_url (→ line_picture_url → legacy staff.avatar_url)
-    return (data || []).map((s: any) => ({
+    return staffList.map((s: any) => ({
       ...s,
       avatar_url: s.profile?.avatar_url || s.profile?.line_picture_url || s.avatar_url || null,
+      total_earnings: earningsMap.has(s.profile_id) ? earningsMap.get(s.profile_id)! : (s.total_earnings || 0),
     })) as Staff[]
   },
 
