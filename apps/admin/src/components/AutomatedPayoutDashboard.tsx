@@ -83,29 +83,32 @@ export function AutomatedPayoutDashboard() {
 
     const { data: recentPayouts, error: payoutsError } = await supabase
       .from('payouts')
-      .select(`
-        id,
-        staff_id,
-        gross_earnings,
-        created_at,
-        status,
-        total_jobs,
-        staff:staff!payouts_staff_id_fkey(name_th)
-      `)
+      .select('id, staff_id, gross_earnings, created_at, status, total_jobs')
       .eq('is_automated', true)
       .gte('created_at', weekAgo.toISOString())
       .order('created_at', { ascending: false })
 
     if (payoutsError) throw payoutsError
 
-    const recentAutomated = recentPayouts?.map(payout => ({
+    // Fetch staff names separately (avoid FK hint that causes 400)
+    const staffIds = [...new Set((recentPayouts || []).map(p => p.staff_id))]
+    let staffNameMap = new Map<string, string>()
+    if (staffIds.length > 0) {
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('id, name_th')
+        .in('id', staffIds)
+      staffData?.forEach(s => staffNameMap.set(s.id, s.name_th))
+    }
+
+    const recentAutomated = (recentPayouts || []).map(payout => ({
       id: payout.id,
-      staff_name: (payout.staff as any)?.name_th || 'Unknown',
+      staff_name: staffNameMap.get(payout.staff_id) || 'Unknown',
       amount: payout.gross_earnings || 0,
       created_at: payout.created_at,
       status: payout.status,
       jobs_count: payout.total_jobs || 0
-    })) || []
+    }))
 
     // Get today's stats
     const { data: todayStats, error: statsError } = await supabase
