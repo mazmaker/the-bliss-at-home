@@ -62,19 +62,30 @@ function calculatePayoutPeriod(staff: StaffPayoutInfo, currentDate: Date = new D
       }
     }
 
-    case 'bi_weekly': {
-      // 15 days from payout_start_date
-      const startDate = staff.payout_start_date ? new Date(staff.payout_start_date) : new Date(currentDate)
-      const endDate = new Date(startDate)
-      endDate.setDate(startDate.getDate() + 14)
+    case 'bi_monthly': {
+      // Twice a month: pay on 1st and 16th of each month
+      const day = currentDate.getDate()
+      const month = currentDate.getMonth()
+      const year = currentDate.getFullYear()
 
-      const nextPayout = new Date(endDate)
-      nextPayout.setDate(endDate.getDate() + 1)
+      let periodStart: Date
+      let periodEnd: Date
+      let nextPayoutDate: Date
+
+      if (day <= 15) {
+        periodStart = new Date(year, month, 1)
+        periodEnd = new Date(year, month, 15)
+        nextPayoutDate = new Date(year, month, 16)
+      } else {
+        periodStart = new Date(year, month, 16)
+        periodEnd = new Date(year, month + 1, 0) // last day of current month
+        nextPayoutDate = new Date(year, month + 1, 1)
+      }
 
       return {
-        periodStart: startDate.toISOString().split('T')[0],
-        periodEnd: endDate.toISOString().split('T')[0],
-        nextPayoutDate: nextPayout.toISOString().split('T')[0]
+        periodStart: periodStart.toISOString().split('T')[0],
+        periodEnd: periodEnd.toISOString().split('T')[0],
+        nextPayoutDate: nextPayoutDate.toISOString().split('T')[0]
       }
     }
 
