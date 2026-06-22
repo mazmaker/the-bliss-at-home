@@ -9,12 +9,6 @@ import { DiscountPrice } from '../components/DiscountPrice'
 import { getMinimumPriceInfo } from '../utils/serviceUtils'
 import { getServiceImage } from '../utils/imageUtils'
 
-// Map category to icon
-const categoryIcons: Record<string, React.ComponentType<{className?: string}>> = {
-  massage: Sparkles,
-  nail: Hand,
-  spa: Flower2,
-}
 
 function ServiceCatalog() {
   const { t } = useTranslation(['services', 'common'])
@@ -26,12 +20,17 @@ function ServiceCatalog() {
   const { data: services, isLoading, error } = useServices()
   const { data: serviceReviewStats } = useAllServiceReviewStats()
 
-  const categories = [
-    { id: 'all', name: t('services:catalog.all'), icon: List },
-    { id: 'massage', name: t('services:catalog.massage'), icon: Sparkles },
-    { id: 'nail', name: t('services:catalog.nail'), icon: Hand },
-    { id: 'spa', name: t('services:catalog.spa'), icon: Flower2 },
-  ]
+  // Only show category filters that have at least 1 active service
+  const categories = useMemo(() => {
+    const usedIds = new Set<string>(services?.map(s => s.category) || [])
+    const all = [
+      { id: 'massage', icon: Sparkles, name: t('services:catalog.massage') },
+      { id: 'nail',    icon: Hand,     name: t('services:catalog.nail') },
+      { id: 'spa',     icon: Flower2,  name: t('services:catalog.spa') },
+    ]
+    const active = all.filter(c => usedIds.has(c.id))
+    return [{ id: 'all', name: t('services:catalog.all'), icon: List }, ...active]
+  }, [services, t])
 
   const sortOptions = [
     { id: 'popular', name: t('services:catalog.popular') },
@@ -105,22 +104,23 @@ function ServiceCatalog() {
           <p className="text-stone-600 font-light">{t('services:catalog.subtitle')}</p>
         </div>
 
-        {/* Search */}
+        {/* Search + Filter Bar */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 mb-8 border border-stone-200">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-              <input
-                type="text"
-                placeholder={t('services:catalog.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition bg-white"
-              />
-            </div>
+          {/* Row 1: search */}
+          <div className="relative mb-3">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            <input
+              type="text"
+              placeholder={t('services:catalog.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition bg-white"
+            />
+          </div>
 
-            {/* Category Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
+          {/* Row 2: category pills + sort */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex gap-2 overflow-x-auto">
               {categories.map((category) => (
                 <button
                   key={category.id}
@@ -132,7 +132,7 @@ function ServiceCatalog() {
                       setSearchParams({ category: category.id })
                     }
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition text-sm ${
                     selectedCategory === category.id
                       ? 'bg-amber-700 text-white shadow-md'
                       : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
@@ -144,11 +144,10 @@ function ServiceCatalog() {
               ))}
             </div>
 
-            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 bg-white text-stone-700"
+              className="px-4 py-2 border border-stone-200 rounded-xl outline-none focus:border-amber-500 bg-white text-stone-700 text-sm shrink-0"
             >
               {sortOptions.map((option) => (
                 <option key={option.id} value={option.id}>{option.name}</option>
