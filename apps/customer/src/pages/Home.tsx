@@ -9,7 +9,6 @@ import { PromotionDetailModal } from '../components/PromotionDetailModal'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
 import EmergencyBookingBanner from '../components/EmergencyBookingBanner'
-import { isGlobalDiscountEnabled, getGlobalDiscountPercentage } from '../utils/discountUtils'
 import { getMinimumPriceInfo } from '../utils/serviceUtils'
 import { getServiceImage } from '../utils/imageUtils'
 
@@ -241,58 +240,6 @@ function HomePage() {
       </section>
       )}
 
-      {/* Categories */}
-      {(() => {
-        const activeCategories = categories.filter(c => c.services > 0)
-        if (activeCategories.length === 0) return null
-        const isSingle = activeCategories.length === 1
-        return (
-          <section className="mb-16 px-4">
-            <div className="max-w-6xl mx-auto">
-              <h3 className="text-2xl font-light text-stone-900 mb-8 tracking-wide">{t('home:categories.title')}</h3>
-              <div className={isSingle
-                ? 'max-w-sm mx-auto'
-                : 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto'
-              }>
-                {activeCategories.map((category) => {
-                  const IconComponent = category.icon
-                  return (
-                    <Link
-                      key={category.id}
-                      to={`/services?category=${category.id}`}
-                      className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 text-left block border border-stone-100 group"
-                    >
-                      <div className="w-14 h-14 bg-gradient-to-br from-amber-50 to-stone-100 rounded-xl flex items-center justify-center mb-4 group-hover:from-amber-100 group-hover:to-amber-50 transition">
-                        <IconComponent className="w-7 h-7 text-amber-700" />
-                      </div>
-                      <h4 className="text-xl font-medium text-stone-900 mb-1">{category.name}</h4>
-                      <p className="text-stone-500 text-sm font-light">{t('home:categories.servicesCount', { count: category.services })}</p>
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-        )
-      })()}
-
-      {/* Global Discount Banner */}
-      {isGlobalDiscountEnabled() && (
-        <section className="mb-8 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 rounded-2xl p-6 text-center shadow-lg">
-              <div className="flex items-center justify-center mb-2">
-                <span className="bg-white text-amber-800 px-4 py-2 rounded-full font-bold text-lg">
-                  {t('home:globalDiscount.badge', { percentage: getGlobalDiscountPercentage() })}
-                </span>
-              </div>
-              <h3 className="text-white font-semibold text-xl">
-                {t('home:globalDiscount.title')}
-              </h3>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Popular Services */}
       <section className="mb-16 px-4">
