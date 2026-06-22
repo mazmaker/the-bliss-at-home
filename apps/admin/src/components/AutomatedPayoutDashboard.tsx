@@ -62,7 +62,7 @@ export function AutomatedPayoutDashboard() {
     const { data: upcomingStaff, error: upcomingError } = await supabase
       .from('staff')
       .select('id, name_th, payout_schedule, next_payout_date')
-      .eq('is_active', true)
+      .eq('status', 'active')
       .gte('next_payout_date', today)
       .lte('next_payout_date', nextWeek.toISOString().split('T')[0])
       .order('next_payout_date', { ascending: true })

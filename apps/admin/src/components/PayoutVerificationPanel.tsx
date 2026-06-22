@@ -102,7 +102,7 @@ export function PayoutVerificationPanel() {
     const { data: staffStatus, error: staffError } = await supabase
       .from('staff')
       .select('id, name_th, next_payout_date, last_payout_processed_at, payout_schedule')
-      .eq('is_active', true)
+      .eq('status', 'active')
       .order('next_payout_date', { ascending: true })
       .limit(20)
 

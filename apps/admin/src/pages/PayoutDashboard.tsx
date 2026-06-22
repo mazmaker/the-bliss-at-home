@@ -182,7 +182,7 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
           .from('staff')
           .select('id, profile_id, name_th, payout_schedule')
           .eq('payout_schedule', 'monthly')
-          .eq('is_active', true)
+          .eq('status', 'active')
           .not('profile_id', 'is', null)
 
         const payoutStaffIds = new Set(enrichedPayouts.map(p => p.staff_id))
