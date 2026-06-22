@@ -122,8 +122,10 @@ export function AutomatedPayoutDashboard() {
   })
 
   async function fetchDashboardData(): Promise<DashboardData> {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    // Use UTC midnight for both today and next_payout_date (which are date-only strings)
+    // to avoid timezone offset causing off-by-one day errors in Thailand (UTC+7)
+    const todayStr = new Date().toISOString().split('T')[0]
+    const today = new Date(todayStr)
 
     // All active staff — no date ceiling, show everyone
     const { data: staffRows, error: staffError } = await supabase
@@ -137,7 +139,7 @@ export function AutomatedPayoutDashboard() {
 
     const rows: StaffPayoutRow[] = (staffRows || []).map(s => ({
       ...s,
-      days: Math.ceil((new Date(s.next_payout_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
+      days: Math.round((new Date(s.next_payout_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
     }))
 
     const overdue    = rows.filter(r => r.days < 0)
