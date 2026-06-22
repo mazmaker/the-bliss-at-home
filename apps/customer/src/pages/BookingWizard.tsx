@@ -225,9 +225,12 @@ function BookingWizard() {
     }
   }, [paymentMethods, selectedPaymentMethodId, showManualPaymentForm])
 
-  // Available dates (today + next 13 days = 14 days total)
+  // Available dates: 14 days starting from launch date (2026-06-26) or today, whichever is later
+  const LAUNCH_DATE = '2026-06-26'
+  const todayStr = new Date().toISOString().split('T')[0]
+  const dateRangeStart = new Date(todayStr < LAUNCH_DATE ? LAUNCH_DATE : todayStr)
   const availableDates = Array.from({ length: 14 }, (_, i) => {
-    const date = new Date()
+    const date = new Date(dateRangeStart)
     date.setDate(date.getDate() + i)
     return date.toISOString().split('T')[0]
   })

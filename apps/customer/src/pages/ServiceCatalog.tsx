@@ -106,21 +106,21 @@ function ServiceCatalog() {
 
         {/* Search + Filter Bar */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 mb-8 border border-stone-200">
-          {/* Row 1: search */}
-          <div className="relative mb-3">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-            <input
-              type="text"
-              placeholder={t('services:catalog.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition bg-white"
-            />
-          </div>
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+              <input
+                type="text"
+                placeholder={t('services:catalog.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition bg-white"
+              />
+            </div>
 
-          {/* Row 2: category pills + sort */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex gap-2 overflow-x-auto">
+            {/* Category pills */}
+            <div className="flex gap-2 shrink-0">
               {categories.map((category) => (
                 <button
                   key={category.id}
@@ -132,7 +132,7 @@ function ServiceCatalog() {
                       setSearchParams({ category: category.id })
                     }
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition text-sm ${
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium whitespace-nowrap transition text-sm ${
                     selectedCategory === category.id
                       ? 'bg-amber-700 text-white shadow-md'
                       : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
@@ -144,10 +144,11 @@ function ServiceCatalog() {
               ))}
             </div>
 
+            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 border border-stone-200 rounded-xl outline-none focus:border-amber-500 bg-white text-stone-700 text-sm shrink-0"
+              className="px-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 bg-white text-stone-700 text-sm shrink-0"
             >
               {sortOptions.map((option) => (
                 <option key={option.id} value={option.id}>{option.name}</option>
