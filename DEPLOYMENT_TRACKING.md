@@ -814,9 +814,65 @@ cec06b4 - fix(server): resolve TypeScript compilation errors in cron comment blo
   - Badge สถานะ/เพศ → `whitespace-nowrap`
   - คอลัมน์งานที่เสร็จ + รายได้รวม → `whitespace-nowrap`
 
-### **📋 Pending (รอ commit + push):**
-- 🔒 งาน session ก่อนหน้าทั้งหมด — ยังรอ push
-- 🔒 งาน session 2026-06-22 ทั้งหมด — รอ push
+---
+
+## SESSION 2026-06-22 (3) — Payout Schedule Cleanup + Performance Tab Fix + Auto Payout
+
+### Commits
+- `9f1049a7` refactor(payout): remove bi_weekly schedule
+- `fd0216de` fix(admin): staff total earnings + performance tab from real jobs
+- `4bb9a49c` feat(payout): implement auto payout system
+
+### งานที่ทำ
+
+#### 1. ลบ bi_weekly ออกจากระบบ (ทุกไฟล์)
+- `packages/supabase/src/earnings/types.ts` — PayoutSchedule type
+- `packages/supabase/src/earnings/automatedPayout.ts` — switch case
+- `apps/admin/src/types/staff.ts` — type + PAYOUT_SCHEDULE_OPTIONS + calculateNextPayoutDate
+- `apps/admin/src/components/PayoutScheduleSelector.tsx` — getScheduleBadge
+- `apps/admin/src/components/CreatePayoutModal.tsx` — display labels (3 จุด)
+- `apps/admin/src/pages/PayoutDashboard.tsx` — scheduleLabels
+- `apps/admin/src/pages/StaffDetail.tsx` — display text
+- `apps/server/src/services/enhancedPayoutService.ts` — type + switch cases
+- `apps/staff/src/types/staff.ts` — type + PAYOUT_SCHEDULE_DISPLAY
+- `apps/staff/src/pages/StaffSettings.tsx` — display label
+
+**รอบจ่ายที่รองรับ (4 แบบ):**
+| Schedule | รอบ | จ่ายวันไหน |
+|---|---|---|
+| `weekly` | จันทร์–อาทิตย์ | จันทร์ถัดไป |
+| `bi_monthly` | 1–15 / 16–สิ้นเดือน | 16 / 1 เดือนถัดไป |
+| `monthly` | ต้นเดือน–สิ้นเดือน | 1 เดือนถัดไป |
+| `custom_days` | N วัน | rolling จาก payout_start_date |
+
+#### 2. แก้ bi_monthly logic ใน automatedPayout.ts
+- เดิม: ไม่มี case → throw error → ไม่จ่ายเงินให้ 43+ พนักงาน
+- ใหม่: จ่ายวันที่ 16 (period 1–15) และวันที่ 1 เดือนถัดไป (period 16–สิ้นเดือน)
+
+#### 3. แก้ PayoutCalculationModal
+- เดิม: ข้อความ static ไม่มีข้อมูลจริง
+- ใหม่: ดึง jobs จริงจาก DB ที่ยังไม่ได้อยู่ใน payout_jobs แสดงรายการ + ยอดรวม
+
+#### 4. แก้ระบบออโต้จ่ายเงิน (automatedPayout.ts)
+- un-stub dailyPayoutCheck() — query staff ที่ถึงรอบวันนี้แล้วสร้าง payout จริง
+- ป้องกัน duplicate: ตรวจ payout ซ้ำก่อนสร้าง
+- กรอง already-paid jobs ผ่าน payout_jobs table
+- ส่ง notification ใน-app ให้ staff หลังสร้าง payout
+- triggerPayoutForStaff() สำหรับ manual test
+
+#### 5. แก้รายได้รวม header (useStaff.ts)
+- `total_earnings` ใช้ `total_staff_earnings ?? staff_earnings` (รวม extension earnings แล้ว)
+
+#### 6. แก้แท็บประสิทธิภาพ (useStaffPerformance.ts)
+- เดิม: อ่านจาก `staff_performance_metrics` table — มีข้อมูลแค่ 3 คน → แสดง 0% ทุกคน
+- ใหม่: คำนวณ on-the-fly จาก `jobs` + `reviews` ใน 2 query เดียว แบ่งกลุ่มตาม month ใน JS
+- แก้ StaffDetail: ส่ง `staff.profile_id` (ไม่ใช่ `staff.id`) ให้ performance hooks
+- สูตร performance score: 40% completion + 30% response + 20% (100-cancel) + 10% rating
+
+### สถานะ
+- Committed: ทั้ง 3 commits
+- Push: ยังไม่ได้ push — รอคำสั่ง
+- Deploy: รอ push ก่อน
 
 ---
 
