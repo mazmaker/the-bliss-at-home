@@ -242,29 +242,39 @@ function HomePage() {
       )}
 
       {/* Categories */}
-      <section className="mb-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-2xl font-light text-stone-900 mb-8 tracking-wide">{t('home:categories.title')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-          {categories.map((category) => {
-            const IconComponent = category.icon
-            return (
-              <Link
-                key={category.id}
-                to={`/services?category=${category.id}`}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 text-left block border border-stone-100 group"
-              >
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-50 to-stone-100 rounded-xl flex items-center justify-center mb-4 group-hover:from-amber-100 group-hover:to-amber-50 transition">
-                  <IconComponent className="w-7 h-7 text-amber-700" />
-                </div>
-                <h4 className="text-xl font-medium text-stone-900 mb-1">{category.name}</h4>
-                <p className="text-stone-500 text-sm font-light">{t('home:categories.servicesCount', { count: category.services })}</p>
-              </Link>
-            )
-          })}
-        </div>
-        </div>
-      </section>
+      {(() => {
+        const activeCategories = categories.filter(c => c.services > 0)
+        if (activeCategories.length === 0) return null
+        const isSingle = activeCategories.length === 1
+        return (
+          <section className="mb-16 px-4">
+            <div className="max-w-6xl mx-auto">
+              <h3 className="text-2xl font-light text-stone-900 mb-8 tracking-wide">{t('home:categories.title')}</h3>
+              <div className={isSingle
+                ? 'max-w-sm mx-auto'
+                : 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto'
+              }>
+                {activeCategories.map((category) => {
+                  const IconComponent = category.icon
+                  return (
+                    <Link
+                      key={category.id}
+                      to={`/services?category=${category.id}`}
+                      className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 text-left block border border-stone-100 group"
+                    >
+                      <div className="w-14 h-14 bg-gradient-to-br from-amber-50 to-stone-100 rounded-xl flex items-center justify-center mb-4 group-hover:from-amber-100 group-hover:to-amber-50 transition">
+                        <IconComponent className="w-7 h-7 text-amber-700" />
+                      </div>
+                      <h4 className="text-xl font-medium text-stone-900 mb-1">{category.name}</h4>
+                      <p className="text-stone-500 text-sm font-light">{t('home:categories.servicesCount', { count: category.services })}</p>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+        )
+      })()}
 
       {/* Global Discount Banner */}
       {isGlobalDiscountEnabled() && (
@@ -276,12 +286,9 @@ function HomePage() {
                   {t('home:globalDiscount.badge', { percentage: getGlobalDiscountPercentage() })}
                 </span>
               </div>
-              <h3 className="text-white font-semibold text-xl mb-1">
+              <h3 className="text-white font-semibold text-xl">
                 {t('home:globalDiscount.title')}
               </h3>
-              <p className="text-yellow-100 text-sm">
-                {t('home:globalDiscount.subtitle')}
-              </p>
             </div>
           </div>
         </section>
