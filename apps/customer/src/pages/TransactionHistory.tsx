@@ -82,19 +82,19 @@ function TransactionHistory() {
       case 'failed':
         return <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">{t('booking:transactionHistory.statusFailed')}</span>
       case 'pending':
-        return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">{t('booking:transactionHistory.statusPending')}</span>
+        return <span className="px-3 py-1 bg-yellow-100 text-bliss-600 text-xs font-medium rounded-full">{t('booking:transactionHistory.statusPending')}</span>
       default:
-        return <span className="px-3 py-1 bg-stone-100 text-stone-700 text-xs font-medium rounded-full">{status}</span>
+        return <span className="px-3 py-1 bg-bliss-100 text-bliss-700 text-xs font-medium rounded-full">{status}</span>
     }
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+      <div className="min-h-screen bg-bliss-100 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-amber-700 mb-4"></div>
-            <p className="text-stone-600">{t('common:loading.transactions')}</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-bliss-600 mb-4"></div>
+            <p className="text-bliss-700">{t('common:loading.transactions')}</p>
           </div>
         </div>
       </div>
@@ -103,15 +103,15 @@ function TransactionHistory() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+      <div className="min-h-screen bg-bliss-100 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">{t('common:errors.failedToLoadTransactions')}</h2>
-            <p className="text-stone-600 mb-6">{error.message}</p>
+            <h2 className="text-2xl font-bold text-bliss-900 mb-2">{t('common:errors.failedToLoadTransactions')}</h2>
+            <p className="text-bliss-700 mb-6">{error.message}</p>
             <button
               onClick={() => window.location.reload()}
-              className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+              className="inline-block bg-bliss-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               {t('common:buttons.retry')}
             </button>
@@ -122,12 +122,12 @@ function TransactionHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+    <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">{t('booking:transactionHistory.title')}</h1>
-          <p className="text-stone-600">{t('booking:transactionHistory.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">{t('booking:transactionHistory.title')}</h1>
+          <p className="text-bliss-700">{t('booking:transactionHistory.subtitle')}</p>
         </div>
 
         {/* Filter Tabs */}
@@ -136,8 +136,8 @@ function TransactionHistory() {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-full font-medium text-sm transition whitespace-nowrap ${
               filter === 'all'
-                ? 'bg-amber-700 text-white'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                ? 'bg-bliss-600 text-white'
+                : 'bg-bliss-50 text-bliss-700 hover:bg-bliss-100 border border-bliss-200'
             }`}
           >
             {t('booking:history.all')}
@@ -146,8 +146,8 @@ function TransactionHistory() {
             onClick={() => setFilter('successful')}
             className={`px-4 py-2 rounded-full font-medium text-sm transition whitespace-nowrap ${
               filter === 'successful'
-                ? 'bg-amber-700 text-white'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                ? 'bg-bliss-600 text-white'
+                : 'bg-bliss-50 text-bliss-700 hover:bg-bliss-100 border border-bliss-200'
             }`}
           >
             {t('booking:transactionHistory.filterSuccessful')}
@@ -156,8 +156,8 @@ function TransactionHistory() {
             onClick={() => setFilter('pending')}
             className={`px-4 py-2 rounded-full font-medium text-sm transition whitespace-nowrap ${
               filter === 'pending'
-                ? 'bg-amber-700 text-white'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                ? 'bg-bliss-600 text-white'
+                : 'bg-bliss-50 text-bliss-700 hover:bg-bliss-100 border border-bliss-200'
             }`}
           >
             {t('common:status.pending')}
@@ -166,8 +166,8 @@ function TransactionHistory() {
             onClick={() => setFilter('refunded')}
             className={`px-4 py-2 rounded-full font-medium text-sm transition whitespace-nowrap ${
               filter === 'refunded'
-                ? 'bg-amber-700 text-white'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                ? 'bg-bliss-600 text-white'
+                : 'bg-bliss-50 text-bliss-700 hover:bg-bliss-100 border border-bliss-200'
             }`}
           >
             {t('booking:transactionHistory.filterRefunded')}
@@ -176,8 +176,8 @@ function TransactionHistory() {
             onClick={() => setFilter('failed')}
             className={`px-4 py-2 rounded-full font-medium text-sm transition whitespace-nowrap ${
               filter === 'failed'
-                ? 'bg-amber-700 text-white'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                ? 'bg-bliss-600 text-white'
+                : 'bg-bliss-50 text-bliss-700 hover:bg-bliss-100 border border-bliss-200'
             }`}
           >
             {t('booking:transactionHistory.filterFailed')}
@@ -187,12 +187,12 @@ function TransactionHistory() {
         {/* Transactions List */}
         {filteredTransactions.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <Receipt className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-stone-900 mb-2">{t('booking:transactionHistory.noTransactions')}</h3>
-            <p className="text-stone-600 mb-6">{t('booking:transactionHistory.noTransactionsMessage')}</p>
+            <Receipt className="w-16 h-16 text-bliss-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-bliss-900 mb-2">{t('booking:transactionHistory.noTransactions')}</h3>
+            <p className="text-bliss-700 mb-6">{t('booking:transactionHistory.noTransactionsMessage')}</p>
             <Link
               to="/services"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700"
             >
               {t('booking:history.viewServices')}
             </Link>
@@ -206,7 +206,7 @@ function TransactionHistory() {
               >
                 <div className="flex items-start gap-4">
                   {/* Payment Icon */}
-                  <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-bliss-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     {getPaymentIcon(transaction.payment_method)}
                   </div>
 
@@ -214,8 +214,8 @@ function TransactionHistory() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div>
-                        <h3 className="font-semibold text-stone-900 mb-1">{transaction.description}</h3>
-                        <p className="text-sm text-stone-500">
+                        <h3 className="font-semibold text-bliss-900 mb-1">{transaction.description}</h3>
+                        <p className="text-sm text-bliss-500">
                           {getPaymentMethodLabel(
                             transaction.payment_method,
                             transaction.card_brand ?? undefined,
@@ -224,13 +224,13 @@ function TransactionHistory() {
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-lg font-bold text-stone-900">฿{transaction.amount}</p>
+                        <p className="text-lg font-bold text-bliss-900">฿{transaction.amount}</p>
                         {getStatusBadge(transaction.status ?? '')}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
-                      <p className="text-stone-500">
+                      <p className="text-bliss-500">
                         {new Date(transaction.created_at!).toLocaleDateString('th-TH', {
                           year: 'numeric',
                           month: 'short',
@@ -278,7 +278,7 @@ function TransactionHistory() {
                                 console.error('Failed to download receipt:', err)
                               }
                             }}
-                            className="text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
+                            className="text-bliss-600 hover:text-bliss-800 font-medium flex items-center gap-1"
                           >
                             <Download className="w-4 h-4" />
                             {t('booking:transactionHistory.receipt')}
@@ -286,7 +286,7 @@ function TransactionHistory() {
                         )}
                         <Link
                           to={`/bookings/${transaction.booking_id}`}
-                          className="text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
+                          className="text-bliss-600 hover:text-bliss-800 font-medium flex items-center gap-1"
                         >
                           {t('booking:transactionHistory.viewBooking')}
                           <ChevronRight className="w-4 h-4" />
@@ -310,28 +310,28 @@ function TransactionHistory() {
         {/* Summary */}
         {transactions.length > 0 && (
           <div className="mt-6 bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold text-stone-900 mb-4">{t('booking:transactionHistory.summaryHeading')}</h3>
+            <h3 className="font-semibold text-bliss-900 mb-4">{t('booking:transactionHistory.summaryHeading')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm text-stone-500 mb-1">{t('booking:transactionHistory.totalTransactions')}</p>
-                <p className="text-xl font-bold text-stone-900">
+                <p className="text-sm text-bliss-500 mb-1">{t('booking:transactionHistory.totalTransactions')}</p>
+                <p className="text-xl font-bold text-bliss-900">
                   {summary?.total_transactions || transactions.length}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">{t('booking:transactionHistory.totalSpent')}</p>
-                <p className="text-xl font-bold text-amber-700">
+                <p className="text-sm text-bliss-500 mb-1">{t('booking:transactionHistory.totalSpent')}</p>
+                <p className="text-xl font-bold text-bliss-600">
                   ฿{summary?.total_spent || transactions.filter(t => t.status === 'successful').reduce((sum, t) => sum + t.amount, 0)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">{t('booking:transactionHistory.successfulLabel')}</p>
+                <p className="text-sm text-bliss-500 mb-1">{t('booking:transactionHistory.successfulLabel')}</p>
                 <p className="text-xl font-bold text-green-600">
                   {summary?.successful_transactions || transactions.filter((t) => t.status === 'successful').length}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">{t('booking:transactionHistory.refundedLabel')}</p>
+                <p className="text-sm text-bliss-500 mb-1">{t('booking:transactionHistory.refundedLabel')}</p>
                 <p className="text-xl font-bold text-purple-600">
                   {transactions.filter((t) => t.status === 'refunded').length}
                 </p>

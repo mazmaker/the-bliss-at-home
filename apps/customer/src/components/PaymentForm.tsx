@@ -169,12 +169,12 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-gradient-to-r from-amber-50 to-stone-50 border border-amber-200 rounded-xl p-4 mb-6">
+      <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4 mb-6">
         <div className="flex items-start gap-3">
-          <Lock className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-stone-700">
+          <Lock className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-bliss-700">
             <p className="font-medium mb-1">{t('booking:payment.securePayment.title')}</p>
-            <p className="text-xs text-stone-600">
+            <p className="text-xs text-bliss-700">
               {t('booking:payment.securePayment.description')}
             </p>
           </div>
@@ -183,7 +183,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
 
       {/* Cardholder Name */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-2">
+        <label className="block text-sm font-medium text-bliss-700 mb-2">
           {t('booking:payment.form.cardholderName')} <span className="text-red-500">*</span>
         </label>
         <input
@@ -191,7 +191,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
           value={cardName}
           onChange={(e) => setCardName(e.target.value)}
           placeholder={t('booking:payment.form.cardholderNamePlaceholder')}
-          className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase"
+          className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent uppercase"
           required
           disabled={isLoading}
         />
@@ -199,7 +199,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
 
       {/* Card Number */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-2">
+        <label className="block text-sm font-medium text-bliss-700 mb-2">
           {t('booking:payment.form.cardNumber')} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -208,18 +208,18 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
             value={formatCardNumber(cardNumber)}
             onChange={handleCardNumberChange}
             placeholder={t('booking:payment.form.cardNumberPlaceholder')}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent pl-12"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent pl-12"
             required
             disabled={isLoading}
           />
-          <CreditCard className="w-5 h-5 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <CreditCard className="w-5 h-5 text-bliss-400 absolute left-4 top-1/2 -translate-y-1/2" />
         </div>
       </div>
 
       {/* Expiry Date and CVV */}
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('booking:payment.form.expiryMonth')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -227,13 +227,13 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
             value={expiryMonth}
             onChange={handleExpiryMonthChange}
             placeholder={t('booking:payment.form.expiryMonthPlaceholder')}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-center"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent text-center"
             required
             disabled={isLoading}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('booking:payment.form.expiryYear')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -241,13 +241,13 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
             value={expiryYear}
             onChange={handleExpiryYearChange}
             placeholder={t('booking:payment.form.expiryYearPlaceholder')}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-center"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent text-center"
             required
             disabled={isLoading}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('booking:payment.form.cvv')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -255,7 +255,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
             value={cvv}
             onChange={handleCvvChange}
             placeholder={t('booking:payment.form.cvvPlaceholder')}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-center"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent text-center"
             required
             disabled={isLoading}
           />
@@ -269,10 +269,10 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
           id="saveCard"
           checked={saveCard}
           onChange={(e) => setSaveCard(e.target.checked)}
-          className="w-4 h-4 text-amber-700 border-stone-300 rounded focus:ring-amber-500"
+          className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-bliss-600"
           disabled={isLoading}
         />
-        <label htmlFor="saveCard" className="text-sm text-stone-700">
+        <label htmlFor="saveCard" className="text-sm text-bliss-700">
           {t('booking:payment.form.saveCardForFuture')}
         </label>
       </div>
@@ -281,7 +281,7 @@ function PaymentForm({ amount, bookingId, customerId, onSuccess, onError }: Paym
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-amber-700 text-white py-4 rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-bliss-600 text-white py-4 rounded-xl font-medium hover:bg-bliss-700 transition disabled:bg-bliss-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

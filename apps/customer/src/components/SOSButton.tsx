@@ -100,7 +100,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
       {showConfirm && createPortal(
         <div className="fixed inset-0 bg-black/60 z-[9999] overflow-y-auto animate-in fade-in duration-200">
           <div className="min-h-full flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 my-8">
+            <div className="bg-bliss-50 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 my-8">
             {!sent ? (
               <>
                 {/* Header */}
@@ -110,16 +110,16 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                       <AlertTriangle className="w-6 h-6 text-red-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-stone-900">{t('sos.title')}</h3>
-                      <p className="text-xs text-stone-500">{t('sos.subtitle')}</p>
+                      <h3 className="text-lg font-bold text-bliss-900">{t('sos.title')}</h3>
+                      <p className="text-xs text-bliss-500">{t('sos.subtitle')}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowConfirm(false)}
                     disabled={createSOSAlert.isPending}
-                    className="p-1 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
+                    className="p-1 hover:bg-bliss-100 rounded-lg transition disabled:opacity-50"
                   >
-                    <X className="w-5 h-5 text-stone-400" />
+                    <X className="w-5 h-5 text-bliss-400" />
                   </button>
                 </div>
 
@@ -141,7 +141,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                     </ul>
                   </div>
 
-                  <p className="text-sm text-stone-600">
+                  <p className="text-sm text-bliss-700">
                     {t('sos.confirmMessage')}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                   <button
                     onClick={() => setShowConfirm(false)}
                     disabled={createSOSAlert.isPending}
-                    className="flex-1 px-4 py-3 border border-stone-300 rounded-xl text-stone-700 font-medium hover:bg-stone-50 transition disabled:opacity-50"
+                    className="flex-1 px-4 py-3 border border-bliss-300 rounded-xl text-bliss-700 font-medium hover:bg-bliss-100 transition disabled:opacity-50"
                   >
                     {t('buttons.cancel')}
                   </button>
@@ -182,8 +182,8 @@ function SOSButton({ className = '' }: SOSButtonProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-2">{t('sos.success')}</h3>
-                <p className="text-stone-600 whitespace-pre-line">
+                <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('sos.success')}</h3>
+                <p className="text-bliss-700 whitespace-pre-line">
                   {t('sos.successMessage')}
                 </p>
               </div>

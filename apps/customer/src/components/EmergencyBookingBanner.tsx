@@ -38,11 +38,11 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
   }
 
   return (
-    <div className="relative rounded-xl my-3 shadow-lg overflow-hidden" style={{ backgroundColor: '#D29B25' }}>
+    <div className="relative rounded-xl my-3 shadow-lg overflow-hidden" style={{ backgroundColor: '#837858' }}>
 
       <div className="relative p-6 text-center">
         {/* White badge */}
-        <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-amber-800 text-sm font-medium mb-4">
+        <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-bliss-700 text-sm font-medium mb-4">
           {t('services:emergencyService.badge')}
         </div>
 

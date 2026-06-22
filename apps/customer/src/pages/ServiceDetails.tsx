@@ -78,8 +78,8 @@ function ServiceDetails() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto" />
-          <p className="text-stone-600 mt-2">{t('common:loading.services')}</p>
+          <Loader2 className="w-8 h-8 animate-spin text-bliss-600 mx-auto" />
+          <p className="text-bliss-700 mt-2">{t('common:loading.services')}</p>
         </div>
       </div>
     )
@@ -91,8 +91,8 @@ function ServiceDetails() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-2xl font-medium text-stone-900 mt-4">{t('common:errors.cannotLoadService')}</h2>
-          <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+          <h2 className="text-2xl font-medium text-bliss-900 mt-4">{t('common:errors.cannotLoadService')}</h2>
+          <Link to="/services" className="inline-block mt-4 text-bliss-600 hover:text-bliss-700 font-medium">
             {t('common:errors.backToServices')}
           </Link>
         </div>
@@ -105,9 +105,9 @@ function ServiceDetails() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Search className="w-16 h-16 text-stone-400 mx-auto" />
-          <h2 className="text-2xl font-medium text-stone-900 mt-4">{t('common:errors.serviceNotFound')}</h2>
-          <Link to="/services" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+          <Search className="w-16 h-16 text-bliss-400 mx-auto" />
+          <h2 className="text-2xl font-medium text-bliss-900 mt-4">{t('common:errors.serviceNotFound')}</h2>
+          <Link to="/services" className="inline-block mt-4 text-bliss-600 hover:text-bliss-700 font-medium">
             {t('common:errors.backToServices')}
           </Link>
         </div>
@@ -142,7 +142,7 @@ function ServiceDetails() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Link to="/services" className="inline-flex items-center text-stone-600 hover:text-amber-700 mb-6 font-medium transition">
+        <Link to="/services" className="inline-flex items-center text-bliss-700 hover:text-bliss-600 mb-6 font-medium transition">
           <ChevronLeft className="w-5 h-5" />
           {t('services:details.backToServices')}
         </Link>
@@ -151,7 +151,7 @@ function ServiceDetails() {
           {/* Left Column - Service Info */}
           <div className="lg:col-span-2">
             {/* Image */}
-            <div className="rounded-2xl h-80 overflow-hidden mb-6 border border-stone-200 bg-gray-100">
+            <div className="rounded-2xl h-80 overflow-hidden mb-6 border border-bliss-200 bg-gray-100">
               {service.image_url ? (
                 <img
                   src={service.image_url}
@@ -164,36 +164,36 @@ function ServiceDetails() {
                   }}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-amber-200">
-                  <IconComponent className="w-24 h-24 text-amber-600" />
+                <div className="w-full h-full flex items-center justify-center bg-bliss-200">
+                  <IconComponent className="w-24 h-24 text-bliss-600" />
                 </div>
               )}
             </div>
 
             {/* Service Info Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-stone-100">
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-bliss-100">
               <div className="mb-4">
-                <h1 className="text-3xl font-light text-stone-900 mb-1 tracking-tight">{service.name}</h1>
+                <h1 className="text-3xl font-light text-bliss-900 mb-1 tracking-tight">{service.name}</h1>
                 {service.name_sub && (
-                  <p className="text-lg text-stone-400 font-light">{service.name_sub}</p>
+                  <p className="text-lg text-bliss-400 font-light">{service.name_sub}</p>
                 )}
               </div>
 
-              <div className="flex items-center gap-4 text-stone-600 mb-6">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-medium">
+              <div className="flex items-center gap-4 text-bliss-700 mb-6">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bliss-100 text-bliss-600 text-sm font-medium">
                   <IconComponent className="w-4 h-4" />
                   {categoryNames[service.category]}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-stone-500">
+                <span className="flex items-center gap-1.5 text-sm text-bliss-500">
                   <Clock className="w-4 h-4" />
                   {service.durations.length > 1
                     ? `${service.durations[0]}-${service.durations[service.durations.length - 1]} ${t('services:details.min')}`
                     : `${service.durations[0]} ${t('services:details.min')}`
                   }
                 </span>
-                <span className="text-sm text-stone-500">
+                <span className="text-sm text-bliss-500">
                   {t('services:details.startingFrom')}{' '}
-                  <span className="font-semibold text-amber-700">
+                  <span className="font-semibold text-bliss-600">
                     ฿{getPriceForDuration(service.raw, service.durations[0]).toLocaleString()}
                   </span>
                 </span>
@@ -202,18 +202,18 @@ function ServiceDetails() {
               {/* Description */}
               {service.description ? (
                 <div className="prose max-w-none">
-                  <h3 className="text-lg font-medium mb-3 text-stone-900">{t('services:details.description')}</h3>
-                  <p className="text-stone-700 font-light leading-relaxed whitespace-pre-line">{service.description}</p>
+                  <h3 className="text-lg font-medium mb-3 text-bliss-900">{t('services:details.description')}</h3>
+                  <p className="text-bliss-700 font-light leading-relaxed whitespace-pre-line">{service.description}</p>
                 </div>
               ) : (
-                <p className="text-stone-400 italic text-sm">{t('services:details.noDescription')}</p>
+                <p className="text-bliss-400 italic text-sm">{t('services:details.noDescription')}</p>
               )}
             </div>
 
             {/* Duration & Pricing Card */}
             {service.durations.length > 1 && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-stone-100">
-                <h3 className="text-xl font-medium text-stone-900 mb-4">{t('services:details.durationAndPricing')}</h3>
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-bliss-100">
+                <h3 className="text-xl font-medium text-bliss-900 mb-4">{t('services:details.durationAndPricing')}</h3>
                 <div className="grid gap-3">
                   {service.durations.map((dur) => {
                     const price = getPriceForDuration(service.raw, dur)
@@ -224,24 +224,24 @@ function ServiceDetails() {
                         onClick={() => setSelectedDuration(dur)}
                         className={`flex items-center justify-between p-4 rounded-xl border-2 transition ${
                           isSelected
-                            ? 'border-amber-500 bg-amber-50'
-                            : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                            ? 'border-bliss-600 bg-bliss-100'
+                            : 'border-bliss-200 hover:border-bliss-400 hover:bg-bliss-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                            isSelected ? 'border-amber-500 bg-amber-500' : 'border-stone-300'
+                            isSelected ? 'border-bliss-600 bg-bliss-600' : 'border-bliss-300'
                           }`}>
                             {isSelected && <Check className="w-4 h-4 text-white" />}
                           </div>
                           <div className="text-left">
-                            <span className="font-medium text-stone-900">{dur} {t('services:details.minutes')}</span>
-                            <span className="text-sm text-stone-500 ml-2">
+                            <span className="font-medium text-bliss-900">{dur} {t('services:details.minutes')}</span>
+                            <span className="text-sm text-bliss-500 ml-2">
                               ({dur / 60 >= 1 ? `${Math.floor(dur / 60)}${dur % 60 > 0 ? `.${dur % 60}` : ''} ${t('services:details.hour')}` : ''})
                             </span>
                           </div>
                         </div>
-                        <span className={`text-lg font-semibold ${isSelected ? 'text-amber-700' : 'text-stone-700'}`}>
+                        <span className={`text-lg font-semibold ${isSelected ? 'text-bliss-600' : 'text-bliss-700'}`}>
                           ฿{price.toLocaleString()}
                         </span>
                       </button>
@@ -249,17 +249,17 @@ function ServiceDetails() {
                   })}
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-stone-100 space-y-1.5">
-                  <p className="text-xs text-stone-400">• {t('services:details.priceIncludesServiceAndTransport')}</p>
-                  <p className="text-xs text-stone-400">• {t('services:details.oilSurchargeNote')}</p>
+                <div className="mt-4 pt-4 border-t border-bliss-100 space-y-1.5">
+                  <p className="text-xs text-bliss-400">• {t('services:details.priceIncludesServiceAndTransport')}</p>
+                  <p className="text-xs text-bliss-400">• {t('services:details.oilSurchargeNote')}</p>
                 </div>
               </div>
             )}
 
             {/* Add-ons Card */}
             {addOns.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
-                <h3 className="text-xl font-medium text-stone-900 mb-4">{t('services:details.addons')}</h3>
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
+                <h3 className="text-xl font-medium text-bliss-900 mb-4">{t('services:details.addons')}</h3>
                 <div className="space-y-3">
                   {addOns.map((addOn) => (
                     <button
@@ -267,23 +267,23 @@ function ServiceDetails() {
                       onClick={() => toggleAddOn(addOn.id)}
                       className={`w-full p-4 rounded-xl border-2 text-left transition ${
                         selectedAddOns.includes(addOn.id)
-                          ? 'border-amber-500 bg-amber-50'
-                          : 'border-stone-200 hover:border-amber-300'
+                          ? 'border-bliss-600 bg-bliss-100'
+                          : 'border-bliss-200 hover:border-bliss-400'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-medium text-stone-900">{addOn.name}</h4>
+                          <h4 className="font-medium text-bliss-900">{addOn.name}</h4>
                           {addOn.description && (
-                            <p className="text-sm text-stone-500 font-light mt-0.5">{addOn.description}</p>
+                            <p className="text-sm text-bliss-500 font-light mt-0.5">{addOn.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-amber-700">+฿{addOn.price.toLocaleString()}</span>
+                          <span className="font-semibold text-bliss-600">+฿{addOn.price.toLocaleString()}</span>
                           <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                             selectedAddOns.includes(addOn.id)
-                              ? 'border-amber-500 bg-amber-500 text-white'
-                              : 'border-stone-300'
+                              ? 'border-bliss-600 bg-bliss-600 text-white'
+                              : 'border-bliss-300'
                           }`}>
                             {selectedAddOns.includes(addOn.id) && <Check className="w-4 h-4" />}
                           </span>
@@ -296,23 +296,23 @@ function ServiceDetails() {
             )}
 
             {/* Customer Reviews Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mt-6 border border-stone-100">
-              <h3 className="text-xl font-medium text-stone-900 mb-4">
+            <div className="bg-white rounded-2xl shadow-lg p-6 mt-6 border border-bliss-100">
+              <h3 className="text-xl font-medium text-bliss-900 mb-4">
                 {t('services:reviews.title')}
               </h3>
 
               {reviewStats && reviewStats.review_count > 0 ? (
                 <>
                   {/* Aggregate Stats */}
-                  <div className="flex items-start gap-6 mb-6 p-4 bg-amber-50/60 rounded-xl">
+                  <div className="flex items-start gap-6 mb-6 p-4 bg-bliss-100/60 rounded-xl">
                     <div className="text-center flex-shrink-0">
-                      <div className="text-3xl font-bold text-amber-700">{reviewStats.avg_rating}</div>
+                      <div className="text-3xl font-bold text-bliss-600">{reviewStats.avg_rating}</div>
                       <div className="flex items-center gap-0.5 mt-1">
                         {[1,2,3,4,5].map(s => (
-                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(Number(reviewStats.avg_rating)) ? 'text-amber-500 fill-amber-500' : 'text-stone-300'}`} />
+                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(Number(reviewStats.avg_rating)) ? 'text-bliss-600 fill-bliss-600' : 'text-bliss-300'}`} />
                         ))}
                       </div>
-                      <div className="text-xs text-stone-500 mt-1">
+                      <div className="text-xs text-bliss-500 mt-1">
                         {t('services:reviews.totalReviews', { count: reviewStats.review_count })}
                       </div>
                     </div>
@@ -323,11 +323,11 @@ function ServiceDetails() {
                         { label: t('services:reviews.skill'), value: reviewStats.avg_skill },
                       ].map(sub => sub.value && (
                         <div key={sub.label} className="flex items-center gap-2 text-sm">
-                          <span className="text-stone-600 w-32 flex-shrink-0">{sub.label}</span>
-                          <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
-                            <div className="h-2 bg-amber-500 rounded-full" style={{ width: `${(Number(sub.value) / 5) * 100}%` }} />
+                          <span className="text-bliss-700 w-32 flex-shrink-0">{sub.label}</span>
+                          <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
+                            <div className="h-2 bg-bliss-600 rounded-full" style={{ width: `${(Number(sub.value) / 5) * 100}%` }} />
                           </div>
-                          <span className="text-stone-700 w-6 text-right font-medium">{sub.value}</span>
+                          <span className="text-bliss-700 w-6 text-right font-medium">{sub.value}</span>
                         </div>
                       ))}
                     </div>
@@ -336,49 +336,49 @@ function ServiceDetails() {
                   {/* Individual Reviews */}
                   <div className="space-y-4">
                     {reviews?.map(review => (
-                      <div key={review.id} className="border-b border-stone-100 last:border-0 pb-4 last:pb-0">
+                      <div key={review.id} className="border-b border-bliss-100 last:border-0 pb-4 last:pb-0">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 bg-gradient-to-br from-amber-100 to-stone-100 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-amber-700">{review.customer_display_name.charAt(0)}</span>
+                            <div className="w-8 h-8 bg-bliss-200 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-bliss-600">{review.customer_display_name.charAt(0)}</span>
                             </div>
                             <div>
-                              <span className="font-medium text-stone-900 text-sm">{review.customer_display_name}</span>
+                              <span className="font-medium text-bliss-900 text-sm">{review.customer_display_name}</span>
                               <div className="flex items-center gap-0.5">
                                 {[1,2,3,4,5].map(s => (
-                                  <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-stone-300'}`} />
+                                  <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-bliss-600 fill-bliss-600' : 'text-bliss-300'}`} />
                                 ))}
                               </div>
                             </div>
                           </div>
-                          <span className="text-xs text-stone-400">
+                          <span className="text-xs text-bliss-400">
                             {new Date(review.created_at).toLocaleDateString(isThai ? 'th-TH' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </span>
                         </div>
                         {review.review && (
-                          <p className="text-stone-600 text-sm font-light leading-relaxed ml-10">{review.review}</p>
+                          <p className="text-bliss-700 text-sm font-light leading-relaxed ml-10">{review.review}</p>
                         )}
                       </div>
                     ))}
                   </div>
                 </>
               ) : (
-                <p className="text-stone-400 text-sm italic">{t('services:reviews.noReviews')}</p>
+                <p className="text-bliss-400 text-sm italic">{t('services:reviews.noReviews')}</p>
               )}
             </div>
           </div>
 
           {/* Right Column - Booking Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-stone-100">
-              <h3 className="text-xl font-medium text-stone-900 mb-6">{t('services:details.bookingSummary')}</h3>
+            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-bliss-100">
+              <h3 className="text-xl font-medium text-bliss-900 mb-6">{t('services:details.bookingSummary')}</h3>
 
-              <div className="space-y-3 mb-6 pb-6 border-b border-stone-200">
+              <div className="space-y-3 mb-6 pb-6 border-b border-bliss-200">
                 {/* Service + Duration */}
-                <div className="flex justify-between text-stone-600">
+                <div className="flex justify-between text-bliss-700">
                   <div>
                     <span>{service.name}</span>
-                    <span className="text-stone-400 text-sm ml-1">({activeDuration} {t('services:details.min')})</span>
+                    <span className="text-bliss-400 text-sm ml-1">({activeDuration} {t('services:details.min')})</span>
                   </div>
                   <span className="font-medium">฿{servicePrice.toLocaleString()}</span>
                 </div>
@@ -387,7 +387,7 @@ function ServiceDetails() {
                   const addon = addOns.find(a => a.id === id)
                   if (!addon) return null
                   return (
-                    <div key={id} className="flex justify-between text-stone-500 text-sm">
+                    <div key={id} className="flex justify-between text-bliss-500 text-sm">
                       <span>+ {addon.name}</span>
                       <span>฿{addon.price.toLocaleString()}</span>
                     </div>
@@ -396,22 +396,22 @@ function ServiceDetails() {
               </div>
 
               <div className="flex justify-between items-center mb-6">
-                <span className="text-xl font-medium text-stone-900">{t('services:details.total')}</span>
-                <span className="text-2xl font-semibold text-amber-700">฿{totalPrice.toLocaleString()}</span>
+                <span className="text-xl font-medium text-bliss-900">{t('services:details.total')}</span>
+                <span className="text-2xl font-semibold text-bliss-600">฿{totalPrice.toLocaleString()}</span>
               </div>
 
               <Link
                 to={`/booking?service=${slug}&duration=${activeDuration}${selectedAddOns.length > 0 ? `&addons=${selectedAddOns.join(',')}` : ''}`}
-                className="block w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white text-center py-4 rounded-xl font-medium hover:shadow-lg transition transform hover:scale-105 shadow-md"
+                className="block w-full bg-bliss-600 text-white text-center py-4 rounded-xl font-medium hover:shadow-lg transition transform hover:scale-105 shadow-md"
               >
                 {t('services:details.bookService')}
               </Link>
 
-              <div className="mt-6 pt-6 border-t border-stone-200 text-center">
-                <p className="text-sm text-stone-500">{t('services:details.questions')}</p>
+              <div className="mt-6 pt-6 border-t border-bliss-200 text-center">
+                <p className="text-sm text-bliss-500">{t('services:details.questions')}</p>
                 <button
                   onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
-                  className="text-amber-700 font-medium text-sm hover:underline mt-1"
+                  className="text-bliss-600 font-medium text-sm hover:underline mt-1"
                 >
                   {t('services:details.askMore')}
                 </button>

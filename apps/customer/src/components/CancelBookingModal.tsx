@@ -221,8 +221,8 @@ export function CancelBookingModal({
         {/* Loading State */}
         {loading && step === 'check' && (
           <div className="text-center py-8">
-            <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
-            <p className="text-stone-600">{t('booking:cancelBooking.checking')}</p>
+            <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-4" />
+            <p className="text-bliss-700">{t('booking:cancelBooking.checking')}</p>
           </div>
         )}
 
@@ -240,32 +240,32 @@ export function CancelBookingModal({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Ban className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:cancelBooking.cannotCancel')}</h3>
-            <p className="text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('booking:cancelBooking.cannotCancel')}</h3>
+            <p className="text-bliss-700 mb-4">
               {eligibility.reason || t('booking:cancelBooking.notEligible')}
             </p>
 
             {eligibility.hoursUntilBooking > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6">
-                <div className="flex items-center gap-2 text-amber-800 mb-2">
+              <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4 text-left mb-6">
+                <div className="flex items-center gap-2 text-bliss-700 mb-2">
                   <Clock className="w-5 h-5" />
                   <span className="font-medium">{t('booking:cancelBooking.hoursUntilBooking', { hours: eligibility.hoursUntilBooking.toFixed(1) })}</span>
                 </div>
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-bliss-600">
                   {t('booking:cancelBooking.policyMessage')}
                 </p>
               </div>
             )}
 
             {eligibility.canReschedule && (
-              <p className="text-sm text-stone-500 mb-4">
+              <p className="text-sm text-bliss-500 mb-4">
                 {t('booking:cancelBooking.rescheduleOption')}
               </p>
             )}
 
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+              className="px-6 py-3 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
             >
               {t('common:button.close')}
             </button>
@@ -276,11 +276,11 @@ export function CancelBookingModal({
         {step === 'reason' && eligibility?.canCancel && (
           <div className="space-y-6">
             {/* Booking Summary */}
-            <div className="bg-stone-50 rounded-xl p-4">
-              <p className="text-sm text-stone-500 mb-1">{t('booking:cancelBooking.bookingSummary')}</p>
-              <p className="font-medium text-stone-900">{serviceName}</p>
-              <p className="text-sm text-stone-600">{t('booking:dateTime', { date: formatDate(bookingDate), time: bookingTime })}</p>
-              <p className="text-sm text-stone-500">{t('booking:bookingNumberLabel')} {bookingNumber}</p>
+            <div className="bg-bliss-100 rounded-xl p-4">
+              <p className="text-sm text-bliss-500 mb-1">{t('booking:cancelBooking.bookingSummary')}</p>
+              <p className="font-medium text-bliss-900">{serviceName}</p>
+              <p className="text-sm text-bliss-700">{t('booking:dateTime', { date: formatDate(bookingDate), time: bookingTime })}</p>
+              <p className="text-sm text-bliss-500">{t('booking:bookingNumberLabel')} {bookingNumber}</p>
             </div>
 
             {/* Refund Info */}
@@ -302,12 +302,12 @@ export function CancelBookingModal({
             )}
 
             {paymentStatus === 'paid' && eligibility.refundPercentage === 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4">
                 <div className="flex items-start gap-2">
-                  <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <Info className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-amber-800">{t('booking:cancelBooking.noRefund')}</p>
-                    <p className="text-sm text-amber-700">
+                    <p className="font-medium text-bliss-700">{t('booking:cancelBooking.noRefund')}</p>
+                    <p className="text-sm text-bliss-600">
                       {t('booking:cancelBooking.noRefundReason')}
                     </p>
                   </div>
@@ -317,7 +317,7 @@ export function CancelBookingModal({
 
             {/* Reason Selection */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-3">
+              <label className="block text-sm font-medium text-bliss-700 mb-3">
                 {t('booking:cancelBooking.reasonLabel')} <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
@@ -326,8 +326,8 @@ export function CancelBookingModal({
                     key={reason.key}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition ${
                       selectedReason === reason.key
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-stone-200 hover:border-stone-300'
+                        ? 'border-bliss-600 bg-bliss-100'
+                        : 'border-bliss-200 hover:border-bliss-300'
                     }`}
                   >
                     <input
@@ -336,9 +336,9 @@ export function CancelBookingModal({
                       value={reason.key}
                       checked={selectedReason === reason.key}
                       onChange={(e) => setSelectedReason(e.target.value)}
-                      className="w-4 h-4 text-amber-600 focus:ring-amber-500"
+                      className="w-4 h-4 text-bliss-600 focus:ring-bliss-600"
                     />
-                    <span className="text-stone-700">{t(reason.key)}</span>
+                    <span className="text-bliss-700">{t(reason.key)}</span>
                   </label>
                 ))}
               </div>
@@ -349,7 +349,7 @@ export function CancelBookingModal({
                   onChange={(e) => setCustomReason(e.target.value)}
                   placeholder={t('booking:cancelBooking.reasonPlaceholder')}
                   rows={3}
-                  className="w-full mt-3 px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full mt-3 px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                 />
               )}
             </div>
@@ -358,7 +358,7 @@ export function CancelBookingModal({
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+                className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition"
               >
                 {t('common:button.cancel')}
               </button>
@@ -379,34 +379,34 @@ export function CancelBookingModal({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:cancelBooking.confirmTitle')}</h3>
-            <p className="text-stone-600 mb-6">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('booking:cancelBooking.confirmTitle')}</h3>
+            <p className="text-bliss-700 mb-6">
               {t('booking:cancelBooking.confirmMessage')}
             </p>
 
-            <div className="bg-stone-50 rounded-xl p-4 text-left mb-6">
+            <div className="bg-bliss-100 rounded-xl p-4 text-left mb-6">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-stone-600">{t('booking:cancelBooking.service')}</span>
-                  <span className="font-medium text-stone-900">{serviceName}</span>
+                  <span className="text-bliss-700">{t('booking:cancelBooking.service')}</span>
+                  <span className="font-medium text-bliss-900">{serviceName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-600">{t('booking:cancelBooking.date')}</span>
-                  <span className="font-medium text-stone-900">{formatDate(bookingDate)}</span>
+                  <span className="text-bliss-700">{t('booking:cancelBooking.date')}</span>
+                  <span className="font-medium text-bliss-900">{formatDate(bookingDate)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-600">{t('booking:cancelBooking.time')}</span>
-                  <span className="font-medium text-stone-900">{bookingTime}</span>
+                  <span className="text-bliss-700">{t('booking:cancelBooking.time')}</span>
+                  <span className="font-medium text-bliss-900">{bookingTime}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-600">{t('booking:cancelBooking.reason')}</span>
-                  <span className="font-medium text-stone-900">
+                  <span className="text-bliss-700">{t('booking:cancelBooking.reason')}</span>
+                  <span className="font-medium text-bliss-900">
                     {selectedReason === OTHER_REASON_KEY ? customReason : t(selectedReason)}
                   </span>
                 </div>
                 {paymentStatus === 'paid' && refundAmount > 0 && (
-                  <div className="flex justify-between pt-2 border-t border-stone-200">
-                    <span className="text-stone-600">{t('booking:cancelBooking.refund')}</span>
+                  <div className="flex justify-between pt-2 border-t border-bliss-200">
+                    <span className="text-bliss-700">{t('booking:cancelBooking.refund')}</span>
                     <span className="font-bold text-green-600">฿{refundAmount.toLocaleString()}</span>
                   </div>
                 )}
@@ -417,7 +417,7 @@ export function CancelBookingModal({
               <button
                 onClick={() => setStep('reason')}
                 disabled={loading}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
+                className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50"
               >
                 {t('common:button.back')}
               </button>
@@ -445,8 +445,8 @@ export function CancelBookingModal({
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:cancelBooking.successTitle')}</h3>
-            <p className="text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('booking:cancelBooking.successTitle')}</h3>
+            <p className="text-bliss-700 mb-4">
               {t('booking:cancelBooking.successMessage', { bookingNumber })}
             </p>
 
@@ -466,7 +466,7 @@ export function CancelBookingModal({
 
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
+              className="px-8 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               {t('common:button.close')}
             </button>

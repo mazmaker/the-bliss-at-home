@@ -21,7 +21,7 @@ export function CustomerTypeSelector({
 
   return (
     <div className="space-y-4">
-      <h4 className="font-semibold text-stone-900">{t('wizard.step1.customerType')}</h4>
+      <h4 className="font-semibold text-bliss-900">{t('wizard.step1.customerType')}</h4>
 
       {/* Single / Couple Toggle */}
       <div className="grid grid-cols-2 gap-3">
@@ -29,45 +29,45 @@ export function CustomerTypeSelector({
           onClick={() => onCustomerTypeChange('single')}
           className={`p-4 rounded-xl border-2 text-center transition ${
             customerType === 'single'
-              ? 'border-amber-700 bg-amber-50'
-              : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+              ? 'border-bliss-600 bg-bliss-100'
+              : 'border-bliss-200 hover:border-bliss-400 hover:bg-bliss-100'
           }`}
         >
-          <User className={`w-8 h-8 mx-auto mb-2 ${customerType === 'single' ? 'text-amber-700' : 'text-stone-400'}`} />
-          <div className="font-semibold text-stone-900">{t('wizard.step1.single')}</div>
-          <div className="text-xs text-stone-500 mt-1">{t('wizard.step1.singleDesc')}</div>
+          <User className={`w-8 h-8 mx-auto mb-2 ${customerType === 'single' ? 'text-bliss-600' : 'text-bliss-400'}`} />
+          <div className="font-semibold text-bliss-900">{t('wizard.step1.single')}</div>
+          <div className="text-xs text-bliss-500 mt-1">{t('wizard.step1.singleDesc')}</div>
         </button>
 
         <button
           onClick={() => onCustomerTypeChange('couple')}
           className={`p-4 rounded-xl border-2 text-center transition ${
             customerType === 'couple'
-              ? 'border-amber-700 bg-amber-50'
-              : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+              ? 'border-bliss-600 bg-bliss-100'
+              : 'border-bliss-200 hover:border-bliss-400 hover:bg-bliss-100'
           }`}
         >
-          <Users className={`w-8 h-8 mx-auto mb-2 ${customerType === 'couple' ? 'text-amber-700' : 'text-stone-400'}`} />
-          <div className="font-semibold text-stone-900">{t('wizard.step1.couple')}</div>
-          <div className="text-xs text-stone-500 mt-1">{t('wizard.step1.coupleDesc')}</div>
+          <Users className={`w-8 h-8 mx-auto mb-2 ${customerType === 'couple' ? 'text-bliss-600' : 'text-bliss-400'}`} />
+          <div className="font-semibold text-bliss-900">{t('wizard.step1.couple')}</div>
+          <div className="text-xs text-bliss-500 mt-1">{t('wizard.step1.coupleDesc')}</div>
         </button>
       </div>
 
       {/* Couple Format Sub-options */}
       {customerType === 'couple' && (
         <div className="space-y-3 pt-2">
-          <h4 className="font-semibold text-stone-900">{t('wizard.step1.coupleFormat')}</h4>
+          <h4 className="font-semibold text-bliss-900">{t('wizard.step1.coupleFormat')}</h4>
 
           <button
             onClick={() => onCoupleFormatChange('simultaneous')}
             className={`w-full p-4 rounded-xl border-2 text-left transition ${
               coupleFormat === 'simultaneous'
-                ? 'border-amber-700 bg-amber-50'
-                : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                ? 'border-bliss-600 bg-bliss-100'
+                : 'border-bliss-200 hover:border-bliss-400 hover:bg-bliss-100'
             }`}
           >
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                coupleFormat === 'simultaneous' ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-400'
+                coupleFormat === 'simultaneous' ? 'bg-bliss-200 text-bliss-600' : 'bg-bliss-100 text-bliss-400'
               }`}>
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14M12 5v14" strokeLinecap="round" />
@@ -75,14 +75,14 @@ export function CustomerTypeSelector({
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-stone-900">{t('wizard.step1.simultaneous')}</div>
-                <div className="text-sm text-stone-500">{t('wizard.step1.simultaneousDesc')}</div>
+                <div className="font-semibold text-bliss-900">{t('wizard.step1.simultaneous')}</div>
+                <div className="text-sm text-bliss-500">{t('wizard.step1.simultaneousDesc')}</div>
               </div>
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                coupleFormat === 'simultaneous' ? 'border-amber-700 bg-amber-700' : 'border-stone-300'
+                coupleFormat === 'simultaneous' ? 'border-bliss-600 bg-bliss-600' : 'border-bliss-300'
               }`}>
                 {coupleFormat === 'simultaneous' && (
-                  <div className="w-2 h-2 rounded-full bg-white" />
+                  <div className="w-2 h-2 rounded-full bg-bliss-50" />
                 )}
               </div>
             </div>

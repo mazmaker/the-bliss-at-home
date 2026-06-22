@@ -24,7 +24,7 @@ export default function FloatingCTA({
   const buttonColors = {
     line: colors.line || 'bg-green-500 hover:bg-green-600',
     facebook: colors.facebook || 'bg-blue-600 hover:bg-blue-700',
-    main: colors.main || 'bg-gradient-to-r from-amber-500 to-orange-600'
+    main: colors.main || 'bg-bliss-600'
   }
 
   const handleContact = (method: 'line' | 'facebook') => {
@@ -51,7 +51,7 @@ export default function FloatingCTA({
             onClick={() => handleContact('facebook')}
             className={`flex items-center gap-3 ${buttonColors.facebook} text-white px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105`}
           >
-            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 bg-bliss-50 rounded-full flex items-center justify-center">
               <span className="text-blue-600 font-bold text-sm">f</span>
             </div>
             <span className="text-sm font-medium">Facebook</span>

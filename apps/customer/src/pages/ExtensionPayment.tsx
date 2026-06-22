@@ -257,13 +257,13 @@ function ExtensionPayment() {
 
   if (paymentSuccess) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">ชำระเงินสำเร็จ!</h1>
-          <p className="text-stone-600">กำลังพาคุณกลับไปที่การจอง...</p>
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">ชำระเงินสำเร็จ!</h1>
+          <p className="text-bliss-700">กำลังพาคุณกลับไปที่การจอง...</p>
         </div>
       </div>
     )
@@ -272,46 +272,46 @@ function ExtensionPayment() {
   const isBanking = selectedChannel === 'internet_banking' || selectedChannel === 'mobile_banking'
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-bliss-100">
       {/* Header */}
-      <div className="bg-white border-b border-stone-200 sticky top-0 z-10">
+      <div className="bg-bliss-50 border-b border-bliss-200 sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => selectedChannel ? resetChannel() : navigate(-1)}
-              className="p-2 -ml-2 text-stone-600 hover:text-stone-900 transition"
+              className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-stone-900">ชำระเงินเพิ่มเวลา</h1>
+            <h1 className="text-lg font-semibold text-bliss-900">ชำระเงินเพิ่มเวลา</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-md mx-auto p-4 space-y-4">
         {/* Summary */}
-        <div className="bg-white rounded-xl p-6 border border-stone-200">
-          <h2 className="text-lg font-semibold text-stone-900 mb-4">สรุปการเพิ่มเวลา</h2>
+        <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
+          <h2 className="text-lg font-semibold text-bliss-900 mb-4">สรุปการเพิ่มเวลา</h2>
           <div className="space-y-3">
             {bookingNumber && (
               <div className="flex justify-between">
-                <span className="text-stone-600">หมายเลขจอง</span>
+                <span className="text-bliss-700">หมายเลขจอง</span>
                 <span className="font-medium">{bookingNumber}</span>
               </div>
             )}
             {duration > 0 && (
               <div className="flex justify-between">
-                <span className="text-stone-600 flex items-center gap-1">
+                <span className="text-bliss-700 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   เพิ่มเวลา
                 </span>
                 <span className="font-medium">{duration} นาที</span>
               </div>
             )}
-            <div className="border-t border-stone-200 pt-3">
+            <div className="border-t border-bliss-200 pt-3">
               <div className="flex justify-between text-lg font-semibold">
                 <span>ยอดชำระ</span>
-                <span className="text-amber-700">฿{amount.toLocaleString()}</span>
+                <span className="text-bliss-600">฿{amount.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -324,7 +324,7 @@ function ExtensionPayment() {
             <div>
               <p className="font-medium text-red-800">เกิดข้อผิดพลาด</p>
               <p className="text-sm text-red-600 mt-1">{error}</p>
-              <button onClick={resetChannel} className="mt-2 text-sm text-amber-700 font-medium underline">
+              <button onClick={resetChannel} className="mt-2 text-sm text-bliss-600 font-medium underline">
                 ลองใหม่
               </button>
             </div>
@@ -333,21 +333,21 @@ function ExtensionPayment() {
 
         {/* ── Channel selection ─────────────────────────────────────── */}
         {!selectedChannel && !error && (
-          <div className="bg-white rounded-xl p-6 border border-stone-200 space-y-4">
-            <h3 className="font-semibold text-stone-900">เลือกวิธีชำระเงิน</h3>
+          <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200 space-y-4">
+            <h3 className="font-semibold text-bliss-900">เลือกวิธีชำระเงิน</h3>
             <div className="grid gap-3">
 
               {enabledChannels.includes('promptpay') && (
                 <button
                   onClick={() => { setSelectedChannel('promptpay'); handlePromptPay() }}
-                  className="flex items-center gap-4 p-4 border-2 border-stone-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
                 >
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                     <QrCode className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-stone-900">PromptPay</p>
-                    <p className="text-sm text-stone-500">สแกน QR ผ่านแอปธนาคาร</p>
+                    <p className="font-semibold text-bliss-900">PromptPay</p>
+                    <p className="text-sm text-bliss-500">สแกน QR ผ่านแอปธนาคาร</p>
                   </div>
                 </button>
               )}
@@ -355,14 +355,14 @@ function ExtensionPayment() {
               {enabledChannels.includes('credit_card') && (
                 <button
                   onClick={() => setSelectedChannel('credit_card')}
-                  className="flex items-center gap-4 p-4 border-2 border-stone-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-bliss-500 hover:bg-bliss-100 transition-all text-left"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-bliss-600 flex items-center justify-center">
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-stone-900">บัตรเครดิต / เดบิต</p>
-                    <p className="text-sm text-stone-500">Visa, Mastercard</p>
+                    <p className="font-semibold text-bliss-900">บัตรเครดิต / เดบิต</p>
+                    <p className="text-sm text-bliss-500">Visa, Mastercard</p>
                   </div>
                 </button>
               )}
@@ -370,14 +370,14 @@ function ExtensionPayment() {
               {enabledChannels.includes('internet_banking') && (
                 <button
                   onClick={() => setSelectedChannel('internet_banking')}
-                  className="flex items-center gap-4 p-4 border-2 border-stone-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all text-left"
                 >
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
                     <Building2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-stone-900">Internet Banking</p>
-                    <p className="text-sm text-stone-500">ชำระผ่านเว็บธนาคาร</p>
+                    <p className="font-semibold text-bliss-900">Internet Banking</p>
+                    <p className="text-sm text-bliss-500">ชำระผ่านเว็บธนาคาร</p>
                   </div>
                 </button>
               )}
@@ -385,20 +385,20 @@ function ExtensionPayment() {
               {enabledChannels.includes('mobile_banking') && (
                 <button
                   onClick={() => setSelectedChannel('mobile_banking')}
-                  className="flex items-center gap-4 p-4 border-2 border-stone-200 rounded-xl hover:border-violet-400 hover:bg-violet-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-violet-400 hover:bg-violet-50 transition-all text-left"
                 >
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                     <Smartphone className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-stone-900">Mobile Banking</p>
-                    <p className="text-sm text-stone-500">ชำระผ่านแอปธนาคาร</p>
+                    <p className="font-semibold text-bliss-900">Mobile Banking</p>
+                    <p className="text-sm text-bliss-500">ชำระผ่านแอปธนาคาร</p>
                   </div>
                 </button>
               )}
 
               {enabledChannels.length === 0 && (
-                <p className="text-center text-stone-500 py-4 text-sm">กำลังโหลดช่องทางชำระเงิน...</p>
+                <p className="text-center text-bliss-500 py-4 text-sm">กำลังโหลดช่องทางชำระเงิน...</p>
               )}
             </div>
           </div>
@@ -406,28 +406,28 @@ function ExtensionPayment() {
 
         {/* ── PromptPay QR ──────────────────────────────────────────── */}
         {selectedChannel === 'promptpay' && !error && (
-          <div className="bg-white rounded-xl p-6 border border-stone-200">
+          <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
             <div className="flex items-center gap-2 mb-4">
-              <button onClick={resetChannel} className="p-1 text-stone-500 hover:text-stone-800 transition">
+              <button onClick={resetChannel} className="p-1 text-bliss-500 hover:text-bliss-900 transition">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <h3 className="font-semibold text-stone-900 flex items-center gap-2">
+              <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
                 ชำระด้วย PromptPay
               </h3>
             </div>
 
             {isLoading && !promptpayQR ? (
-              <div className="flex flex-col items-center py-10 gap-3 text-stone-500">
+              <div className="flex flex-col items-center py-10 gap-3 text-bliss-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
                 <span>กำลังสร้าง QR...</span>
               </div>
             ) : promptpayQR ? (
               <div className="text-center">
                 <img src={promptpayQR} alt="PromptPay QR Code" className="w-64 h-64 mx-auto rounded-xl" />
-                <p className="text-sm text-stone-600 mt-3">สแกน QR ด้วยแอปธนาคารเพื่อชำระเงิน</p>
-                <div className="flex items-center justify-center gap-2 mt-2 text-stone-500 text-sm">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-700" />
+                <p className="text-sm text-bliss-700 mt-3">สแกน QR ด้วยแอปธนาคารเพื่อชำระเงิน</p>
+                <div className="flex items-center justify-center gap-2 mt-2 text-bliss-500 text-sm">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-bliss-600" />
                   กำลังรอการชำระเงิน...
                 </div>
               </div>
@@ -437,12 +437,12 @@ function ExtensionPayment() {
 
         {/* ── Credit card form ───────────────────────────────────────── */}
         {selectedChannel === 'credit_card' && !error && (
-          <div className="bg-white rounded-xl p-6 border border-stone-200">
+          <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
             <div className="flex items-center gap-2 mb-4">
-              <button onClick={resetChannel} className="p-1 text-stone-500 hover:text-stone-800 transition">
+              <button onClick={resetChannel} className="p-1 text-bliss-500 hover:text-bliss-900 transition">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <h3 className="font-semibold text-stone-900 flex items-center gap-2">
+              <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
                 ชำระด้วยบัตรเครดิต / เดบิต
               </h3>
@@ -450,40 +450,40 @@ function ExtensionPayment() {
 
             <form onSubmit={handleCardSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ชื่อบนบัตร</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">ชื่อบนบัตร</label>
                 <input
                   type="text" required placeholder="ชื่อ นามสกุล"
                   value={cardForm.name}
                   onChange={e => setCardForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">หมายเลขบัตร</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">หมายเลขบัตร</label>
                 <input
                   type="text" required inputMode="numeric" placeholder="0000 0000 0000 0000"
                   value={cardForm.number}
                   onChange={e => setCardForm(f => ({ ...f, number: formatCardNumber(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">วันหมดอายุ</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1">วันหมดอายุ</label>
                   <input
                     type="text" required inputMode="numeric" placeholder="MM/YY"
                     value={cardForm.expiry}
                     onChange={e => setCardForm(f => ({ ...f, expiry: formatExpiry(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">CVV</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1">CVV</label>
                   <input
                     type="text" required inputMode="numeric" placeholder="123" maxLength={4}
                     value={cardForm.cvv}
                     onChange={e => setCardForm(f => ({ ...f, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                   />
                 </div>
               </div>
@@ -493,14 +493,14 @@ function ExtensionPayment() {
                 className={`w-full py-3 rounded-xl font-semibold transition-colors ${
                   isLoading || !omiseReady
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/20'
+                    : 'bg-bliss-600 hover:bg-bliss-600 text-white shadow-lg shadow-bliss-600/20'
                 }`}
               >
                 {isLoading ? 'กำลังดำเนินการ...' : `ชำระ ฿${amount.toLocaleString()}`}
               </button>
             </form>
 
-            <div className="flex items-center justify-center gap-2 mt-4 text-stone-500 text-xs">
+            <div className="flex items-center justify-center gap-2 mt-4 text-bliss-500 text-xs">
               <Lock className="w-3 h-3" />
               ปลอดภัยด้วย SSL และ Omise
             </div>
@@ -509,20 +509,20 @@ function ExtensionPayment() {
 
         {/* ── Internet / Mobile Banking bank grid ────────────────────── */}
         {isBanking && !error && (
-          <div className="bg-white rounded-xl p-6 border border-stone-200">
+          <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
             <div className="flex items-center gap-2 mb-1">
-              <button onClick={resetChannel} className="p-1 text-stone-500 hover:text-stone-800 transition">
+              <button onClick={resetChannel} className="p-1 text-bliss-500 hover:text-bliss-900 transition">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <h3 className="font-semibold text-stone-900">
+              <h3 className="font-semibold text-bliss-900">
                 {selectedChannel === 'internet_banking' ? 'Internet Banking' : 'Mobile Banking'}
               </h3>
             </div>
-            <p className="text-sm text-stone-500 mb-4 ml-8">เลือกธนาคารที่ต้องการชำระ</p>
+            <p className="text-sm text-bliss-500 mb-4 ml-8">เลือกธนาคารที่ต้องการชำระ</p>
 
             {isLoading ? (
-              <div className="flex flex-col items-center py-8 gap-3 text-stone-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700" />
+              <div className="flex flex-col items-center py-8 gap-3 text-bliss-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600" />
                 <span>กำลังเชื่อมต่อธนาคาร...</span>
               </div>
             ) : (
@@ -532,13 +532,13 @@ function ExtensionPayment() {
                     key={bank.code}
                     onClick={() => handleBanking(bank.code, selectedChannel === 'mobile_banking')}
                     disabled={isLoading}
-                    className={`p-4 rounded-xl border-2 border-stone-200 ${bank.hover} transition disabled:opacity-50`}
+                    className={`p-4 rounded-xl border-2 border-bliss-200 ${bank.hover} transition disabled:opacity-50`}
                   >
                     <div className="text-center">
                       <div className={`w-12 h-12 ${bank.color} rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-xs`}>
                         {bank.label}
                       </div>
-                      <p className="text-xs font-medium text-stone-900">{bank.label}</p>
+                      <p className="text-xs font-medium text-bliss-900">{bank.label}</p>
                     </div>
                   </button>
                 ))}
@@ -548,8 +548,8 @@ function ExtensionPayment() {
         )}
 
         {/* Security notice */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <p className="text-sm text-stone-600 text-center">
+        <div className="p-4 bg-bliss-100 border border-bliss-300 rounded-xl">
+          <p className="text-sm text-bliss-700 text-center">
             การชำระเงินปลอดภัยด้วยระบบ SSL และ Omise
           </p>
         </div>

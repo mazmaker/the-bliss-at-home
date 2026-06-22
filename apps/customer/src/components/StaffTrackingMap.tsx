@@ -243,7 +243,7 @@ export default function StaffTrackingMap({
 
   const getStatusColor = (status: string) => {
     const colorMap: Record<string, string> = {
-      traveling: 'text-amber-600 bg-amber-100 border-amber-200',
+      traveling: 'text-bliss-600 bg-bliss-200 border-bliss-300',
       arrived: 'text-purple-600 bg-purple-100 border-purple-200',
       completed: 'text-green-600 bg-green-100 border-green-200',
       cancelled: 'text-red-600 bg-red-100 border-red-200'
@@ -257,10 +257,10 @@ export default function StaffTrackingMap({
 
   if (isLoading && !journey) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6" style={{ height }}>
+      <div className="bg-bliss-50 rounded-lg shadow-md p-6" style={{ height }}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto mb-2"></div>
             <p className="text-gray-600">{t('common:trackingMap.loadingMap')}</p>
           </div>
         </div>
@@ -270,14 +270,14 @@ export default function StaffTrackingMap({
 
   if (error && !journey) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6" style={{ height }}>
+      <div className="bg-bliss-50 rounded-lg shadow-md p-6" style={{ height }}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-red-600">
             <p className="mb-2">{t('common:trackingMap.errorTitle')}</p>
             <p className="text-sm">{error}</p>
             <button
               onClick={refreshMap}
-              className="mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 transition"
+              className="mt-3 bg-bliss-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-bliss-600 transition"
             >
               {t('common:buttons.retry')}
             </button>
@@ -290,16 +290,16 @@ export default function StaffTrackingMap({
   const embedUrl = getMapEmbedUrl()
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bliss-50 rounded-lg shadow-md overflow-hidden">
       {/* Header */}
       {journey && (
-        <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-4">
+        <div className="bg-bliss-600 text-white p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold flex items-center gap-2">
                 {t('common:trackingMap.title')}
               </h3>
-              <p className="text-amber-100 text-sm">{journey.staff_name}</p>
+              <p className="text-bliss-200 text-sm">{journey.staff_name}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(journey.status)}`}>
@@ -308,7 +308,7 @@ export default function StaffTrackingMap({
               <button
                 onClick={refreshMap}
                 disabled={isLoading}
-                className="p-1 hover:bg-amber-800 rounded transition"
+                className="p-1 hover:bg-bliss-700 rounded transition"
                 title={t('common:trackingMap.refreshMap')}
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -316,7 +316,7 @@ export default function StaffTrackingMap({
             </div>
           </div>
           {lastUpdate && (
-            <p className="text-amber-100 text-xs mt-2">{t('common:trackingMap.lastUpdated')} {lastUpdate}</p>
+            <p className="text-bliss-200 text-xs mt-2">{t('common:trackingMap.lastUpdated')} {lastUpdate}</p>
           )}
         </div>
       )}
@@ -353,7 +353,7 @@ export default function StaffTrackingMap({
         {isLoading && journey && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
             <div className="text-center">
-              <RefreshCw className="w-6 h-6 animate-spin text-amber-600 mx-auto mb-2" />
+              <RefreshCw className="w-6 h-6 animate-spin text-bliss-600 mx-auto mb-2" />
               <p className="text-sm text-gray-600">{t('common:trackingMap.updating')}</p>
             </div>
           </div>
@@ -377,14 +377,14 @@ export default function StaffTrackingMap({
           )}
 
           {/* Destination Info */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <div className="bg-bliss-100 border border-bliss-300 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="w-4 h-4 text-amber-700" />
-                  <span className="text-amber-700 font-medium text-sm">{t('common:labels.destination')}</span>
+                  <MapPin className="w-4 h-4 text-bliss-600" />
+                  <span className="text-bliss-600 font-medium text-sm">{t('common:labels.destination')}</span>
                 </div>
-                <p className="text-sm text-amber-600">{journey.destination_name}</p>
+                <p className="text-sm text-bliss-600">{journey.destination_name}</p>
               </div>
 
               <div className="flex gap-2">
@@ -393,7 +393,7 @@ export default function StaffTrackingMap({
                     href={`https://www.google.com/maps/dir/?api=1&destination=${journey.destination_lat},${journey.destination_lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-amber-100 text-amber-700 p-2 rounded hover:bg-amber-200 transition"
+                    className="bg-bliss-200 text-bliss-600 p-2 rounded hover:bg-bliss-300 transition"
                     title={t('common:trackingMap.navigateGoogleMaps')}
                   >
                     <Navigation className="w-4 h-4" />

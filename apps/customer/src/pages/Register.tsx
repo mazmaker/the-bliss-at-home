@@ -94,26 +94,26 @@ function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md md:max-w-lg lg:max-w-xl">
         {/* Back Button */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-900 mb-6"
+          className="inline-flex items-center gap-2 text-bliss-700 hover:text-bliss-900 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>{t('register.backToHome')}</span>
         </Link>
 
         {/* Register Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-bliss-100">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-bliss-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">บ</span>
             </div>
-            <h1 className="text-2xl font-bold text-stone-900">{t('register.title')}</h1>
-            <p className="text-stone-500">{t('register.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-bliss-900">{t('register.title')}</h1>
+            <p className="text-bliss-500">{t('register.subtitle')}</p>
           </div>
 
           {/* Error Alert */}
@@ -128,11 +128,11 @@ function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 {t('register.fullName')}
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                 <input
                   type="text"
                   value={formData.name}
@@ -140,18 +140,18 @@ function Register() {
                   placeholder={t('register.namePlaceholder')}
                   required
                   disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 {t('register.email')}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                 <input
                   type="email"
                   value={formData.email}
@@ -159,18 +159,18 @@ function Register() {
                   placeholder={t('register.emailPlaceholder')}
                   required
                   disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 {t('register.phone')}
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                 <input
                   type="tel"
                   value={formData.phone}
@@ -178,18 +178,18 @@ function Register() {
                   placeholder={t('register.phonePlaceholder')}
                   required
                   disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 {t('register.password')}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
@@ -198,27 +198,27 @@ function Register() {
                   required
                   minLength={8}
                   disabled={isLoading}
-                  className="w-full pl-10 pr-12 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-12 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-700 disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-stone-500 mt-1">{t('register.passwordHint')}</p>
+              <p className="text-xs text-bliss-500 mt-1">{t('register.passwordHint')}</p>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 {t('register.confirmPassword')}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
@@ -226,13 +226,13 @@ function Register() {
                   placeholder={t('register.passwordPlaceholder')}
                   required
                   disabled={isLoading}
-                  className="w-full pl-10 pr-12 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-12 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   disabled={isLoading}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-700 disabled:opacity-50"
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -256,15 +256,15 @@ function Register() {
                 onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
                 required
                 disabled={isLoading}
-                className="w-4 h-4 mt-0.5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                className="w-4 h-4 mt-0.5 text-bliss-600 rounded focus:ring-2 focus:ring-bliss-600 disabled:opacity-50"
               />
-              <span className="text-sm text-stone-600">
+              <span className="text-sm text-bliss-700">
                 {t('register.agreeTerms')}{' '}
-                <Link to="/terms" className="text-amber-700 hover:underline">
+                <Link to="/terms" className="text-bliss-600 hover:underline">
                   {t('register.termsOfService')}
                 </Link>{' '}
                 {t('register.and')}{' '}
-                <Link to="/privacy" className="text-amber-700 hover:underline">
+                <Link to="/privacy" className="text-bliss-600 hover:underline">
                   {t('register.privacyPolicy')}
                 </Link>
               </span>
@@ -278,10 +278,10 @@ function Register() {
             />
 
             {/* Health Declaration — required before submit */}
-            <div className="border border-stone-200 rounded-2xl p-4">
+            <div className="border border-bliss-200 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <HeartPulse className="w-5 h-5 text-amber-700" />
-                <h2 className="font-semibold text-stone-900">
+                <HeartPulse className="w-5 h-5 text-bliss-600" />
+                <h2 className="font-semibold text-bliss-900">
                   {t('auth:register.healthDeclarationTitle')}
                 </h2>
               </div>
@@ -296,7 +296,7 @@ function Register() {
             <button
               type="submit"
               disabled={!isFormValid() || isLoading}
-              className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -310,9 +310,9 @@ function Register() {
           </form>
 
           {/* Login Link */}
-          <p className="text-center text-sm text-stone-600 mt-6">
+          <p className="text-center text-sm text-bliss-700 mt-6">
             {t('register.haveAccount')}{' '}
-            <Link to="/login" className="text-amber-700 hover:text-amber-800 font-medium">
+            <Link to="/login" className="text-bliss-600 hover:text-bliss-700 font-medium">
               {t('register.loginLink')}
             </Link>
           </p>

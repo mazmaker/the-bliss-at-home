@@ -100,22 +100,22 @@ function ServiceCatalog() {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-light text-stone-900 mb-2 tracking-wide">{t('services:catalog.title')}</h1>
-          <p className="text-stone-600 font-light">{t('services:catalog.subtitle')}</p>
+          <h1 className="text-3xl font-light text-bliss-900 mb-2 tracking-wide">{t('services:catalog.title')}</h1>
+          <p className="text-bliss-700 font-light">{t('services:catalog.subtitle')}</p>
         </div>
 
         {/* Search + Filter Bar */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 mb-8 border border-stone-200">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 mb-8 border border-bliss-200">
           <div className="flex items-center gap-3">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
               <input
                 type="text"
                 placeholder={t('services:catalog.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition bg-white"
+                className="w-full pl-12 pr-4 py-3 border border-bliss-200 rounded-xl outline-none focus:border-bliss-600 focus:ring-1 focus:ring-bliss-600 transition bg-bliss-50"
               />
             </div>
 
@@ -134,8 +134,8 @@ function ServiceCatalog() {
                   }}
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium whitespace-nowrap transition text-sm ${
                     selectedCategory === category.id
-                      ? 'bg-amber-700 text-white shadow-md'
-                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      ? 'bg-bliss-600 text-white shadow-md'
+                      : 'bg-bliss-100 text-bliss-700 hover:bg-bliss-200'
                   }`}
                 >
                   <category.icon className="w-4 h-4" />
@@ -148,7 +148,7 @@ function ServiceCatalog() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-amber-500 bg-white text-stone-700 text-sm shrink-0"
+              className="px-4 py-3 border border-bliss-200 rounded-xl outline-none focus:border-bliss-600 bg-bliss-50 text-bliss-700 text-sm shrink-0"
             >
               {sortOptions.map((option) => (
                 <option key={option.id} value={option.id}>{option.name}</option>
@@ -160,8 +160,8 @@ function ServiceCatalog() {
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-            <p className="text-stone-600 mt-4">{t('common:loading.services')}</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mx-auto"></div>
+            <p className="text-bliss-700 mt-4">{t('common:loading.services')}</p>
           </div>
         )}
 
@@ -175,7 +175,7 @@ function ServiceCatalog() {
         {/* Results */}
         {!isLoading && !error && (
           <>
-            <div className="mb-4 text-stone-600 font-light">
+            <div className="mb-4 text-bliss-700 font-light">
               {t('services:catalog.resultsCount', { count: filteredServices.length })}
             </div>
 
@@ -186,7 +186,7 @@ function ServiceCatalog() {
               <Link
                 key={service.id}
                 to={`/services/${service.slug}`}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition overflow-hidden group border border-stone-100"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition overflow-hidden group border border-bliss-100"
               >
                 <div className="h-48 overflow-hidden">
                   <img
@@ -196,19 +196,19 @@ function ServiceCatalog() {
                   />
                 </div>
                 <div className="p-5">
-                  <h3 className="font-medium text-lg text-stone-900 mb-2">{service.name}</h3>
+                  <h3 className="font-medium text-lg text-bliss-900 mb-2">{service.name}</h3>
 
                   {service.reviews > 0 ? (
                     <div className="flex items-center gap-2 mb-3">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      <span className="text-sm font-medium text-stone-700">{service.rating.toFixed(1)}</span>
-                      <span className="text-sm text-stone-400">({service.reviews} {t('services:catalog.reviews')})</span>
+                      <Star className="w-4 h-4 text-bliss-600 fill-bliss-600" />
+                      <span className="text-sm font-medium text-bliss-700">{service.rating.toFixed(1)}</span>
+                      <span className="text-sm text-bliss-400">({service.reviews} {t('services:catalog.reviews')})</span>
                     </div>
                   ) : (
-                    <p className="text-sm text-stone-400 mb-3">{t('services:reviews.noReviews')}</p>
+                    <p className="text-sm text-bliss-400 mb-3">{t('services:reviews.noReviews')}</p>
                   )}
 
-                  <div className="flex items-center justify-between text-sm text-stone-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-bliss-500 mb-4">
                     <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {t('services:catalog.startingFrom')} {service.minDuration} {t('services:catalog.min')}</span>
                   </div>
 
@@ -218,7 +218,7 @@ function ServiceCatalog() {
                       size="md"
                       className="flex-1"
                     />
-                    <button className="bg-stone-900 text-white px-4 py-2 rounded-full font-medium hover:bg-amber-700 transition ml-4">
+                    <button className="bg-bliss-900 text-white px-4 py-2 rounded-full font-medium hover:bg-bliss-600 transition ml-4">
                       {t('services:catalog.book')}
                     </button>
                   </div>
@@ -229,15 +229,15 @@ function ServiceCatalog() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Search className="w-12 h-12 text-stone-400 mx-auto" />
-            <p className="text-stone-500 mt-4 font-light">{t('services:catalog.noResults')}</p>
+            <Search className="w-12 h-12 text-bliss-400 mx-auto" />
+            <p className="text-bliss-500 mt-4 font-light">{t('services:catalog.noResults')}</p>
             <button
               onClick={() => {
                 setSearchQuery('')
                 setSelectedCategory('all')
                 setSearchParams({})
               }}
-              className="mt-4 text-amber-700 hover:text-amber-800 font-medium"
+              className="mt-4 text-bliss-600 hover:text-bliss-700 font-medium"
             >
               {t('services:catalog.clearFilters')}
             </button>

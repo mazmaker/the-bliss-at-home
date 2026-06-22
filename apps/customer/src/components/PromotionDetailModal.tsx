@@ -105,17 +105,17 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto relative shadow-2xl">
+      <div className="bg-bliss-50 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto relative shadow-2xl">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg transition"
+          className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-bliss-50 rounded-full shadow-lg transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Hero Section */}
-        <div className="relative h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-t-2xl sm:rounded-t-3xl overflow-hidden">
+        <div className="relative h-48 sm:h-56 lg:h-64 bg-bliss-600 rounded-t-2xl sm:rounded-t-3xl overflow-hidden">
           {promotion.image_url ? (
             <>
               <img
@@ -157,7 +157,7 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
           </div>
 
           {/* Discount Badge */}
-          <div className="absolute bottom-4 right-4 bg-white rounded-2xl px-4 py-2 shadow-lg">
+          <div className="absolute bottom-4 right-4 bg-bliss-50 rounded-2xl px-4 py-2 shadow-lg">
             <div className="flex items-center gap-2">
               {getDiscountIcon()}
               <span className="text-2xl font-bold text-gray-800">{formatDiscount()}</span>
@@ -177,22 +177,22 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
           </div>
 
           {/* Promo Code */}
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-4 border border-amber-200">
+          <div className="bg-bliss-100 rounded-2xl p-4 border border-bliss-300">
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">{t('home:promotions.promoCode')}</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <code className="text-lg sm:text-xl lg:text-2xl font-bold font-mono text-amber-700 bg-white px-4 py-2 rounded-lg border border-amber-300 min-w-0 break-all text-center sm:text-left">
+                <code className="text-lg sm:text-xl lg:text-2xl font-bold font-mono text-bliss-600 bg-bliss-50 px-4 py-2 rounded-lg border border-bliss-400 min-w-0 break-all text-center sm:text-left">
                   {promotion.code}
                 </code>
                 <button
                   onClick={copyCode}
-                  className="p-3 sm:p-2 bg-amber-100 hover:bg-amber-200 rounded-lg transition touch-manipulation"
+                  className="p-3 sm:p-2 bg-bliss-200 hover:bg-bliss-300 rounded-lg transition touch-manipulation"
                   title={t('home:promotions.copyCode')}
                 >
                   {copied ? (
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   ) : (
-                    <Copy className="w-5 h-5 text-amber-600" />
+                    <Copy className="w-5 h-5 text-bliss-600" />
                   )}
                 </button>
               </div>
@@ -294,7 +294,7 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
             <Link
               to="/services"
               onClick={onClose}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white px-6 py-4 rounded-xl font-medium transition flex items-center justify-center gap-3 touch-manipulation text-lg"
+              className="w-full bg-bliss-600 hover:bg-bliss-600 text-white px-6 py-4 rounded-xl font-medium transition flex items-center justify-center gap-3 touch-manipulation text-lg"
             >
               {t('home:promotions.bookNow')}
             </Link>

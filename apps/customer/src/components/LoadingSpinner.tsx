@@ -21,9 +21,9 @@ const textSizeClasses = {
 function LoadingSpinner({ size = 'md', className = '', text }: LoadingSpinnerProps) {
   return (
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
-      <Loader2 className={`${sizeClasses[size]} text-amber-700 animate-spin`} />
+      <Loader2 className={`${sizeClasses[size]} text-bliss-600 animate-spin`} />
       {text && (
-        <p className={`${textSizeClasses[size]} text-stone-600 font-medium`}>
+        <p className={`${textSizeClasses[size]} text-bliss-700 font-medium`}>
           {text}
         </p>
       )}

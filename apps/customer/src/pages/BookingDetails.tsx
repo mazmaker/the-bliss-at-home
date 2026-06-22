@@ -290,11 +290,11 @@ function BookingDetails() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+      <div className="min-h-screen bg-bliss-100 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-            <p className="text-stone-600 mt-4">{t('common:loading.bookingDetails')}</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mx-auto"></div>
+            <p className="text-bliss-700 mt-4">{t('common:loading.bookingDetails')}</p>
           </div>
         </div>
       </div>
@@ -304,15 +304,15 @@ function BookingDetails() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+      <div className="min-h-screen bg-bliss-100 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <XCircle className="w-16 h-16 text-red-500 mx-auto" />
-            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">{t('details.errorLoading')}</h2>
-            <p className="text-stone-600 mb-6">{error.message}</p>
+            <h2 className="text-2xl font-bold text-bliss-900 mt-4 mb-2">{t('details.errorLoading')}</h2>
+            <p className="text-bliss-700 mb-6">{error.message}</p>
             <Link
               to="/bookings"
-              className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+              className="inline-block bg-bliss-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               {t('details.backToHistory')}
             </Link>
@@ -324,15 +324,15 @@ function BookingDetails() {
 
   if (!booking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+      <div className="min-h-screen bg-bliss-100 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <XCircle className="w-16 h-16 text-stone-400 mx-auto" />
-            <h2 className="text-2xl font-bold text-stone-900 mt-4 mb-2">{t('details.notFound')}</h2>
-            <p className="text-stone-600 mb-6">{t('details.notFoundMessage')}</p>
+            <XCircle className="w-16 h-16 text-bliss-400 mx-auto" />
+            <h2 className="text-2xl font-bold text-bliss-900 mt-4 mb-2">{t('details.notFound')}</h2>
+            <p className="text-bliss-700 mb-6">{t('details.notFoundMessage')}</p>
             <Link
               to="/bookings"
-              className="inline-block bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+              className="inline-block bg-bliss-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               {t('details.backToHistory')}
             </Link>
@@ -345,14 +345,14 @@ function BookingDetails() {
   const getStatusColor = (status: string, hasActiveJourney: boolean = false) => {
     // If there's an active journey, show traveling status
     if (hasActiveJourney && status === 'confirmed') {
-      return 'bg-amber-100 text-amber-700'
+      return 'bg-bliss-200 text-bliss-600'
     }
 
     switch (status) {
       case 'confirmed':
-        return 'bg-amber-100 text-amber-700'
+        return 'bg-bliss-200 text-bliss-600'
       case 'traveling':
-        return 'bg-amber-100 text-amber-700'
+        return 'bg-bliss-200 text-bliss-600'
       case 'arrived':
         return 'bg-purple-100 text-purple-700'
       case 'in_progress':
@@ -360,7 +360,7 @@ function BookingDetails() {
       case 'completed':
         return 'bg-green-100 text-green-700'
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700'
+        return 'bg-yellow-100 text-bliss-600'
       case 'cancelled':
         return 'bg-red-100 text-red-700'
       default:
@@ -610,20 +610,20 @@ function BookingDetails() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+    <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <Link to="/bookings" className="inline-flex items-center text-amber-700 hover:text-amber-900 mb-4">
+          <Link to="/bookings" className="inline-flex items-center text-bliss-600 hover:text-bliss-800 mb-4">
             <ChevronLeft className="w-5 h-5" />
             {t('details.backToHistory')}
           </Link>
-          <h1 className="text-2xl font-bold text-stone-900">{t('details.title')}</h1>
+          <h1 className="text-2xl font-bold text-bliss-900">{t('details.title')}</h1>
         </div>
 
         {/* Extension payment polling banner */}
         {extensionPolling && (
-          <div className="p-4 rounded-xl mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center gap-2">
+          <div className="p-4 rounded-xl mb-4 bg-bliss-100 border border-bliss-300 text-bliss-700 text-sm flex items-center gap-2">
             <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
@@ -640,15 +640,15 @@ function BookingDetails() {
         {/* Status Banner */}
         <div className={`p-6 rounded-2xl mb-6 ${
           booking.status === 'confirmed'
-            ? 'bg-amber-50 border-2 border-amber-200'
+            ? 'bg-bliss-100 border-2 border-bliss-300'
             : booking.status === 'completed'
             ? 'bg-green-50 border-2 border-green-200'
-            : 'bg-stone-50 border-2 border-stone-200'
+            : 'bg-bliss-100 border-2 border-bliss-200'
         }`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-stone-600 mb-1">{t('details.bookingNumber')}</p>
-              <p className="font-bold text-stone-900">{booking.id}</p>
+              <p className="text-sm text-bliss-700 mb-1">{t('details.bookingNumber')}</p>
+              <p className="font-bold text-bliss-900">{booking.id}</p>
             </div>
             <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status ?? '', !!activeJourneyId)}`}>
               {getStatusText(booking.status ?? '', !!activeJourneyId)}
@@ -661,27 +661,27 @@ function BookingDetails() {
           <div className="md:col-span-2 space-y-6">
             {/* Service Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.bookedService')}</h2>
+              <h2 className="text-lg font-bold text-bliss-900 mb-4">{t('details.bookedService')}</h2>
 
-              <div className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl">
-                <div className="w-20 h-20 bg-gradient-to-br from-stone-100 to-amber-100 rounded-xl overflow-hidden">
+              <div className="flex items-start gap-4 p-4 bg-bliss-100 rounded-xl">
+                <div className="w-20 h-20 bg-bliss-100 rounded-xl overflow-hidden">
                   <img src={booking.image} alt={booking.serviceName} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-stone-900 mb-1">{booking.serviceName}</h3>
+                  <h3 className="font-semibold text-lg text-bliss-900 mb-1">{booking.serviceName}</h3>
                   <div className="flex items-center gap-2 mb-2">
-                    <p className="text-sm text-stone-600 flex items-center gap-1">
+                    <p className="text-sm text-bliss-700 flex items-center gap-1">
                       <Clock className="w-4 h-4" /> {booking.duration} {t('details.hours')}
                     </p>
                     {extendableBooking && extendableBooking.extension_count > 0 && (
-                      <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-medium">
+                      <span className="bg-bliss-200 text-bliss-600 text-xs px-2 py-1 rounded-full font-medium">
                         {t('booking:extension.times', { count: extendableBooking.extension_count })}
                       </span>
                     )}
                   </div>
-                  <p className="text-lg font-bold text-amber-700">฿{booking.price}</p>
+                  <p className="text-lg font-bold text-bliss-600">฿{booking.price}</p>
                   {extendableBooking && extendableBooking.total_extensions_price > 0 && (
-                    <p className="text-sm text-amber-600 mt-1">
+                    <p className="text-sm text-bliss-600 mt-1">
                       {t('booking:extension.totalExtensionPrice', { amount: extendableBooking.total_extensions_price.toLocaleString() })}
                     </p>
                   )}
@@ -689,12 +689,12 @@ function BookingDetails() {
               </div>
 
               {booking.addOns.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-stone-100">
-                  <h4 className="font-medium text-stone-900 mb-3">{t('details.addons')}</h4>
+                <div className="mt-4 pt-4 border-t border-bliss-100">
+                  <h4 className="font-medium text-bliss-900 mb-3">{t('details.addons')}</h4>
                   {booking.addOns.map((addon: any, index: number) => (
                     <div key={index} className="flex justify-between items-center py-2">
-                      <span className="text-stone-600">{addon.name}</span>
-                      <span className="text-amber-700 font-medium">+฿{addon.price}</span>
+                      <span className="text-bliss-700">{addon.name}</span>
+                      <span className="text-bliss-600 font-medium">+฿{addon.price}</span>
                     </div>
                   ))}
                 </div>
@@ -704,10 +704,10 @@ function BookingDetails() {
             {/* Extension History */}
             {extendableBooking && extendableBooking.booking_services?.some(bs => bs.is_extension) && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-amber-600" />
+                <h2 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-bliss-600" />
                   การเพิ่มเวลาบริการ
-                  <span className="ml-auto text-sm font-normal text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                  <span className="ml-auto text-sm font-normal text-bliss-600 bg-bliss-100 px-3 py-1 rounded-full">
                     {extendableBooking.extension_count} ครั้ง
                   </span>
                 </h2>
@@ -716,15 +716,15 @@ function BookingDetails() {
                   {extendableBooking.booking_services
                     .filter(bs => bs.is_extension)
                     .map((ext, index) => (
-                      <div key={ext.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+                      <div key={ext.id} className="flex items-center justify-between p-3 bg-bliss-100 rounded-xl">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-bold text-sm shrink-0">
+                          <div className="w-8 h-8 bg-bliss-200 rounded-full flex items-center justify-center text-bliss-600 font-bold text-sm shrink-0">
                             {index + 1}
                           </div>
                           <div>
-                            <p className="font-semibold text-stone-900">+{ext.duration} นาที</p>
+                            <p className="font-semibold text-bliss-900">+{ext.duration} นาที</p>
                             {ext.extended_at && (
-                              <p className="text-xs text-stone-500">
+                              <p className="text-xs text-bliss-500">
                                 {new Date(ext.extended_at).toLocaleDateString('th-TH', {
                                   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                                 })}
@@ -732,16 +732,16 @@ function BookingDetails() {
                             )}
                           </div>
                         </div>
-                        <p className="font-bold text-amber-700">+฿{Number(ext.price).toLocaleString()}</p>
+                        <p className="font-bold text-bliss-600">+฿{Number(ext.price).toLocaleString()}</p>
                       </div>
                     ))
                   }
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-stone-100 flex justify-between items-center">
+                <div className="mt-4 pt-4 border-t border-bliss-100 flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-stone-500">เวลารวมทั้งหมด</p>
-                    <p className="font-semibold text-stone-900">
+                    <p className="text-sm text-bliss-500">เวลารวมทั้งหมด</p>
+                    <p className="font-semibold text-bliss-900">
                       {Math.floor(
                         (extendableBooking.duration +
                           extendableBooking.booking_services
@@ -760,8 +760,8 @@ function BookingDetails() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-stone-500">ค่าเพิ่มเวลารวม</p>
-                    <p className="font-bold text-lg text-amber-700">
+                    <p className="text-sm text-bliss-500">ค่าเพิ่มเวลารวม</p>
+                    <p className="font-bold text-lg text-bliss-600">
                       +฿{extendableBooking.booking_services
                         .filter(bs => bs.is_extension)
                         .reduce((sum, bs) => sum + Number(bs.price), 0)
@@ -774,10 +774,10 @@ function BookingDetails() {
 
             {/* Date & Time */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> {t('details.dateTime')}</h2>
+              <h2 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> {t('details.dateTime')}</h2>
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <p className="text-stone-900 font-semibold">
+                  <p className="text-bliss-900 font-semibold">
                     {new Date(booking.date).toLocaleDateString('th-TH', {
                       weekday: 'long',
                       year: 'numeric',
@@ -785,13 +785,13 @@ function BookingDetails() {
                       day: 'numeric',
                     })}
                   </p>
-                  <p className="text-stone-600 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</p>
+                  <p className="text-bliss-700 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</p>
                 </div>
                 {(booking.status === 'confirmed' || booking.status === 'pending') && (
                   <div className="text-right">
                     <button
                       onClick={() => setShowRescheduleModal(true)}
-                      className="text-amber-700 hover:text-amber-900 font-medium text-sm"
+                      className="text-bliss-600 hover:text-bliss-800 font-medium text-sm"
                     >
                       {t('details.reschedule')}
                     </button>
@@ -802,25 +802,25 @@ function BookingDetails() {
 
             {/* Location */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5" /> {t('details.location')}</h2>
+              <h2 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5" /> {t('details.location')}</h2>
               <div className="space-y-2">
-                <p className="text-stone-900 font-medium">{booking.address.name}</p>
-                <p className="text-stone-600">{booking.address.phone}</p>
-                <p className="text-stone-600">{booking.address.address}</p>
-                <p className="text-stone-600">
+                <p className="text-bliss-900 font-medium">{booking.address.name}</p>
+                <p className="text-bliss-700">{booking.address.phone}</p>
+                <p className="text-bliss-700">{booking.address.address}</p>
+                <p className="text-bliss-700">
                   {booking.address.subdistrict} {booking.address.district}
                 </p>
-                <p className="text-stone-600">
+                <p className="text-bliss-700">
                   {booking.address.province} {booking.address.zipcode}
                 </p>
               </div>
-              <div className="mt-4 pt-4 border-t border-stone-100">
+              <div className="mt-4 pt-4 border-t border-bliss-100">
                 <button
                   onClick={() => {
                     const addr = [booking.address.address, booking.address.subdistrict, booking.address.district, booking.address.province, booking.address.zipcode].filter(Boolean).join(' ')
                     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`)
                   }}
-                  className="text-amber-700 hover:text-amber-900 font-medium text-sm flex items-center gap-1"
+                  className="text-bliss-600 hover:text-bliss-800 font-medium text-sm flex items-center gap-1"
                 >
                   <Map className="w-4 h-4" />
                   {t('details.viewMap')}
@@ -831,8 +831,8 @@ function BookingDetails() {
             {/* Notes */}
             {booking.notes && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.notes')}</h2>
-                <p className="text-stone-600 bg-stone-50 p-4 rounded-xl">{booking.notes}</p>
+                <h2 className="text-lg font-bold text-bliss-900 mb-4">{t('details.notes')}</h2>
+                <p className="text-bliss-700 bg-bliss-100 p-4 rounded-xl">{booking.notes}</p>
               </div>
             )}
 
@@ -848,13 +848,13 @@ function BookingDetails() {
             {/* Staff Assignment Info - Show when staff is assigned */}
             {booking.provider && booking.provider.name !== t('booking:provider.notAssigned') && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2">
                   <Users className="w-5 h-5" /> {t('booking:provider.assignedStaffInfo')}
                 </h2>
 
                 <div className="flex items-start gap-4">
                   {/* Staff Avatar */}
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-stone-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-16 h-16 bg-bliss-200 rounded-full flex items-center justify-center flex-shrink-0">
                     {booking.provider.avatar ? (
                       <img
                         src={booking.provider.avatar}
@@ -862,7 +862,7 @@ function BookingDetails() {
                         className="w-16 h-16 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-amber-700 font-medium text-lg">
+                      <span className="text-bliss-600 font-medium text-lg">
                         {booking.provider.name?.charAt(0) || t('booking:provider.avatarInitial')}
                       </span>
                     )}
@@ -870,7 +870,7 @@ function BookingDetails() {
 
                   {/* Staff Details */}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-stone-900 mb-1">{booking.provider.name}</h3>
+                    <h3 className="font-semibold text-bliss-900 mb-1">{booking.provider.name}</h3>
 
                     {/* Job Status Badge */}
                     {booking.provider.jobStatus && (
@@ -881,8 +881,8 @@ function BookingDetails() {
                     )}
 
                     {/* Rating */}
-                    <div className="flex items-center gap-2 text-sm text-stone-600">
-                      <Star className="w-4 h-4 text-amber-500" />
+                    <div className="flex items-center gap-2 text-sm text-bliss-700">
+                      <Star className="w-4 h-4 text-bliss-600" />
                       {booking.provider.reviews > 0 ? (
                         <span>{booking.provider.rating.toFixed(1)} ({booking.provider.reviews} {t('booking:provider.reviews')})</span>
                       ) : (
@@ -892,7 +892,7 @@ function BookingDetails() {
 
                     {/* Phone */}
                     {booking.provider.phone && (
-                      <div className="flex items-center gap-2 text-sm text-stone-600 mt-1">
+                      <div className="flex items-center gap-2 text-sm text-bliss-700 mt-1">
                         <span>📞 {booking.provider.phone}</span>
                       </div>
                     )}
@@ -901,8 +901,8 @@ function BookingDetails() {
 
                 {/* Status Description */}
                 {booking.provider.jobStatus && (
-                  <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-stone-50 border border-amber-200 rounded-lg">
-                    <p className="text-amber-700 text-sm">
+                  <div className="mt-4 p-3 bg-bliss-100 border border-bliss-300 rounded-lg">
+                    <p className="text-bliss-600 text-sm">
                       {booking.provider.jobStatus === 'pending' && t('booking:jobStatus.description.pending')}
                       {booking.provider.jobStatus === 'confirmed' && t('booking:jobStatus.description.confirmed')}
                       {booking.provider.jobStatus === 'traveling' && t('booking:jobStatus.description.traveling')}
@@ -922,11 +922,11 @@ function BookingDetails() {
             })}
             {activeJourneyId && (booking?.status === 'confirmed' || booking?.status === 'in_progress') && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2">
                   <Car className="w-5 h-5" /> {t('booking:tracking.title')}
                 </h2>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                  <p className="text-amber-700 text-sm">
+                <div className="bg-bliss-100 border border-bliss-300 rounded-lg p-3 mb-4">
+                  <p className="text-bliss-600 text-sm">
                     {t('booking:tracking.description')}
                   </p>
                 </div>
@@ -942,7 +942,7 @@ function BookingDetails() {
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center justify-center py-8">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-bliss-600 mx-auto mb-2"></div>
                     <p className="text-gray-600 text-sm">{t('booking:tracking.loading')}</p>
                   </div>
                 </div>
@@ -954,26 +954,26 @@ function BookingDetails() {
           <div className="space-y-6">
             {/* Price Summary */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">{t('details.priceSummary')}</h2>
+              <h2 className="text-lg font-bold text-bliss-900 mb-4">{t('details.priceSummary')}</h2>
               <div className="space-y-3">
-                <div className="flex justify-between text-stone-600">
+                <div className="flex justify-between text-bliss-700">
                   <span>{t('details.mainService')}</span>
                   <span>฿{booking.price}</span>
                 </div>
                 {booking.addOns.map((addon: any, index: number) => (
-                  <div key={index} className="flex justify-between text-stone-600">
+                  <div key={index} className="flex justify-between text-bliss-700">
                     <span>{addon.name}</span>
                     <span>฿{addon.price}</span>
                   </div>
                 ))}
-                <div className="flex justify-between text-stone-600">
+                <div className="flex justify-between text-bliss-700">
                   <span>{t('details.serviceFee')}</span>
                   <span>฿0</span>
                 </div>
-                <div className="pt-3 border-t border-stone-200">
+                <div className="pt-3 border-t border-bliss-200">
                   <div className="flex justify-between">
-                    <span className="font-bold text-stone-900">{t('details.total')}</span>
-                    <span className="font-bold text-xl text-amber-700">฿{totalPrice}</span>
+                    <span className="font-bold text-bliss-900">{t('details.total')}</span>
+                    <span className="font-bold text-xl text-bliss-600">฿{totalPrice}</span>
                   </div>
                 </div>
               </div>
@@ -982,16 +982,16 @@ function BookingDetails() {
             {/* Payment Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-bliss-900 flex items-center gap-2">
                   <CreditCard className="w-5 h-5" /> {t('details.paymentTitle')}
                 </h2>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between text-stone-600">
+                <div className="flex justify-between text-bliss-700">
                   <span>{t('details.paymentMethod')}</span>
-                  <span className="text-stone-900 font-medium">{getPaymentMethodText(booking.payment.method)}</span>
+                  <span className="text-bliss-900 font-medium">{getPaymentMethodText(booking.payment.method)}</span>
                 </div>
-                <div className="flex justify-between text-stone-600">
+                <div className="flex justify-between text-bliss-700">
                   <span>{t('common:status.label')}</span>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     booking.payment.status === 'paid'
@@ -1000,7 +1000,7 @@ function BookingDetails() {
                         ? 'bg-purple-100 text-purple-700 border border-purple-200'
                         : booking.payment.status === 'failed'
                           ? 'bg-red-100 text-red-700 border border-red-200'
-                          : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                          : 'bg-yellow-100 text-bliss-600 border border-yellow-200'
                   }`}>
                     {booking.payment.status === 'paid'
                       ? t('booking:paymentStatus.paid')
@@ -1016,15 +1016,15 @@ function BookingDetails() {
 
               {/* Pay Now Button for Pending Payments */}
               {booking.payment.status === 'pending' && (
-                <div className="mt-4 pt-4 border-t border-stone-100">
+                <div className="mt-4 pt-4 border-t border-bliss-100">
                   <button
                     onClick={() => navigate(`/payment/${booking.id}`)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
                   >
                     <CreditCard className="w-5 h-5" />
                     {t('booking:paymentAction.payNow')}
                   </button>
-                  <p className="text-center text-xs text-stone-500 mt-2">
+                  <p className="text-center text-xs text-bliss-500 mt-2">
                     {t('booking:paymentAction.note')}
                   </p>
                 </div>
@@ -1032,10 +1032,10 @@ function BookingDetails() {
 
               {/* Receipt & Credit Note Downloads */}
               {(booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (
-                <div className="mt-4 pt-4 border-t border-stone-100 space-y-2">
+                <div className="mt-4 pt-4 border-t border-bliss-100 space-y-2">
                   <button
                     onClick={handleDownloadReceipt}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-medium hover:bg-amber-100 transition text-sm"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-bliss-100 text-bliss-600 rounded-xl font-medium hover:bg-bliss-200 transition text-sm"
                   >
                     <Download className="w-4 h-4" />
                     {t('booking:downloadReceipt.label')}
@@ -1060,7 +1060,7 @@ function BookingDetails() {
                 <>
                   <button
                     onClick={() => setShowRescheduleModal(true)}
-                    className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+                    className="w-full bg-bliss-600 text-white py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
                   >
                     {t('details.reschedule')}
                   </button>
@@ -1084,12 +1084,12 @@ function BookingDetails() {
                     }}
                     fullWidth={true}
                   />
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                    <div className="flex items-center gap-2 text-amber-700">
+                  <div className="p-4 bg-bliss-100 border border-bliss-300 rounded-xl">
+                    <div className="flex items-center gap-2 text-bliss-600">
                       <Sparkles className="w-5 h-5" />
                       <span className="font-medium">{t('booking:extension.inProgressLabel')}</span>
                     </div>
-                    <p className="text-sm text-amber-600 mt-1">
+                    <p className="text-sm text-bliss-600 mt-1">
                       {t('booking:extension.note')}
                     </p>
                   </div>
@@ -1098,12 +1098,12 @@ function BookingDetails() {
 
               {booking.status === 'completed' && (
                 <>
-                  <button className="w-full bg-amber-700 text-white py-3 rounded-xl font-medium hover:bg-amber-800 transition">
+                  <button className="w-full bg-bliss-600 text-white py-3 rounded-xl font-medium hover:bg-bliss-700 transition">
                     {t('details.bookAgain')}
                   </button>
                   <button
                     onClick={() => setShowReviewModal(true)}
-                    className="w-full border-2 border-amber-200 text-amber-700 py-3 rounded-xl font-medium hover:bg-amber-50 transition"
+                    className="w-full border-2 border-bliss-300 text-bliss-600 py-3 rounded-xl font-medium hover:bg-bliss-100 transition"
                   >
                     {t('details.rateReview')}
                   </button>
@@ -1112,22 +1112,22 @@ function BookingDetails() {
 
               <button
                 onClick={() => navigate(`/services/${booking.serviceSlug}`)}
-                className="w-full border-2 border-stone-200 text-stone-700 py-3 rounded-xl font-medium hover:bg-stone-50 transition"
+                className="w-full border-2 border-bliss-200 text-bliss-700 py-3 rounded-xl font-medium hover:bg-bliss-100 transition"
               >
                 {t('details.viewService')}
               </button>
 
               <button
                 onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
-                className="w-full text-stone-500 py-2 text-sm hover:text-stone-700"
+                className="w-full text-bliss-500 py-2 text-sm hover:text-bliss-700"
               >
                 {t('details.contactSupport')}
               </button>
             </div>
 
             {/* Booking Info */}
-            <div className="bg-stone-50 rounded-xl p-4 text-sm">
-              <p className="text-stone-600">
+            <div className="bg-bliss-100 rounded-xl p-4 text-sm">
+              <p className="text-bliss-700">
                 {t('details.bookedOn', { date: new Date(booking.createdAt).toLocaleDateString('th-TH', {
                   dateStyle: 'long',
                 }) })}

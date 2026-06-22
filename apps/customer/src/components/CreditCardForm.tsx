@@ -108,7 +108,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Cardholder Name */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-2">
+        <label className="block text-sm font-medium text-bliss-700 mb-2">
           {t('booking:payment.cardName.label')} <span className="text-red-500">*</span>
         </label>
         <input
@@ -120,8 +120,8 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
           }}
           placeholder={t('booking:payment.cardName.placeholder')}
           disabled={isLoading}
-          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase disabled:bg-stone-50 disabled:cursor-not-allowed ${
-            errors.name ? 'border-red-500' : 'border-stone-300'
+          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent uppercase disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+            errors.name ? 'border-red-500' : 'border-bliss-300'
           }`}
         />
         {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
@@ -129,7 +129,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
 
       {/* Card Number */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-2">
+        <label className="block text-sm font-medium text-bliss-700 mb-2">
           {t('booking:payment.cardNumber.label')} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -139,11 +139,11 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
             onChange={handleCardNumberChange}
             placeholder={t('booking:payment.cardNumber.placeholder')}
             disabled={isLoading}
-            className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.number ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.number ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
-          <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 text-stone-400" />
+          <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 text-bliss-400" />
         </div>
         {errors.number && <p className="text-xs text-red-600 mt-1">{errors.number}</p>}
       </div>
@@ -151,7 +151,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
       {/* Expiry and CVV */}
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('booking:payment.expiration.month.label')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -161,15 +161,15 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
             placeholder={t('booking:payment.expiration.month.placeholder')}
             maxLength={2}
             disabled={isLoading}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.expiration_month ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.expiration_month ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.expiration_month && <p className="text-xs text-red-600 mt-1">{errors.expiration_month}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('booking:payment.expiration.year.label')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -179,15 +179,15 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
             placeholder={t('booking:payment.expiration.year.placeholder')}
             maxLength={4}
             disabled={isLoading}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.expiration_year ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.expiration_year ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.expiration_year && <p className="text-xs text-red-600 mt-1">{errors.expiration_year}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('booking:payment.cvv.label')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -197,8 +197,8 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
             placeholder={t('booking:payment.cvv.placeholder')}
             maxLength={4}
             disabled={isLoading}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.security_code ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.security_code ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.security_code && <p className="text-xs text-red-600 mt-1">{errors.security_code}</p>}
@@ -217,7 +217,7 @@ function CreditCardForm({ onSubmit, isLoading, submitButtonText }: CreditCardFor
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full py-3 bg-bliss-600 text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

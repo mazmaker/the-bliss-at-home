@@ -154,14 +154,14 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">{t('auth:otpVerification.successTitle')}</h2>
-            <p className="text-stone-600">{t('auth:otpVerification.successMessage')}</p>
+            <h2 className="text-2xl font-bold text-bliss-900 mb-2">{t('auth:otpVerification.successTitle')}</h2>
+            <p className="text-bliss-700">{t('auth:otpVerification.successMessage')}</p>
           </div>
         </div>
       </div>
@@ -169,12 +169,12 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+    <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-md">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-900 mb-6"
+          className="inline-flex items-center gap-2 text-bliss-700 hover:text-bliss-900 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>{t('common:buttons.back')}</span>
@@ -184,14 +184,14 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-              <Smartphone className="w-8 h-8 text-amber-700" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-bliss-200 rounded-full mb-4">
+              <Smartphone className="w-8 h-8 text-bliss-600" />
             </div>
-            <h1 className="text-2xl font-bold text-stone-900 mb-2">{t('auth:otpVerification.pageTitle')}</h1>
-            <p className="text-stone-600 text-sm">
+            <h1 className="text-2xl font-bold text-bliss-900 mb-2">{t('auth:otpVerification.pageTitle')}</h1>
+            <p className="text-bliss-700 text-sm">
               {t('auth:otpVerification.descriptionPrefix')}
             </p>
-            <p className="text-stone-900 font-medium mt-1">
+            <p className="text-bliss-900 font-medium mt-1">
               {maskPhoneNumber(phoneNumber)}
             </p>
           </div>
@@ -206,7 +206,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
 
           {/* OTP Input */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-stone-700 mb-3 text-center">
+            <label className="block text-sm font-medium text-bliss-700 mb-3 text-center">
               {t('auth:otpVerification.inputLabel')}
             </label>
             <div className="flex gap-2 justify-center" onPaste={handlePaste}>
@@ -221,7 +221,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   disabled={isVerifying}
-                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-50 disabled:cursor-not-allowed"
+                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
               ))}
             </div>
@@ -231,7 +231,7 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
           <button
             onClick={handleVerify}
             disabled={otp.join('').length !== 6 || isVerifying}
-            className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 bg-bliss-600 text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isVerifying ? (
               <>
@@ -248,14 +248,14 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
             {canResend ? (
               <button
                 onClick={handleResendOTP}
-                className="text-amber-700 hover:text-amber-900 font-medium text-sm"
+                className="text-bliss-600 hover:text-bliss-800 font-medium text-sm"
               >
                 {t('auth:otpVerification.resendButton')}
               </button>
             ) : (
-              <p className="text-stone-500 text-sm">
+              <p className="text-bliss-500 text-sm">
                 {t('auth:otpVerification.resendCountdownPrefix')}{' '}
-                <span className="font-medium text-amber-700">{countdown}</span> {t('auth:otpVerification.resendCountdownSuffix')}
+                <span className="font-medium text-bliss-600">{countdown}</span> {t('auth:otpVerification.resendCountdownSuffix')}
               </p>
             )}
           </div>

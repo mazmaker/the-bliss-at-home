@@ -259,8 +259,8 @@ function Profile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-          <p className="text-stone-600 mt-4">{t('common:loading.profile')}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mx-auto"></div>
+          <p className="text-bliss-700 mt-4">{t('common:loading.profile')}</p>
         </div>
       </div>
     )
@@ -271,8 +271,8 @@ function Profile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-stone-600 text-lg">{t('common:auth.pleaseLogin')}</p>
-          <Link to="/login" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
+          <p className="text-bliss-700 text-lg">{t('common:auth.pleaseLogin')}</p>
+          <Link to="/login" className="inline-block mt-4 text-bliss-600 hover:text-bliss-700 font-medium">
             {t('common:auth.goToLogin')}
           </Link>
         </div>
@@ -281,16 +281,16 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+    <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-stone-900">{t('title')}</h1>
+          <h1 className="text-2xl font-bold text-bliss-900">{t('title')}</h1>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Profile Header */}
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 p-6 text-white">
+          <div className="bg-bliss-600 p-6 text-white">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
                 <User className="w-10 h-10 text-white" />
@@ -304,14 +304,14 @@ function Profile() {
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-stone-200">
+          <div className="border-b border-bliss-200">
             <div className="flex">
               <button
                 onClick={() => setActiveTab('profile')}
                 className={`flex-1 py-4 text-center font-medium transition ${
                   activeTab === 'profile'
-                    ? 'text-amber-700 border-b-2 border-amber-700'
-                    : 'text-stone-500 hover:text-stone-700'
+                    ? 'text-bliss-600 border-b-2 border-bliss-600'
+                    : 'text-bliss-500 hover:text-bliss-700'
                 }`}
               >
                 {t('tabs.profile')}
@@ -320,8 +320,8 @@ function Profile() {
                 onClick={() => setActiveTab('addresses')}
                 className={`flex-1 py-4 text-center font-medium transition ${
                   activeTab === 'addresses'
-                    ? 'text-amber-700 border-b-2 border-amber-700'
-                    : 'text-stone-500 hover:text-stone-700'
+                    ? 'text-bliss-600 border-b-2 border-bliss-600'
+                    : 'text-bliss-500 hover:text-bliss-700'
                 }`}
               >
                 {t('tabs.addresses')}
@@ -330,8 +330,8 @@ function Profile() {
                 onClick={() => setActiveTab('payment')}
                 className={`flex-1 py-4 text-center font-medium transition ${
                   activeTab === 'payment'
-                    ? 'text-amber-700 border-b-2 border-amber-700'
-                    : 'text-stone-500 hover:text-stone-700'
+                    ? 'text-bliss-600 border-b-2 border-bliss-600'
+                    : 'text-bliss-500 hover:text-bliss-700'
                 }`}
               >
                 {t('tabs.payment')}
@@ -340,8 +340,8 @@ function Profile() {
                 onClick={() => setActiveTab('tax')}
                 className={`flex-1 py-4 text-center font-medium transition ${
                   activeTab === 'tax'
-                    ? 'text-amber-700 border-b-2 border-amber-700'
-                    : 'text-stone-500 hover:text-stone-700'
+                    ? 'text-bliss-600 border-b-2 border-bliss-600'
+                    : 'text-bliss-500 hover:text-bliss-700'
                 }`}
               >
                 {t('tabs.tax')}
@@ -356,39 +356,39 @@ function Profile() {
               <div className="space-y-6">
                 {customer && <PointsWidget customerId={customer.id} />}
                 <div>
-                  <h3 className="text-lg font-semibold text-stone-900 mb-4">{t('personal.title')}</h3>
+                  <h3 className="text-lg font-semibold text-bliss-900 mb-4">{t('personal.title')}</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">
                         {t('personal.fullName')}
                       </label>
                       <input
                         type="text"
                         value={profileForm.full_name}
                         onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">
                         {t('personal.phone')}
                       </label>
                       <input
                         type="tel"
                         value={profileForm.phone}
                         onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">
                         {t('personal.dateOfBirth')}
                       </label>
                       <input
                         type="date"
                         value={profileForm.date_of_birth}
                         onChange={(e) => setProfileForm({ ...profileForm, date_of_birth: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -397,28 +397,28 @@ function Profile() {
                 <div className="flex justify-end">
                   <button
                     onClick={handleProfileSave}
-                    className="bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+                    className="bg-bliss-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
                   >
                     {t('personal.save')}
                   </button>
                 </div>
 
                 {/* Health Declaration */}
-                <div className="border-t border-stone-200 pt-6">
+                <div className="border-t border-bliss-200 pt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
-                      <HeartPulse className="w-5 h-5 text-amber-700" />
+                    <h3 className="text-lg font-semibold text-bliss-900 flex items-center gap-2">
+                      <HeartPulse className="w-5 h-5 text-bliss-600" />
                       {t('profile:health.title')}
                     </h3>
                     <button
                       onClick={() => setIsHealthModalOpen(true)}
-                      className="text-sm text-amber-700 hover:text-amber-800 font-medium"
+                      className="text-sm text-bliss-600 hover:text-bliss-700 font-medium"
                     >
                       {healthDeclaration ? t('profile:health.editButton') : t('profile:health.fillButton')}
                     </button>
                   </div>
                   {!healthDeclaration ? (
-                    <p className="text-sm text-stone-500">
+                    <p className="text-sm text-bliss-500">
                       {t('profile:health.notFilledYet')}
                     </p>
                   ) : healthDeclaration.has_no_condition ? (
@@ -426,10 +426,10 @@ function Profile() {
                   ) : (
                     <ul className="space-y-1">
                       {healthDeclaration.conditions.map((key) => (
-                        <li key={key} className="text-sm text-stone-700">
+                        <li key={key} className="text-sm text-bliss-700">
                           • {HEALTH_CONDITION_LABELS[key] || key}
                           {key === 'other' && healthDeclaration.other_detail && (
-                            <span className="text-stone-500">: {healthDeclaration.other_detail}</span>
+                            <span className="text-bliss-500">: {healthDeclaration.other_detail}</span>
                           )}
                         </li>
                       ))}
@@ -437,23 +437,23 @@ function Profile() {
                   )}
                 </div>
 
-                <div className="border-t border-stone-200 pt-6">
-                  <h3 className="text-lg font-semibold text-stone-900 mb-4">{t('settings.title')}</h3>
+                <div className="border-t border-bliss-200 pt-6">
+                  <h3 className="text-lg font-semibold text-bliss-900 mb-4">{t('settings.title')}</h3>
                   <div className="space-y-3">
                     {/* Notifications */}
-                    <div className="bg-stone-50 rounded-xl overflow-hidden">
+                    <div className="bg-bliss-100 rounded-xl overflow-hidden">
                       <button
                         onClick={() => setExpandedSetting(expandedSetting === 'notifications' ? null : 'notifications')}
-                        className="w-full flex items-center justify-between p-4 hover:bg-stone-100 transition"
+                        className="w-full flex items-center justify-between p-4 hover:bg-bliss-100 transition"
                       >
                         <div className="flex items-center gap-3">
-                          <Bell className="w-5 h-5 text-stone-600" />
-                          <span className="font-medium text-stone-900">{t('settings.notifications.title')}</span>
+                          <Bell className="w-5 h-5 text-bliss-700" />
+                          <span className="font-medium text-bliss-900">{t('settings.notifications.title')}</span>
                         </div>
                         {expandedSetting === 'notifications' ? (
-                          <ChevronUp className="w-5 h-5 text-stone-400" />
+                          <ChevronUp className="w-5 h-5 text-bliss-400" />
                         ) : (
-                          <ChevronDown className="w-5 h-5 text-stone-400" />
+                          <ChevronDown className="w-5 h-5 text-bliss-400" />
                         )}
                       </button>
                       {expandedSetting === 'notifications' && (
@@ -465,17 +465,17 @@ function Profile() {
                           ].map((item) => (
                             <label key={item.key} className="flex items-center justify-between cursor-pointer">
                               <div>
-                                <p className="font-medium text-stone-800 text-sm">{item.label}</p>
-                                <p className="text-xs text-stone-500">{item.desc}</p>
+                                <p className="font-medium text-bliss-900 text-sm">{item.label}</p>
+                                <p className="text-xs text-bliss-500">{item.desc}</p>
                               </div>
                               <div
                                 onClick={(e) => {
                                   e.preventDefault()
                                   setNotificationPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))
                                 }}
-                                className={`relative w-11 h-6 rounded-full transition cursor-pointer ${notificationPrefs[item.key] ? 'bg-amber-600' : 'bg-stone-300'}`}
+                                className={`relative w-11 h-6 rounded-full transition cursor-pointer ${notificationPrefs[item.key] ? 'bg-bliss-600' : 'bg-bliss-300'}`}
                               >
-                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${notificationPrefs[item.key] ? 'translate-x-5' : ''}`} />
+                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-bliss-50 rounded-full shadow transition-transform ${notificationPrefs[item.key] ? 'translate-x-5' : ''}`} />
                               </div>
                             </label>
                           ))}
@@ -493,7 +493,7 @@ function Profile() {
                                 toast.error(t('toast.settingsSaveFailed'))
                               }
                             }}
-                            className="w-full py-2 bg-amber-700 text-white text-sm rounded-lg font-medium hover:bg-amber-800 transition"
+                            className="w-full py-2 bg-bliss-600 text-white text-sm rounded-lg font-medium hover:bg-bliss-700 transition"
                           >
                             {t('settings.save')}
                           </button>
@@ -502,19 +502,19 @@ function Profile() {
                     </div>
 
                     {/* Language */}
-                    <div className="bg-stone-50 rounded-xl overflow-hidden">
+                    <div className="bg-bliss-100 rounded-xl overflow-hidden">
                       <button
                         onClick={() => setExpandedSetting(expandedSetting === 'language' ? null : 'language')}
-                        className="w-full flex items-center justify-between p-4 hover:bg-stone-100 transition"
+                        className="w-full flex items-center justify-between p-4 hover:bg-bliss-100 transition"
                       >
                         <div className="flex items-center gap-3">
-                          <Globe className="w-5 h-5 text-stone-600" />
-                          <span className="font-medium text-stone-900">{t('settings.language.title')}</span>
+                          <Globe className="w-5 h-5 text-bliss-700" />
+                          <span className="font-medium text-bliss-900">{t('settings.language.title')}</span>
                         </div>
                         {expandedSetting === 'language' ? (
-                          <ChevronUp className="w-5 h-5 text-stone-400" />
+                          <ChevronUp className="w-5 h-5 text-bliss-400" />
                         ) : (
-                          <ChevronDown className="w-5 h-5 text-stone-400" />
+                          <ChevronDown className="w-5 h-5 text-bliss-400" />
                         )}
                       </button>
                       {expandedSetting === 'language' && (
@@ -528,8 +528,8 @@ function Profile() {
                               key={lang.code}
                               className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
                                 selectedLanguage === lang.code
-                                  ? 'border-amber-500 bg-amber-50'
-                                  : 'border-stone-200 hover:border-amber-300'
+                                  ? 'border-bliss-600 bg-bliss-100'
+                                  : 'border-bliss-200 hover:border-bliss-400'
                               }`}
                             >
                               <input
@@ -541,9 +541,9 @@ function Profile() {
                                 className="sr-only"
                               />
                               <span className="text-xl">{lang.flag}</span>
-                              <span className="font-medium text-stone-800">{lang.label}</span>
+                              <span className="font-medium text-bliss-900">{lang.label}</span>
                               {selectedLanguage === lang.code && (
-                                <span className="ml-auto text-amber-600 text-sm font-medium">{t('settings.language.selected')}</span>
+                                <span className="ml-auto text-bliss-600 text-sm font-medium">{t('settings.language.selected')}</span>
                               )}
                             </label>
                           ))}
@@ -560,7 +560,7 @@ function Profile() {
                                 toast.error(t('toast.languageSaveFailed'))
                               }
                             }}
-                            className="w-full py-2 bg-amber-700 text-white text-sm rounded-lg font-medium hover:bg-amber-800 transition"
+                            className="w-full py-2 bg-bliss-600 text-white text-sm rounded-lg font-medium hover:bg-bliss-700 transition"
                           >
                             {t('settings.save')}
                           </button>
@@ -576,10 +576,10 @@ function Profile() {
             {activeTab === 'addresses' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-stone-900">{t('addresses.title')}</h3>
+                  <h3 className="text-lg font-semibold text-bliss-900">{t('addresses.title')}</h3>
                   <button
                     onClick={handleAddAddress}
-                    className="bg-amber-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-amber-800 transition flex items-center gap-2"
+                    className="bg-bliss-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-bliss-700 transition flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     {t('addresses.addNew')}
@@ -588,7 +588,7 @@ function Profile() {
 
                 {addressesLoading ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto"></div>
                   </div>
                 ) : addresses.length > 0 ? (
                   <div className="space-y-4">
@@ -596,40 +596,40 @@ function Profile() {
                       <div
                         key={address.id}
                         className={`border-2 rounded-xl p-4 ${
-                          address.is_default ? 'border-amber-500 bg-stone-50' : 'border-stone-200'
+                          address.is_default ? 'border-bliss-600 bg-bliss-100' : 'border-bliss-200'
                         }`}
                       >
                         {address.is_default && (
-                          <span className="inline-block px-2 py-1 bg-amber-700 text-white text-xs rounded-full mb-2">
+                          <span className="inline-block px-2 py-1 bg-bliss-600 text-white text-xs rounded-full mb-2">
                             {t('addresses.default')}
                           </span>
                         )}
-                        <h4 className="font-semibold text-stone-900 mb-2">{address.label} - {address.recipient_name}</h4>
-                        <p className="text-stone-600 text-sm mb-1">{address.phone}</p>
-                        <p className="text-stone-600 text-sm">{address.address_line}</p>
-                        <p className="text-stone-600 text-sm">
+                        <h4 className="font-semibold text-bliss-900 mb-2">{address.label} - {address.recipient_name}</h4>
+                        <p className="text-bliss-700 text-sm mb-1">{address.phone}</p>
+                        <p className="text-bliss-700 text-sm">{address.address_line}</p>
+                        <p className="text-bliss-700 text-sm">
                           {address.subdistrict} {address.district}
                         </p>
-                        <p className="text-stone-600 text-sm">
+                        <p className="text-bliss-700 text-sm">
                           {address.province} {address.zipcode}
                         </p>
                         <div className="flex gap-2 mt-4">
                           <button
                             onClick={() => handleEditAddress(address.id)}
-                            className="text-amber-700 hover:text-amber-900 font-medium text-sm"
+                            className="text-bliss-600 hover:text-bliss-800 font-medium text-sm"
                           >
                             {t('addresses.edit')}
                           </button>
-                          <span className="text-stone-300">|</span>
+                          <span className="text-bliss-300">|</span>
                           {!address.is_default && (
                             <>
                               <button
                                 onClick={() => handleSetDefaultAddress(address.id)}
-                                className="text-amber-700 hover:text-amber-900 font-medium text-sm"
+                                className="text-bliss-600 hover:text-bliss-800 font-medium text-sm"
                               >
                                 {t('addresses.setDefault')}
                               </button>
-                              <span className="text-stone-300">|</span>
+                              <span className="text-bliss-300">|</span>
                             </>
                           )}
                           <button
@@ -643,12 +643,12 @@ function Profile() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-stone-50 rounded-xl">
-                    <MapPin className="w-12 h-12 text-stone-400 mx-auto" />
-                    <p className="text-stone-500 mt-4">{t('addresses.noAddresses')}</p>
+                  <div className="text-center py-12 bg-bliss-100 rounded-xl">
+                    <MapPin className="w-12 h-12 text-bliss-400 mx-auto" />
+                    <p className="text-bliss-500 mt-4">{t('addresses.noAddresses')}</p>
                     <button
                       onClick={handleAddAddress}
-                      className="mt-4 bg-amber-700 text-white px-6 py-2 rounded-xl font-medium hover:bg-amber-800 transition flex items-center gap-2 mx-auto"
+                      className="mt-4 bg-bliss-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-bliss-700 transition flex items-center gap-2 mx-auto"
                     >
                       <Plus className="w-4 h-4" />
                       {t('addresses.addFirst')}
@@ -662,11 +662,11 @@ function Profile() {
             {activeTab === 'payment' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-stone-900">{t('payment.title')}</h3>
+                  <h3 className="text-lg font-semibold text-bliss-900">{t('payment.title')}</h3>
                   {cardChannelEnabled && (
                   <button
                     onClick={handleAddPaymentMethod}
-                    className="bg-amber-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-amber-800 transition flex items-center gap-2"
+                    className="bg-bliss-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-bliss-700 transition flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     {t('payment.addNew')}
@@ -674,14 +674,14 @@ function Profile() {
                   )}
                 </div>
                 {!cardChannelEnabled && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-stone-600">
+                  <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4 text-sm text-bliss-700">
                     {t('profile:payment.cardDisabledMessage')}
                   </div>
                 )}
 
                 {paymentLoading ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto"></div>
                   </div>
                 ) : paymentMethods.length > 0 ? (
                   <div className="space-y-4">
@@ -689,22 +689,22 @@ function Profile() {
                       <div
                         key={method.id}
                         className={`border-2 rounded-xl p-4 ${
-                          method.is_default ? 'border-amber-500 bg-stone-50' : 'border-stone-200'
+                          method.is_default ? 'border-bliss-600 bg-bliss-100' : 'border-bliss-200'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <CreditCard className="w-8 h-8 text-stone-600" />
+                            <CreditCard className="w-8 h-8 text-bliss-700" />
                             <div>
-                              <h4 className="font-semibold text-stone-900">
+                              <h4 className="font-semibold text-bliss-900">
                                 {method.card_brand} •••• {method.card_last_digits}
                               </h4>
-                              <p className="text-sm text-stone-500">{method.cardholder_name}</p>
-                              <p className="text-xs text-stone-400">
+                              <p className="text-sm text-bliss-500">{method.cardholder_name}</p>
+                              <p className="text-xs text-bliss-400">
                                 {t('payment.expires')} {method.card_expiry_month}/{method.card_expiry_year}
                               </p>
                               {method.is_default && (
-                                <span className="inline-block px-2 py-1 bg-amber-700 text-white text-xs rounded-full mt-1">
+                                <span className="inline-block px-2 py-1 bg-bliss-600 text-white text-xs rounded-full mt-1">
                                   {t('payment.default')}
                                 </span>
                               )}
@@ -714,7 +714,7 @@ function Profile() {
                             {!method.is_default && (
                               <button
                                 onClick={() => handleSetDefaultPaymentMethod(method.id)}
-                                className="text-amber-700 hover:text-amber-800 font-medium text-sm"
+                                className="text-bliss-600 hover:text-bliss-700 font-medium text-sm"
                               >
                                 {t('payment.setDefault')}
                               </button>
@@ -731,13 +731,13 @@ function Profile() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-stone-50 rounded-xl">
-                    <CreditCard className="w-12 h-12 text-stone-400 mx-auto" />
-                    <p className="text-stone-500 mt-4">{t('payment.noMethods')}</p>
+                  <div className="text-center py-12 bg-bliss-100 rounded-xl">
+                    <CreditCard className="w-12 h-12 text-bliss-400 mx-auto" />
+                    <p className="text-bliss-500 mt-4">{t('payment.noMethods')}</p>
                     {cardChannelEnabled && (
                     <button
                       onClick={handleAddPaymentMethod}
-                      className="mt-4 bg-amber-700 text-white px-6 py-2 rounded-xl font-medium hover:bg-amber-800 transition flex items-center gap-2 mx-auto"
+                      className="mt-4 bg-bliss-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-bliss-700 transition flex items-center gap-2 mx-auto"
                     >
                       <Plus className="w-4 h-4" />
                       {t('payment.addFirst')}
@@ -753,18 +753,18 @@ function Profile() {
               <div className="space-y-6">
                 {taxLoading ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto"></div>
                   </div>
                 ) : (
                   <div>
-                    <h3 className="text-lg font-semibold text-stone-900 mb-4">{t('tax.title')}</h3>
-                    <p className="text-sm text-stone-600 mb-6">
+                    <h3 className="text-lg font-semibold text-bliss-900 mb-4">{t('tax.title')}</h3>
+                    <p className="text-sm text-bliss-700 mb-6">
                       {t('tax.subtitle')}
                     </p>
 
                     {/* Tax Type Selection */}
                     <div className="mb-6">
-                      <label className="block text-sm font-medium text-stone-700 mb-3">
+                      <label className="block text-sm font-medium text-bliss-700 mb-3">
                         {t('tax.type')} <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-4">
@@ -772,32 +772,32 @@ function Profile() {
                           onClick={() => setTaxForm({ ...taxForm, tax_type: 'individual' })}
                           className={`p-4 border-2 rounded-xl transition ${
                             taxForm.tax_type === 'individual'
-                              ? 'border-amber-500 bg-amber-50'
-                              : 'border-stone-200 hover:border-amber-300'
+                              ? 'border-bliss-600 bg-bliss-100'
+                              : 'border-bliss-200 hover:border-bliss-400'
                           }`}
                         >
-                          <User className="w-8 h-8 mx-auto mb-2 text-stone-600" />
-                          <p className="font-medium text-stone-900">{t('tax.individual')}</p>
-                          <p className="text-xs text-stone-500 mt-1">{t('tax.individualEn')}</p>
+                          <User className="w-8 h-8 mx-auto mb-2 text-bliss-700" />
+                          <p className="font-medium text-bliss-900">{t('tax.individual')}</p>
+                          <p className="text-xs text-bliss-500 mt-1">{t('tax.individualEn')}</p>
                         </button>
                         <button
                           onClick={() => setTaxForm({ ...taxForm, tax_type: 'company' })}
                           className={`p-4 border-2 rounded-xl transition ${
                             taxForm.tax_type === 'company'
-                              ? 'border-amber-500 bg-amber-50'
-                              : 'border-stone-200 hover:border-amber-300'
+                              ? 'border-bliss-600 bg-bliss-100'
+                              : 'border-bliss-200 hover:border-bliss-400'
                           }`}
                         >
-                          <Building2 className="w-8 h-8 mx-auto mb-2 text-stone-600" />
-                          <p className="font-medium text-stone-900">{t('tax.company')}</p>
-                          <p className="text-xs text-stone-500 mt-1">{t('tax.companyEn')}</p>
+                          <Building2 className="w-8 h-8 mx-auto mb-2 text-bliss-700" />
+                          <p className="font-medium text-bliss-900">{t('tax.company')}</p>
+                          <p className="text-xs text-bliss-500 mt-1">{t('tax.companyEn')}</p>
                         </button>
                       </div>
                     </div>
 
                     {/* Tax ID */}
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">
                         {taxForm.tax_type === 'individual' ? t('tax.nationalId') : t('tax.taxId')}{' '}
                         <span className="text-red-500">*</span>
                       </label>
@@ -807,7 +807,7 @@ function Profile() {
                         onChange={(e) => setTaxForm({ ...taxForm, tax_id: e.target.value })}
                         placeholder={taxForm.tax_type === 'individual' ? '1-2345-67890-12-3' : '0-1234-56789-01-2'}
                         maxLength={13}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                       />
                     </div>
 
@@ -815,7 +815,7 @@ function Profile() {
                     {taxForm.tax_type === 'company' && (
                       <>
                         <div className="mb-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">
                             {t('tax.companyName')} <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -823,12 +823,12 @@ function Profile() {
                             value={taxForm.company_name}
                             onChange={(e) => setTaxForm({ ...taxForm, company_name: e.target.value })}
                             placeholder={t('tax.companyPlaceholder')}
-                            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                           />
                         </div>
 
                         <div className="mb-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">
                             {t('tax.branch')}
                           </label>
                           <input
@@ -836,7 +836,7 @@ function Profile() {
                             value={taxForm.branch_code}
                             onChange={(e) => setTaxForm({ ...taxForm, branch_code: e.target.value })}
                             placeholder={t('tax.branchPlaceholder')}
-                            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                           />
                         </div>
                       </>
@@ -844,7 +844,7 @@ function Profile() {
 
                   {/* Tax Address */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">
                       {t('tax.taxAddress')} <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -852,7 +852,7 @@ function Profile() {
                       value={taxForm.address_line}
                       onChange={(e) => setTaxForm({ ...taxForm, address_line: e.target.value })}
                       placeholder={t('tax.addressPlaceholder')}
-                      className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                     />
                   </div>
 
@@ -869,7 +869,7 @@ function Profile() {
                   <div className="flex justify-end">
                     <button
                       onClick={handleSaveTaxInfo}
-                      className="bg-amber-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-amber-800 transition"
+                      className="bg-bliss-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
                     >
                       {t('tax.save')}
                     </button>

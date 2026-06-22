@@ -88,7 +88,7 @@ function Header() {
   const IconComponent = ({ icon: Icon }: { icon: any }) => <Icon className="w-5 h-5" />
 
   return (
-    <header className="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200 shadow-sm">
+    <header className="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-bliss-200 shadow-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -99,8 +99,8 @@ function Header() {
               className="w-12 h-12 object-contain"
             />
             <div>
-              <h1 className="text-lg font-semibold text-stone-900 tracking-tight">{t('common:brand.name')}</h1>
-              <p className="text-xs text-stone-500 hidden sm:block font-light">{t('common:brand.tagline')}</p>
+              <h1 className="text-lg font-semibold text-bliss-900 tracking-tight">{t('common:brand.name')}</h1>
+              <p className="text-xs text-bliss-500 hidden sm:block font-light">{t('common:brand.tagline')}</p>
             </div>
           </Link>
 
@@ -112,8 +112,8 @@ function Header() {
                 to={item.path}
                 className={`flex items-center gap-2 font-medium text-sm transition ${
                   isActive(item.path)
-                    ? 'text-amber-700'
-                    : 'text-stone-600 hover:text-amber-700'
+                    ? 'text-bliss-600'
+                    : 'text-bliss-700 hover:text-bliss-600'
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -129,7 +129,7 @@ function Header() {
                 {/* Notification Bell */}
                 <Link
                   to="/notifications"
-                  className="relative p-2 text-stone-600 hover:text-amber-700 transition rounded-lg hover:bg-stone-50"
+                  className="relative p-2 text-bliss-700 hover:text-bliss-600 transition rounded-lg hover:bg-bliss-100"
                 >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
@@ -146,7 +146,7 @@ function Header() {
                 <div className="relative user-menu-container">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 text-stone-700 hover:text-amber-700 font-medium text-sm transition px-3 py-2 rounded-lg hover:bg-stone-50"
+                    className="flex items-center gap-2 text-bliss-700 hover:text-bliss-600 font-medium text-sm transition px-3 py-2 rounded-lg hover:bg-bliss-100"
                   >
                     <User className="w-4 h-4" />
                     <span className="hidden xl:inline">{displayName}</span>
@@ -155,11 +155,11 @@ function Header() {
 
                   {/* Dropdown Menu */}
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-stone-200 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-bliss-50 rounded-lg shadow-lg border border-bliss-200 py-1 z-50">
                       <Link
                         to="/profile"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-bliss-700 hover:bg-bliss-100"
                       >
                         <User className="w-4 h-4" />
                         {t('auth.myProfile')}
@@ -167,12 +167,12 @@ function Header() {
                       <Link
                         to="/bookings"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-bliss-700 hover:bg-bliss-100"
                       >
                         <ClipboardList className="w-4 h-4" />
                         {t('auth.myBookings')}
                       </Link>
-                      <div className="border-t border-stone-200 my-1"></div>
+                      <div className="border-t border-bliss-200 my-1"></div>
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -186,7 +186,7 @@ function Header() {
 
                 <Link
                   to="/services"
-                  className="bg-gradient-to-r from-amber-700 to-amber-800 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
+                  className="bg-bliss-600 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
                 >
                   {t('buttons.bookNow')}
                 </Link>
@@ -194,7 +194,7 @@ function Header() {
             ) : (
               <Link
                 to="/login"
-                className="bg-gradient-to-r from-amber-700 to-amber-800 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
+                className="bg-bliss-600 text-white px-5 py-2 rounded-full font-medium text-sm hover:shadow-lg transition shadow-md"
               >
                 {t('buttons.login')}
               </Link>
@@ -204,7 +204,7 @@ function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-stone-700 hover:text-amber-700 transition rounded-lg hover:bg-stone-50"
+            className="lg:hidden p-2 text-bliss-700 hover:text-bliss-600 transition rounded-lg hover:bg-bliss-100"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -212,7 +212,7 @@ function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-stone-200 pt-4">
+          <div className="lg:hidden mt-4 pb-4 border-t border-bliss-200 pt-4">
             <nav className="flex flex-col gap-3">
               {navItems.map((item) => (
                 <Link
@@ -221,8 +221,8 @@ function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
                     isActive(item.path)
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'text-stone-700 hover:bg-stone-100'
+                      ? 'bg-bliss-100 text-bliss-600'
+                      : 'text-bliss-700 hover:bg-bliss-100'
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
@@ -237,8 +237,8 @@ function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
                     isActive('/notifications')
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'text-stone-700 hover:bg-stone-100'
+                      ? 'bg-bliss-100 text-bliss-600'
+                      : 'text-bliss-700 hover:bg-bliss-100'
                   }`}
                 >
                   <Bell className="w-5 h-5" />
@@ -258,19 +258,19 @@ function Header() {
                 </div>
               )}
 
-              <div className="border-t border-stone-200 pt-3 mt-3">
+              <div className="border-t border-bliss-200 pt-3 mt-3">
                 {!isLoading && isLoggedIn ? (
                   <>
-                    <div className="px-4 py-2 text-xs text-stone-500 font-medium">
+                    <div className="px-4 py-2 text-xs text-bliss-500 font-medium">
                       {t('auth.signedInAs')}
                     </div>
-                    <div className="px-4 py-2 text-sm font-medium text-stone-700 bg-stone-50 rounded-lg mx-3 mb-3">
+                    <div className="px-4 py-2 text-sm font-medium text-bliss-700 bg-bliss-100 rounded-lg mx-3 mb-3">
                       {displayName}
                     </div>
                     <Link
                       to="/profile"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-stone-700 hover:bg-stone-100 mx-3"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-bliss-700 hover:bg-bliss-100 mx-3"
                     >
                       <User className="w-5 h-5" />
                       <span>{t('auth.myProfile')}</span>
@@ -278,7 +278,7 @@ function Header() {
                     <Link
                       to="/services"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-center gap-2 mt-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
+                      className="flex items-center justify-center gap-2 mt-3 bg-bliss-600 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
                     >
                       {t('buttons.bookNow')}
                     </Link>
@@ -297,7 +297,7 @@ function Header() {
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 mt-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
+                    className="flex items-center justify-center gap-2 mt-3 bg-bliss-600 text-white px-4 py-3 rounded-xl font-medium shadow-md mx-3"
                   >
                     {t('buttons.login')}
                   </Link>

@@ -118,14 +118,14 @@ export function RefundPolicyConsent({
   const content = (
     <div className={asModal ? '' : 'mt-4'}>
       <div className="flex items-center gap-2 mb-3">
-        <FileText className="w-5 h-5 text-amber-600" />
-        <h3 className="font-semibold text-stone-900">{t('common:refundPolicy.title')}</h3>
-        {policyVersion && <span className="text-xs text-stone-400">v{policyVersion}</span>}
+        <FileText className="w-5 h-5 text-bliss-600" />
+        <h3 className="font-semibold text-bliss-900">{t('common:refundPolicy.title')}</h3>
+        {policyVersion && <span className="text-xs text-bliss-400">v{policyVersion}</span>}
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+          <Loader2 className="w-6 h-6 animate-spin text-bliss-600" />
         </div>
       ) : (
         <>
@@ -133,27 +133,27 @@ export function RefundPolicyConsent({
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="h-64 overflow-y-auto border border-stone-300 rounded-lg p-4 bg-stone-50 text-sm leading-relaxed whitespace-pre-wrap text-stone-700"
+            className="h-64 overflow-y-auto border border-bliss-300 rounded-lg p-4 bg-bliss-100 text-sm leading-relaxed whitespace-pre-wrap text-bliss-700"
           >
             {policyContent}
           </div>
 
           {!hasScrolledToBottom && (
-            <p className="text-xs text-amber-600 mt-1 text-center animate-pulse">
+            <p className="text-xs text-bliss-600 mt-1 text-center animate-pulse">
               {t('common:refundPolicy.scrollPrompt')}
             </p>
           )}
 
           {/* Checkbox */}
-          <label className={`flex items-start gap-3 mt-3 p-3 rounded-lg border ${isAccepted ? 'border-green-300 bg-green-50' : 'border-stone-200'} ${!hasScrolledToBottom ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
+          <label className={`flex items-start gap-3 mt-3 p-3 rounded-lg border ${isAccepted ? 'border-green-300 bg-green-50' : 'border-bliss-200'} ${!hasScrolledToBottom ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
             <input
               type="checkbox"
               checked={isAccepted}
               onChange={(e) => handleCheckboxChange(e.target.checked)}
               disabled={!hasScrolledToBottom}
-              className="mt-0.5 w-4 h-4 text-amber-600 focus:ring-amber-500 rounded"
+              className="mt-0.5 w-4 h-4 text-bliss-600 focus:ring-bliss-600 rounded"
             />
-            <span className="text-sm text-stone-700">
+            <span className="text-sm text-bliss-700">
               {t('common:refundPolicy.acceptanceLabel')}
             </span>
             {isAccepted && <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />}
@@ -164,7 +164,7 @@ export function RefundPolicyConsent({
             <button
               onClick={handleAccept}
               disabled={!isAccepted || isSaving}
-              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-bliss-600 text-white rounded-lg font-medium hover:bg-bliss-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
               {t('common:refundPolicy.acceptButton')}

@@ -10,9 +10,9 @@ const TYPE_CONFIG: Record<string, { labelKey: string; icon: typeof Plus; color: 
   earn: { labelKey: 'booking:transactionTypes.earn', icon: ArrowDownLeft, color: 'text-green-600 bg-green-100' },
   bonus: { labelKey: 'booking:transactionTypes.bonus', icon: Gift, color: 'text-purple-600 bg-purple-100' },
   redeem: { labelKey: 'booking:transactionTypes.redeem', icon: ArrowUpRight, color: 'text-blue-600 bg-blue-100' },
-  refund: { labelKey: 'booking:transactionTypes.refund', icon: Undo, color: 'text-amber-600 bg-amber-100' },
+  refund: { labelKey: 'booking:transactionTypes.refund', icon: Undo, color: 'text-bliss-600 bg-bliss-200' },
   expire: { labelKey: 'booking:transactionTypes.expire', icon: Clock, color: 'text-red-600 bg-red-100' },
-  admin_adjust: { labelKey: 'booking:transactionTypes.adminAdjust', icon: Settings, color: 'text-stone-600 bg-stone-100' },
+  admin_adjust: { labelKey: 'booking:transactionTypes.adminAdjust', icon: Settings, color: 'text-bliss-700 bg-bliss-100' },
 }
 
 const FILTER_OPTIONS = [
@@ -53,14 +53,14 @@ function PointsHistory() {
     const isPositive = tx.points > 0
 
     return (
-      <div key={tx.id} className="flex items-center gap-4 py-4 border-b border-stone-100 last:border-0">
+      <div key={tx.id} className="flex items-center gap-4 py-4 border-b border-bliss-100 last:border-0">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${config.color}`}>
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-stone-900">{t(config.labelKey)}</p>
-          {tx.description && <p className="text-sm text-stone-500 truncate">{tx.description}</p>}
-          <p className="text-xs text-stone-400 mt-0.5">{formatDate(tx.created_at)}</p>
+          <p className="font-medium text-bliss-900">{t(config.labelKey)}</p>
+          {tx.description && <p className="text-sm text-bliss-500 truncate">{tx.description}</p>}
+          <p className="text-xs text-bliss-400 mt-0.5">{formatDate(tx.created_at)}</p>
         </div>
         <div className={`text-right font-bold text-lg ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
           {isPositive ? '+' : ''}{tx.points.toLocaleString()}
@@ -70,51 +70,51 @@ function PointsHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+    <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-amber-700 hover:text-amber-800 font-medium mb-3 transition">
+          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-bliss-600 hover:text-bliss-700 font-medium mb-3 transition">
             <ChevronLeft className="w-4 h-4" />
             {t('profile:pointsHistory.backToProfile')}
           </Link>
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">{t('profile:pointsHistory.title')}</h1>
-          <p className="text-stone-600">{t('profile:pointsHistory.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">{t('profile:pointsHistory.title')}</h1>
+          <p className="text-bliss-700">{t('profile:pointsHistory.subtitle')}</p>
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-bliss-100 p-5">
             <div className="flex items-center gap-2 mb-2">
-              <Star className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.remaining')}</span>
+              <Star className="w-5 h-5 text-bliss-600" />
+              <span className="text-sm text-bliss-500">{t('profile:pointsHistory.card.remaining')}</span>
             </div>
-            <p className="text-3xl font-bold text-amber-700">{totalPoints.toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.value')} ฿{pointsValue.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-bliss-600">{totalPoints.toLocaleString()}</p>
+            <p className="text-sm text-bliss-500 mt-1">{t('profile:pointsHistory.card.value')} ฿{pointsValue.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-bliss-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.totalEarned')}</span>
+              <span className="text-sm text-bliss-500">{t('profile:pointsHistory.card.totalEarned')}</span>
             </div>
-            <p className="text-3xl font-bold text-stone-900">{(points?.lifetime_earned || 0).toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.points')}</p>
+            <p className="text-3xl font-bold text-bliss-900">{(points?.lifetime_earned || 0).toLocaleString()}</p>
+            <p className="text-sm text-bliss-500 mt-1">{t('profile:pointsHistory.card.points')}</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-bliss-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <ArrowUpRight className="w-5 h-5 text-blue-600" />
-              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.redeemed')}</span>
+              <span className="text-sm text-bliss-500">{t('profile:pointsHistory.card.redeemed')}</span>
             </div>
-            <p className="text-3xl font-bold text-stone-900">{(points?.lifetime_redeemed || 0).toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.pointsLabel')}</p>
+            <p className="text-3xl font-bold text-bliss-900">{(points?.lifetime_redeemed || 0).toLocaleString()}</p>
+            <p className="text-sm text-bliss-500 mt-1">{t('profile:pointsHistory.card.pointsLabel')}</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-bliss-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-red-500" />
-              <span className="text-sm text-stone-500">{t('profile:pointsHistory.card.expired')}</span>
+              <span className="text-sm text-bliss-500">{t('profile:pointsHistory.card.expired')}</span>
             </div>
-            <p className="text-3xl font-bold text-stone-900">{(points?.lifetime_expired || 0).toLocaleString()}</p>
-            <p className="text-sm text-stone-500 mt-1">{t('profile:pointsHistory.card.pointsLabelExpired')}</p>
+            <p className="text-3xl font-bold text-bliss-900">{(points?.lifetime_expired || 0).toLocaleString()}</p>
+            <p className="text-sm text-bliss-500 mt-1">{t('profile:pointsHistory.card.pointsLabelExpired')}</p>
           </div>
         </div>
 
@@ -126,8 +126,8 @@ function PointsHistory() {
               onClick={() => setFilter(opt.value)}
               className={`px-4 py-2 rounded-full font-medium text-sm transition whitespace-nowrap ${
                 filter === opt.value
-                  ? 'bg-amber-700 text-white'
-                  : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                  ? 'bg-bliss-600 text-white'
+                  : 'bg-bliss-50 text-bliss-700 hover:bg-bliss-100 border border-bliss-200'
               }`}
             >
               {t(opt.labelKey)}
@@ -136,23 +136,23 @@ function PointsHistory() {
         </div>
 
         {/* Transactions List */}
-        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-stone-100">
-            <h3 className="font-semibold text-stone-900">{t('profile:pointsHistory.section.title')}</h3>
+        <div className="bg-white rounded-2xl shadow-sm border border-bliss-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-bliss-100">
+            <h3 className="font-semibold text-bliss-900">{t('profile:pointsHistory.section.title')}</h3>
           </div>
           <div className="px-6">
             {isLoading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3" />
-                <p className="text-sm text-stone-500">{t('profile:pointsHistory.loading')}</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto mb-3" />
+                <p className="text-sm text-bliss-500">{t('profile:pointsHistory.loading')}</p>
               </div>
             ) : txData?.transactions && txData.transactions.length > 0 ? (
               <div>{txData.transactions.map(renderTransaction)}</div>
             ) : (
               <div className="text-center py-12">
-                <Star className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-                <p className="text-stone-500 font-medium">{t('profile:pointsHistory.empty.title')}</p>
-                <p className="text-sm text-stone-400 mt-1">{t('profile:pointsHistory.empty.description')}</p>
+                <Star className="w-12 h-12 text-bliss-300 mx-auto mb-3" />
+                <p className="text-bliss-500 font-medium">{t('profile:pointsHistory.empty.title')}</p>
+                <p className="text-sm text-bliss-400 mt-1">{t('profile:pointsHistory.empty.description')}</p>
               </div>
             )}
           </div>

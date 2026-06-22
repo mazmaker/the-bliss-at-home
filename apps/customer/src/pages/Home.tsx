@@ -45,8 +45,8 @@ function HomePage() {
   }, [promoCount, nextPromo])
 
   const gradients = [
-    'from-amber-600 via-yellow-600 to-amber-700',
-    'from-stone-700 via-stone-600 to-stone-800',
+    'from-bliss-600 via-bliss-500 to-bliss-600',
+    'from-bliss-700 via-bliss-700 to-bliss-900',
     'from-rose-600 via-pink-600 to-rose-700',
     'from-emerald-600 via-teal-600 to-emerald-700',
     'from-indigo-600 via-blue-600 to-indigo-700',
@@ -105,14 +105,14 @@ function HomePage() {
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="text-center mb-12 max-w-6xl mx-auto">
-          <h2 className="text-5xl md:text-6xl font-light tracking-tight text-stone-900 mb-6">
+          <h2 className="text-5xl md:text-6xl font-light tracking-tight text-bliss-900 mb-6">
             {t('home:hero.title1')}
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 font-normal">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-bliss-600 via-bliss-500 to-bliss-700 font-normal">
               {t('home:hero.title2')}
             </span>
           </h2>
-          <p className="text-lg text-stone-600 max-w-2xl mx-auto font-light leading-relaxed">
+          <p className="text-lg text-bliss-700 max-w-2xl mx-auto font-light leading-relaxed">
             {t('home:hero.subtitle1')}
             <br />
             {t('home:hero.subtitle2')}
@@ -126,19 +126,19 @@ function HomePage() {
               e.preventDefault()
               navigate(searchQuery.trim() ? `/services?search=${encodeURIComponent(searchQuery.trim())}` : '/services')
             }}
-            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 flex items-center gap-2 border border-stone-100"
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 flex items-center gap-2 border border-bliss-100"
           >
             <div className="flex-1 flex items-center gap-2 px-4 py-3">
-              <Search className="w-5 h-5 text-stone-400" />
+              <Search className="w-5 h-5 text-bliss-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('home:hero.searchPlaceholder')}
-                className="flex-1 outline-none text-stone-700 placeholder-stone-400 bg-transparent"
+                className="flex-1 outline-none text-bliss-700 placeholder-bliss-400 bg-transparent"
               />
             </div>
-            <button type="submit" className="bg-gradient-to-r from-amber-700 to-amber-800 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2">
+            <button type="submit" className="bg-bliss-600 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2">
               <Search className="w-4 h-4" />
               {t('home:hero.searchButton')}
             </button>
@@ -209,15 +209,15 @@ function HomePage() {
             <>
               <button
                 onClick={prevPromo}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition z-10"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-bliss-50 rounded-full shadow-lg flex items-center justify-center transition z-10"
               >
-                <ChevronLeft className="w-5 h-5 text-stone-700" />
+                <ChevronLeft className="w-5 h-5 text-bliss-700" />
               </button>
               <button
                 onClick={nextPromo}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition z-10"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-bliss-50 rounded-full shadow-lg flex items-center justify-center transition z-10"
               >
-                <ChevronRight className="w-5 h-5 text-stone-700" />
+                <ChevronRight className="w-5 h-5 text-bliss-700" />
               </button>
             </>
           )}
@@ -230,7 +230,7 @@ function HomePage() {
                   key={index}
                   onClick={() => setPromoIndex(index)}
                   className={`h-2 rounded-full transition-all duration-300 ${
-                    index === promoIndex ? 'w-6 bg-amber-700' : 'w-2 bg-stone-300 hover:bg-stone-400'
+                    index === promoIndex ? 'w-6 bg-bliss-600' : 'w-2 bg-bliss-300 hover:bg-bliss-400'
                   }`}
                 />
               ))}
@@ -245,8 +245,8 @@ function HomePage() {
       <section className="mb-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-light text-stone-900 tracking-wide">{t('home:popular.title')}</h3>
-            <Link to="/services" className="text-amber-700 hover:text-amber-800 font-medium text-sm flex items-center gap-1">
+            <h3 className="text-2xl font-light text-bliss-900 tracking-wide">{t('home:popular.title')}</h3>
+            <Link to="/services" className="text-bliss-600 hover:text-bliss-700 font-medium text-sm flex items-center gap-1">
               {t('common:buttons.viewAll')}
               <ChevronRight className="w-4 h-4" />
             </Link>
@@ -254,8 +254,8 @@ function HomePage() {
 
           {isLoading && (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-              <p className="text-stone-600 mt-4">{t('home:popular.loading')}</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mx-auto"></div>
+              <p className="text-bliss-700 mt-4">{t('home:popular.loading')}</p>
             </div>
           )}
 
@@ -267,7 +267,7 @@ function HomePage() {
 
           {!isLoading && !error && popularServices.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-stone-600">{t('home:popular.empty')}</p>
+              <p className="text-bliss-700">{t('home:popular.empty')}</p>
             </div>
           )}
 
@@ -279,7 +279,7 @@ function HomePage() {
               <Link
                 key={service.id}
                 to={`/services/${service.slug}`}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition overflow-hidden group block border border-stone-100"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition overflow-hidden group block border border-bliss-100"
               >
                 <div className="h-40 overflow-hidden">
                   <img
@@ -289,15 +289,15 @@ function HomePage() {
                   />
                 </div>
                 <div className="p-4">
-                  <h4 className="font-medium text-stone-900 mb-2">{service.name}</h4>
+                  <h4 className="font-medium text-bliss-900 mb-2">{service.name}</h4>
                   {service.reviewCount > 0 ? (
                     <div className="flex items-center gap-1 mb-2">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      <span className="text-sm text-stone-600">{service.rating.toFixed(1)}</span>
-                      <span className="text-sm text-stone-400">({service.reviewCount})</span>
+                      <Star className="w-4 h-4 text-bliss-600 fill-bliss-600" />
+                      <span className="text-sm text-bliss-700">{service.rating.toFixed(1)}</span>
+                      <span className="text-sm text-bliss-400">({service.reviewCount})</span>
                     </div>
                   ) : (
-                    <p className="text-sm text-stone-400 mb-2">{t('services:reviews.noReviews')}</p>
+                    <p className="text-sm text-bliss-400 mb-2">{t('services:reviews.noReviews')}</p>
                   )}
                   <div className="flex flex-col gap-1">
                     <DiscountPrice
@@ -305,9 +305,9 @@ function HomePage() {
                       size="sm"
                       className=""
                     />
-                    <span className="text-xs text-stone-500">{t('services:durationLabel', { duration: service.minDuration })}</span>
+                    <span className="text-xs text-bliss-500">{t('services:durationLabel', { duration: service.minDuration })}</span>
                   </div>
-                  <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-amber-100 hover:text-amber-800 transition mt-2 inline-block text-center w-full">
+                  <span className="bg-bliss-100 text-bliss-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-bliss-200 hover:text-bliss-700 transition mt-2 inline-block text-center w-full">
                     {t('home:popular.book')}
                   </span>
                 </div>
@@ -322,28 +322,28 @@ function HomePage() {
       {/* Why Choose Us */}
       <section className="mb-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h3 className="text-2xl font-light text-stone-900 mb-8 text-center tracking-wide">{t('home:whyChooseUs.title')}</h3>
+          <h3 className="text-2xl font-light text-bliss-900 mb-8 text-center tracking-wide">{t('home:whyChooseUs.title')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-50 to-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-amber-700" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-8 h-8 text-bliss-600" />
             </div>
-            <h4 className="font-medium text-stone-900 mb-2">{t('home:whyChooseUs.experts')}</h4>
-            <p className="text-stone-600 text-sm font-light">{t('home:whyChooseUs.expertsDesc')}</p>
+            <h4 className="font-medium text-bliss-900 mb-2">{t('home:whyChooseUs.experts')}</h4>
+            <p className="text-bliss-700 text-sm font-light">{t('home:whyChooseUs.expertsDesc')}</p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Home className="w-8 h-8 text-stone-700" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Home className="w-8 h-8 text-bliss-700" />
             </div>
-            <h4 className="font-medium text-stone-900 mb-2">{t('home:whyChooseUs.atYourDoor')}</h4>
-            <p className="text-stone-600 text-sm font-light">{t('home:whyChooseUs.atYourDoorDesc')}</p>
+            <h4 className="font-medium text-bliss-900 mb-2">{t('home:whyChooseUs.atYourDoor')}</h4>
+            <p className="text-bliss-700 text-sm font-light">{t('home:whyChooseUs.atYourDoorDesc')}</p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-50 to-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Gem className="w-8 h-8 text-amber-700" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Gem className="w-8 h-8 text-bliss-600" />
             </div>
-            <h4 className="font-medium text-stone-900 mb-2">{t('home:whyChooseUs.premiumQuality')}</h4>
-            <p className="text-stone-600 text-sm font-light">{t('home:whyChooseUs.premiumQualityDesc')}</p>
+            <h4 className="font-medium text-bliss-900 mb-2">{t('home:whyChooseUs.premiumQuality')}</h4>
+            <p className="text-bliss-700 text-sm font-light">{t('home:whyChooseUs.premiumQualityDesc')}</p>
           </div>
         </div>
         </div>
@@ -352,14 +352,14 @@ function HomePage() {
       {/* CTA */}
       <section className="mb-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-stone-800 via-stone-700 to-stone-900 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl">
+          <div className="bg-bliss-800 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl">
           <h3 className="text-3xl font-light mb-4 tracking-wide">{t('home:cta.title')}</h3>
           <p className="text-white/80 mb-6 max-w-2xl mx-auto font-light">
             {t('home:cta.subtitle1')}
             <br />
             {t('home:cta.subtitle2')}
           </p>
-          <Link to="/services" className="inline-block bg-white text-stone-800 px-8 py-4 rounded-full font-medium text-lg hover:shadow-2xl transition transform hover:scale-105">
+          <Link to="/services" className="inline-block bg-bliss-50 text-bliss-900 px-8 py-4 rounded-full font-medium text-lg hover:shadow-2xl transition transform hover:scale-105">
             {t('common:buttons.bookNow')}
           </Link>
         </div>

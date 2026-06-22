@@ -52,7 +52,7 @@ export function ServiceDurationPicker({
 
   return (
     <div className="space-y-2">
-      <h4 className="font-semibold text-stone-900">{t('wizard.step1.duration')}</h4>
+      <h4 className="font-semibold text-bliss-900">{t('wizard.step1.duration')}</h4>
       <div className="flex flex-wrap gap-2">
         {durations.map((dur) => {
           const price = getPriceForDuration(service, dur)
@@ -64,8 +64,8 @@ export function ServiceDurationPicker({
               onClick={() => onDurationChange(dur)}
               className={`px-4 py-3 rounded-xl border-2 transition text-sm font-medium ${
                 isSelected
-                  ? 'border-amber-700 bg-amber-50 text-amber-700'
-                  : 'border-stone-200 text-stone-700 hover:border-amber-300 hover:bg-stone-50'
+                  ? 'border-bliss-600 bg-bliss-100 text-bliss-600'
+                  : 'border-bliss-200 text-bliss-700 hover:border-bliss-400 hover:bg-bliss-100'
               }`}
             >
               <span>{t('wizard.step1.minutes', { count: dur })}</span>

@@ -152,10 +152,10 @@ function PaymentConfirmation() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center">
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-amber-700 mb-4"></div>
-          <p className="text-stone-600">{t('common:loading.paymentData')}</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-bliss-600 mb-4"></div>
+          <p className="text-bliss-700">{t('common:loading.paymentData')}</p>
         </div>
       </div>
     )
@@ -163,12 +163,12 @@ function PaymentConfirmation() {
 
   if (!receiptData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-stone-600 mb-4">{t('common:error.paymentDataNotFound')}</p>
+          <p className="text-bliss-700 mb-4">{t('common:error.paymentDataNotFound')}</p>
           <Link
             to="/bookings"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700"
           >
             {t('booking:goToBookings')}
           </Link>
@@ -178,47 +178,47 @@ function PaymentConfirmation() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
+    <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-2xl">
         {/* Success Animation */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4 animate-in zoom-in duration-300">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-stone-900 mb-2">{t('booking:paymentConfirmation.title')}</h1>
-          <p className="text-stone-600">{t('booking:paymentConfirmation.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-bliss-900 mb-2">{t('booking:paymentConfirmation.title')}</h1>
+          <p className="text-bliss-700">{t('booking:paymentConfirmation.subtitle')}</p>
         </div>
 
         {/* Payment Details Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
-          <h2 className="text-xl font-bold text-stone-900 mb-6">{t('booking:paymentDetails.title')}</h2>
+          <h2 className="text-xl font-bold text-bliss-900 mb-6">{t('booking:paymentDetails.title')}</h2>
 
           <div className="space-y-4">
-            <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">{t('booking:paymentDetails.service')}</span>
-              <span className="font-medium text-stone-900">{receiptData.service_name}</span>
+            <div className="flex justify-between py-3 border-b border-bliss-100">
+              <span className="text-bliss-700">{t('booking:paymentDetails.service')}</span>
+              <span className="font-medium text-bliss-900">{receiptData.service_name}</span>
             </div>
 
-            <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">{t('booking:paymentDetails.amount')}</span>
-              <span className="text-xl font-bold text-amber-700">฿{receiptData.amount.toLocaleString()}</span>
+            <div className="flex justify-between py-3 border-b border-bliss-100">
+              <span className="text-bliss-700">{t('booking:paymentDetails.amount')}</span>
+              <span className="text-xl font-bold text-bliss-600">฿{receiptData.amount.toLocaleString()}</span>
             </div>
 
-            <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">{t('booking:paymentDetails.method')}</span>
-              <span className="font-medium text-stone-900">
+            <div className="flex justify-between py-3 border-b border-bliss-100">
+              <span className="text-bliss-700">{t('booking:paymentDetails.method')}</span>
+              <span className="font-medium text-bliss-900">
                 {formatPaymentMethod(receiptData.payment_method, receiptData.card_last_digits)}
               </span>
             </div>
 
-            <div className="flex justify-between py-3 border-b border-stone-100">
-              <span className="text-stone-600">{t('booking:paymentDetails.receiptNumber')}</span>
-              <span className="font-medium text-stone-900">{receiptData.receipt_number}</span>
+            <div className="flex justify-between py-3 border-b border-bliss-100">
+              <span className="text-bliss-700">{t('booking:paymentDetails.receiptNumber')}</span>
+              <span className="font-medium text-bliss-900">{receiptData.receipt_number}</span>
             </div>
 
             <div className="flex justify-between py-3">
-              <span className="text-stone-600">{t('booking:paymentDetails.date')}</span>
-              <span className="font-medium text-stone-900">
+              <span className="text-bliss-700">{t('booking:paymentDetails.date')}</span>
+              <span className="font-medium text-bliss-900">
                 {formatDate(receiptData.transaction_date)}
               </span>
             </div>
@@ -229,7 +229,7 @@ function PaymentConfirmation() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
           <button
             onClick={handleDownloadReceipt}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-bliss-50 border-2 border-bliss-200 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition"
           >
             <Download className="w-5 h-5" />
             {t('booking:paymentConfirmation.downloadReceipt')}
@@ -238,7 +238,7 @@ function PaymentConfirmation() {
           <button
             onClick={handleEmailReceipt}
             disabled={emailSending || emailSent}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-bliss-50 border-2 border-bliss-200 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50"
           >
             {emailSending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -255,7 +255,7 @@ function PaymentConfirmation() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Link
             to={`/bookings/${bookingId}`}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
           >
             {t('booking:paymentConfirmation.viewBookingDetails')}
             <ArrowRight className="w-5 h-5" />
@@ -263,7 +263,7 @@ function PaymentConfirmation() {
 
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-bliss-50 border-2 border-bliss-200 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition"
           >
             <Home className="w-5 h-5" />
             {t('home:backToHome')}

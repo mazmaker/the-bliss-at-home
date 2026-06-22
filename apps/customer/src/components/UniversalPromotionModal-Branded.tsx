@@ -97,54 +97,54 @@ export function UniversalPromotionModal({
   const variants = {
     thai: {
       // Service Details Style - เหมือนหน้ารายละเอียดบริการ
-      headerBg: 'bg-gradient-to-br from-amber-100 to-amber-200',
-      accent: 'bg-gradient-to-r from-amber-700 to-amber-800',
+      headerBg: 'bg-bliss-200',
+      accent: 'bg-bliss-600',
       accentHover: 'hover:shadow-lg transition transform hover:scale-105',
       accentText: 'text-white',
-      cardBg: 'bg-amber-50/60',
-      cardBorder: 'border-amber-500',
-      border: 'border-stone-100',
+      cardBg: 'bg-bliss-100/60',
+      cardBorder: 'border-bliss-600',
+      border: 'border-bliss-100',
       text: {
-        primary: 'text-stone-900',
-        secondary: 'text-stone-700',
-        muted: 'text-stone-500',
-        accent: 'text-amber-700'
+        primary: 'text-bliss-900',
+        secondary: 'text-bliss-700',
+        muted: 'text-bliss-500',
+        accent: 'text-bliss-600'
       },
-      statsColors: ['text-amber-700', 'text-stone-600', 'text-stone-700']
+      statsColors: ['text-bliss-600', 'text-bliss-700', 'text-bliss-700']
     },
     international: {
       // International Style ตาม Service Details pattern
-      headerBg: 'bg-gradient-to-br from-stone-100 to-stone-200',
-      accent: 'bg-gradient-to-r from-stone-700 to-stone-800',
+      headerBg: 'bg-bliss-100',
+      accent: 'bg-gradient-to-r from-bliss-700 to-bliss-900',
       accentHover: 'hover:shadow-lg transition transform hover:scale-105',
       accentText: 'text-white',
-      cardBg: 'bg-stone-50',
-      cardBorder: 'border-stone-500',
-      border: 'border-stone-100',
+      cardBg: 'bg-bliss-100',
+      cardBorder: 'border-bliss-500',
+      border: 'border-bliss-100',
       text: {
-        primary: 'text-stone-900',
-        secondary: 'text-stone-700',
-        muted: 'text-stone-500',
-        accent: 'text-stone-700'
+        primary: 'text-bliss-900',
+        secondary: 'text-bliss-700',
+        muted: 'text-bliss-500',
+        accent: 'text-bliss-700'
       },
-      statsColors: ['text-stone-700', 'text-stone-600', 'text-stone-500']
+      statsColors: ['text-bliss-700', 'text-bliss-700', 'text-bliss-500']
     },
     minimal: {
       // Minimal Style ตาม Service Details pattern
-      headerBg: 'bg-gradient-to-br from-stone-50 to-white',
-      accent: 'bg-gradient-to-r from-stone-800 to-stone-900',
+      headerBg: 'bg-bliss-100',
+      accent: 'bg-bliss-900',
       accentHover: 'hover:shadow-lg transition transform hover:scale-105',
       accentText: 'text-white',
-      cardBg: 'bg-stone-50',
-      cardBorder: 'border-stone-300',
-      border: 'border-stone-100',
+      cardBg: 'bg-bliss-100',
+      cardBorder: 'border-bliss-300',
+      border: 'border-bliss-100',
       text: {
-        primary: 'text-stone-900',
-        secondary: 'text-stone-700',
-        muted: 'text-stone-500',
-        accent: 'text-stone-800'
+        primary: 'text-bliss-900',
+        secondary: 'text-bliss-700',
+        muted: 'text-bliss-500',
+        accent: 'text-bliss-900'
       },
-      statsColors: ['text-stone-800', 'text-stone-700', 'text-stone-600']
+      statsColors: ['text-bliss-900', 'text-bliss-700', 'text-bliss-700']
     }
   }
 
@@ -156,17 +156,17 @@ export function UniversalPromotionModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       {/* Modal ที่ปรับขนาดตามรูปโปรโมชั่น */}
-      <div className="bg-white rounded-2xl min-w-[400px] max-w-[90vw] max-h-[90vh] overflow-y-auto shadow-lg border border-stone-100">
+      <div className="bg-bliss-50 rounded-2xl min-w-[400px] max-w-[90vw] max-h-[90vh] overflow-y-auto shadow-lg border border-bliss-100">
 
         {/* Header - รูปโปรโมชั่นขนาดจริง */}
-        <div className="relative overflow-hidden bg-white">
+        <div className="relative overflow-hidden bg-bliss-50">
           {/* Promotion Image */}
           {promotion.image_url ? (
             <div className="relative">
               <img
                 src={promotion.image_url}
                 alt={name}
-                className="w-full h-auto max-h-[60vh] object-contain bg-white"
+                className="w-full h-auto max-h-[60vh] object-contain bg-bliss-50"
                 onError={(e) => {
                   // Fallback to fixed height gradient
                   e.currentTarget.style.display = 'none'
@@ -213,7 +213,7 @@ export function UniversalPromotionModal({
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-xl shadow-lg transition z-10"
           >
-            <X className="w-4 h-4 text-stone-600" />
+            <X className="w-4 h-4 text-bliss-700" />
           </button>
 
           {/* Brand icon */}
@@ -227,7 +227,7 @@ export function UniversalPromotionModal({
           <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
             <div className="flex items-center gap-2">
               {getDiscountIcon()}
-              <span className="font-bold text-lg text-stone-900">{formatDiscount()}</span>
+              <span className="font-bold text-lg text-bliss-900">{formatDiscount()}</span>
             </div>
           </div>
         </div>
@@ -250,7 +250,7 @@ export function UniversalPromotionModal({
                 {t('home:promotion.promoCodeLabel')}
               </div>
               <div className="flex items-center justify-center gap-3">
-                <code className={`text-xl font-mono font-bold ${currentVariant.text.primary} bg-white px-4 py-3 rounded-xl shadow-sm border border-stone-200`}>
+                <code className={`text-xl font-mono font-bold ${currentVariant.text.primary} bg-bliss-50 px-4 py-3 rounded-xl shadow-sm border border-bliss-200`}>
                   {promotion.code}
                 </code>
                 <button
@@ -258,7 +258,7 @@ export function UniversalPromotionModal({
                   className={`p-3 rounded-xl border-2 transition ${
                     copied
                       ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
-                      : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50 text-stone-600'
+                      : 'border-bliss-200 hover:border-bliss-400 hover:bg-bliss-100 text-bliss-700'
                   }`}
                 >
                   {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
@@ -273,7 +273,7 @@ export function UniversalPromotionModal({
           </div>
 
           {/* Stats Grid - Service Details Style */}
-          <div className="bg-stone-50 rounded-xl p-4 border border-stone-200">
+          <div className="bg-bliss-100 rounded-xl p-4 border border-bliss-200">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className={`text-2xl font-bold ${currentVariant.statsColors[0]}`}>
@@ -304,15 +304,15 @@ export function UniversalPromotionModal({
 
           {/* Usage Progress - Service Details Style */}
           {promotion.usage_limit && (
-            <div className="bg-white rounded-xl p-4 border border-stone-200">
-              <div className="flex justify-between text-sm text-stone-700 font-medium mb-3">
+            <div className="bg-bliss-50 rounded-xl p-4 border border-bliss-200">
+              <div className="flex justify-between text-sm text-bliss-700 font-medium mb-3">
                 <span>{t('home:promotion.usageProgressLabel')}</span>
                 <span>{Math.round(usagePercentage)}%</span>
               </div>
-              <div className="w-full bg-stone-200 rounded-full h-2">
+              <div className="w-full bg-bliss-200 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all duration-500 ${
-                    variant === 'thai' ? 'bg-amber-500' : 'bg-stone-600'
+                    variant === 'thai' ? 'bg-bliss-600' : 'bg-bliss-700'
                   }`}
                   style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                 />
@@ -322,7 +322,7 @@ export function UniversalPromotionModal({
 
           {/* Terms - Service Details Card Style */}
           {(promotion.min_order_amount || promotion.max_discount) && (
-            <div className="bg-white rounded-xl p-4 border border-stone-200">
+            <div className="bg-bliss-50 rounded-xl p-4 border border-bliss-200">
               <h3 className={`text-lg font-medium ${currentVariant.text.primary} mb-3`}>
                 {t('home:promotion.termsTitle')}
               </h3>
@@ -373,7 +373,7 @@ export function UniversalPromotionModal({
                     navigator.clipboard.writeText(text)
                   }
                 }}
-                className="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2 border border-stone-200"
+                className="py-3 px-4 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2 border border-bliss-200"
               >
                 <Share2 className="w-4 h-4" />
                 {t('home:promotion.shareButton')}
@@ -381,7 +381,7 @@ export function UniversalPromotionModal({
 
               <button
                 onClick={onClose}
-                className="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2 border border-stone-200"
+                className="py-3 px-4 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2 border border-bliss-200"
               >
                 <X className="w-4 h-4" />
                 {t('home:promotion.closeButton')}

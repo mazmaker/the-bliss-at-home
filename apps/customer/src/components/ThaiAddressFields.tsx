@@ -122,8 +122,8 @@ function ThaiAddressFields({
   }, [subdistrict, subdistricts])
 
   const selectClass = (hasError: boolean) =>
-    `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-      hasError ? 'border-red-500' : 'border-stone-300'
+    `w-full px-4 py-3 border rounded-xl bg-bliss-50 focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+      hasError ? 'border-red-500' : 'border-bliss-300'
     }`
 
   return (
@@ -131,7 +131,7 @@ function ThaiAddressFields({
       {/* Province and District */}
       <div className="grid grid-cols-2 gap-4">
         <div data-field="province">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('common:address.province')} <span className="text-red-500">*</span>
           </label>
           <select
@@ -155,7 +155,7 @@ function ThaiAddressFields({
         </div>
 
         <div data-field="district">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('common:address.district')}
           </label>
           <select
@@ -186,7 +186,7 @@ function ThaiAddressFields({
       {/* Subdistrict and Zipcode */}
       <div className="grid grid-cols-2 gap-4">
         <div data-field="subdistrict">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('common:address.subdistrict')}
           </label>
           <select
@@ -214,7 +214,7 @@ function ThaiAddressFields({
         </div>
 
         <div data-field="zipcode">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             {t('common:address.zipcode')} <span className="text-red-500">*</span>
           </label>
           <input

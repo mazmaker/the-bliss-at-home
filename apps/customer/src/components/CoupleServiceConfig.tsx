@@ -42,7 +42,7 @@ function AddOnList({
 
   return (
     <div className="space-y-2">
-      <h5 className="text-sm font-medium text-stone-700">{t('wizard.step1.addons')}</h5>
+      <h5 className="text-sm font-medium text-bliss-700">{t('wizard.step1.addons')}</h5>
       <div className="space-y-1.5">
         {addons.map((addon) => {
           const isSelected = selectedIds.includes(addon.id)
@@ -58,12 +58,12 @@ function AddOnList({
               }}
               className={`w-full flex items-center justify-between p-2.5 rounded-lg border text-left text-sm transition ${
                 isSelected
-                  ? 'border-amber-300 bg-amber-50'
-                  : 'border-stone-200 hover:border-amber-200 hover:bg-stone-50'
+                  ? 'border-bliss-400 bg-bliss-100'
+                  : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-100'
               }`}
             >
-              <span className="text-stone-700">{addon.name_th || addon.name_en}</span>
-              <span className={`font-medium ${isSelected ? 'text-amber-700' : 'text-stone-500'}`}>
+              <span className="text-bliss-700">{addon.name_th || addon.name_en}</span>
+              <span className={`font-medium ${isSelected ? 'text-bliss-600' : 'text-bliss-500'}`}>
                 +฿{Number(addon.price).toLocaleString()}
               </span>
             </button>
@@ -119,18 +119,18 @@ export function CoupleServiceConfig({
   return (
     <div className="space-y-4">
       {/* Person 1 Card */}
-      <div className="border-2 border-stone-200 rounded-xl overflow-hidden">
-        <div className="bg-amber-50 px-4 py-3 flex items-center gap-2 border-b border-amber-100">
-          <div className="w-7 h-7 bg-amber-700 rounded-full flex items-center justify-center">
+      <div className="border-2 border-bliss-200 rounded-xl overflow-hidden">
+        <div className="bg-bliss-100 px-4 py-3 flex items-center gap-2 border-b border-bliss-200">
+          <div className="w-7 h-7 bg-bliss-600 rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-stone-900">{t('wizard.step1.person1')}</span>
+          <span className="font-semibold text-bliss-900">{t('wizard.step1.person1')}</span>
         </div>
         <div className="p-4 space-y-4">
           {/* Service name (fixed - main service) */}
           <div className="flex items-center justify-between">
-            <span className="font-medium text-stone-900">{person1Service.name_th || person1Service.name_en}</span>
-            <span className="font-bold text-amber-700">฿{person1Price.toLocaleString()}</span>
+            <span className="font-medium text-bliss-900">{person1Service.name_th || person1Service.name_en}</span>
+            <span className="font-bold text-bliss-600">฿{person1Price.toLocaleString()}</span>
           </div>
 
           {/* Duration picker */}
@@ -148,38 +148,38 @@ export function CoupleServiceConfig({
           />
 
           {/* Subtotal */}
-          <div className="flex justify-between items-center pt-2 border-t border-stone-100">
-            <span className="text-sm text-stone-600">{t('wizard.step5.subtotal')}</span>
-            <span className="font-semibold text-stone-900">฿{(person1Price + person1AddonTotal).toLocaleString()}</span>
+          <div className="flex justify-between items-center pt-2 border-t border-bliss-100">
+            <span className="text-sm text-bliss-700">{t('wizard.step5.subtotal')}</span>
+            <span className="font-semibold text-bliss-900">฿{(person1Price + person1AddonTotal).toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Person 2 Card */}
-      <div className="border-2 border-stone-200 rounded-xl overflow-hidden">
-        <div className="bg-stone-50 px-4 py-3 flex items-center gap-2 border-b border-stone-200">
-          <div className="w-7 h-7 bg-stone-600 rounded-full flex items-center justify-center">
+      <div className="border-2 border-bliss-200 rounded-xl overflow-hidden">
+        <div className="bg-bliss-100 px-4 py-3 flex items-center gap-2 border-b border-bliss-200">
+          <div className="w-7 h-7 bg-bliss-700 rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-stone-900">{t('wizard.step1.person2')}</span>
+          <span className="font-semibold text-bliss-900">{t('wizard.step1.person2')}</span>
         </div>
         <div className="p-4 space-y-4">
           {/* Service selector */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-stone-900">{p2Svc.name_th || p2Svc.name_en}</span>
-              <span className="font-bold text-amber-700">฿{person2Price.toLocaleString()}</span>
+              <span className="font-medium text-bliss-900">{p2Svc.name_th || p2Svc.name_en}</span>
+              <span className="font-bold text-bliss-600">฿{person2Price.toLocaleString()}</span>
             </div>
             <button
               onClick={() => setShowServicePicker(!showServicePicker)}
-              className="text-sm text-amber-700 hover:text-amber-800 flex items-center gap-1"
+              className="text-sm text-bliss-600 hover:text-bliss-700 flex items-center gap-1"
             >
               {t('wizard.step1.changeService')}
               <ChevronDown className={`w-4 h-4 transition ${showServicePicker ? 'rotate-180' : ''}`} />
             </button>
 
             {showServicePicker && allServices && (
-              <div className="mt-2 max-h-48 overflow-y-auto border border-stone-200 rounded-lg">
+              <div className="mt-2 max-h-48 overflow-y-auto border border-bliss-200 rounded-lg">
                 {allServices.map((svc) => (
                   <button
                     key={svc.id}
@@ -192,14 +192,14 @@ export function CoupleServiceConfig({
                       onPerson2DurationChange(durations[0])
                       setShowServicePicker(false)
                     }}
-                    className={`w-full flex items-center justify-between p-3 text-left text-sm border-b border-stone-100 last:border-b-0 transition ${
+                    className={`w-full flex items-center justify-between p-3 text-left text-sm border-b border-bliss-100 last:border-b-0 transition ${
                       svc.id === p2ServiceId
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'hover:bg-stone-50'
+                        ? 'bg-bliss-100 text-bliss-600'
+                        : 'hover:bg-bliss-100'
                     }`}
                   >
-                    <span className="text-stone-900">{svc.name_th || svc.name_en}</span>
-                    <span className="text-stone-500">฿{Number(svc.base_price).toLocaleString()}</span>
+                    <span className="text-bliss-900">{svc.name_th || svc.name_en}</span>
+                    <span className="text-bliss-500">฿{Number(svc.base_price).toLocaleString()}</span>
                   </button>
                 ))}
               </div>
@@ -221,9 +221,9 @@ export function CoupleServiceConfig({
           />
 
           {/* Subtotal */}
-          <div className="flex justify-between items-center pt-2 border-t border-stone-100">
-            <span className="text-sm text-stone-600">{t('wizard.step5.subtotal')}</span>
-            <span className="font-semibold text-stone-900">฿{(person2Price + person2AddonTotal).toLocaleString()}</span>
+          <div className="flex justify-between items-center pt-2 border-t border-bliss-100">
+            <span className="text-sm text-bliss-700">{t('wizard.step5.subtotal')}</span>
+            <span className="font-semibold text-bliss-900">฿{(person2Price + person2AddonTotal).toLocaleString()}</span>
           </div>
         </div>
       </div>

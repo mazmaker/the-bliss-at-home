@@ -89,16 +89,16 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Star className="w-4 h-4 text-amber-600" />
-        <span className="font-medium text-stone-900">{t('booking:pointsRedeem.sectionTitle')}</span>
+        <Star className="w-4 h-4 text-bliss-600" />
+        <span className="font-medium text-bliss-900">{t('booking:pointsRedeem.sectionTitle')}</span>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+      <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-sm text-stone-600">{t('booking:pointsRedeem.yourPoints')}</span>
-            <span className="font-bold text-amber-700">{availablePoints.toLocaleString()} {t('booking:pointsRedeem.pointsUnit')}</span>
-            <span className="text-xs text-stone-500 ml-1">(฿{pointsValue.toLocaleString()})</span>
+            <span className="text-sm text-bliss-700">{t('booking:pointsRedeem.yourPoints')}</span>
+            <span className="font-bold text-bliss-600">{availablePoints.toLocaleString()} {t('booking:pointsRedeem.pointsUnit')}</span>
+            <span className="text-xs text-bliss-500 ml-1">(฿{pointsValue.toLocaleString()})</span>
           </div>
         </div>
 
@@ -108,7 +108,7 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
               <span className="text-green-700 font-medium">{t('booking:pointsRedeem.appliedPoints', { points: appliedPoints.toLocaleString() })}</span>
               <span className="text-green-600 text-sm ml-2">{t('booking:pointsRedeem.discountPrefix')}{appliedDiscount.toLocaleString()}</span>
             </div>
-            <button onClick={handleClear} className="text-stone-400 hover:text-red-500 transition">
+            <button onClick={handleClear} className="text-bliss-400 hover:text-red-500 transition">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -120,13 +120,13 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
                 value={inputPoints}
                 onChange={(e) => { setInputPoints(e.target.value); setError('') }}
                 placeholder={t('booking:pointsRedeem.placeholderMinimumPoints', { count: settings.min_redeem_points })}
-                className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="flex-1 px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                 min={settings.min_redeem_points}
                 max={availablePoints}
               />
               <button
                 onClick={handleApply}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
+                className="px-4 py-2 bg-bliss-600 text-white rounded-lg text-sm font-medium hover:bg-bliss-600 transition"
               >
                 {t('booking:pointsRedeem.applyButton')}
               </button>
@@ -134,11 +134,11 @@ export function PointsRedeemSection({ customerId, orderAmount, onPointsChange }:
             <div className="flex items-center gap-2">
               <button
                 onClick={handleUseAll}
-                className="text-xs text-amber-600 hover:text-amber-700 font-medium underline"
+                className="text-xs text-bliss-600 hover:text-bliss-600 font-medium underline"
               >
                 {t('booking:pointsRedeem.useAllButton')}
               </button>
-              <span className="text-xs text-stone-400">
+              <span className="text-xs text-bliss-400">
                 {t('booking:pointsRedeem.maxDiscountHint', { percent: settings.max_discount_percent })}
               </span>
             </div>

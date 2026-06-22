@@ -52,16 +52,16 @@ export default function EmergencyBooking() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-bliss-50 shadow-sm border-b">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link
               to="/"
-              className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+              className="p-2 hover:bg-bliss-100 rounded-full transition-colors"
             >
-              <ArrowLeft className="w-6 h-6 text-stone-600" />
+              <ArrowLeft className="w-6 h-6 text-bliss-700" />
             </Link>
-            <h1 className="text-xl font-bold text-stone-900">{t('emergency:pageTitle')}</h1>
+            <h1 className="text-xl font-bold text-bliss-900">{t('emergency:pageTitle')}</h1>
             <div className="ml-auto">
               <div className="flex items-center gap-1 text-red-500 text-sm font-semibold">
                 <Clock className="w-4 h-4 animate-pulse" />
@@ -84,14 +84,14 @@ export default function EmergencyBooking() {
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold text-stone-900 mb-2">
+          <h2 className="text-3xl font-bold text-bliss-900 mb-2">
             {t('emergency:heroTitle')}
           </h2>
           <div className="text-4xl font-black text-red-500 mb-4">
             {t('emergency:heroMinutes')}
           </div>
 
-          <p className="text-stone-600 text-lg leading-relaxed">
+          <p className="text-bliss-700 text-lg leading-relaxed">
             {t('emergency:noAdvanceNotice')}<br />
             <span className="font-semibold text-red-600">{t('emergency:heroCta')}</span>
           </p>
@@ -100,8 +100,8 @@ export default function EmergencyBooking() {
         {/* Current Time Display */}
         <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-4 mb-6">
           <div className="text-center">
-            <div className="text-stone-500 text-sm mb-1">{t('emergency:currentTimeLabel')}</div>
-            <div className="text-2xl font-mono font-bold text-stone-900">
+            <div className="text-bliss-500 text-sm mb-1">{t('emergency:currentTimeLabel')}</div>
+            <div className="text-2xl font-mono font-bold text-bliss-900">
               {currentTime.toLocaleTimeString('th-TH')}
             </div>
             <div className="text-red-500 text-sm font-semibold">
@@ -112,7 +112,7 @@ export default function EmergencyBooking() {
 
         {/* How it works */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2">
             <Heart className="w-5 h-5 text-red-500" />
             {t('emergency:howWeHelpTitle')}
           </h3>
@@ -123,8 +123,8 @@ export default function EmergencyBooking() {
                 <span className="text-green-600 font-bold text-sm">1</span>
               </div>
               <div>
-                <div className="font-semibold text-stone-900">{t('emergency:step1Title')}</div>
-                <div className="text-stone-600 text-sm">{t('emergency:step1Description')}</div>
+                <div className="font-semibold text-bliss-900">{t('emergency:step1Title')}</div>
+                <div className="text-bliss-700 text-sm">{t('emergency:step1Description')}</div>
               </div>
             </div>
 
@@ -133,8 +133,8 @@ export default function EmergencyBooking() {
                 <span className="text-blue-600 font-bold text-sm">2</span>
               </div>
               <div>
-                <div className="font-semibold text-stone-900">{t('emergency:step2Title')}</div>
-                <div className="text-stone-600 text-sm">{t('emergency:step2Description')}</div>
+                <div className="font-semibold text-bliss-900">{t('emergency:step2Title')}</div>
+                <div className="text-bliss-700 text-sm">{t('emergency:step2Description')}</div>
               </div>
             </div>
 
@@ -143,8 +143,8 @@ export default function EmergencyBooking() {
                 <span className="text-purple-600 font-bold text-sm">3</span>
               </div>
               <div>
-                <div className="font-semibold text-stone-900">{t('emergency:step3Title')}</div>
-                <div className="text-stone-600 text-sm">{t('emergency:step3Description')}</div>
+                <div className="font-semibold text-bliss-900">{t('emergency:step3Title')}</div>
+                <div className="text-bliss-700 text-sm">{t('emergency:step3Description')}</div>
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function EmergencyBooking() {
 
         {/* Contact Options */}
         <div className="space-y-4 mb-6">
-          <h3 className="text-lg font-bold text-stone-900 text-center">
+          <h3 className="text-lg font-bold text-bliss-900 text-center">
             {t('emergency:contactUsTitle')}
           </h3>
 
@@ -189,8 +189,8 @@ export default function EmergencyBooking() {
             <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <Star className="w-6 h-6 text-yellow-900" />
             </div>
-            <h3 className="font-bold text-stone-900 mb-2">{t('emergency:guaranteeTitle')}</h3>
-            <p className="text-stone-700 text-sm">
+            <h3 className="font-bold text-bliss-900 mb-2">{t('emergency:guaranteeTitle')}</h3>
+            <p className="text-bliss-700 text-sm">
               {t('emergency:guaranteeCondition')}
               <br />
               <span className="font-bold text-red-600">{t('emergency:guaranteeRefund')}</span>
@@ -210,7 +210,7 @@ export default function EmergencyBooking() {
         )}
 
         {/* Social Proof */}
-        <div className="text-center mt-8 text-stone-500">
+        <div className="text-center mt-8 text-bliss-500">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Users className="w-4 h-4" />
             <span className="text-sm">{t('emergency:socialProofCustomers')}</span>

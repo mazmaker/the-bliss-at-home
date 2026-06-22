@@ -82,11 +82,11 @@ function PaymentMethodModal({ isOpen, onClose, customerId }: PaymentMethodModalP
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
             disabled={isProcessing}
-            className="w-4 h-4 text-amber-700 border-stone-300 rounded focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+            className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-2 focus:ring-bliss-600 disabled:opacity-50"
           />
           <label
             htmlFor="is-default-payment"
-            className="text-sm text-stone-700 cursor-pointer"
+            className="text-sm text-bliss-700 cursor-pointer"
           >
             {t('profile:payment.setAsDefault')}
           </label>

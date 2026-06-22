@@ -67,7 +67,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         title: t('booking:status.confirmed.title'),
         description: t('booking:status.confirmed.description'),
         icon: '',
-        color: 'amber',
+        color: 'bliss',
         showProgress: true,
         currentStep: 1,
         billing: t('booking:status.confirmed.billingStatus')
@@ -96,7 +96,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
         title: t('booking:status.STAFF_EN_ROUTE.title'),
         description: t('booking:status.STAFF_EN_ROUTE.description'),
         icon: '',
-        color: 'amber',
+        color: 'bliss',
         showStaff: true,
         showETA: true,
         showProgress: true,
@@ -238,7 +238,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
 
       {/* Staff Info & Travel Status */}
       {config.showStaff && booking.provider.name !== t('booking:provider.notAssigned') && (
-        <div className="bg-white rounded-xl p-4 mb-4">
+        <div className="bg-bliss-50 rounded-xl p-4 mb-4">
           {/* Staff Basic Info */}
           <div className="flex items-center gap-3 mb-4">
             {booking.provider.avatar ? (
@@ -263,7 +263,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
             {config.showContact && booking.provider.phone && (
               <a
                 href={`tel:${booking.provider.phone}`}
-                className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg text-sm transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 bg-bliss-200 hover:bg-bliss-300 text-bliss-600 rounded-lg text-sm transition-colors"
               >
                 <Phone className="w-4 h-4" />
                 {t('booking:action.call')}
@@ -275,12 +275,12 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
           {booking.travel_started_at && currentStatus === 'STAFF_EN_ROUTE' && (
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center gap-2 mb-3">
-                <Car className="w-5 h-5 text-amber-600" />
+                <Car className="w-5 h-5 text-bliss-600" />
                 <span className="font-medium text-gray-900">{t('booking:duration.travelTime')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-lg font-bold text-amber-600">
+                  <div className="text-lg font-bold text-bliss-600">
                     {formatDuration(travelDuration)}
                   </div>
                   <div className="text-sm text-gray-600">
@@ -288,8 +288,8 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-amber-600">{t('booking:duration.travelTime')}</div>
-                  <div className="text-xs text-amber-500">{t('booking:duration.notCountedAsServiceTime')}</div>
+                  <div className="text-sm text-bliss-600">{t('booking:duration.travelTime')}</div>
+                  <div className="text-xs text-bliss-600">{t('booking:duration.notCountedAsServiceTime')}</div>
                 </div>
               </div>
             </div>
@@ -299,7 +299,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
 
       {/* Service Timer */}
       {config.showTimer && booking.service_started_at && (
-        <div className="bg-white rounded-xl p-4 mb-4">
+        <div className="bg-bliss-50 rounded-xl p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-emerald-600" />
             <span className="font-medium text-gray-900">{t('booking:duration.serviceTime')}</span>

@@ -130,7 +130,7 @@ export default function TrackStaff() {
 
   const getStatusColor = (status: string) => {
     const colorMap: Record<string, string> = {
-      traveling: 'text-amber-700 bg-amber-100 border-amber-200',
+      traveling: 'text-bliss-600 bg-bliss-200 border-bliss-300',
       arrived: 'text-purple-600 bg-purple-100 border-purple-200',
       completed: 'text-green-600 bg-green-100 border-green-200',
       cancelled: 'text-red-600 bg-red-100 border-red-200'
@@ -183,7 +183,7 @@ export default function TrackStaff() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{t('common:loading.journey')}</p>
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function TrackStaff() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="bg-bliss-50 rounded-lg shadow-md p-6 text-center">
             <div className="text-6xl mb-4">😔</div>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">{t('common:errors.dataNotFound')}</h2>
             <p className="text-gray-600 mb-4">{error}</p>
@@ -214,7 +214,7 @@ export default function TrackStaff() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <div className="bg-bliss-50 shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <button
@@ -240,7 +240,7 @@ export default function TrackStaff() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         {/* Journey Info Card */}
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="bg-bliss-50 rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-800">{journey.service_name}</h2>

@@ -130,7 +130,7 @@ export function ResetPasswordPage() {
       {/* Loading State */}
       {pageState === 'loading' && (
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-700 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-bliss-600 mx-auto mb-4" />
           <p className="text-gray-600">{t('auth:resetPassword.status.verifying')}</p>
         </div>
       )}
@@ -151,7 +151,7 @@ export function ResetPasswordPage() {
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
+            className="inline-flex items-center px-4 py-2 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
           >
             {t('auth:forgotPassword.backToLogin')}
           </button>
@@ -179,8 +179,8 @@ export function ResetPasswordPage() {
       {pageState === 'form' && (
         <div className="w-full">
           <div className="text-center mb-6">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 mb-4">
-              <Lock className="h-6 w-6 text-amber-700" />
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-bliss-200 mb-4">
+              <Lock className="h-6 w-6 text-bliss-600" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-1">
               {t('auth:resetPassword.form.title')}
@@ -218,12 +218,12 @@ export function ResetPasswordPage() {
                   minLength={8}
                   disabled={isSubmitting}
                   autoComplete="new-password"
-                  className="w-full px-4 py-3 pr-12 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
+                  className="w-full px-4 py-3 pr-12 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-700"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -246,12 +246,12 @@ export function ResetPasswordPage() {
                   minLength={8}
                   disabled={isSubmitting}
                   autoComplete="new-password"
-                  className="w-full px-4 py-3 pr-12 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
+                  className="w-full px-4 py-3 pr-12 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-700"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -262,7 +262,7 @@ export function ResetPasswordPage() {
             <button
               type="submit"
               disabled={isSubmitting || !newPassword || !confirmPassword}
-              className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">

@@ -62,7 +62,7 @@ export function VoucherCodeInput({
   if (appliedPromo?.valid) {
     return (
       <div className="space-y-2">
-        <h4 className="font-semibold text-stone-900 flex items-center gap-2">
+        <h4 className="font-semibold text-bliss-900 flex items-center gap-2">
           <Tag className="w-4 h-4" />
           {t('wizard.step5.voucher')}
         </h4>
@@ -76,7 +76,7 @@ export function VoucherCodeInput({
           </div>
           <button
             onClick={handleRemove}
-            className="text-stone-400 hover:text-stone-600 transition"
+            className="text-bliss-400 hover:text-bliss-700 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -87,7 +87,7 @@ export function VoucherCodeInput({
 
   return (
     <div className="space-y-2">
-      <h4 className="font-semibold text-stone-900 flex items-center gap-2">
+      <h4 className="font-semibold text-bliss-900 flex items-center gap-2">
         <Tag className="w-4 h-4" />
         {t('wizard.step5.voucher')}
       </h4>
@@ -100,7 +100,7 @@ export function VoucherCodeInput({
             setError(null)
           }}
           placeholder={t('wizard.step5.voucherPlaceholder')}
-          className="flex-1 px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm uppercase"
+          className="flex-1 px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent text-sm uppercase"
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleApply()
           }}
@@ -108,7 +108,7 @@ export function VoucherCodeInput({
         <button
           onClick={handleApply}
           disabled={!code.trim() || validatePromo.isPending}
-          className="px-5 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:bg-stone-300 disabled:cursor-not-allowed text-sm flex items-center gap-1"
+          className="px-5 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:bg-bliss-300 disabled:cursor-not-allowed text-sm flex items-center gap-1"
         >
           {validatePromo.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />

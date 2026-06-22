@@ -132,7 +132,7 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-stone-600">
+      <p className="text-sm text-bliss-700">
         {t('booking:healthDeclaration.intro')}
       </p>
 
@@ -143,8 +143,8 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
             <label
               className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
                 value.conditions.includes(condition.key)
-                  ? 'border-amber-500 bg-amber-50'
-                  : 'border-stone-200 hover:border-stone-300'
+                  ? 'border-bliss-600 bg-bliss-100'
+                  : 'border-bliss-200 hover:border-bliss-300'
               }`}
             >
               <input
@@ -152,9 +152,9 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
                 checked={value.conditions.includes(condition.key)}
                 onChange={() => toggleCondition(condition.key)}
                 disabled={disabled}
-                className="w-4 h-4 mt-0.5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
+                className="w-4 h-4 mt-0.5 text-bliss-600 rounded focus:ring-2 focus:ring-bliss-600"
               />
-              <span className="text-sm text-stone-800">{t(condition.i18nKey)}</span>
+              <span className="text-sm text-bliss-900">{t(condition.i18nKey)}</span>
             </label>
             {condition.key === 'other' && value.conditions.includes('other') && (
               <input
@@ -163,7 +163,7 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
                 onChange={(e) => onChange({ ...value, otherDetail: e.target.value })}
                 placeholder={t('booking:healthDeclaration.otherDetailPlaceholder')}
                 disabled={disabled}
-                className="mt-2 w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="mt-2 w-full px-4 py-2.5 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
               />
             )}
           </div>
@@ -175,7 +175,7 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
         className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
           value.hasNoCondition
             ? 'border-green-500 bg-green-50'
-            : 'border-stone-200 hover:border-stone-300'
+            : 'border-bliss-200 hover:border-bliss-300'
         }`}
       >
         <input
@@ -185,25 +185,25 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
           disabled={disabled}
           className="w-4 h-4 mt-0.5 text-green-700 rounded focus:ring-2 focus:ring-green-500"
         />
-        <span className="text-sm font-medium text-stone-800">
+        <span className="text-sm font-medium text-bliss-900">
           {t('booking:healthDeclaration.noCondition')}
         </span>
       </label>
 
       {/* Confirmation */}
-      <div className="border-t border-stone-100 pt-4">
-        <p className="text-sm font-semibold text-stone-900 mb-2">{t('booking:healthDeclaration.confirmationSectionTitle')}</p>
+      <div className="border-t border-bliss-100 pt-4">
+        <p className="text-sm font-semibold text-bliss-900 mb-2">{t('booking:healthDeclaration.confirmationSectionTitle')}</p>
         <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={value.confirmed}
             onChange={(e) => onChange({ ...value, confirmed: e.target.checked })}
             disabled={disabled}
-            className="w-4 h-4 mt-0.5 text-amber-700 rounded focus:ring-2 focus:ring-amber-500"
+            className="w-4 h-4 mt-0.5 text-bliss-600 rounded focus:ring-2 focus:ring-bliss-600"
           />
-          <span className="text-sm text-stone-700">
+          <span className="text-sm text-bliss-700">
             {t('booking:healthDeclaration.confirmAccuracy')}
-            <span className="block text-xs text-stone-500 mt-1">
+            <span className="block text-xs text-bliss-500 mt-1">
               ({t('booking:healthDeclaration.confirmAdjustment')})
             </span>
           </span>
@@ -211,9 +211,9 @@ export function HealthChecklistFields({ value, onChange, disabled }: HealthCheck
       </div>
 
       {/* Privacy note */}
-      <div className="flex items-start gap-2 p-3 bg-stone-50 rounded-xl">
-        <ShieldCheck className="w-4 h-4 text-stone-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-stone-500">
+      <div className="flex items-start gap-2 p-3 bg-bliss-100 rounded-xl">
+        <ShieldCheck className="w-4 h-4 text-bliss-500 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-bliss-500">
           {t('booking:healthDeclaration.privacyNote')}
         </p>
       </div>
@@ -270,12 +270,12 @@ export function HealthDeclarationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-stone-100 px-6 py-4 rounded-t-2xl">
+        <div className="sticky top-0 bg-bliss-50 border-b border-bliss-100 px-6 py-4 rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <HeartPulse className="w-5 h-5 text-amber-700" />
+            <div className="w-10 h-10 bg-bliss-200 rounded-xl flex items-center justify-center flex-shrink-0">
+              <HeartPulse className="w-5 h-5 text-bliss-600" />
             </div>
-            <h2 className="text-lg font-bold text-stone-900">
+            <h2 className="text-lg font-bold text-bliss-900">
               {t('booking:healthDeclaration.title')}
             </h2>
           </div>
@@ -293,13 +293,13 @@ export function HealthDeclarationModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-stone-100 px-6 py-4 rounded-b-2xl flex gap-3">
+        <div className="sticky bottom-0 bg-bliss-50 border-t border-bliss-100 px-6 py-4 rounded-b-2xl flex gap-3">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="flex-1 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
+              className="flex-1 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50"
             >
               {t('common:buttons.cancel')}
             </button>
@@ -308,7 +308,7 @@ export function HealthDeclarationModal({
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="flex-1 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSaving ? (
               <>

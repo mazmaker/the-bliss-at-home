@@ -35,7 +35,7 @@ import ExtensionPayment from './pages/ExtensionPayment'
 function App() {
   const { t } = useTranslation('common')
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+    <div className="min-h-screen bg-bliss-100">
       <Toaster position="top-right" />
       <Routes>
         {/* Public routes - Login only */}
@@ -160,7 +160,7 @@ function App() {
         colors={{
           line: 'bg-green-500 hover:bg-green-600',
           facebook: 'bg-blue-600 hover:bg-blue-700',
-          main: 'bg-gradient-to-r from-amber-500 to-orange-600'
+          main: 'bg-bliss-600'
         }}
         onContactAdmin={(method) => {
           // Optional: Add analytics tracking here
@@ -171,20 +171,20 @@ function App() {
       />
 
       {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-stone-200 py-8 mt-12">
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-bliss-200 py-8 mt-12">
         <div className="container mx-auto px-4">
           <div className="text-center text-gray-500 text-sm pt-4">
             <p>{t('footer.copyright')}</p>
             <div className="flex justify-center gap-4 mt-4">
-              <Link to="/terms" className="hover:text-amber-700 transition font-medium">
+              <Link to="/terms" className="hover:text-bliss-600 transition font-medium">
                 {t('footer.terms')}
               </Link>
               <span>|</span>
-              <Link to="/privacy" className="hover:text-amber-700 transition font-medium">
+              <Link to="/privacy" className="hover:text-bliss-600 transition font-medium">
                 {t('footer.privacy')}
               </Link>
               <span>|</span>
-              <a href={LINE_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="hover:text-amber-700 transition font-medium">
+              <a href={LINE_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="hover:text-bliss-600 transition font-medium">
                 {t('footer.contact')}
               </a>
             </div>

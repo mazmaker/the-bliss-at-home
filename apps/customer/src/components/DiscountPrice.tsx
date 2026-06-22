@@ -42,7 +42,7 @@ export function DiscountPrice({
   if (!hasDiscount) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <span className={`font-semibold text-stone-900 ${sizes.price}`}>
+        <span className={`font-semibold text-bliss-900 ${sizes.price}`}>
           {t('common:currency')}{originalPrice.toLocaleString()}
         </span>
       </div>
@@ -53,7 +53,7 @@ export function DiscountPrice({
     <div className={`flex items-center gap-2 ${className}`}>
       {/* Discount Badge */}
       {showBadge && (
-        <span className={`bg-amber-500 text-white font-bold rounded-full ${sizes.badge}`}>
+        <span className={`bg-bliss-600 text-white font-bold rounded-full ${sizes.badge}`}>
           {t('services:discount.badge', { percentage: discountPercentage })}
         </span>
       )}
@@ -65,7 +65,7 @@ export function DiscountPrice({
         </span>
 
         {/* Discounted Price */}
-        <span className={`font-bold text-amber-700 ${sizes.price}`}>
+        <span className={`font-bold text-bliss-600 ${sizes.price}`}>
           {t('common:currency')}{discountedPrice.toLocaleString()}
         </span>
       </div>

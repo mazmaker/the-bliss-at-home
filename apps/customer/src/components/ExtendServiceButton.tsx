@@ -68,11 +68,11 @@ export function ExtendServiceButton({
 
     switch (variant) {
       case 'secondary':
-        return 'bg-stone-600 hover:bg-stone-700 text-white'
+        return 'bg-bliss-700 hover:bg-bliss-700 text-white'
       case 'outline':
-        return 'border-2 border-amber-600 text-amber-600 hover:bg-amber-50 bg-white'
+        return 'border-2 border-bliss-600 text-bliss-600 hover:bg-bliss-100 bg-bliss-50'
       default:
-        return 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25'
+        return 'bg-bliss-600 hover:bg-bliss-700 text-white shadow-lg shadow-bliss-600/25'
     }
   }
 
@@ -101,7 +101,7 @@ export function ExtendServiceButton({
           title={getHelpText()}
           className={`
             flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2
+            focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:ring-offset-2
             ${getSizeClasses()}
             ${getVariantClasses()}
             ${fullWidth ? 'w-full' : ''}
@@ -118,7 +118,7 @@ export function ExtendServiceButton({
 
         {/* Extension count indicator */}
         {extensionStatus.hasExtensions && (
-          <div className="absolute -top-2 -right-2 min-w-[20px] h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center px-1">
+          <div className="absolute -top-2 -right-2 min-w-[20px] h-5 bg-bliss-600 text-white text-xs rounded-full flex items-center justify-center px-1">
             {extensionStatus.extensionCount}
           </div>
         )}
@@ -138,12 +138,12 @@ export function ExtendServiceButton({
 
         {/* Extension info for bookings with extensions */}
         {extensionStatus.hasExtensions && !extensionStatus.maxExtensionsReached && (
-          <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <div className="text-sm text-amber-700">
+          <div className="flex items-center gap-2 p-3 bg-bliss-100 border border-bliss-300 rounded-lg">
+            <Sparkles className="w-4 h-4 text-bliss-600 flex-shrink-0" />
+            <div className="text-sm text-bliss-600">
               <div className="font-medium">ขยายเวลาแล้ว {extensionStatus.extensionCount} ครั้ง</div>
               {extensionStatus.lastExtendedAt && (
-                <div className="text-xs text-amber-600">
+                <div className="text-xs text-bliss-600">
                   ล่าสุด: {new Date(extensionStatus.lastExtendedAt).toLocaleDateString('th-TH', {
                     day: 'numeric',
                     month: 'short',

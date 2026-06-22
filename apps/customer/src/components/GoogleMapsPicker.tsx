@@ -132,7 +132,7 @@ export function GoogleMapsPicker({
       const input = document.createElement('input')
       input.type = 'text'
       input.placeholder = t('booking:wizard.step4.searchPlaceholder')
-      input.className = 'w-80 px-4 py-2 mt-2 ml-2 bg-white rounded-lg shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500'
+      input.className = 'w-80 px-4 py-2 mt-2 ml-2 bg-bliss-50 rounded-lg shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-bliss-600'
 
       const searchBox = new window.google.maps.places.SearchBox(input)
       map.controls[window.google.maps.ControlPosition.TOP_LEFT].push(input)
@@ -212,7 +212,7 @@ export function GoogleMapsPicker({
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto mb-2" />
+              <Loader2 className="w-8 h-8 animate-spin text-bliss-600 mx-auto mb-2" />
               <p className="text-sm text-gray-600">{t('common:loading.map')}</p>
             </div>
           </div>
@@ -224,7 +224,7 @@ export function GoogleMapsPicker({
             type="button"
             onClick={locateCurrentPosition}
             disabled={isLocating}
-            className="absolute bottom-4 right-4 z-10 flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg shadow-lg border border-stone-200 text-sm font-medium text-stone-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition disabled:opacity-60"
+            className="absolute bottom-4 right-4 z-10 flex items-center gap-2 px-4 py-2.5 bg-bliss-50 rounded-lg shadow-lg border border-bliss-200 text-sm font-medium text-bliss-700 hover:bg-bliss-100 hover:text-bliss-600 hover:border-bliss-400 transition disabled:opacity-60"
           >
             {isLocating ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -236,11 +236,11 @@ export function GoogleMapsPicker({
         )}
       </div>
 
-      <div className="flex items-start gap-2 text-xs text-gray-600 bg-amber-50 p-3 rounded-lg">
-        <MapPin className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+      <div className="flex items-start gap-2 text-xs text-gray-600 bg-bliss-100 p-3 rounded-lg">
+        <MapPin className="w-4 h-4 text-bliss-600 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="font-medium text-amber-900 mb-1">{t('booking:wizard.step4.howToUseTitle')}</p>
-          <ul className="space-y-1 text-amber-700">
+          <p className="font-medium text-bliss-800 mb-1">{t('booking:wizard.step4.howToUseTitle')}</p>
+          <ul className="space-y-1 text-bliss-600">
             <li>{t('booking:wizard.step4.howToUseStep1')}</li>
             <li>{t('booking:wizard.step4.howToUseStep2')}</li>
             <li>{t('booking:wizard.step4.howToUseStep3')}</li>

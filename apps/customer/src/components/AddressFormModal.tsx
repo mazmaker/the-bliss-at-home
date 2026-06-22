@@ -224,14 +224,14 @@ function AddressFormModal({
         {/* Label and Default Checkbox */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               {t('profile:addresses.label')} <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.label}
               onChange={(e) => handleInputChange('label', e.target.value)}
               disabled={mutation.isPending}
-              className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed"
             >
               <option value="Home">{t('profile:addresses.labelHome')}</option>
               <option value="Office">{t('profile:addresses.labelWork')}</option>
@@ -246,16 +246,16 @@ function AddressFormModal({
                 checked={formData.is_default}
                 onChange={(e) => handleInputChange('is_default', e.target.checked)}
                 disabled={mutation.isPending}
-                className="w-4 h-4 text-amber-700 border-stone-300 rounded focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-2 focus:ring-bliss-600 disabled:opacity-50"
               />
-              <span className="text-sm text-stone-700">{t('profile:addresses.setAsDefault')}</span>
+              <span className="text-sm text-bliss-700">{t('profile:addresses.setAsDefault')}</span>
             </label>
           </div>
         </div>
 
         {/* Recipient Name */}
         <div data-field="recipient_name">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <User className="w-4 h-4 inline mr-1" />
             {t('profile:addresses.recipientName')} <span className="text-red-500">*</span>
           </label>
@@ -265,8 +265,8 @@ function AddressFormModal({
             onChange={(e) => handleInputChange('recipient_name', e.target.value)}
             placeholder={t('profile:addresses.recipientNamePlaceholder')}
             disabled={mutation.isPending}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.recipient_name ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.recipient_name ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.recipient_name && (
@@ -276,7 +276,7 @@ function AddressFormModal({
 
         {/* Phone Number */}
         <div data-field="phone">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <Phone className="w-4 h-4 inline mr-1" />
             {t('profile:addresses.phone')} <span className="text-red-500">*</span>
           </label>
@@ -286,8 +286,8 @@ function AddressFormModal({
             onChange={(e) => handleInputChange('phone', e.target.value)}
             placeholder="0812345678"
             disabled={mutation.isPending}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.phone ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.phone ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.phone && (
@@ -297,7 +297,7 @@ function AddressFormModal({
 
         {/* Address Line */}
         <div data-field="address_line">
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <MapPin className="w-4 h-4 inline mr-1" />
             {t('profile:addresses.address')} <span className="text-red-500">*</span>
           </label>
@@ -307,8 +307,8 @@ function AddressFormModal({
             onChange={(e) => handleInputChange('address_line', e.target.value)}
             placeholder={t('profile:addresses.addressPlaceholder')}
             disabled={mutation.isPending}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-50 disabled:cursor-not-allowed ${
-              errors.address_line ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-600 focus:border-transparent disabled:bg-bliss-100 disabled:cursor-not-allowed ${
+              errors.address_line ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.address_line && (
@@ -338,7 +338,7 @@ function AddressFormModal({
 
         {/* Google Maps Location Picker */}
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <MapPin className="w-4 h-4 inline mr-1" />
             {t('profile:addresses.mapLocation')}
           </label>
@@ -351,19 +351,19 @@ function AddressFormModal({
         </div>
 
         {/* Action Buttons - Fixed at bottom */}
-        <div className="flex gap-3 pt-4 mt-4 border-t border-stone-200">
+        <div className="flex gap-3 pt-4 mt-4 border-t border-bliss-200">
           <button
             type="button"
             onClick={onClose}
             disabled={mutation.isPending}
-            className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('profile:addresses.buttonCancel')}
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {mutation.isPending ? (
               <>

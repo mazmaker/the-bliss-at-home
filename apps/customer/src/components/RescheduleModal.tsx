@@ -206,8 +206,8 @@ export function RescheduleModal({
         {/* Loading State */}
         {loading && step === 'check' && (
           <div className="text-center py-8">
-            <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
-            <p className="text-stone-600">{t('booking:reschedule.checking')}</p>
+            <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-4" />
+            <p className="text-bliss-700">{t('booking:reschedule.checking')}</p>
           </div>
         )}
 
@@ -225,18 +225,18 @@ export function RescheduleModal({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Ban className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:reschedule.cannotReschedule')}</h3>
-            <p className="text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('booking:reschedule.cannotReschedule')}</h3>
+            <p className="text-bliss-700 mb-4">
               {eligibility.reason || t('booking:reschedule.notEligibleDefault')}
             </p>
 
             {eligibility.hoursUntilBooking > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6">
-                <div className="flex items-center gap-2 text-amber-800 mb-2">
+              <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4 text-left mb-6">
+                <div className="flex items-center gap-2 text-bliss-700 mb-2">
                   <Clock className="w-5 h-5" />
                   <span className="font-medium">{t('booking:reschedule.hoursUntilBooking', { hours: eligibility.hoursUntilBooking.toFixed(1) })}</span>
                 </div>
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-bliss-600">
                   {t('booking:reschedule.policyMessage')}
                 </p>
               </div>
@@ -244,7 +244,7 @@ export function RescheduleModal({
 
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+              className="px-6 py-3 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
             >
               {t('common:action.close')}
             </button>
@@ -255,41 +255,41 @@ export function RescheduleModal({
         {step === 'select' && eligibility?.canReschedule && (
           <div className="space-y-6">
             {/* Current Booking Info */}
-            <div className="bg-stone-50 rounded-xl p-4">
-              <p className="text-sm text-stone-500 mb-1">{t('booking:reschedule.currentBooking')}</p>
-              <p className="font-medium text-stone-900">{serviceName}</p>
-              <p className="text-sm text-stone-600">{t('booking:dateTime', { date: formatDate(currentDate), time: currentTime })}</p>
+            <div className="bg-bliss-100 rounded-xl p-4">
+              <p className="text-sm text-bliss-500 mb-1">{t('booking:reschedule.currentBooking')}</p>
+              <p className="font-medium text-bliss-900">{serviceName}</p>
+              <p className="text-sm text-bliss-700">{t('booking:dateTime', { date: formatDate(currentDate), time: currentTime })}</p>
             </div>
 
             {/* Date Selection */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-3">
+              <label className="block text-sm font-medium text-bliss-700 mb-3">
                 {t('booking:reschedule.selectNewDate')}
               </label>
-              <div className="bg-white border border-stone-200 rounded-xl p-4">
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
                 {/* Month Navigation */}
                 <div className="flex items-center justify-between mb-4">
                   <button
                     onClick={() => navigateMonth('prev')}
-                    className="p-2 hover:bg-stone-100 rounded-lg transition"
+                    className="p-2 hover:bg-bliss-100 rounded-lg transition"
                   >
-                    <ChevronLeft className="w-5 h-5 text-stone-600" />
+                    <ChevronLeft className="w-5 h-5 text-bliss-700" />
                   </button>
-                  <span className="font-medium text-stone-900">
+                  <span className="font-medium text-bliss-900">
                     {currentMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
                   </span>
                   <button
                     onClick={() => navigateMonth('next')}
-                    className="p-2 hover:bg-stone-100 rounded-lg transition"
+                    className="p-2 hover:bg-bliss-100 rounded-lg transition"
                   >
-                    <ChevronRight className="w-5 h-5 text-stone-600" />
+                    <ChevronRight className="w-5 h-5 text-bliss-700" />
                   </button>
                 </div>
 
                 {/* Day Headers */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {['common:dayOfWeek.sun', 'common:dayOfWeek.mon', 'common:dayOfWeek.tue', 'common:dayOfWeek.wed', 'common:dayOfWeek.thu', 'common:dayOfWeek.fri', 'common:dayOfWeek.sat'].map((dayKey) => (
-                    <div key={dayKey} className="text-center text-xs font-medium text-stone-500 py-2">
+                    <div key={dayKey} className="text-center text-xs font-medium text-bliss-500 py-2">
                       {t(dayKey)}
                     </div>
                   ))}
@@ -318,11 +318,11 @@ export function RescheduleModal({
                         disabled={!isSelectable}
                         className={`p-2 text-sm rounded-lg transition ${
                           isSelected
-                            ? 'bg-amber-600 text-white font-bold'
+                            ? 'bg-bliss-600 text-white font-bold'
                             : isSelectable
-                            ? 'hover:bg-amber-100 text-stone-700'
-                            : 'text-stone-300 cursor-not-allowed'
-                        } ${isToday && !isSelected ? 'ring-2 ring-amber-300' : ''}`}
+                            ? 'hover:bg-bliss-200 text-bliss-700'
+                            : 'text-bliss-300 cursor-not-allowed'
+                        } ${isToday && !isSelected ? 'ring-2 ring-bliss-400' : ''}`}
                       >
                         {date.getDate()}
                       </button>
@@ -335,7 +335,7 @@ export function RescheduleModal({
             {/* Time Selection */}
             {selectedDate && (
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-3">
+                <label className="block text-sm font-medium text-bliss-700 mb-3">
                   {t('booking:reschedule.selectNewTime')}
                 </label>
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
@@ -348,8 +348,8 @@ export function RescheduleModal({
                         onClick={() => setSelectedTime(time)}
                         className={`px-3 py-2 text-sm rounded-lg border-2 transition ${
                           isSelected
-                            ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
-                            : 'border-stone-200 hover:border-amber-300 text-stone-700'
+                            ? 'border-bliss-600 bg-bliss-100 text-bliss-600 font-medium'
+                            : 'border-bliss-200 hover:border-bliss-400 text-bliss-700'
                         }`}
                       >
                         {time}
@@ -364,14 +364,14 @@ export function RescheduleModal({
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+                className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition"
               >
                 {t('common:action.cancel')}
               </button>
               <button
                 onClick={() => setStep('confirm')}
                 disabled={!selectedDate || !selectedTime}
-                className="flex-1 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('booking:reschedule.continue')}
               </button>
@@ -382,29 +382,29 @@ export function RescheduleModal({
         {/* Confirm Step */}
         {step === 'confirm' && (
           <div className="text-center py-4">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-amber-600" />
+            <div className="w-16 h-16 bg-bliss-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-bliss-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:reschedule.confirmTitle')}</h3>
-            <p className="text-stone-600 mb-6">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('booking:reschedule.confirmTitle')}</h3>
+            <p className="text-bliss-700 mb-6">
               {t('booking:reschedule.confirmMessage')}
             </p>
 
-            <div className="bg-stone-50 rounded-xl p-4 text-left mb-6 space-y-4">
+            <div className="bg-bliss-100 rounded-xl p-4 text-left mb-6 space-y-4">
               <div>
-                <p className="text-sm text-stone-500 mb-1">{t('booking:reschedule.originalDateTime')}</p>
-                <p className="font-medium text-stone-900 line-through opacity-60">
+                <p className="text-sm text-bliss-500 mb-1">{t('booking:reschedule.originalDateTime')}</p>
+                <p className="font-medium text-bliss-900 line-through opacity-60">
                   {t('booking:dateTime', { date: formatDate(currentDate), time: currentTime })}
                 </p>
               </div>
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                  <ChevronRight className="w-5 h-5 text-amber-600" />
+                <div className="w-8 h-8 bg-bliss-200 rounded-full flex items-center justify-center">
+                  <ChevronRight className="w-5 h-5 text-bliss-600" />
                 </div>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">{t('booking:reschedule.newDateTime')}</p>
-                <p className="font-bold text-amber-700 text-lg">
+                <p className="text-sm text-bliss-500 mb-1">{t('booking:reschedule.newDateTime')}</p>
+                <p className="font-bold text-bliss-600 text-lg">
                   {t('booking:dateTime', { date: formatDate(selectedDate), time: selectedTime })}
                 </p>
               </div>
@@ -414,14 +414,14 @@ export function RescheduleModal({
               <button
                 onClick={() => setStep('select')}
                 disabled={loading}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
+                className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50"
               >
                 {t('common:action.back')}
               </button>
               <button
                 onClick={handleConfirmReschedule}
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -442,8 +442,8 @@ export function RescheduleModal({
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">{t('booking:reschedule.successTitle')}</h3>
-            <p className="text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">{t('booking:reschedule.successTitle')}</h3>
+            <p className="text-bliss-700 mb-4">
               {t('booking:reschedule.successMessage', { number: bookingNumber })}
             </p>
 
@@ -461,7 +461,7 @@ export function RescheduleModal({
 
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
+              className="px-8 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               {t('common:action.close')}
             </button>

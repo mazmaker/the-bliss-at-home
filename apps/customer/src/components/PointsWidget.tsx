@@ -19,7 +19,7 @@ export function PointsWidget({ customerId }: PointsWidgetProps) {
   const pointsValue = settings ? Math.floor(totalPoints / settings.points_to_baht) : 0
 
   return (
-    <div className="bg-gradient-to-r from-amber-600 to-amber-700 rounded-2xl p-5 text-white mb-6">
+    <div className="bg-bliss-600 rounded-2xl p-5 text-white mb-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Star className="w-5 h-5" />
@@ -27,7 +27,7 @@ export function PointsWidget({ customerId }: PointsWidgetProps) {
         </div>
         <Link
           to="/points"
-          className="flex items-center gap-1 text-sm text-amber-100 hover:text-white transition"
+          className="flex items-center gap-1 text-sm text-bliss-200 hover:text-white transition"
         >
           {t('home:pointsWidget.viewHistory')}
           <ChevronRight className="w-4 h-4" />
@@ -36,13 +36,13 @@ export function PointsWidget({ customerId }: PointsWidgetProps) {
 
       <div className="flex items-baseline gap-2 mb-1">
         <span className="text-3xl font-bold">{totalPoints.toLocaleString()}</span>
-        <span className="text-amber-200">{t('home:pointsWidget.pointsUnit')}</span>
+        <span className="text-bliss-300">{t('home:pointsWidget.pointsUnit')}</span>
       </div>
 
-      <p className="text-amber-200 text-sm">{t('home:pointsWidget.valueLabel')}{pointsValue.toLocaleString()}</p>
+      <p className="text-bliss-300 text-sm">{t('home:pointsWidget.valueLabel')}{pointsValue.toLocaleString()}</p>
 
       {nearestExpiry && (
-        <div className="flex items-center gap-1 mt-3 text-xs text-amber-200 bg-amber-800/30 rounded-lg px-3 py-1.5">
+        <div className="flex items-center gap-1 mt-3 text-xs text-bliss-300 bg-bliss-700/30 rounded-lg px-3 py-1.5">
           <Clock className="w-3 h-3" />
           <span>
             {nearestExpiry.points} {t('home:pointsWidget.expiringLabel')}{' '}

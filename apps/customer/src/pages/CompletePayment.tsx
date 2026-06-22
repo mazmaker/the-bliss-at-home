@@ -117,22 +117,22 @@ function CompletePayment() {
 
   if (bookingLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700"></div>
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600"></div>
       </div>
     )
   }
 
   if (bookingError || !bookingData) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl p-6 text-center max-w-md w-full">
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
+        <div className="bg-bliss-50 rounded-xl p-6 text-center max-w-md w-full">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-stone-900 mb-2">{t('booking:bookingNotFound.title')}</h1>
-          <p className="text-stone-600 mb-4">{t('booking:bookingNotFound.message')}</p>
+          <h1 className="text-xl font-semibold text-bliss-900 mb-2">{t('booking:bookingNotFound.title')}</h1>
+          <p className="text-bliss-700 mb-4">{t('booking:bookingNotFound.message')}</p>
           <Link
             to="/bookings"
-            className="text-amber-700 hover:text-amber-800 font-medium"
+            className="text-bliss-600 hover:text-bliss-700 font-medium"
           >
             {t('common:backToBookings')}
           </Link>
@@ -143,14 +143,14 @@ function CompletePayment() {
 
   if (!customer) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl p-6 text-center max-w-md w-full">
-          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-stone-900 mb-2">{t('auth:signInRequired.title')}</h1>
-          <p className="text-stone-600 mb-4">{t('auth:signInRequired.message')}</p>
+      <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
+        <div className="bg-bliss-50 rounded-xl p-6 text-center max-w-md w-full">
+          <AlertTriangle className="w-12 h-12 text-bliss-600 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-bliss-900 mb-2">{t('auth:signInRequired.title')}</h1>
+          <p className="text-bliss-700 mb-4">{t('auth:signInRequired.message')}</p>
           <Link
             to="/auth/signin"
-            className="text-amber-700 hover:text-amber-800 font-medium"
+            className="text-bliss-600 hover:text-bliss-700 font-medium"
           >
             {t('auth:signIn')}
           </Link>
@@ -160,59 +160,59 @@ function CompletePayment() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-bliss-100">
       {/* Header */}
-      <div className="bg-white border-b border-stone-200 sticky top-0 z-10">
+      <div className="bg-bliss-50 border-b border-bliss-200 sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 text-stone-600 hover:text-stone-900 transition"
+              className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-stone-900">{t('booking:payment.pageTitle')}</h1>
+            <h1 className="text-lg font-semibold text-bliss-900">{t('booking:payment.pageTitle')}</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-md mx-auto p-4">
         {/* Booking Summary */}
-        <div className="bg-white rounded-xl p-6 mb-6 border border-stone-200">
-          <h2 className="text-lg font-semibold text-stone-900 mb-4">{t('booking:bookingSummary.title')}</h2>
+        <div className="bg-bliss-50 rounded-xl p-6 mb-6 border border-bliss-200">
+          <h2 className="text-lg font-semibold text-bliss-900 mb-4">{t('booking:bookingSummary.title')}</h2>
 
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-stone-600">{t('booking:bookingSummary.bookingNumber')}</span>
+              <span className="text-bliss-700">{t('booking:bookingSummary.bookingNumber')}</span>
               <span className="font-medium">{bookingData.booking_number}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-stone-600">{t('services:service.label')}</span>
+              <span className="text-bliss-700">{t('services:service.label')}</span>
               <span className="font-medium">{bookingData.service?.name_th}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-stone-600">{t('booking:bookingSummary.date')}</span>
+              <span className="text-bliss-700">{t('booking:bookingSummary.date')}</span>
               <span className="font-medium">
                 {new Date(bookingData.booking_date).toLocaleDateString('th-TH')} {bookingData.booking_time}
               </span>
             </div>
 
-            <div className="border-t border-stone-200 pt-3 mt-3">
+            <div className="border-t border-bliss-200 pt-3 mt-3">
               <div className="flex justify-between text-lg font-semibold">
                 <span>{t('booking:bookingSummary.amount')}</span>
-                <span className="text-amber-700">฿{bookingData.final_price?.toLocaleString()}</span>
+                <span className="text-bliss-600">฿{bookingData.final_price?.toLocaleString()}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Payment Form — gated by the admin payment-channel allowlist (R1) */}
-        <div className="bg-white rounded-xl p-6 border border-stone-200">
+        <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
           {cardEnabled ? (
             <>
-              <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-4 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
                 {t('booking:payment.creditCard')}
               </h3>
@@ -231,7 +231,7 @@ function CompletePayment() {
             </>
           ) : promptpayEnabled ? (
             <>
-              <h3 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-4 flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
                 {t('booking:payment.promptpay')}
               </h3>
@@ -244,26 +244,26 @@ function CompletePayment() {
                 <button
                   onClick={handlePayWithPromptPay}
                   disabled={isProcessing}
-                  className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                  className="w-full py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50"
                 >
                   {isProcessing ? t('booking:payment.generatingQR') : t('booking:payment.generateQRButton', { amount: bookingData.final_price?.toLocaleString() })}
                 </button>
               ) : (
                 <div className="text-center">
                   <img src={promptpayQR} alt={t('booking:payment.qrCodeAlt')} className="w-64 h-64 mx-auto" />
-                  <p className="text-sm text-stone-600 mt-3">{t('booking:payment.waitingForPayment')}</p>
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-700 mx-auto mt-3"></div>
+                  <p className="text-sm text-bliss-700 mt-3">{t('booking:payment.waitingForPayment')}</p>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-bliss-600 mx-auto mt-3"></div>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-stone-600 text-center py-4">{t('booking:payment.noChannelsAvailable')}</p>
+            <p className="text-bliss-700 text-center py-4">{t('booking:payment.noChannelsAvailable')}</p>
           )}
         </div>
 
         {/* Security Notice */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-stone-50 border border-amber-200 rounded-xl">
-          <p className="text-sm text-stone-600 text-center">
+        <div className="mt-6 p-4 bg-bliss-100 border border-bliss-300 rounded-xl">
+          <p className="text-sm text-bliss-700 text-center">
             {t('common:payment.securityNotice')}
           </p>
         </div>

@@ -36,9 +36,9 @@ export function ConfirmDialog({
       button: 'bg-red-600 hover:bg-red-700',
     },
     warning: {
-      icon: 'text-amber-600',
-      iconBg: 'bg-amber-100',
-      button: 'bg-amber-600 hover:bg-amber-700',
+      icon: 'text-bliss-600',
+      iconBg: 'bg-bliss-200',
+      button: 'bg-bliss-600 hover:bg-bliss-600',
     },
     info: {
       icon: 'text-blue-600',
@@ -62,10 +62,10 @@ export function ConfirmDialog({
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-stone-900 mb-2">{title}</h3>
+        <h3 className="text-xl font-bold text-bliss-900 mb-2">{title}</h3>
 
         {/* Message */}
-        <p className="text-stone-600 mb-6">{message}</p>
+        <p className="text-bliss-700 mb-6">{message}</p>
 
         {/* Actions */}
         <div className="flex gap-3">
@@ -73,7 +73,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelText}
           </button>

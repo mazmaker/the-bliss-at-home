@@ -147,11 +147,11 @@ export function AuthCallback() {
   }, [navigate])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+    <div className="min-h-screen flex items-center justify-center bg-bliss-100">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mb-4"></div>
-        <p className="text-stone-600 font-medium">{status}</p>
-        <p className="text-stone-500 text-sm mt-2">{t('common:loading.pleaseWait')}</p>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mb-4"></div>
+        <p className="text-bliss-700 font-medium">{status}</p>
+        <p className="text-bliss-500 text-sm mt-2">{t('common:loading.pleaseWait')}</p>
       </div>
     </div>
   )

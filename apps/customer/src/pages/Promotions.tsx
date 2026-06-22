@@ -122,7 +122,7 @@ const PromotionsPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{t('home:promotions.loading')}</p>
         </div>
       </div>
@@ -132,7 +132,7 @@ const PromotionsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-bliss-50 shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4 mb-4">
             <Link to="/" className="p-2 hover:bg-gray-100 rounded-lg transition">
@@ -151,7 +151,7 @@ const PromotionsPage = () => {
               <input
                 type="text"
                 placeholder={t('home:promotions.searchPlaceholder')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -160,7 +160,7 @@ const PromotionsPage = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
             >
               <option value="all">{t('home:promotions.filterAll')}</option>
               <option value="percentage">{t('home:promotions.filterPercentage')}</option>
@@ -171,7 +171,7 @@ const PromotionsPage = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bliss-600 focus:border-transparent"
             >
               <option value="newest">{t('home:promotions.sortNewest')}</option>
               <option value="discount">{t('home:promotions.sortHighestDiscount')}</option>
@@ -245,9 +245,9 @@ const PromotionsPage = () => {
                         width: '68px',
                         paddingTop: '14px',
                         paddingBottom: '22px',
-                        background: '#C40000',
+                        background: '#775642',
                         clipPath: 'polygon(0 0, 100% 0, 100% 83%, 50% 100%, 0 83%)',
-                        boxShadow: '0 6px 18px rgba(196,0,0,0.45)',
+                        boxShadow: '0 6px 18px rgba(119,86,66,0.45)',
                       }}
                     >
                       <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.35, letterSpacing: '0.02em' }}>ส่วนลด</span>
@@ -256,7 +256,7 @@ const PromotionsPage = () => {
 
                     {/* Days Left Badge */}
                     {daysLeft > 0 && daysLeft <= 7 && (
-                      <div className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1" style={{ background: '#D50000' }}>
+                      <div className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1" style={{ background: '#775642' }}>
                         <Clock className="w-3 h-3" />
                         {t('home:promotions.daysLeftBadge', { daysLeft })}
                       </div>
@@ -269,7 +269,7 @@ const PromotionsPage = () => {
                           <span style={{
                             fontSize: '11.5rem',
                             fontWeight: 500,
-                            color: '#E8000A',
+                            color: '#775642',
                             fontFamily: '"Noto Serif Thai", serif',
                             lineHeight: 0.85,
                             letterSpacing: '-4px',
@@ -279,7 +279,7 @@ const PromotionsPage = () => {
                           <span style={{
                             fontSize: '3.2rem',
                             fontWeight: 500,
-                            color: '#E8000A',
+                            color: '#775642',
                             fontFamily: '"Noto Serif Thai", serif',
                             marginTop: '22px',
                             marginLeft: '4px',
@@ -289,7 +289,7 @@ const PromotionsPage = () => {
                           </span>
                         </div>
                       ) : (
-                        <div className="text-center" style={{ color: '#D50000' }}>
+                        <div className="text-center" style={{ color: '#775642' }}>
                           <div style={{ fontSize: '4.5rem', fontWeight: 900, fontFamily: '"Noto Serif Thai", Georgia, serif' }}>{formatDiscount(promo)}</div>
                         </div>
                       )}
@@ -309,8 +309,8 @@ const PromotionsPage = () => {
 
                       {/* Header */}
                       <div className="flex items-center gap-2 mb-4">
-                        <Tag className="w-4 h-4 flex-shrink-0" style={{ color: '#D50000' }} />
-                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#D50000' }}>{name}</span>
+                        <Tag className="w-4 h-4 flex-shrink-0" style={{ color: '#775642' }} />
+                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#775642' }}>{name}</span>
                       </div>
 
                       {/* Promo code */}
@@ -320,7 +320,7 @@ const PromotionsPage = () => {
                           className="flex items-center justify-between"
                           style={{
                             background: '#FFF5F5',
-                            border: '1.5px dashed #D50000',
+                            border: '1.5px dashed #775642',
                             borderRadius: '12px',
                             padding: '13px 16px',
                           }}
@@ -332,13 +332,13 @@ const PromotionsPage = () => {
                           <span style={{
                             fontSize: '18px',
                             fontWeight: 800,
-                            color: '#D50000',
+                            color: '#775642',
                             fontFamily: '"Noto Serif Thai", Georgia, serif',
                             letterSpacing: '0.04em',
                           }}>
                             {promo.code}
                           </span>
-                          <Copy className="w-5 h-5 flex-shrink-0" style={{ color: '#D50000', opacity: 0.65 }} />
+                          <Copy className="w-5 h-5 flex-shrink-0" style={{ color: '#775642', opacity: 0.65 }} />
                         </div>
                       </div>
 
