@@ -35,6 +35,7 @@ interface BookingData {
   paymentNotes?: string
   adminNotes?: string
   discountCode?: string
+  providerPreference?: string
 }
 
 interface Props {
@@ -85,6 +86,16 @@ export default function BookingConfirmation({
       'other': 'อื่นๆ'
     }
     return methods[method] || method
+  }
+
+  const getProviderLabel = (pref?: string) => {
+    switch (pref) {
+      case 'female-only': return 'ผู้หญิงเท่านั้น'
+      case 'male-only': return 'ผู้ชายเท่านั้น'
+      case 'prefer-female': return 'ต้องการผู้หญิง'
+      case 'prefer-male': return 'ต้องการผู้ชาย'
+      default: return 'ไม่ระบุ'
+    }
   }
 
   const handleCreateBooking = async () => {
@@ -168,6 +179,9 @@ export default function BookingConfirmation({
         // Payment method (from admin selection)
         payment_method: bookingData.paymentMethod || null,
 
+        // Provider gender preference — drives staff dispatch filtering on the server
+        provider_preference: bookingData.providerPreference || 'no-preference',
+
         // Booking source identifier
         booking_source: 'admin_app',
 
@@ -188,6 +202,29 @@ export default function BookingConfirmation({
       }
 
       console.log('✅ Booking created:', booking)
+
+      // Dispatch to staff: create job(s) + send LINE/in-app notifications.
+      // Admin quick-booking inserts the booking directly (no payment webhook), so it must
+      // trigger the same server path the customer/hotel confirmation flow uses — otherwise
+      // no job is ever created and the booking never reaches the Staff App. Mirrors
+      // adminBookingService.updateBookingStatus's confirmed-branch dispatch. Non-blocking.
+      try {
+        const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+        const dispatchRes = await fetch(`${serverUrl}/api/notifications/booking-confirmed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: booking.id }),
+        })
+        const dispatchResult = await dispatchRes.json()
+        if (dispatchResult.success) {
+          console.log(`📋 Quick booking ${booking.id} dispatched to staff:`, dispatchResult)
+        } else {
+          console.warn(`⚠️ Quick booking ${booking.id} dispatch partial:`, dispatchResult)
+        }
+      } catch (dispatchError) {
+        // Non-blocking: a dispatch failure must not break the booking creation result.
+        console.error('⚠️ Failed to dispatch quick booking to staff:', dispatchError)
+      }
 
       setCreatedBooking({
         id: booking.id,
@@ -293,6 +330,7 @@ export default function BookingConfirmation({
             {bookingData.bookingTime && (
               <p><span className="text-stone-500">เวลา:</span> {formatTime(bookingData.bookingTime)}</p>
             )}
+            <p><span className="text-stone-500">เพศผู้ให้บริการ:</span> {getProviderLabel(bookingData.providerPreference)}</p>
           </div>
         </div>
 

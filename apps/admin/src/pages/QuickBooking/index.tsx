@@ -71,6 +71,7 @@ interface BookingData {
   paymentNotes?: string
   adminNotes?: string
   overrideRestrictions?: boolean
+  providerPreference?: string
 }
 
 const steps = [
@@ -185,7 +186,8 @@ export default function QuickBooking() {
                 hotelRoomNumber: details.hotelRoomNumber,
                 addressDetails: details.addressDetails,
                 discountCode: details.discountCode,
-                appliedDiscount: details.appliedDiscount
+                appliedDiscount: details.appliedDiscount,
+                providerPreference: details.providerPreference
               })
             }
             onNext={undefined}

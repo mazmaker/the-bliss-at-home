@@ -236,6 +236,12 @@ export default function ServiceSelection({
   const [isHotelBooking, setIsHotelBooking] = useState(false)
   const [hotelId, setHotelId] = useState('')
 
+  // Provider gender preference (mirrors Customer/Hotel app). Drives staff dispatch filtering
+  // server-side (notificationService.filterStaffByProviderPreference) + staff job eligibility.
+  const [providerPreference, setProviderPreference] = useState<string>(
+    (selectedService as any)?.providerPreference || 'no-preference'
+  )
+
   // Address details state for home/office booking
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showManualAddressForm, setShowManualAddressForm] = useState(false)
@@ -804,7 +810,8 @@ export default function ServiceSelection({
         addressDetails: completeAddress,
         discountCode: appliedPromotion?.code,
         appliedDiscount: appliedPromotion,
-        selectedDuration: currentServiceSelection?.duration
+        selectedDuration: currentServiceSelection?.duration,
+        providerPreference
       }
 
       console.log('✅ Validation passed, updating booking data')
@@ -1316,6 +1323,50 @@ export default function ServiceSelection({
                 </div>
               )}
             </div>
+                </div>
+
+                {/* 2.5 Provider Gender Preference (mirrors Customer/Hotel app) */}
+                <div className="bg-white border border-stone-200 rounded-lg p-5">
+                  <h3 className="font-medium text-stone-900 mb-1 flex items-center gap-2">
+                    <User className="w-5 h-5 text-amber-700" />
+                    เพศผู้ให้บริการ
+                  </h3>
+                  <p className="text-sm text-stone-500 mb-3">เลือกเพศผู้ให้บริการที่ลูกค้าต้องการ (มีผลต่อการกระจายงานให้พนักงาน)</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { value: 'no-preference', label: 'ไม่ระบุ', desc: 'พนักงานที่ว่างทุกคน' },
+                      { value: 'female-only', label: 'ผู้หญิงเท่านั้น', desc: 'เฉพาะพนักงานหญิง' },
+                      { value: 'male-only', label: 'ผู้ชายเท่านั้น', desc: 'เฉพาะพนักงานชาย' },
+                      { value: 'prefer-female', label: 'ต้องการผู้หญิง', desc: 'หญิงก่อน ไม่ว่างให้ชายแทน' },
+                      { value: 'prefer-male', label: 'ต้องการผู้ชาย', desc: 'ชายก่อน ไม่ว่างให้หญิงแทน' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setProviderPreference(opt.value)}
+                        className={`p-3 rounded-lg border-2 text-left transition ${
+                          providerPreference === opt.value
+                            ? 'border-amber-700 bg-amber-50 shadow-sm'
+                            : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-amber-700" />
+                              <span className="font-medium text-stone-900 text-sm">{opt.label}</span>
+                            </div>
+                            <p className="text-xs text-stone-500 mt-0.5 ml-6">{opt.desc}</p>
+                          </div>
+                          {providerPreference === opt.value && (
+                            <div className="w-5 h-5 rounded-full bg-amber-700 flex items-center justify-center flex-shrink-0">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* 3. Contact & Address Information (Conditional) */}
