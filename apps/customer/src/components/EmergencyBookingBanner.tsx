@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Phone, MessageCircle, Clock, X, Sparkles, Star } from 'lucide-react'
+import { MessageCircle, Facebook, Clock, X, Sparkles, Star } from 'lucide-react'
 import { useTranslation } from '@bliss/i18n'
+import { LINE_CONTACT_URL, FACEBOOK_CONTACT_URL } from '../config/contact'
 
 interface EmergencyBookingBannerProps {
-  onContactAdmin?: (method: 'phone' | 'line' | 'chat') => void
+  onContactAdmin?: (method: 'line' | 'facebook') => void
 }
 
 // Force customer app redeploy - CORS fix 2026-05-22 15:15
@@ -23,18 +24,15 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
 
   if (!isVisible) return null
 
-  const handleContact = (method: 'phone' | 'line' | 'chat') => {
+  const handleContact = (method: 'line' | 'facebook') => {
     onContactAdmin?.(method)
 
     switch (method) {
-      case 'phone':
-        window.open('tel:+66-XX-XXX-XXXX')
-        break
       case 'line':
-        window.open('https://line.me/ti/p/@blissathome')
+        window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')
         break
-      case 'chat':
-        window.open(`https://wa.me/66XXXXXXXXX?text=${encodeURIComponent(t('emergency:bannerWhatsappText'))}`)
+      case 'facebook':
+        window.open(FACEBOOK_CONTACT_URL, '_blank', 'noopener,noreferrer')
         break
     }
   }
@@ -58,16 +56,8 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
           {t('services:emergencyService.subtitle')}
         </p>
 
-        {/* Contact buttons */}
+        {/* Contact buttons — LINE + Facebook (single-source URLs from config/contact) */}
         <div className="flex justify-center gap-3">
-          <button
-            onClick={() => handleContact('phone')}
-            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
-          >
-            <Phone className="w-4 h-4" />
-            {t('common:emergencyService.callButton')}
-          </button>
-
           <button
             onClick={() => handleContact('line')}
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
@@ -77,11 +67,11 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
           </button>
 
           <button
-            onClick={() => handleContact('chat')}
+            onClick={() => handleContact('facebook')}
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
           >
-            <MessageCircle className="w-4 h-4" />
-            {t('common:emergencyService.whatsappButton')}
+            <Facebook className="w-4 h-4" />
+            {t('common:emergencyService.facebookButton')}
           </button>
         </div>
       </div>

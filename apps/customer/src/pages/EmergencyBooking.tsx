@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Clock,
-  Phone,
   MessageCircle,
+  Facebook,
   CheckCircle,
   AlertTriangle,
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
   MapPin
 } from 'lucide-react'
 import { useTranslation } from '@bliss/i18n'
+import { LINE_CONTACT_URL, FACEBOOK_CONTACT_URL } from '../config/contact'
 
 export default function EmergencyBooking() {
   const { t } = useTranslation('emergency')
@@ -27,7 +28,7 @@ export default function EmergencyBooking() {
     return () => clearInterval(timer)
   }, [])
 
-  const handleEmergencyRequest = (method: 'phone' | 'line' | 'whatsapp') => {
+  const handleEmergencyRequest = (method: 'line' | 'facebook') => {
     setRequestSent(true)
 
     // Analytics tracking
@@ -39,16 +40,11 @@ export default function EmergencyBooking() {
     }
 
     switch (method) {
-      case 'phone':
-        window.open('tel:+66-XX-XXX-XXXX')
-        break
       case 'line':
-        const message = `${t('emergency:lineMessageTitle')}\n\n${t('emergency:lineMessageCurrentTime')} ${currentTime.toLocaleTimeString('th-TH')}\n${t('emergency:lineMessageArea')} ${t('emergency:lineMessageBangkok')}\n${t('emergency:lineMessageServiceType')} ${t('emergency:lineMessageNotSpecified')}`
-        window.open(`https://line.me/ti/p/@blissathome?text=${encodeURIComponent(message)}`)
+        window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')
         break
-      case 'whatsapp':
-        const whatsappMessage = `${t('emergency:whatsappMessageTitle')}\n\n${t('emergency:whatsappMessageCurrentTime')} ${currentTime.toLocaleString()}\n${t('emergency:whatsappMessageArea')} ${t('emergency:whatsappMessageBangkok')}\n${t('emergency:whatsappMessageService')} ${t('emergency:whatsappMessageThaiMassage')}`
-        window.open(`https://wa.me/66XXXXXXXXX?text=${encodeURIComponent(whatsappMessage)}`)
+      case 'facebook':
+        window.open(FACEBOOK_CONTACT_URL, '_blank', 'noopener,noreferrer')
         break
     }
   }
@@ -161,19 +157,6 @@ export default function EmergencyBooking() {
           </h3>
 
           <button
-            onClick={() => handleEmergencyRequest('phone')}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <div className="font-bold text-xl mb-1">{t('emergency:phoneButton')}</div>
-                <div className="opacity-90 text-sm">{t('emergency:phoneSubtext')}</div>
-              </div>
-              <Phone className="w-8 h-8" />
-            </div>
-          </button>
-
-          <button
             onClick={() => handleEmergencyRequest('line')}
             className="w-full bg-gradient-to-r from-green-400 to-green-500 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
           >
@@ -187,15 +170,15 @@ export default function EmergencyBooking() {
           </button>
 
           <button
-            onClick={() => handleEmergencyRequest('whatsapp')}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            onClick={() => handleEmergencyRequest('facebook')}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
           >
             <div className="flex items-center justify-between">
               <div className="text-left">
-                <div className="font-bold text-xl mb-1">{t('emergency:whatsappButton')}</div>
-                <div className="opacity-90 text-sm">{t('emergency:whatsappSubtext')}</div>
+                <div className="font-bold text-xl mb-1">{t('emergency:facebookButton')}</div>
+                <div className="opacity-90 text-sm">{t('emergency:facebookSubtext')}</div>
               </div>
-              <MessageCircle className="w-8 h-8" />
+              <Facebook className="w-8 h-8" />
             </div>
           </button>
         </div>

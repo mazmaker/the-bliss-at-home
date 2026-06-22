@@ -7,6 +7,27 @@
     "promotions": "促销",
     "notifications": "通知"
   },
+  "notifications": {
+    "unread": "{{count}} 条未读",
+    "markAllRead": "全部标为已读",
+    "marking": "标记中...",
+    "backToProfile": "返回个人资料",
+    "loading": "正在加载通知...",
+    "loginRequired": "请登录以查看通知",
+    "goToLogin": "前往登录",
+    "emptyTitle": "暂无通知",
+    "emptySubtitle": "您将在此查看预约更新和促销信息",
+    "autoRefresh": "通知每 30 秒自动刷新一次"
+  },
+  "timeAgo": {
+    "justNow": "刚刚",
+    "minutesAgo_one": "{{count}} 分钟前",
+    "minutesAgo_other": "{{count}} 分钟前",
+    "hoursAgo_one": "{{count}} 小时前",
+    "hoursAgo_other": "{{count}} 小时前",
+    "daysAgo_one": "{{count}} 天前",
+    "daysAgo_other": "{{count}} 天前"
+  },
   "footer": {
     "copyright": "© 2026 The Bliss Massage at Home. 版权所有。",
     "terms": "服务条款",
@@ -199,9 +220,8 @@
     "room": "房间"
   },
   "emergencyService": {
-    "callButton": "拨打",
     "lineButton": "LINE",
-    "whatsappButton": "WhatsApp"
+    "facebookButton": "Facebook"
   },
   "trackingMap": {
     "loadingMap": "正在加载地图...",

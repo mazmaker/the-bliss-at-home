@@ -7,6 +7,27 @@
     "promotions": "Promotions",
     "notifications": "Notifications"
   },
+  "notifications": {
+    "unread": "{{count}} unread",
+    "markAllRead": "Mark all as read",
+    "marking": "Marking...",
+    "backToProfile": "Back to Profile",
+    "loading": "Loading notifications...",
+    "loginRequired": "Please log in to view notifications",
+    "goToLogin": "Go to Login",
+    "emptyTitle": "No notifications",
+    "emptySubtitle": "You'll see booking updates and promotions here",
+    "autoRefresh": "Notifications are automatically refreshed every 30 seconds"
+  },
+  "timeAgo": {
+    "justNow": "Just now",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
   "footer": {
     "copyright": "© 2026 The Bliss Massage at Home. All rights reserved.",
     "terms": "Terms of Service",
@@ -199,9 +220,8 @@
     "room": "Room"
   },
   "emergencyService": {
-    "callButton": "Call",
     "lineButton": "LINE",
-    "whatsappButton": "WhatsApp"
+    "facebookButton": "Facebook"
   },
   "trackingMap": {
     "loadingMap": "Loading map...",

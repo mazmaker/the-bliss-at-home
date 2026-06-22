@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ChevronLeft, Bell, CheckCircle, AlertCircle, Info, Calendar, CreditCard, Sparkles, Play, UserCheck, XCircle } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import {
   useNotifications,
@@ -9,6 +10,7 @@ import {
 } from '@bliss/supabase/hooks/useNotifications'
 
 function Notifications() {
+  const { t, i18n } = useTranslation('common')
   const { data: customer, isLoading: customerLoading } = useCurrentCustomer()
   const userId = customer?.profile_id ?? undefined
 
@@ -50,6 +52,8 @@ function Notifications() {
     }
   }
 
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+
   const getTimeAgo = (dateString: string | null) => {
     if (!dateString) return ''
 
@@ -57,16 +61,16 @@ function Notifications() {
     const past = new Date(dateString)
     const diffInMinutes = Math.floor((now.getTime() - past.getTime()) / (1000 * 60))
 
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes} min ago`
+    if (diffInMinutes < 1) return t('timeAgo.justNow')
+    if (diffInMinutes < 60) return t('timeAgo.minutesAgo', { count: diffInMinutes })
 
     const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`
+    if (diffInHours < 24) return t('timeAgo.hoursAgo', { count: diffInHours })
 
     const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`
+    if (diffInDays < 7) return t('timeAgo.daysAgo', { count: diffInDays })
 
-    return past.toLocaleDateString()
+    return past.toLocaleDateString(dateLocale)
   }
 
   const handleNotificationClick = async (notification: typeof notifications[0]) => {
@@ -92,7 +96,7 @@ function Notifications() {
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-            <p className="text-stone-600 mt-4">Loading notifications...</p>
+            <p className="text-stone-600 mt-4">{t('notifications.loading')}</p>
           </div>
         </div>
       </div>
@@ -105,9 +109,9 @@ function Notifications() {
       <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <p className="text-stone-600 text-lg">Please log in to view notifications</p>
+            <p className="text-stone-600 text-lg">{t('notifications.loginRequired')}</p>
             <Link to="/login" className="inline-block mt-4 text-amber-700 hover:text-amber-800 font-medium">
-              Go to Login
+              {t('notifications.goToLogin')}
             </Link>
           </div>
         </div>
@@ -122,13 +126,13 @@ function Notifications() {
         <div className="mb-6">
           <Link to="/profile" className="inline-flex items-center text-amber-700 hover:text-amber-900 mb-4">
             <ChevronLeft className="w-5 h-5" />
-            Back to Profile
+            {t('notifications.backToProfile')}
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-stone-900">Notifications</h1>
+              <h1 className="text-2xl font-bold text-stone-900">{t('nav.notifications')}</h1>
               {unreadCount > 0 && (
-                <p className="text-sm text-stone-500">{unreadCount} unread</p>
+                <p className="text-sm text-stone-500">{t('notifications.unread', { count: unreadCount })}</p>
               )}
             </div>
             {unreadCount > 0 && (
@@ -137,7 +141,7 @@ function Notifications() {
                 disabled={markAllAsRead.isPending}
                 className="text-sm text-amber-700 hover:text-amber-800 font-medium disabled:opacity-50"
               >
-                {markAllAsRead.isPending ? 'Marking...' : 'Mark all as read'}
+                {markAllAsRead.isPending ? t('notifications.marking') : t('notifications.markAllRead')}
               </button>
             )}
           </div>
@@ -150,9 +154,9 @@ function Notifications() {
               <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Bell className="w-8 h-8 text-stone-400" />
               </div>
-              <h3 className="font-semibold text-stone-900 mb-2">No notifications</h3>
+              <h3 className="font-semibold text-stone-900 mb-2">{t('notifications.emptyTitle')}</h3>
               <p className="text-sm text-stone-500">
-                You'll see booking updates and promotions here
+                {t('notifications.emptySubtitle')}
               </p>
             </div>
           ) : (
@@ -194,7 +198,7 @@ function Notifications() {
 
         {/* Help Text */}
         <div className="mt-6 text-center text-sm text-stone-500">
-          <p>Notifications are automatically refreshed every 30 seconds</p>
+          <p>{t('notifications.autoRefresh')}</p>
         </div>
       </div>
     </div>

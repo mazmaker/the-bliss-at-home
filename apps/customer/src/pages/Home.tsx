@@ -152,12 +152,9 @@ function HomePage() {
       <section className="px-4">
         <div className="max-w-6xl mx-auto relative">
           <EmergencyBookingBanner
-            onContactAdmin={(method) => {
-              if (method === 'line') {
-                navigate('/emergency-booking')
-              } else {
-                navigate('/emergency-booking')
-              }
+            onContactAdmin={() => {
+              // LINE / Facebook open directly from the banner (config/contact single source);
+              // no extra routing needed.
             }}
           />
         </div>

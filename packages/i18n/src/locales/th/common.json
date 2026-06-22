@@ -7,6 +7,27 @@
     "promotions": "โปรโมชั่น",
     "notifications": "การแจ้งเตือน"
   },
+  "notifications": {
+    "unread": "{{count}} ยังไม่อ่าน",
+    "markAllRead": "อ่านทั้งหมด",
+    "marking": "กำลังทำเครื่องหมาย...",
+    "backToProfile": "กลับไปโปรไฟล์",
+    "loading": "กำลังโหลดการแจ้งเตือน...",
+    "loginRequired": "กรุณาเข้าสู่ระบบเพื่อดูการแจ้งเตือน",
+    "goToLogin": "ไปหน้าเข้าสู่ระบบ",
+    "emptyTitle": "ไม่มีการแจ้งเตือน",
+    "emptySubtitle": "คุณจะเห็นอัปเดตการจองและโปรโมชันที่นี่",
+    "autoRefresh": "การแจ้งเตือนจะรีเฟรชอัตโนมัติทุก 30 วินาที"
+  },
+  "timeAgo": {
+    "justNow": "เมื่อสักครู่",
+    "minutesAgo_one": "{{count}} นาทีที่แล้ว",
+    "minutesAgo_other": "{{count}} นาทีที่แล้ว",
+    "hoursAgo_one": "{{count}} ชั่วโมงที่แล้ว",
+    "hoursAgo_other": "{{count}} ชั่วโมงที่แล้ว",
+    "daysAgo_one": "{{count}} วันที่แล้ว",
+    "daysAgo_other": "{{count}} วันที่แล้ว"
+  },
   "footer": {
     "copyright": "© 2026 The Bliss Massage at Home สงวนลิขสิทธิ์",
     "terms": "เงื่อนไขการให้บริการ",
@@ -199,9 +220,8 @@
     "room": "ห้อง"
   },
   "emergencyService": {
-    "callButton": "โทร",
     "lineButton": "LINE",
-    "whatsappButton": "WhatsApp"
+    "facebookButton": "Facebook"
   },
   "trackingMap": {
     "loadingMap": "กำลังโหลดแผนที่...",

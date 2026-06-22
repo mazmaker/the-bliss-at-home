@@ -157,11 +157,7 @@ function App() {
 
       {/* Floating CTA - shows on all pages */}
       <FloatingCTA
-        phoneNumber="+66-XX-XXX-XXXX"
-        lineId="@blissathome"
-        facebookUrl="theblissathome"
         colors={{
-          phone: 'bg-amber-500 hover:bg-amber-600',
           line: 'bg-green-500 hover:bg-green-600',
           facebook: 'bg-blue-600 hover:bg-blue-700',
           main: 'bg-gradient-to-r from-amber-500 to-orange-600'
