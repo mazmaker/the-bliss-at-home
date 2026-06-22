@@ -41,11 +41,10 @@ export interface Staff {
 
 // Payout schedule types
 export type PayoutSchedule =
-  | 'weekly'        // 7 วัน
-  | 'bi_weekly'     // 15 วัน
-  | 'monthly'       // 30 วัน
-  | 'bi_monthly'    // กลาง+สิ้นเดือน (15 และ 1)
-  | 'custom_days'   // กำหนดเอง
+  | 'weekly'        // 7 วัน จันทร์-อาทิตย์
+  | 'bi_monthly'    // 2 ครั้งต่อเดือน (1-15 / 16-สิ้นเดือน)
+  | 'monthly'       // รายเดือน
+  | 'custom_days'   // กำหนดเอง N วัน
 
 // Staff status enum
 export type StaffStatus =
@@ -77,15 +76,6 @@ export const PAYOUT_SCHEDULE_OPTIONS: PayoutScheduleOption[] = [
     intervalDays: 7,
     icon: '7d',
     isDefault: true
-  },
-  {
-    value: 'bi_weekly',
-    label: 'ทุก 2 สัปดาห์ (15 วัน)',
-    description: 'จ่ายเงินทุก 2 สัปดาห์ - สมดุลระหว่างความถี่และจำนวน',
-    detailedDescription: 'จ่ายเงินทุก 15 วันนับจากรอบก่อนหน้า ช่วยสร้างสมดุลระหว่างความถี่ในการจ่ายและจำนวนเงินต่อครั้ง',
-    examples: 'เริ่ม 1 มิ.ย. → จ่าย 16 มิ.ย. | รอบถัดไป → จ่าย 1 ก.ค.',
-    intervalDays: 15,
-    icon: '15d'
   },
   {
     value: 'monthly',
@@ -172,8 +162,6 @@ export const calculateNextPayoutDate = (
   switch (schedule) {
     case 'weekly':
       return new Date(base.getTime() + 7 * 24 * 60 * 60 * 1000)
-    case 'bi_weekly':
-      return new Date(base.getTime() + 15 * 24 * 60 * 60 * 1000)
     case 'monthly':
       // Return 1st of next month (synchronized for all staff)
       return new Date(base.getFullYear(), base.getMonth() + 1, 1)

@@ -427,7 +427,6 @@ export default function PayoutDashboard() {
 
     const scheduleLabels = {
       'weekly': '7 วัน',
-      'bi_weekly': '15 วัน',
       'monthly': '30 วัน',
       'bi_monthly': 'กลาง+สิ้นเดือน',
       'custom_days': 'กำหนดเอง'

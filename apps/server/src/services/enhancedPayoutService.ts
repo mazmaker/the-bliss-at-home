@@ -3,7 +3,6 @@
  *
  * Supports multiple payout schedules:
  * - weekly (7 days)
- * - bi_weekly (15 days)
  * - monthly (30 days)
  * - bi_monthly (existing - mid-month + end-month)
  * - custom_days (1-90 days)
@@ -15,7 +14,7 @@ import { getSupabaseClient } from '../lib/supabase'
 // Types
 // ============================================================
 
-export type PayoutSchedule = 'weekly' | 'bi_weekly' | 'monthly' | 'bi_monthly' | 'custom_days'
+export type PayoutSchedule = 'weekly' | 'monthly' | 'bi_monthly' | 'custom_days'
 
 export interface PayoutSettings {
   // Existing bi-monthly settings
@@ -95,9 +94,6 @@ function calculateNextPayoutDate(
     case 'weekly':
       return addDays(base, 7)
 
-    case 'bi_weekly':
-      return addDays(base, 15)
-
     case 'monthly':
       return addDays(base, 30)
 
@@ -131,9 +127,6 @@ function calculatePeriodStart(
   switch (schedule) {
     case 'weekly':
       return addDays(payoutDate, -7)
-
-    case 'bi_weekly':
-      return addDays(payoutDate, -15)
 
     case 'monthly':
       return addDays(payoutDate, -30)

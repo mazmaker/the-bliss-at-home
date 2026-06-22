@@ -392,7 +392,6 @@ function StaffSettings() {
                   <span className="text-sm text-stone-600">รอบปัจจุบัน</span>
                   <span className="text-sm font-semibold text-amber-800">
                     {payoutSchedule === 'weekly' && 'ทุกสัปดาห์'}
-                    {payoutSchedule === 'bi_weekly' && 'ทุก 2 สัปดาห์'}
                     {payoutSchedule === 'monthly' && 'รายเดือน'}
                     {payoutSchedule === 'custom_days' && 'กำหนดเอง'}
                   </span>

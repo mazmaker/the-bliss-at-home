@@ -1,13 +1,87 @@
-import { X, Calculator, TrendingUp } from 'lucide-react'
+import { X, Calculator, TrendingUp, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 interface PayoutCalculationModalProps {
+  staffId: string
+  staffName: string
   onClose: () => void
 }
 
-export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps) {
+interface JobRow {
+  id: string
+  service_name: string
+  scheduled_date: string
+  staff_earnings: number
+  total_staff_earnings: number | null
+}
+
+export function PayoutCalculationModal({ staffId, staffName, onClose }: PayoutCalculationModalProps) {
+  const [jobs, setJobs] = useState<JobRow[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchUnpaidJobs()
+  }, [staffId])
+
+  const fetchUnpaidJobs = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      // Get profile_id from staff table
+      const { data: staffData, error: staffErr } = await supabase
+        .from('staff')
+        .select('profile_id')
+        .eq('id', staffId)
+        .single()
+
+      if (staffErr || !staffData?.profile_id) {
+        setError('ไม่พบข้อมูลพนักงาน')
+        return
+      }
+
+      // Get job IDs already in a payout
+      const { data: paidJobIds } = await supabase
+        .from('payout_jobs')
+        .select('job_id')
+
+      const paidSet = new Set((paidJobIds || []).map(p => p.job_id))
+
+      // Get completed jobs for this staff
+      const { data: jobData, error: jobErr } = await supabase
+        .from('jobs')
+        .select('id, service_name, scheduled_date, staff_earnings, total_staff_earnings')
+        .eq('staff_id', staffData.profile_id)
+        .eq('status', 'completed')
+        .order('scheduled_date', { ascending: false })
+
+      if (jobErr) {
+        setError('โหลดข้อมูลงานไม่ได้')
+        return
+      }
+
+      // Filter out already-paid jobs
+      const unpaid = (jobData || []).filter(j => !paidSet.has(j.id))
+      setJobs(unpaid)
+    } catch (e) {
+      setError('เกิดข้อผิดพลาด')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getJobEarnings = (job: JobRow) =>
+    job.total_staff_earnings ?? job.staff_earnings ?? 0
+
+  const total = jobs.reduce((sum, j) => sum + getJobEarnings(j), 0)
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-amber-50 to-orange-50">
           <div className="flex items-center gap-3">
@@ -16,147 +90,92 @@ export function PayoutCalculationModal({ onClose }: PayoutCalculationModalProps)
             </div>
             <div>
               <h2 className="text-xl font-semibold text-stone-900">รายละเอียดการคำนวณ</h2>
-              <p className="text-sm text-stone-600 mt-1">วิธีการคำนวณรายได้พนักงาน</p>
+              <p className="text-sm text-stone-600 mt-1">{staffName} — งานที่ยังไม่ได้รับเงิน</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/50 rounded-lg transition"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-white/50 rounded-lg transition">
             <X className="w-5 h-5 text-stone-500" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          {/* System Overview */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              ภาพรวมระบบการจ่ายเงิน
-            </h3>
+        <div className="p-6 overflow-y-auto flex-1 space-y-5">
+          {/* Info banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+            <TrendingUp className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-800">
-              ระบบคำนวณรายได้พนักงานจากค่าคอมมิชชั่นของงานที่ทำสำเร็จในแต่ละรอบ (รายสัปดาห์/รายเดือน)
-              โดยรายได้จากค่าคอมมิชชั่นเป็นยอดสุทธิที่พนักงานจะได้รับ <strong>ไม่มีการหักค่าธรรมเนียมแพลตฟอร์มเพิ่มเติม</strong>
+              รายได้คำนวณจาก <strong>ยอดคงที่ที่ Admin กำหนด</strong> ต่อระยะเวลาบริการ (60/90/120 นาที)
+              หรือ % commission ตามที่ตั้งค่าไว้ในแต่ละบริการ — รวมค่าเพิ่มเวลาบริการแล้ว
             </p>
           </div>
 
-          {/* Calculation Steps */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-stone-900 text-lg">ขั้นตอนการคำนวณ</h3>
+          {/* Job list */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12 gap-3 text-stone-500">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>กำลังโหลด...</span>
+            </div>
+          ) : error ? (
+            <div className="flex items-center gap-3 text-red-600 py-8">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          ) : jobs.length === 0 ? (
+            <div className="text-center py-12 text-stone-400">
+              <p className="text-lg font-medium">ไม่มีงานที่ยังค้างจ่าย</p>
+              <p className="text-sm mt-1">งานทั้งหมดอยู่ในรอบจ่ายเงินแล้ว</p>
+            </div>
+          ) : (
+            <>
+              <div className="border border-stone-200 rounded-xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-stone-50 border-b border-stone-200">
+                      <th className="text-left py-3 px-4 text-stone-600 font-medium whitespace-nowrap">วันที่</th>
+                      <th className="text-left py-3 px-4 text-stone-600 font-medium">บริการ</th>
+                      <th className="text-right py-3 px-4 text-stone-600 font-medium whitespace-nowrap">รายได้</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {jobs.map(job => (
+                      <tr key={job.id} className="hover:bg-stone-50">
+                        <td className="py-2.5 px-4 text-stone-500 whitespace-nowrap">
+                          {formatDate(job.scheduled_date)}
+                        </td>
+                        <td className="py-2.5 px-4 text-stone-900">{job.service_name}</td>
+                        <td className="py-2.5 px-4 text-right font-medium text-green-700 whitespace-nowrap">
+                          ฿{getJobEarnings(job).toLocaleString()}
+                          {job.total_staff_earnings != null && job.total_staff_earnings !== job.staff_earnings && (
+                            <span className="text-xs text-amber-600 block">รวมเพิ่มเวลา</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Step 1 */}
-            <div className="border border-stone-200 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-semibold">
-                  1
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-stone-900 mb-2">คำนวณรายได้จากค่าคอมมิชชั่น</h4>
-                  <div className="bg-stone-50 rounded-lg p-3 mb-2">
-                    <p className="text-sm font-mono text-stone-700">
-                      รายได้ต่องาน = ราคาบริการ × อัตราคอมมิชชั่นของบริการนั้น
-                    </p>
+              {/* Total */}
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold text-amber-900">ยอดรวมทั้งหมด</p>
+                    <p className="text-xs text-amber-700 mt-0.5">{jobs.length} งาน — ยังไม่ได้รับเงิน</p>
                   </div>
-                  <p className="text-sm text-stone-600">
-                    แต่ละบริการมีอัตราคอมมิชชั่นที่กำหนดไว้ พนักงานจะได้รับส่วนแบ่งตามอัตรานี้
-                  </p>
-                  <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-xs text-green-700 font-medium">ตัวอย่าง</p>
-                    <p className="text-sm text-green-800 mt-1">
-                      นวดไทย ฿690 × 50% = <strong>฿345</strong>
-                    </p>
-                  </div>
+                  <p className="text-3xl font-bold text-amber-900">฿{total.toLocaleString()}</p>
                 </div>
               </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="border border-stone-200 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-semibold">
-                  2
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-stone-900 mb-2">รวมรายได้ทั้งหมดในรอบ</h4>
-                  <div className="bg-stone-50 rounded-lg p-3 mb-2">
-                    <p className="text-sm font-mono text-stone-700">
-                      รายได้รวม = Σ (รายได้จากแต่ละงานที่สำเร็จ)
-                    </p>
-                  </div>
-                  <p className="text-sm text-stone-600">
-                    รวมรายได้จากค่าคอมมิชชั่นของงานทั้งหมดที่สถานะเป็น "เสร็จสิ้น" ในช่วงเวลาที่กำหนด
-                  </p>
-                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-xs text-blue-700 font-medium">ตัวอย่าง</p>
-                    <p className="text-sm text-blue-800 mt-1">
-                      งานที่ 1: ฿345 + งานที่ 2: ฿300 + งานที่ 3: ฿175 = <strong>฿820</strong>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="border-2 border-amber-300 bg-amber-50 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  3
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-amber-900 mb-2">ยอดโอนทั้งหมด (Total Payout)</h4>
-                  <div className="bg-white rounded-lg p-3 mb-2 border border-amber-200">
-                    <p className="text-sm font-mono text-amber-900 font-semibold">
-                      ยอดโอน = รายได้รวมจากค่าคอมมิชชั่น
-                    </p>
-                  </div>
-                  <p className="text-sm text-amber-800">
-                    ยอดเงินที่พนักงานจะได้รับโอนเข้าบัญชี เท่ากับรายได้รวมจากค่าคอมมิชชั่นทั้งหมด ไม่มีการหักค่าธรรมเนียมเพิ่มเติม
-                  </p>
-                  <div className="mt-2 bg-amber-100 border border-amber-300 rounded-lg p-3">
-                    <p className="text-xs text-amber-700 font-medium">ตัวอย่าง</p>
-                    <p className="text-lg text-amber-900 mt-1 font-bold">
-                      <span className="text-2xl">฿820</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Table */}
-          <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-            <h3 className="font-semibold text-stone-900 mb-3">สรุปการคำนวณ</h3>
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-stone-200">
-                <tr>
-                  <td className="py-2 text-stone-600">รายได้รวมจากค่าคอมมิชชั่น</td>
-                  <td className="py-2 text-right font-medium text-green-700">+฿820</td>
-                </tr>
-                <tr className="bg-amber-100 border-t-2 border-amber-300">
-                  <td className="py-2 font-semibold text-amber-900">ยอดโอนทั้งหมด</td>
-                  <td className="py-2 text-right font-bold text-xl text-amber-900">฿820</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Note */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
-              <strong>หมายเหตุ:</strong> ตัวเลขที่แสดงเป็นเพียงตัวอย่าง
-              ระบบจะคำนวณจากข้อมูลจริงของแต่ละพนักงานและแต่ละรอบการจ่ายเงิน
-            </p>
-          </div>
+            </>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50 flex-shrink-0">
+        <div className="flex items-center justify-end p-6 border-t border-stone-200 bg-stone-50">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
           >
-            เข้าใจแล้ว
+            ปิด
           </button>
         </div>
       </div>

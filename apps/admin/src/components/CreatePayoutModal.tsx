@@ -148,7 +148,6 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       // Get schedule display name for toast
       const scheduleNames = {
         weekly: 'ทุกสัปดาห์ (7 วัน)',
-        bi_weekly: 'ทุก 2 สัปดาห์ (15 วัน)',
         monthly: 'รายเดือน (30 วัน)',
         bi_monthly: 'กลางเดือน + สิ้นเดือน',
         custom_days: `กำหนดเอง (${customInterval} วัน)`
@@ -234,7 +233,6 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                     <h3 className="font-semibold text-stone-900 mb-1">รอบการจ่ายปัจจุบัน</h3>
                     <p className="text-sm text-stone-600">
                       {currentPayoutSchedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
-                      {currentPayoutSchedule === 'bi_weekly' && 'ทุก 2 สัปดาห์ (15 วัน)'}
                       {currentPayoutSchedule === 'monthly' && 'รายเดือน (30 วัน)'}
                       {currentPayoutSchedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
                       {currentPayoutSchedule === 'custom_days' && `กำหนดเอง (${customInterval} วัน)`}
@@ -254,7 +252,6 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                     <span className="text-sm font-medium text-green-800">
                       ตอนนี้ตั้งค่าเลือก:
                       {selectedSchedule === 'weekly' && ' 7 วัน (ทุกสัปดาห์)'}
-                      {selectedSchedule === 'bi_weekly' && ' 15 วัน (ทุก 2 สัปดาห์)'}
                       {selectedSchedule === 'monthly' && ' 30 วัน (รายเดือน)'}
                       {selectedSchedule === 'bi_monthly' && ' กลางเดือน + สิ้นเดือน'}
                       {selectedSchedule === 'custom_days' && ` ${customInterval} วัน (กำหนดเอง)`}
@@ -301,7 +298,6 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                     <h3 className="font-semibold text-green-900 mb-1">รอบการจ่ายที่เลือกแล้ว</h3>
                     <p className="text-sm text-green-700 font-medium">
                       • {selectedSchedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
-                      • {selectedSchedule === 'bi_weekly' && 'ทุก 2 สัปดาห์ (15 วัน)'}
                       • {selectedSchedule === 'monthly' && 'รายเดือน (30 วัน)'}
                       • {selectedSchedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
                       • {selectedSchedule === 'custom_days' && `กำหนดเอง (${customInterval} วัน)`}

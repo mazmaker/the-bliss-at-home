@@ -25,9 +25,10 @@ interface StaffPayoutInfo {
   id: string
   profile_id: string
   name_th: string
-  payout_schedule?: PayoutSchedule // Optional since column might not exist yet
-  next_payout_date?: string // Optional since column might not exist yet
-  payout_start_date?: string // Optional since column might not exist yet
+  payout_schedule?: PayoutSchedule
+  next_payout_date?: string
+  payout_start_date?: string
+  custom_payout_interval?: number
 }
 
 interface PayoutPeriod {
@@ -91,7 +92,7 @@ function calculatePayoutPeriod(staff: StaffPayoutInfo, currentDate: Date = new D
     }
 
     case 'custom_days': {
-      const days = 30 // Default to 30 days
+      const days = staff.custom_payout_interval || 30
       const startDate = staff.payout_start_date ? new Date(staff.payout_start_date) : new Date(currentDate)
       const endDate = new Date(startDate)
       endDate.setDate(startDate.getDate() + days - 1)
@@ -112,7 +113,7 @@ function calculatePayoutPeriod(staff: StaffPayoutInfo, currentDate: Date = new D
 }
 
 /**
- * Get completed jobs for a staff member in the given period
+ * Get completed jobs for a staff member in the given period, excluding already-paid jobs
  */
 async function getCompletedJobs(profileId: string, periodStart: string, periodEnd: string) {
   const { data: jobs, error } = await supabase
@@ -129,7 +130,17 @@ async function getCompletedJobs(profileId: string, periodStart: string, periodEn
     throw error
   }
 
-  return jobs || []
+  if (!jobs || jobs.length === 0) return []
+
+  // Exclude jobs already linked to a payout
+  const jobIds = jobs.map(j => j.id)
+  const { data: paidJobs } = await supabase
+    .from('payout_jobs')
+    .select('job_id')
+    .in('job_id', jobIds)
+
+  const paidSet = new Set((paidJobs || []).map(pj => pj.job_id))
+  return jobs.filter(j => !paidSet.has(j.id))
 }
 
 /**
@@ -141,6 +152,20 @@ async function generateAutoPayout(staff: StaffPayoutInfo): Promise<void> {
 
     // Calculate period
     const period = calculatePayoutPeriod(staff)
+
+    // Skip if payout already exists for this period (prevent duplicates)
+    const { data: existing } = await supabase
+      .from('payouts')
+      .select('id')
+      .eq('staff_id', staff.profile_id)
+      .eq('period_start', period.periodStart)
+      .eq('period_end', period.periodEnd)
+      .maybeSingle()
+
+    if (existing) {
+      console.log(`⏭️ Payout already exists for ${staff.name_th} (${period.periodStart} – ${period.periodEnd}), skipping`)
+      return
+    }
 
     // Get completed jobs in this period
     const jobs = await getCompletedJobs(staff.profile_id, period.periodStart, period.periodEnd)
@@ -278,20 +303,44 @@ export async function dailyPayoutCheck(): Promise<{ success: boolean; processed:
   let processed = 0
 
   try {
-    // TODO: Re-enable after database migrations are applied
-    // For now, just return success to allow deployment
-    console.log('📅 Automated payout system running (simplified mode)')
-    console.log('⚠️ Database columns not yet migrated - full functionality pending')
+    console.log(`📅 Daily payout check for date: ${today}`)
 
-    return { success: true, processed: 0, errors: [] }
+    // Query staff due for payout today
+    const { data: staffDue, error: staffError } = await supabase
+      .from('staff')
+      .select('id, profile_id, name_th, payout_schedule, next_payout_date, payout_start_date, custom_payout_interval')
+      .lte('next_payout_date', today)
+      .eq('is_active', true)
+      .not('profile_id', 'is', null)
+      .not('payout_schedule', 'is', null)
+
+    if (staffError) {
+      console.error('Error fetching staff due for payout:', staffError)
+      return { success: false, processed: 0, errors: [staffError.message] }
+    }
+
+    if (!staffDue || staffDue.length === 0) {
+      console.log('📭 No staff due for payout today')
+      return { success: true, processed: 0, errors: [] }
+    }
+
+    console.log(`👥 Found ${staffDue.length} staff due for payout`)
+
+    // Process each staff member
+    for (const staff of staffDue) {
+      try {
+        await generateAutoPayout(staff as StaffPayoutInfo)
+        processed++
+      } catch (err) {
+        const msg = `Failed for ${staff.name_th}: ${err?.toString()}`
+        console.error(msg)
+        errors.push(msg)
+      }
+    }
 
     console.log(`✅ Completed daily payout check. Processed: ${processed}, Errors: ${errors.length}`)
 
-    return {
-      success: true,
-      processed,
-      errors
-    }
+    return { success: true, processed, errors }
 
   } catch (error) {
     console.error('❌ Error in daily payout check:', error)
@@ -307,7 +356,15 @@ export async function dailyPayoutCheck(): Promise<{ success: boolean; processed:
  * Manual trigger for testing
  */
 export async function triggerPayoutForStaff(staffId: string): Promise<void> {
-  // TODO: Re-enable after database migrations are applied
-  console.log('⚠️ Manual payout trigger not yet implemented - database columns pending migration')
-  throw new Error('Manual payout trigger temporarily disabled - database migration required')
+  const { data: staff, error } = await supabase
+    .from('staff')
+    .select('id, profile_id, name_th, payout_schedule, next_payout_date, payout_start_date, custom_payout_interval')
+    .eq('id', staffId)
+    .single()
+
+  if (error || !staff) throw new Error(`Staff not found: ${staffId}`)
+  if (!staff.profile_id) throw new Error(`Staff ${staff.name_th} has no profile_id`)
+  if (!staff.payout_schedule) throw new Error(`Staff ${staff.name_th} has no payout_schedule`)
+
+  await generateAutoPayout(staff as StaffPayoutInfo)
 }

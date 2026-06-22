@@ -5,9 +5,8 @@
 
 export type PayoutSchedule =
   | 'weekly'
-  | 'bi_weekly'
-  | 'monthly'
   | 'bi_monthly'
+  | 'monthly'
   | 'custom_days'
 
 export interface StaffPayoutInfo {
@@ -33,13 +32,6 @@ export const PAYOUT_SCHEDULE_DISPLAY: Record<PayoutSchedule, PayoutScheduleDispl
     description: 'รับเงินทุก 7 วัน',
     frequency: '7 วัน',
     color: 'bg-green-100 text-green-800'
-  },
-  bi_weekly: {
-    icon: '📅',
-    title: 'ทุก 2 สัปดาห์',
-    description: 'รับเงินทุก 15 วัน',
-    frequency: '15 วัน',
-    color: 'bg-blue-100 text-blue-800'
   },
   monthly: {
     icon: '🗓️',
