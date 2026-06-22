@@ -42,7 +42,7 @@ export function useStaffDetail(id: string) {
       if (staff.profile_id) {
         const { data: jobs } = await supabase
           .from('jobs')
-          .select('status, staff_earnings')
+          .select('status, staff_earnings, total_staff_earnings')
           .eq('staff_id', staff.profile_id)
 
         if (jobs && jobs.length > 0) {
@@ -50,7 +50,7 @@ export function useStaffDetail(id: string) {
           completedJobs = jobs.filter(j => j.status === 'completed').length
           totalEarnings = jobs
             .filter(j => j.status === 'completed')
-            .reduce((sum, j) => sum + (parseFloat(j.staff_earnings) || 0), 0)
+            .reduce((sum, j) => sum + (parseFloat(j.total_staff_earnings ?? j.staff_earnings) || 0), 0)
         }
       }
 

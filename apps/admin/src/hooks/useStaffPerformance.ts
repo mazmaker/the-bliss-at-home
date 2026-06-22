@@ -42,65 +42,156 @@ export interface PerformanceTrend {
 // Hooks
 // ============================================
 
+// Helper: calculate metrics from a set of jobs and reviews
+function calcMetrics(
+  staffId: string,
+  year: number,
+  month: number,
+  jobs: { status: string; staff_earnings: string | null; total_staff_earnings: string | null }[],
+  reviews: { rating: number }[]
+): StaffPerformanceMetrics {
+  const total = jobs.length
+  const completed = jobs.filter(j => j.status === 'completed').length
+  const cancelled = jobs.filter(j => j.status === 'cancelled').length
+  const active = jobs.filter(j =>
+    ['in_progress', 'traveling', 'arrived', 'assigned', 'confirmed'].includes(j.status)
+  ).length
+
+  const completionRate = total > 0 ? (completed / total) * 100 : 0
+  const cancelRate = total > 0 ? (cancelled / total) * 100 : 0
+  const responseRate = total > 0 ? ((completed + active) / total) * 100 : 0
+
+  const totalEarnings = jobs
+    .filter(j => j.status === 'completed')
+    .reduce((sum, j) => sum + (parseFloat((j.total_staff_earnings ?? j.staff_earnings) || '0') || 0), 0)
+
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+    : 0
+
+  const performanceScore = Math.round(
+    completionRate * 0.4 +
+    responseRate * 0.3 +
+    (100 - cancelRate) * 0.2 +
+    (avgRating / 5 * 100) * 0.1
+  )
+
+  return {
+    id: `${staffId}-${year}-${month}`,
+    staff_id: staffId,
+    year,
+    month,
+    total_jobs: total,
+    completed_jobs: completed,
+    cancelled_jobs: cancelled,
+    pending_jobs: jobs.filter(j => j.status === 'pending').length,
+    completion_rate: completionRate,
+    cancel_rate: cancelRate,
+    response_rate: responseRate,
+    total_ratings: reviews.length,
+    avg_rating: avgRating,
+    total_earnings: totalEarnings,
+    performance_score: performanceScore,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+}
+
 /**
- * Fetch performance metrics for a specific staff member
+ * Calculate performance metrics from jobs + reviews (no staff_performance_metrics table dependency)
  */
 export function useStaffPerformanceMetrics(staffId: string, months: number = 6) {
   return useQuery({
-    queryKey: ['staff-performance', staffId, months],
+    queryKey: ['staff-performance-calc', staffId, months],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('staff_performance_metrics')
-        .select('*')
-        .eq('staff_id', staffId)
-        .order('year', { ascending: false })
-        .order('month', { ascending: false })
-        .limit(months)
+      if (!staffId) return []
 
-      if (error) {
-        console.error('Error fetching performance metrics:', error)
-        throw error
+      const now = new Date()
+      const startOfRange = new Date(now.getFullYear(), now.getMonth() - months + 1, 1)
+      const startStr = startOfRange.toISOString().split('T')[0]
+
+      const [{ data: jobs }, { data: reviews }] = await Promise.all([
+        supabase
+          .from('jobs')
+          .select('status, staff_earnings, total_staff_earnings, scheduled_date')
+          .eq('staff_id', staffId)
+          .gte('scheduled_date', startStr),
+        supabase
+          .from('reviews')
+          .select('rating, created_at')
+          .eq('staff_id', staffId)
+          .gte('created_at', `${startStr}T00:00:00`),
+      ])
+
+      // Build month buckets
+      const monthMap = new Map<string, { jobs: typeof jobs; reviews: typeof reviews }>()
+      for (let i = months - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        monthMap.set(`${d.getFullYear()}-${d.getMonth() + 1}`, { jobs: [], reviews: [] })
       }
 
-      // Sort by date ascending for display (oldest to newest)
-      const sorted = data?.sort((a, b) => {
-        const dateA = new Date(a.year, a.month - 1)
-        const dateB = new Date(b.year, b.month - 1)
-        return dateA.getTime() - dateB.getTime()
-      })
+      for (const job of jobs || []) {
+        const d = new Date(job.scheduled_date)
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`
+        monthMap.get(key)?.jobs?.push(job)
+      }
+      for (const review of reviews || []) {
+        const d = new Date(review.created_at)
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`
+        monthMap.get(key)?.reviews?.push(review)
+      }
 
-      return sorted as StaffPerformanceMetrics[]
+      const results: StaffPerformanceMetrics[] = []
+      for (const [key, { jobs: mJobs, reviews: mReviews }] of monthMap) {
+        if (!mJobs || mJobs.length === 0) continue
+        const [year, month] = key.split('-').map(Number)
+        results.push(calcMetrics(staffId, year, month, mJobs, mReviews || []))
+      }
+
+      return results.sort((a, b) =>
+        new Date(a.year, a.month - 1).getTime() - new Date(b.year, b.month - 1).getTime()
+      )
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   })
 }
 
 /**
- * Fetch current month's performance for a staff member
+ * Calculate current month's performance from jobs + reviews
  */
 export function useCurrentMonthPerformance(staffId: string) {
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth() + 1
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
 
   return useQuery({
-    queryKey: ['staff-performance-current', staffId],
+    queryKey: ['staff-performance-current-calc', staffId, year, month],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('staff_performance_metrics')
-        .select('*')
-        .eq('staff_id', staffId)
-        .eq('year', currentYear)
-        .eq('month', currentMonth)
+      if (!staffId) return null
 
-      if (error) {
-        console.error('Error fetching current performance:', error)
-        throw error
-      }
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+      const lastDay = new Date(year, month, 0).getDate()
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
 
-      // Return first item or null if no data
-      return (data && data.length > 0 ? data[0] : null) as StaffPerformanceMetrics | null
+      const [{ data: jobs }, { data: reviews }] = await Promise.all([
+        supabase
+          .from('jobs')
+          .select('status, staff_earnings, total_staff_earnings')
+          .eq('staff_id', staffId)
+          .gte('scheduled_date', startDate)
+          .lte('scheduled_date', endDate),
+        supabase
+          .from('reviews')
+          .select('rating')
+          .eq('staff_id', staffId)
+          .gte('created_at', `${startDate}T00:00:00`)
+          .lte('created_at', `${endDate}T23:59:59`),
+      ])
+
+      if (!jobs || jobs.length === 0) return null
+      return calcMetrics(staffId, year, month, jobs, reviews || [])
     },
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   })
 }
 
