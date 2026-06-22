@@ -12,6 +12,7 @@ export function HotelLoginPage() {
   return (
     <AuthLayout
       appTitle={config.name}
+      appLogo="/logo.jpg"
       backgroundVariant="gradient"
       backLinkText="Back to Home"
       backLinkTo="/"

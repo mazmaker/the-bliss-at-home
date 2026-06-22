@@ -1071,9 +1071,10 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 
   const months = getMonthsFromPeriod(selectedPeriod)
 
-  // Fetch real performance data
-  const { data: performanceHistory = [], isLoading: historyLoading } = useStaffPerformanceMetrics(staff.id, months)
-  const { data: currentMetrics, isLoading: currentLoading } = useCurrentMonthPerformance(staff.id)
+  // Fetch real performance data — must use profile_id (auth UUID), not staff.id
+  const perfId = staff.profile_id || staff.id
+  const { data: performanceHistory = [], isLoading: historyLoading } = useStaffPerformanceMetrics(perfId, months)
+  const { data: currentMetrics, isLoading: currentLoading } = useCurrentMonthPerformance(perfId)
   const { data: platformAverage } = usePlatformAverages()
 
   // Show loading state
@@ -1851,7 +1852,6 @@ function EarningsTab({ staff }: { staff: Staff }) {
               <h4 className="font-semibold text-blue-900">รอบการจ่ายเงินปัจจุบัน</h4>
               <p className="text-sm text-blue-700">
                 • {staff.payout_schedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
-                • {staff.payout_schedule === 'bi_weekly' && 'ทุก 2 สัปดาห์ (15 วัน)'}
                 • {staff.payout_schedule === 'monthly' && 'รายเดือน (30 วัน)'}
                 • {staff.payout_schedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
                 • {staff.payout_schedule === 'custom_days' && `กำหนดเอง (${staff.custom_payout_interval || 30} วัน)`}
@@ -1948,6 +1948,8 @@ function EarningsTab({ staff }: { staff: Staff }) {
       {/* Calculation Modal */}
       {showCalculationModal && (
         <PayoutCalculationModal
+          staffId={staff.id}
+          staffName={staff.name_th}
           onClose={() => setShowCalculationModal(false)}
         />
       )}

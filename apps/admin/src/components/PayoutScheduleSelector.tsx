@@ -59,8 +59,6 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
     switch (scheduleValue) {
       case 'weekly':
         return { text: 'แนะนำ', color: 'bg-green-100 text-green-800' }
-      case 'bi_weekly':
-        return { text: 'สมดุลดี', color: 'bg-blue-100 text-blue-800' }
       case 'monthly':
         return { text: 'จัดการง่าย', color: 'bg-purple-100 text-purple-800' }
       case 'custom_days':

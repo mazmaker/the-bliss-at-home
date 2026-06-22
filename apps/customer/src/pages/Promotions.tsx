@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Search, Filter, Tag, Calendar, Percent, Gift, Star, Clock, ArrowLeft } from 'lucide-react'
+import { Search, Filter, Tag, Calendar, Percent, Gift, Star, Clock, ArrowLeft, Copy } from 'lucide-react'
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
 import { useTranslation } from '@bliss/i18n'
 import { UniversalPromotionModal } from '../components/UniversalPromotionModal-Branded'
@@ -200,66 +200,153 @@ const PromotionsPage = () => {
                 <div
                   key={promo.id}
                   onClick={() => handlePromotionClick(promo)}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border hover:border-amber-200"
+                  className="cursor-pointer transition-all duration-300 hover:scale-[1.01]"
+                  style={{ borderRadius: '28px', overflow: 'hidden', background: '#F8F5F1', boxShadow: '0 6px 32px rgba(0,0,0,0.10)' }}
                 >
-                  {/* Image or Gradient Header */}
-                  <div className="relative h-40 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600">
-                    {promo.image_url ? (
-                      <img src={promo.image_url} alt={name} className="w-full h-full object-cover" />
-                    ) : null}
+                  {/* ── Banner Area ── */}
+                  <div className="relative" style={{ height: '340px', background: '#F8F5F1' }}>
 
-                    {/* Discount Badge */}
-                    <div className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-lg">
-                      <div className="flex items-center gap-1">
-                        {getDiscountIcon(promo.discount_type)}
-                        <span className="font-bold text-gray-800 text-sm">{formatDiscount(promo)}</span>
-                      </div>
+                    {promo.image_url && (
+                      <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                    )}
+
+                    {/* Background SVG — 3 layers */}
+                    {!promo.image_url && (
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <radialGradient id={`wg_${promo.id}`} cx="44%" cy="42%" r="58%">
+                            <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.82"/>
+                            <stop offset="55%"  stopColor="#ffffff" stopOpacity="0.32"/>
+                            <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+                          </radialGradient>
+                          <radialGradient id={`cg_${promo.id}`} cx="52%" cy="56%" r="68%">
+                            <stop offset="0%"   stopColor="#FFF0DC" stopOpacity="0.55"/>
+                            <stop offset="65%"  stopColor="#FFF0DC" stopOpacity="0.18"/>
+                            <stop offset="100%" stopColor="#FFF0DC" stopOpacity="0"/>
+                          </radialGradient>
+                        </defs>
+
+                        {/* Layer 2 — Cream transparent sweep */}
+                        <ellipse cx="205" cy="168" rx="235" ry="210" fill={`url(#cg_${promo.id})`}/>
+
+                        {/* Layer 1 — Large white transparent sweep */}
+                        <ellipse cx="195" cy="148" rx="215" ry="190" fill={`url(#wg_${promo.id})`}/>
+
+                        {/* Layer 3 — 2 thin gold curves, bottom only */}
+                        <path d="M-10,274 C110,242 268,254 420,220" fill="none" stroke="#D8B36A" strokeWidth="1" opacity="0.42"/>
+                        <path d="M-10,290 C110,257 268,269 420,235" fill="none" stroke="#D8B36A" strokeWidth="1" opacity="0.26"/>
+                      </svg>
+                    )}
+
+                    {/* Ribbon badge — bookmark */}
+                    <div
+                      className="absolute top-0 right-7 flex flex-col items-center justify-center text-white"
+                      style={{
+                        width: '68px',
+                        paddingTop: '14px',
+                        paddingBottom: '22px',
+                        background: '#C40000',
+                        clipPath: 'polygon(0 0, 100% 0, 100% 83%, 50% 100%, 0 83%)',
+                        boxShadow: '0 6px 18px rgba(196,0,0,0.45)',
+                      }}
+                    >
+                      <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.35, letterSpacing: '0.02em' }}>ส่วนลด</span>
+                      <span style={{ fontSize: '17px', fontWeight: 900, lineHeight: 1.15 }}>{formatDiscount(promo)}</span>
                     </div>
 
                     {/* Days Left Badge */}
                     {daysLeft > 0 && daysLeft <= 7 && (
-                      <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                        <Clock className="w-3 h-3 inline mr-1" />
+                      <div className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1" style={{ background: '#D50000' }}>
+                        <Clock className="w-3 h-3" />
                         {t('home:promotions.daysLeftBadge', { daysLeft })}
                       </div>
                     )}
 
-                    {/* Discount Overlay */}
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <div className="text-3xl font-bold">{formatDiscount(promo)}</div>
-                        <div className="text-sm opacity-90">{t('home:promotions.discountOverlay')}</div>
-                      </div>
+                    {/* Large discount number */}
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: '56px' }}>
+                      {promo.discount_type === 'percentage' ? (
+                        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                          <span style={{
+                            fontSize: '11.5rem',
+                            fontWeight: 500,
+                            color: '#E8000A',
+                            fontFamily: '"Noto Serif Thai", serif',
+                            lineHeight: 0.85,
+                            letterSpacing: '-4px',
+                          }}>
+                            {Number(promo.discount_value)}
+                          </span>
+                          <span style={{
+                            fontSize: '3.2rem',
+                            fontWeight: 500,
+                            color: '#E8000A',
+                            fontFamily: '"Noto Serif Thai", serif',
+                            marginTop: '22px',
+                            marginLeft: '4px',
+                            letterSpacing: '-1px',
+                          }}>
+                            %
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-center" style={{ color: '#D50000' }}>
+                          <div style={{ fontSize: '4.5rem', fontWeight: 900, fontFamily: '"Noto Serif Thai", Georgia, serif' }}>{formatDiscount(promo)}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* OFF with golden lines */}
+                    <div className="absolute left-0 right-0 flex items-center px-8" style={{ bottom: '26px', gap: '12px' }}>
+                      <div style={{ height: '1px', flex: 1, background: 'linear-gradient(to right, transparent, #D8B36A)' }} />
+                      <span style={{ fontSize: '28px', fontWeight: 600, letterSpacing: '0.5em', color: '#1a100a', fontFamily: '"Cormorant Garamond", serif', paddingLeft: '4px' }}>OFF</span>
+                      <div style={{ height: '1px', flex: 1, background: 'linear-gradient(to left, transparent, #D8B36A)' }} />
                     </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-4">
-                    <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-1">{name}</h3>
+                  {/* ── Coupon Box ── */}
+                  <div style={{ background: '#F8F5F1', padding: '14px 16px 20px' }}>
+                    <div style={{ background: '#ffffff', borderRadius: '18px', padding: '18px 20px', boxShadow: '0 2px 18px rgba(0,0,0,0.07)' }}>
 
-                    {description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{description}</p>
-                    )}
+                      {/* Header */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <Tag className="w-4 h-4 flex-shrink-0" style={{ color: '#D50000' }} />
+                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#D50000' }}>{name}</span>
+                      </div>
 
-                    {/* Promo Code */}
-                    <div className="bg-amber-50 rounded-lg p-2 mb-3 border border-amber-200">
-                      <p className="text-xs text-gray-600 mb-1">{t('home:promotions.promoCode')}</p>
-                      <code className="font-mono font-bold text-amber-700">{promo.code}</code>
-                    </div>
+                      {/* Promo code */}
+                      <div className="mb-4">
+                        <p style={{ fontSize: '12px', color: '#999', marginBottom: '8px' }}>{t('home:promotions.promoCode')}</p>
+                        <div
+                          className="flex items-center justify-between"
+                          style={{
+                            background: '#FFF5F5',
+                            border: '1.5px dashed #D50000',
+                            borderRadius: '12px',
+                            padding: '13px 16px',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigator.clipboard?.writeText(promo.code)
+                          }}
+                        >
+                          <span style={{
+                            fontSize: '18px',
+                            fontWeight: 800,
+                            color: '#D50000',
+                            fontFamily: '"Noto Serif Thai", Georgia, serif',
+                            letterSpacing: '0.04em',
+                          }}>
+                            {promo.code}
+                          </span>
+                          <Copy className="w-5 h-5 flex-shrink-0" style={{ color: '#D50000', opacity: 0.65 }} />
+                        </div>
+                      </div>
 
-                    {/* Stats */}
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {t('home:promotions.expiryLabel', { date: new Date(promo.end_date).toLocaleDateString('th-TH') })}
-                      </span>
-
-                      {promo.usage_count !== undefined && promo.usage_limit && (
-                        <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3" />
-                          {t('home:promotions.usageLabel', { used: promo.usage_count, limit: promo.usage_limit })}
-                        </span>
-                      )}
+                      {/* Expiry */}
+                      <div className="flex items-center gap-2" style={{ color: '#BBBBBB', fontSize: '13px' }}>
+                        <Calendar className="w-4 h-4" />
+                        <span>ถึง {new Date(promo.end_date).toLocaleDateString('th-TH')}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

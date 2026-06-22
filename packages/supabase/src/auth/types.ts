@@ -102,7 +102,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
     allowedRole: 'CUSTOMER',
     loginPath: '/login',
     defaultPath: '/services',
-    logoUrl: '/logo.svg',
+    logoUrl: '/logo.jpg',
     primaryColor: '#ec4899',
   },
   HOTEL: {

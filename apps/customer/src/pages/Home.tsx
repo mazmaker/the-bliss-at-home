@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, ChevronRight, Sparkles, Home, Gem, ChevronLeft, Flower2 } from 'lucide-react'
 import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
-import { useTopReviews, useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
+import { useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { PromotionDetailModal } from '../components/PromotionDetailModal'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
@@ -24,7 +24,6 @@ function HomePage() {
   const isPaused = useRef(false)
   const { data: services, isLoading, error } = useServices()
   const { data: promotions } = useActivePromotions()
-  const { data: topReviews } = useTopReviews(6)
   const { data: serviceReviewStats } = useAllServiceReviewStats()
 
   const promoCount = promotions?.length || 0
@@ -365,41 +364,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Customer Reviews */}
-      {topReviews && topReviews.length > 0 && (
-        <section className="mb-16 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h3 className="text-2xl font-light text-stone-900 mb-2 text-center tracking-wide">{t('home:reviews.title')}</h3>
-            <p className="text-stone-500 text-sm font-light text-center mb-8">{t('home:reviews.subtitle')}</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {topReviews.slice(0, 3).map((review) => (
-                <div key={review.id} className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
-                  <div className="flex items-center gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-stone-200'}`}
-                      />
-                    ))}
-                  </div>
-                  {review.review && (
-                    <p className="text-stone-600 text-sm font-light leading-relaxed mb-4 line-clamp-3">"{review.review}"</p>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center">
-                      <span className="text-sm font-medium text-amber-800">{review.customer_display_name.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-stone-800">{review.customer_display_name}</p>
-                      <p className="text-xs text-stone-400">{isEn ? review.service_name_en : review.service_name_th}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Why Choose Us */}
       <section className="mb-16 px-4">
