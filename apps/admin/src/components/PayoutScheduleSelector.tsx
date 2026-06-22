@@ -14,6 +14,7 @@ interface PayoutScheduleSelectorProps {
   onCustomIntervalChange?: (interval: number) => void
   disabled?: boolean
   showNextPayoutPreview?: boolean
+  showComparisonTable?: boolean
   className?: string
 }
 
@@ -24,6 +25,7 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
   onCustomIntervalChange,
   disabled = false,
   showNextPayoutPreview = true,
+  showComparisonTable = true,
   className = ''
 }) => {
   const [localCustomInterval, setLocalCustomInterval] = useState(customInterval)
@@ -178,43 +180,51 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
       )}
 
       {/* Comparison Table */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
-          📊 เปรียบเทียบรอบการจ่าย
-        </h4>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-blue-200">
-                <th className="text-left py-2 text-blue-800">รอบ</th>
-                <th className="text-left py-2 text-blue-800">ความถี่</th>
-                <th className="text-left py-2 text-blue-800">กระแสเงิน</th>
-                <th className="text-left py-2 text-blue-800">การจัดการ</th>
-              </tr>
-            </thead>
-            <tbody className="text-blue-700">
-              <tr className="bg-blue-100 rounded">
-                <td className="py-1">ทุกสัปดาห์</td>
-                <td className="py-1">สูงสุด</td>
-                <td className="py-1">ดีที่สุด</td>
-                <td className="py-1">ปานกลาง ⭐</td>
-              </tr>
-              <tr>
-                <td className="py-1">ทุก 2 สัปดาห์</td>
-                <td className="py-1">สูง</td>
-                <td className="py-1">ดี</td>
-                <td className="py-1">ปานกลาง</td>
-              </tr>
-              <tr>
-                <td className="py-1">รายเดือน</td>
-                <td className="py-1">ต่ำ</td>
-                <td className="py-1">ปานกลาง</td>
-                <td className="py-1">ง่ายที่สุด</td>
-              </tr>
-            </tbody>
-          </table>
+      {showComparisonTable && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+            📊 เปรียบเทียบรอบการจ่าย
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-blue-200">
+                  <th className="text-left py-2 text-blue-800">รอบ</th>
+                  <th className="text-left py-2 text-blue-800">ความถี่</th>
+                  <th className="text-left py-2 text-blue-800">กระแสเงิน</th>
+                  <th className="text-left py-2 text-blue-800">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="text-blue-700">
+                <tr className="bg-blue-100 rounded">
+                  <td className="py-1">ทุกสัปดาห์</td>
+                  <td className="py-1">สูงสุด</td>
+                  <td className="py-1">ดีที่สุด</td>
+                  <td className="py-1">ปานกลาง</td>
+                </tr>
+                <tr>
+                  <td className="py-1">ทุก 2 สัปดาห์</td>
+                  <td className="py-1">สูง</td>
+                  <td className="py-1">ดี</td>
+                  <td className="py-1">ปานกลาง</td>
+                </tr>
+                <tr>
+                  <td className="py-1">รายเดือน</td>
+                  <td className="py-1">ต่ำ</td>
+                  <td className="py-1">ปานกลาง</td>
+                  <td className="py-1">ง่ายที่สุด</td>
+                </tr>
+                <tr>
+                  <td className="py-1">กำหนดเอง</td>
+                  <td className="py-1">ยืดหยุ่น</td>
+                  <td className="py-1">ตามต้องการ</td>
+                  <td className="py-1">กำหนดเอง</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Schedule info */}
       {value && (

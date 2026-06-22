@@ -62,15 +62,15 @@ export function useStaffEarningsSummary(staffId: string) {
 
       const profileId = staffData.profile_id
 
-      // Get total earnings from completed jobs
+      // Get total earnings from completed jobs (use total_staff_earnings when available — includes extension service pay)
       const { data: jobs } = await supabase
         .from('jobs')
-        .select('staff_earnings')
+        .select('staff_earnings, total_staff_earnings')
         .eq('staff_id', profileId)
         .eq('status', 'completed')
 
       const totalEarningsFromJobs = (jobs || [])
-        .reduce((sum, j) => sum + (parseFloat(j.staff_earnings) || 0), 0)
+        .reduce((sum, j) => sum + (parseFloat(j.total_staff_earnings ?? j.staff_earnings) || 0), 0)
 
       // Get payouts data
       const { data: payouts } = await supabase

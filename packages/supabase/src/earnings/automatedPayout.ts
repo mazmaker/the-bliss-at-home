@@ -29,6 +29,7 @@ interface StaffPayoutInfo {
   next_payout_date?: string
   payout_start_date?: string
   custom_payout_interval?: number
+  last_payout_processed_at?: string
 }
 
 interface PayoutPeriod {
@@ -37,89 +38,78 @@ interface PayoutPeriod {
   nextPayoutDate: string
 }
 
+function formatDate(d: Date): string {
+  return d.toISOString().split('T')[0]
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
+function getDefaultIntervalDays(schedule: PayoutSchedule | undefined, customInterval?: number): number {
+  switch (schedule) {
+    case 'weekly': return 7
+    case 'bi_monthly': return 15
+    case 'monthly': return 30
+    case 'custom_days': return customInterval || 30
+    default: return 30
+  }
+}
+
+// Calculate the next payout date from a given date based on schedule
+function getNextPayoutDate(schedule: PayoutSchedule | undefined, customInterval: number | undefined, fromDate: Date): Date {
+  switch (schedule) {
+    case 'weekly':
+      return addDays(fromDate, 7)
+    case 'bi_monthly': {
+      const day = fromDate.getDate()
+      if (day < 16) return new Date(fromDate.getFullYear(), fromDate.getMonth(), 16)
+      return new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 1)
+    }
+    case 'monthly':
+      return new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 1)
+    case 'custom_days':
+      return addDays(fromDate, customInterval || 30)
+    default:
+      return addDays(fromDate, 30)
+  }
+}
+
 /**
- * Calculate payout period based on schedule
+ * Calculate payout period using standard payroll approach:
+ * period_start = day after last payout processed (or payout_start_date for first payout)
+ * period_end   = today (the day the payout runs)
+ * next_payout  = today + schedule interval
+ *
+ * This ensures no earnings are missed regardless of schedule type,
+ * and handles overdue payouts correctly (period extends back to last paid date).
  */
 function calculatePayoutPeriod(staff: StaffPayoutInfo, currentDate: Date = new Date()): PayoutPeriod {
-  const today = currentDate.toISOString().split('T')[0]
+  // Period start: day after last payout, or payout_start_date for first-ever payout
+  let periodStart: Date
+  if (staff.last_payout_processed_at) {
+    const lastDate = new Date(staff.last_payout_processed_at.split('T')[0])
+    periodStart = addDays(lastDate, 1)
+  } else if (staff.payout_start_date) {
+    periodStart = new Date(staff.payout_start_date)
+  } else {
+    // No history and no start date — use one full interval ago
+    const days = getDefaultIntervalDays(staff.payout_schedule, staff.custom_payout_interval)
+    periodStart = addDays(currentDate, -days)
+  }
 
-  switch (staff.payout_schedule) {
-    case 'weekly': {
-      // Current Monday to Sunday, next payout is next Monday
-      const monday = new Date(currentDate)
-      monday.setDate(currentDate.getDate() - currentDate.getDay() + 1)
+  // Period end: today
+  const periodEnd = new Date(currentDate.toISOString().split('T')[0])
 
-      const sunday = new Date(monday)
-      sunday.setDate(monday.getDate() + 6)
+  // Next payout date: schedule-based from today
+  const nextPayoutDate = getNextPayoutDate(staff.payout_schedule, staff.custom_payout_interval, currentDate)
 
-      const nextMonday = new Date(monday)
-      nextMonday.setDate(monday.getDate() + 7)
-
-      return {
-        periodStart: monday.toISOString().split('T')[0],
-        periodEnd: sunday.toISOString().split('T')[0],
-        nextPayoutDate: nextMonday.toISOString().split('T')[0]
-      }
-    }
-
-    case 'bi_monthly': {
-      // Twice a month: pay on 1st and 16th of each month
-      const day = currentDate.getDate()
-      const month = currentDate.getMonth()
-      const year = currentDate.getFullYear()
-
-      let periodStart: Date
-      let periodEnd: Date
-      let nextPayoutDate: Date
-
-      if (day <= 15) {
-        periodStart = new Date(year, month, 1)
-        periodEnd = new Date(year, month, 15)
-        nextPayoutDate = new Date(year, month, 16)
-      } else {
-        periodStart = new Date(year, month, 16)
-        periodEnd = new Date(year, month + 1, 0) // last day of current month
-        nextPayoutDate = new Date(year, month + 1, 1)
-      }
-
-      return {
-        periodStart: periodStart.toISOString().split('T')[0],
-        periodEnd: periodEnd.toISOString().split('T')[0],
-        nextPayoutDate: nextPayoutDate.toISOString().split('T')[0]
-      }
-    }
-
-    case 'monthly': {
-      // 1st to end of month, next payout is 1st of next month
-      const firstOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-      const lastOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-      const nextFirst = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-
-      return {
-        periodStart: firstOfMonth.toISOString().split('T')[0],
-        periodEnd: lastOfMonth.toISOString().split('T')[0],
-        nextPayoutDate: nextFirst.toISOString().split('T')[0]
-      }
-    }
-
-    case 'custom_days': {
-      const days = staff.custom_payout_interval || 30
-      const startDate = staff.payout_start_date ? new Date(staff.payout_start_date) : new Date(currentDate)
-      const endDate = new Date(startDate)
-      endDate.setDate(startDate.getDate() + days - 1)
-
-      const nextPayout = new Date(endDate)
-      nextPayout.setDate(endDate.getDate() + 1)
-
-      return {
-        periodStart: startDate.toISOString().split('T')[0],
-        periodEnd: endDate.toISOString().split('T')[0],
-        nextPayoutDate: nextPayout.toISOString().split('T')[0]
-      }
-    }
-
-    default:
-      throw new Error(`Unsupported payout schedule: ${staff.payout_schedule}`)
+  return {
+    periodStart: formatDate(periodStart),
+    periodEnd: formatDate(periodEnd),
+    nextPayoutDate: formatDate(nextPayoutDate)
   }
 }
 
@@ -175,6 +165,8 @@ async function generateAutoPayout(staff: StaffPayoutInfo): Promise<void> {
 
     if (existing) {
       console.log(`⏭️ Payout already exists for ${staff.name_th} (${period.periodStart} – ${period.periodEnd}), skipping`)
+      // Still advance next_payout_date so staff doesn't stay permanently overdue
+      await updateNextPayoutDate(staff.id, period.nextPayoutDate)
       return
     }
 
@@ -214,7 +206,7 @@ async function generateAutoPayout(staff: StaffPayoutInfo): Promise<void> {
         status: 'pending',
         payout_round: null,
         is_automated: true, // Mark as automated
-        notes: `🤖 Auto-generated ${staff.payout_schedule} payout`
+        notes: `Auto-generated ${staff.payout_schedule} payout`
       })
       .select()
       .single()
@@ -319,9 +311,9 @@ export async function dailyPayoutCheck(): Promise<{ success: boolean; processed:
     // Query staff due for payout today
     const { data: staffDue, error: staffError } = await supabase
       .from('staff')
-      .select('id, profile_id, name_th, payout_schedule, next_payout_date, payout_start_date, custom_payout_interval')
+      .select('id, profile_id, name_th, payout_schedule, next_payout_date, payout_start_date, custom_payout_interval, last_payout_processed_at')
       .lte('next_payout_date', today)
-      .eq('is_active', true)
+      .eq('status', 'active')
       .not('profile_id', 'is', null)
       .not('payout_schedule', 'is', null)
 

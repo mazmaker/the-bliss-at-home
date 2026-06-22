@@ -4,7 +4,8 @@ import {
   PayoutSchedule,
   Staff,
   UpdatePayoutScheduleRequest,
-  calculateNextPayoutDate
+  calculateNextPayoutDate,
+  getPayoutScheduleLabel
 } from '../types/staff'
 import PayoutScheduleSelector from './PayoutScheduleSelector'
 
@@ -145,10 +146,7 @@ const PayoutScheduleModal: React.FC<PayoutScheduleModalProps> = ({
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-blue-800 mb-2">รอบการจ่ายปัจจุบัน</h3>
                 <div className="text-sm text-blue-700">
-                  <p>รอบ: {staff.payout_schedule}</p>
-                  {staff.custom_payout_interval && (
-                    <p>ระยะเวลา: {staff.custom_payout_interval} วัน</p>
-                  )}
+                  <p>รอบ: {getPayoutScheduleLabel(staff.payout_schedule, staff.custom_payout_interval)}</p>
                   {staff.next_payout_date && (
                     <p>วันจ่ายครั้งถัดไป: {new Intl.DateTimeFormat('th-TH').format(new Date(staff.next_payout_date))}</p>
                   )}
@@ -164,6 +162,7 @@ const PayoutScheduleModal: React.FC<PayoutScheduleModalProps> = ({
                   onCustomIntervalChange={setCustomInterval}
                   disabled={isLoading}
                   showNextPayoutPreview={false}
+                  showComparisonTable={false}
                 />
                 {errors.schedule && (
                   <p className="mt-1 text-sm text-red-600">{errors.schedule}</p>

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { calculateNextPayoutDate, PayoutSchedule } from '../types/staff'
 
 // Check if we're in mock mode
 const isMockMode = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
@@ -660,9 +661,18 @@ export const staffService = {
     payoutStartDate?: string
   }) {
     try {
+      const startDate = request.payoutStartDate || new Date().toISOString().split('T')[0]
+      const nextPayoutDate = calculateNextPayoutDate(
+        request.payoutSchedule as PayoutSchedule,
+        request.payoutSchedule === 'custom_days' ? request.customPayoutInterval : undefined,
+        undefined,
+        startDate
+      )
+
       const updates: any = {
         payout_schedule: request.payoutSchedule,
-        payout_start_date: request.payoutStartDate || new Date().toISOString().split('T')[0]
+        payout_start_date: startDate,
+        next_payout_date: nextPayoutDate.toISOString().split('T')[0],
       }
 
       if (request.customPayoutInterval) {

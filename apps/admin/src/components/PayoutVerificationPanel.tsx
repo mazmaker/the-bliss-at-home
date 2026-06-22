@@ -254,7 +254,7 @@ export function PayoutVerificationPanel() {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {payout.is_automated ? '🤖 อัตโนมัติ' : '👤 Manual'}
+                        {payout.is_automated ? 'อัตโนมัติ' : 'Manual'}
                       </span>
                     </td>
                     <td className="px-6 py-4">

@@ -35,7 +35,7 @@ export interface StaffPayoutInfo {
   next_payout_date?: string
   last_payout_processed_at?: string
   payout_start_date?: string
-  is_active: boolean
+  status: string
 }
 
 export interface PayoutCalculationResult {
@@ -172,9 +172,9 @@ export async function getAllStaffPayoutInfo(): Promise<StaffPayoutInfo[]> {
       next_payout_date,
       last_payout_processed_at,
       payout_start_date,
-      is_active
+      status
     `)
-    .eq('is_active', true)
+    .eq('status', 'active')
 
   if (error) {
     console.error('[Enhanced Payout] Error fetching staff info:', error)
@@ -202,9 +202,9 @@ export async function getStaffDueForPayout(): Promise<StaffPayoutInfo[]> {
       next_payout_date,
       last_payout_processed_at,
       payout_start_date,
-      is_active
+      status
     `)
-    .eq('is_active', true)
+    .eq('status', 'active')
     .lte('next_payout_date', today)
 
   if (error) {
@@ -467,7 +467,7 @@ export async function notifyUpcomingPayouts(daysBefore: number = 1): Promise<voi
       next_payout_date,
       profiles!inner(line_user_id)
     `)
-    .eq('is_active', true)
+    .eq('status', 'active')
     .eq('next_payout_date', targetDate)
 
   if (!staffToNotify || staffToNotify.length === 0) {

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { toast } from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
 import PayoutScheduleSelector from './PayoutScheduleSelector'
-import { PayoutSchedule } from '../types/staff'
+import { PayoutSchedule, calculateNextPayoutDate } from '../types/staff'
 
 interface UnpaidJob {
   id: string
@@ -92,13 +92,24 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
 
     setIsCreating(true)
     try {
-      // Update staff payout schedule first
+      // Calculate next payout date based on selected schedule starting from today
+      const today = new Date().toISOString().split('T')[0]
+      const nextPayoutDate = calculateNextPayoutDate(
+        selectedSchedule,
+        selectedSchedule === 'custom_days' ? customInterval : undefined,
+        undefined,
+        today
+      )
+
+      // Update staff payout schedule + advance next_payout_date
       const { error: updateError } = await supabase
         .from('staff')
         .update({
           payout_schedule: selectedSchedule,
           custom_payout_interval: selectedSchedule === 'custom_days' ? customInterval : null,
-          payout_start_date: new Date().toISOString().split('T')[0]
+          payout_start_date: today,
+          next_payout_date: nextPayoutDate.toISOString().split('T')[0],
+          last_payout_processed_at: new Date().toISOString(),
         })
         .eq('id', staffId)
 
