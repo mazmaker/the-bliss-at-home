@@ -204,20 +204,37 @@ const PromotionsPage = () => {
                   style={{ borderRadius: '28px', overflow: 'hidden', background: '#F8F5F1', boxShadow: '0 6px 32px rgba(0,0,0,0.10)' }}
                 >
                   {/* ── Banner Area ── */}
-                  <div className="relative" style={{ height: '340px', background: 'linear-gradient(145deg, #fdfaf6 0%, #f9f2e6 40%, #f3e8d6 75%, #ecdcca 100%)' }}>
+                  <div className="relative" style={{ height: '340px', background: '#F8F5F1' }}>
 
                     {promo.image_url && (
                       <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover" />
                     )}
 
-                    {/* Silk wave SVG */}
+                    {/* Background SVG — 3 layers */}
                     {!promo.image_url && (
                       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-                        <ellipse cx="330" cy="120" rx="210" ry="170" fill="rgba(255,253,248,0.55)" />
-                        <path d="M-20,268 C80,198 200,308 345,218 C398,188 432,208 470,196" fill="none" stroke="#D8B36A" strokeWidth="2.2" opacity="0.65"/>
-                        <path d="M-20,288 C92,216 215,322 358,232 C410,202 442,222 475,210" fill="none" stroke="#D8B36A" strokeWidth="1.1" opacity="0.42"/>
-                        <path d="M-20,250 C72,182 190,292 332,205 C387,175 422,195 462,183" fill="none" stroke="#c9a24a" strokeWidth="3" opacity="0.30"/>
-                        <path d="M-20,308 C104,238 226,340 368,252 C418,222 448,242 478,230" fill="none" stroke="#D8B36A" strokeWidth="0.8" opacity="0.28"/>
+                        <defs>
+                          <radialGradient id={`wg_${promo.id}`} cx="44%" cy="42%" r="58%">
+                            <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.82"/>
+                            <stop offset="55%"  stopColor="#ffffff" stopOpacity="0.32"/>
+                            <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+                          </radialGradient>
+                          <radialGradient id={`cg_${promo.id}`} cx="52%" cy="56%" r="68%">
+                            <stop offset="0%"   stopColor="#FFF0DC" stopOpacity="0.55"/>
+                            <stop offset="65%"  stopColor="#FFF0DC" stopOpacity="0.18"/>
+                            <stop offset="100%" stopColor="#FFF0DC" stopOpacity="0"/>
+                          </radialGradient>
+                        </defs>
+
+                        {/* Layer 2 — Cream transparent sweep */}
+                        <ellipse cx="205" cy="168" rx="235" ry="210" fill={`url(#cg_${promo.id})`}/>
+
+                        {/* Layer 1 — Large white transparent sweep */}
+                        <ellipse cx="195" cy="148" rx="215" ry="190" fill={`url(#wg_${promo.id})`}/>
+
+                        {/* Layer 3 — 2 thin gold curves, bottom only */}
+                        <path d="M-10,274 C110,242 268,254 420,220" fill="none" stroke="#D8B36A" strokeWidth="1" opacity="0.42"/>
+                        <path d="M-10,290 C110,257 268,269 420,235" fill="none" stroke="#D8B36A" strokeWidth="1" opacity="0.26"/>
                       </svg>
                     )}
 
@@ -251,19 +268,19 @@ const PromotionsPage = () => {
                         <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                           <span style={{
                             fontSize: '11.5rem',
-                            fontWeight: 900,
-                            color: '#D50000',
-                            fontFamily: '"Noto Serif Thai", Georgia, "Times New Roman", serif',
+                            fontWeight: 500,
+                            color: '#E8000A',
+                            fontFamily: '"Noto Serif Thai", serif',
                             lineHeight: 0.85,
-                            letterSpacing: '-6px',
+                            letterSpacing: '-4px',
                           }}>
                             {Number(promo.discount_value)}
                           </span>
                           <span style={{
                             fontSize: '3.2rem',
-                            fontWeight: 700,
-                            color: '#D50000',
-                            fontFamily: '"Noto Serif Thai", Georgia, serif',
+                            fontWeight: 500,
+                            color: '#E8000A',
+                            fontFamily: '"Noto Serif Thai", serif',
                             marginTop: '22px',
                             marginLeft: '4px',
                             letterSpacing: '-1px',
@@ -281,7 +298,7 @@ const PromotionsPage = () => {
                     {/* OFF with golden lines */}
                     <div className="absolute left-0 right-0 flex items-center px-8" style={{ bottom: '26px', gap: '12px' }}>
                       <div style={{ height: '1px', flex: 1, background: 'linear-gradient(to right, transparent, #D8B36A)' }} />
-                      <span style={{ fontSize: '17px', fontWeight: 700, letterSpacing: '0.5em', color: '#22150a', fontFamily: 'Georgia, "Times New Roman", serif', paddingLeft: '4px' }}>OFF</span>
+                      <span style={{ fontSize: '28px', fontWeight: 600, letterSpacing: '0.5em', color: '#1a100a', fontFamily: '"Cormorant Garamond", serif', paddingLeft: '4px' }}>OFF</span>
                       <div style={{ height: '1px', flex: 1, background: 'linear-gradient(to left, transparent, #D8B36A)' }} />
                     </div>
                   </div>
