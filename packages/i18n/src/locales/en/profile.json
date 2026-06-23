@@ -59,7 +59,8 @@
       "addressRequired": "Please enter address",
       "provinceRequired": "Please select province",
       "zipcodeRequired": "Please enter postal code",
-      "zipcodeFormat": "Postal code must be 5 digits"
+      "zipcodeFormat": "Postal code must be 5 digits",
+      "locationRequired": "Please select a location on the map"
     },
     "errorSaving": "Failed to save address:",
     "editTitle": "Edit Address",
@@ -73,7 +74,7 @@
     "phone": "Phone Number",
     "address": "Address",
     "addressPlaceholder": "House number, Soi, Street",
-    "mapLocation": "Select Location on Map (Optional)",
+    "mapLocation": "Select Location on Map",
     "buttonCancel": "Cancel",
     "buttonSaving": "Saving...",
     "buttonUpdate": "Update Address",

@@ -76,7 +76,7 @@
       "fullName": "姓名",
       "phonePlaceholder": "08x-xxx-xxxx",
       "addressPlaceholder": "门牌号、小区、街道",
-      "mapLabel": "在地图上选择位置（可选）",
+      "mapLabel": "在地图上选择位置",
       "notes": "附加备注",
       "notesPlaceholder": "如：门禁密码、接待地点或其他重要信息",
       "arrivalNote": "我们的团队将准时到达您的位置",

@@ -109,6 +109,13 @@ function AddressFormModal({
 
   const handleLocationChange = (lat: number, lng: number) => {
     setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }))
+    if (errors.location) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next.location
+        return next
+      })
+    }
   }
 
   const validate = (): boolean => {
@@ -142,6 +149,10 @@ function AddressFormModal({
       newErrors.zipcode = t('profile:addresses.validation.zipcodeRequired')
     } else if (!/^\d{5}$/.test(formData.zipcode.trim())) {
       newErrors.zipcode = t('profile:addresses.validation.zipcodeFormat')
+    }
+
+    if (!formData.latitude || !formData.longitude) {
+      newErrors.location = t('profile:addresses.validation.locationRequired')
     }
 
     setErrors(newErrors)
@@ -337,16 +348,19 @@ function AddressFormModal({
         />
 
         {/* Google Maps Location Picker */}
-        <div>
+        <div data-field="location">
           <label className="block text-sm font-medium text-bliss-700 mb-2">
             <MapPin className="w-4 h-4 inline mr-1" />
-            {t('profile:addresses.mapLocation')}
+            {t('profile:addresses.mapLocation')} <span className="text-red-500">*</span>
           </label>
           <GoogleMapsPicker
             latitude={formData.latitude}
             longitude={formData.longitude}
             onLocationChange={handleLocationChange}
           />
+          {errors.location && (
+            <p className="text-xs text-red-600 mt-1">{errors.location}</p>
+          )}
         </div>
         </div>
 

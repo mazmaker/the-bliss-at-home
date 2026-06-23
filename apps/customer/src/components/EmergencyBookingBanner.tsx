@@ -38,7 +38,7 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
   }
 
   return (
-    <div className="relative rounded-xl my-3 shadow-sm overflow-hidden border border-bliss-500" style={{ backgroundColor: '#c8c29c' }}>
+    <div className="relative rounded-xl my-3 shadow-sm overflow-hidden border border-bliss-500" style={{ backgroundColor: '#a7a87f' }}>
 
       <div className="relative p-6 text-center">
         {/* Badge */}

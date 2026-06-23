@@ -76,7 +76,7 @@
       "fullName": "Full Name",
       "phonePlaceholder": "08x-xxx-xxxx",
       "addressPlaceholder": "House number, village, street",
-      "mapLabel": "Select location on map (optional)",
+      "mapLabel": "Select location on map",
       "notes": "Additional Notes",
       "notesPlaceholder": "E.g., building access code, meeting point, or other important information",
       "arrivalNote": "Our team will arrive at your location on time",

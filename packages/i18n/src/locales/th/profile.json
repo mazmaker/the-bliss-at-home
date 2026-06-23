@@ -59,7 +59,8 @@
       "addressRequired": "กรุณากรอกที่อยู่",
       "provinceRequired": "กรุณาเลือกจังหวัด",
       "zipcodeRequired": "กรุณากรอกรหัสไปรษณีย์",
-      "zipcodeFormat": "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก"
+      "zipcodeFormat": "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก",
+      "locationRequired": "กรุณาเลือกตำแหน่งบนแผนที่"
     },
     "errorSaving": "บันทึกที่อยู่ไม่สำเร็จ:",
     "editTitle": "แก้ไขที่อยู่",
@@ -73,7 +74,7 @@
     "phone": "เบอร์โทรศัพท์",
     "address": "ที่อยู่",
     "addressPlaceholder": "บ้านเลขที่ ซอย ถนน",
-    "mapLocation": "เลือกตำแหน่งบนแผนที่ (ไม่บังคับ)",
+    "mapLocation": "เลือกตำแหน่งบนแผนที่",
     "buttonCancel": "ยกเลิก",
     "buttonSaving": "กำลังบันทึก...",
     "buttonUpdate": "อัปเดตที่อยู่",

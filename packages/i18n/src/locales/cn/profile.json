@@ -59,7 +59,8 @@
       "addressRequired": "请输入地址",
       "provinceRequired": "请选择省份",
       "zipcodeRequired": "请输入邮编",
-      "zipcodeFormat": "邮编必须是5位数字"
+      "zipcodeFormat": "邮编必须是5位数字",
+      "locationRequired": "请在地图上选择位置"
     },
     "errorSaving": "保存地址失败：",
     "editTitle": "编辑地址",
@@ -73,7 +74,7 @@
     "phone": "电话号码",
     "address": "地址",
     "addressPlaceholder": "门牌号、街道",
-    "mapLocation": "在地图上选择位置（可选）",
+    "mapLocation": "在地图上选择位置",
     "buttonCancel": "取消",
     "buttonSaving": "保存中...",
     "buttonUpdate": "更新地址",

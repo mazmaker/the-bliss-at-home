@@ -1070,6 +1070,19 @@ function BookingWizard() {
                     />
                   </div>
 
+                  {/* Google Maps Location Picker */}
+                  <div>
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">
+                      <MapPin className="w-4 h-4 inline mr-1" />
+                      {t('wizard.step4.mapLabel')} <span className="text-red-500">*</span>
+                    </label>
+                    <GoogleMapsPicker
+                      latitude={manualAddressLocation.latitude}
+                      longitude={manualAddressLocation.longitude}
+                      onLocationChange={handleLocationChange}
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-bliss-700 mb-2">
                       <MapPin className="w-4 h-4 inline mr-1" />
@@ -1094,19 +1107,6 @@ function BookingWizard() {
                       setAddress((prev) => ({ ...prev, ...fields }))
                     }}
                   />
-
-                  {/* Google Maps Location Picker */}
-                  <div>
-                    <label className="block text-sm font-medium text-bliss-700 mb-2">
-                      <MapPin className="w-4 h-4 inline mr-1" />
-                      {t('wizard.step4.mapLabel')}
-                    </label>
-                    <GoogleMapsPicker
-                      latitude={manualAddressLocation.latitude}
-                      longitude={manualAddressLocation.longitude}
-                      onLocationChange={handleLocationChange}
-                    />
-                  </div>
 
                   {/* Additional Notes */}
                   <div>
@@ -1736,7 +1736,8 @@ function BookingWizard() {
                 onClick={handleNext}
                 disabled={
                   (currentStep === 2 && (!selectedDate || !selectedTime)) ||
-                  (currentStep === 4 && (!address.name || !address.phone || !address.address || !address.province))
+                  (currentStep === 4 && (!address.name || !address.phone || !address.address || !address.province ||
+                    (showManualAddressForm && (!manualAddressLocation.latitude || !manualAddressLocation.longitude))))
                 }
                 className="px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:bg-bliss-300 disabled:cursor-not-allowed"
               >
