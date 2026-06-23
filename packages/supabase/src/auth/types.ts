@@ -103,7 +103,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
     loginPath: '/login',
     defaultPath: '/services',
     logoUrl: '/logo.jpg',
-    primaryColor: '#837858',
+    primaryColor: '#565b34',
   },
   HOTEL: {
     name: 'Hotel Partner Portal',

@@ -151,7 +151,7 @@ function ServiceDetails() {
           {/* Left Column - Service Info */}
           <div className="lg:col-span-2">
             {/* Image */}
-            <div className="rounded-2xl h-80 overflow-hidden mb-6 border border-bliss-200 bg-gray-100">
+            <div className="rounded-2xl aspect-[21/9] overflow-hidden mb-6 border border-bliss-200 bg-gray-100">
               {service.image_url ? (
                 <img
                   src={service.image_url}
@@ -160,7 +160,7 @@ function ServiceDetails() {
                   onError={(e) => {
                     e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       service.name
-                    )}&background=f59e0b&color=fff&size=600`
+                    )}&background=565b34&color=fff&size=600`
                   }}
                 />
               ) : (

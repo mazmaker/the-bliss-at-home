@@ -188,7 +188,7 @@ function ServiceCatalog() {
                 to={`/services/${service.slug}`}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition overflow-hidden group border border-bliss-100"
               >
-                <div className="h-48 overflow-hidden">
+                <div className="aspect-[4/3] overflow-hidden">
                   <img
                     src={service.image}
                     alt={service.name}
@@ -218,7 +218,7 @@ function ServiceCatalog() {
                       size="md"
                       className="flex-1"
                     />
-                    <button className="bg-bliss-900 text-white px-4 py-2 rounded-full font-medium hover:bg-bliss-600 transition ml-4">
+                    <button className="bg-bliss-600 text-white px-4 py-2 rounded-full font-medium hover:bg-bliss-700 transition ml-4">
                       {t('services:catalog.book')}
                     </button>
                   </div>

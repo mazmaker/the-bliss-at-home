@@ -38,29 +38,29 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
   }
 
   return (
-    <div className="relative rounded-xl my-3 shadow-lg overflow-hidden" style={{ backgroundColor: '#837858' }}>
+    <div className="relative rounded-xl my-3 shadow-sm overflow-hidden border border-bliss-300" style={{ backgroundColor: '#ebe6d0' }}>
 
       <div className="relative p-6 text-center">
-        {/* White badge */}
-        <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-bliss-700 text-sm font-medium mb-4">
+        {/* Badge */}
+        <div className="inline-block bg-white px-4 py-2 rounded-full text-bliss-600 text-sm font-medium mb-4 shadow-sm">
           {t('services:emergencyService.badge')}
         </div>
 
         {/* Main heading */}
-        <h3 className="text-xl font-semibold text-white mb-2">
+        <h3 className="text-xl font-semibold text-bliss-900 mb-2">
           {t('services:emergencyService.heading')}
         </h3>
 
         {/* Subtitle */}
-        <p className="text-white/90 text-sm mb-6">
+        <p className="text-bliss-700 text-sm mb-6">
           {t('services:emergencyService.subtitle')}
         </p>
 
-        {/* Contact buttons — LINE + Facebook (single-source URLs from config/contact) */}
+        {/* Contact buttons */}
         <div className="flex justify-center gap-3">
           <button
             onClick={() => handleContact('line')}
-            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
+            className="flex items-center gap-2 bg-white text-bliss-700 px-4 py-2 rounded-lg text-sm hover:bg-bliss-100 transition-all border border-bliss-300 shadow-sm"
           >
             <MessageCircle className="w-4 h-4" />
             {t('common:emergencyService.lineButton')}
@@ -68,7 +68,7 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
 
           <button
             onClick={() => handleContact('facebook')}
-            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all border border-white/20"
+            className="flex items-center gap-2 bg-white text-bliss-700 px-4 py-2 rounded-lg text-sm hover:bg-bliss-100 transition-all border border-bliss-300 shadow-sm"
           >
             <Facebook className="w-4 h-4" />
             {t('common:emergencyService.facebookButton')}

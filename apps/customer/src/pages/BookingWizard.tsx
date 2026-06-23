@@ -1334,7 +1334,7 @@ function BookingWizard() {
                       onClick={() => setSelectedPaymentChannel('credit_card')}
                       className="p-4 rounded-xl border-2 border-bliss-200 hover:border-bliss-600 hover:bg-bliss-100 transition text-left flex items-center gap-3"
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-bliss-600 rounded-lg flex items-center justify-center">
                         <CreditCard className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1350,7 +1350,7 @@ function BookingWizard() {
                       onClick={() => setSelectedPaymentChannel('promptpay')}
                       className="p-4 rounded-xl border-2 border-bliss-200 hover:border-bliss-600 hover:bg-bliss-100 transition text-left flex items-center gap-3"
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-bliss-600 rounded-lg flex items-center justify-center">
                         <QrCode className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1366,7 +1366,7 @@ function BookingWizard() {
                       onClick={() => setSelectedPaymentChannel('internet_banking')}
                       className="p-4 rounded-xl border-2 border-bliss-200 hover:border-bliss-600 hover:bg-bliss-100 transition text-left flex items-center gap-3"
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-bliss-600 rounded-lg flex items-center justify-center">
                         <Building2 className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1382,7 +1382,7 @@ function BookingWizard() {
                       onClick={() => setSelectedPaymentChannel('mobile_banking')}
                       className="p-4 rounded-xl border-2 border-bliss-200 hover:border-bliss-600 hover:bg-bliss-100 transition text-left flex items-center gap-3"
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-bliss-600 rounded-lg flex items-center justify-center">
                         <Smartphone className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1551,7 +1551,7 @@ function BookingWizard() {
                       <button
                         onClick={handlePayWithPromptPay}
                         disabled={isProcessingPayment}
-                        className="px-8 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:bg-bliss-300 disabled:cursor-not-allowed"
+                        className="px-8 py-4 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:bg-bliss-300 disabled:cursor-not-allowed"
                       >
                         {isProcessingPayment ? t('wizard.payment.generatingQR') : t('wizard.payment.generateQR')}
                       </button>

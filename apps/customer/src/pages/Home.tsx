@@ -44,13 +44,7 @@ function HomePage() {
     return () => clearInterval(timer)
   }, [promoCount, nextPromo])
 
-  const gradients = [
-    'from-bliss-600 via-bliss-500 to-bliss-600',
-    'from-bliss-700 via-bliss-700 to-bliss-900',
-    'from-rose-600 via-pink-600 to-rose-700',
-    'from-emerald-600 via-teal-600 to-emerald-700',
-    'from-indigo-600 via-blue-600 to-indigo-700',
-  ]
+  const promoBgs = ['#ebe6d0', '#dfd9b9', '#ebe6d0', '#dfd9b9', '#ebe6d0']
 
   // Calculate actual service counts by category
   const getServiceCountByCategory = (categoryId: string) => {
@@ -108,7 +102,7 @@ function HomePage() {
           <h2 className="text-5xl md:text-6xl font-light tracking-tight text-bliss-900 mb-6">
             {t('home:hero.title1')}
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-bliss-600 via-bliss-500 to-bliss-700 font-normal">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-bliss-600 via-bliss-400 to-bliss-600 font-normal">
               {t('home:hero.title2')}
             </span>
           </h2>
@@ -175,28 +169,23 @@ function HomePage() {
               {promotions.map((promo, index) => {
                 const name = isEn ? promo.name_en : promo.name_th
                 const description = isEn ? (promo.description_en || promo.description_th) : (promo.description_th || promo.description_en)
-                const discountLabel = promo.discount_type === 'percentage'
-                  ? `${t('home:promotions.discount')} ${Number(promo.discount_value)}%`
-                  : promo.discount_type === 'fixed_amount'
-                    ? `${t('home:promotions.discount')} ฿${Number(promo.discount_value).toLocaleString()}`
-                    : promo.code
                 return (
                   <div
                     key={promo.id}
                     onClick={() => setSelectedPromo(promo)}
-                    className={`w-full flex-shrink-0 bg-gradient-to-r ${gradients[index % gradients.length]} p-8 md:p-12 text-white relative overflow-hidden min-h-[180px] flex flex-col justify-center cursor-pointer group/slide`}
+                    className="w-full flex-shrink-0 p-8 md:p-12 relative overflow-hidden min-h-[180px] flex flex-col justify-center cursor-pointer group/slide"
+                    style={{ backgroundColor: promoBgs[index % promoBgs.length] }}
                   >
                     {promo.image_url && (
-                      <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                      <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-10" />
                     )}
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-                    <div className="absolute inset-0 bg-black/0 group-hover/slide:bg-black/10 transition-colors duration-300" />
+                    <div className="absolute top-0 right-0 w-48 h-48 rounded-full -translate-y-1/2 translate-x-1/2" style={{ background: 'rgba(86,91,52,0.07)' }} />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full translate-y-1/2 -translate-x-1/2" style={{ background: 'rgba(86,91,52,0.05)' }} />
+                    <div className="absolute inset-0 group-hover/slide:bg-black/5 transition-colors duration-300" />
                     <div className="relative max-w-2xl mx-auto text-center">
-                      <span className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium mb-3">{discountLabel}</span>
-                      <h3 className="text-2xl md:text-3xl font-semibold">{name}</h3>
-                      {description && <p className="text-sm md:text-base opacity-90 mt-2 font-light mx-auto">{description}</p>}
-                      <p className="text-xs opacity-70 mt-3 font-mono bg-white/10 inline-block px-2 py-1 rounded">{t('home:promotions.code')}: {promo.code}</p>
+                      <h3 className="text-4xl md:text-5xl font-bold" style={{ color: '#e3342f' }}>{name}</h3>
+                      {description && <p className="text-sm md:text-base mt-2 font-light mx-auto" style={{ color: '#464a28' }}>{description}</p>}
+                      <p className="text-xs mt-3 font-mono inline-block px-2 py-1 rounded" style={{ background: 'rgba(86,91,52,0.12)', color: '#565b34' }}>{t('home:promotions.code')}: {promo.code}</p>
                     </div>
                   </div>
                 )
@@ -307,7 +296,7 @@ function HomePage() {
                     />
                     <span className="text-xs text-bliss-500">{t('services:durationLabel', { duration: service.minDuration })}</span>
                   </div>
-                  <span className="bg-bliss-100 text-bliss-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-bliss-200 hover:text-bliss-700 transition mt-2 inline-block text-center w-full">
+                  <span className="bg-bliss-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-bliss-700 transition mt-2 inline-block text-center w-full">
                     {t('home:popular.book')}
                   </span>
                 </div>
@@ -325,21 +314,21 @@ function HomePage() {
           <h3 className="text-2xl font-light text-bliss-900 mb-8 text-center tracking-wide">{t('home:whyChooseUs.title')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
-            <div className="w-16 h-16 bg-bliss-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-bliss-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-8 h-8 text-bliss-600" />
             </div>
             <h4 className="font-medium text-bliss-900 mb-2">{t('home:whyChooseUs.experts')}</h4>
             <p className="text-bliss-700 text-sm font-light">{t('home:whyChooseUs.expertsDesc')}</p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-bliss-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-bliss-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Home className="w-8 h-8 text-bliss-700" />
             </div>
             <h4 className="font-medium text-bliss-900 mb-2">{t('home:whyChooseUs.atYourDoor')}</h4>
             <p className="text-bliss-700 text-sm font-light">{t('home:whyChooseUs.atYourDoorDesc')}</p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-bliss-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-bliss-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Gem className="w-8 h-8 text-bliss-600" />
             </div>
             <h4 className="font-medium text-bliss-900 mb-2">{t('home:whyChooseUs.premiumQuality')}</h4>
@@ -352,17 +341,17 @@ function HomePage() {
       {/* CTA */}
       <section className="mb-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-bliss-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl">
-          <h3 className="text-3xl font-light mb-4 tracking-wide">{t('home:cta.title')}</h3>
-          <p className="text-white/80 mb-6 max-w-2xl mx-auto font-light">
-            {t('home:cta.subtitle1')}
-            <br />
-            {t('home:cta.subtitle2')}
-          </p>
-          <Link to="/services" className="inline-block bg-bliss-50 text-bliss-900 px-8 py-4 rounded-full font-medium text-lg hover:shadow-2xl transition transform hover:scale-105">
-            {t('common:buttons.bookNow')}
-          </Link>
-        </div>
+          <div className="rounded-3xl p-8 md:p-12 text-center border border-bliss-300" style={{ backgroundColor: '#ebe6d0' }}>
+            <h3 className="text-3xl font-light mb-4 tracking-wide" style={{ color: '#1a1a1a' }}>{t('home:cta.title')}</h3>
+            <p className="mb-6 max-w-2xl mx-auto font-light" style={{ color: '#464a28' }}>
+              {t('home:cta.subtitle1')}
+              <br />
+              {t('home:cta.subtitle2')}
+            </p>
+            <Link to="/services" className="inline-block px-8 py-4 rounded-full font-medium text-lg hover:opacity-90 transition transform hover:scale-105 text-white" style={{ backgroundColor: '#565b34' }}>
+              {t('common:buttons.bookNow')}
+            </Link>
+          </div>
         </div>
       </section>
 

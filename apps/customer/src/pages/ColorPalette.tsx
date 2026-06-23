@@ -3,15 +3,15 @@ import { useState } from 'react'
 
 /* ─── Color tokens (actual tailwind.config values) ─── */
 const C = {
-  50:  '#f6f3f0',
-  100: '#f2ede9',
-  200: '#e3dbd4',
-  300: '#d0c4b8',
-  400: '#bfb5a1',
-  500: '#a09484',
-  600: '#837858',
-  700: '#775642',
-  800: '#4a3728',
+  50:  '#fbfaf6',
+  100: '#fbfaf6',
+  200: '#ebe6d0',
+  300: '#dfd9b9',
+  400: '#c8c29c',
+  500: '#7a875f',
+  600: '#565b34',
+  700: '#464a28',
+  800: '#363921',
   900: '#1a1a1a',
 }
 
@@ -242,7 +242,7 @@ export default function DesignGuide() {
             <p className="font-semibold">จองด่วนฉุกเฉิน</p>
             <p className="text-xs opacity-80 mt-0.5">ไม่ทันจองล่วงหน้า 3 ชั่วโมง? เรามีทีมพิเศษคอยช่วยเหลือสำหรับสมาชิก</p>
           </div>
-          <p className="text-xs mt-2" style={{ color: C[400] }}>Feature icons: w-16 h-16 bg-bliss-100 rounded-2xl · Emergency: bg-bliss-600 (#837858)</p>
+          <p className="text-xs mt-2" style={{ color: C[400] }}>Feature icons: w-16 h-16 bg-bliss-200 rounded-2xl · Emergency: bg-bliss-200 (#ebe6d0)</p>
         </Card>
 
         {/* ── 8. BOOKING WIZARD ── */}
@@ -316,7 +316,7 @@ export default function DesignGuide() {
               <button className="w-full py-3 rounded-xl text-white text-sm font-medium" style={{ background: C[600] }}>เข้าสู่ระบบ</button>
             </div>
           </div>
-          <p className="text-xs text-center mt-2" style={{ color: C[400] }}>AuthLayout: className=&quot;bg-[#f2ede9]&quot; · Card: bg-white rounded-2xl · Button: bg-bliss-600 [background-image:none]</p>
+          <p className="text-xs text-center mt-2" style={{ color: C[400] }}>AuthLayout: className=&quot;bg-[#fbfaf6]&quot; · Card: bg-white rounded-2xl · Button: bg-bliss-600 [background-image:none]</p>
         </Card>
 
         {/* ── FOOTER ── */}

@@ -340,9 +340,9 @@ function ExtensionPayment() {
               {enabledChannels.includes('promptpay') && (
                 <button
                   onClick={() => { setSelectedChannel('promptpay'); handlePromptPay() }}
-                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-bliss-500 hover:bg-bliss-100 transition-all text-left"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-bliss-600 flex items-center justify-center">
                     <QrCode className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -370,9 +370,9 @@ function ExtensionPayment() {
               {enabledChannels.includes('internet_banking') && (
                 <button
                   onClick={() => setSelectedChannel('internet_banking')}
-                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-bliss-500 hover:bg-bliss-100 transition-all text-left"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-bliss-600 flex items-center justify-center">
                     <Building2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -385,9 +385,9 @@ function ExtensionPayment() {
               {enabledChannels.includes('mobile_banking') && (
                 <button
                   onClick={() => setSelectedChannel('mobile_banking')}
-                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-violet-400 hover:bg-violet-50 transition-all text-left"
+                  className="flex items-center gap-4 p-4 border-2 border-bliss-200 rounded-xl hover:border-bliss-500 hover:bg-bliss-100 transition-all text-left"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-bliss-600 flex items-center justify-center">
                     <Smartphone className="w-6 h-6 text-white" />
                   </div>
                   <div>

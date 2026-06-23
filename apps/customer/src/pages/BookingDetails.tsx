@@ -1044,7 +1044,7 @@ function BookingDetails() {
                   {(bookingData as any)?.refund_status === 'completed' && (
                     <button
                       onClick={handleDownloadCreditNote}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-50 text-purple-700 rounded-xl font-medium hover:bg-purple-100 transition text-sm"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-bliss-100 text-bliss-600 rounded-xl font-medium hover:bg-bliss-200 transition text-sm"
                     >
                       <FileText className="w-4 h-4" />
                       {t('booking:downloadCreditNote.label')}

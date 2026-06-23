@@ -200,7 +200,7 @@ export default function TrackStaff() {
             <p className="text-gray-600 mb-4">{error}</p>
             <button
               onClick={goBack}
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-2 bg-bliss-600 text-white px-4 py-2 rounded-lg hover:bg-bliss-700 transition"
             >
               <ArrowLeft className="w-4 h-4" />
               {t('common:buttons.back')}
