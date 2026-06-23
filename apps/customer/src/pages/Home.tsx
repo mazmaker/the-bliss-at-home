@@ -352,7 +352,7 @@ function HomePage() {
       {/* CTA */}
       <section className="mb-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-bliss-800 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl">
+          <div className="bg-bliss-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl">
           <h3 className="text-3xl font-light mb-4 tracking-wide">{t('home:cta.title')}</h3>
           <p className="text-white/80 mb-6 max-w-2xl mx-auto font-light">
             {t('home:cta.subtitle1')}

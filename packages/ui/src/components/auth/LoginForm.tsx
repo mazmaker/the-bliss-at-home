@@ -312,7 +312,7 @@ export function LoginForm({
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full"
+          className="w-full [background-image:none]"
           style={{ backgroundColor: primaryColor }}
         >
           {isLoading ? (

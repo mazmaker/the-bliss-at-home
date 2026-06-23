@@ -245,9 +245,9 @@ const PromotionsPage = () => {
                         width: '68px',
                         paddingTop: '14px',
                         paddingBottom: '22px',
-                        background: '#775642',
+                        background: '#837858',
                         clipPath: 'polygon(0 0, 100% 0, 100% 83%, 50% 100%, 0 83%)',
-                        boxShadow: '0 6px 18px rgba(119,86,66,0.45)',
+                        boxShadow: '0 6px 18px rgba(131,120,88,0.45)',
                       }}
                     >
                       <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.35, letterSpacing: '0.02em' }}>ส่วนลด</span>
@@ -256,7 +256,7 @@ const PromotionsPage = () => {
 
                     {/* Days Left Badge */}
                     {daysLeft > 0 && daysLeft <= 7 && (
-                      <div className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1" style={{ background: '#775642' }}>
+                      <div className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1" style={{ background: '#837858' }}>
                         <Clock className="w-3 h-3" />
                         {t('home:promotions.daysLeftBadge', { daysLeft })}
                       </div>
@@ -269,7 +269,7 @@ const PromotionsPage = () => {
                           <span style={{
                             fontSize: '11.5rem',
                             fontWeight: 500,
-                            color: '#775642',
+                            color: '#837858',
                             fontFamily: '"Noto Serif Thai", serif',
                             lineHeight: 0.85,
                             letterSpacing: '-4px',
@@ -279,7 +279,7 @@ const PromotionsPage = () => {
                           <span style={{
                             fontSize: '3.2rem',
                             fontWeight: 500,
-                            color: '#775642',
+                            color: '#837858',
                             fontFamily: '"Noto Serif Thai", serif',
                             marginTop: '22px',
                             marginLeft: '4px',
@@ -289,7 +289,7 @@ const PromotionsPage = () => {
                           </span>
                         </div>
                       ) : (
-                        <div className="text-center" style={{ color: '#775642' }}>
+                        <div className="text-center" style={{ color: '#837858' }}>
                           <div style={{ fontSize: '4.5rem', fontWeight: 900, fontFamily: '"Noto Serif Thai", Georgia, serif' }}>{formatDiscount(promo)}</div>
                         </div>
                       )}
@@ -309,8 +309,8 @@ const PromotionsPage = () => {
 
                       {/* Header */}
                       <div className="flex items-center gap-2 mb-4">
-                        <Tag className="w-4 h-4 flex-shrink-0" style={{ color: '#775642' }} />
-                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#775642' }}>{name}</span>
+                        <Tag className="w-4 h-4 flex-shrink-0" style={{ color: '#837858' }} />
+                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#837858' }}>{name}</span>
                       </div>
 
                       {/* Promo code */}
@@ -319,8 +319,8 @@ const PromotionsPage = () => {
                         <div
                           className="flex items-center justify-between"
                           style={{
-                            background: '#FFF5F5',
-                            border: '1.5px dashed #775642',
+                            background: '#f6f3f0',
+                            border: '1.5px dashed #837858',
                             borderRadius: '12px',
                             padding: '13px 16px',
                           }}
@@ -332,13 +332,13 @@ const PromotionsPage = () => {
                           <span style={{
                             fontSize: '18px',
                             fontWeight: 800,
-                            color: '#775642',
+                            color: '#837858',
                             fontFamily: '"Noto Serif Thai", Georgia, serif',
                             letterSpacing: '0.04em',
                           }}>
                             {promo.code}
                           </span>
-                          <Copy className="w-5 h-5 flex-shrink-0" style={{ color: '#775642', opacity: 0.65 }} />
+                          <Copy className="w-5 h-5 flex-shrink-0" style={{ color: '#837858', opacity: 0.65 }} />
                         </div>
                       </div>
 

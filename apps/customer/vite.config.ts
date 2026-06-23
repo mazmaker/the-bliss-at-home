@@ -16,6 +16,7 @@ export default defineConfig({
   server: {
     port: 3002,
     strictPort: true,
+    allowedHosts: true,
   },
   preview: {
     port: 3002,

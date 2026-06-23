@@ -17,6 +17,7 @@ export interface AuthLayoutProps {
   backLinkText?: string
   backLinkTo?: string
   backgroundVariant?: 'default' | 'gradient' | 'image'
+  className?: string
 }
 
 export function AuthLayout({
@@ -27,6 +28,7 @@ export function AuthLayout({
   backLinkText = 'Back to Home',
   backLinkTo = '/',
   backgroundVariant = 'default',
+  className,
 }: AuthLayoutProps) {
   const backgroundStyles = {
     default: 'bg-gray-50',
@@ -36,7 +38,7 @@ export function AuthLayout({
 
   return (
     <div
-      className={`min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${backgroundStyles[backgroundVariant]}`}
+      className={`min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${className ?? backgroundStyles[backgroundVariant]}`}
     >
       {/* Back Link */}
       {showBackLink && (
@@ -65,22 +67,21 @@ export function AuthLayout({
 
       {/* Main Content */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          {appLogo && (
-            <img
-              src={appLogo}
-              alt={appTitle}
-              className="h-16 w-auto mx-auto mb-4"
-            />
-          )}
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            {appTitle}
-          </h2>
-        </div>
-
-        {/* Form Container */}
+        {/* Form Container with Logo & Title inside */}
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* Logo & Title */}
+          <div className="text-center mb-8">
+            {appLogo && (
+              <img
+                src={appLogo}
+                alt={appTitle}
+                className="h-28 w-auto mx-auto mb-3"
+              />
+            )}
+            <h2 className="text-lg font-semibold text-gray-700">
+              {appTitle}
+            </h2>
+          </div>
           {children}
         </div>
       </div>
