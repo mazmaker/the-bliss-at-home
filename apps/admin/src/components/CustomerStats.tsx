@@ -170,7 +170,7 @@ function CustomerStats() {
                   CLV เฉลี่ย ฿{stats.average_lifetime_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </p>
                 <p className="text-xs text-stone-500">
-                  สามารถใช้เป็นข้อมูลในการวางแผนการตลาดและโปรโมชั่น
+                  สามารถใช้เป็นข้อมูลในการวางแผนการตลาดและโปรโมชัน
                 </p>
               </div>
             </div>

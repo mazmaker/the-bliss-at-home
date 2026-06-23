@@ -2,7 +2,7 @@
   "hero": {
     "title1": "มอบความสบาย",
     "title2": "ถึงบ้านคุณ",
-    "subtitle1": "บริการนวดและสปา ระดับพรีเมียม",
+    "subtitle1": "บริการนวดและสปา",
     "subtitle2": "โดยทีมงานมืออาชีพที่คัดสรรมาเป็นพิเศษ",
     "searchPlaceholder": "ค้นหาบริการ...",
     "searchButton": "ค้นหา"
@@ -20,11 +20,11 @@
     "allServices": "บริการทั้งหมด",
     "selectedCategories": "หมวดหมู่ที่เลือก",
     "selectedServices": "บริการที่เลือก",
-    "promoCode": "รหัสโปรโมชั่น",
+    "promoCode": "รหัสโปรโมชัน",
     "copyCode": "คัดลอกรหัส",
     "copied": "คัดลอกแล้ว!",
     "statusActive": "ใช้งานอยู่",
-    "periodTitle": "ระยะเวลาโปรโมชั่น",
+    "periodTitle": "ระยะเวลาโปรโมชัน",
     "startDate": "เริ่ม",
     "endDate": "สิ้นสุด",
     "daysLeft": "เหลือ {{count}} วัน",
@@ -32,11 +32,11 @@
     "used": "ใช้แล้ว",
     "limitPerUser": "จำกัด {{count}} ครั้งต่อผู้ใช้",
     "termsTitle": "เงื่อนไขการใช้งาน",
-    "share": "แชร์โปรโมชั่น",
-    "loading": "กำลังโหลดโปรโมชั่น...",
-    "pageTitle": "โปรโมชั่นทั้งหมด",
+    "share": "แชร์โปรโมชัน",
+    "loading": "กำลังโหลดโปรโมชัน...",
+    "pageTitle": "โปรโมชันทั้งหมด",
     "pageSubtitle": "ข้อเสนอพิเศษสำหรับคุณ",
-    "searchPlaceholder": "ค้นหาโปรโมชั่น...",
+    "searchPlaceholder": "ค้นหาโปรโมชัน...",
     "filterAll": "ทุกประเภท",
     "filterPercentage": "ลดเปอร์เซ็นต์",
     "filterFixedAmount": "ลดยอดคงที่",
@@ -45,7 +45,7 @@
     "sortHighestDiscount": "ส่วนลดสูงสุด",
     "sortExpiring": "หมดอายุเร็วสุด",
     "empty": {
-      "heading": "ไม่พบโปรโมชั่น",
+      "heading": "ไม่พบโปรโมชัน",
       "message": "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
     },
     "daysLeftBadge": "{{daysLeft}} วันสุดท้าย",
@@ -100,8 +100,8 @@
     "subtitle": "เพียงแค่กรอกโค้ด DISCOUNT15"
   },
   "promotion": {
-    "label": "โปรโมชั่น",
-    "promoCodeLabel": "รหัสโปรโมชั่น",
+    "label": "โปรโมชัน",
+    "promoCodeLabel": "รหัสโปรโมชัน",
     "codeCopied": "คัดลอกแล้ว!",
     "discountLabel": "ส่วนลด",
     "daysLeftLabel": "วันเหลือ",

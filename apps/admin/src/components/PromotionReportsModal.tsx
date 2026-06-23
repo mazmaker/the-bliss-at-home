@@ -149,7 +149,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-stone-200">
           <div>
-            <h2 className="text-xl font-bold text-stone-900">รายงานการใช้โปรโมชั่น</h2>
+            <h2 className="text-xl font-bold text-stone-900">รายงานการใช้โปรโมชัน</h2>
             <p className="text-sm text-stone-500 mt-1">
               {promotionName} ({promotionCode})
             </p>
@@ -329,7 +329,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                     <div className="text-center py-12 text-stone-500">
                       <Eye className="w-12 h-12 mx-auto mb-4 text-stone-400" />
                       <p className="text-lg font-medium mb-2">ยังไม่มีการใช้งาน</p>
-                      <p className="text-sm">โปรโมชั่นนี้ยังไม่ได้ถูกใช้งาน</p>
+                      <p className="text-sm">โปรโมชันนี้ยังไม่ได้ถูกใช้งาน</p>
                     </div>
                   ) : (
                     <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
@@ -414,7 +414,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                     <div className="text-center py-12 text-stone-500">
                       <BarChart3 className="w-12 h-12 mx-auto mb-4 text-stone-400" />
                       <p className="text-lg font-medium mb-2">ไม่มีข้อมูลสำหรับสร้างกราฟ</p>
-                      <p className="text-sm">เมื่อมีการใช้งานโปรโมชั่น กราฟจะแสดงที่นี่</p>
+                      <p className="text-sm">เมื่อมีการใช้งานโปรโมชัน กราฟจะแสดงที่นี่</p>
                     </div>
                   )}
                 </div>
@@ -427,7 +427,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
             <div className="text-center py-12 text-stone-500">
               <BarChart3 className="w-12 h-12 mx-auto mb-4 text-stone-400" />
               <p className="text-lg font-medium mb-2">ยังไม่มีข้อมูลการใช้งาน</p>
-              <p className="text-sm">โปรโมชั่นนี้ยังไม่ได้ถูกใช้งาน</p>
+              <p className="text-sm">โปรโมชันนี้ยังไม่ได้ถูกใช้งาน</p>
             </div>
           )}
 

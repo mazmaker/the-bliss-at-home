@@ -216,7 +216,7 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
           <div>
             <h2 className="text-xl font-bold text-stone-900">จัดการคูปอง</h2>
             <p className="text-sm text-stone-500 mt-1">
-              โปรโมชั่น: {promotionName} ({promotionCode})
+              โปรโมชัน: {promotionName} ({promotionCode})
             </p>
           </div>
           <button
