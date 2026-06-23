@@ -412,10 +412,10 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
         <div className="flex items-center justify-between p-6 border-b border-stone-200">
           <div>
             <h2 className="text-xl font-bold text-stone-900">
-              {editData ? 'แก้ไขโปรโมชั่น' : 'เพิ่มโปรโมชั่นใหม่'}
+              {editData ? 'แก้ไขโปรโมชัน' : 'เพิ่มโปรโมชันใหม่'}
             </h2>
             <p className="text-sm text-stone-500 mt-1">
-              {editData ? 'แก้ไขข้อมูลโปรโมชั่นที่มีอยู่' : 'สร้างโปรโมชั่นใหม่สำหรับลูกค้า'}
+              {editData ? 'แก้ไขข้อมูลโปรโมชันที่มีอยู่' : 'สร้างโปรโมชันใหม่สำหรับลูกค้า'}
             </p>
           </div>
           <button
@@ -441,7 +441,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                ชื่อโปรโมชั่น (ไทย) *
+                ชื่อโปรโมชัน (ไทย) *
               </label>
               <input
                 type="text"
@@ -455,7 +455,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
 
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                ชื่อโปรโมชั่น (อังกฤษ) *
+                ชื่อโปรโมชัน (อังกฤษ) *
               </label>
               <input
                 type="text"
@@ -473,7 +473,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
               <Tag className="w-4 h-4" />
-              รหัสโปรโมชั่น
+              รหัสโปรโมชัน
             </h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -512,7 +512,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
 
               <div>
                 <label className="block text-sm font-medium text-amber-700 mb-2">
-                  รหัสโปรโมชั่น *
+                  รหัสโปรโมชัน *
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -732,7 +732,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                   placeholder="ไม่จำกัด"
                 />
                 <p className="text-xs text-blue-600 mt-1">
-                  จำนวนครั้งทั้งหมดที่โปรโมชั่นนี้สามารถใช้ได้ (เว้นว่างหมายถึงไม่จำกัด)
+                  จำนวนครั้งทั้งหมดที่โปรโมชันนี้สามารถใช้ได้ (เว้นว่างหมายถึงไม่จำกัด)
                 </p>
               </div>
 
@@ -749,7 +749,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                   placeholder="ไม่จำกัด"
                 />
                 <p className="text-xs text-blue-600 mt-1">
-                  จำนวนครั้งสูงสุดที่ลูกค้า 1 คนใช้โปรโมชั่นนี้ได้ (เว้นว่างหมายถึงไม่จำกัด)
+                  จำนวนครั้งสูงสุดที่ลูกค้า 1 คนใช้โปรโมชันนี้ได้ (เว้นว่างหมายถึงไม่จำกัด)
                 </p>
               </div>
             </div>
@@ -830,7 +830,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 onChange={(e) => setFormData({ ...formData, description_th: e.target.value })}
                 className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
                 rows={3}
-                placeholder="รายละเอียดและเงื่อนไขของโปรโมชั่น"
+                placeholder="รายละเอียดและเงื่อนไขของโปรโมชัน"
               />
             </div>
 
@@ -852,7 +852,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              ภาพประกอบโปรโมชั่น
+              ภาพประกอบโปรโมชัน
             </h3>
 
             <div className="space-y-4">
@@ -861,7 +861,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 <div className="relative">
                   <img
                     src={imagePreview}
-                    alt="ตัวอย่างภาพโปรโมชั่น"
+                    alt="ตัวอย่างภาพโปรโมชัน"
                     className="w-full h-48 object-cover rounded-lg border border-blue-200"
                   />
                   <button
@@ -942,7 +942,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
             >
               {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
               <Save className="w-4 h-4" />
-              {editData ? 'บันทึกการแก้ไข' : 'สร้างโปรโมชั่น'}
+              {editData ? 'บันทึกการแก้ไข' : 'สร้างโปรโมชัน'}
             </button>
           </div>
         </form>

@@ -178,7 +178,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
           {/* Promo Code */}
           <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-4 border border-amber-200">
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">รหัสโปรโมชั่น</p>
+              <p className="text-sm text-gray-600 mb-2">รหัสโปรโมชัน</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <code className="text-lg sm:text-xl lg:text-2xl font-bold font-mono text-amber-700 bg-white px-4 py-2 rounded-lg border border-amber-300 min-w-0 break-all text-center sm:text-left">
                   {promotion.code}
@@ -201,7 +201,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-800">ระยะเวลาโปรโมชั่น</h3>
+                <h3 className="font-semibold text-blue-800">ระยะเวลาโปรโมชัน</h3>
               </div>
               <div className="space-y-2 text-sm">
                 <div>
@@ -293,14 +293,14 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
               className="w-full bg-amber-600 hover:bg-amber-700 text-white px-6 py-4 rounded-xl font-medium transition flex items-center justify-center gap-3 touch-manipulation text-lg"
             >
               <Copy className="w-5 h-5" />
-              {copied ? 'คัดลอกแล้ว!' : 'คัดลอกรหัสโปรโมชั่น'}
+              {copied ? 'คัดลอกแล้ว!' : 'คัดลอกรหัสโปรโมชัน'}
             </button>
 
             {/* Secondary Actions - Stack on Mobile, Row on Desktop */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={() => {
-                  const text = `🎉 โปรโมชั่นพิเศษ!\n${promotion.name_th}\nใช้รหัส: ${promotion.code}\nลด${formatDiscount(promotion)}`
+                  const text = `🎉 โปรโมชันพิเศษ!\n${promotion.name_th}\nใช้รหัส: ${promotion.code}\nลด${formatDiscount(promotion)}`
                   if (navigator.share) {
                     navigator.share({ title: promotion.name_th, text })
                   } else {
@@ -311,7 +311,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
                 className="px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl font-medium transition flex items-center justify-center gap-2 touch-manipulation"
               >
                 <Share2 className="w-5 h-5" />
-                แชร์โปรโมชั่น
+                แชร์โปรโมชัน
               </button>
 
               <button

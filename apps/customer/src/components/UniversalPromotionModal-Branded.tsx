@@ -155,10 +155,10 @@ export function UniversalPromotionModal({
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      {/* Modal ที่ปรับขนาดตามรูปโปรโมชั่น */}
+      {/* Modal ที่ปรับขนาดตามรูปโปรโมชัน */}
       <div className="bg-bliss-50 rounded-2xl min-w-[400px] max-w-[90vw] max-h-[90vh] overflow-y-auto shadow-lg border border-bliss-100">
 
-        {/* Header - รูปโปรโมชั่นขนาดจริง */}
+        {/* Header - รูปโปรโมชันขนาดจริง */}
         <div className="relative overflow-hidden bg-bliss-50">
           {/* Promotion Image */}
           {promotion.image_url ? (

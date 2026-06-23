@@ -96,7 +96,7 @@ function Promotions() {
       setPromotions(data || [])
     } catch (err) {
       console.error('Error fetching promotions:', err)
-      setError('ไม่สามารถโหลดข้อมูลโปรโมชั่นได้')
+      setError('ไม่สามารถโหลดข้อมูลโปรโมชันได้')
     } finally {
       setIsLoading(false)
     }
@@ -133,18 +133,18 @@ function Promotions() {
 
       if (error) throw error
 
-      setSuccessMessage('ลบโปรโมชั่นเรียบร้อยแล้ว')
+      setSuccessMessage('ลบโปรโมชันเรียบร้อยแล้ว')
       fetchPromotions()
     } catch (err) {
       console.error('Error deleting promotion:', err)
-      setError('ไม่สามารถลบโปรโมชั่นได้')
+      setError('ไม่สามารถลบโปรโมชันได้')
     } finally {
       setDeleteConfirmId(null)
     }
   }
 
   const handleFormSuccess = () => {
-    setSuccessMessage(editingPromotion ? 'แก้ไขโปรโมชั่นเรียบร้อยแล้ว' : 'เพิ่มโปรโมชั่นใหม่เรียบร้อยแล้ว')
+    setSuccessMessage(editingPromotion ? 'แก้ไขโปรโมชันเรียบร้อยแล้ว' : 'เพิ่มโปรโมชันใหม่เรียบร้อยแล้ว')
     fetchPromotions()
   }
 
@@ -169,11 +169,11 @@ function Promotions() {
 
       if (error) throw error
 
-      setSuccessMessage(`${newStatus === 'disabled' ? 'ระงับ' : 'เปิดใช้'}โปรโมชั่นเรียบร้อยแล้ว`)
+      setSuccessMessage(`${newStatus === 'disabled' ? 'ระงับ' : 'เปิดใช้'}โปรโมชันเรียบร้อยแล้ว`)
       fetchPromotions()
     } catch (err) {
       console.error('Error toggling promotion status:', err)
-      setError('ไม่สามารถเปลี่ยนสถานะโปรโมชั่นได้')
+      setError('ไม่สามารถเปลี่ยนสถานะโปรโมชันได้')
     }
   }
 
@@ -186,11 +186,11 @@ function Promotions() {
 
       if (error) throw error
 
-      setSuccessMessage('เปิดใช้โปรโมชั่นเรียบร้อยแล้ว')
+      setSuccessMessage('เปิดใช้โปรโมชันเรียบร้อยแล้ว')
       fetchPromotions()
     } catch (err) {
       console.error('Error activating promotion:', err)
-      setError('ไม่สามารถเปิดใช้โปรโมชั่นได้')
+      setError('ไม่สามารถเปิดใช้โปรโมชันได้')
     }
   }
 
@@ -365,7 +365,7 @@ function Promotions() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">จัดการโปรโมชั่น</h1>
+          <h1 className="text-2xl font-bold text-stone-900">จัดการโปรโมชัน</h1>
           <p className="text-stone-500">Promotions Management</p>
         </div>
         <div className="flex gap-2">
@@ -381,7 +381,7 @@ function Promotions() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
           >
             <Plus className="w-5 h-5" />
-            เพิ่มโปรโมชั่นใหม่
+            เพิ่มโปรโมชันใหม่
           </button>
         </div>
       </div>
@@ -394,7 +394,7 @@ function Promotions() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
             <input
               type="text"
-              placeholder="ค้นหาโปรโมชั่น (ชื่อ, รหัส)..."
+              placeholder="ค้นหาโปรโมชัน (ชื่อ, รหัส)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
@@ -453,7 +453,7 @@ function Promotions() {
 
       {/* Results */}
       <div className="text-sm text-stone-500">
-        พบ {filteredPromotions.length} โปรโมชั่น
+        พบ {filteredPromotions.length} โปรโมชัน
       </div>
 
       {/* Promotions Grid */}
@@ -505,7 +505,7 @@ function Promotions() {
                 <button
                   onClick={() => navigator.clipboard.writeText(promotion.code)}
                   className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-sm rounded-lg hover:bg-amber-200 transition"
-                  title="คัดลอกรหัสโปรโมชั่น"
+                  title="คัดลอกรหัสโปรโมชัน"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
@@ -664,13 +664,13 @@ function Promotions() {
           </div>
           <p className="text-gray-600 text-lg font-medium mb-2">
             {searchQuery || selectedType !== 'all' || selectedStatus !== 'all'
-              ? 'ไม่พบโปรโมชั่นที่ค้นหา'
-              : 'ยังไม่มีโปรโมชั่น'}
+              ? 'ไม่พบโปรโมชันที่ค้นหา'
+              : 'ยังไม่มีโปรโมชัน'}
           </p>
           <p className="text-gray-500 text-sm mb-4">
             {searchQuery || selectedType !== 'all' || selectedStatus !== 'all'
               ? 'ลองค้นหาด้วยคำอื่นหรือเปลี่ยนตัวกรอง'
-              : 'เริ่มต้นด้วยการเพิ่มโปรโมชั่นใหม่'}
+              : 'เริ่มต้นด้วยการเพิ่มโปรโมชันใหม่'}
           </p>
           {(!searchQuery && selectedType === 'all' && selectedStatus === 'all') && (
             <button
@@ -678,7 +678,7 @@ function Promotions() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
             >
               <Plus className="w-5 h-5" />
-              เพิ่มโปรโมชั่นแรก
+              เพิ่มโปรโมชันแรก
             </button>
           )}
         </div>
