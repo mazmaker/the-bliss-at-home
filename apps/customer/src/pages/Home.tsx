@@ -176,9 +176,6 @@ function HomePage() {
                     className="w-full flex-shrink-0 p-8 md:p-12 relative overflow-hidden min-h-[180px] flex flex-col justify-center cursor-pointer group/slide"
                     style={{ backgroundColor: promoBgs[index % promoBgs.length] }}
                   >
-                    {promo.image_url && (
-                      <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-10" />
-                    )}
                     <div className="absolute top-0 right-0 w-48 h-48 rounded-full -translate-y-1/2 translate-x-1/2" style={{ background: 'rgba(86,91,52,0.07)' }} />
                     <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full translate-y-1/2 -translate-x-1/2" style={{ background: 'rgba(86,91,52,0.05)' }} />
                     <div className="absolute inset-0 group-hover/slide:bg-black/5 transition-colors duration-300" />

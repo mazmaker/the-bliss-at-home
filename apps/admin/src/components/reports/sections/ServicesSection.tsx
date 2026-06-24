@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Info,
   Wrench,
+  Sparkles,
   MapPin,
   Calendar,
   DollarSign
@@ -194,7 +195,8 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
-            🛎️ บริการและประเภท
+            <Sparkles className="w-6 h-6 text-bliss-600" />
+            บริการและประเภท
             <Tooltip content="การวิเคราะห์บริการยอดนิยมและการกระจายตามประเภท | Popular services and category distribution analysis">
               <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
             </Tooltip>
@@ -361,7 +363,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                         <p className="text-sm mb-2">Unable to load top services data</p>
                         <button
                           onClick={() => refetch.topServices()}
-                          className="text-pink-600 hover:text-pink-700 text-sm inline-flex items-center gap-1"
+                          className="text-bliss-600 hover:text-bliss-700 text-sm inline-flex items-center gap-1"
                         >
                           <RefreshCw className="w-4 h-4" />
                           Retry
@@ -382,8 +384,8 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                       <tr key={item.rank} className="border-b border-bliss-100 hover:bg-bliss-50 transition-colors">
                         <td className="py-3 px-2">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs ${
-                            item.rank === 1 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                            item.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                            item.rank === 1 ? 'bg-gradient-to-r from-bliss-700 to-bliss-800' :
+                            item.rank === 2 ? 'bg-gradient-to-r from-bliss-400 to-bliss-500' :
                             item.rank === 3 ? 'bg-gradient-to-r from-bliss-600 to-bliss-700' :
                             'bg-gradient-to-r from-bliss-400 to-bliss-500'
                           }`}>
@@ -394,7 +396,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                           <div className="font-medium text-bliss-900 text-sm">{item.name}</div>
                         </td>
                         <td className="py-3 px-2">
-                          <div className="text-sm font-semibold text-pink-700">฿{item.revenue.toLocaleString()}</div>
+                          <div className="text-sm font-semibold text-bliss-700">฿{item.revenue.toLocaleString()}</div>
                         </td>
                         <td className="py-3 px-2">
                           <div className="text-sm text-bliss-600 font-medium">{item.bookings}</div>
@@ -422,7 +424,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
           <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
                   <BarChart3 className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -445,7 +447,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                   <p className="text-sm mb-2">Unable to load category data</p>
                   <button
                     onClick={() => refetch.categories()}
-                    className="text-blue-600 hover:text-blue-700 text-sm inline-flex items-center gap-1"
+                    className="text-bliss-600 hover:text-bliss-700 text-sm inline-flex items-center gap-1"
                   >
                     <RefreshCw className="w-4 h-4" />
                     Retry
@@ -465,7 +467,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                 ))
               ) : (
                 (categories || []).map((item, index) => {
-                  const colors = ['bg-pink-500', 'bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-bliss-500']
+                  const colors = ['bg-bliss-700', 'bg-bliss-600', 'bg-bliss-500', 'bg-bliss-400', 'bg-bliss-300']
                   const color = colors[index] || 'bg-bliss-500'
                   return (
                     <div key={item.category} className="group">
@@ -501,7 +503,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
         <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -523,7 +525,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                 <p className="text-sm mb-2">Unable to load revenue data</p>
                 <button
                   onClick={() => serviceRevenueData.refetch()}
-                  className="text-emerald-600 hover:text-emerald-700 text-sm inline-flex items-center gap-1"
+                  className="text-bliss-600 hover:text-bliss-700 text-sm inline-flex items-center gap-1"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Retry
@@ -540,11 +542,11 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
             ) : (
               (serviceRevenueData.data || []).map((item: any, index) => {
                 const colors = [
-                  'border-emerald-200 bg-emerald-50 text-emerald-700',
-                  'border-blue-200 bg-blue-50 text-blue-700',
-                  'border-purple-200 bg-purple-50 text-purple-700',
-                  'border-bliss-200 bg-bliss-50 text-bliss-700',
-                  'border-pink-200 bg-pink-50 text-pink-700'
+                  'border-bliss-300 bg-bliss-50 text-bliss-700',
+                  'border-bliss-400 bg-bliss-100 text-bliss-800',
+                  'border-bliss-200 bg-bliss-50 text-bliss-600',
+                  'border-bliss-500 bg-bliss-100 text-bliss-800',
+                  'border-bliss-300 bg-bliss-50 text-bliss-700'
                 ]
                 const colorClass = colors[index % colors.length]
 
@@ -576,7 +578,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
         <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
           <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-600 to-cyan-700 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -598,7 +600,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                   <p className="text-sm mb-2">Unable to load geographical data</p>
                   <button
                     onClick={() => geographicalData.refetch()}
-                    className="text-cyan-600 hover:text-cyan-700 text-sm inline-flex items-center gap-1"
+                    className="text-bliss-600 hover:text-bliss-700 text-sm inline-flex items-center gap-1"
                   >
                     <RefreshCw className="w-4 h-4" />
                     Retry
@@ -617,7 +619,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                   <div key={area.area_name} className="group">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${area.area_type === 'hotel' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                        <div className={`w-3 h-3 rounded-full ${area.area_type === 'hotel' ? 'bg-bliss-500' : 'bg-green-500'}`}></div>
                         <span className="text-sm font-medium text-bliss-700">{area.area_name}</span>
                         <span className="text-xs px-2 py-1 bg-bliss-100 text-bliss-500 rounded-full">
                           {area.area_type === 'hotel' ? 'โรงแรม' : 'เขต'}
@@ -635,7 +637,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                     <div className="h-2 bg-bliss-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 group-hover:opacity-80 ${
-                          area.area_type === 'hotel' ? 'bg-blue-500' : 'bg-green-500'
+                          area.area_type === 'hotel' ? 'bg-bliss-500' : 'bg-green-500'
                         }`}
                         style={{ width: `${Math.min((area.total_revenue / Math.max(...(geographicalData.data || []).map((a: any) => a.total_revenue))) * 100, 100)}%` }}
                       />
@@ -651,7 +653,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
         <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
           <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -673,7 +675,7 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                   <p className="text-sm mb-2">Unable to load trends data</p>
                   <button
                     onClick={() => monthlyTrendsData.refetch()}
-                    className="text-indigo-600 hover:text-indigo-700 text-sm inline-flex items-center gap-1"
+                    className="text-bliss-600 hover:text-bliss-700 text-sm inline-flex items-center gap-1"
                   >
                     <RefreshCw className="w-4 h-4" />
                     Retry
@@ -709,9 +711,9 @@ function ServicesSection({ selectedPeriod }: ServicesSectionProps) {
                           <div key={service.service_name} className="flex items-center justify-between text-sm">
                             <div className="flex items-center gap-2">
                               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                                index === 0 ? 'bg-yellow-500' :
-                                index === 1 ? 'bg-gray-400' :
-                                'bg-bliss-600'
+                                index === 0 ? 'bg-bliss-700' :
+                                index === 1 ? 'bg-bliss-500' :
+                                'bg-bliss-400'
                               }`}>
                                 {service.rank_position}
                               </div>

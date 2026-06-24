@@ -141,8 +141,8 @@ function Bookings() {
   const getStatusBadge = (status: string) => {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      in_progress: 'bg-purple-100 text-purple-700',
+      confirmed: 'bg-bliss-100 text-bliss-700',
+      in_progress: 'bg-bliss-200 text-bliss-800',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
@@ -167,7 +167,7 @@ function Bookings() {
                           booking?.admin_notes?.includes('Admin Quick Booking')
 
     const badges = {
-      pending: isAdminBooking ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700',
+      pending: isAdminBooking ? 'bg-bliss-100 text-bliss-700' : 'bg-orange-100 text-orange-700',
       paid: 'bg-green-100 text-green-700',
       refunded: 'bg-bliss-100 text-bliss-600',
     }
@@ -211,11 +211,11 @@ function Bookings() {
           <p className="text-xs text-bliss-500">รอดำเนินการ</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-          <p className="text-2xl font-bold text-blue-600">{stats?.confirmed || 0}</p>
+          <p className="text-2xl font-bold text-bliss-700">{stats?.confirmed || 0}</p>
           <p className="text-xs text-bliss-500">ยืนยันแล้ว</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-          <p className="text-2xl font-bold text-purple-600">{stats?.in_progress || 0}</p>
+          <p className="text-2xl font-bold text-bliss-500">{stats?.in_progress || 0}</p>
           <p className="text-xs text-bliss-500">กำลังดำเนินการ</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
@@ -327,7 +327,7 @@ function Bookings() {
                     <td className="py-2 px-2 text-xs font-medium text-bliss-900 truncate">{booking.booking_number}</td>
                     <td className="py-2 px-2">
                       {booking.is_hotel_booking ? (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-bliss-100 text-bliss-800">
                           โรงแรม
                         </span>
                       ) : (() => {
@@ -448,8 +448,8 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      in_progress: 'bg-purple-100 text-purple-700',
+      confirmed: 'bg-bliss-100 text-bliss-700',
+      in_progress: 'bg-bliss-200 text-bliss-800',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
@@ -544,7 +544,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                       <p className="text-xs text-bliss-600">⭐ {booking.hotel.rating.toFixed(1)}</p>
                     )}
                     {booking.hotel_room_number && (
-                      <p className="text-xs text-blue-600">🏠 ห้อง: {booking.hotel_room_number}</p>
+                      <p className="text-xs text-bliss-600">🏠 ห้อง: {booking.hotel_room_number}</p>
                     )}
                   </div>
                 ) : (
@@ -787,10 +787,10 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
             const revenue = Number(booking.final_price)
             const netRevenue = revenue - totalStaffEarnings
             return (
-              <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+              <div className="bg-bliss-50 rounded-xl p-4 space-y-3">
                 <h3 className="font-semibold text-bliss-900 mb-3">ข้อมูลรายได้</h3>
                 <div className="flex items-start gap-3">
-                  <TrendingUp className="w-5 h-5 text-purple-600 mt-0.5" />
+                  <TrendingUp className="w-5 h-5 text-bliss-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-sm">
@@ -815,9 +815,9 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                           <span className="text-red-600">-฿{totalStaffEarnings.toLocaleString()}</span>
                         </div>
                       )}
-                      <div className="border-t border-purple-200 pt-2 mt-2 flex justify-between">
+                      <div className="border-t border-bliss-200 pt-2 mt-2 flex justify-between">
                         <span className="font-semibold text-bliss-900">รายได้สุทธิ</span>
-                        <span className="text-xl font-bold text-purple-600">฿{netRevenue.toLocaleString()}</span>
+                        <span className="text-xl font-bold text-bliss-600">฿{netRevenue.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -827,15 +827,15 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
           })()}
 
           {/* Location Map */}
-          <div className="bg-blue-50 rounded-xl p-4">
+          <div className="bg-bliss-50 rounded-xl p-4">
             <h3 className="font-semibold text-bliss-900 mb-3 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-blue-600" />
+              <MapPin className="w-5 h-5 text-bliss-600" />
               ตำแหน่งให้บริการ
             </h3>
 
             {booking.latitude && booking.longitude ? (
               <>
-                <div className="rounded-lg overflow-hidden border border-blue-200 mb-2">
+                <div className="rounded-lg overflow-hidden border border-bliss-200 mb-2">
                   <iframe
                     width="100%"
                     height="300"
@@ -855,7 +855,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                 </div>
               </>
             ) : (
-              <div className="bg-white rounded-lg border border-blue-200 p-4">
+              <div className="bg-white rounded-lg border border-bliss-200 p-4">
                 <p className="text-sm text-bliss-600">
                   📍 {booking.address}
                 </p>
@@ -868,9 +868,9 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
 
           {/* Notes */}
           {(booking.customer_notes || booking.admin_notes) && (
-            <div className="bg-blue-50 rounded-xl p-4 space-y-2">
+            <div className="bg-bliss-50 rounded-xl p-4 space-y-2">
               <h3 className="font-semibold text-bliss-900 mb-2 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-bliss-600" />
                 หมายเหตุ
               </h3>
               {booking.customer_notes && (
@@ -943,7 +943,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                           <span className="text-yellow-600">⏳ รอดำเนินการ</span>
                         )}
                         {booking.refund_status === 'processing' && (
-                          <span className="text-blue-600">🔄 กำลังดำเนินการ</span>
+                          <span className="text-bliss-600">🔄 กำลังดำเนินการ</span>
                         )}
                         {booking.refund_status === 'completed' && (
                           <span className="text-green-600">✅ คืนเงินแล้ว</span>

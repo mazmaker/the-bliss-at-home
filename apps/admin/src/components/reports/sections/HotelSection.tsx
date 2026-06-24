@@ -156,7 +156,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
             </p>
             <button
               onClick={() => refetch.hotelPerformance()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-700 to-purple-800 text-white rounded-xl font-medium hover:from-purple-800 hover:to-purple-900 transition"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition"
             >
               <RefreshCw className="w-5 h-5" />
               ลองใหม่
@@ -173,7 +173,8 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
-            🏨 ประสิทธิภาพโรงแรม
+            <Building2 className="w-6 h-6 text-bliss-600" />
+            ประสิทธิภาพโรงแรม
             <Tooltip content="การวิเคราะห์ผลการดำเนินงานของพาร์ทเนอร์โรงแรม | Hotel partner performance analytics">
               <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
             </Tooltip>
@@ -186,7 +187,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
           <button
             onClick={() => setShowExportDropdown(!showExportDropdown)}
             disabled={isExporting || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:from-purple-700 hover:to-purple-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium hover:from-bliss-700 hover:to-bliss-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Download className="w-5 h-5" />
             {isExporting ? 'กำลังส่งออก...' : 'ส่งออกโรงแรม'}
@@ -317,7 +318,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                 <p className="text-xs text-bliss-400 mb-4">ไม่สามารถโหลดข้อมูลประสิทธิภาพโรงแรมได้</p>
                 <button
                   onClick={() => refetch.hotelPerformance()}
-                  className="text-purple-600 hover:text-purple-700 text-sm inline-flex items-center gap-1"
+                  className="text-bliss-600 hover:text-bliss-700 text-sm inline-flex items-center gap-1"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Retry • ลองใหม่
@@ -343,10 +344,10 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm ${
-                        hotel.rank === 1 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                        hotel.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                        hotel.rank === 1 ? 'bg-gradient-to-r from-bliss-700 to-bliss-800' :
+                        hotel.rank === 2 ? 'bg-gradient-to-r from-bliss-400 to-bliss-500' :
                         hotel.rank === 3 ? 'bg-gradient-to-r from-bliss-600 to-bliss-700' :
-                        'bg-gradient-to-r from-purple-500 to-purple-600'
+                        'bg-gradient-to-r from-bliss-500 to-bliss-600'
                       }`}>
                         #{hotel.rank}
                       </div>
@@ -397,7 +398,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
                           <Users className="w-3 h-3" />
                           พนักงาน:
                         </span>
-                        <span className="font-semibold text-blue-700">{hotel.staff_count} คน</span>
+                        <span className="font-semibold text-bliss-700">{hotel.staff_count} คน</span>
                       </div>
                     )}
 
@@ -439,9 +440,9 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
 
       {/* Hotel Payment Details & Invoice Management */}
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-6 border-b border-indigo-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <Receipt className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -505,7 +506,7 @@ function HotelSection({ selectedPeriod }: HotelSectionProps) {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+            <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <Calculator className="w-6 h-6" />
                 <span className="text-sm font-medium">ยอดค้างชำระรวม • Outstanding</span>

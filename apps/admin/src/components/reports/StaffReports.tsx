@@ -169,8 +169,8 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
               <div key={staff.staff_id} className="flex items-center gap-4 p-4 bg-bliss-50 rounded-xl hover:bg-bliss-100 transition">
                 <div className="relative">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
-                    staff.rank === 1 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
-                    staff.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                    staff.rank === 1 ? 'bg-gradient-to-r from-bliss-700 to-bliss-800' :
+                    staff.rank === 2 ? 'bg-gradient-to-r from-bliss-400 to-bliss-500' :
                     staff.rank === 3 ? 'bg-gradient-to-r from-bliss-600 to-bliss-700' :
                     'bg-gradient-to-r from-bliss-400 to-bliss-500'
                   }`}>
@@ -180,7 +180,7 @@ function StaffReports({ selectedPeriod }: StaffReportsProps) {
                     <div className="absolute -top-1 -right-1">
                       {staff.badge === 'top_performer' && <Trophy className="w-5 h-5 text-yellow-500" />}
                       {staff.badge === 'rising_star' && <TrendingUp className="w-5 h-5 text-green-500" />}
-                      {staff.badge === 'customer_favorite' && <Star className="w-5 h-5 text-pink-500" />}
+                      {staff.badge === 'customer_favorite' && <Star className="w-5 h-5 text-bliss-500" />}
                     </div>
                   )}
                 </div>

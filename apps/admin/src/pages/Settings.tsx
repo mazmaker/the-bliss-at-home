@@ -652,7 +652,7 @@ function Settings() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
-          <p className="text-gray-600">กำลังโหลดการตั้งค่า...</p>
+          <p className="text-bliss-600">กำลังโหลดการตั้งค่า...</p>
         </div>
       </div>
     )
@@ -888,7 +888,7 @@ function Settings() {
                 </div>
 
                 {/* Google Calendar */}
-                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                <div className="p-4 bg-bliss-50 border border-bliss-200 rounded-xl">
                   <h3 className="font-medium text-bliss-900 mb-1">Google Calendar (เครดิตโรงแรม)</h3>
                   <p className="text-xs text-bliss-500 mb-3">เชื่อมต่อ Google Calendar เพื่อสร้าง event แจ้งเตือนครบกำหนดชำระเครดิตอัตโนมัติ</p>
                   <div className="grid grid-cols-1 gap-4">
@@ -898,7 +898,7 @@ function Settings() {
                         type="text"
                         value={settings.google_calendar_id}
                         onChange={(e) => setSettings({ ...settings, google_calendar_id: e.target.value })}
-                        className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                         placeholder="xxx@group.calendar.google.com"
                       />
                       <p className="text-xs text-bliss-400 mt-1">ดูได้จาก Google Calendar Settings → Calendar ID</p>
@@ -908,7 +908,7 @@ function Settings() {
                       <textarea
                         value={settings.google_service_account_key}
                         onChange={(e) => setSettings({ ...settings, google_service_account_key: e.target.value })}
-                        className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 h-20"
+                        className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500 h-20"
                         placeholder="eyJ0eXBlIjoic2Vydmlj..."
                       />
                       <p className="text-xs text-bliss-400 mt-1">แปลง JSON key เป็น base64 ด้วย: btoa(JSON.stringify(key))</p>
@@ -1098,7 +1098,7 @@ function Settings() {
                                         setEditingTier(tier)
                                         setShowTierModal(true)
                                       }}
-                                      className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                                      className="p-1.5 text-bliss-600 hover:bg-bliss-100 rounded-lg transition"
                                       title="แก้ไข"
                                     >
                                       <Edit2 className="w-4 h-4" />
@@ -1133,12 +1133,12 @@ function Settings() {
             {/* Refund Policy Tab */}
             {activeTab === 'refund_policy' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-                  <h3 className="font-semibold text-blue-900 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 rounded-xl border border-bliss-200">
+                  <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                     <FileText className="w-5 h-5" />
                     เงื่อนไขการคืนเงิน (Refund Policy)
                   </h3>
-                  <p className="text-sm text-blue-700 mt-1">
+                  <p className="text-sm text-bliss-700 mt-1">
                     เนื้อหาที่ลูกค้าต้องอ่านและยอมรับก่อนลงทะเบียน/จองบริการ
                   </p>
                 </div>
@@ -1149,7 +1149,7 @@ function Settings() {
                     type="text"
                     value={refundPolicyVersion}
                     onChange={(e) => setRefundPolicyVersion(e.target.value)}
-                    className="w-full max-w-xs px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full max-w-xs px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500"
                     placeholder="เช่น 1.0, 2.0"
                   />
                   <p className="text-xs text-bliss-400 mt-1">เมื่อเปลี่ยนเวอร์ชัน ลูกค้าเก่าจะต้องยอมรับเงื่อนไขใหม่อีกครั้ง</p>
@@ -1161,7 +1161,7 @@ function Settings() {
                     value={refundPolicyContent}
                     onChange={(e) => setRefundPolicyContent(e.target.value)}
                     rows={20}
-                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 text-sm"
                     placeholder="เขียนเงื่อนไขการคืนเงินที่นี่..."
                   />
                 </div>
@@ -1170,7 +1170,7 @@ function Settings() {
                   <button
                     onClick={saveRefundPolicy}
                     disabled={refundPolicySaving}
-                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 disabled:opacity-50"
                   >
                     {refundPolicySaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     บันทึก
@@ -1182,12 +1182,12 @@ function Settings() {
             {/* Reports & Targets Tab */}
             {activeTab === 'reports' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
-                  <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 rounded-xl border border-bliss-200">
+                  <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
                     ตั้งค่ารายงานและเป้าหมาย
                   </h3>
-                  <p className="text-sm text-purple-700 mt-1">
+                  <p className="text-sm text-bliss-700 mt-1">
                     ค่าเหล่านี้ใช้คำนวณใน Dashboard รายงาน เช่น Forecast, Net Revenue, Target Achievement
                   </p>
                 </div>
@@ -1239,12 +1239,12 @@ function Settings() {
                 </div>
 
                 {/* Payment Processing Fees */}
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 mt-6">
-                  <h3 className="font-semibold text-green-900 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 rounded-xl border border-bliss-200 mt-6">
+                  <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                     <CreditCard className="w-5 h-5" />
                     ค่าธรรมเนียมช่องทางชำระเงิน
                   </h3>
-                  <p className="text-sm text-green-700 mt-1">
+                  <p className="text-sm text-bliss-700 mt-1">
                     ค่าธรรมเนียมที่ payment gateway เรียกเก็บ ใช้คำนวณ Processing Fees ในรายงานยอดขาย
                   </p>
                 </div>
@@ -1252,7 +1252,7 @@ function Settings() {
                 <div className="space-y-3">
                   {/* Credit Card - percentage */}
                   <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-sm">💳</div>
+                    <div className="w-8 h-8 bg-bliss-100 rounded-lg flex items-center justify-center text-sm">💳</div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-bliss-700">
                         บัตรเครดิต/เดบิต • Credit/Debit Card
@@ -1274,7 +1274,7 @@ function Settings() {
 
                   {/* PromptPay - percentage */}
                   <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-sm">📱</div>
+                    <div className="w-8 h-8 bg-bliss-100 rounded-lg flex items-center justify-center text-sm">📱</div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-bliss-700">
                         พร้อมเพย์ • PromptPay QR
@@ -1296,7 +1296,7 @@ function Settings() {
 
                   {/* Internet Banking - flat fee */}
                   <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
-                    <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center text-sm">🏦</div>
+                    <div className="w-8 h-8 bg-bliss-100 rounded-lg flex items-center justify-center text-sm">🏦</div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-bliss-700">
                         อินเทอร์เน็ตแบงก์กิ้ง • Internet Banking
@@ -1318,7 +1318,7 @@ function Settings() {
 
                   {/* Mobile Banking - flat fee */}
                   <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
-                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-sm">📲</div>
+                    <div className="w-8 h-8 bg-bliss-100 rounded-lg flex items-center justify-center text-sm">📲</div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-bliss-700">
                         โมบายแบงก์กิ้ง • Mobile Banking
@@ -1391,7 +1391,7 @@ function Settings() {
                     {/* การได้รับแต้ม */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium text-bliss-900 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-bold">+</span>
+                        <span className="w-6 h-6 bg-bliss-100 text-bliss-700 rounded-full flex items-center justify-center text-xs font-bold">+</span>
                         การได้รับแต้ม
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1429,7 +1429,7 @@ function Settings() {
                     {/* การแลกแต้ม */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium text-bliss-900 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">⇄</span>
+                        <span className="w-6 h-6 bg-bliss-100 text-bliss-700 rounded-full flex items-center justify-center text-xs font-bold">⇄</span>
                         การแลกแต้ม
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1516,7 +1516,7 @@ function Settings() {
                     </div>
 
                     {/* ตัวอย่างการคำนวณ */}
-                    <div className="bg-gradient-to-r from-bliss-50 to-orange-50 border border-bliss-200 rounded-xl p-5">
+                    <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 border border-bliss-200 rounded-xl p-5">
                       <h4 className="font-medium text-bliss-900 mb-3">ตัวอย่างการคำนวณ</h4>
                       <div className="text-sm text-bliss-600 space-y-1">
                         <p>• ลูกค้าจองบริการ ฿800 → ได้ <strong>{Math.floor(800 / (parseInt(loyaltySettings.points_per_baht) || 100))} แต้ม</strong></p>

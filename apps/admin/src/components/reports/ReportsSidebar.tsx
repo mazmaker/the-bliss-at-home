@@ -42,28 +42,28 @@ const menuItems: MenuItem[] = [
     id: 'sales',
     icon: BarChart3,
     label: { th: 'ยอดขาย', en: 'Sales' },
-    color: 'text-emerald-600',
-    hoverColor: 'hover:bg-emerald-50',
-    activeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    bgColor: 'bg-emerald-500'
+    color: 'text-bliss-600',
+    hoverColor: 'hover:bg-bliss-50',
+    activeColor: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    bgColor: 'bg-bliss-500'
   },
   {
     id: 'customers',
     icon: UserCheck,
     label: { th: 'ลูกค้า', en: 'Customers' },
-    color: 'text-blue-600',
-    hoverColor: 'hover:bg-blue-50',
-    activeColor: 'bg-blue-100 text-blue-700 border-blue-200',
-    bgColor: 'bg-blue-500'
+    color: 'text-bliss-600',
+    hoverColor: 'hover:bg-bliss-50',
+    activeColor: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    bgColor: 'bg-bliss-500'
   },
   {
     id: 'hotels',
     icon: Building2,
     label: { th: 'โรงแรม', en: 'Hotels' },
-    color: 'text-purple-600',
-    hoverColor: 'hover:bg-purple-50',
-    activeColor: 'bg-purple-100 text-purple-700 border-purple-200',
-    bgColor: 'bg-purple-500'
+    color: 'text-bliss-600',
+    hoverColor: 'hover:bg-bliss-50',
+    activeColor: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    bgColor: 'bg-bliss-500'
   },
   {
     id: 'staff',
@@ -78,10 +78,10 @@ const menuItems: MenuItem[] = [
     id: 'services',
     icon: Sparkles,
     label: { th: 'บริการ', en: 'Services' },
-    color: 'text-pink-600',
-    hoverColor: 'hover:bg-pink-50',
-    activeColor: 'bg-pink-100 text-pink-700 border-pink-200',
-    bgColor: 'bg-pink-500'
+    color: 'text-bliss-600',
+    hoverColor: 'hover:bg-bliss-50',
+    activeColor: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    bgColor: 'bg-bliss-500'
   }
 ]
 
@@ -160,7 +160,7 @@ function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps)
       <div className="p-4 border-t border-bliss-200">
         <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-xl p-3">
           <div className="text-xs text-bliss-600 text-center">
-            <div className="font-medium mb-1">📈 The Bliss Massage at Home</div>
+            <div className="font-medium mb-1">The Bliss Massage at Home</div>
             <div className="text-bliss-500">Business Intelligence</div>
           </div>
         </div>

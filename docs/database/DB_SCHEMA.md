@@ -524,6 +524,9 @@ Total tables: 54 | Total columns: 841
 | used_count | integer | YES | `0` |
 | min_purchase_amount | numeric | YES | `0` |
 | is_active | boolean | YES | `true` |
+| is_public | boolean | NO | `true` |
+
+> `is_public`: controls whether the promotion is listed on the customer-facing promotions page. `false` = secret/code-only promo (not shown, but the code still validates). Independent of `status`.
 
 ### promotion_usage
 

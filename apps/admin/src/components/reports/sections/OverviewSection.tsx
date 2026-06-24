@@ -247,7 +247,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">รายได้รวม</p>
-              <div className="text-3xl font-bold text-bliss-900 mb-1">
+              <div className="text-2xl font-bold text-bliss-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-bliss-200 h-8 w-24 rounded"></div>
                   : states.dashboardStats.isError
@@ -272,11 +272,11 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
 
         {/* Total Bookings Card */}
         <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-md transition-all duration-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-bliss-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">การจอง</p>
-              <div className="text-3xl font-bold text-bliss-900 mb-1">
+              <div className="text-2xl font-bold text-bliss-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-bliss-200 h-8 w-20 rounded"></div>
                   : states.dashboardStats.isError
@@ -293,19 +293,19 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                 </div>
               )}
             </div>
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+              <Calendar className="w-8 h-8 text-bliss-600" />
             </div>
           </div>
         </div>
 
         {/* New Customers Card */}
         <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-md transition-all duration-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-bliss-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">ลูกค้าใหม่</p>
-              <div className="text-3xl font-bold text-bliss-900 mb-1">
+              <div className="text-2xl font-bold text-bliss-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-bliss-200 h-8 w-16 rounded"></div>
                   : states.dashboardStats.isError
@@ -322,8 +322,8 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                 </div>
               )}
             </div>
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-              <Users className="w-8 h-8 text-purple-600" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+              <Users className="w-8 h-8 text-bliss-600" />
             </div>
           </div>
         </div>
@@ -334,7 +334,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
               <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">ค่าเฉลี่ย</p>
-              <div className="text-3xl font-bold text-bliss-900 mb-1">
+              <div className="text-2xl font-bold text-bliss-900 mb-1">
                 {states.dashboardStats.isLoading
                   ? <div className="animate-pulse bg-bliss-200 h-8 w-24 rounded"></div>
                   : states.dashboardStats.isError
@@ -362,14 +362,14 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
         <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center shadow-lg">
               <Repeat className="w-6 h-6 text-white" />
             </div>
             <div>
               <h3 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
                 พฤติกรรมลูกค้า
                 <Tooltip content="การวิเคราะห์พฤติกรรมลูกค้า รวมถึงอัตราการจองซ้ำ และความภักดี | Customer behavior analysis including repeat booking rates and loyalty metrics">
-                  <Info className="w-5 h-5 text-bliss-400 hover:text-purple-600 cursor-help" />
+                  <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
                 </Tooltip>
               </h3>
               <p className="text-bliss-500 mt-1">Customer Behavior Analytics • การวิเคราะห์พฤติกรรมและความภักดีของลูกค้า</p>
@@ -382,11 +382,11 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Repeat Booking Rate */}
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-md transition-all duration-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-bliss-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">อัตราการจองซ้ำ</p>
-                  <div className="text-3xl font-bold text-bliss-900 mb-1">
+                  <div className="text-2xl font-bold text-bliss-900 mb-1">
                     {customerBehavior.isLoading
                       ? <div className="animate-pulse bg-bliss-200 h-8 w-16 rounded"></div>
                       : customerBehavior.isError
@@ -403,19 +403,19 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                     </div>
                   )}
                 </div>
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Repeat className="w-8 h-8 text-purple-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <Repeat className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
 
             {/* Customer Lifetime Value */}
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-md transition-all duration-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-bliss-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">ค่าเฉลี่ยลูกค้า</p>
-                  <div className="text-3xl font-bold text-bliss-900 mb-1">
+                  <div className="text-2xl font-bold text-bliss-900 mb-1">
                     {customerBehavior.isLoading
                       ? <div className="animate-pulse bg-bliss-200 h-8 w-20 rounded"></div>
                       : customerBehavior.isError
@@ -432,19 +432,19 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                     </div>
                   )}
                 </div>
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <Heart className="w-8 h-8 text-emerald-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <Heart className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
 
             {/* Customer Retention Rate */}
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-md transition-all duration-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-bliss-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">อัตราการกลับมา</p>
-                  <div className="text-3xl font-bold text-bliss-900 mb-1">
+                  <div className="text-2xl font-bold text-bliss-900 mb-1">
                     {customerBehavior.isLoading
                       ? <div className="animate-pulse bg-bliss-200 h-8 w-16 rounded"></div>
                       : customerBehavior.isError
@@ -455,19 +455,19 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                     Churn: {customerBehavior.data?.churn_rate || 0}%
                   </div>
                 </div>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                  <UserPlus className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <UserPlus className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
 
             {/* Customer Satisfaction */}
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-md transition-all duration-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-bliss-50 opacity-20 rounded-full transform translate-x-16 -translate-y-16"></div>
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <p className="text-xs text-bliss-500 uppercase tracking-wide mb-2">ความพึงพอใจ</p>
-                  <div className="text-3xl font-bold text-bliss-900 mb-1">
+                  <div className="text-2xl font-bold text-bliss-900 mb-1">
                     {customerSatisfaction.isLoading
                       ? <div className="animate-pulse bg-bliss-200 h-8 w-12 rounded"></div>
                       : customerSatisfaction.isError
@@ -478,7 +478,7 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                     {customerSatisfaction.data?.satisfaction_rate || 0}% Satisfied
                   </div>
                 </div>
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
                   <Star className="w-8 h-8 text-yellow-600" />
                 </div>
               </div>
@@ -509,8 +509,8 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                     ))
                   ) : (
                     (customerSegments.data || []).map((segment: any, index) => {
-                      const colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500']
-                      const bgColors = ['bg-purple-50', 'bg-blue-50', 'bg-green-50', 'bg-yellow-50']
+                      const colors = ['bg-bliss-700', 'bg-bliss-600', 'bg-bliss-500', 'bg-bliss-400']
+                      const bgColors = ['bg-bliss-100', 'bg-bliss-100', 'bg-bliss-50', 'bg-bliss-50']
 
                       // Define segment criteria tooltips
                       const segmentCriteria = {
@@ -555,12 +555,12 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                 <p className="text-sm text-bliss-500">การวิเคราะห์แนวโน้มลูกค้า</p>
               </div>
               <div className="p-4 space-y-4">
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 rounded-lg border border-bliss-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <Repeat className="w-5 h-5 text-purple-700" />
-                    <span className="font-medium text-purple-800">Repeat Booking Analysis</span>
+                    <Repeat className="w-5 h-5 text-bliss-700" />
+                    <span className="font-medium text-bliss-800">Repeat Booking Analysis</span>
                   </div>
-                  <p className="text-sm text-purple-700">
+                  <p className="text-sm text-bliss-700">
                     {customerBehavior.data?.repeat_booking_rate && customerBehavior.data.repeat_booking_rate > 30
                       ? `อัตราการจองซ้ำสูง ${customerBehavior.data.repeat_booking_rate}% แสดงถึงความพึงพอใจของลูกค้า`
                       : customerBehavior.data?.repeat_booking_rate
@@ -569,24 +569,24 @@ function OverviewSection({ selectedPeriod }: OverviewSectionProps) {
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 rounded-lg border border-bliss-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <Heart className="w-5 h-5 text-green-700" />
-                    <span className="font-medium text-green-800">Customer Loyalty</span>
+                    <Heart className="w-5 h-5 text-bliss-700" />
+                    <span className="font-medium text-bliss-800">Customer Loyalty</span>
                   </div>
-                  <p className="text-sm text-green-700">
+                  <p className="text-sm text-bliss-700">
                     {customerBehavior.data?.avg_time_between_bookings && customerBehavior.data.avg_time_between_bookings > 0
                       ? `ลูกค้าจองซ้ำโดยเฉลี่ยทุก ${customerBehavior.data.avg_time_between_bookings.toFixed(0)} วัน`
                       : 'ยังไม่มีข้อมูลการจองซ้ำเพียงพอ'}
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 rounded-lg border border-bliss-200">
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="w-5 h-5 text-yellow-700" />
-                    <span className="font-medium text-yellow-800">Service Quality</span>
+                    <span className="font-medium text-bliss-800">Service Quality</span>
                   </div>
-                  <p className="text-sm text-yellow-700">
+                  <p className="text-sm text-bliss-700">
                     {customerSatisfaction.data?.satisfaction_rate && customerSatisfaction.data.satisfaction_rate > 80
                       ? `คะแนนความพึงพอใจสูง ${customerSatisfaction.data.satisfaction_rate}% จาก ${customerSatisfaction.data.total_reviews} รีวิว`
                       : `ควรปรับปรุงคุณภาพการบริการ (${customerSatisfaction.data?.satisfaction_rate || 0}% ความพึงพอใจ)`}

@@ -76,7 +76,7 @@ function Customers() {
       banned: 'ระงับถาวร',
     }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+      <span className={`inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
         {labels[status]}
       </span>
     )
@@ -199,13 +199,13 @@ function Customers() {
                     />
                   </td>
                   <td className="py-3 px-4">
-                    <div className="space-y-1 text-sm">
-                      <div className="flex items-center gap-1 text-bliss-600">
-                        <Mail className="w-3 h-3" />
-                        {customer.email || '-'}
+                    <div className="space-y-1 text-sm max-w-[240px]">
+                      <div className="flex items-center gap-1 text-bliss-600 min-w-0">
+                        <Mail className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate" title={customer.email || '-'}>{customer.email || '-'}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-bliss-600">
-                        <Phone className="w-3 h-3" />
+                      <div className="flex items-center gap-1 text-bliss-600 whitespace-nowrap">
+                        <Phone className="w-3 h-3 flex-shrink-0" />
                         {customer.phone}
                       </div>
                     </div>
@@ -215,8 +215,8 @@ function Customers() {
                     ฿{Number(customer.total_spent).toLocaleString()}
                   </td>
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-1 text-sm text-bliss-600">
-                      <Calendar className="w-3 h-3" />
+                    <div className="flex items-center gap-1 text-sm text-bliss-600 whitespace-nowrap">
+                      <Calendar className="w-3 h-3 flex-shrink-0" />
                       {formatDate(customer.created_at)}
                     </div>
                   </td>

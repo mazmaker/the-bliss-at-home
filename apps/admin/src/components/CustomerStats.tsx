@@ -1,4 +1,4 @@
-import { TrendingUp, Users, DollarSign, RefreshCw, UserCheck } from 'lucide-react'
+import { TrendingUp, Users, Wallet, RefreshCw, UserCheck } from 'lucide-react'
 import { useCustomerStatistics } from '../hooks/useCustomers'
 
 function CustomerStats() {
@@ -38,8 +38,8 @@ function CustomerStats() {
         {/* Total Customers */}
         <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
               <p className="text-xs text-bliss-500">ลูกค้าทั้งหมด</p>
@@ -62,12 +62,12 @@ function CustomerStats() {
         {/* Total Revenue */}
         <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
               <p className="text-xs text-bliss-500">รายได้รวมทั้งหมด</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-bliss-900">
                 ฿{stats.total_revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
             </div>
@@ -80,12 +80,12 @@ function CustomerStats() {
         {/* Repeat Customers */}
         <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <RefreshCw className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
               <p className="text-xs text-bliss-500">ลูกค้าจองซ้ำ</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats.repeat_customers.toLocaleString()}
               </p>
             </div>
@@ -103,7 +103,7 @@ function CustomerStats() {
             </div>
             <div>
               <p className="text-xs text-bliss-500">อัตราการจองซ้ำ</p>
-              <p className="text-2xl font-bold text-bliss-600">
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats.repeat_rate.toFixed(1)}%
               </p>
             </div>
@@ -151,7 +151,7 @@ function CustomerStats() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-bliss-500 mt-1.5" />
               <div>
                 <p className="text-sm font-medium text-bliss-900">
                   {stats.repeat_rate.toFixed(1)}% อัตราการจองซ้ำ

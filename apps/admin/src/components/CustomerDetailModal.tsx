@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Mail, Phone, Calendar, TrendingUp, DollarSign, ShoppingBag, Home, FileText, User, Cake, Star, Plus, Minus } from 'lucide-react'
+import { X, Mail, Phone, Calendar, TrendingUp, Wallet, ShoppingBag, Home, FileText, User, Cake, Star, Plus, Minus } from 'lucide-react'
 import { useCustomerWithStats, useCustomerBookings, useCustomerAddresses, useCustomerTaxInfo } from '../hooks/useCustomers'
 import { Customer } from '../lib/customerQueries'
 import { supabase } from '../lib/supabase'
@@ -105,10 +105,10 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
   const getBookingStatusBadge = (status: string) => {
     const styles = {
       pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
+      confirmed: 'bg-bliss-100 text-bliss-700',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
-      no_show: 'bg-gray-100 text-gray-700',
+      no_show: 'bg-bliss-100 text-bliss-700',
     } as const
     const labels = {
       pending: 'รอยืนยัน',
@@ -118,7 +118,7 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
       no_show: 'ไม่มาใช้บริการ',
     } as const
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-700'}`}>
+      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-bliss-100 text-bliss-700'}`}>
         {labels[status as keyof typeof labels] || status}
       </span>
     )
@@ -132,7 +132,7 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
 
     const styles = {
       paid: 'bg-green-100 text-green-700',
-      pending: isAdminBooking ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700',
+      pending: isAdminBooking ? 'bg-bliss-100 text-bliss-700' : 'bg-yellow-100 text-yellow-700',
       refunded: 'bg-red-100 text-red-700',
     } as const
     const labels = {
@@ -141,7 +141,7 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
       refunded: 'คืนเงินแล้ว',
     } as const
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-700'}`}>
+      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-bliss-100 text-bliss-700'}`}>
         {labels[status as keyof typeof labels] || status}
       </span>
     )
@@ -151,13 +151,18 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
-          <div>
-            <h2 className="text-2xl font-bold text-bliss-900">รายละเอียดลูกค้า</h2>
-            <p className="text-sm text-bliss-500">Customer Details</p>
+        <div className="flex items-center justify-between bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white leading-tight">รายละเอียดลูกค้า</h2>
+              <p className="text-xs text-bliss-200">Customer Details</p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-bliss-100 rounded-lg transition">
-            <X className="w-5 h-5 text-bliss-400" />
+          <button onClick={onClose} className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -359,22 +364,22 @@ function CustomerDetailModal({ isOpen, onClose, customer }: CustomerDetailModalP
                   <p className="text-2xl font-bold text-bliss-900">{customerStats.total_bookings}</p>
                   <p className="text-xs text-bliss-500">การจองทั้งหมด</p>
                 </div>
-                <div className="bg-green-50 rounded-xl p-3 text-center">
-                  <DollarSign className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                <div className="bg-bliss-50 rounded-xl p-3 text-center">
+                  <Wallet className="w-5 h-5 text-bliss-600 mx-auto mb-1" />
                   <p className="text-2xl font-bold text-bliss-900">
                     ฿{Number(customerStats.total_spent).toLocaleString()}
                   </p>
                   <p className="text-xs text-bliss-500">ยอดใช้จ่ายรวม</p>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-3 text-center">
-                  <TrendingUp className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                <div className="bg-bliss-50 rounded-xl p-3 text-center">
+                  <TrendingUp className="w-5 h-5 text-bliss-600 mx-auto mb-1" />
                   <p className="text-2xl font-bold text-bliss-900">
                     {customerStats.repeat_booking_rate.toFixed(0)}%
                   </p>
                   <p className="text-xs text-bliss-500">อัตราการจองซ้ำ</p>
                 </div>
-                <div className="bg-purple-50 rounded-xl p-3 text-center">
-                  <DollarSign className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                <div className="bg-bliss-50 rounded-xl p-3 text-center">
+                  <Wallet className="w-5 h-5 text-bliss-600 mx-auto mb-1" />
                   <p className="text-2xl font-bold text-bliss-900">
                     ฿{customerStats.average_booking_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </p>

@@ -181,7 +181,8 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
-            👥 ประสิทธิภาพพนักงาน
+            <Users className="w-6 h-6 text-bliss-600" />
+            ประสิทธิภาพพนักงาน
             <Tooltip content="การวิเคราะห์ประสิทธิภาพและรายได้ของพนักงาน | Staff performance and earnings analytics">
               <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
             </Tooltip>
@@ -242,9 +243,9 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
 
       {/* Provider Performance Analytics */}
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-6 border-b border-indigo-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <Trophy className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -268,17 +269,16 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
             ) : (
               (staffPerformance.data || []).slice(0, 3).map((staff, index) => {
                 const rankColors = [
-                  'from-yellow-400 to-yellow-500', // Gold
-                  'from-gray-400 to-gray-500', // Silver
-                  'from-orange-400 to-orange-500' // Bronze
+                  'from-bliss-700 to-bliss-800', // Gold
+                  'from-bliss-500 to-bliss-600', // Silver
+                  'from-bliss-400 to-bliss-500' // Bronze
                 ]
-                const bgColor = rankColors[index] || 'from-blue-400 to-blue-500'
-                const medalIcons = ['🥇', '🥈', '🥉']
+                const bgColor = rankColors[index] || 'from-bliss-400 to-bliss-500'
 
                 return (
                   <div key={index} className="relative">
                     <div className={`bg-gradient-to-br ${bgColor} rounded-2xl p-6 text-white relative overflow-hidden`}>
-                      <div className="absolute top-2 right-2 text-2xl">{medalIcons[index] || '🏅'}</div>
+                      <Award className="absolute top-2 right-2 w-6 h-6 text-white/90" />
                       <div className="absolute bottom-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 translate-y-8"></div>
 
                       <div className="relative z-10">
@@ -366,7 +366,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                       <tr key={index} className="border-b border-bliss-100 hover:bg-white transition-colors">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            <div className="w-8 h-8 bg-gradient-to-r from-bliss-500 to-bliss-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                               {staff.name?.charAt(0) || '?'}
                             </div>
                             <div>
@@ -379,7 +379,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                           <span className="font-bold text-bliss-900">฿{(staff.total_revenue_generated || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-center">
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-bliss-100 text-bliss-800 text-xs rounded-full">
                             <Target className="w-3 h-3" />
                             {staff.bookings_completed || 0}
                           </span>
@@ -394,7 +394,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                           <div className="flex items-center justify-center">
                             <div className="w-16 bg-bliss-200 rounded-full h-2">
                               <div
-                                className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all"
+                                className="bg-gradient-to-r from-bliss-500 to-bliss-600 h-2 rounded-full transition-all"
                                 style={{ width: `${Math.max(staff.completion_rate || 0, 5)}%` }}
                               ></div>
                             </div>
@@ -429,9 +429,9 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
 
       {/* Payment Details & Financial Tracking */}
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 border-b border-emerald-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <Wallet className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -444,7 +444,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
         <div className="p-6">
           {/* Payment Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white">
+            <div className="bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <DollarSign className="w-6 h-6" />
                 <span className="text-sm font-medium">รายได้รวม</span>
@@ -459,7 +459,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
               <div className="text-xs opacity-80">Total Earnings</div>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
+            <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <CheckCircle className="w-6 h-6" />
                 <span className="text-sm font-medium">จ่ายแล้ว</span>
@@ -531,7 +531,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                       <tr key={index} className="border-b border-bliss-100 hover:bg-white transition-colors">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            <div className="w-8 h-8 bg-gradient-to-r from-bliss-500 to-bliss-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                               {staff.name?.charAt(0) || '?'}
                             </div>
                             <div>

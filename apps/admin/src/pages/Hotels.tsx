@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2, Key, Shield, User, Grid, List } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Building, MapPin, Phone, Star, Check, X, Ban, AlertTriangle, Loader2, Key, Shield, User, Grid, List, CheckCircle, Clock, UserX, Wallet } from 'lucide-react'
 import { HotelForm } from '../components/HotelForm'
 import { useHotels, useTotalMonthlyRevenue } from '../hooks/useHotels'
 import { updateHotelStatus } from '../lib/hotelQueries'
@@ -129,45 +129,73 @@ function Hotels() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-bliss-100">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 flex items-center justify-center bg-bliss-100 rounded-lg flex-shrink-0">
+              <Building className="w-5 h-5 text-bliss-600" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-bliss-900">{hotels.length}</p>
-              <p className="text-xs text-bliss-500">โรงแรมทั้งหมด</p>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-bliss-900 leading-none">{hotels.length}</p>
+              <p className="text-xs text-bliss-500 mt-1">โรงแรมทั้งหมด</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-          <p className="text-2xl font-bold text-green-600">
-            {hotels.filter((h) => h.status === 'active').length}
-          </p>
-          <p className="text-xs text-bliss-500">ใช้งานอยู่</p>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-bliss-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center bg-bliss-100 rounded-lg flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-bliss-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-green-600 leading-none">
+                {hotels.filter((h) => h.status === 'active').length}
+              </p>
+              <p className="text-xs text-bliss-500 mt-1">ใช้งานอยู่</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-          <p className="text-2xl font-bold text-bliss-700">
-            {hotels.filter((h) => h.status === 'pending').length}
-          </p>
-          <p className="text-xs text-bliss-500">รออนุมัติ</p>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-bliss-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center bg-bliss-100 rounded-lg flex-shrink-0">
+              <Clock className="w-5 h-5 text-bliss-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-yellow-600 leading-none">
+                {hotels.filter((h) => h.status === 'pending').length}
+              </p>
+              <p className="text-xs text-bliss-500 mt-1">รออนุมัติ</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-          <p className="text-2xl font-bold text-red-600">
-            {hotels.filter((h) => !(h as any).recommended_sales_staff).length}
-          </p>
-          <p className="text-xs text-bliss-500">ยังไม่กำหนดเซลล์</p>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-bliss-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center bg-bliss-100 rounded-lg flex-shrink-0">
+              <UserX className="w-5 h-5 text-bliss-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-red-600 leading-none">
+                {hotels.filter((h) => !(h as any).recommended_sales_staff).length}
+              </p>
+              <p className="text-xs text-bliss-500 mt-1">ยังไม่กำหนดเซลล์</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-          <p className="text-2xl font-bold text-bliss-900">
-            {revenueLoading ? (
-              <Loader2 className="w-6 h-6 animate-spin inline-block" />
-            ) : (
-              `฿${monthlyRevenue.toLocaleString()}`
-            )}
-          </p>
-          <p className="text-xs text-bliss-500">รายได้ทั้งหมด</p>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-bliss-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center bg-bliss-100 rounded-lg flex-shrink-0">
+              <Wallet className="w-5 h-5 text-bliss-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-bliss-900 leading-none">
+                {revenueLoading ? (
+                  <Loader2 className="w-6 h-6 animate-spin inline-block" />
+                ) : (
+                  `฿${monthlyRevenue.toLocaleString()}`
+                )}
+              </p>
+              <p className="text-xs text-bliss-500 mt-1">รายได้ทั้งหมด</p>
+            </div>
+          </div>
         </div>
       </div>
 

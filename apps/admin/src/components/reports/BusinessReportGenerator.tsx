@@ -350,7 +350,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
                 disabled={isExporting || !realTimeData}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium hover:from-green-700 hover:to-green-800 transition disabled:opacity-50 shadow-lg"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium hover:from-bliss-700 hover:to-bliss-800 transition disabled:opacity-50 shadow-lg"
               >
                 {isExporting ? (
                   <>
@@ -439,7 +439,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-bliss-500 mb-1">รายได้รวม{getPeriodLabel()}</p>
-                  <p className="text-3xl font-bold text-green-700">
+                  <p className="text-2xl font-bold text-green-700">
                     ฿{realTimeData.yearlyRevenue.toLocaleString()}
                   </p>
                   <p className="text-sm text-bliss-600 mt-1">
@@ -457,15 +457,15 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-bliss-500 mb-1">การจอง</p>
-                  <p className="text-3xl font-bold text-blue-700">
+                  <p className="text-2xl font-bold text-bliss-700">
                     {realTimeData.activeBookings.toLocaleString()} ครั้ง
                   </p>
                   <p className="text-sm text-bliss-600 mt-1">
                     เฉลี่ย ฿{realTimeData.avgBookingValue.toLocaleString()}/ครั้ง
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Calendar className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <Calendar className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
@@ -475,15 +475,15 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-bliss-500 mb-1">รายได้จากโรงแรม</p>
-                  <p className="text-3xl font-bold text-purple-700">
+                  <p className="text-2xl font-bold text-bliss-700">
                     ฿{realTimeData.hotelRevenue.toLocaleString()}
                   </p>
                   <p className="text-sm text-bliss-600 mt-1">
                     {realTimeData.hotelRevenuePercentage.toFixed(1)}% ของรายได้รวม
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Users className="w-8 h-8 text-purple-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
@@ -493,7 +493,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-bliss-500 mb-1">รายได้ลูกค้าตรง</p>
-                  <p className="text-3xl font-bold text-bliss-700">
+                  <p className="text-2xl font-bold text-bliss-700">
                     ฿{realTimeData.directCustomerRevenue.toLocaleString()}
                   </p>
                   <p className="text-sm text-bliss-600 mt-1">
@@ -511,15 +511,15 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-bliss-500 mb-1">อัตราจองซ้ำ</p>
-                  <p className="text-3xl font-bold text-teal-700">
+                  <p className="text-2xl font-bold text-bliss-700">
                     {realTimeData.repeatBookingRate.toFixed(1)}%
                   </p>
                   <p className="text-sm text-bliss-600 mt-1">
                     Repeat Booking Rate
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-8 h-8 text-teal-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
@@ -529,7 +529,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-bliss-500 mb-1">อัตรายกเลิก</p>
-                  <p className="text-3xl font-bold text-red-700">
+                  <p className="text-2xl font-bold text-red-700">
                     {realTimeData.cancellationRate.toFixed(1)}%
                   </p>
                   <p className="text-sm text-bliss-600 mt-1">
@@ -549,7 +549,7 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             <div className="bg-white rounded-2xl shadow-sm border border-bliss-200 overflow-hidden">
               <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 border-b">
                 <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  <BarChart3 className="w-5 h-5 text-bliss-600" />
                   สถานะการจอง • Booking Status
                 </h3>
               </div>
@@ -564,11 +564,11 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <span className="font-medium text-blue-800">ยืนยันแล้ว (Confirmed)</span>
+                <div className="flex items-center justify-between p-3 bg-bliss-50 rounded-lg border border-bliss-200">
+                  <span className="font-medium text-bliss-800">ยืนยันแล้ว (Confirmed)</span>
                   <div className="text-right">
-                    <div className="font-bold text-blue-900">{realTimeData.confirmedBookings}</div>
-                    <div className="text-xs text-blue-600">
+                    <div className="font-bold text-bliss-900">{realTimeData.confirmedBookings}</div>
+                    <div className="text-xs text-bliss-600">
                       {realTimeData.totalBookings > 0 ? ((realTimeData.confirmedBookings / realTimeData.totalBookings) * 100).toFixed(1) : '0.0'}%
                     </div>
                   </div>

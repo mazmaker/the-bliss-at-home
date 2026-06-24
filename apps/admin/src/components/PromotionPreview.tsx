@@ -78,7 +78,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
 
   const getStatusBadge = () => {
     const statusColors = {
-      draft: 'bg-gray-500 text-white',
+      draft: 'bg-bliss-500 text-white',
       active: 'bg-green-500 text-white',
       disabled: 'bg-orange-500 text-white',
       expired: 'bg-red-500 text-white',
@@ -119,66 +119,49 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
         </button>
 
         {/* Hero Section with Image - Responsive Height */}
-        <div className="relative h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-bliss-400 via-bliss-500 to-bliss-600 rounded-t-3xl overflow-hidden">
-          {promotion.image_url ? (
-            <>
-              <img
-                src={promotion.image_url}
-                alt={promotion.name_en}
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay สำหรับข้อความบนภาพ */}
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                    {getDiscountIcon()}
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 drop-shadow-lg">{formatDiscount(promotion)}</h1>
-                  <p className="text-base sm:text-lg opacity-90 font-semibold drop-shadow">OFF</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-white">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  {getDiscountIcon()}
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">{formatDiscount(promotion)}</h1>
-                <p className="text-base sm:text-lg opacity-90">OFF</p>
-              </div>
-            </div>
+        <div className="relative h-56 sm:h-64 lg:h-72 bg-gradient-to-br from-bliss-400 via-bliss-500 to-bliss-600 rounded-t-3xl overflow-hidden">
+          {/* Promotion image */}
+          {promotion.image_url && (
+            <img
+              src={promotion.image_url}
+              alt={promotion.name_en}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
           )}
+          {/* Olive gradient overlay — readable text + CI tone */}
+          <div className="absolute inset-0 bg-gradient-to-t from-bliss-900/85 via-bliss-900/35 to-bliss-900/10" />
+
+          {/* Discount info — bottom-left */}
+          <div className="absolute bottom-4 left-5 text-white">
+            <div className="w-12 h-12 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm mb-2">
+              {getDiscountIcon()}
+            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-none drop-shadow-lg">{formatDiscount(promotion)}</h1>
+            <p className="text-sm font-semibold opacity-90 drop-shadow mt-1">OFF</p>
+          </div>
 
           {/* Status Badge */}
           <div className="absolute top-4 left-4">
             {getStatusBadge()}
           </div>
 
-          {/* Discount Badge */}
-          <div className="absolute bottom-4 right-4 bg-white rounded-2xl px-4 py-2 shadow-lg">
-            <div className="flex items-center gap-2">
-              {getDiscountIcon()}
-              <span className="text-2xl font-bold text-gray-800">{formatDiscount(promotion)}</span>
-            </div>
-          </div>
         </div>
 
         {/* Content - Responsive Padding */}
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Title Section - Responsive Text */}
           <div className="text-center">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">{promotion.name_th}</h2>
-            <p className="text-lg sm:text-xl text-gray-600">{promotion.name_en}</p>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-bliss-800 mb-2">{promotion.name_th}</h2>
+            <p className="text-lg sm:text-xl text-bliss-600">{promotion.name_en}</p>
             {promotion.description_th && (
-              <p className="text-gray-500 mt-3 leading-relaxed">{promotion.description_th}</p>
+              <p className="text-bliss-500 mt-3 leading-relaxed">{promotion.description_th}</p>
             )}
           </div>
 
           {/* Promo Code */}
-          <div className="bg-gradient-to-r from-bliss-50 to-yellow-50 rounded-2xl p-4 border border-bliss-200">
+          <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-2xl p-4 border border-bliss-200">
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">รหัสโปรโมชัน</p>
+              <p className="text-sm text-bliss-600 mb-2">รหัสโปรโมชัน</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <code className="text-lg sm:text-xl lg:text-2xl font-bold font-mono text-bliss-700 bg-white px-4 py-2 rounded-lg border border-bliss-300 min-w-0 break-all text-center sm:text-left">
                   {promotion.code}
@@ -198,18 +181,18 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
           {/* Promotion Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Time Period */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="bg-bliss-50 rounded-xl p-4 border border-bliss-200">
               <div className="flex items-center gap-2 mb-3">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-800">ระยะเวลาโปรโมชัน</h3>
+                <Calendar className="w-5 h-5 text-bliss-600" />
+                <h3 className="font-semibold text-bliss-800">ระยะเวลาโปรโมชัน</h3>
               </div>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-600">เริ่ม:</span>
+                  <span className="text-bliss-600">เริ่ม:</span>
                   <span className="ml-2 font-medium">{new Date(promotion.start_date).toLocaleDateString('th-TH')}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">สิ้นสุด:</span>
+                  <span className="text-bliss-600">สิ้นสุด:</span>
                   <span className="ml-2 font-medium">{new Date(promotion.end_date).toLocaleDateString('th-TH')}</span>
                 </div>
                 {!isExpired && daysLeft > 0 && (
@@ -222,21 +205,21 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
             </div>
 
             {/* Usage Stats */}
-            <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <div className="bg-bliss-50 rounded-xl p-4 border border-bliss-200">
               <div className="flex items-center gap-2 mb-3">
-                <Users className="w-5 h-5 text-purple-600" />
-                <h3 className="font-semibold text-purple-800">การใช้งาน</h3>
+                <Users className="w-5 h-5 text-bliss-600" />
+                <h3 className="font-semibold text-bliss-800">การใช้งาน</h3>
               </div>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-600">ใช้แล้ว:</span>
+                  <span className="text-bliss-600">ใช้แล้ว:</span>
                   <span className="ml-2 font-medium">{promotion.usage_count.toLocaleString()}</span>
-                  {promotion.usage_limit && <span className="text-gray-500">/{promotion.usage_limit.toLocaleString()}</span>}
+                  {promotion.usage_limit && <span className="text-bliss-500">/{promotion.usage_limit.toLocaleString()}</span>}
                 </div>
                 {promotion.usage_limit && (
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-bliss-200 rounded-full h-2">
                     <div
-                      className="bg-purple-600 h-2 rounded-full"
+                      className="bg-bliss-600 h-2 rounded-full"
                       style={{
                         width: `${Math.min((promotion.usage_count / promotion.usage_limit) * 100, 100)}%`
                       }}
@@ -244,7 +227,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
                   </div>
                 )}
                 {promotion.usage_limit_per_user && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-bliss-500">
                     จำกัด {promotion.usage_limit_per_user} ครั้งต่อผู้ใช้
                   </div>
                 )}
@@ -253,12 +236,12 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
           </div>
 
           {/* Terms & Conditions */}
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-500" />
+          <div className="bg-bliss-50 rounded-xl p-4 border border-bliss-200">
+            <h3 className="font-semibold text-bliss-800 mb-3 flex items-center gap-2">
+              <Star className="w-5 h-5 text-bliss-500" />
               เงื่อนไขการใช้งาน
             </h3>
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-2 text-sm text-bliss-600">
               {promotion.min_order_amount && (
                 <div className="flex justify-between">
                   <span>ยอดขั้นต่ำ:</span>
@@ -308,7 +291,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
                     alert('คัดลอกข้อความสำหรับแชร์แล้ว!')
                   }
                 }}
-                className="px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl font-medium transition flex items-center justify-center gap-2 touch-manipulation"
+                className="px-6 py-3 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-xl font-medium transition flex items-center justify-center gap-2 touch-manipulation"
               >
                 <Share2 className="w-5 h-5" />
                 แชร์โปรโมชัน
@@ -316,7 +299,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
 
               <button
                 onClick={onClose}
-                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition flex items-center justify-center gap-2 touch-manipulation"
+                className="px-6 py-3 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-xl font-medium transition flex items-center justify-center gap-2 touch-manipulation"
               >
                 <X className="w-5 h-5" />
                 ปิด

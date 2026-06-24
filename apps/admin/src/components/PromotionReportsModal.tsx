@@ -187,7 +187,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
-                <p className="text-gray-600">กำลังโหลดข้อมูลรายงาน...</p>
+                <p className="text-bliss-600">กำลังโหลดข้อมูลรายงาน...</p>
               </div>
             </div>
           )}
@@ -236,17 +236,17 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
               {activeTab === 'overview' && (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-blue-600">
+                        <div className="text-bliss-600">
                           <Users className="w-8 h-8" />
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-blue-900">{stats.total_usage.toLocaleString()}</div>
-                          <div className="text-sm text-blue-600">ครั้ง</div>
+                          <div className="text-2xl font-bold text-bliss-900">{stats.total_usage.toLocaleString()}</div>
+                          <div className="text-sm text-bliss-600">ครั้ง</div>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-blue-800">การใช้งานทั้งหมด</div>
+                      <div className="text-sm font-medium text-bliss-800">การใช้งานทั้งหมด</div>
                     </div>
 
                     <div className="bg-green-50 border border-green-200 rounded-xl p-6">
@@ -275,17 +275,17 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                       <div className="text-sm font-medium text-bliss-800">ส่วนลดรวม</div>
                     </div>
 
-                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+                    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-purple-600">
+                        <div className="text-bliss-600">
                           <TrendingUp className="w-8 h-8" />
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-purple-900">{formatCurrency(stats.avg_discount)}</div>
-                          <div className="text-sm text-purple-600">เฉลี่ย</div>
+                          <div className="text-lg font-bold text-bliss-900">{formatCurrency(stats.avg_discount)}</div>
+                          <div className="text-sm text-bliss-600">เฉลี่ย</div>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-purple-800">ส่วนลดเฉลี่ย</div>
+                      <div className="text-sm font-medium text-bliss-800">ส่วนลดเฉลี่ย</div>
                     </div>
                   </div>
 
@@ -393,7 +393,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                               </div>
                               <div className="flex-1 bg-bliss-100 rounded-full h-6 relative">
                                 <div
-                                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                                  className="bg-gradient-to-r from-bliss-500 to-bliss-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
                                   style={{ width: `${Math.max(widthPercent, 5)}%` }}
                                 >
                                   {widthPercent > 15 && `${day.count} ครั้ง`}

@@ -2267,6 +2267,7 @@ export type Database = {
           end_date: string
           id: string
           image_url: string | null
+          is_public: boolean
           max_discount: number | null
           min_order_amount: number | null
           name_en: string
@@ -2294,6 +2295,7 @@ export type Database = {
           end_date: string
           id?: string
           image_url?: string | null
+          is_public?: boolean
           max_discount?: number | null
           min_order_amount?: number | null
           name_en: string
@@ -2321,6 +2323,7 @@ export type Database = {
           end_date?: string
           id?: string
           image_url?: string | null
+          is_public?: boolean
           max_discount?: number | null
           min_order_amount?: number | null
           name_en?: string

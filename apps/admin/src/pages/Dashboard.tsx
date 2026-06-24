@@ -43,9 +43,9 @@ function formatTime(timeStr: string): string {
 
 function getStatusBadge(status: string) {
   const badges: Record<string, string> = {
-    confirmed: 'bg-blue-100 text-blue-700',
+    confirmed: 'bg-bliss-100 text-bliss-700',
     completed: 'bg-green-100 text-green-700',
-    in_progress: 'bg-purple-100 text-purple-700',
+    in_progress: 'bg-bliss-100 text-bliss-700',
     pending: 'bg-yellow-100 text-yellow-700',
     cancelled: 'bg-red-100 text-red-700',
   }

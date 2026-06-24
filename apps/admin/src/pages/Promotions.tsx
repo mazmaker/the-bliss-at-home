@@ -23,6 +23,7 @@ import {
   Pause,
   Copy,
   Eye,
+  EyeOff,
 } from 'lucide-react'
 
 interface Promotion {
@@ -49,6 +50,7 @@ interface Promotion {
   code_prefix: string
   code_length: number
   image_url?: string
+  is_public?: boolean
   created_at: string
   updated_at: string
 }
@@ -251,7 +253,7 @@ function Promotions() {
     const status = getPromotionStatus(promotion)
     switch (status) {
       case 'draft':
-        return 'bg-gray-500 text-white'
+        return 'bg-bliss-500 text-white'
       case 'active':
         return 'bg-green-500 text-white'
       case 'disabled':
@@ -332,7 +334,7 @@ function Promotions() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
-          <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+          <p className="text-bliss-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
     )
@@ -437,7 +439,7 @@ function Promotions() {
                     onClick={() => setSelectedStatus(status.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
                       selectedStatus === status.id
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                        ? 'bg-gradient-to-r from-bliss-600 to-bliss-700 text-white'
                         : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                     }`}
                   >
@@ -540,7 +542,7 @@ function Promotions() {
               <div className="mb-4 p-3 bg-bliss-50 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-600" />
+                    <Users className="w-4 h-4 text-bliss-600" />
                     <span className="text-sm text-bliss-600">การใช้งาน:</span>
                   </div>
                   <span className="text-sm font-medium">
@@ -549,9 +551,9 @@ function Promotions() {
                 </div>
 
                 {promotion.usage_limit && (
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-bliss-200 rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full"
+                      className="bg-bliss-600 h-2 rounded-full"
                       style={{
                         width: `${Math.min((promotion.usage_count / promotion.usage_limit) * 100, 100)}%`
                       }}
@@ -578,17 +580,26 @@ function Promotions() {
                     {new Date(promotion.end_date).toLocaleDateString('th-TH')}
                   </span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    {promotion.is_public === false ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>การแสดงผล:</span>
+                  </div>
+                  <span className={`font-medium ${promotion.is_public === false ? 'text-amber-600' : 'text-green-600'}`}>
+                    {promotion.is_public === false ? 'ปิดแสดงผล' : 'เปิดแสดงผล'}
+                  </span>
+                </div>
               </div>
 
               {/* Description */}
               {promotion.description_th && (
-                <div className="mb-4 p-2 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-700">{promotion.description_th}</p>
+                <div className="mb-4 p-2 bg-bliss-50 rounded-lg">
+                  <p className="text-xs text-bliss-700">{promotion.description_th}</p>
                 </div>
               )}
 
               {/* Professional Action Buttons */}
-              <div className="mt-5 border-t border-gray-100 pt-4">
+              <div className="mt-5 border-t border-bliss-100 pt-4">
                 <div className="flex flex-wrap gap-2">
                   {/* Status Actions */}
                   {getStatusActions(promotion).map((action, index) => {
@@ -607,7 +618,7 @@ function Promotions() {
 
                   <button
                     onClick={() => openPreviewModal(promotion)}
-                    className="flex items-center gap-1 px-3 py-2 bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition"
+                    className="flex items-center gap-1 px-3 py-2 bg-bliss-100 border border-bliss-200 text-bliss-700 text-xs font-medium rounded-lg hover:bg-bliss-200 transition"
                   >
                     <Eye className="w-3 h-3" />
                     <span>พรีวิว</span>
@@ -615,7 +626,7 @@ function Promotions() {
 
                   <button
                     onClick={() => handleEdit(promotion)}
-                    className="flex items-center gap-1 px-3 py-2 bg-gray-100 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition"
+                    className="flex items-center gap-1 px-3 py-2 bg-bliss-100 border border-bliss-200 text-bliss-700 text-xs font-medium rounded-lg hover:bg-bliss-200 transition"
                   >
                     <Edit className="w-3 h-3" />
                     <span>แก้ไข</span>
@@ -644,7 +655,7 @@ function Promotions() {
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(null)}
-                      className="flex-1 px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+                      className="flex-1 px-2 py-1 bg-bliss-200 text-bliss-700 text-xs rounded hover:bg-bliss-300"
                     >
                       ยกเลิก
                     </button>
@@ -659,15 +670,15 @@ function Promotions() {
       {/* Empty State */}
       {filteredPromotions.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
+          <div className="text-bliss-400 mb-4">
             <TrendingUp className="w-16 h-16 mx-auto" />
           </div>
-          <p className="text-gray-600 text-lg font-medium mb-2">
+          <p className="text-bliss-600 text-lg font-medium mb-2">
             {searchQuery || selectedType !== 'all' || selectedStatus !== 'all'
               ? 'ไม่พบโปรโมชันที่ค้นหา'
               : 'ยังไม่มีโปรโมชัน'}
           </p>
-          <p className="text-gray-500 text-sm mb-4">
+          <p className="text-bliss-500 text-sm mb-4">
             {searchQuery || selectedType !== 'all' || selectedStatus !== 'all'
               ? 'ลองค้นหาด้วยคำอื่นหรือเปลี่ยนตัวกรอง'
               : 'เริ่มต้นด้วยการเพิ่มโปรโมชันใหม่'}

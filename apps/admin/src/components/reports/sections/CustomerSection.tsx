@@ -17,6 +17,9 @@ import {
   UserPlus,
   Repeat,
   Crown,
+  Sparkles,
+  Zap,
+  Moon,
   MapPin,
   PhoneCall,
   Smartphone
@@ -452,7 +455,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       <div className="space-y-6 animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-gray-200 rounded-2xl h-32"></div>
+            <div key={i} className="bg-bliss-200 rounded-2xl h-32"></div>
           ))}
         </div>
       </div>
@@ -600,14 +603,15 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {analytics.customerSegments.map((segment, index) => {
               const segmentStyles = [
-                { bg: 'bg-gradient-to-br from-bliss-600 to-bliss-700', icon: '👑', ring: 'ring-bliss-500/20' }, // VIP
-                { bg: 'bg-gradient-to-br from-bliss-500 to-bliss-600', icon: '⭐', ring: 'ring-bliss-400/20' },   // Regular
-                { bg: 'bg-gradient-to-br from-bliss-600 to-bliss-700', icon: '🌟', ring: 'ring-bliss-500/20' }, // Casual
-                { bg: 'bg-gradient-to-br from-bliss-500 to-bliss-600', icon: '💫', ring: 'ring-bliss-400/20' }, // One-time
-                { bg: 'bg-gradient-to-br from-bliss-400 to-bliss-500', icon: '😴', ring: 'ring-bliss-300/20' }     // Inactive
+                { bg: 'bg-gradient-to-br from-bliss-600 to-bliss-700', icon: Crown, ring: 'ring-bliss-500/20' }, // VIP
+                { bg: 'bg-gradient-to-br from-bliss-500 to-bliss-600', icon: Star, ring: 'ring-bliss-400/20' },   // Regular
+                { bg: 'bg-gradient-to-br from-bliss-600 to-bliss-700', icon: Sparkles, ring: 'ring-bliss-500/20' }, // Casual
+                { bg: 'bg-gradient-to-br from-bliss-500 to-bliss-600', icon: Zap, ring: 'ring-bliss-400/20' }, // One-time
+                { bg: 'bg-gradient-to-br from-bliss-400 to-bliss-500', icon: Moon, ring: 'ring-bliss-300/20' }     // Inactive
               ]
 
               const style = segmentStyles[index] || segmentStyles[4]
+              const SegIcon = style.icon
 
               return (
                 <div key={segment.segment} className={`group relative ${style.bg} rounded-2xl p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300 ring-2 ${style.ring}`}>
@@ -618,7 +622,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                   {/* Content */}
                   <div className="relative">
                     <div className="text-center mb-4">
-                      <div className="text-3xl mb-2">{style.icon}</div>
+                      <div className="flex justify-center mb-2"><SegIcon className="w-8 h-8" /></div>
                       <h4 className="font-bold text-lg mb-1">{segment.segment}</h4>
                       <div className="text-4xl font-black mb-1">{segment.count}</div>
                       <div className="text-sm opacity-90 font-medium">{formatPercentage(segment.percentage)}</div>
@@ -775,7 +779,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
             <div className="space-y-4">
               {[
                 { key: 'active', label: 'ใช้งานปกติ', color: 'bg-green-500', count: analytics.totalCustomers },
-                { key: 'inactive', label: 'ไม่ใช้งาน', color: 'bg-gray-500', count: 0 }
+                { key: 'inactive', label: 'ไม่ใช้งาน', color: 'bg-bliss-500', count: 0 }
               ].map(item => {
                 const percentage = analytics.totalCustomers > 0 ? (item.count / analytics.totalCustomers) * 100 : 0
                 return (
@@ -804,8 +808,8 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
           <div className="p-6">
             <div className="space-y-4">
               {[
-                { key: 'phone', label: 'มีเบอร์โทร', color: 'bg-blue-500', count: analytics.communicationChannels.phone },
-                { key: 'no_phone', label: 'ไม่มีเบอร์โทร', color: 'bg-gray-500', count: analytics.totalCustomers - analytics.communicationChannels.phone }
+                { key: 'phone', label: 'มีเบอร์โทร', color: 'bg-bliss-500', count: analytics.communicationChannels.phone },
+                { key: 'no_phone', label: 'ไม่มีเบอร์โทร', color: 'bg-bliss-500', count: analytics.totalCustomers - analytics.communicationChannels.phone }
               ].map(item => {
                 const percentage = analytics.totalCustomers > 0 ? (item.count / analytics.totalCustomers) * 100 : 0
                 return (
@@ -821,8 +825,8 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                   </div>
                 )
               })}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-700">
+              <div className="mt-4 p-3 bg-bliss-50 rounded-lg">
+                <p className="text-sm text-bliss-700">
                   <span className="font-medium">หมายเหตุ:</span> ข้อมูลอีเมลจะเพิ่มเติมในเร็วๆ นี้
                 </p>
               </div>
@@ -874,25 +878,25 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {analytics.preferredServices.map((service, index) => {
               const rankColors = [
-                'bg-gradient-to-r from-yellow-400 to-orange-500 text-white', // #1
-                'bg-gradient-to-r from-gray-300 to-gray-400 text-white',     // #2
-                'bg-gradient-to-r from-orange-300 to-orange-400 text-white', // #3
-                'bg-gradient-to-r from-blue-500 to-indigo-500 text-white',   // #4+
-                'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
-                'bg-gradient-to-r from-green-500 to-emerald-500 text-white',
-                'bg-gradient-to-r from-pink-500 to-rose-500 text-white',
-                'bg-gradient-to-r from-cyan-500 to-teal-500 text-white'
+                'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white', // #1
+                'bg-gradient-to-r from-bliss-600 to-bliss-700 text-white', // #2
+                'bg-gradient-to-r from-bliss-500 to-bliss-600 text-white', // #3
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white', // #4+
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white',
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white',
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white',
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white'
               ]
 
               const bgColors = [
                 'from-bliss-50 to-bliss-100 border-bliss-200',
                 'from-bliss-50 to-bliss-100 border-bliss-200',
-                'from-bliss-50 to-orange-50 border-bliss-200',
-                'from-bliss-100 to-bliss-150 border-bliss-200',
-                'from-bliss-100 to-bliss-150 border-bliss-200',
+                'from-bliss-50 to-bliss-100 border-bliss-200',
+                'from-bliss-100 to-bliss-200 border-bliss-200',
+                'from-bliss-100 to-bliss-200 border-bliss-200',
                 'from-bliss-50 to-bliss-100 border-bliss-200',
                 'from-bliss-50 to-bliss-100 border-bliss-200',
-                'from-bliss-100 to-bliss-150 border-bliss-200'
+                'from-bliss-100 to-bliss-200 border-bliss-200'
               ]
 
               return (
@@ -949,9 +953,9 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
         <div className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {analytics.customerGrowthTrend.map((month, index) => (
-              <div key={index} className="text-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+              <div key={index} className="text-center p-4 bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-xl">
                 <p className="font-semibold text-bliss-900">{month.month}</p>
-                <p className="text-2xl font-bold text-blue-600">{month.newCustomers}</p>
+                <p className="text-2xl font-bold text-bliss-600">{month.newCustomers}</p>
                 <p className="text-sm text-bliss-500">ลูกค้าใหม่</p>
                 <p className="text-xs text-bliss-400 mt-1">รวม: {month.totalCustomers}</p>
               </div>
@@ -965,7 +969,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
         <div className="p-6 border-b border-bliss-200">
           <h3 className="text-xl font-bold text-bliss-900 flex items-center gap-2">
-            <Smartphone className="w-6 h-6 text-blue-500" />
+            <Smartphone className="w-6 h-6 text-bliss-500" />
             ช่องทางการติดต่อ
           </h3>
           <p className="text-bliss-600">Communication Channels</p>
@@ -980,16 +984,16 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                 {formatPercentage((analytics.communicationChannels.phone / analytics.totalCustomers) * 100)}
               </p>
             </div>
-            <div className="text-center p-6 bg-purple-50 rounded-xl">
-              <Users className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-purple-700">{analytics.communicationChannels.line}</p>
-              <p className="text-purple-600 font-medium">LINE (ประมาณ)</p>
+            <div className="text-center p-6 bg-bliss-50 rounded-xl">
+              <Users className="w-12 h-12 text-bliss-600 mx-auto mb-4" />
+              <p className="text-2xl font-bold text-bliss-700">{analytics.communicationChannels.line}</p>
+              <p className="text-bliss-600 font-medium">LINE (ประมาณ)</p>
               <p className="text-sm text-bliss-500">ตามเบอร์โทร</p>
             </div>
           </div>
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl text-center">
-            <p className="text-blue-700 font-medium">ข้อมูลอีเมลจะเพิ่มเติมเร็วๆ นี้</p>
-            <p className="text-sm text-blue-600">Email analytics coming soon</p>
+          <div className="mt-6 p-4 bg-bliss-50 rounded-xl text-center">
+            <p className="text-bliss-700 font-medium">ข้อมูลอีเมลจะเพิ่มเติมเร็วๆ นี้</p>
+            <p className="text-sm text-bliss-600">Email analytics coming soon</p>
           </div>
         </div>
       </div>

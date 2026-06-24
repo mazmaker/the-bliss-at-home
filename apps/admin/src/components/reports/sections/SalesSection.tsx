@@ -11,6 +11,7 @@ import {
   Info,
   Target,
   PieChart,
+  Wallet,
   Clock,
   CreditCard,
   Store,
@@ -193,7 +194,8 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
-            💰 ยอดขายและการเงิน
+            <Wallet className="w-6 h-6 text-bliss-600" />
+            ยอดขายและการเงิน
             <Tooltip content="การวิเคราะห์ขายและการเงินระดับโลก | World-class sales and financial analytics">
               <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
             </Tooltip>
@@ -335,9 +337,9 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
 
       {/* Sales Channel Analysis */}
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <PieChart className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -366,10 +368,10 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 const Icon = iconMap[channel.channel_name] || Store
 
                 const colorMap = {
-                  'Hotel Direct': 'from-orange-500 to-orange-600',
-                  'Customer App': 'from-blue-500 to-blue-600',
+                  'Hotel Direct': 'from-bliss-600 to-bliss-700',
+                  'Customer App': 'from-bliss-500 to-bliss-600',
                 }
-                const bgColor = colorMap[channel.channel_name] || 'from-gray-500 to-gray-600'
+                const bgColor = colorMap[channel.channel_name] || 'from-bliss-500 to-bliss-600'
 
                 return (
                   <div key={index} className="p-4 rounded-xl border border-bliss-200 bg-gradient-to-br from-bliss-50 to-white">
@@ -419,9 +421,9 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
 
       {/* Service Revenue by Category */}
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 border-b border-purple-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -450,11 +452,11 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 const totalRevenue = categories.reduce((sum, s) => sum + (s.total_revenue || 0), 0)
                 return categories.map((service, index) => {
                   const colors = [
-                    'from-pink-500 to-pink-600',
-                    'from-indigo-500 to-indigo-600',
-                    'from-emerald-500 to-emerald-600',
+                    'from-bliss-700 to-bliss-800',
+                    'from-bliss-600 to-bliss-700',
                     'from-bliss-500 to-bliss-600',
-                    'from-violet-500 to-violet-600'
+                    'from-bliss-400 to-bliss-500',
+                    'from-bliss-300 to-bliss-400'
                   ]
                   const bgColor = colors[index % colors.length]
                   const marketShare = totalRevenue > 0 ? (service.total_revenue || 0) / totalRevenue * 100 : 0
@@ -498,9 +500,9 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
 
       {/* Payment Method Analysis */}
       <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 border-b border-green-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -647,7 +649,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                         <div className="flex-1">
                           <div className="w-full bg-bliss-200 rounded-full h-2">
                             <div
-                              className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all"
+                              className="bg-gradient-to-r from-bliss-500 to-bliss-600 h-2 rounded-full transition-all"
                               style={{ width: `${Math.min(Math.max((day.performance_score || 0), 10), 100)}%` }}
                             ></div>
                           </div>
@@ -666,7 +668,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       </div>
 
       {/* Target Progress */}
-      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+      <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Target className="w-8 h-8" />

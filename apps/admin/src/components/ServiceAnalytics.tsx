@@ -93,7 +93,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
       <div className={`flex items-center justify-center h-64 ${className}`}>
         <div className="text-center">
           <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
-          <p className="text-gray-600">กำลังโหลดสถิติ...</p>
+          <p className="text-bliss-600">กำลังโหลดสถิติ...</p>
         </div>
       </div>
     )
@@ -163,9 +163,9 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
       {/* Analytics Grid */}
       {analytics.length === 0 ? (
         <div className="text-center py-12">
-          <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg font-medium">ยังไม่มีข้อมูลสถิติ</p>
-          <p className="text-gray-500 text-sm mt-1">
+          <Activity className="w-16 h-16 text-bliss-400 mx-auto mb-4" />
+          <p className="text-bliss-600 text-lg font-medium">ยังไม่มีข้อมูลสถิติ</p>
+          <p className="text-bliss-500 text-sm mt-1">
             ข้อมูลจะแสดงเมื่อมีการจองบริการเกิดขึ้น
           </p>
         </div>
@@ -198,15 +198,15 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
               <div className="p-4 space-y-4">
                 {/* Primary Metrics */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-medium text-blue-700">การจอง</span>
+                      <Calendar className="w-4 h-4 text-bliss-600" />
+                      <span className="text-xs font-medium text-bliss-700">การจอง</span>
                     </div>
-                    <p className="text-lg font-bold text-blue-900">
+                    <p className="text-lg font-bold text-bliss-900">
                       {service.total_bookings.toLocaleString()}
                     </p>
-                    <p className="text-xs text-blue-600">
+                    <p className="text-xs text-bliss-600">
                       {service.last_7_days} รายการ (7 วัน)
                     </p>
                   </div>
@@ -236,7 +236,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
                   </div>
 
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-purple-600 mb-1">
+                    <div className="flex items-center justify-center gap-1 text-bliss-600 mb-1">
                       <Clock className="w-3 h-3" />
                       <span>{service.avg_duration}m</span>
                     </div>
@@ -244,7 +244,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
                   </div>
 
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-orange-600 mb-1">
+                    <div className="flex items-center justify-center gap-1 text-bliss-600 mb-1">
                       <Users className="w-3 h-3" />
                       <span>{service.peak_hour}</span>
                     </div>

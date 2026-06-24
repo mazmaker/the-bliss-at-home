@@ -63,7 +63,7 @@ function SOSAlerts() {
       pending: 'bg-red-100 text-red-700 border-red-200',
       acknowledged: 'bg-yellow-100 text-yellow-700 border-yellow-200',
       resolved: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
+      cancelled: 'bg-bliss-100 text-bliss-700 border-bliss-200',
     } as const
     const labels = {
       pending: 'รอดำเนินการ',
@@ -80,7 +80,7 @@ function SOSAlerts() {
 
   const getPriorityBadge = (priority: string) => {
     const styles = {
-      low: 'bg-blue-100 text-blue-700',
+      low: 'bg-bliss-100 text-bliss-700',
       medium: 'bg-yellow-100 text-yellow-700',
       high: 'bg-orange-100 text-orange-700',
       critical: 'bg-red-100 text-red-700',
@@ -101,8 +101,8 @@ function SOSAlerts() {
   const getSourceBadge = (sourceType?: SOSSourceType) => {
     if (!sourceType) return null
     const styles = {
-      customer: 'bg-purple-100 text-purple-700 border-purple-200',
-      staff: 'bg-blue-100 text-blue-700 border-blue-200',
+      customer: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+      staff: 'bg-bliss-200 text-bliss-800 border-bliss-300',
     }
     const labels = {
       customer: 'ลูกค้า',
@@ -180,7 +180,7 @@ function SOSAlerts() {
             onClick={() => setSourceFilter('customer')}
             className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
               sourceFilter === 'customer'
-                ? 'bg-purple-600 text-white shadow-md'
+                ? 'bg-bliss-600 text-white shadow-md'
                 : 'bg-bliss-50 text-bliss-600 hover:bg-bliss-100'
             }`}
           >
@@ -193,7 +193,7 @@ function SOSAlerts() {
             onClick={() => setSourceFilter('staff')}
             className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
               sourceFilter === 'staff'
-                ? 'bg-blue-600 text-white shadow-md'
+                ? 'bg-bliss-600 text-white shadow-md'
                 : 'bg-bliss-50 text-bliss-600 hover:bg-bliss-100'
             }`}
           >
@@ -302,7 +302,7 @@ function SOSAlerts() {
                               href={`https://www.google.com/maps?q=${alert.latitude},${alert.longitude}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
+                              className="text-bliss-600 hover:underline"
                             >
                               ดูตำแหน่งบน Google Maps ({alert.latitude.toFixed(6)}, {alert.longitude.toFixed(6)})
                             </a>
