@@ -7,7 +7,7 @@ import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
 import { paymentAuthGuard } from '../middleware/auth.js'
-import { getEnabledPaymentChannels } from '../lib/paymentChannels.js'
+import { getEnabledPaymentChannels, getPaymentMode } from '../lib/paymentChannels.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
 import { sendCreditNoteEmailForRefund } from './receipts.js'
@@ -107,6 +107,29 @@ router.get('/:id/refund-preview', async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: 'Missing booking ID',
+      })
+    }
+
+    // R-5 G33/D2: manual-QR booking has no Omise charge → not refund-eligible on-platform.
+    // Lightweight marker SELECT + short-circuit so the UI renders the "contact LINE OA" state
+    // (refundService.calculateRefund is marker-blind, so the gate must live here at the route).
+    const previewSupabase = getSupabaseClient()
+    const { data: previewBooking } = await previewSupabase
+      .from('bookings')
+      .select('admin_notes')
+      .eq('id', id)
+      .single()
+    if (((previewBooking as any)?.admin_notes || '').includes('[MANUAL_QR')) {
+      return res.json({
+        success: true,
+        data: {
+          eligible: false,
+          originalAmount: 0,
+          refundAmount: 0,
+          refundPercentage: 0,
+          reason: 'คืนเงินนอกแพลตฟอร์มทาง LINE',
+        },
+        policy: refundService.CANCELLATION_POLICY,
       })
     }
 
@@ -685,6 +708,7 @@ router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response)
         hotel_id,
         is_hotel_booking,
         points_redeemed,
+        admin_notes,
         customer:customers(
           id,
           profile_id,
@@ -725,6 +749,10 @@ router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response)
       })
     }
 
+    // R-5 G20/D2: manual-QR bookings ("[MANUAL_QR]"/"[MANUAL_QR PAID]" in admin_notes) were marked
+    // paid with NO Omise transaction → no on-platform money refund. Cancel + points refund still run.
+    const isManualQr = ((booking as any).admin_notes || '').includes('[MANUAL_QR')
+
     // Check if already cancelled
     if (booking.status === 'cancelled') {
       return res.status(400).json({
@@ -751,7 +779,9 @@ router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response)
 
     // Process refund if payment was made and refund is requested
     let refundResult = null
-    const shouldProcessRefund = booking.payment_status === 'paid' && body.refund_option !== 'none'
+    // R-5 D2/G4: never run an on-platform Omise refund for manual-QR (no charge to refund). This SKIPS
+    // the money refund WITHOUT early-returning, so the loyalty-points refund below (G5) still runs.
+    const shouldProcessRefund = !isManualQr && booking.payment_status === 'paid' && body.refund_option !== 'none'
 
     if (shouldProcessRefund) {
       // Check if there's a transaction to refund
@@ -810,8 +840,9 @@ router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response)
       updateData.refund_status = 'completed'
       updateData.refund_amount = refundResult.refundAmount
       updateData.refund_percentage = body.refund_option === 'full' ? 100 : body.refund_percentage
-    } else if (booking.payment_status === 'paid' && body.refund_option === 'none') {
-      // Payment was made but no refund requested
+    } else if (isManualQr || (booking.payment_status === 'paid' && body.refund_option === 'none')) {
+      // R-5 G20/G4: no on-platform refund (manual-QR off-platform settlement, or refund_option='none')
+      // → terminal state status='cancelled' + refund_status='none' (avoid the paid+cancelled+NULL limbo).
       updateData.refund_status = 'none'
     }
 
@@ -1395,6 +1426,17 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
     // 8. Customer-paid extensions: create payment FIRST, apply extension only after webhook confirms
     // Hotel bookings settle on monthly credit bill — apply immediately without Omise charge.
     if (finalExtensionPrice > 0 && !booking.is_hotel_booking) {
+      // [manual-QR] G10: a paid customer extension in manual_qr mode is settled OFF-platform (customer
+      // pays via the static QR + sends the slip to admin via LINE OA; admin applies it). Reject the Omise
+      // charge here — placed INSIDE the !is_hotel_booking block so hotel extend-session (monthly bill) and
+      // free (price=0) extensions never hit this gate (VA6).
+      if (await getPaymentMode() === 'manual_qr') {
+        return res.status(410).json({
+          success: false,
+          error: 'Extension is settled via manual QR off-platform (send the slip to admin via LINE OA); Omise extension charges are disabled',
+          code: 'PAYMENT_MODE_MANUAL_QR'
+        })
+      }
       try {
         const { omiseService } = await import('../services/omiseService.js')
         const enabledChannels = await getEnabledPaymentChannels()

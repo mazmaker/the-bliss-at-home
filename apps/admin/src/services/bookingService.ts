@@ -378,7 +378,7 @@ class BookingService {
     }
   }
 
-  async updateBookingStatus(id: string, status: BookingStatus): Promise<Booking | null> {
+  async updateBookingStatus(id: string, status: BookingStatus, opts?: { autoMarkPaid?: boolean }): Promise<Booking | null> {
     try {
       const updateData: Record<string, any> = { status }
 
@@ -398,6 +398,25 @@ class BookingService {
           break
       }
 
+      // [manual-QR] ส่วน B: when the admin confirms a manual-QR customer booking (opt-in flag from the
+      // caller), auto-flip it to paid in the SAME write — "verify slip → mark paid + confirm + dispatch".
+      // Re-verify against the PERSISTED row (don't trust the possibly-stale caller object): must carry the
+      // marker + be a customer (not hotel) booking + still be pending (positive-form checks; guards against
+      // re-confirming an already-paid booking → no double stats-trigger). Append the marker, never overwrite.
+      if (status === 'confirmed' && opts?.autoMarkPaid) {
+        const { data: current } = await supabase
+          .from('bookings')
+          .select('admin_notes, is_hotel_booking, payment_status')
+          .eq('id', id)
+          .single()
+        const isManual = (current?.admin_notes || '').includes('[MANUAL_QR')
+        if (current && isManual && !current.is_hotel_booking && current.payment_status === 'pending') {
+          updateData.payment_status = 'paid'
+          updateData.payment_method = 'other'
+          updateData.admin_notes = `${current.admin_notes || ''} [MANUAL_QR PAID] ชำระภายนอก โดย admin`.trim()
+        }
+      }
+
       const { data, error } = await supabase
         .from('bookings')
         .update(updateData)
@@ -415,8 +434,9 @@ class BookingService {
         throw error
       }
 
-      // Award loyalty points when booking is completed
-      if (status === 'completed' && data && !data.is_hotel_booking && data.customer_id) {
+      // Award loyalty points when booking is completed — but ONLY for a PAID booking (G18: selecting
+      // "เสร็จสิ้น" on a still-unpaid manual-QR booking must not award points on money not yet collected).
+      if (status === 'completed' && data && data.payment_status === 'paid' && !data.is_hotel_booking && data.customer_id) {
         try {
           const result = await awardPoints(supabase as any, data.customer_id, id, Number(data.final_price) || 0)
           if (result.pointsEarned > 0 || result.bonusPoints > 0) {

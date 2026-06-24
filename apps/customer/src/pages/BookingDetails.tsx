@@ -166,6 +166,10 @@ function BookingDetails() {
         method: bookingData.payment_method || 'pending_payment',
         status: bookingData.payment_status || 'pending',
       },
+      // R-5 G17: manual-QR marker — single source of truth read across the render tree
+      // (receipt-hide / payment relabel / Pay-Now hide / cancel-modal prop). admin_notes is
+      // returned by getBookingByNumber's select('*') but is off the typed shape (cast as any).
+      isManualQr: ((bookingData as any)?.admin_notes || '').includes('[MANUAL_QR'),
       createdAt: new Date(bookingData.created_at!).toISOString().split('T')[0],
       image: getServiceImage(bookingData.service?.image_url, bookingData.service?.category || 'massage'),
       providerPreference: (bookingData as any).provider_preference || null,
@@ -989,7 +993,7 @@ function BookingDetails() {
               <div className="space-y-2">
                 <div className="flex justify-between text-bliss-700">
                   <span>{t('details.paymentMethod')}</span>
-                  <span className="text-bliss-900 font-medium">{getPaymentMethodText(booking.payment.method)}</span>
+                  <span className="text-bliss-900 font-medium">{booking.isManualQr ? t('booking:paymentMethod.manualQrExternal') : getPaymentMethodText(booking.payment.method)}</span>
                 </div>
                 <div className="flex justify-between text-bliss-700">
                   <span>{t('common:status.label')}</span>
@@ -1015,7 +1019,8 @@ function BookingDetails() {
               </div>
 
               {/* Pay Now Button for Pending Payments */}
-              {booking.payment.status === 'pending' && (
+              {/* R-5 G8/G26: hide the Omise Pay-Now CTA for manual-QR — no Omise charge exists */}
+              {booking.payment.status === 'pending' && !booking.isManualQr && (
                 <div className="mt-4 pt-4 border-t border-bliss-100">
                   <button
                     onClick={() => navigate(`/payment/${booking.id}`)}
@@ -1031,7 +1036,8 @@ function BookingDetails() {
               )}
 
               {/* Receipt & Credit Note Downloads */}
-              {(booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (
+              {/* R-5 D1: manual-QR has no Omise transaction → no receipt/credit-note (server also denies) */}
+              {!booking.isManualQr && (booking.payment.status === 'paid' || booking.payment.status === 'refunded') && (
                 <div className="mt-4 pt-4 border-t border-bliss-100 space-y-2">
                   <button
                     onClick={handleDownloadReceipt}
@@ -1150,6 +1156,7 @@ function BookingDetails() {
           bookingTime={booking.time}
           totalPrice={totalPrice}
           paymentStatus={booking.payment.status as 'pending' | 'paid' | 'refunded'}
+          isManualQr={booking.isManualQr}
         />
       )}
 

@@ -156,7 +156,22 @@
       "bbl": "กรุงเทพ",
       "ktb": "กรุงไทย",
       "bay": "กรุงศรี",
-      "ttb": "ทหารไทยธนชาต"
+      "ttb": "ทหารไทยธนชาต",
+      "manualQr": {
+        "title": "ชำระยอดและส่งสลิปเพื่อยืนยันการชำระ",
+        "instruction": "สแกน QR ด้านล่างเพื่อชำระยอด แล้วส่งสลิปให้แอดมินทาง LINE OA เพื่อตรวจสอบการชำระ",
+        "qrImageLabel": "QR สำหรับโอนเงิน",
+        "amountLabel": "ยอดที่ต้องชำระ",
+        "bookingNumberLabel": "เลขที่การจอง",
+        "copyButton": "คัดลอก",
+        "copied": "คัดลอกแล้ว",
+        "lineOALabel": "ส่งสลิปทาง LINE OA",
+        "lineIdLabel": "LINE ID",
+        "lineOpenButton": "เปิด LINE OA",
+        "sendSlipNote": "หลังโอนเงิน กรุณาส่งสลิปพร้อมเลขที่การจองให้แอดมินทาง LINE OA",
+        "pendingVerification": "การจองจะอยู่สถานะรอตรวจสอบ จนกว่าแอดมินจะยืนยันการชำระเงิน",
+        "noQrConfigured": "ยังไม่ได้ตั้งค่า QR รับเงิน กรุณาติดต่อแอดมินทาง LINE OA"
+      }
     },
     "serviceNotFound": "ไม่พบบริการ",
     "backToServices": "← กลับไปดูบริการ",
@@ -278,6 +293,7 @@
     "successMessage": "การจองหมายเลข {{bookingNumber}} ถูกยกเลิกเรียบร้อยแล้ว",
     "refundInfo": "คุณจะได้รับเงินคืน ฿{{amount}} ภายใน {{days}} วันทำการ",
     "refundWithinDays": "(ภายใน {{days}} วันทำการ)",
+    "manualQrRefundNotice": "คืนเงินนอกแพลตฟอร์ม — ติดต่อแอดมินทาง LINE OA",
     "error": "ไม่สามารถยกเลิกการจองได้"
   },
   "reschedule": {
@@ -350,7 +366,8 @@
     "promptpay": "พร้อมเพย์",
     "pendingPayment": "รอชำระเงิน",
     "creditCard": "บัตรเครดิต",
-    "internetBanking": "โอนผ่านธนาคาร"
+    "internetBanking": "โอนผ่านธนาคาร",
+    "manualQrExternal": "โอน/QR (ชำระภายนอก)"
   },
   "jobStatus": {
     "pending": "รอพนักงานยืนยัน",

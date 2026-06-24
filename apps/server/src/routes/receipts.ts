@@ -123,6 +123,7 @@ router.get('/:transactionId', async (req, res) => {
           final_price,
           status,
           payment_method,
+          admin_notes,
           services!bookings_service_id_fkey (
             name_th,
             name_en,
@@ -152,6 +153,13 @@ router.get('/:transactionId', async (req, res) => {
     if (error || !transaction) {
       console.error('Receipt query error:', error)
       return res.status(404).json({ success: false, error: 'Transaction not found' })
+    }
+
+    // R-5 D1: manual-QR booking was marked paid with NO real Omise transaction → deny the receipt
+    // (and do NOT stamp a bogus RCP number). Settlement/receipts for these are handled off-platform.
+    const receiptBooking = (transaction as any).bookings
+    if ((receiptBooking?.admin_notes || '').includes('[MANUAL_QR')) {
+      return res.status(403).json({ success: false, error: 'ใบเสร็จไม่พร้อมใช้งานสำหรับการชำระภายนอก / not available' })
     }
 
     // Auto-generate receipt_number if not yet assigned
@@ -240,6 +248,7 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
           final_price,
           cancellation_reason,
           payment_method,
+          admin_notes,
           services (
             name_th,
             name_en
@@ -258,6 +267,13 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
     if (error || !refundTxn) {
       console.error('Credit note query error:', error)
       return res.status(404).json({ success: false, error: 'Refund transaction not found' })
+    }
+
+    // R-5 D1: manual-QR booking has no real Omise charge → deny the credit-note (and do NOT stamp a
+    // bogus CN number). Off-platform settlements have no platform credit-note.
+    const creditNoteBooking = (refundTxn as any).bookings
+    if ((creditNoteBooking?.admin_notes || '').includes('[MANUAL_QR')) {
+      return res.status(403).json({ success: false, error: 'ใบเสร็จไม่พร้อมใช้งานสำหรับการชำระภายนอก / not available' })
     }
 
     // Auto-generate credit_note_number if not yet assigned

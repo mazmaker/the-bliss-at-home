@@ -41,6 +41,12 @@ interface SettingsState {
   company_phone: string
   sos_notification_email: string
 
+  // Manual-QR payment mode (temporary while Omise approval pending) — master switch + config
+  payment_mode: string // 'omise' | 'manual_qr'
+  manual_qr_payment_image_url: string
+  manual_qr_line_qr_url: string
+  manual_qr_line_id: string
+
   // Payment Settings — Google Calendar only (credit reminders; consumed by server googleCalendarService).
   // Omise / Google Maps / Email Provider keys removed: all consumers read from env, not these settings (R5).
   google_calendar_id: string
@@ -68,6 +74,10 @@ function Settings() {
     company_address: '',
     company_phone: '',
     sos_notification_email: '',
+    payment_mode: 'omise',
+    manual_qr_payment_image_url: '',
+    manual_qr_line_qr_url: '',
+    manual_qr_line_id: '',
     google_calendar_id: '',
     google_service_account_key: '',
     report_monthly_target: '500000',
@@ -561,6 +571,10 @@ function Settings() {
         company_address: settingsMap.company_address || '',
         company_phone: settingsMap.company_phone || '',
         sos_notification_email: settingsMap.sos_notification_email || '',
+        payment_mode: settingsMap.payment_mode || 'omise',
+        manual_qr_payment_image_url: settingsMap.manual_qr_payment_image_url || '',
+        manual_qr_line_qr_url: settingsMap.manual_qr_line_qr_url || '',
+        manual_qr_line_id: settingsMap.manual_qr_line_id || '',
         google_calendar_id: settingsMap.google_calendar_id || '',
         google_service_account_key: settingsMap.google_service_account_key || '',
         report_monthly_target: settingsMap.report_monthly_target || '500000',
@@ -595,6 +609,10 @@ function Settings() {
         { key: 'company_address', value: { value: settings.company_address || '' }, description: 'Company address' },
         { key: 'company_phone', value: { value: settings.company_phone || '' }, description: 'Company phone number' },
         { key: 'sos_notification_email', value: { value: settings.sos_notification_email || '' }, description: 'Email address to receive SOS / emergency alerts (R3)' },
+        { key: 'payment_mode', value: { value: settings.payment_mode || 'omise' }, description: 'Customer payment mode: omise | manual_qr (temporary while Omise approval pending)' },
+        { key: 'manual_qr_payment_image_url', value: { url: settings.manual_qr_payment_image_url || '' }, description: 'Manual-QR payment-receiving QR image URL' },
+        { key: 'manual_qr_line_qr_url', value: { url: settings.manual_qr_line_qr_url || '' }, description: 'Manual-QR LINE OA QR image URL (for sending payment slip)' },
+        { key: 'manual_qr_line_id', value: { value: settings.manual_qr_line_id || '' }, description: 'Manual-QR LINE OA ID' },
         { key: 'google_calendar_id', value: settings.google_calendar_id || '', description: 'Google Calendar ID for credit reminders' },
         { key: 'google_service_account_key', value: settings.google_service_account_key || '', description: 'Google Service Account key (base64)' },
         { key: 'report_monthly_target', value: { value: settings.report_monthly_target || '500000' }, description: 'Monthly revenue target (THB)' },
@@ -640,6 +658,18 @@ function Settings() {
     setSettings({ ...settings, company_logo_url: url })
     setError('')
     setMessage('อัพโหลดโลโก้เรียบร้อยแล้ว! กรุณากด "บันทึก" เพื่อยืนยันการเปลี่ยนแปลง')
+  }
+
+  const handleManualQrImageUpload = (url: string) => {
+    setSettings(prev => ({ ...prev, manual_qr_payment_image_url: url }))
+    setError('')
+    setMessage('อัพโหลด QR รับเงินเรียบร้อยแล้ว! กรุณากด "บันทึก" เพื่อยืนยัน')
+  }
+
+  const handleManualQrLineUpload = (url: string) => {
+    setSettings(prev => ({ ...prev, manual_qr_line_qr_url: url }))
+    setError('')
+    setMessage('อัพโหลด QR LINE OA เรียบร้อยแล้ว! กรุณากด "บันทึก" เพื่อยืนยัน')
   }
 
   const handleLogoUploadError = (error: string) => {
@@ -854,8 +884,83 @@ function Settings() {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-bliss-900 mb-4">การตั้งค่าการชำระเงิน</h2>
 
-                {/* Enabled Payment Channels (R1) */}
+                {/* Payment Mode — master switch: Omise (auto) vs Manual QR (transfer + slip via LINE) */}
                 <div className="p-4 bg-bliss-50 border border-bliss-200 rounded-xl">
+                  <h3 className="font-medium text-bliss-900 mb-1">โหมดการชำระเงิน (Payment Mode)</h3>
+                  <p className="text-xs text-bliss-500 mb-3">เลือกวิธีที่ลูกค้าชำระเงิน — Omise (อัตโนมัติ) หรือ Manual QR (โอน + ส่งสลิปทาง LINE ให้แอดมินตรวจ). มีผลทันที ไม่ต้อง deploy.</p>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-bliss-100/50 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment_mode"
+                        value="omise"
+                        checked={settings.payment_mode === 'omise'}
+                        onChange={(e) => setSettings({ ...settings, payment_mode: e.target.value })}
+                        className="w-4 h-4 text-bliss-600 focus:ring-bliss-500"
+                      />
+                      <span className="text-sm text-bliss-700">Omise (ชำระออนไลน์อัตโนมัติ — PromptPay / บัตร / Banking)</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-bliss-100/50 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment_mode"
+                        value="manual_qr"
+                        checked={settings.payment_mode === 'manual_qr'}
+                        onChange={(e) => setSettings({ ...settings, payment_mode: e.target.value })}
+                        className="w-4 h-4 text-bliss-600 focus:ring-bliss-500"
+                      />
+                      <span className="text-sm text-bliss-700">Manual QR (ลูกค้าโอนผ่าน QR + ส่งสลิปทาง LINE OA → แอดมินตรวจแล้วกดยืนยัน)</span>
+                    </label>
+                  </div>
+
+                  {settings.payment_mode === 'manual_qr' && (
+                    <div className="mt-4 space-y-4 border-t border-bliss-200 pt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-bliss-700 mb-2">QR รับเงิน (พร้อมเพย์ / บัญชีร้าน)</label>
+                        <LogoUpload
+                          onUploadComplete={handleManualQrImageUpload}
+                          onUploadError={handleLogoUploadError}
+                          currentImageUrl={settings.manual_qr_payment_image_url}
+                          bucketName="payment-qr"
+                          folder="receiving"
+                          maxSizeMB={2}
+                          accept="image/png,image/jpeg"
+                          className="w-full"
+                        />
+                        <p className="text-xs text-bliss-400 mt-1">รูป QR ที่ลูกค้าสแกนเพื่อโอนเงิน (PNG/JPG ≤ 2MB)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-bliss-700 mb-2">QR LINE OA (สำหรับส่งสลิป)</label>
+                        <LogoUpload
+                          onUploadComplete={handleManualQrLineUpload}
+                          onUploadError={handleLogoUploadError}
+                          currentImageUrl={settings.manual_qr_line_qr_url}
+                          bucketName="payment-qr"
+                          folder="line-oa"
+                          maxSizeMB={2}
+                          accept="image/png,image/jpeg"
+                          className="w-full"
+                        />
+                        <p className="text-xs text-bliss-400 mt-1">รูป QR เพิ่มเพื่อน LINE OA ให้ลูกค้าส่งสลิปการโอน (PNG/JPG ≤ 2MB)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-bliss-700 mb-2">LINE OA ID</label>
+                        <input
+                          type="text"
+                          value={settings.manual_qr_line_id}
+                          onChange={(e) => setSettings({ ...settings, manual_qr_line_id: e.target.value })}
+                          className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                          placeholder="@theblissathome"
+                        />
+                        <p className="text-xs text-bliss-400 mt-1">LINE OA ID ที่แสดงให้ลูกค้า (เว้นว่าง = ใช้ลิงก์ LINE เริ่มต้น https://lin.ee/629FvW2)</p>
+                      </div>
+                      <p className="text-xs text-bliss-700">ขณะเปิด Manual QR — ช่องทาง Omise ด้านล่างถูกเพิกเฉย (ลูกค้าจะเห็นหน้าโอน + ส่งสลิปแทน)</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Enabled Payment Channels (R1) — Omise sub-methods; ignored in manual_qr mode */}
+                <div className={`p-4 bg-bliss-50 border border-bliss-200 rounded-xl ${settings.payment_mode === 'manual_qr' ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-medium text-bliss-900">ช่องทางการชำระเงินที่เปิดใช้</h3>
                     <button
@@ -915,8 +1020,8 @@ function Settings() {
                     </div>
                   </div>
                   {settings.google_calendar_id && settings.google_service_account_key ? (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-emerald-600">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" /> เชื่อมต่อแล้ว
+                    <div className="mt-3 flex items-center gap-2 text-xs text-bliss-600">
+                      <span className="w-2 h-2 rounded-full bg-bliss-500" /> เชื่อมต่อแล้ว
                     </div>
                   ) : (
                     <div className="mt-3 flex items-center gap-2 text-xs text-bliss-400">

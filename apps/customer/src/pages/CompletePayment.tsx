@@ -95,6 +95,12 @@ function CompletePayment() {
   // Redirect if booking not found or payment already completed
   useEffect(() => {
     if (bookingData) {
+      // R-5 G26: manual-QR booking has NO Omise charge — never show the Omise pay UI.
+      // Send back to the booking detail (which shows the manual-payment / contact-LINE state).
+      if (((bookingData as any).admin_notes || '').includes('[MANUAL_QR')) {
+        navigate(`/bookings/${bookingData.booking_number}`)
+        return
+      }
       if (bookingData.payment_status === 'paid') {
         navigate(`/bookings/${bookingData.booking_number}`)
         return

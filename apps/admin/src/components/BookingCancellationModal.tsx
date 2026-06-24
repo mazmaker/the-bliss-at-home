@@ -117,12 +117,16 @@ export default function BookingCancellationModal({
   const { user } = useAdminAuth()
   // Check if booking has been paid
   const isPaid = booking.payment_status === 'paid'
+  // R-5 G3/D2: manual-QR booking ("[MANUAL_QR]"/"[MANUAL_QR PAID]" in admin_notes) was marked paid
+  // with NO Omise transaction → no on-platform refund. Suppress the refund preview/radios, force
+  // refund_option='none', and tell the admin to settle off-platform via LINE OA.
+  const isManualQr = (booking.admin_notes || '').includes('[MANUAL_QR')
 
   // Form state
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
-  // If not paid, default to 'none' since there's nothing to refund
-  const [refundOption, setRefundOption] = useState<RefundOption>(isPaid ? 'full' : 'none')
+  // If not paid (or manual-QR / off-platform), default to 'none' since there's nothing to refund on-platform
+  const [refundOption, setRefundOption] = useState<RefundOption>(isPaid && !isManualQr ? 'full' : 'none')
   const [partialPercentage, setPartialPercentage] = useState(50)
   const [notifyCustomer, setNotifyCustomer] = useState(true)
   const [notifyStaff, setNotifyStaff] = useState(true)
@@ -139,7 +143,8 @@ export default function BookingCancellationModal({
 
   // Load refund preview when modal opens
   useEffect(() => {
-    if (isOpen && booking.payment_status === 'paid') {
+    // R-5 G3: skip the Omise refund-preview fetch for manual-QR (there is no Omise charge to preview)
+    if (isOpen && booking.payment_status === 'paid' && !isManualQr) {
       loadRefundPreview()
     }
   }, [isOpen, booking.id])
@@ -196,8 +201,10 @@ export default function BookingCancellationModal({
 
       const result = await cancelBooking(booking.id, {
         reason,
-        refund_option: refundOption,
-        refund_percentage: refundOption === 'partial' ? partialPercentage : undefined,
+        // R-5 D2: manual-QR → never request an on-platform Omise refund (settle off-platform via LINE).
+        // The server (G20) also forces refund_status='none' for the manual marker as a backstop.
+        refund_option: isManualQr ? 'none' : refundOption,
+        refund_percentage: !isManualQr && refundOption === 'partial' ? partialPercentage : undefined,
         notify_customer: notifyCustomer,
         notify_staff: notifyStaff,
         notify_hotel: notifyHotel,
@@ -334,7 +341,20 @@ export default function BookingCancellationModal({
             </div>
           )}
 
-          {isPaid && (
+          {/* R-5 G3/D2: manual-QR → off-platform refund notice instead of the Omise refund radios/preview */}
+          {isPaid && isManualQr && (
+            <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4">
+              <h3 className="font-medium text-bliss-900 mb-1 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-bliss-600" />
+                คืนเงินนอกแพลตฟอร์มทาง LINE
+              </h3>
+              <p className="text-sm text-bliss-600">
+                การจองนี้ชำระแบบ Manual QR (นอกแพลตฟอร์ม) ระบบจะไม่คืนเงินผ่านแพลตฟอร์ม — กรุณาดำเนินการคืนเงินกับลูกค้าผ่าน LINE OA โดยตรง
+              </p>
+            </div>
+          )}
+
+          {isPaid && !isManualQr && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
               <h3 className="font-medium text-bliss-900 mb-3 flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-green-600" />
@@ -434,9 +454,9 @@ export default function BookingCancellationModal({
           )}
 
           {/* Notification Options */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
             <h3 className="font-medium text-bliss-900 mb-3 flex items-center gap-2">
-              <Bell className="w-4 h-4 text-blue-600" />
+              <Bell className="w-4 h-4 text-bliss-600" />
               การแจ้งเตือน
             </h3>
             <div className="space-y-2">
@@ -482,7 +502,8 @@ export default function BookingCancellationModal({
                 <span className="text-bliss-600">สถานะการจอง:</span>
                 <span className="font-medium text-red-600">ยกเลิก</span>
               </p>
-              {isPaid && (
+              {/* R-5 G3/D2: hide the "฿X จะคืน" summary for manual-QR (off-platform settlement via LINE) */}
+              {isPaid && !isManualQr && (
                 <>
                   <p className="flex justify-between">
                     <span className="text-bliss-600">ยอดชำระเดิม:</span>
@@ -495,6 +516,12 @@ export default function BookingCancellationModal({
                     </span>
                   </p>
                 </>
+              )}
+              {isPaid && isManualQr && (
+                <p className="flex justify-between">
+                  <span className="text-bliss-600">การคืนเงิน:</span>
+                  <span className="font-medium text-bliss-700">คืนเงินนอกแพลตฟอร์มทาง LINE</span>
+                </p>
               )}
             </div>
           </div>

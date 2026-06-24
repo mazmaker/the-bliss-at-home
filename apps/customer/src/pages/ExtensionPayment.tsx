@@ -9,6 +9,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, QrCode, CreditCard, Clock, AlertTriangle, CheckCircle, Lock, Building2, Smartphone } from 'lucide-react'
 import { supabase } from '@bliss/supabase/auth'
+import ManualPaymentInstructions, { type ManualQrConfig } from '../components/ManualPaymentInstructions'
 
 const API_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
@@ -63,17 +64,28 @@ function ExtensionPayment() {
   const [paymentSuccess, setPaymentSuccess]   = useState(false)
   const [cardForm, setCardForm]               = useState<CardForm>({ name: '', number: '', expiry: '', cvv: '' })
   const [omiseReady, setOmiseReady]           = useState(false)
+  // [manual-QR] admin payment mode + config (from the same enabled-channels fetch). Default omise.
+  const [paymentMode, setPaymentMode]         = useState<'omise' | 'manual_qr'>('omise')
+  const [manualQrConfig, setManualQrConfig]   = useState<ManualQrConfig | null>(null)
 
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     fetch(`${API_URL}/api/payments/enabled-channels`)
       .then(r => r.json())
-      .then(d => { if (d?.success && Array.isArray(d.channels)) setEnabledChannels(d.channels) })
+      .then(d => {
+        if (d?.success && Array.isArray(d.channels)) setEnabledChannels(d.channels)
+        // [manual-QR] G23: extension must honour the mode too → render the manual screen instead of Omise.
+        if (d?.payment_mode === 'manual_qr') {
+          setPaymentMode('manual_qr')
+          if (d.manual_qr) setManualQrConfig(d.manual_qr)
+        }
+      })
       .catch(() => {})
   }, [])
 
   useEffect(() => {
+    if (paymentMode === 'manual_qr') return // [manual-QR] defense: never load Omise.js in manual mode
     if (selectedChannel !== 'credit_card') return
     if ((window as any).Omise) {
       ;(window as any).Omise.setPublicKey(import.meta.env.VITE_OMISE_PUBLIC_KEY)
@@ -87,7 +99,7 @@ function ExtensionPayment() {
       setOmiseReady(true)
     }
     document.head.appendChild(script)
-  }, [selectedChannel])
+  }, [selectedChannel, paymentMode])
 
   useEffect(() => {
     if (!chargeId) return
@@ -264,6 +276,40 @@ function ExtensionPayment() {
           </div>
           <h1 className="text-2xl font-bold text-bliss-900 mb-2">ชำระเงินสำเร็จ!</h1>
           <p className="text-bliss-700">กำลังพาคุณกลับไปที่การจอง...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // [manual-QR] Manual mode → static QR + LINE slip; skip the Omise channel selector / card form / poll entirely.
+  if (paymentMode === 'manual_qr') {
+    return (
+      <div className="min-h-screen bg-bliss-100">
+        <div className="bg-bliss-50 border-b border-bliss-200 sticky top-0 z-10">
+          <div className="max-w-md mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-lg font-semibold text-bliss-900">ชำระเงินเพิ่มเวลา</h1>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-md mx-auto p-4 space-y-4">
+          {duration > 0 && (
+            <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
+              <h2 className="text-lg font-semibold text-bliss-900 mb-4">สรุปการเพิ่มเวลา</h2>
+              <div className="flex justify-between">
+                <span className="text-bliss-700 flex items-center gap-1"><Clock className="w-4 h-4" />เพิ่มเวลา</span>
+                <span className="font-medium">{duration} นาที</span>
+              </div>
+            </div>
+          )}
+          <ManualPaymentInstructions
+            bookingNumber={bookingNumber || null}
+            amount={amount}
+            config={manualQrConfig}
+          />
         </div>
       </div>
     )
