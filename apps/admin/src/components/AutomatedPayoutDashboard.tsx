@@ -1,15 +1,16 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import {
   AlertTriangle,
   Calendar,
   CheckCircle,
-  Clock,
   Loader2,
   Play,
   RefreshCw,
-  Users,
+  Settings,
+  Wallet,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { getPayoutScheduleLabel, PayoutSchedule } from '../types/staff'
@@ -41,6 +42,7 @@ interface DashboardData {
   this_month: StaffPayoutRow[]
   later: StaffPayoutRow[]
   recent_payouts: RecentPayout[]
+  schedule_counts: { weekly: number; bi_monthly: number; monthly: number; custom_days: number }
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
@@ -57,31 +59,32 @@ function scheduleLabel(row: StaffPayoutRow) {
 }
 
 function StaffRow({ row, showDate = true }: { row: StaffPayoutRow; showDate?: boolean }) {
+  const navigate = useNavigate()
   const days = row.days
   const isOverdue = days < 0
   const isToday = days === 0
 
   return (
-    <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-white border border-stone-100">
+    <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-white border border-bliss-100">
       <div className="min-w-0">
-        <p className="font-medium text-stone-900 truncate">{row.name_th}</p>
+        <p className="font-medium text-bliss-900 truncate">{row.name_th}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs px-1.5 py-0.5 rounded bg-stone-100 text-stone-600">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-bliss-100 text-bliss-600">
             {scheduleLabel(row)}
           </span>
           {showDate && (
-            <span className="text-xs text-stone-500">
+            <span className="text-xs text-bliss-500">
               {new Date(row.next_payout_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
           )}
           {row.last_payout_processed_at && (
-            <span className="text-xs text-stone-400">
+            <span className="text-xs text-bliss-400">
               จ่ายล่าสุด {new Date(row.last_payout_processed_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
             </span>
           )}
         </div>
       </div>
-      <div className="flex-shrink-0 ml-3">
+      <div className="flex-shrink-0 ml-3 flex items-center gap-2">
         {isOverdue ? (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
             เลย {Math.abs(days)} วัน
@@ -91,10 +94,18 @@ function StaffRow({ row, showDate = true }: { row: StaffPayoutRow; showDate?: bo
             วันนี้
           </span>
         ) : (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-600">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-bliss-100 text-bliss-600">
             อีก {days} วัน
           </span>
         )}
+        <button
+          onClick={() => navigate(`/admin/staff/${row.id}?tab=earnings`)}
+          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-bliss-700 bg-bliss-100 rounded-lg hover:bg-bliss-200 transition whitespace-nowrap"
+          title="สร้างรายการจ่ายของพนักงาน"
+        >
+          <Wallet className="w-3.5 h-3.5" />
+          สร้างรายการจ่าย
+        </button>
       </div>
     </div>
   )
@@ -104,7 +115,7 @@ function SectionHeader({ title, count, color }: { title: string; count: number; 
   return (
     <div className={`flex items-center justify-between mb-2`}>
       <p className={`text-sm font-semibold ${color}`}>{title}</p>
-      <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-stone-100 text-stone-600`}>
+      <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-bliss-100 text-bliss-600`}>
         {count} คน
       </span>
     </div>
@@ -179,7 +190,15 @@ export function AutomatedPayoutDashboard() {
       total_jobs: p.total_jobs || 0,
     }))
 
-    return { overdue, today: todayDue, this_week, this_month, later, recent_payouts }
+    // Count active staff by their payout schedule (7d / 15d / 30d / custom)
+    const schedule_counts = {
+      weekly: rows.filter(r => r.payout_schedule === 'weekly').length,
+      bi_monthly: rows.filter(r => r.payout_schedule === 'bi_monthly').length,
+      monthly: rows.filter(r => r.payout_schedule === 'monthly').length,
+      custom_days: rows.filter(r => r.payout_schedule === 'custom_days').length,
+    }
+
+    return { overdue, today: todayDue, this_week, this_month, later, recent_payouts, schedule_counts }
   }
 
   async function runPayoutCheck() {
@@ -206,8 +225,8 @@ export function AutomatedPayoutDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
-        <span className="ml-3 text-stone-500">กำลังโหลด...</span>
+        <Loader2 className="w-6 h-6 animate-spin text-bliss-400" />
+        <span className="ml-3 text-bliss-500">กำลังโหลด...</span>
       </div>
     )
   }
@@ -221,52 +240,61 @@ export function AutomatedPayoutDashboard() {
     )
   }
 
-  const totalStaff = (data?.overdue.length || 0) + (data?.today.length || 0) +
-    (data?.this_week.length || 0) + (data?.this_month.length || 0) + (data?.later.length || 0)
 
   return (
     <div className="space-y-5">
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className={`rounded-xl p-4 border ${data?.overdue.length ? 'bg-red-50 border-red-200' : 'bg-white border-stone-200'}`}>
-          <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className={`w-4 h-4 ${data?.overdue.length ? 'text-red-500' : 'text-stone-400'}`} />
-            <p className={`text-xs font-medium ${data?.overdue.length ? 'text-red-700' : 'text-stone-500'}`}>ค้างจ่าย</p>
+        <div className="rounded-xl p-4 border bg-white border-bliss-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex flex-col items-center justify-center flex-shrink-0 leading-none">
+              <span className="text-sm font-bold text-white">7</span>
+              <span className="text-[9px] text-white/80">วัน</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-bliss-900 leading-none">{data?.schedule_counts.weekly || 0}</p>
+              <p className="text-xs text-bliss-500 mt-1">รายสัปดาห์ (คน)</p>
+            </div>
           </div>
-          <p className={`text-2xl font-bold ${data?.overdue.length ? 'text-red-900' : 'text-stone-400'}`}>
-            {data?.overdue.length || 0}
-          </p>
-          <p className={`text-xs mt-0.5 ${data?.overdue.length ? 'text-red-600' : 'text-stone-400'}`}>คน</p>
         </div>
 
-        <div className="rounded-xl p-4 border bg-white border-stone-200">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-amber-500" />
-            <p className="text-xs font-medium text-stone-500">สัปดาห์นี้</p>
+        <div className="rounded-xl p-4 border bg-white border-bliss-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex flex-col items-center justify-center flex-shrink-0 leading-none">
+              <span className="text-sm font-bold text-white">15</span>
+              <span className="text-[9px] text-white/80">วัน</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-bliss-900 leading-none">{data?.schedule_counts.bi_monthly || 0}</p>
+              <p className="text-xs text-bliss-500 mt-1">กลาง+สิ้นเดือน (คน)</p>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-stone-900">
-            {(data?.today.length || 0) + (data?.this_week.length || 0)}
-          </p>
-          <p className="text-xs text-stone-400 mt-0.5">คน</p>
         </div>
 
-        <div className="rounded-xl p-4 border bg-white border-stone-200">
-          <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-4 h-4 text-blue-500" />
-            <p className="text-xs font-medium text-stone-500">เดือนนี้</p>
+        <div className="rounded-xl p-4 border bg-white border-bliss-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex flex-col items-center justify-center flex-shrink-0 leading-none">
+              <span className="text-sm font-bold text-white">30</span>
+              <span className="text-[9px] text-white/80">วัน</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-bliss-900 leading-none">{data?.schedule_counts.monthly || 0}</p>
+              <p className="text-xs text-bliss-500 mt-1">รายเดือน (คน)</p>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-stone-900">{data?.this_month.length || 0}</p>
-          <p className="text-xs text-stone-400 mt-0.5">คน</p>
         </div>
 
-        <div className="rounded-xl p-4 border bg-white border-stone-200">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-4 h-4 text-stone-400" />
-            <p className="text-xs font-medium text-stone-500">พนักงานทั้งหมด</p>
+        <div className="rounded-xl p-4 border bg-white border-bliss-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Settings className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-bliss-900 leading-none">{data?.schedule_counts.custom_days || 0}</p>
+              <p className="text-xs text-bliss-500 mt-1">กำหนดเอง (คน)</p>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-stone-900">{totalStaff}</p>
-          <p className="text-xs text-stone-400 mt-0.5">คน active</p>
         </div>
       </div>
 
@@ -294,14 +322,14 @@ export function AutomatedPayoutDashboard() {
       )}
 
       {/* Upcoming grouped */}
-      <div className="bg-white border border-stone-200 rounded-xl p-5">
+      <div className="bg-white border border-bliss-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-stone-900">รอบจ่ายเงินที่กำลังมาถึง</h3>
+          <h3 className="font-semibold text-bliss-900">รอบจ่ายเงินที่กำลังมาถึง</h3>
           {!data?.overdue.length && (
             <button
               onClick={runPayoutCheck}
               disabled={isTriggering}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 text-white text-sm rounded-lg hover:bg-stone-700 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-bliss-800 text-white text-sm rounded-lg hover:bg-bliss-700 transition disabled:opacity-50"
             >
               {isTriggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               เรียกระบบออโต้
@@ -310,7 +338,7 @@ export function AutomatedPayoutDashboard() {
         </div>
 
         {(data?.today.length || 0) + (data?.this_week.length || 0) + (data?.this_month.length || 0) + (data?.later.length || 0) === 0 ? (
-          <div className="text-center py-8 text-stone-400">
+          <div className="text-center py-8 text-bliss-400">
             <Calendar className="w-10 h-10 mx-auto mb-2 opacity-40" />
             <p className="text-sm">ไม่มีรอบจ่ายที่กำลังมาถึง</p>
           </div>
@@ -327,7 +355,7 @@ export function AutomatedPayoutDashboard() {
 
             {!!data?.this_week.length && (
               <div>
-                <SectionHeader title="สัปดาห์นี้ (1–7 วัน)" count={data.this_week.length} color="text-amber-700" />
+                <SectionHeader title="สัปดาห์นี้ (1–7 วัน)" count={data.this_week.length} color="text-bliss-700" />
                 <div className="space-y-2">
                   {data.this_week.map(row => <StaffRow key={row.id} row={row} />)}
                 </div>
@@ -336,7 +364,7 @@ export function AutomatedPayoutDashboard() {
 
             {!!data?.this_month.length && (
               <div>
-                <SectionHeader title="เดือนนี้ (8–30 วัน)" count={data.this_month.length} color="text-blue-700" />
+                <SectionHeader title="เดือนนี้ (8–30 วัน)" count={data.this_month.length} color="text-bliss-700" />
                 <div className="space-y-2">
                   {data.this_month.map(row => <StaffRow key={row.id} row={row} />)}
                 </div>
@@ -345,7 +373,7 @@ export function AutomatedPayoutDashboard() {
 
             {!!data?.later.length && (
               <div>
-                <SectionHeader title="ถัดไป (30+ วัน)" count={data.later.length} color="text-stone-500" />
+                <SectionHeader title="ถัดไป (30+ วัน)" count={data.later.length} color="text-bliss-500" />
                 <div className="space-y-2">
                   {data.later.map(row => <StaffRow key={row.id} row={row} />)}
                 </div>
@@ -356,34 +384,34 @@ export function AutomatedPayoutDashboard() {
       </div>
 
       {/* Recent payouts history */}
-      <div className="bg-white border border-stone-200 rounded-xl p-5">
-        <h3 className="font-semibold text-stone-900 mb-4">ประวัติรอบจ่าย 30 วันที่ผ่านมา</h3>
+      <div className="bg-white border border-bliss-200 rounded-xl p-5">
+        <h3 className="font-semibold text-bliss-900 mb-4">ประวัติรอบจ่าย 30 วันที่ผ่านมา</h3>
 
         {!data?.recent_payouts.length ? (
-          <div className="text-center py-8 text-stone-400">
+          <div className="text-center py-8 text-bliss-400">
             <RefreshCw className="w-10 h-10 mx-auto mb-2 opacity-40" />
             <p className="text-sm">ยังไม่มีรอบจ่ายในช่วงนี้</p>
           </div>
         ) : (
-          <div className="divide-y divide-stone-100">
+          <div className="divide-y divide-bliss-100">
             {data.recent_payouts.map(payout => (
               <div key={payout.id} className="flex items-center justify-between py-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-stone-900 truncate">{payout.staff_name}</p>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${payout.is_automated ? 'bg-blue-100 text-blue-700' : 'bg-stone-100 text-stone-600'}`}>
+                    <p className="font-medium text-bliss-900 truncate">{payout.staff_name}</p>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${payout.is_automated ? 'bg-bliss-100 text-bliss-700' : 'bg-bliss-100 text-bliss-600'}`}>
                       {payout.is_automated ? 'อัตโนมัติ' : 'Manual'}
                     </span>
                   </div>
-                  <p className="text-xs text-stone-400 mt-0.5">
+                  <p className="text-xs text-bliss-400 mt-0.5">
                     {payout.total_jobs} งาน • {new Date(payout.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
                 <div className="flex-shrink-0 ml-4 text-right">
-                  <p className="font-semibold text-stone-900">฿{payout.gross_earnings.toLocaleString()}</p>
+                  <p className="font-semibold text-bliss-900">฿{payout.gross_earnings.toLocaleString()}</p>
                   <span className={`text-xs ${
                     payout.status === 'completed' ? 'text-green-600' :
-                    payout.status === 'pending' ? 'text-amber-600' : 'text-red-600'
+                    payout.status === 'pending' ? 'text-bliss-600' : 'text-red-600'
                   }`}>
                     {payout.status === 'completed' ? 'จ่ายแล้ว' :
                      payout.status === 'pending' ? 'รออนุมัติ' : 'ล้มเหลว'}

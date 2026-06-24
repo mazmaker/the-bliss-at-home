@@ -147,10 +147,10 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
           <div>
-            <h2 className="text-xl font-bold text-stone-900">รายงานการใช้โปรโมชัน</h2>
-            <p className="text-sm text-stone-500 mt-1">
+            <h2 className="text-xl font-bold text-bliss-900">รายงานการใช้โปรโมชัน</h2>
+            <p className="text-sm text-bliss-500 mt-1">
               {promotionName} ({promotionCode})
             </p>
           </div>
@@ -166,7 +166,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
             )}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-stone-100 rounded-lg transition"
+              className="p-2 hover:bg-bliss-100 rounded-lg transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -186,7 +186,7 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
           {isLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
+                <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
                 <p className="text-gray-600">กำลังโหลดข้อมูลรายงาน...</p>
               </div>
             </div>
@@ -196,13 +196,13 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
           {!isLoading && stats && (
             <>
               {/* Tabs */}
-              <div className="flex space-x-1 mb-6 bg-stone-100 rounded-lg p-1">
+              <div className="flex space-x-1 mb-6 bg-bliss-100 rounded-lg p-1">
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
                     activeTab === 'overview'
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
+                      ? 'bg-white text-bliss-900 shadow-sm'
+                      : 'text-bliss-600 hover:text-bliss-900'
                   }`}
                 >
                   <BarChart3 className="w-4 h-4" />
@@ -212,8 +212,8 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                   onClick={() => setActiveTab('usage')}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
                     activeTab === 'usage'
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
+                      ? 'bg-white text-bliss-900 shadow-sm'
+                      : 'text-bliss-600 hover:text-bliss-900'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -223,8 +223,8 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                   onClick={() => setActiveTab('chart')}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
                     activeTab === 'chart'
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
+                      ? 'bg-white text-bliss-900 shadow-sm'
+                      : 'text-bliss-600 hover:text-bliss-900'
                   }`}
                 >
                   <TrendingUp className="w-4 h-4" />
@@ -262,17 +262,17 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                       <div className="text-sm font-medium text-green-800">ผู้ใช้ไม่ซ้ำ</div>
                     </div>
 
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-amber-600">
+                        <div className="text-bliss-600">
                           <DollarSign className="w-8 h-8" />
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-amber-900">{formatCurrency(stats.total_discount)}</div>
-                          <div className="text-sm text-amber-600">รวม</div>
+                          <div className="text-lg font-bold text-bliss-900">{formatCurrency(stats.total_discount)}</div>
+                          <div className="text-sm text-bliss-600">รวม</div>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-amber-800">ส่วนลดรวม</div>
+                      <div className="text-sm font-medium text-bliss-800">ส่วนลดรวม</div>
                     </div>
 
                     <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
@@ -291,18 +291,18 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
 
                   {/* Recent Activity */}
                   {stats.usage_by_date && stats.usage_by_date.length > 0 && (
-                    <div className="bg-stone-50 border border-stone-200 rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-stone-900 mb-4">การใช้งานรายวัน (30 วันล่าสุด)</h3>
+                    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-bliss-900 mb-4">การใช้งานรายวัน (30 วันล่าสุด)</h3>
                       <div className="space-y-3 max-h-60 overflow-y-auto">
                         {stats.usage_by_date.map((day, index) => (
                           <div key={index} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg">
                             <div className="flex items-center gap-3">
-                              <Calendar className="w-4 h-4 text-stone-400" />
+                              <Calendar className="w-4 h-4 text-bliss-400" />
                               <span className="text-sm font-medium">{new Date(day.date).toLocaleDateString('th-TH')}</span>
                             </div>
                             <div className="text-right">
                               <div className="text-sm font-bold">{day.count} ครั้ง</div>
-                              <div className="text-xs text-stone-500">{formatCurrency(day.total_discount)}</div>
+                              <div className="text-xs text-bliss-500">{formatCurrency(day.total_discount)}</div>
                             </div>
                           </div>
                         ))}
@@ -316,49 +316,49 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
               {activeTab === 'usage' && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-stone-900">รายละเอียดการใช้งาน ({usage.length} รายการ)</h3>
+                    <h3 className="text-lg font-semibold text-bliss-900">รายละเอียดการใช้งาน ({usage.length} รายการ)</h3>
                     <button
                       onClick={fetchReports}
-                      className="p-2 text-stone-600 hover:text-stone-800 rounded-lg transition"
+                      className="p-2 text-bliss-600 hover:text-bliss-800 rounded-lg transition"
                     >
                       <RefreshCw className="w-5 h-5" />
                     </button>
                   </div>
 
                   {usage.length === 0 ? (
-                    <div className="text-center py-12 text-stone-500">
-                      <Eye className="w-12 h-12 mx-auto mb-4 text-stone-400" />
+                    <div className="text-center py-12 text-bliss-500">
+                      <Eye className="w-12 h-12 mx-auto mb-4 text-bliss-400" />
                       <p className="text-lg font-medium mb-2">ยังไม่มีการใช้งาน</p>
                       <p className="text-sm">โปรโมชันนี้ยังไม่ได้ถูกใช้งาน</p>
                     </div>
                   ) : (
-                    <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+                    <div className="bg-white border border-bliss-200 rounded-xl overflow-hidden">
                       <div className="overflow-x-auto">
                         <table className="w-full">
-                          <thead className="bg-stone-50">
+                          <thead className="bg-bliss-50">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">วันที่ใช้</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">ผู้ใช้</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">เบอร์โทร</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase">ส่วนลด</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">วันที่ใช้</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">ผู้ใช้</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">เบอร์โทร</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-bliss-500 uppercase">ส่วนลด</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-stone-200">
+                          <tbody className="divide-y divide-bliss-200">
                             {usage.map((item, index) => (
-                              <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-stone-50'}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-900">
+                              <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-bliss-50'}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-bliss-900">
                                   {formatDate(item.used_at)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-900">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-bliss-900">
                                   {item.profiles ?
                                     `${item.profiles.first_name || ''} ${item.profiles.last_name || ''}`.trim() || 'ไม่ทราบชื่อ'
                                     : 'ไม่ทราบชื่อ'
                                   }
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-bliss-500">
                                   {item.profiles?.phone || '-'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-900 text-right font-medium">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-bliss-900 text-right font-medium">
                                   {formatCurrency(item.discount_amount)}
                                 </td>
                               </tr>
@@ -374,10 +374,10 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
               {/* Chart Tab */}
               {activeTab === 'chart' && (
                 <div>
-                  <h3 className="text-lg font-semibold text-stone-900 mb-6">กราฟการใช้งานรายวัน</h3>
+                  <h3 className="text-lg font-semibold text-bliss-900 mb-6">กราฟการใช้งานรายวัน</h3>
 
                   {stats.usage_by_date && stats.usage_by_date.length > 0 ? (
-                    <div className="bg-white border border-stone-200 rounded-xl p-6">
+                    <div className="bg-white border border-bliss-200 rounded-xl p-6">
                       <div className="space-y-4">
                         {stats.usage_by_date.map((day, index) => {
                           const maxUsage = Math.max(...stats.usage_by_date.map(d => d.count))
@@ -385,13 +385,13 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
 
                           return (
                             <div key={index} className="flex items-center space-x-4">
-                              <div className="w-24 text-sm text-stone-600 flex-shrink-0">
+                              <div className="w-24 text-sm text-bliss-600 flex-shrink-0">
                                 {new Date(day.date).toLocaleDateString('th-TH', {
                                   month: 'short',
                                   day: 'numeric'
                                 })}
                               </div>
-                              <div className="flex-1 bg-stone-100 rounded-full h-6 relative">
+                              <div className="flex-1 bg-bliss-100 rounded-full h-6 relative">
                                 <div
                                   className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
                                   style={{ width: `${Math.max(widthPercent, 5)}%` }}
@@ -399,10 +399,10 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                                   {widthPercent > 15 && `${day.count} ครั้ง`}
                                 </div>
                               </div>
-                              <div className="w-20 text-sm text-stone-900 text-right flex-shrink-0">
+                              <div className="w-20 text-sm text-bliss-900 text-right flex-shrink-0">
                                 {day.count} ครั้ง
                               </div>
-                              <div className="w-24 text-sm text-stone-600 text-right flex-shrink-0">
+                              <div className="w-24 text-sm text-bliss-600 text-right flex-shrink-0">
                                 {formatCurrency(day.total_discount)}
                               </div>
                             </div>
@@ -411,8 +411,8 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-stone-500">
-                      <BarChart3 className="w-12 h-12 mx-auto mb-4 text-stone-400" />
+                    <div className="text-center py-12 text-bliss-500">
+                      <BarChart3 className="w-12 h-12 mx-auto mb-4 text-bliss-400" />
                       <p className="text-lg font-medium mb-2">ไม่มีข้อมูลสำหรับสร้างกราฟ</p>
                       <p className="text-sm">เมื่อมีการใช้งานโปรโมชัน กราฟจะแสดงที่นี่</p>
                     </div>
@@ -424,18 +424,18 @@ export function PromotionReportsModal({ isOpen, onClose, promotionId, promotionN
 
           {/* No Data State */}
           {!isLoading && !stats && !error && (
-            <div className="text-center py-12 text-stone-500">
-              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-stone-400" />
+            <div className="text-center py-12 text-bliss-500">
+              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-bliss-400" />
               <p className="text-lg font-medium mb-2">ยังไม่มีข้อมูลการใช้งาน</p>
               <p className="text-sm">โปรโมชันนี้ยังไม่ได้ถูกใช้งาน</p>
             </div>
           )}
 
           {/* Footer */}
-          <div className="flex justify-end mt-6 pt-4 border-t border-stone-200">
+          <div className="flex justify-end mt-6 pt-4 border-t border-bliss-200">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-stone-600 text-white rounded-xl font-medium hover:bg-stone-700 transition"
+              className="px-6 py-2 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               ปิด
             </button>

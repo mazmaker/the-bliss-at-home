@@ -290,8 +290,8 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-stone-900 mb-2">ค้นหาลูกค้า</h2>
-        <p className="text-stone-600">ค้นหาลูกค้าด้วยเบอร์โทร, ชื่อ, หรือ email</p>
+        <h2 className="text-xl font-semibold text-bliss-900 mb-2">ค้นหาลูกค้า</h2>
+        <p className="text-bliss-600">ค้นหาลูกค้าด้วยเบอร์โทร, ชื่อ, หรือ email</p>
       </div>
 
       {/* Selected Customer Display */}
@@ -350,7 +350,7 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
                 </div>
 
                 {selectedCustomer.created_by_admin && (
-                  <div className="inline-flex items-center bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-medium">
+                  <div className="inline-flex items-center bg-bliss-100 text-bliss-700 px-3 py-1 rounded-full text-xs font-medium">
                     สร้างโดย Admin
                   </div>
                 )}
@@ -358,7 +358,7 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
             </div>
             <button
               onClick={() => onCustomerSelect(undefined as any)}
-              className="text-stone-400 hover:text-stone-600 px-3 py-1 rounded-lg hover:bg-stone-100 text-sm"
+              className="text-bliss-400 hover:text-bliss-600 px-3 py-1 rounded-lg hover:bg-bliss-100 text-sm"
             >
               เปลี่ยน
             </button>
@@ -377,16 +377,16 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ลองค้นหา: ทดสอบ, 081, email@example.com"
-              className="w-full pl-10 pr-4 py-3 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+              className="w-full pl-10 pr-4 py-3 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:bg-white transition"
             />
           </div>
 
           {/* Search Results */}
           {searchQuery && (
-            <div className="border border-stone-200 rounded-xl max-h-96 overflow-y-auto">
+            <div className="border border-bliss-200 rounded-xl max-h-96 overflow-y-auto">
               {isLoading ? (
-                <div className="p-8 text-center text-stone-500">
-                  <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <div className="p-8 text-center text-bliss-500">
+                  <div className="animate-spin w-8 h-8 border-2 border-bliss-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                   กำลังค้นหา...
                 </div>
               ) : searchResults.length > 0 ? (
@@ -398,21 +398,21 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
                       </p>
                     </div>
                   )}
-                  <div className="divide-y divide-stone-100">
+                  <div className="divide-y divide-bliss-100">
                     {searchResults.map((customer) => (
                     <div
                       key={customer.id}
                       onClick={() => onCustomerSelect(customer)}
-                      className="p-4 hover:bg-stone-50 cursor-pointer transition-colors"
+                      className="p-4 hover:bg-bliss-50 cursor-pointer transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-stone-600" />
+                          <div className="w-10 h-10 bg-bliss-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-bliss-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-stone-900">{customer.full_name}</h3>
-                            <div className="flex items-center gap-4 text-sm text-stone-500">
+                            <h3 className="font-medium text-bliss-900">{customer.full_name}</h3>
+                            <div className="flex items-center gap-4 text-sm text-bliss-500">
                               <span className="flex items-center gap-1">
                                 <Phone className="w-4 h-4" />
                                 {formatPhone(customer.phone)}
@@ -421,27 +421,27 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
                                 <span>{customer.email}</span>
                               )}
                             </div>
-                            <div className="flex items-center gap-4 text-xs text-stone-400 mt-1">
+                            <div className="flex items-center gap-4 text-xs text-bliss-400 mt-1">
                               <span>การจอง: {customer.total_bookings} ครั้ง</span>
                               <span>ยอดรวม: {formatCurrency(customer.total_spent)}</span>
                               <span>แต้ม: {customer.loyalty_points}</span>
                               {customer.created_by_admin && (
-                                <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs">
+                                <span className="bg-bliss-100 text-bliss-700 px-2 py-0.5 rounded text-xs">
                                   Admin
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
-                        <ArrowRight className="w-5 h-5 text-stone-400" />
+                        <ArrowRight className="w-5 h-5 text-bliss-400" />
                       </div>
                     </div>
                   ))}
                   </div>
                 </>
               ) : searchQuery.length >= 2 ? (
-                <div className="p-8 text-center text-stone-500">
-                  <User className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+                <div className="p-8 text-center text-bliss-500">
+                  <User className="w-12 h-12 text-bliss-300 mx-auto mb-4" />
                   <p>ไม่พบลูกค้า "{searchQuery}"</p>
                 </div>
               ) : null}
@@ -450,10 +450,10 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
 
           {/* Instructions for creating customers */}
           {!searchQuery && (
-            <div className="border-2 border-dashed border-stone-200 rounded-xl p-6 text-center">
-              <User className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-              <p className="text-stone-600 font-medium">เลือกลูกค้าจากระบบ</p>
-              <p className="text-stone-400 text-sm">
+            <div className="border-2 border-dashed border-bliss-200 rounded-xl p-6 text-center">
+              <User className="w-8 h-8 text-bliss-300 mx-auto mb-2" />
+              <p className="text-bliss-600 font-medium">เลือกลูกค้าจากระบบ</p>
+              <p className="text-bliss-400 text-sm">
                 พิมพ์ชื่อหรือเบอร์โทรเพื่อค้นหาลูกค้า
               </p>
             </div>
@@ -468,7 +468,7 @@ export default function CustomerSearch({ selectedCustomer, onCustomerSelect, onN
         <div className="flex justify-end">
           <button
             onClick={onNext}
-            className="bg-amber-600 text-white px-6 py-3 rounded-xl hover:bg-amber-700 transition-colors flex items-center gap-2"
+            className="bg-bliss-600 text-white px-6 py-3 rounded-xl hover:bg-bliss-700 transition-colors flex items-center gap-2"
           >
             ถัดไป: เลือกบริการ
             <ArrowRight className="w-5 h-5" />

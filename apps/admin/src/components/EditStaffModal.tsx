@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   X,
+  Pencil,
   Phone,
   User,
   MapPin,
@@ -11,6 +12,7 @@ import {
   Check,
   Loader2,
   Star,
+  ShieldAlert,
 } from 'lucide-react'
 import { useUpdateStaff } from '../hooks/useStaff'
 import { CreateStaffData, Staff } from '../services/staffService'
@@ -133,138 +135,162 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
-          <h2 className="text-xl font-bold text-stone-900">
-            ✏️ แก้ไขข้อมูลพนักงาน
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-stone-100 rounded-lg transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                <Pencil className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white leading-tight">
+                  แก้ไขข้อมูลพนักงาน
+                </h2>
+                <p className="text-xs text-bliss-200">
+                  อัปเดตข้อมูลของ {staff.name_th}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Thai Name */}
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
-                  <User className="w-4 h-4 inline mr-1" />
-                  ชื่อ (ภาษาไทย) *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name_th}
-                  onChange={(e) => handleInputChange('name_th', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="เช่น สมหญิง นวดเก่ง"
-                  required
-                />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+            {/* ── Section: ข้อมูลส่วนตัว ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <User className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">ข้อมูลส่วนตัว</h4>
               </div>
 
-              {/* English Name */}
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
-                  <User className="w-4 h-4 inline mr-1" />
-                  ชื่อ (ภาษาอังกฤษ)
-                </label>
-                <input
-                  type="text"
-                  value={formData.name_en}
-                  onChange={(e) => handleInputChange('name_en', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="เช่น Somying Massage"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Thai Name */}
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    <User className="w-4 h-4 inline mr-1" />
+                    ชื่อ (ภาษาไทย) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name_th}
+                    onChange={(e) => handleInputChange('name_th', e.target.value)}
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                    placeholder="เช่น สมหญิง นวดเก่ง"
+                    required
+                  />
+                </div>
+
+                {/* English Name */}
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    <User className="w-4 h-4 inline mr-1" />
+                    ชื่อ (ภาษาอังกฤษ)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name_en}
+                    onChange={(e) => handleInputChange('name_en', e.target.value)}
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                    placeholder="เช่น Somying Massage"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    <Phone className="w-4 h-4 inline mr-1" />
+                    เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                    placeholder="เช่น 081-234-5678"
+                    required
+                  />
+                </div>
+
+                {/* ID Card */}
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    <FileText className="w-4 h-4 inline mr-1" />
+                    เลขบัตรประชาชน
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.id_card}
+                    onChange={(e) => handleInputChange('id_card', e.target.value)}
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                    placeholder="เช่น 1234567890123"
+                  />
+                </div>
               </div>
 
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
-                  <Phone className="w-4 h-4 inline mr-1" />
-                  เบอร์โทรศัพท์ *
+              {/* Gender */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-bliss-700 mb-2">
+                  เพศ
                 </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="เช่น 081-234-5678"
-                  required
-                />
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, gender: 'female' }))}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-medium border-2 transition ${
+                      formData.gender === 'female'
+                        ? 'bg-bliss-50 text-bliss-700 border-bliss-500'
+                        : 'bg-white text-bliss-600 border-bliss-200 hover:border-bliss-300'
+                    }`}
+                  >
+                    หญิง
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, gender: 'male' }))}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-medium border-2 transition ${
+                      formData.gender === 'male'
+                        ? 'bg-bliss-50 text-bliss-700 border-bliss-500'
+                        : 'bg-white text-bliss-600 border-bliss-200 hover:border-bliss-300'
+                    }`}
+                  >
+                    ชาย
+                  </button>
+                </div>
               </div>
 
-              {/* ID Card */}
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
-                  <FileText className="w-4 h-4 inline mr-1" />
-                  เลขบัตรประชาชน
+              {/* Address */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                  ที่อยู่
                 </label>
-                <input
-                  type="text"
-                  value={formData.id_card}
-                  onChange={(e) => handleInputChange('id_card', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="เช่น 1234567890123"
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                  placeholder="เช่น 123 ถนนสุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพฯ 10110"
+                  rows={2}
                 />
               </div>
             </div>
 
-            {/* Gender */}
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
-                เพศ
-              </label>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, gender: 'female' }))}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
-                    formData.gender === 'female'
-                      ? 'bg-pink-100 text-pink-700 border-2 border-pink-400'
-                      : 'bg-stone-100 text-stone-600 border-2 border-transparent hover:bg-stone-200'
-                  }`}
-                >
-                  หญิง
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, gender: 'male' }))}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
-                    formData.gender === 'male'
-                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-400'
-                      : 'bg-stone-100 text-stone-600 border-2 border-transparent hover:bg-stone-200'
-                  }`}
-                >
-                  ชาย
-                </button>
+            {/* ── Section: ทักษะ/ความสามารถ ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <Sparkles className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">ทักษะ / ความสามารถ</h4>
               </div>
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
-                <MapPin className="w-4 h-4 inline mr-1" />
-                ที่อยู่
-              </label>
-              <textarea
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="เช่น 123 ถนนสุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพฯ 10110"
-                rows={2}
-              />
-            </div>
-
-            {/* Skills */}
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-3">
-                ทักษะ/ความสามารถ
-              </label>
-              <div className="grid grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-72 overflow-y-auto p-1">
                 {availableSkills.map((skill: any) => {
                   const skillIcon = skillIconMap.find(
                     (s) => skill.name_th?.includes(s.name) || skill.name_en?.toLowerCase().includes(s.name.toLowerCase())
@@ -276,53 +302,54 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
                       key={skill.id}
                       type="button"
                       onClick={() => handleSkillToggle(skill.id)}
-                      className={`flex flex-col items-center gap-2 px-3 py-3 rounded-xl font-medium transition relative ${
+                      className={`flex flex-col items-center gap-2 px-3 py-3 rounded-xl font-medium border-2 transition relative ${
                         isSelected
-                          ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                          ? 'bg-bliss-50 text-bliss-700 border-bliss-500'
+                          : 'bg-white text-bliss-600 border-bliss-200 hover:border-bliss-300'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className={`w-5 h-5 ${isSelected ? 'text-bliss-600' : 'text-bliss-400'}`} />
                       <span className="text-sm">{skill.name_th}</span>
-                      {isSelected && <Check className="w-4 h-4 absolute top-1 right-1" />}
+                      {isSelected && <Check className="w-4 h-4 absolute top-1.5 right-1.5 text-bliss-600" />}
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            {/* Emergency Contact */}
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-3">
-                👤 บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)
-              </label>
+            {/* ── Section: ผู้ติดต่อฉุกเฉิน ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <ShieldAlert className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">ผู้ติดต่อฉุกเฉิน</h4>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs text-stone-500 mb-1">ชื่อ-นามสกุล</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">ชื่อ-นามสกุล</label>
                   <input
                     type="text"
                     value={formData.emergency_contact_name}
                     onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact_name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                     placeholder="ชื่อบุคคลอ้างอิง"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-stone-500 mb-1">เบอร์โทรศัพท์</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">เบอร์โทรศัพท์</label>
                   <input
                     type="tel"
                     value={formData.emergency_contact_phone}
                     onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact_phone: e.target.value }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                     placeholder="081-234-5678"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-stone-500 mb-1">ความสัมพันธ์</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">ความสัมพันธ์</label>
                   <select
                     value={formData.emergency_contact_relationship}
                     onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact_relationship: e.target.value }))}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                   >
                     <option value="">-- เลือก --</option>
                     {EMERGENCY_CONTACT_RELATIONSHIPS.map((r) => (
@@ -333,63 +360,69 @@ export default function EditStaffModal({ isOpen, onClose, staff }: EditStaffModa
               </div>
             </div>
 
-            {/* Bio */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
-                  ข้อมูลเพิ่มเติม (ภาษาไทย)
-                </label>
-                <textarea
-                  value={formData.bio_th}
-                  onChange={(e) => handleInputChange('bio_th', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="เช่น มีประสบการณ์นวดมา 5 ปี เชี่ยวชาญการนวดแผนไทย"
-                  rows={3}
-                />
+            {/* ── Section: ข้อมูลเพิ่มเติม ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <FileText className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">ข้อมูลเพิ่มเติม</h4>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
-                  ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)
-                </label>
-                <textarea
-                  value={formData.bio_en}
-                  onChange={(e) => handleInputChange('bio_en', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="e.g. 5 years experience in Thai massage therapy"
-                  rows={3}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    ประวัติ / จุดเด่น (ภาษาไทย)
+                  </label>
+                  <textarea
+                    value={formData.bio_th}
+                    onChange={(e) => handleInputChange('bio_th', e.target.value)}
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                    placeholder="เช่น มีประสบการณ์นวดมา 5 ปี เชี่ยวชาญการนวดแผนไทย"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    ประวัติ / จุดเด่น (ภาษาอังกฤษ)
+                  </label>
+                  <textarea
+                    value={formData.bio_en}
+                    onChange={(e) => handleInputChange('bio_en', e.target.value)}
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                    placeholder="e.g. 5 years experience in Thai massage therapy"
+                    rows={3}
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Submit Button */}
-            <div className="flex items-center gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={updateStaffMutation.isPending}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition disabled:opacity-50"
-              >
-                {updateStaffMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    กำลังบันทึก...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-5 h-5" />
-                    บันทึกการแก้ไข
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Sticky Footer */}
+          <div className="flex-shrink-0 flex justify-end gap-3 border-t border-bliss-200 bg-bliss-50 px-6 py-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 text-sm font-medium text-bliss-700 bg-white border border-bliss-300 rounded-xl hover:bg-bliss-100 transition"
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              disabled={updateStaffMutation.isPending}
+              className="flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl hover:from-bliss-700 hover:to-bliss-800 shadow-sm transition disabled:opacity-50"
+            >
+              {updateStaffMutation.isPending ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  กำลังบันทึก...
+                </>
+              ) : (
+                <>
+                  <Check className="w-5 h-5" />
+                  บันทึกการแก้ไข
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

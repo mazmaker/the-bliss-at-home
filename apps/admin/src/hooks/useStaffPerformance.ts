@@ -248,7 +248,7 @@ export function calculateTrend(current: number, previous: number): PerformanceTr
   return {
     direction: 'stable',
     value: '0.0',
-    color: 'text-stone-500',
+    color: 'text-bliss-500',
   }
 }
 

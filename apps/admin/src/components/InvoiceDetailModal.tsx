@@ -247,7 +247,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoice, hotelName }: Invo
             <button
               onClick={handleSendEmail}
               disabled={emailSending}
-              className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-bliss-600 px-4 py-2 text-sm font-medium text-white hover:bg-bliss-700 disabled:opacity-50"
             >
               {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               {emailSending ? 'กำลังส่ง...' : 'ส่งอีเมล'}

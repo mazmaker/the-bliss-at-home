@@ -32,14 +32,14 @@ export function QuickActionButtons({
   const isLastStep = currentStep === totalSteps
 
   return (
-    <div className="bg-white border-t border-stone-200 p-4 rounded-b-xl">
+    <div className="bg-white border-t border-bliss-200 p-4 rounded-b-xl">
       <div className="flex justify-between items-center gap-4">
         {/* Back Button */}
         {canGoBack ? (
           <button
             onClick={onBack}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-bliss-300 text-bliss-700 rounded-lg hover:bg-bliss-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             {backLabel || 'ก่อนหน้า'}
@@ -49,8 +49,8 @@ export function QuickActionButtons({
         )}
 
         {/* Center - Step indicator */}
-        <div className="flex items-center gap-2 text-sm text-stone-500">
-          <span className="font-medium text-[#d29b25]">{currentStep}</span>
+        <div className="flex items-center gap-2 text-sm text-bliss-500">
+          <span className="font-medium text-[#565b34]">{currentStep}</span>
           <span>จาก</span>
           <span>{totalSteps}</span>
           <span>ขั้นตอน</span>
@@ -63,7 +63,7 @@ export function QuickActionButtons({
             <button
               onClick={onSkip}
               disabled={isLoading}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm text-stone-600 hover:text-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm text-bliss-600 hover:text-bliss-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <SkipForward className="w-4 h-4" />
               {skipLabel || 'ข้าม'}
@@ -76,8 +76,8 @@ export function QuickActionButtons({
             disabled={!canGoNext || isLoading}
             className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
               isLastStep
-                ? 'bg-[#b6d387] text-white hover:bg-[#9bc76f] shadow-lg'
-                : 'bg-[#d29b25] text-white hover:bg-[#b8851e] shadow-lg'
+                ? 'bg-[#c8c29c] text-white hover:bg-[#c8c29c] shadow-lg'
+                : 'bg-[#565b34] text-white hover:bg-[#464a28] shadow-lg'
             }`}
           >
             {isLoading ? (
@@ -100,16 +100,16 @@ export function QuickActionButtons({
       </div>
 
       {/* Progress Bar */}
-      <div className="mt-4 w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+      <div className="mt-4 w-full bg-bliss-200 rounded-full h-1.5 overflow-hidden">
         <div
-          className="bg-gradient-to-r from-[#d29b25] to-[#b6d387] h-full rounded-full transition-all duration-500 ease-out"
+          className="bg-gradient-to-r from-[#565b34] to-[#c8c29c] h-full rounded-full transition-all duration-500 ease-out"
           style={{ width: `${(currentStep / totalSteps) * 100}%` }}
         ></div>
       </div>
 
       {/* Step completion text */}
       <div className="mt-2 text-center">
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-bliss-500">
           {currentStep === totalSteps
             ? '🎉 เสร็จสิ้นทุกขั้นตอนแล้ว พร้อมส่งการจองให้ Staff'
             : `เสร็จแล้ว ${currentStep - 1} จาก ${totalSteps} ขั้นตอน`

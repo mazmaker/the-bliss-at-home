@@ -259,7 +259,7 @@ function Promotions() {
       case 'expired':
         return 'bg-red-500 text-white'
       default:
-        return 'bg-stone-500 text-white'
+        return 'bg-bliss-500 text-white'
     }
   }
 
@@ -331,7 +331,7 @@ function Promotions() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
+          <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
           <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -365,20 +365,20 @@ function Promotions() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">จัดการโปรโมชัน</h1>
-          <p className="text-stone-500">Promotions Management</p>
+          <h1 className="text-2xl font-bold text-bliss-900">จัดการโปรโมชัน</h1>
+          <p className="text-bliss-500">Promotions Management</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={fetchPromotions}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-bliss-200 text-bliss-700 rounded-xl font-medium hover:bg-bliss-50 transition"
           >
             <RefreshCw className="w-4 h-4" />
             รีเฟรช
           </button>
           <button
             onClick={handleAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition"
           >
             <Plus className="w-5 h-5" />
             เพิ่มโปรโมชันใหม่
@@ -387,23 +387,23 @@ function Promotions() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-4 border border-bliss-100">
         <div className="flex flex-col gap-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
             <input
               type="text"
               placeholder="ค้นหาโปรโมชัน (ชื่อ, รหัส)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+              className="w-full pl-10 pr-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:bg-white transition"
             />
           </div>
 
           {/* Type Filters */}
           <div>
-            <p className="text-sm font-medium text-stone-700 mb-2">ประเภทส่วนลด:</p>
+            <p className="text-sm font-medium text-bliss-700 mb-2">ประเภทส่วนลด:</p>
             <div className="flex flex-wrap gap-2">
               {promotionTypes.map((type) => {
                 const Icon = type.icon
@@ -413,8 +413,8 @@ function Promotions() {
                     onClick={() => setSelectedType(type.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
                       selectedType === type.id
-                        ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                        : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -427,7 +427,7 @@ function Promotions() {
 
           {/* Status Filters */}
           <div>
-            <p className="text-sm font-medium text-stone-700 mb-2">สถานะ:</p>
+            <p className="text-sm font-medium text-bliss-700 mb-2">สถานะ:</p>
             <div className="flex flex-wrap gap-2">
               {statusFilters.map((status) => {
                 const Icon = status.icon
@@ -438,7 +438,7 @@ function Promotions() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
                       selectedStatus === status.id
                         ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -452,7 +452,7 @@ function Promotions() {
       </div>
 
       {/* Results */}
-      <div className="text-sm text-stone-500">
+      <div className="text-sm text-bliss-500">
         พบ {filteredPromotions.length} โปรโมชัน
       </div>
 
@@ -461,7 +461,7 @@ function Promotions() {
         {filteredPromotions.map((promotion) => (
           <div
             key={promotion.id}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100 hover:shadow-xl transition"
+            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-bliss-100 hover:shadow-xl transition"
           >
             {/* Image Section */}
             {promotion.image_url && (
@@ -481,11 +481,11 @@ function Promotions() {
             )}
 
             {/* Header */}
-            <div className={`relative p-4 ${promotion.image_url ? 'bg-white' : 'bg-gradient-to-r from-amber-100 to-amber-50'}`}>
+            <div className={`relative p-4 ${promotion.image_url ? 'bg-white' : 'bg-gradient-to-r from-bliss-100 to-bliss-50'}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-stone-900 mb-1">{promotion.name_en}</h3>
-                  <p className="text-sm text-stone-600">{promotion.name_th}</p>
+                  <h3 className="font-semibold text-bliss-900 mb-1">{promotion.name_en}</h3>
+                  <p className="text-sm text-bliss-600">{promotion.name_th}</p>
                 </div>
                 {!promotion.image_url && (
                   <div
@@ -498,13 +498,13 @@ function Promotions() {
 
               {/* Promotion Code */}
               <div className="mt-3 flex items-center gap-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-lg border border-amber-200">
-                  <Tag className="w-4 h-4 text-amber-600" />
-                  <span className="font-mono font-bold text-amber-700">{promotion.code}</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-lg border border-bliss-200">
+                  <Tag className="w-4 h-4 text-bliss-600" />
+                  <span className="font-mono font-bold text-bliss-700">{promotion.code}</span>
                 </div>
                 <button
                   onClick={() => navigator.clipboard.writeText(promotion.code)}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-sm rounded-lg hover:bg-amber-200 transition"
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-bliss-100 text-bliss-700 text-sm rounded-lg hover:bg-bliss-200 transition"
                   title="คัดลอกรหัสโปรโมชัน"
                 >
                   <Copy className="w-4 h-4" />
@@ -517,19 +517,19 @@ function Promotions() {
               {/* Discount Info */}
               <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-stone-600">ส่วนลด:</span>
+                  <span className="text-sm text-bliss-600">ส่วนลด:</span>
                   <span className="text-lg font-bold text-green-700">{formatDiscount(promotion)}</span>
                 </div>
 
                 {promotion.min_order_amount && (
-                  <div className="flex justify-between text-xs text-stone-500">
+                  <div className="flex justify-between text-xs text-bliss-500">
                     <span>ยอดขั้นต่ำ:</span>
                     <span>฿{promotion.min_order_amount.toLocaleString()}</span>
                   </div>
                 )}
 
                 {promotion.max_discount && promotion.discount_type === 'percentage' && (
-                  <div className="flex justify-between text-xs text-stone-500">
+                  <div className="flex justify-between text-xs text-bliss-500">
                     <span>ลดสูงสุด:</span>
                     <span>฿{promotion.max_discount.toLocaleString()}</span>
                   </div>
@@ -537,11 +537,11 @@ function Promotions() {
               </div>
 
               {/* Usage Stats */}
-              <div className="mb-4 p-3 bg-stone-50 rounded-xl">
+              <div className="mb-4 p-3 bg-bliss-50 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm text-stone-600">การใช้งาน:</span>
+                    <span className="text-sm text-bliss-600">การใช้งาน:</span>
                   </div>
                   <span className="text-sm font-medium">
                     {promotion.usage_count}{promotion.usage_limit ? `/${promotion.usage_limit}` : ''}
@@ -561,7 +561,7 @@ function Promotions() {
               </div>
 
               {/* Dates */}
-              <div className="mb-4 space-y-2 text-xs text-stone-500">
+              <div className="mb-4 space-y-2 text-xs text-bliss-500">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
@@ -675,7 +675,7 @@ function Promotions() {
           {(!searchQuery && selectedType === 'all' && selectedStatus === 'all') && (
             <button
               onClick={handleAdd}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition"
             >
               <Plus className="w-5 h-5" />
               เพิ่มโปรโมชันแรก

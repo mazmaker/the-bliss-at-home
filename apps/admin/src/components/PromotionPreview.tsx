@@ -119,7 +119,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
         </button>
 
         {/* Hero Section with Image - Responsive Height */}
-        <div className="relative h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-t-3xl overflow-hidden">
+        <div className="relative h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-bliss-400 via-bliss-500 to-bliss-600 rounded-t-3xl overflow-hidden">
           {promotion.image_url ? (
             <>
               <img
@@ -176,19 +176,19 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
           </div>
 
           {/* Promo Code */}
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-4 border border-amber-200">
+          <div className="bg-gradient-to-r from-bliss-50 to-yellow-50 rounded-2xl p-4 border border-bliss-200">
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">รหัสโปรโมชัน</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <code className="text-lg sm:text-xl lg:text-2xl font-bold font-mono text-amber-700 bg-white px-4 py-2 rounded-lg border border-amber-300 min-w-0 break-all text-center sm:text-left">
+                <code className="text-lg sm:text-xl lg:text-2xl font-bold font-mono text-bliss-700 bg-white px-4 py-2 rounded-lg border border-bliss-300 min-w-0 break-all text-center sm:text-left">
                   {promotion.code}
                 </code>
                 <button
                   onClick={copyCode}
-                  className="p-3 sm:p-2 bg-amber-100 hover:bg-amber-200 rounded-lg transition touch-manipulation"
+                  className="p-3 sm:p-2 bg-bliss-100 hover:bg-bliss-200 rounded-lg transition touch-manipulation"
                   title="คัดลอกรหัส"
                 >
-                  {copied ? <CheckCircle className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5 text-amber-600" />}
+                  {copied ? <CheckCircle className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5 text-bliss-600" />}
                 </button>
               </div>
               {copied && <p className="text-sm text-green-600 mt-1">คัดลอกแล้ว!</p>}
@@ -290,7 +290,7 @@ export function PromotionPreview({ isOpen, onClose, promotion }: PromotionPrevie
             {/* Primary Action - Always Full Width */}
             <button
               onClick={copyCode}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white px-6 py-4 rounded-xl font-medium transition flex items-center justify-center gap-3 touch-manipulation text-lg"
+              className="w-full bg-bliss-600 hover:bg-bliss-700 text-white px-6 py-4 rounded-xl font-medium transition flex items-center justify-center gap-3 touch-manipulation text-lg"
             >
               <Copy className="w-5 h-5" />
               {copied ? 'คัดลอกแล้ว!' : 'คัดลอกรหัสโปรโมชัน'}

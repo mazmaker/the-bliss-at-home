@@ -92,7 +92,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
+          <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
           <p className="text-gray-600">กำลังโหลดสถิติ...</p>
         </div>
       </div>
@@ -113,14 +113,14 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header Controls */}
-      <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-bliss-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-amber-600" />
+            <h3 className="text-lg font-semibold text-bliss-900 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-bliss-600" />
               {serviceId ? 'สถิติบริการ' : 'สถิติบริการทั้งหมด'}
             </h3>
-            <p className="text-sm text-stone-600 mt-1">
+            <p className="text-sm text-bliss-600 mt-1">
               วิเคราะห์ประสิทธิภาพและยอดนิยมของบริการ
             </p>
           </div>
@@ -130,7 +130,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d')}
-              className="px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
             >
               <option value="7d">7 วันล่าสุด</option>
               <option value="30d">30 วันล่าสุด</option>
@@ -141,7 +141,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'bookings' | 'revenue' | 'rating')}
-              className="px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
             >
               <option value="bookings">เรียงตามการจอง</option>
               <option value="revenue">เรียงตามรายได้</option>
@@ -151,7 +151,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
             {/* Refresh Button */}
             <button
               onClick={fetchAnalytics}
-              className="px-3 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg transition flex items-center gap-2"
+              className="px-3 py-2 bg-bliss-100 hover:bg-bliss-200 border border-bliss-300 rounded-lg transition flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               รีเฟรช
@@ -174,20 +174,20 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
           {analytics.map((service) => (
             <div
               key={service.id}
-              className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition"
+              className="bg-white rounded-xl shadow-sm border border-bliss-200 overflow-hidden hover:shadow-md transition"
             >
               {/* Service Header */}
-              <div className="p-4 border-b border-stone-100">
+              <div className="p-4 border-b border-bliss-100">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-stone-900 truncate">
+                    <h4 className="font-semibold text-bliss-900 truncate">
                       {service.name_th}
                     </h4>
-                    <p className="text-sm text-stone-500 truncate">
+                    <p className="text-sm text-bliss-500 truncate">
                       {service.name_en}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-bliss-100 text-bliss-800 rounded-full text-xs font-medium">
                     <Award className="w-3 h-3" />
                     #{service.popularity_rank}
                   </div>
@@ -228,11 +228,11 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
                 {/* Secondary Metrics */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-amber-600 mb-1">
+                    <div className="flex items-center justify-center gap-1 text-bliss-600 mb-1">
                       <Star className="w-3 h-3" />
                       <span>{formatRating(service.average_rating)}</span>
                     </div>
-                    <p className="text-stone-600">คะแนน</p>
+                    <p className="text-bliss-600">คะแนน</p>
                   </div>
 
                   <div className="text-center">
@@ -240,7 +240,7 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
                       <Clock className="w-3 h-3" />
                       <span>{service.avg_duration}m</span>
                     </div>
-                    <p className="text-stone-600">เฉลี่ย</p>
+                    <p className="text-bliss-600">เฉลี่ย</p>
                   </div>
 
                   <div className="text-center">
@@ -248,15 +248,15 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
                       <Users className="w-3 h-3" />
                       <span>{service.peak_hour}</span>
                     </div>
-                    <p className="text-stone-600">ช่วงยอดนิยม</p>
+                    <p className="text-bliss-600">ช่วงยอดนิยม</p>
                   </div>
                 </div>
 
                 {/* Commission Info */}
-                <div className="border-t border-stone-100 pt-3">
+                <div className="border-t border-bliss-100 pt-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-stone-600">คอมมิชชั่น Staff:</span>
-                    <span className="font-semibold text-stone-900">
+                    <span className="text-bliss-600">คอมมิชชั่น Staff:</span>
+                    <span className="font-semibold text-bliss-900">
                       {formatCurrency(service.commission_earned)}
                     </span>
                   </div>
@@ -269,39 +269,39 @@ export function ServiceAnalytics({ serviceId, className = '' }: ServiceAnalytics
 
       {/* Summary Stats */}
       {analytics.length > 0 && !serviceId && (
-        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-          <h4 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-amber-600" />
+        <div className="bg-white rounded-xl shadow-sm border border-bliss-200 p-6">
+          <h4 className="text-lg font-semibold text-bliss-900 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-bliss-600" />
             สรุปภาพรวม
           </h4>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {analytics.reduce((sum, s) => sum + s.total_bookings, 0).toLocaleString()}
               </p>
-              <p className="text-sm text-stone-600">การจองทั้งหมด</p>
+              <p className="text-sm text-bliss-600">การจองทั้งหมด</p>
             </div>
 
             <div className="text-center">
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {formatCurrency(analytics.reduce((sum, s) => sum + s.total_revenue, 0))}
               </p>
-              <p className="text-sm text-stone-600">รายได้รวม</p>
+              <p className="text-sm text-bliss-600">รายได้รวม</p>
             </div>
 
             <div className="text-center">
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {formatRating(analytics.reduce((sum, s) => sum + s.average_rating, 0) / analytics.length)}
               </p>
-              <p className="text-sm text-stone-600">คะแนนเฉลี่ย</p>
+              <p className="text-sm text-bliss-600">คะแนนเฉลี่ย</p>
             </div>
 
             <div className="text-center">
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {formatCurrency(analytics.reduce((sum, s) => sum + s.commission_earned, 0))}
               </p>
-              <p className="text-sm text-stone-600">คอมมิชชั่นรวม</p>
+              <p className="text-sm text-bliss-600">คอมมิชชั่นรวม</p>
             </div>
           </div>
         </div>

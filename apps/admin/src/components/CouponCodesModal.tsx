@@ -212,16 +212,16 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
           <div>
-            <h2 className="text-xl font-bold text-stone-900">จัดการคูปอง</h2>
-            <p className="text-sm text-stone-500 mt-1">
+            <h2 className="text-xl font-bold text-bliss-900">จัดการคูปอง</h2>
+            <p className="text-sm text-bliss-500 mt-1">
               โปรโมชัน: {promotionName} ({promotionCode})
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-stone-100 rounded-lg transition"
+            className="p-2 hover:bg-bliss-100 rounded-lg transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -250,24 +250,24 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
           )}
 
           {/* Actions Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-bliss-50 rounded-xl border border-bliss-200">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-amber-700">สร้างคูปองอัตโนมัติ:</label>
+                <label className="text-sm font-medium text-bliss-700">สร้างคูปองอัตโนมัติ:</label>
                 <input
                   type="number"
                   min="1"
                   max="100"
                   value={newCouponCount}
                   onChange={(e) => setNewCouponCount(parseInt(e.target.value) || 5)}
-                  className="w-20 px-2 py-1 border border-amber-300 rounded text-sm"
+                  className="w-20 px-2 py-1 border border-bliss-300 rounded text-sm"
                 />
-                <span className="text-sm text-amber-600">รหัส</span>
+                <span className="text-sm text-bliss-600">รหัส</span>
               </div>
               <button
                 onClick={generateCoupons}
                 disabled={isLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 transition"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 disabled:opacity-50 transition"
               >
                 {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 สร้าง
@@ -352,19 +352,19 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
           {/* Coupons List */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-stone-900">คูปองทั้งหมด ({coupons.length} รหัส)</h3>
+              <h3 className="text-lg font-semibold text-bliss-900">คูปองทั้งหมด ({coupons.length} รหัส)</h3>
               <button
                 onClick={fetchCoupons}
                 disabled={isLoading}
-                className="p-2 text-stone-600 hover:text-stone-800 rounded-lg transition"
+                className="p-2 text-bliss-600 hover:text-bliss-800 rounded-lg transition"
               >
                 <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
 
             {coupons.length === 0 ? (
-              <div className="text-center py-12 text-stone-500">
-                <Tag className="w-12 h-12 mx-auto mb-4 text-stone-400" />
+              <div className="text-center py-12 text-bliss-500">
+                <Tag className="w-12 h-12 mx-auto mb-4 text-bliss-400" />
                 <p className="text-lg font-medium mb-2">ยังไม่มีคูปอง</p>
                 <p className="text-sm">เริ่มต้นด้วยการสร้างคูปองอัตโนมัติหรือสร้างเอง</p>
               </div>
@@ -373,11 +373,11 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
                 {coupons.map((coupon) => (
                   <div
                     key={coupon.id}
-                    className="bg-stone-50 border border-stone-200 rounded-xl p-4"
+                    className="bg-bliss-50 border border-bliss-200 rounded-xl p-4"
                   >
                     {/* Code Header */}
                     <div className="flex items-center justify-between mb-3">
-                      <div className="font-mono font-bold text-lg text-stone-900">
+                      <div className="font-mono font-bold text-lg text-bliss-900">
                         {coupon.code}
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(coupon)}`}>
@@ -388,7 +388,7 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
                     {/* Usage Stats */}
                     <div className="mb-3 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-stone-600">การใช้งาน:</span>
+                        <span className="text-bliss-600">การใช้งาน:</span>
                         <span className="font-medium">{coupon.usage_count}/{coupon.usage_limit}</span>
                       </div>
                       {coupon.usage_limit > 1 && (
@@ -402,7 +402,7 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
                         </div>
                       )}
                       {coupon.expires_at && (
-                        <div className="text-xs text-stone-500">
+                        <div className="text-xs text-bliss-500">
                           หมดอายุ: {new Date(coupon.expires_at).toLocaleDateString('th-TH')}
                         </div>
                       )}
@@ -445,10 +445,10 @@ export function CouponCodesModal({ isOpen, onClose, promotionId, promotionName, 
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end mt-6 pt-4 border-t border-stone-200">
+          <div className="flex justify-end mt-6 pt-4 border-t border-bliss-200">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-stone-600 text-white rounded-xl font-medium hover:bg-stone-700 transition"
+              className="px-6 py-2 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition"
             >
               ปิด
             </button>

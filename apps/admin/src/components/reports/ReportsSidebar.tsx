@@ -33,10 +33,10 @@ const menuItems: MenuItem[] = [
     id: 'overview',
     icon: PieChart,
     label: { th: 'ภาพรวม', en: 'Overview' },
-    color: 'text-amber-600',
-    hoverColor: 'hover:bg-amber-50',
-    activeColor: 'bg-amber-100 text-amber-700 border-amber-200',
-    bgColor: 'bg-amber-500'
+    color: 'text-bliss-600',
+    hoverColor: 'hover:bg-bliss-50',
+    activeColor: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    bgColor: 'bg-bliss-500'
   },
   {
     id: 'sales',
@@ -69,10 +69,10 @@ const menuItems: MenuItem[] = [
     id: 'staff',
     icon: Users,
     label: { th: 'พนักงาน', en: 'Staff' },
-    color: 'text-amber-600',
-    hoverColor: 'hover:bg-amber-50',
-    activeColor: 'bg-amber-100 text-amber-700 border-amber-200',
-    bgColor: 'bg-amber-500'
+    color: 'text-bliss-600',
+    hoverColor: 'hover:bg-bliss-50',
+    activeColor: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    bgColor: 'bg-bliss-500'
   },
   {
     id: 'services',
@@ -87,16 +87,16 @@ const menuItems: MenuItem[] = [
 
 function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps) {
   return (
-    <div className="w-64 bg-white rounded-2xl shadow-lg border border-stone-100 h-fit sticky top-6">
+    <div className="w-64 bg-white rounded-2xl shadow-lg border border-bliss-100 h-fit sticky top-6">
       {/* Header */}
-      <div className="p-6 border-b border-stone-200">
+      <div className="p-6 border-b border-bliss-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="font-semibold text-stone-900">รายงาน</h2>
-            <p className="text-sm text-stone-500">Analytics</p>
+            <h2 className="font-semibold text-bliss-900">รายงาน</h2>
+            <p className="text-sm text-bliss-500">Analytics</p>
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@ function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps)
                     w-full flex items-center gap-4 px-4 py-4 rounded-xl border transition-all duration-200
                     ${isActive
                       ? `${item.activeColor} shadow-sm`
-                      : `border-transparent ${item.hoverColor} hover:border-stone-200 hover:shadow-sm`
+                      : `border-transparent ${item.hoverColor} hover:border-bliss-200 hover:shadow-sm`
                     }
                     group
                   `}
@@ -126,7 +126,7 @@ function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps)
                     w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200
                     ${isActive
                       ? `${item.bgColor} shadow-lg`
-                      : 'bg-stone-100 group-hover:bg-stone-200'
+                      : 'bg-bliss-100 group-hover:bg-bliss-200'
                     }
                   `}>
                     <Icon className={`
@@ -137,10 +137,10 @@ function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps)
 
                   {/* Labels */}
                   <div className="flex-1 text-left">
-                    <div className={`font-semibold text-sm transition-colors duration-200 ${isActive ? 'text-stone-900' : 'text-stone-700 group-hover:text-stone-900'}`}>
+                    <div className={`font-semibold text-sm transition-colors duration-200 ${isActive ? 'text-bliss-900' : 'text-bliss-700 group-hover:text-bliss-900'}`}>
                       {item.label.th}
                     </div>
-                    <div className={`text-xs transition-colors duration-200 ${isActive ? 'text-stone-600' : 'text-stone-500 group-hover:text-stone-600'}`}>
+                    <div className={`text-xs transition-colors duration-200 ${isActive ? 'text-bliss-600' : 'text-bliss-500 group-hover:text-bliss-600'}`}>
                       {item.label.en}
                     </div>
                   </div>
@@ -157,11 +157,11 @@ function ReportsSidebar({ activeSection, onSectionChange }: ReportsSidebarProps)
       </nav>
 
       {/* Footer Info */}
-      <div className="p-4 border-t border-stone-200">
-        <div className="bg-gradient-to-r from-stone-50 to-stone-100 rounded-xl p-3">
-          <div className="text-xs text-stone-600 text-center">
+      <div className="p-4 border-t border-bliss-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-xl p-3">
+          <div className="text-xs text-bliss-600 text-center">
             <div className="font-medium mb-1">📈 The Bliss Massage at Home</div>
-            <div className="text-stone-500">Business Intelligence</div>
+            <div className="text-bliss-500">Business Intelligence</div>
           </div>
         </div>
       </div>

@@ -266,7 +266,7 @@ function Services() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
+          <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
           <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -300,13 +300,13 @@ function Services() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">จัดการบริการ</h1>
-          <p className="text-stone-500">Service Management</p>
+          <h1 className="text-2xl font-bold text-bliss-900">จัดการบริการ</h1>
+          <p className="text-bliss-500">Service Management</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={fetchServices}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-bliss-200 text-bliss-700 rounded-xl font-medium hover:bg-bliss-50 transition"
           >
             <RefreshCw className="w-4 h-4" />
             รีเฟรช
@@ -314,7 +314,7 @@ function Services() {
           {activeTab === 'management' && (
             <button
               onClick={handleAdd}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition"
             >
               <Plus className="w-5 h-5" />
               เพิ่มบริการใหม่
@@ -324,14 +324,14 @@ function Services() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-stone-200">
+      <div className="border-b border-bliss-200">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('management')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
               activeTab === 'management'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
+                ? 'border-bliss-500 text-bliss-600'
+                : 'border-transparent text-bliss-500 hover:text-bliss-700 hover:border-bliss-300'
             }`}
           >
             <div className="flex items-center gap-2">
@@ -343,8 +343,8 @@ function Services() {
             onClick={() => setActiveTab('analytics')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
               activeTab === 'analytics'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
+                ? 'border-bliss-500 text-bliss-600'
+                : 'border-transparent text-bliss-500 hover:text-bliss-700 hover:border-bliss-300'
             }`}
           >
             <div className="flex items-center gap-2">
@@ -359,17 +359,17 @@ function Services() {
       {activeTab === 'management' && (
         <>
           {/* Filters */}
-          <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-bliss-100">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
             <input
               type="text"
               placeholder="ค้นหาบริการ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+              className="w-full pl-10 pr-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:bg-white transition"
             />
           </div>
 
@@ -383,8 +383,8 @@ function Services() {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
                     selectedCategory === category.id
-                      ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                      : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -397,7 +397,7 @@ function Services() {
       </div>
 
       {/* Results */}
-      <div className="text-sm text-stone-500">
+      <div className="text-sm text-bliss-500">
         พบ {filteredServices.length} บริการ
       </div>
 
@@ -406,10 +406,10 @@ function Services() {
         {filteredServices.map((service) => (
           <div
             key={service.id}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100 hover:shadow-xl transition"
+            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-bliss-100 hover:shadow-xl transition"
           >
             {/* Image */}
-            <div className="relative h-40 bg-gray-100">
+            <div className="relative h-56 bg-gray-100">
               {service.image_url ? (
                 <img
                   src={service.image_url}
@@ -418,21 +418,21 @@ function Services() {
                   onError={(e) => {
                     e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       service.name_en
-                    )}&background=f59e0b&color=fff&size=200`
+                    )}&background=565b34&color=fff&size=200`
                   }}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-amber-200">
-                  {service.category === 'massage' && <Sparkles className="w-16 h-16 text-amber-600" />}
-                  {service.category === 'nail' && <Hand className="w-16 h-16 text-amber-600" />}
-                  {service.category === 'spa' && <Flower2 className="w-16 h-16 text-amber-600" />}
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-bliss-100 to-bliss-200">
+                  {service.category === 'massage' && <Sparkles className="w-16 h-16 text-bliss-600" />}
+                  {service.category === 'nail' && <Hand className="w-16 h-16 text-bliss-600" />}
+                  {service.category === 'spa' && <Flower2 className="w-16 h-16 text-bliss-600" />}
                 </div>
               )}
               <div
-                className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${
+                className={`absolute top-3 right-3 px-3.5 py-1.5 rounded-full text-sm font-semibold shadow-md ${
                   service.is_active
-                    ? 'bg-green-500 text-white'
-                    : 'bg-stone-500 text-white'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-500 text-white'
                 }`}
               >
                 {service.is_active ? 'ใช้งาน' : 'ระงับ'}
@@ -441,32 +441,32 @@ function Services() {
 
             {/* Content */}
             <div className="p-4">
-              <h3 className="font-semibold text-stone-900 mb-1">{service.name_en}</h3>
-              <p className="text-sm text-stone-500 mb-3">{service.name_th}</p>
+              <h3 className="font-semibold text-bliss-900 mb-1">{service.name_en}</h3>
+              <p className="text-sm text-bliss-500 mb-3">{service.name_th}</p>
 
               {/* Category Badge */}
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-medium mb-3">
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-bliss-100 text-bliss-700 rounded-md text-xs font-medium mb-3">
                 {categories.find(c => c.id === service.category)?.name || service.category}
               </div>
 
               {/* Details */}
-              <div className="flex items-center gap-2 text-xs text-stone-500 mb-3">
+              <div className="flex items-center gap-2 text-xs text-bliss-500 mb-3">
                 <Clock className="w-4 h-4" />
                 <span>{formatDurationOptions(service)}</span>
               </div>
 
               {/* Pricing Information */}
-              <div className="space-y-2 mb-4 p-3 bg-stone-50 rounded-xl">
+              <div className="space-y-2 mb-4 p-3 bg-bliss-50 rounded-xl">
                 <div className="flex justify-between text-sm">
-                  <span className="text-stone-600">ราคาบริการ:</span>
-                  <span className="font-semibold text-amber-700">฿{getMinimumPriceInfo(service).price.toLocaleString()}</span>
+                  <span className="text-bliss-600">ราคาบริการ:</span>
+                  <span className="font-semibold text-bliss-700">฿{getMinimumPriceInfo(service).price.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-xs text-green-600">
+                <div className="flex justify-between text-xs text-bliss-500">
                   <span>เริ่มต้น:</span>
                   <span className="font-medium">{getMinimumPriceInfo(service).duration} นาที</span>
                 </div>
                 {service.use_fixed_rate ? (
-                  <div className="text-xs text-blue-600">
+                  <div className="text-xs text-bliss-600">
                     <div className="flex justify-between">
                       <span>รายได้ Staff (Fixed):</span>
                       <span className="font-medium text-right">
@@ -479,17 +479,17 @@ function Services() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-between text-xs text-blue-600">
+                  <div className="flex justify-between text-xs text-bliss-600">
                     <span>คอมมิชชั่น Staff:</span>
                     <span className="font-medium">{((service.staff_commission_rate ?? 0) * 100).toFixed(0)}%</span>
                   </div>
                 )}
-                <div className="flex justify-between text-xs text-stone-600">
+                <div className="flex justify-between text-xs text-bliss-600">
                   <span>ระยะเวลาที่มี:</span>
                   <span className="font-medium">{formatDurationOptions(service)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-stone-600">สถานะการใช้งาน:</span>
+                  <span className="text-bliss-600">สถานะการใช้งาน:</span>
                   <span className={`font-medium ${service.is_active ? 'text-green-600' : 'text-red-600'}`}>
                     {service.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                   </span>
@@ -510,7 +510,7 @@ function Services() {
                 </button>
                 <button
                   onClick={() => handlePreview(service)}
-                  className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-100 text-blue-700 text-sm rounded-lg hover:bg-blue-200 transition"
+                  className="flex items-center justify-center gap-1 px-3 py-2 bg-bliss-200 text-bliss-700 text-sm rounded-lg hover:bg-bliss-300 transition"
                   title="พรีวิวหน้าบริการ"
                 >
                   <Eye className="w-4 h-4" />
@@ -518,7 +518,7 @@ function Services() {
                 </button>
                 <button
                   onClick={() => handleEdit(service)}
-                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition"
+                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-bliss-100 text-bliss-700 text-sm rounded-lg hover:bg-bliss-200 transition"
                 >
                   <Edit className="w-4 h-4" />
                   แก้ไข
@@ -575,7 +575,7 @@ function Services() {
           {(!searchQuery && selectedCategory === 'all') && (
             <button
               onClick={handleAdd}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition"
             >
               <Plus className="w-5 h-5" />
               เพิ่มบริการแรก

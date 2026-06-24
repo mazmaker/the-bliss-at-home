@@ -234,15 +234,15 @@ export function LogoUpload({
                   w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer
                   transition-colors duration-200
                   ${dragOver
-                    ? 'border-amber-400 bg-amber-50'
-                    : 'border-gray-300 hover:border-amber-400 hover:bg-gray-50'
+                    ? 'border-bliss-400 bg-bliss-50'
+                    : 'border-gray-300 hover:border-bliss-400 hover:bg-gray-50'
                   }
                   ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
                   ${isUploading ? 'pointer-events-none' : ''}
                 `}
               >
                 {isUploading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-bliss-600" />
                 ) : (
                   <Upload className="w-6 h-6 text-gray-400" />
                 )}
@@ -273,7 +273,7 @@ export function LogoUpload({
                 <button
                   onClick={handleClick}
                   disabled={disabled || isUploading}
-                  className="inline-flex items-center px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-lg hover:bg-amber-200 transition disabled:opacity-50"
+                  className="inline-flex items-center px-3 py-1.5 bg-bliss-100 text-bliss-700 text-xs font-medium rounded-lg hover:bg-bliss-200 transition disabled:opacity-50"
                 >
                   <ImageIcon className="w-3 h-3 mr-1.5" />
                   เปลี่ยนโลโก้

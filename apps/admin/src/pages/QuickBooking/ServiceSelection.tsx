@@ -903,8 +903,8 @@ export default function ServiceSelection({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-stone-900 mb-2">เลือกบริการ</h2>
-        <p className="text-stone-600">เลือกบริการสำหรับ {customer?.full_name}</p>
+        <h2 className="text-xl font-semibold text-bliss-900 mb-2">เลือกบริการ</h2>
+        <p className="text-bliss-600">เลือกบริการสำหรับ {customer?.full_name}</p>
 
         {/* Step indicator */}
         {(() => {
@@ -913,11 +913,11 @@ export default function ServiceSelection({
 
           return (
             <div className="flex items-center gap-2 mt-4 text-sm">
-              <div className={`flex items-center gap-2 ${step === 'service' ? 'text-[#d29b25] font-medium' : step !== 'service' ? 'text-[#b6d387]' : 'text-stone-500'}`}>
+              <div className={`flex items-center gap-2 ${step === 'service' ? 'text-[#565b34] font-medium' : step !== 'service' ? 'text-[#c8c29c]' : 'text-bliss-500'}`}>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  step === 'service' ? 'bg-[#d29b25] text-white' :
-                  step !== 'service' ? 'bg-[#b6d387] text-white' :
-                  'bg-stone-300 text-stone-600'
+                  step === 'service' ? 'bg-[#565b34] text-white' :
+                  step !== 'service' ? 'bg-[#c8c29c] text-white' :
+                  'bg-bliss-300 text-bliss-600'
                 }`}>
                   {step !== 'service' ? <Check className="w-3 h-3" /> : '1'}
                 </div>
@@ -926,16 +926,16 @@ export default function ServiceSelection({
 
               {hasDurationOptions && (
                 <>
-                  <ChevronRight className="w-4 h-4 text-stone-400" />
+                  <ChevronRight className="w-4 h-4 text-bliss-400" />
                   <div className={`flex items-center gap-2 ${
-                    step === 'duration' ? 'text-[#d29b25] font-medium' :
-                    step === 'details' ? 'text-[#b6d387]' :
-                    'text-stone-500'
+                    step === 'duration' ? 'text-[#565b34] font-medium' :
+                    step === 'details' ? 'text-[#c8c29c]' :
+                    'text-bliss-500'
                   }`}>
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                      step === 'duration' ? 'bg-[#d29b25] text-white' :
-                      step === 'details' ? 'bg-[#b6d387] text-white' :
-                      'bg-stone-300 text-stone-600'
+                      step === 'duration' ? 'bg-[#565b34] text-white' :
+                      step === 'details' ? 'bg-[#c8c29c] text-white' :
+                      'bg-bliss-300 text-bliss-600'
                     }`}>
                       {step === 'details' ? <Check className="w-3 h-3" /> : '2'}
                     </div>
@@ -944,11 +944,11 @@ export default function ServiceSelection({
                 </>
               )}
 
-              <ChevronRight className="w-4 h-4 text-stone-400" />
+              <ChevronRight className="w-4 h-4 text-bliss-400" />
 
-              <div className={`flex items-center gap-2 ${step === 'details' ? 'text-[#d29b25] font-medium' : 'text-stone-500'}`}>
+              <div className={`flex items-center gap-2 ${step === 'details' ? 'text-[#565b34] font-medium' : 'text-bliss-500'}`}>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  step === 'details' ? 'bg-[#d29b25] text-white' : 'bg-stone-300 text-stone-600'
+                  step === 'details' ? 'bg-[#565b34] text-white' : 'bg-bliss-300 text-bliss-600'
                 }`}>
                   {hasDurationOptions ? '3' : '2'}
                 </div>
@@ -976,16 +976,16 @@ export default function ServiceSelection({
         {/* Left Column: Service Selection Steps */}
         <div className={`${step === 'details' ? '' : 'lg:col-span-2'} space-y-6`}>
           {/* Service Selector Component */}
-          <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm">
+          <div className="bg-white border border-bliss-200 rounded-xl p-6 shadow-sm">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-700 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-stone-900">{customer?.full_name}</h4>
-                  <p className="text-xs text-stone-600">
+                  <h4 className="font-medium text-bliss-900">{customer?.full_name}</h4>
+                  <p className="text-xs text-bliss-600">
                     {step === 'service' ? 'เลือกบริการ' :
                      step === 'duration' ? 'เลือกระยะเวลา' :
                      step === 'details' ? 'กรอกรายละเอียด' : 'เลือกแล้ว'}
@@ -1003,8 +1003,8 @@ export default function ServiceSelection({
                     onClick={() => setSelectedCategory('all')}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
                       selectedCategory === 'all'
-                        ? 'bg-[#d29b25] text-white'
-                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                        ? 'bg-[#565b34] text-white'
+                        : 'bg-bliss-100 text-bliss-700 hover:bg-bliss-200'
                     }`}
                   >
                     ทั้งหมด
@@ -1015,8 +1015,8 @@ export default function ServiceSelection({
                       onClick={() => setSelectedCategory(category)}
                       className={`px-3 py-1 rounded-full text-sm transition-colors ${
                         selectedCategory === category
-                          ? 'bg-[#d29b25] text-white'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                          ? 'bg-[#565b34] text-white'
+                          : 'bg-bliss-100 text-bliss-700 hover:bg-bliss-200'
                       }`}
                     >
                       {label.th}
@@ -1037,24 +1037,24 @@ export default function ServiceSelection({
                         className={`
                           w-full p-6 rounded-xl border-2 text-left transition-all duration-300 shadow-sm
                           ${isSelected
-                            ? 'border-[#d29b25] bg-gradient-to-r from-[#ffe79d] to-[#ffe79d]/70 shadow-lg transform scale-[1.01]'
-                            : 'border-stone-200 bg-white hover:border-[#d29b25]/50 hover:bg-[#ffe79d]/20 hover:shadow-lg'
+                            ? 'border-[#565b34] bg-gradient-to-r from-[#ebe6d0] to-[#ebe6d0]/70 shadow-lg transform scale-[1.01]'
+                            : 'border-bliss-200 bg-white hover:border-[#565b34]/50 hover:bg-[#ebe6d0]/20 hover:shadow-lg'
                           }
-                          cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d29b25] focus:ring-offset-1
+                          cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#565b34] focus:ring-offset-1
                         `}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-medium text-stone-900 mb-1 truncate">
+                            <h5 className="font-medium text-bliss-900 mb-1 truncate">
                               {service.name_th}
                             </h5>
-                            <p className="text-xs text-stone-500 mb-2 truncate">
+                            <p className="text-xs text-bliss-500 mb-2 truncate">
                               {service.name_en}
                             </p>
 
                             <div className="flex items-center gap-2 mb-2">
-                              <Clock className="w-3 h-3 text-stone-400" />
-                              <span className="text-xs text-stone-600">
+                              <Clock className="w-3 h-3 text-bliss-400" />
+                              <span className="text-xs text-bliss-600">
                                 {service.duration_options && service.duration_options.length > 1
                                   ? `${Math.min(...service.duration_options)}-${Math.max(...service.duration_options)} นาที`
                                   : `${service.duration} นาที`
@@ -1062,7 +1062,7 @@ export default function ServiceSelection({
                               </span>
                             </div>
 
-                            <div className={`text-sm font-bold ${isSelected ? 'text-[#d29b25]' : 'text-[#b6d387]'}`}>
+                            <div className={`text-sm font-bold ${isSelected ? 'text-[#565b34]' : 'text-[#c8c29c]'}`}>
                               {service.duration_options && service.duration_options.length > 1 ? (
                                 <span>เริ่มต้น ฿{basePrice.toLocaleString()}</span>
                               ) : (
@@ -1073,11 +1073,11 @@ export default function ServiceSelection({
 
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {isSelected && (
-                              <div className="w-6 h-6 bg-[#d29b25] rounded-full flex items-center justify-center shadow-md">
+                              <div className="w-6 h-6 bg-[#565b34] rounded-full flex items-center justify-center shadow-md">
                                 <Check className="w-3.5 h-3.5 text-white" />
                               </div>
                             )}
-                            <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-[#d29b25]' : 'text-stone-400'}`} />
+                            <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-[#565b34]' : 'text-bliss-400'}`} />
                           </div>
                         </div>
                       </button>
@@ -1086,7 +1086,7 @@ export default function ServiceSelection({
                 </div>
 
                 {filteredServices.length === 0 && (
-                  <div className="text-center py-8 text-stone-500">
+                  <div className="text-center py-8 text-bliss-500">
                     {selectedCategory === 'all' ? 'ไม่พบบริการ' : `ไม่พบบริการใน${categoryLabels[selectedCategory]?.th}`}
                   </div>
                 )}
@@ -1102,18 +1102,18 @@ export default function ServiceSelection({
                 <div className="space-y-4">
 
                   {/* Selected service info */}
-                  <div className="p-4 bg-stone-50 rounded-xl">
-                    <h5 className="font-medium text-stone-900 mb-1">
+                  <div className="p-4 bg-bliss-50 rounded-xl">
+                    <h5 className="font-medium text-bliss-900 mb-1">
                       {selectedServiceData.name_th}
                     </h5>
-                    <p className="text-sm text-stone-600">
+                    <p className="text-sm text-bliss-600">
                       {selectedServiceData.description_th || selectedServiceData.description_en}
                     </p>
                   </div>
 
                   {/* Duration options */}
                   <div>
-                    <h6 className="text-sm font-medium text-stone-900 mb-3">
+                    <h6 className="text-sm font-medium text-bliss-900 mb-3">
                       เลือกระยะเวลาบริการ <span className="text-red-500">*</span>
                     </h6>
 
@@ -1130,17 +1130,17 @@ export default function ServiceSelection({
                             className={`
                               p-3 rounded-lg border-2 text-center transition-all duration-300 shadow-sm
                               ${isSelected
-                                ? 'border-[#d29b25] bg-[#d29b25] text-white shadow-md transform scale-[1.05]'
-                                : 'border-stone-300 bg-white text-stone-700 hover:border-[#d29b25]/50 hover:bg-[#ffe79d]/20 hover:shadow-md'
+                                ? 'border-[#565b34] bg-[#565b34] text-white shadow-md transform scale-[1.05]'
+                                : 'border-bliss-300 bg-white text-bliss-700 hover:border-[#565b34]/50 hover:bg-[#ebe6d0]/20 hover:shadow-md'
                               }
                               ${!option.isAvailable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                              focus:outline-none focus:ring-2 focus:ring-[#d29b25] focus:ring-offset-1
+                              focus:outline-none focus:ring-2 focus:ring-[#565b34] focus:ring-offset-1
                             `}
                           >
                             <div className="text-sm font-medium">
                               {option.label}
                             </div>
-                            <div className={`text-xs mt-1 font-semibold ${isSelected ? 'text-amber-100' : 'text-[#d29b25]'}`}>
+                            <div className={`text-xs mt-1 font-semibold ${isSelected ? 'text-bliss-100' : 'text-[#565b34]'}`}>
                               ฿{calculatedPrice.toLocaleString()}
                             </div>
                           </button>
@@ -1168,7 +1168,7 @@ export default function ServiceSelection({
                 </div>
                 <span className="text-sm font-bold text-green-700">บริการที่เลือก</span>
               </div>
-              <div className="text-sm font-medium text-stone-800">
+              <div className="text-sm font-medium text-bliss-800">
                 {currentServiceSelection?.service?.name_th || 'กำลังโหลดชื่อบริการ...'} • {formatDuration(currentServiceSelection?.duration || 0)} • {currentPricing ? formatCurrency(currentPricing.final_price) : 'กำลังคำนวณราคา...'}
               </div>
 
@@ -1186,14 +1186,14 @@ export default function ServiceSelection({
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleBackToServices}
-                  className="flex-1 px-3 py-2 text-xs bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition"
+                  className="flex-1 px-3 py-2 text-xs bg-bliss-100 text-bliss-600 rounded-lg hover:bg-bliss-200 transition"
                 >
                   เปลี่ยนบริการ
                 </button>
                 {getDurationOptions(currentServiceSelection?.service).length > 1 && (
                   <button
                     onClick={handleBackToDuration}
-                    className="flex-1 px-3 py-2 text-xs bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
+                    className="flex-1 px-3 py-2 text-xs bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition"
                   >
                     เปลี่ยนระยะเวลา
                   </button>
@@ -1209,14 +1209,14 @@ export default function ServiceSelection({
               <div className="lg:col-span-2 space-y-6">
 
                 {/* 1. Booking Type Selection */}
-                <div className="bg-white border border-stone-200 rounded-lg p-5">
-            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-amber-700" />
+                <div className="bg-white border border-bliss-200 rounded-lg p-5">
+            <h3 className="font-medium text-bliss-900 mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-bliss-700" />
               ประเภทการจอง
             </h3>
             <div className="space-y-3">
               <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
-                !isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+                !isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-bliss-200 hover:border-bliss-300'
               }`}>
                 <input
                   type="radio"
@@ -1231,7 +1231,7 @@ export default function ServiceSelection({
                 </div>
               </label>
               <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
-                isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-stone-300'
+                isHotelBooking ? 'border-blue-500 bg-blue-50' : 'border-bliss-200 hover:border-bliss-300'
               }`}>
                 <input
                   type="radio"
@@ -1255,14 +1255,14 @@ export default function ServiceSelection({
           </div>
 
                 {/* 2. Date and Time Selection */}
-                <div className="bg-white border border-stone-200 rounded-lg p-5">
-            <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-amber-700" />
+                <div className="bg-white border border-bliss-200 rounded-lg p-5">
+            <h3 className="font-medium text-bliss-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-bliss-700" />
               วันที่และเวลา
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   วันที่
                 </label>
                 <input
@@ -1270,13 +1270,13 @@ export default function ServiceSelection({
                   value={bookingDate}
                   onChange={(e) => setBookingDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                  className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                  <label className="block text-sm font-medium text-bliss-700 mb-1">
                     ชั่วโมง
                   </label>
                   <select
@@ -1285,7 +1285,7 @@ export default function ServiceSelection({
                       setSelectedHour(e.target.value)
                       setSelectedMinute('') // Reset minute when hour changes
                     }}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
                   >
                     <option value="">เลือกชั่วโมง</option>
                     {getAvailableHoursForDate(bookingDate).map((hour) => (
@@ -1297,14 +1297,14 @@ export default function ServiceSelection({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                  <label className="block text-sm font-medium text-bliss-700 mb-1">
                     นาที
                   </label>
                   <select
                     value={selectedMinute}
                     onChange={(e) => setSelectedMinute(e.target.value)}
                     disabled={!selectedHour}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25] disabled:bg-stone-100 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34] disabled:bg-bliss-100 disabled:cursor-not-allowed"
                   >
                     <option value="">เลือกนาที</option>
                     {getAvailableMinutesForDateHour(bookingDate, selectedHour).map((minute) => (
@@ -1326,12 +1326,12 @@ export default function ServiceSelection({
                 </div>
 
                 {/* 2.5 Provider Gender Preference (mirrors Customer/Hotel app) */}
-                <div className="bg-white border border-stone-200 rounded-lg p-5">
-                  <h3 className="font-medium text-stone-900 mb-1 flex items-center gap-2">
-                    <User className="w-5 h-5 text-amber-700" />
+                <div className="bg-white border border-bliss-200 rounded-lg p-5">
+                  <h3 className="font-medium text-bliss-900 mb-1 flex items-center gap-2">
+                    <User className="w-5 h-5 text-bliss-700" />
                     เพศผู้ให้บริการ
                   </h3>
-                  <p className="text-sm text-stone-500 mb-3">เลือกเพศผู้ให้บริการที่ลูกค้าต้องการ (มีผลต่อการกระจายงานให้พนักงาน)</p>
+                  <p className="text-sm text-bliss-500 mb-3">เลือกเพศผู้ให้บริการที่ลูกค้าต้องการ (มีผลต่อการกระจายงานให้พนักงาน)</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {[
                       { value: 'no-preference', label: 'ไม่ระบุ', desc: 'พนักงานที่ว่างทุกคน' },
@@ -1346,20 +1346,20 @@ export default function ServiceSelection({
                         onClick={() => setProviderPreference(opt.value)}
                         className={`p-3 rounded-lg border-2 text-left transition ${
                           providerPreference === opt.value
-                            ? 'border-amber-700 bg-amber-50 shadow-sm'
-                            : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50'
+                            ? 'border-bliss-700 bg-bliss-50 shadow-sm'
+                            : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-50'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-amber-700" />
-                              <span className="font-medium text-stone-900 text-sm">{opt.label}</span>
+                              <User className="w-4 h-4 text-bliss-700" />
+                              <span className="font-medium text-bliss-900 text-sm">{opt.label}</span>
                             </div>
-                            <p className="text-xs text-stone-500 mt-0.5 ml-6">{opt.desc}</p>
+                            <p className="text-xs text-bliss-500 mt-0.5 ml-6">{opt.desc}</p>
                           </div>
                           {providerPreference === opt.value && (
-                            <div className="w-5 h-5 rounded-full bg-amber-700 flex items-center justify-center flex-shrink-0">
+                            <div className="w-5 h-5 rounded-full bg-bliss-700 flex items-center justify-center flex-shrink-0">
                               <Check className="w-3 h-3 text-white" />
                             </div>
                           )}
@@ -1371,14 +1371,14 @@ export default function ServiceSelection({
 
                 {/* 3. Contact & Address Information (Conditional) */}
                 {!isHotelBooking && (
-                  <div className="bg-white border border-stone-200 rounded-lg p-5">
-                    <h3 className="font-medium text-stone-900 mb-4 flex items-center gap-2">
-                      <User className="w-5 h-5 text-amber-700" />
+                  <div className="bg-white border border-bliss-200 rounded-lg p-5">
+                    <h3 className="font-medium text-bliss-900 mb-4 flex items-center gap-2">
+                      <User className="w-5 h-5 text-bliss-700" />
                       ข้อมูลติดต่อและที่อยู่
                     </h3>
 
                     <div className="flex items-center justify-between mb-3">
-                      <label className="text-sm font-medium text-stone-700">
+                      <label className="text-sm font-medium text-bliss-700">
                         เลือกที่อยู่ที่บันทึกไว้ หรือเพิ่มที่อยู่ใหม่
                       </label>
                       <button
@@ -1391,13 +1391,13 @@ export default function ServiceSelection({
                     </div>
 
                     {addressesLoading ? (
-                      <div className="flex items-center justify-center p-6 bg-stone-50 rounded-lg">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-3"></div>
-                        <p className="text-stone-600 text-sm ml-3">กำลังโหลดที่อยู่...</p>
+                      <div className="flex items-center justify-center p-6 bg-bliss-50 rounded-lg">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-700 mx-auto mb-3"></div>
+                        <p className="text-bliss-600 text-sm ml-3">กำลังโหลดที่อยู่...</p>
                       </div>
                     ) : addresses && addresses.length > 0 && !showManualAddressForm ? (
                       <div className="space-y-4">
-                        <p className="text-sm text-stone-600 mb-3">เลือกที่อยู่ที่บันทึกไว้</p>
+                        <p className="text-sm text-bliss-600 mb-3">เลือกที่อยู่ที่บันทึกไว้</p>
 
                         {/* Saved Address Cards */}
                         <div className="space-y-3">
@@ -1407,25 +1407,25 @@ export default function ServiceSelection({
                               onClick={() => handleSelectAddress(addr.id)}
                               className={`w-full p-4 rounded-xl border-2 text-left transition shadow-sm ${
                                 selectedAddressId === addr.id
-                                  ? 'border-amber-700 bg-amber-50 shadow-md'
-                                  : 'border-stone-200 hover:border-amber-300 hover:bg-stone-50 hover:shadow-md'
+                                  ? 'border-bliss-700 bg-bliss-50 shadow-md'
+                                  : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-50 hover:shadow-md'
                               }`}
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <span className="inline-block px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded">
+                                    <span className="inline-block px-2 py-1 bg-bliss-100 text-bliss-700 text-xs rounded">
                                       {addr.label}
                                     </span>
                                     {addr.is_default && (
-                                      <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                                      <span className="inline-block px-2 py-1 bg-bliss-100 text-bliss-700 text-xs rounded">
                                         ค่าเริ่มต้น
                                       </span>
                                     )}
                                   </div>
-                                  <h3 className="font-semibold text-stone-900 mb-1">{addr.recipient_name}</h3>
-                                  <p className="text-sm text-stone-600 mb-1">{addr.phone}</p>
-                                  <p className="text-sm text-stone-600">
+                                  <h3 className="font-semibold text-bliss-900 mb-1">{addr.recipient_name}</h3>
+                                  <p className="text-sm text-bliss-600 mb-1">{addr.phone}</p>
+                                  <p className="text-sm text-bliss-600">
                                     {addr.address_line}
                                     {addr.subdistrict && `, ${addr.subdistrict}`}
                                     {addr.district && `, ${addr.district}`}
@@ -1434,8 +1434,8 @@ export default function ServiceSelection({
                                 </div>
                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
                                   selectedAddressId === addr.id
-                                    ? 'border-amber-700 bg-amber-700'
-                                    : 'border-stone-300'
+                                    ? 'border-bliss-700 bg-bliss-700'
+                                    : 'border-bliss-300'
                                 }`}>
                                   {selectedAddressId === addr.id && (
                                     <CheckCircle className="w-4 h-4 text-white" />
@@ -1449,7 +1449,7 @@ export default function ServiceSelection({
                         {/* Add New Address Button */}
                         <button
                           onClick={handleShowManualForm}
-                          className="w-full p-4 mt-2 rounded-xl border-2 border-dashed border-stone-300 text-stone-600 hover:border-amber-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-2"
+                          className="w-full p-4 mt-2 rounded-xl border-2 border-dashed border-bliss-300 text-bliss-600 hover:border-bliss-500 hover:text-bliss-700 hover:bg-bliss-50 transition flex items-center justify-center gap-2"
                         >
                           <Plus className="w-4 h-4" />
                           <span className="text-sm font-medium">เพิ่มที่อยู่ใหม่</span>
@@ -1459,14 +1459,14 @@ export default function ServiceSelection({
                       /* Manual Address Form */
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <h5 className="text-sm font-medium text-stone-900">กรอกข้อมูลที่อยู่ใหม่</h5>
+                          <h5 className="text-sm font-medium text-bliss-900">กรอกข้อมูลที่อยู่ใหม่</h5>
                           {addresses && addresses.length > 0 && (
                             <button
                               onClick={() => {
                                 setShowManualAddressForm(false)
                                 setUserWantsNewAddress(false)
                               }}
-                              className="text-sm text-stone-600 hover:text-stone-900"
+                              className="text-sm text-bliss-600 hover:text-bliss-900"
                             >
                               ← กลับไปเลือกที่อยู่ที่บันทึกไว้
                             </button>
@@ -1476,7 +1476,7 @@ export default function ServiceSelection({
                         {/* Contact Information */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label className="block text-sm font-medium text-bliss-700 mb-1">
                               ชื่อผู้ติดต่อ <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -1484,11 +1484,11 @@ export default function ServiceSelection({
                               value={contactName}
                               onChange={(e) => setContactName(e.target.value)}
                               placeholder="ชื่อ-นามสกุล"
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label className="block text-sm font-medium text-bliss-700 mb-1">
                               เบอร์โทรศัพท์ <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -1496,14 +1496,14 @@ export default function ServiceSelection({
                               value={contactPhone}
                               onChange={(e) => setContactPhone(e.target.value)}
                               placeholder="08x-xxx-xxxx"
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
                             />
                           </div>
                         </div>
 
                         {/* Address */}
                         <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-1">
+                          <label className="block text-sm font-medium text-bliss-700 mb-1">
                             ที่อยู่ <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -1511,7 +1511,7 @@ export default function ServiceSelection({
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             placeholder="บ้านเลขที่, หมู่บ้าน, ถนน"
-                            className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                            className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
                           />
                         </div>
 
@@ -1531,7 +1531,7 @@ export default function ServiceSelection({
 
                         {/* GPS Map Integration */}
                         <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">
                             ปักหมุดตำแหน่งที่อยู่ <span className="text-red-500">*</span>
                           </label>
 
@@ -1540,7 +1540,7 @@ export default function ServiceSelection({
                             latitude={mapLocation?.lat || 13.7563}
                             longitude={mapLocation?.lng || 100.5018}
                             onLocationChange={(lat: number, lng: number) => setMapLocation({ lat, lng })}
-                            className="w-full h-64 rounded-lg border border-stone-300"
+                            className="w-full h-64 rounded-lg border border-bliss-300"
                           />
                           {mapLocation && (
                             <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -1562,20 +1562,20 @@ export default function ServiceSelection({
               {/* Right: Summary Sidebar (1 column) */}
               <div className="space-y-4">
           {/* Discount Code */}
-          <div className="bg-white border border-stone-200 rounded-lg p-4">
-            <h3 className="font-medium text-stone-900 mb-3">โค้ดส่วนลด</h3>
+          <div className="bg-white border border-bliss-200 rounded-lg p-4">
+            <h3 className="font-medium text-bliss-900 mb-3">โค้ดส่วนลด</h3>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={discountCode}
                 onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
                 placeholder="กรอกโค้ดส่วนลด"
-                className="flex-1 px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25]"
+                className="flex-1 px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
               />
               <button
                 onClick={() => validateDiscountCode(discountCode)}
                 disabled={!discountCode || isValidatingCode}
-                className="bg-[#b6d387] text-white px-4 py-2 rounded-lg hover:bg-[#9bc76f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="bg-[#c8c29c] text-white px-4 py-2 rounded-lg hover:bg-[#c8c29c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isValidatingCode ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1604,11 +1604,11 @@ export default function ServiceSelection({
 
             {/* Price Summary */}
             {currentPricing && (
-              <div className="bg-stone-50 border border-stone-200 rounded-lg p-4">
-                <h3 className="font-medium text-stone-900 mb-3">สรุปราคา</h3>
+              <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
+                <h3 className="font-medium text-bliss-900 mb-3">สรุปราคา</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-600">ค่าบริการ:</span>
+                    <span className="text-bliss-600">ค่าบริการ:</span>
                     <span>{formatCurrency(currentPricing.base_price)}</span>
                   </div>
 
@@ -1629,7 +1629,7 @@ export default function ServiceSelection({
 
                   <div className="border-t pt-2 flex justify-between font-medium">
                     <span>ยอดรวม:</span>
-                    <span className="text-[#d29b25] text-lg">
+                    <span className="text-[#565b34] text-lg">
                       {formatCurrency(currentPricing.final_price)}
                     </span>
                   </div>
@@ -1663,7 +1663,7 @@ export default function ServiceSelection({
               }
             }
           }}
-          className="flex items-center gap-2 px-4 py-2 text-stone-600 border border-stone-300 rounded-lg hover:bg-stone-50"
+          className="flex items-center gap-2 px-4 py-2 text-bliss-600 border border-bliss-300 rounded-lg hover:bg-bliss-50"
         >
           <ArrowLeft className="w-4 h-4" />
           {step === 'service' ? 'กลับ' :
@@ -1679,7 +1679,7 @@ export default function ServiceSelection({
               handleProceedToNext()
             }}
             disabled={!currentServiceSelection || !currentPricing || !bookingDate || !selectedHour || !selectedMinute || isProcessing}
-            className="flex items-center gap-2 bg-[#d29b25] text-white px-6 py-3 rounded-lg hover:bg-[#b8851e] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 bg-[#565b34] text-white px-6 py-3 rounded-lg hover:bg-[#464a28] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isProcessing ? (
               <>

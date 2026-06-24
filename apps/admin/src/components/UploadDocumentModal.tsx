@@ -157,15 +157,15 @@ export function UploadDocumentModal({
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
           <div>
-            <h3 className="text-lg font-semibold text-stone-900">อัปโหลดเอกสาร</h3>
-            <p className="text-sm text-stone-500 mt-1">สำหรับพนักงาน: {staffName}</p>
+            <h3 className="text-lg font-semibold text-bliss-900">อัปโหลดเอกสาร</h3>
+            <p className="text-sm text-bliss-500 mt-1">สำหรับพนักงาน: {staffName}</p>
           </div>
           <button
             onClick={handleClose}
             disabled={uploadMutation.isPending}
-            className="p-2 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
+            className="p-2 hover:bg-bliss-100 rounded-lg transition disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -175,13 +175,13 @@ export function UploadDocumentModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Document Type */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               ประเภทเอกสาร <span className="text-red-500">*</span>
             </label>
             <select
               value={documentType}
               onChange={(e) => setDocumentType(e.target.value as DocumentType)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
               disabled={uploadMutation.isPending}
             >
               {documentTypes.map((type) => (
@@ -194,7 +194,7 @@ export function UploadDocumentModal({
 
           {/* File Upload */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               ไฟล์เอกสาร <span className="text-red-500">*</span>
             </label>
 
@@ -206,8 +206,8 @@ export function UploadDocumentModal({
               onDrop={handleDrop}
               className={`relative border-2 border-dashed rounded-lg p-8 text-center transition ${
                 dragActive
-                  ? 'border-amber-500 bg-amber-50'
-                  : 'border-stone-300 hover:border-amber-400'
+                  ? 'border-bliss-500 bg-bliss-50'
+                  : 'border-bliss-300 hover:border-bliss-400'
               }`}
             >
               <input
@@ -222,17 +222,17 @@ export function UploadDocumentModal({
 
               {selectedFile ? (
                 <div className="flex items-center justify-center gap-3">
-                  <File className="w-8 h-8 text-amber-600" />
+                  <File className="w-8 h-8 text-bliss-600" />
                   <div className="text-left">
-                    <p className="font-medium text-stone-900">{selectedFile.name}</p>
-                    <p className="text-sm text-stone-500">
+                    <p className="font-medium text-bliss-900">{selectedFile.name}</p>
+                    <p className="text-sm text-bliss-500">
                       {(selectedFile.size / 1024).toFixed(2)} KB
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedFile(null)}
-                    className="ml-4 p-2 hover:bg-stone-100 rounded-lg transition"
+                    className="ml-4 p-2 hover:bg-bliss-100 rounded-lg transition"
                     disabled={uploadMutation.isPending}
                   >
                     <X className="w-4 h-4" />
@@ -240,17 +240,17 @@ export function UploadDocumentModal({
                 </div>
               ) : (
                 <div>
-                  <Upload className="w-12 h-12 text-stone-400 mx-auto mb-3" />
-                  <p className="text-stone-600 mb-2">ลากไฟล์มาวางที่นี่ หรือ</p>
+                  <Upload className="w-12 h-12 text-bliss-400 mx-auto mb-3" />
+                  <p className="text-bliss-600 mb-2">ลากไฟล์มาวางที่นี่ หรือ</p>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+                    className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
                     disabled={uploadMutation.isPending}
                   >
                     เลือกไฟล์
                   </button>
-                  <p className="text-xs text-stone-500 mt-3">
+                  <p className="text-xs text-bliss-500 mt-3">
                     รองรับไฟล์: JPG, PNG, PDF (ขนาดไม่เกิน 10MB)
                   </p>
                 </div>
@@ -260,14 +260,14 @@ export function UploadDocumentModal({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               หมายเหตุ (ถ้ามี)
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="ระบุรายละเอียดเพิ่มเติม..."
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent resize-none"
               rows={3}
               disabled={uploadMutation.isPending}
             />
@@ -275,17 +275,17 @@ export function UploadDocumentModal({
 
           {/* Expiry Date */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               วันหมดอายุ (ถ้ามี)
             </label>
             <input
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
               disabled={uploadMutation.isPending}
             />
-            <p className="text-xs text-stone-500 mt-1">
+            <p className="text-xs text-bliss-500 mt-1">
               สำหรับเอกสารที่มีวันหมดอายุ เช่น ใบประกอบวิชาชีพ
             </p>
           </div>
@@ -309,14 +309,14 @@ export function UploadDocumentModal({
               type="button"
               onClick={handleClose}
               disabled={uploadMutation.isPending}
-              className="flex-1 px-6 py-3 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition font-medium disabled:opacity-50"
+              className="flex-1 px-6 py-3 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition font-medium disabled:opacity-50"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={!selectedFile || uploadMutation.isPending}
-              className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {uploadMutation.isPending ? (
                 <>

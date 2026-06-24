@@ -35,7 +35,7 @@ describe('calculateTrend', () => {
     const result = calculateTrend(85, 85)
     expect(result.direction).toBe('stable')
     expect(result.value).toBe('0.0')
-    expect(result.color).toBe('text-stone-500')
+    expect(result.color).toBe('text-bliss-500')
   })
 
   it('formats value to 1 decimal place', () => {

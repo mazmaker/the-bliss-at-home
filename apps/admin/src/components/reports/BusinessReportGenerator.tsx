@@ -366,34 +366,34 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
               </button>
 
               {showExportMenu && realTimeData && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-20">
-                  <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
-                    <p className="text-xs font-medium text-stone-600">ส่งออกรายงานครบวงจร</p>
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-bliss-200 py-2 z-20">
+                  <div className="px-4 py-2 bg-bliss-50 border-b border-bliss-200">
+                    <p className="text-xs font-medium text-bliss-600">ส่งออกรายงานครบวงจร</p>
                   </div>
                   <button
                     onClick={handleExportExcel}
                     disabled={isExporting}
-                    className="w-full text-left px-4 py-3 hover:bg-stone-50 flex items-center gap-3 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full text-left px-4 py-3 hover:bg-bliss-50 flex items-center gap-3 text-bliss-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                       <FileBarChart className="w-4 h-4 text-green-600" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">Excel รายละเอียด</div>
-                      <div className="text-xs text-stone-500">ไฟล์ CSV พร้อมข้อมูลครบถ้วน</div>
+                      <div className="text-xs text-bliss-500">ไฟล์ CSV พร้อมข้อมูลครบถ้วน</div>
                     </div>
                   </button>
                   <button
                     onClick={handleExportPDF}
                     disabled={isExporting}
-                    className="w-full text-left px-4 py-3 hover:bg-stone-50 flex items-center gap-3 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full text-left px-4 py-3 hover:bg-bliss-50 flex items-center gap-3 text-bliss-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                       <FileText className="w-4 h-4 text-red-600" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">PDF สรุปผล</div>
-                      <div className="text-xs text-stone-500">รายงานสรุปแบบอ่านง่าย</div>
+                      <div className="text-xs text-bliss-500">รายงานสรุปแบบอ่านง่าย</div>
                     </div>
                   </button>
                 </div>
@@ -435,14 +435,14 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
           {/* 6 Key Performance Indicator Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* 1. รายได้รวม (฿ ทั้งปี) */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">รายได้รวม{getPeriodLabel()}</p>
+                  <p className="text-sm font-medium text-bliss-500 mb-1">รายได้รวม{getPeriodLabel()}</p>
                   <p className="text-3xl font-bold text-green-700">
                     ฿{realTimeData.yearlyRevenue.toLocaleString()}
                   </p>
-                  <p className="text-sm text-stone-600 mt-1">
+                  <p className="text-sm text-bliss-600 mt-1">
                     ช่วงเวลา: {getPeriodLabel()}
                   </p>
                 </div>
@@ -453,14 +453,14 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             </div>
 
             {/* 2. จองทั้งหมด (ครั้ง + เฉลี่ย ฿/ครั้ง) */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">การจอง</p>
+                  <p className="text-sm font-medium text-bliss-500 mb-1">การจอง</p>
                   <p className="text-3xl font-bold text-blue-700">
                     {realTimeData.activeBookings.toLocaleString()} ครั้ง
                   </p>
-                  <p className="text-sm text-stone-600 mt-1">
+                  <p className="text-sm text-bliss-600 mt-1">
                     เฉลี่ย ฿{realTimeData.avgBookingValue.toLocaleString()}/ครั้ง
                   </p>
                 </div>
@@ -471,14 +471,14 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             </div>
 
             {/* 3. รายได้จากโรงแรม (฿ + %) */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">รายได้จากโรงแรม</p>
+                  <p className="text-sm font-medium text-bliss-500 mb-1">รายได้จากโรงแรม</p>
                   <p className="text-3xl font-bold text-purple-700">
                     ฿{realTimeData.hotelRevenue.toLocaleString()}
                   </p>
-                  <p className="text-sm text-stone-600 mt-1">
+                  <p className="text-sm text-bliss-600 mt-1">
                     {realTimeData.hotelRevenuePercentage.toFixed(1)}% ของรายได้รวม
                   </p>
                 </div>
@@ -489,32 +489,32 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             </div>
 
             {/* 4. รายได้ลูกค้าตรง (฿ + %) */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">รายได้ลูกค้าตรง</p>
-                  <p className="text-3xl font-bold text-amber-700">
+                  <p className="text-sm font-medium text-bliss-500 mb-1">รายได้ลูกค้าตรง</p>
+                  <p className="text-3xl font-bold text-bliss-700">
                     ฿{realTimeData.directCustomerRevenue.toLocaleString()}
                   </p>
-                  <p className="text-sm text-stone-600 mt-1">
+                  <p className="text-sm text-bliss-600 mt-1">
                     {realTimeData.directCustomerRevenuePercentage.toFixed(1)}% ของรายได้รวม
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-                  <Star className="w-8 h-8 text-amber-600" />
+                <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <Star className="w-8 h-8 text-bliss-600" />
                 </div>
               </div>
             </div>
 
             {/* 5. อัตราจองซ้ำ Repeat Booking Rate (%) */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">อัตราจองซ้ำ</p>
+                  <p className="text-sm font-medium text-bliss-500 mb-1">อัตราจองซ้ำ</p>
                   <p className="text-3xl font-bold text-teal-700">
                     {realTimeData.repeatBookingRate.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-stone-600 mt-1">
+                  <p className="text-sm text-bliss-600 mt-1">
                     Repeat Booking Rate
                   </p>
                 </div>
@@ -525,14 +525,14 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             </div>
 
             {/* 6. อัตรายกเลิก (%) */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-stone-200 hover:shadow-lg transition-all duration-200">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-bliss-200 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-1">อัตรายกเลิก</p>
+                  <p className="text-sm font-medium text-bliss-500 mb-1">อัตรายกเลิก</p>
                   <p className="text-3xl font-bold text-red-700">
                     {realTimeData.cancellationRate.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-stone-600 mt-1">
+                  <p className="text-sm text-bliss-600 mt-1">
                     จาก {realTimeData.totalBookings} รวมทุกสถานะ
                   </p>
                 </div>
@@ -546,9 +546,9 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
           {/* Detailed Analytics */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Booking Status Breakdown */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-4 border-b">
-                <h3 className="font-semibold text-stone-900 flex items-center gap-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-bliss-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 border-b">
+                <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-blue-600" />
                   สถานะการจอง • Booking Status
                 </h3>
@@ -597,25 +597,25 @@ function BusinessReportGenerator({ selectedPeriod }: BusinessReportGeneratorProp
             </div>
 
             {/* Top Services */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-4 border-b">
-                <h3 className="font-semibold text-stone-900 flex items-center gap-2">
-                  <PieChart className="w-5 h-5 text-amber-600" />
+            <div className="bg-white rounded-2xl shadow-sm border border-bliss-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-4 border-b">
+                <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
+                  <PieChart className="w-5 h-5 text-bliss-600" />
                   บริการยอดนิยม • Top Services
                 </h3>
               </div>
               <div className="p-6 space-y-4">
                 {realTimeData.topServices.map((service, index) => (
-                  <div key={service.name} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg border border-stone-200">
+                  <div key={service.name} className="flex items-center justify-between p-3 bg-bliss-50 rounded-lg border border-bliss-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center font-bold text-amber-700">
+                      <div className="w-8 h-8 bg-bliss-100 rounded-full flex items-center justify-center font-bold text-bliss-700">
                         {index + 1}
                       </div>
-                      <span className="font-medium text-stone-900">{service.name}</span>
+                      <span className="font-medium text-bliss-900">{service.name}</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-stone-900">฿{service.revenue.toLocaleString()}</div>
-                      <div className="text-xs text-stone-500">{service.count} การจอง</div>
+                      <div className="font-bold text-bliss-900">฿{service.revenue.toLocaleString()}</div>
+                      <div className="text-xs text-bliss-500">{service.count} การจอง</div>
                     </div>
                   </div>
                 ))}

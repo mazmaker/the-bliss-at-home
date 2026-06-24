@@ -151,7 +151,7 @@ function AdminLayout() {
     .slice(0, 5)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+    <div className="min-h-screen bg-gradient-to-br from-bliss-50 via-bliss-50/30 to-bliss-100">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -162,20 +162,27 @@ function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-stone-200 transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-bliss-200 transition-transform duration-300 lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b border-stone-200">
-            <div>
-              <h1 className="text-xl font-bold text-stone-900">The Bliss Massage at Home</h1>
-              <p className="text-xs text-stone-500">Admin Panel</p>
+          <div className="flex items-center justify-between px-4 py-5 border-b border-bliss-200">
+            <div className="flex items-center gap-2 min-w-0">
+              <img
+                src="/logo.jpg"
+                alt="The Bliss Massage at Home"
+                className="w-9 h-9 object-contain rounded-lg flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <h1 className="text-xs font-bold text-bliss-900 leading-tight whitespace-nowrap">The Bliss Massage at Home</h1>
+                <p className="text-[10px] text-bliss-500">Admin Panel</p>
+              </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 hover:bg-stone-100 rounded-lg"
+              className="lg:hidden p-2 hover:bg-bliss-100 rounded-lg"
             >
               <X className="w-5 h-5" />
             </button>
@@ -197,8 +204,8 @@ function AdminLayout() {
                       onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative ${
                         isActive
-                          ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                          : 'text-stone-600 hover:bg-stone-100'
+                          ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                          : 'text-bliss-600 hover:bg-bliss-100'
                       } ${showBadge && hasCriticalAlerts ? 'animate-pulse' : ''}`}
                     >
                       <Icon className={`w-5 h-5 ${showBadge ? 'animate-bounce' : ''}`} />
@@ -246,16 +253,16 @@ function AdminLayout() {
           </nav>
 
           {/* User info */}
-          <div className="p-4 border-t border-stone-200">
-            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+          <div className="p-4 border-t border-bliss-200">
+            <div className="flex items-center gap-3 p-3 bg-bliss-50 rounded-xl">
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                 {user?.full_name?.[0]?.toUpperCase() || 'A'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-stone-900 truncate">
+                <p className="text-sm font-medium text-bliss-900 truncate">
                   {user?.full_name || 'Admin'}
                 </p>
-                <p className="text-xs text-stone-500 truncate">
+                <p className="text-xs text-bliss-500 truncate">
                   {user?.email || 'admin@theblissathome.com'}
                 </p>
               </div>
@@ -267,21 +274,21 @@ function AdminLayout() {
       {/* Main content */}
       <div className="lg:ml-64">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-stone-200">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-bliss-200">
           <div className="flex items-center justify-between px-4 lg:px-6 py-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-stone-100 rounded-lg"
+                className="lg:hidden p-2 hover:bg-bliss-100 rounded-lg"
               >
                 <Menu className="w-6 h-6" />
               </button>
               <div className="relative hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                 <input
                   type="text"
                   placeholder="ค้นหา..."
-                  className="pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition w-64"
+                  className="pl-10 pr-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:bg-white transition w-64"
                 />
               </div>
             </div>
@@ -291,22 +298,22 @@ function AdminLayout() {
               <div className="relative" ref={bookingNotifRef}>
                 <button
                   onClick={() => { setBookingNotifOpen(!bookingNotifOpen); setNotificationOpen(false); setEscalationOpen(false) }}
-                  className="relative p-2 hover:bg-stone-100 rounded-lg transition"
+                  className="relative p-2 hover:bg-bliss-100 rounded-lg transition"
                 >
                   <CalendarCheck className={`w-5 h-5 ${
-                    bookingUnreadCount > 0 ? 'text-amber-600' : 'text-stone-600'
+                    bookingUnreadCount > 0 ? 'text-bliss-600' : 'text-bliss-600'
                   }`} />
                   {bookingUnreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold text-white bg-amber-600 rounded-full">
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold text-white bg-bliss-600 rounded-full">
                       {bookingUnreadCount > 99 ? '99+' : bookingUnreadCount}
                     </span>
                   )}
                 </button>
 
                 {bookingNotifOpen && (
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50">
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-bliss-200 overflow-hidden z-50">
                     {/* Header */}
-                    <div className="p-4 bg-gradient-to-r from-amber-600 to-amber-700">
+                    <div className="p-4 bg-gradient-to-r from-bliss-600 to-bliss-700">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="font-bold text-white">การจองใหม่</h3>
@@ -331,16 +338,16 @@ function AdminLayout() {
                     <div className="max-h-96 overflow-y-auto">
                       {bookingNotifications.length === 0 ? (
                         <div className="p-8 text-center">
-                          <CalendarCheck className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-                          <p className="text-stone-500 font-medium">ไม่มีการแจ้งเตือน</p>
+                          <CalendarCheck className="w-12 h-12 text-bliss-300 mx-auto mb-3" />
+                          <p className="text-bliss-500 font-medium">ไม่มีการแจ้งเตือน</p>
                         </div>
                       ) : (
-                        <div className="divide-y divide-stone-100">
+                        <div className="divide-y divide-bliss-100">
                           {bookingNotifications.map((notif) => (
                             <div
                               key={notif.id}
-                              className={`p-4 hover:bg-stone-50 cursor-pointer transition ${
-                                !notif.is_read ? 'bg-amber-50/50 border-l-4 border-l-amber-500' : ''
+                              className={`p-4 hover:bg-bliss-50 cursor-pointer transition ${
+                                !notif.is_read ? 'bg-bliss-50/50 border-l-4 border-l-bliss-500' : ''
                               }`}
                               onClick={() => {
                                 if (!notif.is_read) markBookingAsRead(notif.id)
@@ -353,22 +360,22 @@ function AdminLayout() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-start justify-between gap-2 mb-1">
                                     <div className={`font-semibold truncate ${
-                                      !notif.is_read ? 'text-stone-900' : 'text-stone-600'
+                                      !notif.is_read ? 'text-bliss-900' : 'text-bliss-600'
                                     }`}>
                                       {notif.title}
                                     </div>
-                                    <div className="flex items-center gap-1 text-xs text-stone-500 whitespace-nowrap">
+                                    <div className="flex items-center gap-1 text-xs text-bliss-500 whitespace-nowrap">
                                       <Clock className="w-3 h-3" />
                                       <span>{getTimeAgo(notif.created_at)}</span>
                                     </div>
                                   </div>
                                   <p className={`text-sm line-clamp-2 ${
-                                    !notif.is_read ? 'text-stone-700' : 'text-stone-500'
+                                    !notif.is_read ? 'text-bliss-700' : 'text-bliss-500'
                                   }`}>
                                     {notif.message}
                                   </p>
                                   {notif.data?.booking_number && (
-                                    <p className="text-xs text-amber-600 mt-1">
+                                    <p className="text-xs text-bliss-600 mt-1">
                                       เลขที่จอง: {notif.data.booking_number}
                                     </p>
                                   )}
@@ -382,11 +389,11 @@ function AdminLayout() {
 
                     {/* Footer */}
                     {bookingNotifications.length > 0 && (
-                      <div className="p-3 bg-stone-50 border-t border-stone-200">
+                      <div className="p-3 bg-bliss-50 border-t border-bliss-200">
                         <Link
                           to="/admin/bookings"
                           onClick={() => setBookingNotifOpen(false)}
-                          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-xl font-semibold text-white transition"
+                          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-bliss-600 hover:bg-bliss-700 rounded-xl font-semibold text-white transition"
                         >
                           <span>ดูการจองทั้งหมด</span>
                           <ArrowRight className="w-4 h-4" />
@@ -402,7 +409,7 @@ function AdminLayout() {
                 <div className="relative" ref={escalationRef}>
                   <button
                     onClick={() => { setEscalationOpen(!escalationOpen); setBookingNotifOpen(false); setNotificationOpen(false) }}
-                    className={`relative p-2 hover:bg-stone-100 rounded-lg transition ${
+                    className={`relative p-2 hover:bg-bliss-100 rounded-lg transition ${
                       hasEscalationUrgent ? 'animate-pulse' : ''
                     }`}
                   >
@@ -417,7 +424,7 @@ function AdminLayout() {
                   </button>
 
                   {escalationOpen && (
-                    <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50">
+                    <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-bliss-200 overflow-hidden z-50">
                       {/* Header */}
                       <div className={`p-4 ${
                         hasEscalationUrgent
@@ -447,13 +454,13 @@ function AdminLayout() {
                       </div>
 
                       {/* List */}
-                      <div className="max-h-96 overflow-y-auto divide-y divide-stone-100">
+                      <div className="max-h-96 overflow-y-auto divide-y divide-bliss-100">
                         {escalationAlerts.slice(0, 8).map((alert) => {
                           const isUrgent = alert.type === 'job_no_staff_urgent'
                           return (
                             <div
                               key={alert.id}
-                              className={`p-4 hover:bg-stone-50 cursor-pointer transition ${
+                              className={`p-4 hover:bg-bliss-50 cursor-pointer transition ${
                                 isUrgent
                                   ? 'bg-red-50 border-l-4 border-l-red-500'
                                   : 'bg-orange-50 border-l-4 border-l-orange-500'
@@ -468,15 +475,15 @@ function AdminLayout() {
                                 <span className="text-2xl">{isUrgent ? '🚨' : '⚠️'}</span>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-start justify-between gap-2 mb-1">
-                                    <div className="font-semibold text-stone-900 truncate text-sm">
+                                    <div className="font-semibold text-bliss-900 truncate text-sm">
                                       {alert.title}
                                     </div>
-                                    <div className="flex items-center gap-1 text-xs text-stone-500 whitespace-nowrap">
+                                    <div className="flex items-center gap-1 text-xs text-bliss-500 whitespace-nowrap">
                                       <Clock className="w-3 h-3" />
                                       <span>{getTimeAgo(alert.created_at)}</span>
                                     </div>
                                   </div>
-                                  <p className="text-sm text-stone-700 line-clamp-2">
+                                  <p className="text-sm text-bliss-700 line-clamp-2">
                                     {alert.message}
                                   </p>
                                 </div>
@@ -487,7 +494,7 @@ function AdminLayout() {
                       </div>
 
                       {/* Footer */}
-                      <div className="p-3 bg-stone-50 border-t border-stone-200">
+                      <div className="p-3 bg-bliss-50 border-t border-bliss-200">
                         <Link
                           to="/admin/bookings"
                           onClick={() => setEscalationOpen(false)}
@@ -510,12 +517,12 @@ function AdminLayout() {
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => { setNotificationOpen(!notificationOpen); setBookingNotifOpen(false); setEscalationOpen(false) }}
-                  className={`relative p-2 hover:bg-stone-100 rounded-lg transition ${
+                  className={`relative p-2 hover:bg-bliss-100 rounded-lg transition ${
                     pendingCount > 0 && hasCriticalAlerts ? 'animate-pulse' : ''
                   }`}
                 >
                   <Bell className={`w-5 h-5 ${
-                    pendingCount > 0 ? 'text-red-600' : 'text-stone-600'
+                    pendingCount > 0 ? 'text-red-600' : 'text-bliss-600'
                   }`} />
                   {pendingCount > 0 && (
                     <span className={`absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold text-white rounded-full ${
@@ -528,14 +535,14 @@ function AdminLayout() {
 
                 {/* Notification Dropdown */}
                 {notificationOpen && (
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50">
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-bliss-200 overflow-hidden z-50">
                     {/* Header */}
                     <div className={`p-4 ${
                       pendingCount > 0 && hasCriticalAlerts
                         ? 'bg-gradient-to-r from-red-600 to-red-700'
                         : pendingCount > 0
                         ? 'bg-gradient-to-r from-orange-600 to-orange-700'
-                        : 'bg-gradient-to-r from-stone-600 to-stone-700'
+                        : 'bg-gradient-to-r from-bliss-600 to-bliss-700'
                     }`}>
                       <div className="flex items-center justify-between">
                         <div>
@@ -554,10 +561,10 @@ function AdminLayout() {
                         <div className="p-8 text-center">
                           <ShieldAlert className="w-12 h-12 text-green-500 mx-auto mb-3" />
                           <p className="text-green-600 font-medium">ไม่มีการแจ้งเตือนฉุกเฉิน</p>
-                          <p className="text-sm text-stone-500 mt-1">ระบบทำงานปกติ</p>
+                          <p className="text-sm text-bliss-500 mt-1">ระบบทำงานปกติ</p>
                         </div>
                       ) : (
-                        <div className="divide-y divide-stone-100">
+                        <div className="divide-y divide-bliss-100">
                           {topAlerts.map((alert) => {
                             const priorityColors = {
                               critical: 'bg-red-50 border-l-4 border-l-red-600',
@@ -576,7 +583,7 @@ function AdminLayout() {
                             return (
                               <div
                                 key={alert.id}
-                                className={`p-4 hover:bg-stone-50 cursor-pointer transition ${priorityColors[alert.priority]}`}
+                                className={`p-4 hover:bg-bliss-50 cursor-pointer transition ${priorityColors[alert.priority]}`}
                                 onClick={() => {
                                   navigate('/admin/sos-alerts')
                                   setNotificationOpen(false)
@@ -586,24 +593,24 @@ function AdminLayout() {
                                   <span className="text-2xl">{priorityIcons[alert.priority]}</span>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2 mb-1">
-                                      <div className="font-semibold text-stone-900 truncate">
+                                      <div className="font-semibold text-bliss-900 truncate">
                                         {alert.source_name || 'Unknown'}
                                       </div>
-                                      <div className="flex items-center gap-1 text-xs text-stone-500 whitespace-nowrap">
+                                      <div className="flex items-center gap-1 text-xs text-bliss-500 whitespace-nowrap">
                                         <Clock className="w-3 h-3" />
                                         <span>{getTimeAgo(alert.created_at)}</span>
                                       </div>
                                     </div>
-                                    <div className="text-xs text-stone-600 mb-1">
+                                    <div className="text-xs text-bliss-600 mb-1">
                                       {alert.source_type === 'customer' ? '👤 ลูกค้า' : '👨‍💼 พนักงาน'}
                                     </div>
                                     {alert.message && (
-                                      <p className="text-sm text-stone-700 line-clamp-2 mb-1">
+                                      <p className="text-sm text-bliss-700 line-clamp-2 mb-1">
                                         {alert.message}
                                       </p>
                                     )}
                                     {alert.latitude && alert.longitude && (
-                                      <div className="flex items-center gap-1 text-xs text-stone-500">
+                                      <div className="flex items-center gap-1 text-xs text-bliss-500">
                                         <MapPin className="w-3 h-3" />
                                         <span>มีข้อมูลพิกัด GPS</span>
                                       </div>
@@ -619,7 +626,7 @@ function AdminLayout() {
 
                     {/* Footer */}
                     {pendingCount > 0 && (
-                      <div className="p-3 bg-stone-50 border-t border-stone-200">
+                      <div className="p-3 bg-bliss-50 border-t border-bliss-200">
                         <Link
                           to="/admin/sos-alerts"
                           onClick={() => setNotificationOpen(false)}
@@ -641,7 +648,7 @@ function AdminLayout() {
               <button
                 onClick={handleLogout}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 text-bliss-600 hover:bg-bliss-100 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <LogOut className="w-5 h-5" />
                 <span className="hidden sm:inline">
@@ -655,29 +662,17 @@ function AdminLayout() {
         {/* Enable Sound Banner */}
         {pendingCount > 0 && soundEnabled && !audioContextReady && (
           <div className="mx-4 lg:mx-6 mt-4">
-            <div className={`rounded-2xl border-2 overflow-hidden ${
-              hasCriticalAlerts
-                ? 'bg-red-50 border-red-500'
-                : 'bg-orange-50 border-orange-400'
-            }`}>
+            <div className="rounded-2xl border-2 overflow-hidden bg-red-50 border-red-500">
               <div className="p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    hasCriticalAlerts ? 'bg-red-100' : 'bg-orange-100'
-                  }`}>
-                    <Volume2 className={`w-6 h-6 ${
-                      hasCriticalAlerts ? 'text-red-600' : 'text-orange-600'
-                    } animate-bounce`} />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-100">
+                    <Volume2 className="w-6 h-6 text-red-600 animate-bounce" />
                   </div>
                   <div>
-                    <h3 className={`font-bold ${
-                      hasCriticalAlerts ? 'text-red-900' : 'text-orange-900'
-                    }`}>
+                    <h3 className="font-bold text-red-900">
                       🔇 เสียงแจ้งเตือนยังไม่ทำงาน
                     </h3>
-                    <p className={`text-sm ${
-                      hasCriticalAlerts ? 'text-red-700' : 'text-orange-700'
-                    }`}>
+                    <p className="text-sm text-red-700">
                       คลิกปุ่มด้านล่างเพื่อเปิดใช้งานเสียงแจ้งเตือนฉุกเฉิน ({pendingCount} รายการรอดำเนินการ)
                     </p>
                   </div>
@@ -689,11 +684,7 @@ function AdminLayout() {
                       console.log('Audio enabled successfully')
                     }
                   }}
-                  className={`px-6 py-3 rounded-xl font-semibold text-white transition transform hover:scale-105 active:scale-95 ${
-                    hasCriticalAlerts
-                      ? 'bg-red-600 hover:bg-red-700'
-                      : 'bg-orange-600 hover:bg-orange-700'
-                  }`}
+                  className="px-6 py-3 rounded-xl font-semibold text-white transition transform hover:scale-105 active:scale-95 bg-red-600 hover:bg-red-700"
                 >
                   🔊 เปิดเสียงแจ้งเตือน
                 </button>

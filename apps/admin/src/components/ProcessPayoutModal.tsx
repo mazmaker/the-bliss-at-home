@@ -85,11 +85,11 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-stone-900 mb-2">ไม่พบรายการจ่ายเงิน</h3>
-            <p className="text-sm text-stone-600 mb-4">กรุณาเลือกรายการจ่ายเงินที่ต้องการดำเนินการ</p>
+            <h3 className="text-lg font-semibold text-bliss-900 mb-2">ไม่พบรายการจ่ายเงิน</h3>
+            <p className="text-sm text-bliss-600 mb-4">กรุณาเลือกรายการจ่ายเงินที่ต้องการดำเนินการ</p>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-stone-200 text-stone-700 rounded-lg hover:bg-stone-300 transition"
+              className="px-4 py-2 bg-bliss-200 text-bliss-700 rounded-lg hover:bg-bliss-300 transition"
             >
               ปิด
             </button>
@@ -105,34 +105,34 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-amber-50 to-orange-50">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200 bg-gradient-to-r from-bliss-50 to-orange-50">
           <div>
-            <h2 className="text-xl font-semibold text-stone-900">ดำเนินการจ่ายเงิน</h2>
-            <p className="text-sm text-stone-600 mt-1">ยืนยันการโอนเงินให้พนักงาน</p>
+            <h2 className="text-xl font-semibold text-bliss-900">ดำเนินการจ่ายเงิน</h2>
+            <p className="text-sm text-bliss-600 mt-1">ยืนยันการโอนเงินให้พนักงาน</p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/50 rounded-lg transition"
             disabled={isProcessing}
           >
-            <X className="w-5 h-5 text-stone-500" />
+            <X className="w-5 h-5 text-bliss-500" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
           {/* Payout Summary */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-amber-600" />
+              <div className="p-2 bg-bliss-100 rounded-lg">
+                <DollarSign className="w-5 h-5 text-bliss-600" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-stone-900 mb-3">สรุปยอดจ่าย</h3>
+                <h3 className="font-semibold text-bliss-900 mb-3">สรุปยอดจ่าย</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-600">ช่วงเวลา:</span>
-                    <span className="font-medium text-stone-900">
+                    <span className="text-bliss-600">ช่วงเวลา:</span>
+                    <span className="font-medium text-bliss-900">
                       {new Date(selectedPayout.period_start).toLocaleDateString('th-TH', {
                         year: 'numeric',
                         month: 'short',
@@ -147,13 +147,13 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-stone-600">จำนวนงาน:</span>
-                    <span className="font-medium text-stone-900">{selectedPayout.total_jobs} งาน</span>
+                    <span className="text-bliss-600">จำนวนงาน:</span>
+                    <span className="font-medium text-bliss-900">{selectedPayout.total_jobs} งาน</span>
                   </div>
-                  <div className="border-t border-amber-300 pt-2 mt-2">
+                  <div className="border-t border-bliss-300 pt-2 mt-2">
                     <div className="flex justify-between">
-                      <span className="font-semibold text-stone-900">ยอดโอนทั้งหมด:</span>
-                      <span className="font-bold text-xl text-amber-700">฿{totalAmount.toLocaleString()}</span>
+                      <span className="font-semibold text-bliss-900">ยอดโอนทั้งหมด:</span>
+                      <span className="font-bold text-xl text-bliss-700">฿{totalAmount.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
           {/* Transfer Information */}
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
+              <label className="block text-sm font-medium text-bliss-700 mb-1">
                 หมายเลขอ้างอิงการโอน <span className="text-red-500">*</span>
               </label>
               <input
@@ -172,20 +172,20 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
                 value={transferReference}
                 onChange={(e) => setTransferReference(e.target.value)}
                 placeholder="เช่น TXN123456789"
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500"
                 disabled={isProcessing}
               />
-              <p className="text-xs text-stone-500 mt-1">กรุณากรอกหมายเลขอ้างอิงจากธนาคาร</p>
+              <p className="text-xs text-bliss-500 mt-1">กรุณากรอกหมายเลขอ้างอิงจากธนาคาร</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">หมายเหตุ (ถ้ามี)</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-1">หมายเหตุ (ถ้ามี)</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="บันทึกเพิ่มเติม..."
                 rows={3}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500"
                 disabled={isProcessing}
               />
             </div>
@@ -205,10 +205,10 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-bliss-200 bg-bliss-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
+            className="px-4 py-2 bg-white text-bliss-700 border border-bliss-300 rounded-lg hover:bg-bliss-100 transition"
             disabled={isProcessing}
           >
             ยกเลิก
@@ -216,7 +216,7 @@ export function ProcessPayoutModal({ payoutId, staffId, onClose }: ProcessPayout
           <button
             onClick={handleProcessPayout}
             disabled={isProcessing || !transferReference.trim()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isProcessing ? (
               <>

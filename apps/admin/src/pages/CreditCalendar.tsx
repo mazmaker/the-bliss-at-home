@@ -138,7 +138,7 @@ export default function CreditCalendar() {
   const getStatusColor = (status: 'paid' | 'upcoming' | 'overdue') => {
     switch (status) {
       case 'paid': return 'bg-emerald-500'
-      case 'upcoming': return 'bg-amber-500'
+      case 'upcoming': return 'bg-bliss-500'
       case 'overdue': return 'bg-red-500'
     }
   }
@@ -154,7 +154,7 @@ export default function CreditCalendar() {
   const getStatusBadgeClass = (status: 'paid' | 'upcoming' | 'overdue') => {
     switch (status) {
       case 'paid': return 'bg-emerald-100 text-emerald-700'
-      case 'upcoming': return 'bg-amber-100 text-amber-700'
+      case 'upcoming': return 'bg-bliss-100 text-bliss-700'
       case 'overdue': return 'bg-red-100 text-red-700'
     }
   }
@@ -162,7 +162,7 @@ export default function CreditCalendar() {
   if (hotelsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-bliss-600" />
       </div>
     )
   }
@@ -171,67 +171,67 @@ export default function CreditCalendar() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">ปฏิทินเครดิต</h1>
-        <p className="text-stone-500">Credit Calendar — แสดงรอบเครดิตและกำหนดชำระของทุกโรงแรม</p>
+        <h1 className="text-2xl font-bold text-bliss-900">ปฏิทินเครดิต</h1>
+        <p className="text-bliss-500">Credit Calendar — แสดงรอบเครดิตและกำหนดชำระของทุกโรงแรม</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <p className="text-sm text-stone-500">โรงแรมที่ตั้งค่าเครดิต</p>
-          <p className="text-2xl font-bold text-stone-900">{stats.total}</p>
+        <div className="bg-white rounded-xl border border-bliss-200 p-4">
+          <p className="text-sm text-bliss-500">โรงแรมที่ตั้งค่าเครดิต</p>
+          <p className="text-2xl font-bold text-bliss-900">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <p className="text-sm text-stone-500">ครบกำหนดเดือนนี้</p>
-          <p className="text-2xl font-bold text-amber-600">{stats.dueThisMonth}</p>
+        <div className="bg-white rounded-xl border border-bliss-200 p-4">
+          <p className="text-sm text-bliss-500">ครบกำหนดเดือนนี้</p>
+          <p className="text-2xl font-bold text-bliss-600">{stats.dueThisMonth}</p>
         </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <p className="text-sm text-stone-500">เลยกำหนด</p>
+        <div className="bg-white rounded-xl border border-bliss-200 p-4">
+          <p className="text-sm text-bliss-500">เลยกำหนด</p>
           <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
         </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <p className="text-sm text-stone-500">ยอดค้างชำระรวม</p>
-          <p className="text-2xl font-bold text-stone-900">฿{stats.totalOutstanding.toLocaleString()}</p>
+        <div className="bg-white rounded-xl border border-bliss-200 p-4">
+          <p className="text-sm text-bliss-500">ยอดค้างชำระรวม</p>
+          <p className="text-2xl font-bold text-bliss-900">฿{stats.totalOutstanding.toLocaleString()}</p>
         </div>
       </div>
 
       {/* Calendar */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-sm overflow-hidden">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-stone-100">
+        <div className="flex items-center justify-between p-4 border-b border-bliss-100">
           <div className="flex items-center gap-3">
-            <CalendarClock className="w-5 h-5 text-amber-600" />
-            <h2 className="text-lg font-semibold text-stone-900">
+            <CalendarClock className="w-5 h-5 text-bliss-600" />
+            <h2 className="text-lg font-semibold text-bliss-900">
               {MONTH_NAMES[currentMonth]} {currentYear + 543}
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={goToToday}
-              className="px-3 py-1.5 text-sm bg-stone-100 hover:bg-stone-200 rounded-lg transition"
+              className="px-3 py-1.5 text-sm bg-bliss-100 hover:bg-bliss-200 rounded-lg transition"
             >
               วันนี้
             </button>
-            <button onClick={goToPrevMonth} className="p-1.5 hover:bg-stone-100 rounded-lg transition">
+            <button onClick={goToPrevMonth} className="p-1.5 hover:bg-bliss-100 rounded-lg transition">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={goToNextMonth} className="p-1.5 hover:bg-stone-100 rounded-lg transition">
+            <button onClick={goToNextMonth} className="p-1.5 hover:bg-bliss-100 rounded-lg transition">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 px-4 py-2 border-b border-stone-50 bg-stone-50 text-xs">
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-bliss-50 bg-bliss-50 text-xs">
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> จ่ายแล้ว</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> ใกล้ครบกำหนด</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-bliss-500" /> ใกล้ครบกำหนด</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> เลยกำหนด</span>
         </div>
 
         {/* Day Names */}
-        <div className="grid grid-cols-7 border-b border-stone-100">
+        <div className="grid grid-cols-7 border-b border-bliss-100">
           {DAY_NAMES.map(day => (
-            <div key={day} className="py-2 text-center text-xs font-medium text-stone-500">
+            <div key={day} className="py-2 text-center text-xs font-medium text-bliss-500">
               {day}
             </div>
           ))}
@@ -242,14 +242,14 @@ export default function CreditCalendar() {
           {calendarData.map((day, idx) => (
             <div
               key={idx}
-              className={`min-h-[80px] border-b border-r border-stone-100 p-1.5 transition ${
-                day ? 'hover:bg-stone-50 cursor-pointer' : 'bg-stone-50/50'
-              } ${day && isToday(day.date) ? 'bg-amber-50' : ''}`}
+              className={`min-h-[80px] border-b border-r border-bliss-100 p-1.5 transition ${
+                day ? 'hover:bg-bliss-50 cursor-pointer' : 'bg-bliss-50/50'
+              } ${day && isToday(day.date) ? 'bg-bliss-50' : ''}`}
               onClick={() => day && day.hotels.length > 0 && setSelectedDay(day)}
             >
               {day && (
                 <>
-                  <div className={`text-xs font-medium mb-1 ${isToday(day.date) ? 'text-amber-700 font-bold' : 'text-stone-600'}`}>
+                  <div className={`text-xs font-medium mb-1 ${isToday(day.date) ? 'text-bliss-700 font-bold' : 'text-bliss-600'}`}>
                     {day.date}
                   </div>
                   {day.hotels.length > 0 && (
@@ -261,7 +261,7 @@ export default function CreditCalendar() {
                             hotel.status === 'overdue'
                               ? 'bg-red-100 text-red-700'
                               : hotel.status === 'upcoming'
-                                ? 'bg-amber-100 text-amber-700'
+                                ? 'bg-bliss-100 text-bliss-700'
                                 : 'bg-emerald-100 text-emerald-700'
                           }`}
                         >
@@ -270,7 +270,7 @@ export default function CreditCalendar() {
                         </div>
                       ))}
                       {day.hotels.length > 3 && (
-                        <div className="text-[10px] text-stone-400 px-1">
+                        <div className="text-[10px] text-bliss-400 px-1">
                           +{day.hotels.length - 3} อื่นๆ
                         </div>
                       )}
@@ -287,49 +287,49 @@ export default function CreditCalendar() {
       {selectedDay && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setSelectedDay(null)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-stone-100">
+            <div className="flex items-center justify-between p-4 border-b border-bliss-100">
               <div>
-                <h3 className="font-semibold text-stone-900">
+                <h3 className="font-semibold text-bliss-900">
                   วันที่ {selectedDay.date} {MONTH_NAMES[currentMonth]} {currentYear + 543}
                 </h3>
-                <p className="text-sm text-stone-500">{selectedDay.hotels.length} โรงแรมครบกำหนด</p>
+                <p className="text-sm text-bliss-500">{selectedDay.hotels.length} โรงแรมครบกำหนด</p>
               </div>
-              <button onClick={() => setSelectedDay(null)} className="p-1 hover:bg-stone-100 rounded-lg">
+              <button onClick={() => setSelectedDay(null)} className="p-1 hover:bg-bliss-100 rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-4 space-y-3 overflow-y-auto max-h-[60vh]">
               {selectedDay.hotels.map(hotel => (
-                <div key={hotel.id} className="border border-stone-200 rounded-xl p-4">
+                <div key={hotel.id} className="border border-bliss-200 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h4 className="font-medium text-stone-900">{hotel.name_th}</h4>
-                      <p className="text-xs text-stone-500">{hotel.name_en}</p>
+                      <h4 className="font-medium text-bliss-900">{hotel.name_th}</h4>
+                      <p className="text-xs text-bliss-500">{hotel.name_en}</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(hotel.status)}`}>
                       {getStatusLabel(hotel.status)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-stone-500">ยอดค้างชำระ</span>
+                    <span className="text-bliss-500">ยอดค้างชำระ</span>
                     <span className={`font-bold ${hotel.totalOutstanding > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                       ฿{hotel.totalOutstanding.toLocaleString()}
                     </span>
                   </div>
                   {hotel.billCount > 0 && (
-                    <p className="text-xs text-stone-400 mt-1">{hotel.billCount} บิลที่รอชำระ</p>
+                    <p className="text-xs text-bliss-400 mt-1">{hotel.billCount} บิลที่รอชำระ</p>
                   )}
                   <div className="flex items-center gap-2 mt-3">
                     <a
                       href={`/admin/hotels/${hotel.id}/billing`}
-                      className="flex-1 text-center px-3 py-1.5 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 transition"
+                      className="flex-1 text-center px-3 py-1.5 bg-bliss-600 text-white text-xs rounded-lg hover:bg-bliss-700 transition"
                     >
                       ดูบิล
                     </a>
                     {hotel.email && (
                       <a
                         href={`mailto:${hotel.email}`}
-                        className="flex items-center gap-1 px-3 py-1.5 border border-stone-200 text-xs rounded-lg hover:bg-stone-50 transition"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-bliss-200 text-xs rounded-lg hover:bg-bliss-50 transition"
                       >
                         <Mail className="w-3 h-3" />
                         ส่งอีเมล

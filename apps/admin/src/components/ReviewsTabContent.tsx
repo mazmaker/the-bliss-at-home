@@ -36,8 +36,8 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
             key={star}
             className={`${sizeClasses[size]} ${
               star <= rating
-                ? 'text-amber-500 fill-amber-500'
-                : 'text-stone-300'
+                ? 'text-bliss-500 fill-bliss-500'
+                : 'text-bliss-300'
             }`}
           />
         ))}
@@ -49,8 +49,8 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
   if (reviewsLoading || statsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
-        <span className="ml-2 text-stone-600">กำลังโหลดรีวิว...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-bliss-600" />
+        <span className="ml-2 text-bliss-600">กำลังโหลดรีวิว...</span>
       </div>
     )
   }
@@ -59,9 +59,9 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
   if (!reviews || reviews.length === 0) {
     return (
       <div className="text-center py-12">
-        <MessageSquare className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-        <p className="text-stone-500">ยังไม่มีรีวิวจากลูกค้า</p>
-        <p className="text-sm text-stone-400 mt-2">รีวิวจะแสดงที่นี่หลังจากลูกค้าให้คะแนน</p>
+        <MessageSquare className="w-16 h-16 text-bliss-300 mx-auto mb-4" />
+        <p className="text-bliss-500">ยังไม่มีรีวิวจากลูกค้า</p>
+        <p className="text-sm text-bliss-400 mt-2">รีวิวจะแสดงที่นี่หลังจากลูกค้าให้คะแนน</p>
       </div>
     )
   }
@@ -72,15 +72,15 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Overall Rating */}
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-6">
+          <div className="bg-gradient-to-br from-bliss-50 to-bliss-100 border border-bliss-200 rounded-xl p-6">
             <div className="flex items-center justify-between mb-2">
-              <Star className="w-8 h-8 text-amber-600 fill-amber-600" />
+              <Star className="w-8 h-8 text-bliss-600 fill-bliss-600" />
             </div>
-            <div className="text-4xl font-bold text-amber-900 mb-1">
+            <div className="text-4xl font-bold text-bliss-900 mb-1">
               {stats.average_rating.toFixed(1)}
             </div>
-            <p className="text-sm font-medium text-amber-700">คะแนนเฉลี่ย</p>
-            <p className="text-xs text-amber-600 mt-1">จาก {stats.total} รีวิว</p>
+            <p className="text-sm font-medium text-bliss-700">คะแนนเฉลี่ย</p>
+            <p className="text-xs text-bliss-600 mt-1">จาก {stats.total} รีวิว</p>
             <div className="mt-3">
               {renderStars(Math.round(stats.average_rating), 'sm')}
             </div>
@@ -99,22 +99,22 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
           </div>
 
           {/* Rating Distribution */}
-          <div className="bg-white border border-stone-200 rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-stone-900 mb-3">การกระจายคะแนน</h3>
+          <div className="bg-white border border-bliss-200 rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-bliss-900 mb-3">การกระจายคะแนน</h3>
             <div className="space-y-2">
               {[5, 4, 3, 2, 1].map((rating) => {
                 const count = stats.rating_distribution[rating as keyof typeof stats.rating_distribution]
                 const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0
                 return (
                   <div key={rating} className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-stone-700 w-8">{rating} ⭐</span>
-                    <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+                    <span className="text-xs font-medium text-bliss-700 w-8">{rating} ⭐</span>
+                    <div className="flex-1 h-2 bg-bliss-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-amber-500"
+                        className="h-full bg-bliss-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-xs text-stone-500 w-8 text-right">{count}</span>
+                    <span className="text-xs text-bliss-500 w-8 text-right">{count}</span>
                   </div>
                 )
               })}
@@ -126,8 +126,8 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-stone-500" />
-          <span className="text-sm font-medium text-stone-700">กรองและเรียง:</span>
+          <Filter className="w-4 h-4 text-bliss-500" />
+          <span className="text-sm font-medium text-bliss-700">กรองและเรียง:</span>
         </div>
 
         {/* Rating Filter */}
@@ -137,7 +137,7 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
             ...filters,
             rating: e.target.value === 'all' ? undefined : parseInt(e.target.value)
           })}
-          className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="px-3 py-2 bg-white border border-bliss-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bliss-500"
         >
           <option value="all">ทุกคะแนน</option>
           <option value="5">5 ดาว</option>
@@ -154,7 +154,7 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
             ...filters,
             sortBy: e.target.value as ReviewFilters['sortBy']
           })}
-          className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="px-3 py-2 bg-white border border-bliss-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bliss-500"
         >
           <option value="newest">ล่าสุด</option>
           <option value="oldest">เก่าสุด</option>
@@ -168,18 +168,18 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
         {reviews.map((review) => (
           <div
             key={review.id}
-            className="bg-white border border-stone-200 rounded-xl p-6 hover:shadow-md transition"
+            className="bg-white border border-bliss-200 rounded-xl p-6 hover:shadow-md transition"
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   {renderStars(review.rating, 'md')}
-                  <span className="text-sm font-semibold text-stone-900">
+                  <span className="text-sm font-semibold text-bliss-900">
                     {review.rating.toFixed(1)}
                   </span>
                 </div>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-bliss-500">
                   {getRelativeTime(review.created_at)}
                 </p>
               </div>
@@ -189,19 +189,19 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
                 <div className="flex flex-col gap-1">
                   {review.cleanliness_rating && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-stone-500">ความสะอาด:</span>
+                      <span className="text-xs text-bliss-500">ความสะอาด:</span>
                       {renderStars(review.cleanliness_rating, 'sm')}
                     </div>
                   )}
                   {review.professionalism_rating && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-stone-500">ความเป็นมืออาชีพ:</span>
+                      <span className="text-xs text-bliss-500">ความเป็นมืออาชีพ:</span>
                       {renderStars(review.professionalism_rating, 'sm')}
                     </div>
                   )}
                   {review.skill_rating && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-stone-500">ทักษะ:</span>
+                      <span className="text-xs text-bliss-500">ทักษะ:</span>
                       {renderStars(review.skill_rating, 'sm')}
                     </div>
                   )}
@@ -211,8 +211,8 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
 
             {/* Review Text */}
             {review.review && (
-              <div className="bg-stone-50 rounded-lg p-4">
-                <p className="text-sm text-stone-700 leading-relaxed">
+              <div className="bg-bliss-50 rounded-lg p-4">
+                <p className="text-sm text-bliss-700 leading-relaxed">
                   {review.review}
                 </p>
               </div>
@@ -229,8 +229,8 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
               <TrendingUp className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-stone-900 mb-2">สรุปรีวิว</h3>
-              <ul className="space-y-2 text-sm text-stone-600">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-2">สรุปรีวิว</h3>
+              <ul className="space-y-2 text-sm text-bliss-600">
                 {stats.average_rating >= 4.5 && (
                   <li className="flex items-start gap-2">
                     <span className="text-green-600">✓</span>
@@ -245,7 +245,7 @@ export function ReviewsTabContent({ staff }: ReviewsTabProps) {
                 )}
                 {stats.average_rating < 4.0 && (
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-600">⚠</span>
+                    <span className="text-bliss-600">⚠</span>
                     <span>ควรปรับปรุงคุณภาพการบริการเพื่อเพิ่มความพึงพอใจของลูกค้า</span>
                   </li>
                 )}

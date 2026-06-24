@@ -54,17 +54,17 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200 bg-gradient-to-r from-blue-50 to-cyan-50">
           <div>
-            <h2 className="text-xl font-semibold text-stone-900">แก้ไขข้อมูลบัญชีธนาคาร</h2>
-            <p className="text-sm text-stone-600 mt-1">อัปเดตข้อมูลการโอนเงินของพนักงาน</p>
+            <h2 className="text-xl font-semibold text-bliss-900">แก้ไขข้อมูลบัญชีธนาคาร</h2>
+            <p className="text-sm text-bliss-600 mt-1">อัปเดตข้อมูลการโอนเงินของพนักงาน</p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/50 rounded-lg transition"
             disabled={isSaving}
           >
-            <X className="w-5 h-5 text-stone-500" />
+            <X className="w-5 h-5 text-bliss-500" />
           </button>
         </div>
 
@@ -72,7 +72,7 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
           {/* Bank Name */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
+            <label className="block text-sm font-medium text-bliss-700 mb-1">
               <div className="flex items-center gap-2">
                 <Building className="w-4 h-4" />
                 ธนาคาร <span className="text-red-500">*</span>
@@ -81,7 +81,7 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
             <select
               value={formData.bank_name}
               onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSaving}
               required
             >
@@ -101,7 +101,7 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
 
           {/* Account Name */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
+            <label className="block text-sm font-medium text-bliss-700 mb-1">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 ชื่อบัญชี <span className="text-red-500">*</span>
@@ -112,16 +112,16 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
               value={formData.account_name}
               onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
               placeholder="ชื่อ-นามสกุลตามบัญชีธนาคาร"
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSaving}
               required
             />
-            <p className="text-xs text-stone-500 mt-1">กรอกชื่อตามบัตรประชาชนหรือทะเบียนบัญชี</p>
+            <p className="text-xs text-bliss-500 mt-1">กรอกชื่อตามบัตรประชาชนหรือทะเบียนบัญชี</p>
           </div>
 
           {/* Account Number */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
+            <label className="block text-sm font-medium text-bliss-700 mb-1">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
                 เลขที่บัญชี <span className="text-red-500">*</span>
@@ -132,11 +132,11 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
               value={formData.account_number}
               onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
               placeholder="xxx-x-xxxxx-x"
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSaving}
               required
             />
-            <p className="text-xs text-stone-500 mt-1">กรอกเลขที่บัญชีธนาคาร 10-15 หลัก</p>
+            <p className="text-xs text-bliss-500 mt-1">กรอกเลขที่บัญชีธนาคาร 10-15 หลัก</p>
           </div>
 
           {/* Warning */}
@@ -151,11 +151,11 @@ export function EditBankModal({ bankInfo, onClose, onSave }: EditBankModalProps)
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-bliss-200 bg-bliss-50">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
+            className="px-4 py-2 bg-white text-bliss-700 border border-bliss-300 rounded-lg hover:bg-bliss-100 transition"
             disabled={isSaving}
           >
             ยกเลิก

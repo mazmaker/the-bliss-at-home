@@ -55,7 +55,7 @@ const Tooltip = ({ content, children }: { content: string, children: React.React
       {children}
       {show && (
         <div
-          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          className="fixed z-[9999] px-3 py-2 bg-bliss-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
           style={{
             top: pos.top,
             left: pos.left,
@@ -63,7 +63,7 @@ const Tooltip = ({ content, children }: { content: string, children: React.React
           }}
         >
           {content}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-bliss-800"></div>
         </div>
       )}
     </div>
@@ -180,13 +180,13 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
       {/* Section Header with Export */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
             👥 ประสิทธิภาพพนักงาน
             <Tooltip content="การวิเคราะห์ประสิทธิภาพและรายได้ของพนักงาน | Staff performance and earnings analytics">
-              <Info className="w-5 h-5 text-stone-400 hover:text-amber-600 cursor-help" />
+              <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
             </Tooltip>
           </h2>
-          <p className="text-stone-500 mt-1">Staff Performance Analytics • การวิเคราะห์ประสิทธิภาพพนักงาน</p>
+          <p className="text-bliss-500 mt-1">Staff Performance Analytics • การวิเคราะห์ประสิทธิภาพพนักงาน</p>
         </div>
 
         {/* Export Button */}
@@ -194,7 +194,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
           <button
             onClick={() => setShowExportDropdown(!showExportDropdown)}
             disabled={isExporting || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium hover:from-bliss-700 hover:to-bliss-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Download className="w-5 h-5" />
             {isExporting ? 'กำลังส่งออก...' : 'ส่งออกพนักงาน'}
@@ -202,34 +202,34 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
-              <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
-                <p className="text-xs font-medium text-stone-600">Export Staff Data • ส่งออกข้อมูลพนักงาน</p>
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-bliss-200 py-2 z-50">
+              <div className="px-4 py-2 bg-bliss-50 border-b border-bliss-200">
+                <p className="text-xs font-medium text-bliss-600">Export Staff Data • ส่งออกข้อมูลพนักงาน</p>
               </div>
               <button
                 onClick={handleExportPDF}
                 disabled={isExporting || isLoading}
-                className="w-full text-left px-4 py-3 hover:bg-stone-50 flex items-center gap-3 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full text-left px-4 py-3 hover:bg-bliss-50 flex items-center gap-3 text-bliss-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                   <FileText className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
                   <div className="font-medium text-sm">Export as PDF</div>
-                  <div className="text-xs text-stone-500">ส่งออกเป็นไฟล์ PDF</div>
+                  <div className="text-xs text-bliss-500">ส่งออกเป็นไฟล์ PDF</div>
                 </div>
               </button>
               <button
                 onClick={handleExportExcel}
                 disabled={isExporting || isLoading}
-                className="w-full text-left px-4 py-3 hover:bg-stone-50 flex items-center gap-3 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full text-left px-4 py-3 hover:bg-bliss-50 flex items-center gap-3 text-bliss-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                   <Table className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
                   <div className="font-medium text-sm">Export as Excel</div>
-                  <div className="text-xs text-stone-500">ส่งออกเป็นไฟล์ Excel</div>
+                  <div className="text-xs text-bliss-500">ส่งออกเป็นไฟล์ Excel</div>
                 </div>
               </button>
             </div>
@@ -241,15 +241,15 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
       <StaffReports selectedPeriod={selectedPeriod} />
 
       {/* Provider Performance Analytics */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
         <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-6 border-b border-indigo-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
               <Trophy className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">🏆 ประสิทธิภาพผู้ให้บริการ • Provider Performance</h3>
-              <p className="text-sm text-stone-500">Individual provider metrics and rankings • ตัวชี้วัดผู้ให้บริการรายบุคคล</p>
+              <h3 className="text-lg font-semibold text-bliss-900">🏆 ประสิทธิภาพผู้ให้บริการ • Provider Performance</h3>
+              <p className="text-sm text-bliss-500">Individual provider metrics and rankings • ตัวชี้วัดผู้ให้บริการรายบุคคล</p>
             </div>
           </div>
         </div>
@@ -260,9 +260,9 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
             {staffPerformance.isLoading ? (
               Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="animate-pulse">
-                  <div className="bg-stone-200 h-24 rounded-lg mb-3"></div>
-                  <div className="bg-stone-200 h-4 w-32 rounded mb-2"></div>
-                  <div className="bg-stone-200 h-3 w-24 rounded"></div>
+                  <div className="bg-bliss-200 h-24 rounded-lg mb-3"></div>
+                  <div className="bg-bliss-200 h-4 w-32 rounded mb-2"></div>
+                  <div className="bg-bliss-200 h-3 w-24 rounded"></div>
                 </div>
               ))
             ) : (
@@ -322,61 +322,61 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
           </div>
 
           {/* Detailed Performance Table */}
-          <div className="bg-stone-50 rounded-xl p-6">
-            <h4 className="font-semibold text-stone-900 mb-4">📊 ตารางประสิทธิภาพโดยละเอียด • Detailed Performance Table</h4>
+          <div className="bg-bliss-50 rounded-xl p-6">
+            <h4 className="font-semibold text-bliss-900 mb-4">📊 ตารางประสิทธิภาพโดยละเอียด • Detailed Performance Table</h4>
 
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone-200 text-left">
-                    <th className="pb-3 text-sm font-semibold text-stone-700">Provider Name</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">Revenue</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">Bookings</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">Rating</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">Completion %</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">Growth</th>
+                  <tr className="border-b border-bliss-200 text-left">
+                    <th className="pb-3 text-sm font-semibold text-bliss-700">Provider Name</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-right">Revenue</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-center">Bookings</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-center">Rating</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-center">Completion %</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-center">Growth</th>
                   </tr>
                 </thead>
                 <tbody>
                   {staffPerformance.isLoading ? (
                     Array.from({ length: 5 }).map((_, index) => (
-                      <tr key={index} className="border-b border-stone-100">
+                      <tr key={index} className="border-b border-bliss-100">
                         <td className="py-3">
-                          <div className="animate-pulse bg-stone-200 h-4 w-32 rounded"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-32 rounded"></div>
                         </td>
                         <td className="py-3 text-right">
-                          <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-20 rounded ml-auto"></div>
                         </td>
                         <td className="py-3 text-center">
-                          <div className="animate-pulse bg-stone-200 h-4 w-12 rounded mx-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-12 rounded mx-auto"></div>
                         </td>
                         <td className="py-3 text-center">
-                          <div className="animate-pulse bg-stone-200 h-4 w-16 rounded mx-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-16 rounded mx-auto"></div>
                         </td>
                         <td className="py-3 text-center">
-                          <div className="animate-pulse bg-stone-200 h-4 w-12 rounded mx-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-12 rounded mx-auto"></div>
                         </td>
                         <td className="py-3 text-center">
-                          <div className="animate-pulse bg-stone-200 h-4 w-16 rounded mx-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-16 rounded mx-auto"></div>
                         </td>
                       </tr>
                     ))
                   ) : (
                     (staffPerformance.data || []).map((staff, index) => (
-                      <tr key={index} className="border-b border-stone-100 hover:bg-white transition-colors">
+                      <tr key={index} className="border-b border-bliss-100 hover:bg-white transition-colors">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                               {staff.name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              <div className="font-medium text-stone-900">{staff.name || 'Unknown Staff'}</div>
-                              {staff.email && <div className="text-xs text-stone-500">{staff.email}</div>}
+                              <div className="font-medium text-bliss-900">{staff.name || 'Unknown Staff'}</div>
+                              {staff.email && <div className="text-xs text-bliss-500">{staff.email}</div>}
                             </div>
                           </div>
                         </td>
                         <td className="py-3 text-right">
-                          <span className="font-bold text-stone-900">฿{(staff.total_revenue_generated || 0).toLocaleString()}</span>
+                          <span className="font-bold text-bliss-900">฿{(staff.total_revenue_generated || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-center">
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -387,18 +387,18 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                         <td className="py-3 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                            <span className="font-semibold text-stone-900">{(staff.avg_rating || 0).toFixed(1)}</span>
+                            <span className="font-semibold text-bliss-900">{(staff.avg_rating || 0).toFixed(1)}</span>
                           </div>
                         </td>
                         <td className="py-3 text-center">
                           <div className="flex items-center justify-center">
-                            <div className="w-16 bg-stone-200 rounded-full h-2">
+                            <div className="w-16 bg-bliss-200 rounded-full h-2">
                               <div
                                 className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all"
                                 style={{ width: `${Math.max(staff.completion_rate || 0, 5)}%` }}
                               ></div>
                             </div>
-                            <span className="ml-2 text-xs font-semibold text-stone-700">{(staff.completion_rate || 0).toFixed(1)}%</span>
+                            <span className="ml-2 text-xs font-semibold text-bliss-700">{(staff.completion_rate || 0).toFixed(1)}%</span>
                           </div>
                         </td>
                         <td className="py-3 text-center">
@@ -414,7 +414,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                               <span className="text-xs font-semibold">{Math.abs(staff.revenue_growth).toFixed(1)}%</span>
                             </div>
                           ) : (
-                            <span className="text-xs text-stone-400">-</span>
+                            <span className="text-xs text-bliss-400">-</span>
                           )}
                         </td>
                       </tr>
@@ -428,15 +428,15 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
       </div>
 
       {/* Payment Details & Financial Tracking */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
         <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 border-b border-emerald-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
               <Wallet className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">💳 รายละเอียดการชำระเงิน • Payment Details</h3>
-              <p className="text-sm text-stone-500">Staff earnings and payment tracking • ติดตามรายได้และการชำระเงินพนักงาน</p>
+              <h3 className="text-lg font-semibold text-bliss-900">💳 รายละเอียดการชำระเงิน • Payment Details</h3>
+              <p className="text-sm text-bliss-500">Staff earnings and payment tracking • ติดตามรายได้และการชำระเงินพนักงาน</p>
             </div>
           </div>
         </div>
@@ -474,7 +474,7 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
               <div className="text-xs opacity-80">Paid</div>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
+            <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl p-4 text-white">
               <div className="flex items-center gap-3 mb-3">
                 <Clock className="w-6 h-6" />
                 <span className="text-sm font-medium">รอจ่าย</span>
@@ -491,62 +491,62 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
           </div>
 
           {/* Payment Status Table */}
-          <div className="bg-stone-50 rounded-xl p-6">
-            <h4 className="font-semibold text-stone-900 mb-4">📋 สถานะการชำระเงิน • Payment Status</h4>
+          <div className="bg-bliss-50 rounded-xl p-6">
+            <h4 className="font-semibold text-bliss-900 mb-4">📋 สถานะการชำระเงิน • Payment Status</h4>
 
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone-200 text-left">
-                    <th className="pb-3 text-sm font-semibold text-stone-700">พนักงาน</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">รายได้</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">จ่ายแล้ว</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-right">ค้างจ่าย</th>
-                    <th className="pb-3 text-sm font-semibold text-stone-700 text-center">สถานะ</th>
+                  <tr className="border-b border-bliss-200 text-left">
+                    <th className="pb-3 text-sm font-semibold text-bliss-700">พนักงาน</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-right">รายได้</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-right">จ่ายแล้ว</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-right">ค้างจ่าย</th>
+                    <th className="pb-3 text-sm font-semibold text-bliss-700 text-center">สถานะ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {staffEarnings.isLoading ? (
                     Array.from({ length: 5 }).map((_, index) => (
-                      <tr key={index} className="border-b border-stone-100">
+                      <tr key={index} className="border-b border-bliss-100">
                         <td className="py-3">
-                          <div className="animate-pulse bg-stone-200 h-4 w-32 rounded"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-32 rounded"></div>
                         </td>
                         <td className="py-3 text-right">
-                          <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-20 rounded ml-auto"></div>
                         </td>
                         <td className="py-3 text-right">
-                          <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-20 rounded ml-auto"></div>
                         </td>
                         <td className="py-3 text-right">
-                          <div className="animate-pulse bg-stone-200 h-4 w-20 rounded ml-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-4 w-20 rounded ml-auto"></div>
                         </td>
                         <td className="py-3 text-center">
-                          <div className="animate-pulse bg-stone-200 h-6 w-16 rounded mx-auto"></div>
+                          <div className="animate-pulse bg-bliss-200 h-6 w-16 rounded mx-auto"></div>
                         </td>
                       </tr>
                     ))
                   ) : (
                     (staffEarnings.data || []).map((staff, index) => (
-                      <tr key={index} className="border-b border-stone-100 hover:bg-white transition-colors">
+                      <tr key={index} className="border-b border-bliss-100 hover:bg-white transition-colors">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                               {staff.name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              <div className="font-medium text-stone-900">{staff.name || 'Unknown Staff'}</div>
+                              <div className="font-medium text-bliss-900">{staff.name || 'Unknown Staff'}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-3 text-right">
-                          <span className="font-medium text-stone-900">฿{(staff.alltime_earnings || 0).toLocaleString()}</span>
+                          <span className="font-medium text-bliss-900">฿{(staff.alltime_earnings || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-right">
                           <span className="font-medium text-green-600">฿{(staff.paid_payout || 0).toLocaleString()}</span>
                         </td>
                         <td className="py-3 text-right">
-                          <span className={`font-bold ${staff.pending_payout > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                          <span className={`font-bold ${staff.pending_payout > 0 ? 'text-bliss-600' : 'text-green-600'}`}>
                             ฿{(staff.pending_payout || 0).toLocaleString()}
                           </span>
                         </td>
@@ -557,12 +557,12 @@ function StaffSection({ selectedPeriod }: StaffSectionProps) {
                               Paid
                             </span>
                           ) : staff.pending_payout > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-bliss-100 text-bliss-800 text-xs rounded-full">
                               <Clock className="w-3 h-3" />
                               Pending
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-stone-100 text-stone-600 text-xs rounded-full">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-bliss-100 text-bliss-600 text-xs rounded-full">
                               —
                             </span>
                           )}

@@ -409,18 +409,18 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
           <div>
-            <h2 className="text-xl font-bold text-stone-900">
+            <h2 className="text-xl font-bold text-bliss-900">
               {editData ? 'แก้ไขโปรโมชัน' : 'เพิ่มโปรโมชันใหม่'}
             </h2>
-            <p className="text-sm text-stone-500 mt-1">
+            <p className="text-sm text-bliss-500 mt-1">
               {editData ? 'แก้ไขข้อมูลโปรโมชันที่มีอยู่' : 'สร้างโปรโมชันใหม่สำหรับลูกค้า'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-stone-100 rounded-lg transition"
+            className="p-2 hover:bg-bliss-100 rounded-lg transition"
             disabled={isLoading}
           >
             <X className="w-5 h-5" />
@@ -440,28 +440,28 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           {/* Basic Information */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 ชื่อโปรโมชัน (ไทย) *
               </label>
               <input
                 type="text"
                 value={formData.name_th}
                 onChange={(e) => setFormData({ ...formData, name_th: e.target.value })}
-                className="w-full px-4 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                 placeholder="ส่วนลดสำหรับสมาชิกใหม่"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 ชื่อโปรโมชัน (อังกฤษ) *
               </label>
               <input
                 type="text"
                 value={formData.name_en}
                 onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                className="w-full px-4 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                 placeholder="New Member Discount"
                 required
               />
@@ -470,20 +470,20 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
 
 
           {/* Code Generation */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
+          <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-bliss-800 mb-3 flex items-center gap-2">
               <Tag className="w-4 h-4" />
               รหัสโปรโมชัน
             </h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <label className="flex items-center gap-2 text-sm text-amber-700 mb-2">
+                <label className="flex items-center gap-2 text-sm text-bliss-700 mb-2">
                   <input
                     type="checkbox"
                     checked={formData.auto_generate_code}
                     onChange={(e) => setFormData({ ...formData, auto_generate_code: e.target.checked })}
-                    className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    className="rounded border-bliss-300 text-bliss-600 focus:ring-bliss-500"
                   />
                   สร้างรหัสอัตโนมัติ
                 </label>
@@ -495,7 +495,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                       placeholder="คำนำหน้า"
                       value={formData.code_prefix}
                       onChange={(e) => setFormData({ ...formData, code_prefix: e.target.value })}
-                      className="px-3 py-2 border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                      className="px-3 py-2 border border-bliss-200 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     />
                     <input
                       type="number"
@@ -503,7 +503,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                       max="20"
                       value={formData.code_length}
                       onChange={(e) => setFormData({ ...formData, code_length: parseInt(e.target.value) || 8 })}
-                      className="px-3 py-2 border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                      className="px-3 py-2 border border-bliss-200 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                       placeholder="ความยาว"
                     />
                   </div>
@@ -511,7 +511,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-amber-700 mb-2">
+                <label className="block text-sm font-medium text-bliss-700 mb-2">
                   รหัสโปรโมชัน *
                 </label>
                 <div className="flex gap-2">
@@ -519,14 +519,14 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                     type="text"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    className="flex-1 px-3 py-2 border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 font-mono"
+                    className="flex-1 px-3 py-2 border border-bliss-200 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500 font-mono"
                     placeholder="SAVE20"
                     required
                   />
                   <button
                     type="button"
                     onClick={generateRandomCode}
-                    className="px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+                    className="px-3 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </button>
@@ -756,11 +756,11 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           </div>
 
           {/* Advanced Settings Toggle */}
-          <div className="border-t border-stone-200 pt-4">
+          <div className="border-t border-bliss-200 pt-4">
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-sm text-stone-600 hover:text-stone-800"
+              className="flex items-center gap-2 text-sm text-bliss-600 hover:text-bliss-800"
             >
               {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               {showAdvanced ? 'ซ่อนการตั้งค่าขั้นสูง' : 'แสดงการตั้งค่าขั้นสูง'}
@@ -777,39 +777,39 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           {/* Dates and Status */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 วันที่เริ่มต้น *
               </label>
               <input
                 type="date"
                 value={formData.start_date}
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 วันที่สิ้นสุด *
               </label>
               <input
                 type="date"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 สถานะ *
               </label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
                 required
               >
                 <option value="draft">ร่าง</option>
@@ -822,26 +822,26 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           {/* Descriptions */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 รายละเอียด (ไทย)
               </label>
               <textarea
                 value={formData.description_th}
                 onChange={(e) => setFormData({ ...formData, description_th: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
                 rows={3}
                 placeholder="รายละเอียดและเงื่อนไขของโปรโมชัน"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 รายละเอียด (อังกฤษ)
               </label>
               <textarea
                 value={formData.description_en}
                 onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
                 rows={3}
                 placeholder="Promotion details and conditions"
               />
@@ -926,11 +926,11 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-bliss-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-stone-600 hover:text-stone-800 font-medium"
+              className="px-4 py-2 text-bliss-600 hover:text-bliss-800 font-medium"
               disabled={isLoading}
             >
               ยกเลิก
@@ -938,7 +938,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 disabled:opacity-50 transition"
+              className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 disabled:opacity-50 transition"
             >
               {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
               <Save className="w-4 h-4" />

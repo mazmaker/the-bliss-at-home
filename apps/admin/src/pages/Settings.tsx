@@ -651,7 +651,7 @@ function Settings() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
+          <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
           <p className="text-gray-600">กำลังโหลดการตั้งค่า...</p>
         </div>
       </div>
@@ -685,14 +685,14 @@ function Settings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">ตั้งค่าระบบ</h1>
-          <p className="text-stone-500">System Settings</p>
+          <h1 className="text-2xl font-bold text-bliss-900">ตั้งค่าระบบ</h1>
+          <p className="text-bliss-500">System Settings</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={loadSettings}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             รีเฟรช
@@ -700,7 +700,7 @@ function Settings() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
           >
             <Save className="w-5 h-5" />
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -711,7 +711,7 @@ function Settings() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Tabs */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-bliss-100">
             <nav className="space-y-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon
@@ -721,8 +721,8 @@ function Settings() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                        : 'text-stone-600 hover:bg-stone-100'
+                        ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                        : 'text-bliss-600 hover:bg-bliss-100'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -739,51 +739,51 @@ function Settings() {
 
         {/* Content */}
         <div className="lg:col-span-3">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
 
             {/* General Settings */}
             {activeTab === 'general' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-stone-900 mb-4">ตั้งค่าทั่วไป</h2>
+                <h2 className="text-xl font-semibold text-bliss-900 mb-4">ตั้งค่าทั่วไป</h2>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">ชื่อเว็บไซต์</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">ชื่อเว็บไซต์</label>
                   <input
                     type="text"
                     value={settings.website_name_en}
                     onChange={(e) => setSettings({ ...settings, website_name_en: e.target.value })}
-                    className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                     placeholder="e.g. The Bliss Massage at Home"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">ชื่อบริษัท (ภาษาไทย)</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">ชื่อบริษัท (ภาษาไทย)</label>
                   <input
                     type="text"
                     value={settings.company_name_th}
                     onChange={(e) => setSettings({ ...settings, company_name_th: e.target.value })}
-                    className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                     placeholder="เช่น บริษัท เดอะบลิส แอท โฮม จำกัด"
                   />
-                  <p className="text-xs text-stone-500 mt-1">ใช้สำหรับใบเสร็จรับเงินและใบลดหนี้</p>
+                  <p className="text-xs text-bliss-500 mt-1">ใช้สำหรับใบเสร็จรับเงินและใบลดหนี้</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">เลขประจำตัวผู้เสียภาษี</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เลขประจำตัวผู้เสียภาษี</label>
                   <input
                     type="text"
                     value={settings.company_tax_id}
                     onChange={(e) => setSettings({ ...settings, company_tax_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                     placeholder="เช่น 0123456789012"
                     maxLength={13}
                   />
-                  <p className="text-xs text-stone-500 mt-1">เลข 13 หลัก ใช้สำหรับใบเสร็จรับเงินและใบลดหนี้</p>
+                  <p className="text-xs text-bliss-500 mt-1">เลข 13 หลัก ใช้สำหรับใบเสร็จรับเงินและใบลดหนี้</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">Company Logo</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">Company Logo</label>
                   <LogoUpload
                     onUploadComplete={handleLogoUploadComplete}
                     onUploadError={handleLogoUploadError}
@@ -799,51 +799,51 @@ function Settings() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">อีเมลบริษัท</label>
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">อีเมลบริษัท</label>
                     <textarea
                       value={settings.company_email}
                       onChange={(e) => setSettings({ ...settings, company_email: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="info@theblissathome.com, support@theblissathome.com"
                       rows={2}
                     />
-                    <p className="text-xs text-stone-500 mt-1">อีเมลหลักของบริษัท ใช้ในการติดต่อและส่งอีเมล</p>
+                    <p className="text-xs text-bliss-500 mt-1">อีเมลหลักของบริษัท ใช้ในการติดต่อและส่งอีเมล</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">ที่อยู่บริษัท</label>
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">ที่อยู่บริษัท</label>
                     <textarea
                       value={settings.company_address}
                       onChange={(e) => setSettings({ ...settings, company_address: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="123/45 ถนนสุขุมวิท แขวงคลองตัน เขตคลองตัน กรุงเทพฯ 10110"
                       rows={3}
                     />
-                    <p className="text-xs text-stone-500 mt-1">ที่อยู่บริษัทสำหรับใบเสร็จ ใบกำกับภาษี และการติดต่อ</p>
+                    <p className="text-xs text-bliss-500 mt-1">ที่อยู่บริษัทสำหรับใบเสร็จ ใบกำกับภาษี และการติดต่อ</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">เบอร์โทรศัพท์</label>
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">เบอร์โทรศัพท์</label>
                     <textarea
                       value={settings.company_phone}
                       onChange={(e) => setSettings({ ...settings, company_phone: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="02-123-4567, 099-123-4567 (Call Center), 080-123-4567 (Emergency)"
                       rows={2}
                     />
-                    <p className="text-xs text-stone-500 mt-1">เบอร์โทรศัพท์ติดต่อ สามารถใส่หลายหมายเลข</p>
+                    <p className="text-xs text-bliss-500 mt-1">เบอร์โทรศัพท์ติดต่อ สามารถใส่หลายหมายเลข</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">อีเมลรับแจ้งเตือน SOS / ฉุกเฉิน</label>
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">อีเมลรับแจ้งเตือน SOS / ฉุกเฉิน</label>
                     <input
                       type="email"
                       value={settings.sos_notification_email}
                       onChange={(e) => setSettings({ ...settings, sos_notification_email: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="emergency@theblissathome.com"
                     />
-                    <p className="text-xs text-stone-500 mt-1">อีเมลที่จะรับการแจ้งเตือนเมื่อมีการกด SOS จากลูกค้า/พนักงาน (เว้นว่าง = ไม่ส่งอีเมล แต่การแจ้งเตือนในระบบยังทำงานตามปกติ)</p>
+                    <p className="text-xs text-bliss-500 mt-1">อีเมลที่จะรับการแจ้งเตือนเมื่อมีการกด SOS จากลูกค้า/พนักงาน (เว้นว่าง = ไม่ส่งอีเมล แต่การแจ้งเตือนในระบบยังทำงานตามปกติ)</p>
                   </div>
                 </div>
               </div>
@@ -852,33 +852,33 @@ function Settings() {
             {/* Payment Settings */}
             {activeTab === 'payment' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-stone-900 mb-4">การตั้งค่าการชำระเงิน</h2>
+                <h2 className="text-xl font-semibold text-bliss-900 mb-4">การตั้งค่าการชำระเงิน</h2>
 
                 {/* Enabled Payment Channels (R1) */}
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="p-4 bg-bliss-50 border border-bliss-200 rounded-xl">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-stone-900">ช่องทางการชำระเงินที่เปิดใช้</h3>
+                    <h3 className="font-medium text-bliss-900">ช่องทางการชำระเงินที่เปิดใช้</h3>
                     <button
                       onClick={saveEnabledChannels}
                       disabled={channelsSaving || channelsLoading}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-lg text-sm font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-lg text-sm font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
                     >
                       <Save className="w-4 h-4" />
                       {channelsSaving ? 'กำลังบันทึก...' : 'บันทึกช่องทาง'}
                     </button>
                   </div>
-                  <p className="text-xs text-stone-500 mb-3">เลือกช่องทางที่ลูกค้าใช้ชำระเงินได้ (มีผลทันที ไม่ต้อง deploy)</p>
+                  <p className="text-xs text-bliss-500 mb-3">เลือกช่องทางที่ลูกค้าใช้ชำระเงินได้ (มีผลทันที ไม่ต้อง deploy)</p>
                   <div className="space-y-2">
                     {CHANNEL_OPTIONS.map((opt) => (
-                      <label key={opt.key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-amber-100/50 cursor-pointer">
+                      <label key={opt.key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bliss-100/50 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={enabledChannels.includes(opt.key)}
                           onChange={() => toggleChannel(opt.key)}
-                          className="w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                          className="w-4 h-4 rounded border-bliss-300 text-bliss-600 focus:ring-bliss-500"
                         />
-                        <span className="text-sm text-stone-700">{opt.label}</span>
-                        <span className="text-xs text-stone-400">({opt.key})</span>
+                        <span className="text-sm text-bliss-700">{opt.label}</span>
+                        <span className="text-xs text-bliss-400">({opt.key})</span>
                       </label>
                     ))}
                   </div>
@@ -889,29 +889,29 @@ function Settings() {
 
                 {/* Google Calendar */}
                 <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
-                  <h3 className="font-medium text-stone-900 mb-1">Google Calendar (เครดิตโรงแรม)</h3>
-                  <p className="text-xs text-stone-500 mb-3">เชื่อมต่อ Google Calendar เพื่อสร้าง event แจ้งเตือนครบกำหนดชำระเครดิตอัตโนมัติ</p>
+                  <h3 className="font-medium text-bliss-900 mb-1">Google Calendar (เครดิตโรงแรม)</h3>
+                  <p className="text-xs text-bliss-500 mb-3">เชื่อมต่อ Google Calendar เพื่อสร้าง event แจ้งเตือนครบกำหนดชำระเครดิตอัตโนมัติ</p>
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">Calendar ID</label>
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">Calendar ID</label>
                       <input
                         type="text"
                         value={settings.google_calendar_id}
                         onChange={(e) => setSettings({ ...settings, google_calendar_id: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="xxx@group.calendar.google.com"
                       />
-                      <p className="text-xs text-stone-400 mt-1">ดูได้จาก Google Calendar Settings → Calendar ID</p>
+                      <p className="text-xs text-bliss-400 mt-1">ดูได้จาก Google Calendar Settings → Calendar ID</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">Service Account Key (Base64)</label>
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">Service Account Key (Base64)</label>
                       <textarea
                         value={settings.google_service_account_key}
                         onChange={(e) => setSettings({ ...settings, google_service_account_key: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 h-20"
+                        className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 h-20"
                         placeholder="eyJ0eXBlIjoic2Vydmlj..."
                       />
-                      <p className="text-xs text-stone-400 mt-1">แปลง JSON key เป็น base64 ด้วย: btoa(JSON.stringify(key))</p>
+                      <p className="text-xs text-bliss-400 mt-1">แปลง JSON key เป็น base64 ด้วย: btoa(JSON.stringify(key))</p>
                     </div>
                   </div>
                   {settings.google_calendar_id && settings.google_service_account_key ? (
@@ -919,8 +919,8 @@ function Settings() {
                       <span className="w-2 h-2 rounded-full bg-emerald-500" /> เชื่อมต่อแล้ว
                     </div>
                   ) : (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-stone-400">
-                      <span className="w-2 h-2 rounded-full bg-stone-300" /> ยังไม่ได้เชื่อมต่อ
+                    <div className="mt-3 flex items-center gap-2 text-xs text-bliss-400">
+                      <span className="w-2 h-2 rounded-full bg-bliss-300" /> ยังไม่ได้เชื่อมต่อ
                     </div>
                   )}
                 </div>
@@ -931,11 +931,11 @@ function Settings() {
             {activeTab === 'cancellation' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-stone-900">นโยบายการยกเลิก/เลื่อนนัด</h2>
+                  <h2 className="text-xl font-semibold text-bliss-900">นโยบายการยกเลิก/เลื่อนนัด</h2>
                   <button
                     onClick={savePolicySettings}
                     disabled={saving || !policySettings}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
                     {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
@@ -944,68 +944,68 @@ function Settings() {
 
                 {policyLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="w-6 h-6 text-amber-600 animate-spin" />
-                    <span className="ml-2 text-stone-600">กำลังโหลด...</span>
+                    <RefreshCw className="w-6 h-6 text-bliss-600 animate-spin" />
+                    <span className="ml-2 text-bliss-600">กำลังโหลด...</span>
                   </div>
                 ) : (
                   <>
                     {/* General Settings */}
                     {policySettings && (
-                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-4">
-                        <h3 className="font-medium text-stone-900">ตั้งค่าทั่วไป</h3>
+                      <div className="p-4 bg-bliss-50 border border-bliss-200 rounded-xl space-y-4">
+                        <h3 className="font-medium text-bliss-900">ตั้งค่าทั่วไป</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-2">ชื่อนโยบาย (ไทย)</label>
+                            <label className="block text-sm font-medium text-bliss-700 mb-2">ชื่อนโยบาย (ไทย)</label>
                             <input
                               type="text"
                               value={policySettings.policy_title_th || ''}
                               onChange={(e) => setPolicySettings({ ...policySettings, policy_title_th: e.target.value })}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-2">ชื่อนโยบาย (English)</label>
+                            <label className="block text-sm font-medium text-bliss-700 mb-2">ชื่อนโยบาย (English)</label>
                             <input
                               type="text"
                               value={policySettings.policy_title_en || ''}
                               onChange={(e) => setPolicySettings({ ...policySettings, policy_title_en: e.target.value })}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">รายละเอียดนโยบาย (ไทย)</label>
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">รายละเอียดนโยบาย (ไทย)</label>
                           <textarea
                             value={policySettings.policy_description_th || ''}
                             onChange={(e) => setPolicySettings({ ...policySettings, policy_description_th: e.target.value })}
                             rows={2}
-                            className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                           />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-2">จำนวนครั้งเลื่อนนัดสูงสุดต่อการจอง</label>
+                            <label className="block text-sm font-medium text-bliss-700 mb-2">จำนวนครั้งเลื่อนนัดสูงสุดต่อการจอง</label>
                             <input
                               type="number"
                               min="0"
                               max="10"
                               value={policySettings.max_reschedules_per_booking}
                               onChange={(e) => setPolicySettings({ ...policySettings, max_reschedules_per_booking: parseInt(e.target.value) || 0 })}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-2">ระยะเวลาดำเนินการคืนเงิน (วัน)</label>
+                            <label className="block text-sm font-medium text-bliss-700 mb-2">ระยะเวลาดำเนินการคืนเงิน (วัน)</label>
                             <input
                               type="number"
                               min="1"
                               max="60"
                               value={policySettings.refund_processing_days}
                               onChange={(e) => setPolicySettings({ ...policySettings, refund_processing_days: parseInt(e.target.value) || 14 })}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                             />
                           </div>
                         </div>
@@ -1015,7 +1015,7 @@ function Settings() {
                     {/* Policy Tiers */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-medium text-stone-900">ช่วงเวลาและเงื่อนไข</h3>
+                        <h3 className="font-medium text-bliss-900">ช่วงเวลาและเงื่อนไข</h3>
                         <button
                           onClick={() => {
                             setEditingTier({
@@ -1043,27 +1043,27 @@ function Settings() {
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="bg-stone-100">
-                              <th className="px-4 py-3 text-left font-medium text-stone-700">ช่วงเวลา</th>
-                              <th className="px-4 py-3 text-center font-medium text-stone-700">ยกเลิกได้</th>
-                              <th className="px-4 py-3 text-center font-medium text-stone-700">เลื่อนนัดได้</th>
-                              <th className="px-4 py-3 text-center font-medium text-stone-700">คืนเงิน %</th>
-                              <th className="px-4 py-3 text-center font-medium text-stone-700">สถานะ</th>
-                              <th className="px-4 py-3 text-center font-medium text-stone-700">จัดการ</th>
+                            <tr className="bg-bliss-100">
+                              <th className="px-4 py-3 text-left font-medium text-bliss-700">ช่วงเวลา</th>
+                              <th className="px-4 py-3 text-center font-medium text-bliss-700">ยกเลิกได้</th>
+                              <th className="px-4 py-3 text-center font-medium text-bliss-700">เลื่อนนัดได้</th>
+                              <th className="px-4 py-3 text-center font-medium text-bliss-700">คืนเงิน %</th>
+                              <th className="px-4 py-3 text-center font-medium text-bliss-700">สถานะ</th>
+                              <th className="px-4 py-3 text-center font-medium text-bliss-700">จัดการ</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-stone-200">
+                          <tbody className="divide-y divide-bliss-200">
                             {policyTiers.map((tier) => (
-                              <tr key={tier.id} className={!tier.is_active ? 'bg-stone-50 opacity-60' : ''}>
+                              <tr key={tier.id} className={!tier.is_active ? 'bg-bliss-50 opacity-60' : ''}>
                                 <td className="px-4 py-3">
-                                  <div className="font-medium text-stone-900">
+                                  <div className="font-medium text-bliss-900">
                                     {tier.max_hours_before === null
                                       ? `มากกว่า ${tier.min_hours_before} ชั่วโมง`
                                       : tier.min_hours_before === 0
                                       ? `น้อยกว่า ${tier.max_hours_before} ชั่วโมง`
                                       : `${tier.min_hours_before}-${tier.max_hours_before} ชั่วโมง`}
                                   </div>
-                                  <div className="text-stone-500 text-xs">{tier.label_th}</div>
+                                  <div className="text-bliss-500 text-xs">{tier.label_th}</div>
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   {tier.can_cancel ? (
@@ -1080,7 +1080,7 @@ function Settings() {
                                   )}
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                  <span className={`font-medium ${tier.refund_percentage === 100 ? 'text-green-600' : tier.refund_percentage > 0 ? 'text-amber-600' : 'text-red-600'}`}>
+                                  <span className={`font-medium ${tier.refund_percentage === 100 ? 'text-green-600' : tier.refund_percentage > 0 ? 'text-bliss-600' : 'text-red-600'}`}>
                                     {tier.refund_percentage}%
                                   </span>
                                 </td>
@@ -1088,7 +1088,7 @@ function Settings() {
                                   {tier.is_active ? (
                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">ใช้งาน</span>
                                   ) : (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-600">ปิดใช้งาน</span>
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bliss-100 text-bliss-600">ปิดใช้งาน</span>
                                   )}
                                 </td>
                                 <td className="px-4 py-3 text-center">
@@ -1116,7 +1116,7 @@ function Settings() {
                             ))}
                             {policyTiers.length === 0 && (
                               <tr>
-                                <td colSpan={6} className="px-4 py-8 text-center text-stone-500">
+                                <td colSpan={6} className="px-4 py-8 text-center text-bliss-500">
                                   ยังไม่มีช่วงเวลาที่กำหนด กรุณาเพิ่มช่วงเวลา
                                 </td>
                               </tr>
@@ -1144,24 +1144,24 @@ function Settings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">เวอร์ชัน</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เวอร์ชัน</label>
                   <input
                     type="text"
                     value={refundPolicyVersion}
                     onChange={(e) => setRefundPolicyVersion(e.target.value)}
-                    className="w-full max-w-xs px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full max-w-xs px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="เช่น 1.0, 2.0"
                   />
-                  <p className="text-xs text-stone-400 mt-1">เมื่อเปลี่ยนเวอร์ชัน ลูกค้าเก่าจะต้องยอมรับเงื่อนไขใหม่อีกครั้ง</p>
+                  <p className="text-xs text-bliss-400 mt-1">เมื่อเปลี่ยนเวอร์ชัน ลูกค้าเก่าจะต้องยอมรับเงื่อนไขใหม่อีกครั้ง</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">เนื้อหาเงื่อนไข</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข</label>
                   <textarea
                     value={refundPolicyContent}
                     onChange={(e) => setRefundPolicyContent(e.target.value)}
                     rows={20}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                     placeholder="เขียนเงื่อนไขการคืนเงินที่นี่..."
                   />
                 </div>
@@ -1194,44 +1194,44 @@ function Settings() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
                       เป้ารายได้ต่อเดือน (บาท) • Monthly Revenue Target (THB)
                     </label>
                     <input
                       type="number"
                       value={settings.report_monthly_target}
                       onChange={(e) => setSettings({ ...settings, report_monthly_target: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="500000"
                       min="0"
                     />
-                    <p className="text-xs text-stone-500 mt-1">
+                    <p className="text-xs text-bliss-500 mt-1">
                       ใช้คำนวณ Target Achievement (%) และ Variance from Forecast ในหน้ารายงานยอดขาย
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
                       อัตราต้นทุนโดยประมาณ (%) • Estimated Cost Percentage
                     </label>
                     <input
                       type="number"
                       value={settings.report_cost_percentage}
                       onChange={(e) => setSettings({ ...settings, report_cost_percentage: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="30"
                       min="0"
                       max="100"
                     />
-                    <p className="text-xs text-stone-500 mt-1">
+                    <p className="text-xs text-bliss-500 mt-1">
                       ใช้คำนวณ Net Revenue, Gross Margin และ Cash Flow โดยหักจากรายได้รวม
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
-                  <h4 className="font-medium text-stone-800 mb-2">ตัวอย่างการคำนวณ</h4>
-                  <div className="text-sm text-stone-600 space-y-1">
+                <div className="bg-bliss-50 p-4 rounded-xl border border-bliss-200">
+                  <h4 className="font-medium text-bliss-800 mb-2">ตัวอย่างการคำนวณ</h4>
+                  <div className="text-sm text-bliss-600 space-y-1">
                     <p>• <strong>Net Revenue</strong> = รายได้ completed - (รายได้รวม × {settings.report_cost_percentage || 30}%)</p>
                     <p>• <strong>Target Achievement</strong> = (รายได้ completed ÷ ฿{Number(settings.report_monthly_target || 500000).toLocaleString()}) × 100</p>
                     <p>• <strong>Forecast</strong> = (รายได้ completed ÷ จำนวนวัน) × 30 วัน</p>
@@ -1251,10 +1251,10 @@ function Settings() {
 
                 <div className="space-y-3">
                   {/* Credit Card - percentage */}
-                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                  <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-sm">💳</div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-stone-700">
+                      <label className="block text-sm font-medium text-bliss-700">
                         บัตรเครดิต/เดบิต • Credit/Debit Card
                       </label>
                     </div>
@@ -1263,20 +1263,20 @@ function Settings() {
                         type="number"
                         value={settings.fee_credit_card}
                         onChange={(e) => setSettings({ ...settings, fee_credit_card: e.target.value })}
-                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        className="w-24 px-3 py-1.5 border border-bliss-300 rounded-lg text-right focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                         placeholder="3.65"
                         min="0"
                         step="0.01"
                       />
-                      <span className="text-sm text-stone-500 w-20">% ต่อรายการ</span>
+                      <span className="text-sm text-bliss-500 w-20">% ต่อรายการ</span>
                     </div>
                   </div>
 
                   {/* PromptPay - percentage */}
-                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                  <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
                     <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-sm">📱</div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-stone-700">
+                      <label className="block text-sm font-medium text-bliss-700">
                         พร้อมเพย์ • PromptPay QR
                       </label>
                     </div>
@@ -1285,20 +1285,20 @@ function Settings() {
                         type="number"
                         value={settings.fee_promptpay}
                         onChange={(e) => setSettings({ ...settings, fee_promptpay: e.target.value })}
-                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        className="w-24 px-3 py-1.5 border border-bliss-300 rounded-lg text-right focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                         placeholder="1.65"
                         min="0"
                         step="0.01"
                       />
-                      <span className="text-sm text-stone-500 w-20">% ต่อรายการ</span>
+                      <span className="text-sm text-bliss-500 w-20">% ต่อรายการ</span>
                     </div>
                   </div>
 
                   {/* Internet Banking - flat fee */}
-                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                  <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
                     <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center text-sm">🏦</div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-stone-700">
+                      <label className="block text-sm font-medium text-bliss-700">
                         อินเทอร์เน็ตแบงก์กิ้ง • Internet Banking
                       </label>
                     </div>
@@ -1307,20 +1307,20 @@ function Settings() {
                         type="number"
                         value={settings.fee_internet_banking}
                         onChange={(e) => setSettings({ ...settings, fee_internet_banking: e.target.value })}
-                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        className="w-24 px-3 py-1.5 border border-bliss-300 rounded-lg text-right focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                         placeholder="10"
                         min="0"
                         step="0.01"
                       />
-                      <span className="text-sm text-stone-500 w-20">บาท/รายการ</span>
+                      <span className="text-sm text-bliss-500 w-20">บาท/รายการ</span>
                     </div>
                   </div>
 
                   {/* Mobile Banking - flat fee */}
-                  <div className="flex items-center gap-4 p-3 bg-white border border-stone-200 rounded-lg">
+                  <div className="flex items-center gap-4 p-3 bg-white border border-bliss-200 rounded-lg">
                     <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-sm">📲</div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-stone-700">
+                      <label className="block text-sm font-medium text-bliss-700">
                         โมบายแบงก์กิ้ง • Mobile Banking
                       </label>
                     </div>
@@ -1329,12 +1329,12 @@ function Settings() {
                         type="number"
                         value={settings.fee_mobile_banking}
                         onChange={(e) => setSettings({ ...settings, fee_mobile_banking: e.target.value })}
-                        className="w-24 px-3 py-1.5 border border-stone-300 rounded-lg text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        className="w-24 px-3 py-1.5 border border-bliss-300 rounded-lg text-right focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                         placeholder="10"
                         min="0"
                         step="0.01"
                       />
-                      <span className="text-sm text-stone-500 w-20">บาท/รายการ</span>
+                      <span className="text-sm text-bliss-500 w-20">บาท/รายการ</span>
                     </div>
                   </div>
 
@@ -1347,13 +1347,13 @@ function Settings() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-stone-900">ระบบแต้มสะสม</h2>
-                    <p className="text-sm text-stone-500 mt-1">Loyalty Points — ตั้งค่าการได้รับและแลกแต้มของลูกค้า</p>
+                    <h2 className="text-xl font-semibold text-bliss-900">ระบบแต้มสะสม</h2>
+                    <p className="text-sm text-bliss-500 mt-1">Loyalty Points — ตั้งค่าการได้รับและแลกแต้มของลูกค้า</p>
                   </div>
                   <button
                     onClick={saveLoyaltySettings}
                     disabled={loyaltySaving}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
                     {loyaltySaving ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -1362,26 +1362,26 @@ function Settings() {
 
                 {loyaltyLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="w-6 h-6 animate-spin text-amber-600" />
-                    <span className="ml-2 text-stone-500">กำลังโหลด...</span>
+                    <RefreshCw className="w-6 h-6 animate-spin text-bliss-600" />
+                    <span className="ml-2 text-bliss-500">กำลังโหลด...</span>
                   </div>
                 ) : (
                   <>
                     {/* เปิด/ปิดระบบ */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <Star className="w-5 h-5 text-amber-700" />
+                          <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+                            <Star className="w-5 h-5 text-bliss-700" />
                           </div>
                           <div>
-                            <p className="font-medium text-stone-900">เปิดใช้งานระบบแต้มสะสม</p>
-                            <p className="text-sm text-stone-500">ลูกค้าจะได้รับแต้มเมื่อจองบริการเสร็จสมบูรณ์</p>
+                            <p className="font-medium text-bliss-900">เปิดใช้งานระบบแต้มสะสม</p>
+                            <p className="text-sm text-bliss-500">ลูกค้าจะได้รับแต้มเมื่อจองบริการเสร็จสมบูรณ์</p>
                           </div>
                         </div>
                         <button
                           onClick={() => setLoyaltySettings(prev => ({ ...prev, loyalty_enabled: !prev.loyalty_enabled }))}
-                          className={`relative w-14 h-7 rounded-full transition-colors ${loyaltySettings.loyalty_enabled ? 'bg-amber-600' : 'bg-stone-300'}`}
+                          className={`relative w-14 h-7 rounded-full transition-colors ${loyaltySettings.loyalty_enabled ? 'bg-bliss-600' : 'bg-bliss-300'}`}
                         >
                           <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${loyaltySettings.loyalty_enabled ? 'translate-x-7' : 'translate-x-0.5'}`} />
                         </button>
@@ -1390,135 +1390,135 @@ function Settings() {
 
                     {/* การได้รับแต้ม */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-stone-900 flex items-center gap-2">
+                      <h3 className="text-lg font-medium text-bliss-900 flex items-center gap-2">
                         <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-bold">+</span>
                         การได้รับแต้ม
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">ทุกกี่บาทได้ 1 แต้ม</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">ทุกกี่บาทได้ 1 แต้ม</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.points_per_baht}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_per_baht: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="1"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">บาท</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">บาท</span>
                           </div>
-                          <p className="text-xs text-stone-400 mt-1">ตัวอย่าง: ฿{loyaltySettings.points_per_baht || 100} = 1 แต้ม, ฿{(parseInt(loyaltySettings.points_per_baht) || 100) * 5} = 5 แต้ม</p>
+                          <p className="text-xs text-bliss-400 mt-1">ตัวอย่าง: ฿{loyaltySettings.points_per_baht || 100} = 1 แต้ม, ฿{(parseInt(loyaltySettings.points_per_baht) || 100) * 5} = 5 แต้ม</p>
                         </div>
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">โบนัสจองครั้งแรก</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">โบนัสจองครั้งแรก</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.first_booking_bonus}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, first_booking_bonus: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="0"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">แต้ม</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">แต้ม</span>
                           </div>
-                          <p className="text-xs text-stone-400 mt-1">ลูกค้าจะได้รับโบนัสนี้เมื่อจองครั้งแรกเสร็จสมบูรณ์</p>
+                          <p className="text-xs text-bliss-400 mt-1">ลูกค้าจะได้รับโบนัสนี้เมื่อจองครั้งแรกเสร็จสมบูรณ์</p>
                         </div>
                       </div>
                     </div>
 
                     {/* การแลกแต้ม */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-stone-900 flex items-center gap-2">
+                      <h3 className="text-lg font-medium text-bliss-900 flex items-center gap-2">
                         <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">⇄</span>
                         การแลกแต้ม
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">กี่แต้มเท่ากับ ฿1</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">กี่แต้มเท่ากับ ฿1</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.points_to_baht}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_to_baht: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="1"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">แต้ม</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">แต้ม</span>
                           </div>
-                          <p className="text-xs text-stone-400 mt-1">{loyaltySettings.points_to_baht || 10} แต้ม = ฿1</p>
+                          <p className="text-xs text-bliss-400 mt-1">{loyaltySettings.points_to_baht || 10} แต้ม = ฿1</p>
                         </div>
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">แลกขั้นต่ำ</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">แลกขั้นต่ำ</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.min_redeem_points}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, min_redeem_points: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="0"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">แต้ม</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">แต้ม</span>
                           </div>
-                          <p className="text-xs text-stone-400 mt-1">= ฿{Math.floor((parseInt(loyaltySettings.min_redeem_points) || 100) / (parseInt(loyaltySettings.points_to_baht) || 10))} ส่วนลด</p>
+                          <p className="text-xs text-bliss-400 mt-1">= ฿{Math.floor((parseInt(loyaltySettings.min_redeem_points) || 100) / (parseInt(loyaltySettings.points_to_baht) || 10))} ส่วนลด</p>
                         </div>
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">ส่วนลดสูงสุด</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">ส่วนลดสูงสุด</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.max_discount_percent}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, max_discount_percent: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="1"
                               max="100"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">%</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">%</span>
                           </div>
-                          <p className="text-xs text-stone-400 mt-1">ป้องกันลูกค้าจองฟรี</p>
+                          <p className="text-xs text-bliss-400 mt-1">ป้องกันลูกค้าจองฟรี</p>
                         </div>
                       </div>
                     </div>
 
                     {/* อายุแต้ม */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-stone-900 flex items-center gap-2">
+                      <h3 className="text-lg font-medium text-bliss-900 flex items-center gap-2">
                         <span className="w-6 h-6 bg-red-100 text-red-700 rounded-full flex items-center justify-center text-xs font-bold">⏱</span>
                         อายุแต้ม
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">แต้มหมดอายุหลัง</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">แต้มหมดอายุหลัง</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.points_expiry_days}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_expiry_days: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="1"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">วัน</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">วัน</span>
                           </div>
                         </div>
-                        <div className="bg-stone-50 rounded-xl p-4">
-                          <label className="block text-sm font-medium text-stone-700 mb-2">แจ้งเตือนก่อนหมดอายุ</label>
+                        <div className="bg-bliss-50 rounded-xl p-4">
+                          <label className="block text-sm font-medium text-bliss-700 mb-2">แจ้งเตือนก่อนหมดอายุ</label>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={loyaltySettings.points_expiry_warning_days}
                               onChange={(e) => setLoyaltySettings(prev => ({ ...prev, points_expiry_warning_days: e.target.value }))}
-                              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                               min="1"
                             />
-                            <span className="text-sm text-stone-500 whitespace-nowrap">วัน</span>
+                            <span className="text-sm text-bliss-500 whitespace-nowrap">วัน</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* ตัวอย่างการคำนวณ */}
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
-                      <h4 className="font-medium text-stone-900 mb-3">ตัวอย่างการคำนวณ</h4>
-                      <div className="text-sm text-stone-600 space-y-1">
+                    <div className="bg-gradient-to-r from-bliss-50 to-orange-50 border border-bliss-200 rounded-xl p-5">
+                      <h4 className="font-medium text-bliss-900 mb-3">ตัวอย่างการคำนวณ</h4>
+                      <div className="text-sm text-bliss-600 space-y-1">
                         <p>• ลูกค้าจองบริการ ฿800 → ได้ <strong>{Math.floor(800 / (parseInt(loyaltySettings.points_per_baht) || 100))} แต้ม</strong></p>
                         <p>• ลูกค้ามี 500 แต้ม → แลกส่วนลดได้ <strong>฿{Math.floor(500 / (parseInt(loyaltySettings.points_to_baht) || 10))}</strong></p>
                         <p>• บริการ ฿1,000 → ส่วนลดจากแต้มสูงสุด <strong>฿{Math.floor(1000 * (parseInt(loyaltySettings.max_discount_percent) || 50) / 100)}</strong> ({loyaltySettings.max_discount_percent}%)</p>
@@ -1534,13 +1534,13 @@ function Settings() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-stone-900">ตั้งค่ารอบจ่ายเงิน Staff</h3>
-                    <p className="text-sm text-stone-500">กำหนดวันตัดรอบ วันจ่ายเงิน และยอดขั้นต่ำ</p>
+                    <h3 className="text-lg font-semibold text-bliss-900">ตั้งค่ารอบจ่ายเงิน Staff</h3>
+                    <p className="text-sm text-bliss-500">กำหนดวันตัดรอบ วันจ่ายเงิน และยอดขั้นต่ำ</p>
                   </div>
                   <button
                     onClick={savePayoutSettings}
                     disabled={payoutSaving}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
                   >
                     {payoutSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     บันทึก
@@ -1549,106 +1549,106 @@ function Settings() {
 
                 {payoutLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
+                    <Loader2 className="w-6 h-6 animate-spin text-bliss-400" />
                   </div>
                 ) : (
                   <>
                     {/* Mid-month (งวดแรก) */}
-                    <div className="bg-stone-50 rounded-xl p-5 space-y-4">
-                      <h4 className="font-semibold text-stone-800">งวดแรก (Mid-month)</h4>
+                    <div className="bg-bliss-50 rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-bliss-800">งวดแรก (Mid-month)</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-stone-600 mb-1">วันตัดรอบงวดแรก</label>
+                          <label className="block text-sm font-medium text-bliss-600 mb-1">วันตัดรอบงวดแรก</label>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-stone-500">วันที่</span>
+                            <span className="text-sm text-bliss-500">วันที่</span>
                             <input
                               type="number"
                               min="1" max="28"
                               value={payoutSettings.mid_month_cutoff_day}
                               onChange={e => setPayoutSettings(s => ({ ...s, mid_month_cutoff_day: e.target.value }))}
-                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                              className="w-20 px-3 py-2 border border-bliss-300 rounded-lg text-center focus:ring-2 focus:ring-bliss-500"
                             />
-                            <span className="text-sm text-stone-500">ของเดือน</span>
+                            <span className="text-sm text-bliss-500">ของเดือน</span>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-stone-600 mb-1">วันจ่ายเงินงวดแรก</label>
+                          <label className="block text-sm font-medium text-bliss-600 mb-1">วันจ่ายเงินงวดแรก</label>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-stone-500">วันที่</span>
+                            <span className="text-sm text-bliss-500">วันที่</span>
                             <input
                               type="number"
                               min="1" max="28"
                               value={payoutSettings.mid_month_payout_day}
                               onChange={e => setPayoutSettings(s => ({ ...s, mid_month_payout_day: e.target.value }))}
-                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                              className="w-20 px-3 py-2 border border-bliss-300 rounded-lg text-center focus:ring-2 focus:ring-bliss-500"
                             />
-                            <span className="text-sm text-stone-500">ของเดือน</span>
+                            <span className="text-sm text-bliss-500">ของเดือน</span>
                           </div>
                         </div>
                       </div>
-                      <p className="text-xs text-stone-400">สำหรับ Staff ที่เลือกรอบ "ครึ่งเดือน" — นับรายได้จากวันที่ 26 เดือนก่อน ถึงวันตัดรอบ</p>
+                      <p className="text-xs text-bliss-400">สำหรับ Staff ที่เลือกรอบ "ครึ่งเดือน" — นับรายได้จากวันที่ 26 เดือนก่อน ถึงวันตัดรอบ</p>
                     </div>
 
                     {/* End-month (งวดหลัง) */}
-                    <div className="bg-stone-50 rounded-xl p-5 space-y-4">
-                      <h4 className="font-semibold text-stone-800">งวดหลัง (End-month)</h4>
+                    <div className="bg-bliss-50 rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-bliss-800">งวดหลัง (End-month)</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-stone-600 mb-1">วันตัดรอบงวดหลัง</label>
+                          <label className="block text-sm font-medium text-bliss-600 mb-1">วันตัดรอบงวดหลัง</label>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-stone-500">วันที่</span>
+                            <span className="text-sm text-bliss-500">วันที่</span>
                             <input
                               type="number"
                               min="1" max="28"
                               value={payoutSettings.end_month_cutoff_day}
                               onChange={e => setPayoutSettings(s => ({ ...s, end_month_cutoff_day: e.target.value }))}
-                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                              className="w-20 px-3 py-2 border border-bliss-300 rounded-lg text-center focus:ring-2 focus:ring-bliss-500"
                             />
-                            <span className="text-sm text-stone-500">ของเดือน</span>
+                            <span className="text-sm text-bliss-500">ของเดือน</span>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-stone-600 mb-1">วันจ่ายเงินงวดหลัง</label>
+                          <label className="block text-sm font-medium text-bliss-600 mb-1">วันจ่ายเงินงวดหลัง</label>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-stone-500">วันที่</span>
+                            <span className="text-sm text-bliss-500">วันที่</span>
                             <input
                               type="number"
                               min="1" max="28"
                               value={payoutSettings.end_month_payout_day}
                               onChange={e => setPayoutSettings(s => ({ ...s, end_month_payout_day: e.target.value }))}
-                              className="w-20 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                              className="w-20 px-3 py-2 border border-bliss-300 rounded-lg text-center focus:ring-2 focus:ring-bliss-500"
                             />
-                            <span className="text-sm text-stone-500">ของเดือนถัดไป</span>
+                            <span className="text-sm text-bliss-500">ของเดือนถัดไป</span>
                           </div>
                         </div>
                       </div>
-                      <p className="text-xs text-stone-400">สำหรับ Staff ทุกคน — นับรายได้จากวันที่ 11 (หรือ 26 สำหรับรายเดือน) ถึงวันตัดรอบ</p>
+                      <p className="text-xs text-bliss-400">สำหรับ Staff ทุกคน — นับรายได้จากวันที่ 11 (หรือ 26 สำหรับรายเดือน) ถึงวันตัดรอบ</p>
                     </div>
 
                     {/* Minimum & Carry Forward */}
-                    <div className="bg-stone-50 rounded-xl p-5 space-y-4">
-                      <h4 className="font-semibold text-stone-800">ยอดขั้นต่ำ & ยกยอด</h4>
+                    <div className="bg-bliss-50 rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-bliss-800">ยอดขั้นต่ำ & ยกยอด</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-stone-600 mb-1">ยอดขั้นต่ำในการจ่าย (บาท)</label>
+                          <label className="block text-sm font-medium text-bliss-600 mb-1">ยอดขั้นต่ำในการจ่าย (บาท)</label>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-stone-500">฿</span>
+                            <span className="text-sm text-bliss-500">฿</span>
                             <input
                               type="number"
                               min="0"
                               value={payoutSettings.minimum_payout_amount}
                               onChange={e => setPayoutSettings(s => ({ ...s, minimum_payout_amount: e.target.value }))}
-                              className="w-32 px-3 py-2 border border-stone-300 rounded-lg text-center focus:ring-2 focus:ring-amber-500"
+                              className="w-32 px-3 py-2 border border-bliss-300 rounded-lg text-center focus:ring-2 focus:ring-bliss-500"
                             />
                           </div>
-                          <p className="text-xs text-stone-400 mt-1">ถ้ารายได้ต่ำกว่ายอดนี้จะยกยอดไปรอบถัดไป</p>
+                          <p className="text-xs text-bliss-400 mt-1">ถ้ารายได้ต่ำกว่ายอดนี้จะยกยอดไปรอบถัดไป</p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-stone-600 mb-1">ยกยอดข้ามรอบ</label>
+                          <label className="block text-sm font-medium text-bliss-600 mb-1">ยกยอดข้ามรอบ</label>
                           <button
                             onClick={() => setPayoutSettings(s => ({ ...s, carry_forward_enabled: !s.carry_forward_enabled }))}
                             className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
-                              payoutSettings.carry_forward_enabled ? 'bg-amber-700' : 'bg-stone-300'
+                              payoutSettings.carry_forward_enabled ? 'bg-bliss-700' : 'bg-bliss-300'
                             }`}
                             style={{ width: '44px', height: '24px' }}
                           >
@@ -1660,7 +1660,7 @@ function Settings() {
                               }}
                             />
                           </button>
-                          <p className="text-xs text-stone-400 mt-1">
+                          <p className="text-xs text-bliss-400 mt-1">
                             {payoutSettings.carry_forward_enabled ? 'เปิด — ยอดต่ำกว่าขั้นต่ำจะยกไปรอบถัดไป' : 'ปิด — จ่ายทุกยอดไม่ว่าจะน้อยแค่ไหน'}
                           </p>
                         </div>
@@ -1668,9 +1668,9 @@ function Settings() {
                     </div>
 
                     {/* Summary */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                      <h4 className="font-semibold text-amber-800 mb-2">สรุปการตั้งค่า</h4>
-                      <div className="text-sm text-amber-700 space-y-1">
+                    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
+                      <h4 className="font-semibold text-bliss-800 mb-2">สรุปการตั้งค่า</h4>
+                      <div className="text-sm text-bliss-700 space-y-1">
                         <p>• งวดแรก: ตัดรอบวันที่ {payoutSettings.mid_month_cutoff_day} → จ่ายวันที่ {payoutSettings.mid_month_payout_day}</p>
                         <p>• งวดหลัง: ตัดรอบวันที่ {payoutSettings.end_month_cutoff_day} → จ่ายวันที่ {payoutSettings.end_month_payout_day} เดือนถัดไป</p>
                         <p>• ยอดขั้นต่ำ: ฿{parseInt(payoutSettings.minimum_payout_amount).toLocaleString('th-TH')} {payoutSettings.carry_forward_enabled ? '(ยกยอดถ้าต่ำกว่า)' : '(จ่ายทุกยอด)'}</p>
@@ -1718,8 +1718,8 @@ function TierEditModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-stone-200">
-          <h3 className="text-xl font-semibold text-stone-900">
+        <div className="p-6 border-b border-bliss-200">
+          <h3 className="text-xl font-semibold text-bliss-900">
             {tier.id === 'new' ? 'เพิ่มช่วงเวลาใหม่' : 'แก้ไขช่วงเวลา'}
           </h3>
         </div>
@@ -1728,48 +1728,48 @@ function TierEditModal({
           {/* Time Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">ชั่วโมงขั้นต่ำก่อนนัด</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">ชั่วโมงขั้นต่ำก่อนนัด</label>
               <input
                 type="number"
                 min="0"
                 value={formData.min_hours_before}
                 onChange={(e) => setFormData({ ...formData, min_hours_before: parseInt(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">ชั่วโมงสูงสุดก่อนนัด</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">ชั่วโมงสูงสุดก่อนนัด</label>
               <input
                 type="number"
                 min="0"
                 value={formData.max_hours_before || ''}
                 onChange={(e) => setFormData({ ...formData, max_hours_before: e.target.value ? parseInt(e.target.value) : null })}
-                className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                 placeholder="ไม่จำกัด"
               />
-              <p className="text-xs text-stone-500 mt-1">เว้นว่างหากไม่จำกัด</p>
+              <p className="text-xs text-bliss-500 mt-1">เว้นว่างหากไม่จำกัด</p>
             </div>
           </div>
 
           {/* Labels */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">ป้ายกำกับ (ไทย)</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">ป้ายกำกับ (ไทย)</label>
               <input
                 type="text"
                 value={formData.label_th || ''}
                 onChange={(e) => setFormData({ ...formData, label_th: e.target.value })}
-                className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                 placeholder="เช่น มากกว่า 24 ชั่วโมงก่อนนัด"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">ป้ายกำกับ (English)</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">ป้ายกำกับ (English)</label>
               <input
                 type="text"
                 value={formData.label_en || ''}
                 onChange={(e) => setFormData({ ...formData, label_en: e.target.value })}
-                className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                 placeholder="e.g. More than 24 hours before"
               />
             </div>
@@ -1782,25 +1782,25 @@ function TierEditModal({
                 type="checkbox"
                 checked={formData.can_cancel}
                 onChange={(e) => setFormData({ ...formData, can_cancel: e.target.checked })}
-                className="w-5 h-5 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                className="w-5 h-5 rounded border-bliss-300 text-bliss-600 focus:ring-bliss-500"
               />
-              <span className="text-sm font-medium text-stone-700">อนุญาตให้ยกเลิกได้</span>
+              <span className="text-sm font-medium text-bliss-700">อนุญาตให้ยกเลิกได้</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.can_reschedule}
                 onChange={(e) => setFormData({ ...formData, can_reschedule: e.target.checked })}
-                className="w-5 h-5 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                className="w-5 h-5 rounded border-bliss-300 text-bliss-600 focus:ring-bliss-500"
               />
-              <span className="text-sm font-medium text-stone-700">อนุญาตให้เลื่อนนัดได้</span>
+              <span className="text-sm font-medium text-bliss-700">อนุญาตให้เลื่อนนัดได้</span>
             </label>
           </div>
 
           {/* Refund */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">เปอร์เซ็นต์คืนเงิน</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">เปอร์เซ็นต์คืนเงิน</label>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -1808,19 +1808,19 @@ function TierEditModal({
                   max="100"
                   value={formData.refund_percentage}
                   onChange={(e) => setFormData({ ...formData, refund_percentage: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                 />
-                <span className="text-stone-700">%</span>
+                <span className="text-bliss-700">%</span>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">ค่าธรรมเนียมเลื่อนนัด (บาท)</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">ค่าธรรมเนียมเลื่อนนัด (บาท)</label>
               <input
                 type="number"
                 min="0"
                 value={formData.reschedule_fee}
                 onChange={(e) => setFormData({ ...formData, reschedule_fee: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
               />
             </div>
           </div>
@@ -1828,13 +1828,13 @@ function TierEditModal({
           {/* Sort Order & Active */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">ลำดับการแสดง</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">ลำดับการแสดง</label>
               <input
                 type="number"
                 min="1"
                 value={formData.sort_order}
                 onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 1 })}
-                className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
               />
             </div>
             <div className="flex items-end pb-2">
@@ -1843,25 +1843,25 @@ function TierEditModal({
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-5 h-5 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                  className="w-5 h-5 rounded border-bliss-300 text-bliss-600 focus:ring-bliss-500"
                 />
-                <span className="text-sm font-medium text-stone-700">เปิดใช้งาน</span>
+                <span className="text-sm font-medium text-bliss-700">เปิดใช้งาน</span>
               </label>
             </div>
           </div>
         </div>
 
-        <div className="p-6 border-t border-stone-200 flex justify-end gap-3">
+        <div className="p-6 border-t border-bliss-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-stone-700 bg-stone-100 rounded-xl font-medium hover:bg-stone-200 transition"
+            className="px-4 py-2 text-bliss-700 bg-bliss-100 rounded-xl font-medium hover:bg-bliss-200 transition"
           >
             ยกเลิก
           </button>
           <button
             onClick={() => onSave(formData)}
             disabled={saving}
-            className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+            className="px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
           >
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>

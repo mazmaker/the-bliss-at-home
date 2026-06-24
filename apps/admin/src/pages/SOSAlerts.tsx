@@ -127,7 +127,7 @@ function SOSAlerts() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4" />
-          <p className="text-stone-600">กำลังโหลดการแจ้งเตือน SOS...</p>
+          <p className="text-bliss-600">กำลังโหลดการแจ้งเตือน SOS...</p>
         </div>
       </div>
     )
@@ -152,23 +152,23 @@ function SOSAlerts() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
             <ShieldAlert className="w-7 h-7 text-red-600" />
             ศูนย์แจ้งเตือนฉุกเฉิน (SOS Center)
           </h1>
-          <p className="text-stone-500">Emergency Alerts from Customers & Staff</p>
+          <p className="text-bliss-500">Emergency Alerts from Customers & Staff</p>
         </div>
       </div>
 
       {/* Source Filter Tabs */}
-      <div className="bg-white rounded-2xl shadow-lg p-2 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-2 border border-bliss-100">
         <div className="flex gap-2">
           <button
             onClick={() => setSourceFilter('all')}
             className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
               sourceFilter === 'all'
                 ? 'bg-red-600 text-white shadow-md'
-                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+                : 'bg-bliss-50 text-bliss-600 hover:bg-bliss-100'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -181,7 +181,7 @@ function SOSAlerts() {
             className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
               sourceFilter === 'customer'
                 ? 'bg-purple-600 text-white shadow-md'
-                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+                : 'bg-bliss-50 text-bliss-600 hover:bg-bliss-100'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -194,7 +194,7 @@ function SOSAlerts() {
             className={`flex-1 px-4 py-3 rounded-xl font-medium transition ${
               sourceFilter === 'staff'
                 ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+                : 'bg-bliss-50 text-bliss-600 hover:bg-bliss-100'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -207,31 +207,31 @@ function SOSAlerts() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
-          <p className="text-2xl font-bold text-stone-900">{filteredAlerts.length}</p>
-          <p className="text-xs text-stone-500">การแจ้งเตือนที่แสดง</p>
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
+          <p className="text-2xl font-bold text-bliss-900">{filteredAlerts.length}</p>
+          <p className="text-xs text-bliss-500">การแจ้งเตือนที่แสดง</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-red-100">
           <p className="text-2xl font-bold text-red-600">{pendingCount}</p>
-          <p className="text-xs text-stone-500">รอดำเนินการ</p>
+          <p className="text-xs text-bliss-500">รอดำเนินการ</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-yellow-100">
           <p className="text-2xl font-bold text-yellow-600">{acknowledgedCount}</p>
-          <p className="text-xs text-stone-500">รับทราบแล้ว</p>
+          <p className="text-xs text-bliss-500">รับทราบแล้ว</p>
         </div>
         <div className="bg-white rounded-xl shadow p-4 border border-green-100">
           <p className="text-2xl font-bold text-green-600">{resolvedCount}</p>
-          <p className="text-xs text-stone-500">แก้ไขแล้ว</p>
+          <p className="text-xs text-bliss-500">แก้ไขแล้ว</p>
         </div>
       </div>
 
       {/* Status Filter */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-4 border border-bliss-100">
         <div className="flex items-center gap-4">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-red-500"
           >
             <option value="all">สถานะทั้งหมด</option>
             <option value="pending">รอดำเนินการ</option>
@@ -243,9 +243,9 @@ function SOSAlerts() {
 
       {/* Alerts List */}
       {filteredAlerts.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-100">
-          <ShieldAlert className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-          <p className="text-stone-600">ไม่มีการแจ้งเตือน SOS</p>
+        <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-bliss-100">
+          <ShieldAlert className="w-16 h-16 text-bliss-300 mx-auto mb-4" />
+          <p className="text-bliss-600">ไม่มีการแจ้งเตือน SOS</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -257,7 +257,7 @@ function SOSAlerts() {
                   ? 'border-red-200'
                   : alert.status === 'acknowledged'
                   ? 'border-yellow-200'
-                  : 'border-stone-100'
+                  : 'border-bliss-100'
               }`}
             >
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -269,14 +269,14 @@ function SOSAlerts() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-stone-900 text-lg">
+                        <h3 className="font-semibold text-bliss-900 text-lg">
                           {alert.source_name || 'ไม่ระบุชื่อ'}
                         </h3>
                         {getSourceBadge(alert.source_type)}
                         {getStatusBadge(alert.status)}
                         {getPriorityBadge(alert.priority)}
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-stone-600">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-bliss-600">
                         {alert.source_phone && (
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4" />
@@ -310,8 +310,8 @@ function SOSAlerts() {
                         )}
                       </div>
                       {alert.message && (
-                        <div className="mt-3 p-3 bg-stone-50 rounded-lg">
-                          <p className="text-sm text-stone-700">{alert.message}</p>
+                        <div className="mt-3 p-3 bg-bliss-50 rounded-lg">
+                          <p className="text-sm text-bliss-700">{alert.message}</p>
                         </div>
                       )}
                       {alert.resolution_notes && (
@@ -350,7 +350,7 @@ function SOSAlerts() {
                       <button
                         onClick={() => handleCancel(alert.id)}
                         disabled={actionLoading}
-                        className="px-4 py-2 border border-stone-300 text-stone-700 rounded-xl hover:bg-stone-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="px-4 py-2 border border-bliss-300 text-bliss-700 rounded-xl hover:bg-bliss-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <XCircle className="w-4 h-4" />
                         ยกเลิก
@@ -371,7 +371,7 @@ function SOSAlerts() {
                     </button>
                   )}
                   {(alert.status === 'resolved' || alert.status === 'cancelled') && (
-                    <div className="text-center py-2 text-sm text-stone-500">
+                    <div className="text-center py-2 text-sm text-bliss-500">
                       {alert.status === 'resolved' ? 'แก้ไขเรียบร้อย' : 'ถูกยกเลิก'}
                     </div>
                   )}
@@ -386,8 +386,8 @@ function SOSAlerts() {
       {showResolveModal && selectedAlert && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-stone-900 mb-4">แก้ไขการแจ้งเตือน SOS</h3>
-            <p className="text-sm text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-4">แก้ไขการแจ้งเตือน SOS</h3>
+            <p className="text-sm text-bliss-600 mb-4">
               กรุณาบันทึกรายละเอียดการแก้ไขปัญหาสำหรับ{' '}
               <strong>{selectedAlert.source_name}</strong> ({selectedAlert.source_type === 'customer' ? 'ลูกค้า' : 'พนักงาน'})
             </p>
@@ -395,7 +395,7 @@ function SOSAlerts() {
               value={resolveNotes}
               onChange={(e) => setResolveNotes(e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent mb-4"
+              className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent mb-4"
               placeholder="กรอกรายละเอียดการแก้ไข..."
             />
             <div className="flex gap-3">
@@ -405,7 +405,7 @@ function SOSAlerts() {
                   setResolveNotes('')
                   setSelectedAlert(null)
                 }}
-                className="flex-1 px-4 py-2 border border-stone-300 rounded-xl text-stone-700 hover:bg-stone-50 transition"
+                className="flex-1 px-4 py-2 border border-bliss-300 rounded-xl text-bliss-700 hover:bg-bliss-50 transition"
               >
                 ยกเลิก
               </button>

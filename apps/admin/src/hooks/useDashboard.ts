@@ -87,7 +87,7 @@ export function usePendingApprovals(limit: number = 5) {
     retry: 2,
   })
 
-  useDashboardRealTime(query.refetch, ['staff_applications'])
+  useDashboardRealTime(query.refetch, ['staff'])
 
   return query
 }

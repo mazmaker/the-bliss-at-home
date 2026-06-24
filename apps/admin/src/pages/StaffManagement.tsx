@@ -128,7 +128,7 @@ function StaffManagement() {
       PENDING: 'bg-yellow-100 text-yellow-700',
       APPROVED: 'bg-green-100 text-green-700',
       REJECTED: 'bg-red-100 text-red-700',
-      SUSPENDED: 'bg-stone-100 text-stone-600',
+      SUSPENDED: 'bg-bliss-100 text-bliss-600',
     }
     const labels = {
       PENDING: 'รออนุมัติ',
@@ -159,8 +159,8 @@ function StaffManagement() {
   if (applicationsLoading || profilesLoading || statsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
-        <span className="ml-2 text-stone-600">กำลังโหลดข้อมูลพนักงาน...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-bliss-600" />
+        <span className="ml-2 text-bliss-600">กำลังโหลดข้อมูลพนักงาน...</span>
       </div>
     )
   }
@@ -170,8 +170,8 @@ function StaffManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">จัดการพนักงาน</h1>
-          <p className="text-stone-500">Staff Management - LINE LIFF Integration</p>
+          <h1 className="text-2xl font-bold text-bliss-900">จัดการพนักงาน</h1>
+          <p className="text-bliss-500">Staff Management - LINE LIFF Integration</p>
         </div>
         <div className="flex items-center gap-3">
           <a
@@ -183,7 +183,7 @@ function StaffManagement() {
             <ExternalLink className="w-5 h-5" />
             LINE LIFF สมัครงาน
           </a>
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition">
+          <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition">
             <MessageSquare className="w-5 h-5" />
             ส่งแจ้งเตือน LINE
           </button>
@@ -192,72 +192,72 @@ function StaffManagement() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <Clock className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats?.pending_applications || 0}
               </p>
-              <p className="text-xs text-stone-500">รออนุมัติ</p>
+              <p className="text-xs text-bliss-500">รออนุมัติ</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
               <UserCheck className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats?.active_staff || 0}
               </p>
-              <p className="text-xs text-stone-500">พนักงานใช้งาน</p>
+              <p className="text-xs text-bliss-500">พนักงานใช้งาน</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 rounded-lg">
               <UserX className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats?.rejected_applications || 0}
               </p>
-              <p className="text-xs text-stone-500">ปฏิเสธ</p>
+              <p className="text-xs text-bliss-500">ปฏิเสธ</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Star className="w-5 h-5 text-amber-600" />
+            <div className="p-2 bg-bliss-100 rounded-lg">
+              <Star className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats?.average_rating ? stats.average_rating.toFixed(1) : '0.0'}
               </p>
-              <p className="text-xs text-stone-500">คะแนนเฉลี่ย</p>
+              <p className="text-xs text-bliss-500">คะแนนเฉลี่ย</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-4 border border-bliss-100">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
             <input
               type="text"
               placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+              className="w-full pl-10 pr-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:bg-white transition"
             />
           </div>
 
@@ -271,8 +271,8 @@ function StaffManagement() {
                   onClick={() => setSelectedSkill(skill.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
                     selectedSkill === skill.id
-                      ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                      : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -286,7 +286,7 @@ function StaffManagement() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500"
+            className="px-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500"
           >
             <option value="all">สถานะทั้งหมด</option>
             <option value="PENDING">รออนุมัติ</option>
@@ -297,35 +297,35 @@ function StaffManagement() {
       </div>
 
       {/* Results */}
-      <div className="text-sm text-stone-500">
+      <div className="text-sm text-bliss-500">
         พบ {filteredApplications.length} ใบสมัคร
       </div>
 
       {/* Applications Table */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-bliss-100">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-stone-50 border-b border-stone-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ผู้สมัคร</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ทักษะ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ประสบการณ์</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่สมัคร</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จัดการ</th>
+              <tr className="bg-bliss-50 border-b border-bliss-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ผู้สมัคร</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ทักษะ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ประสบการณ์</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">วันที่สมัคร</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">สถานะ</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {filteredApplications.map((application) => (
-                <tr key={application.id} className="border-b border-stone-100 hover:bg-stone-50">
+                <tr key={application.id} className="border-b border-bliss-100 hover:bg-bliss-50">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white font-semibold">
                         {application.full_name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium text-stone-900">{application.full_name}</p>
-                        <div className="flex items-center gap-2 text-xs text-stone-500">
+                        <p className="font-medium text-bliss-900">{application.full_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-bliss-500">
                           <span className="flex items-center gap-1">
                             <Phone className="w-3 h-3" />
                             {application.phone_number}
@@ -344,26 +344,26 @@ function StaffManagement() {
                       {application.skills.map((skill) => (
                         <span
                           key={skill}
-                          className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"
+                          className="px-2 py-1 bg-bliss-100 text-bliss-700 rounded-full text-xs"
                         >
                           {skill}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-sm text-stone-600">{application.experience_years} ปี</td>
-                  <td className="py-3 px-4 text-sm text-stone-600">
+                  <td className="py-3 px-4 text-sm text-bliss-600">{application.experience_years} ปี</td>
+                  <td className="py-3 px-4 text-sm text-bliss-600">
                     {new Date(application.application_date).toLocaleDateString('th-TH')}
                   </td>
                   <td className="py-3 px-4">{getStatusBadge(application.status)}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <button
-                        className="p-2 hover:bg-stone-100 rounded-lg transition"
+                        className="p-2 hover:bg-bliss-100 rounded-lg transition"
                         title="ดูรายละเอียด"
                         onClick={() => setShowApplicationDetails(application.id)}
                       >
-                        <Eye className="w-4 h-4 text-stone-600" />
+                        <Eye className="w-4 h-4 text-bliss-600" />
                       </button>
                       {application.status === 'PENDING' && (
                         <>
@@ -391,8 +391,8 @@ function StaffManagement() {
               ))}
               {filteredApplications.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-stone-500">
-                    <AlertCircle className="w-8 h-8 mx-auto mb-2 text-stone-400" />
+                  <td colSpan={6} className="py-12 text-center text-bliss-500">
+                    <AlertCircle className="w-8 h-8 mx-auto mb-2 text-bliss-400" />
                     ไม่พบใบสมัครพนักงาน
                   </td>
                 </tr>
@@ -409,10 +409,10 @@ function StaffManagement() {
             <MessageSquare className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-stone-900 mb-2">
+            <h3 className="text-lg font-semibold text-bliss-900 mb-2">
               🔗 การเชื่อมต่อ LINE LIFF
             </h3>
-            <div className="text-sm text-stone-600 space-y-2">
+            <div className="text-sm text-bliss-600 space-y-2">
               <p>• พนักงานสมัครผ่าน LINE LIFF → ข้อมูลเข้าสู่ระบบอัตโนมัติ</p>
               <p>• แอดมินอนุมัติ/ปฏิเสธ → ส่งแจ้งเตือนทาง LINE ทันที</p>
               <p>• พนักงานที่ได้รับอนุมัติ → สามารถเข้าใช้ Staff App ได้</p>

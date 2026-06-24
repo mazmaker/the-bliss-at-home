@@ -54,14 +54,14 @@ export function TestAutomatedPayout() {
   }
 
   return (
-    <div className="bg-white border border-stone-200 rounded-xl p-6">
+    <div className="bg-white border border-bliss-200 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-bliss-900 flex items-center gap-2">
             <TestTube className="w-5 h-5" />
             ทดสอบระบบอัตโนมัติ
           </h3>
-          <p className="text-sm text-stone-600 mt-1">
+          <p className="text-sm text-bliss-600 mt-1">
             ทดสอบการทำงานของระบบสร้าง payout อัตโนมัติ
           </p>
         </div>
@@ -105,13 +105,13 @@ export function TestAutomatedPayout() {
 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-stone-600">เวลา:</span>
+              <span className="text-bliss-600">เวลา:</span>
               <span className="font-medium">
                 {new Date(lastResult.timestamp).toLocaleString('th-TH')}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-stone-600">สถานะ:</span>
+              <span className="text-bliss-600">สถานะ:</span>
               <span className={`font-medium ${
                 lastResult.success ? 'text-green-700' : 'text-red-700'
               }`}>
@@ -119,12 +119,12 @@ export function TestAutomatedPayout() {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-stone-600">ดำเนินการ:</span>
+              <span className="text-bliss-600">ดำเนินการ:</span>
               <span className="font-medium">{lastResult.processed} คน</span>
             </div>
             {lastResult.errors.length > 0 && (
               <div>
-                <span className="text-stone-600">ข้อผิดพลาด:</span>
+                <span className="text-bliss-600">ข้อผิดพลาด:</span>
                 <div className="mt-1 space-y-1">
                   {lastResult.errors.map((error, index) => (
                     <div key={index} className="text-xs text-red-700 bg-red-100 rounded px-2 py-1">

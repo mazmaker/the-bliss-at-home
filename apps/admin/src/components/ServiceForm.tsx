@@ -20,7 +20,6 @@ import {
   Upload,
   Globe,
   Clock,
-  DollarSign,
   Package,
   Sparkles,
   Hand,
@@ -120,9 +119,9 @@ interface ServiceFormProps {
 }
 
 const categories = [
-  { id: 'massage', name: 'นวด', nameEn: 'Massage', icon: Sparkles, color: 'purple' },
-  { id: 'nail', name: 'เล็บ', nameEn: 'Nail', icon: Hand, color: 'pink' },
-  { id: 'spa', name: 'สปา', nameEn: 'Spa', icon: Flower2, color: 'blue' },
+  { id: 'massage', name: 'นวด', nameEn: 'Massage', icon: Sparkles },
+  { id: 'nail', name: 'เล็บ', nameEn: 'Nail', icon: Hand },
+  { id: 'spa', name: 'สปา', nameEn: 'Spa', icon: Flower2 },
 ]
 
 const durationOptions = [
@@ -334,8 +333,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
           console.log('  - DB staff_earning_120:', result[0].staff_earning_120)
         }
         if (error) {
-          console.error('❌ Update error:', error)
-          console.error('❌ Full error details:', {
+          console.error('Update error:', error)
+          console.error('Full error details:', {
             message: error.message,
             details: error.details,
             hint: error.hint,
@@ -352,7 +351,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
         console.log('✅ Insert result:', result)
         if (result && result[0]) {
-          console.log('💰 DATABASE RETURNED PRICES:')
+          console.log('DATABASE RETURNED PRICES:')
           console.log('  - DB price_60:', result[0].price_60)
           console.log('  - DB price_90:', result[0].price_90)
           console.log('  - DB price_120:', result[0].price_120)
@@ -360,8 +359,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
           console.log('  - DB hotel_price:', result[0].hotel_price)
         }
         if (error) {
-          console.error('❌ Insert error:', error)
-          console.error('❌ Full error details:', {
+          console.error('Insert error:', error)
+          console.error('Full error details:', {
             message: error.message,
             details: error.details,
             hint: error.hint,
@@ -375,7 +374,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       onSuccess?.()
       onClose()
     } catch (error) {
-      console.error('❌ Service form error:', error)
+      console.error('Service form error:', error)
       const errorMsg = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึก'
       setSubmitError(`บันทึกไม่สำเร็จ: ${errorMsg}`)
     } finally {
@@ -395,37 +394,57 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
       {/* Modal */}
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+        <div className="relative w-full max-w-4xl bg-white text-left shadow-2xl rounded-2xl transition-all sm:my-8 flex flex-col max-h-[92vh] overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 px-6 py-4">
+          <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">
-                {editData ? 'แก้ไขบริการ' : 'เพิ่มบริการใหม่'}
-              </h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white leading-tight">
+                    {editData ? 'แก้ไขบริการ' : 'เพิ่มบริการใหม่'}
+                  </h3>
+                  <p className="text-xs text-bliss-200">
+                    {editData ? 'อัปเดตข้อมูลบริการที่มีอยู่' : 'กรอกข้อมูลเพื่อสร้างบริการใหม่'}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={onClose}
-                className="text-white hover:text-amber-200 transition"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit, (errors) => {
-            console.log('❌ Form validation errors:', errors)
-            console.log('💥 DEBUGGING FORM ERRORS - these might be causing orange warning!')
+            console.log('Form validation errors:', errors)
+            console.log('DEBUGGING FORM ERRORS - these might be causing orange warning!')
             Object.entries(errors).forEach(([field, error]) => {
               console.log(`  Field: ${field}, Error:`, error)
             })
             setSubmitError('กรุณาตรวจสอบข้อมูลที่กรอกให้ครบถ้วนและถูกต้อง')
-          })} className="p-6" noValidate>
+          })} className="flex flex-col min-h-0 flex-1" noValidate>
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+            {/* ── Section: ข้อมูลบริการ ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <Package className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">ข้อมูลบริการ</h4>
+              </div>
+
             {/* Category Selection */}
             <div className="mb-6">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
+              <label className="text-sm font-medium text-bliss-700 mb-2 block">
                 ประเภทบริการ
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {categories.map((cat) => {
                   const Icon = cat.icon
                   const isSelected = selectedCategory === cat.id
@@ -436,16 +455,16 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       onClick={() => setValue('category', cat.id as any, { shouldValidate: true })}
                       className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition ${
                         isSelected
-                          ? 'border-amber-500 bg-amber-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-bliss-500 bg-bliss-50'
+                          : 'border-bliss-200 hover:border-bliss-300'
                       }`}
                     >
-                      <Icon className={`w-6 h-6 ${isSelected ? 'text-amber-600' : 'text-gray-400'}`} />
-                      <span className={`text-sm font-medium ${isSelected ? 'text-amber-900' : 'text-gray-600'}`}>
+                      <Icon className={`w-6 h-6 ${isSelected ? 'text-bliss-600' : 'text-bliss-400'}`} />
+                      <span className={`text-sm font-medium ${isSelected ? 'text-bliss-900' : 'text-bliss-600'}`}>
                         {cat.name}
                       </span>
                       {isSelected && (
-                        <CheckCircle className="absolute top-2 right-2 w-4 h-4 text-amber-600" />
+                        <CheckCircle className="absolute top-2 right-2 w-4 h-4 text-bliss-600" />
                       )}
                     </button>
                   )
@@ -459,14 +478,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
             {/* Service Names */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   <Globe className="w-4 h-4 inline mr-1" />
                   ชื่อบริการ (ไทย)
                 </label>
                 <input
                   {...register('name_th')}
                   type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="เช่น นวดไทย 2 ชั่วโมง"
                 />
                 {errors.name_th && (
@@ -475,14 +494,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   <Globe className="w-4 h-4 inline mr-1" />
                   Service Name (English)
                 </label>
                 <input
                   {...register('name_en')}
                   type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="e.g. Thai Massage 2 Hours"
                 />
                 {errors.name_en && (
@@ -493,20 +512,20 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
             {/* URL Slug */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-bliss-700 mb-1">
                 URL Slug
               </label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">localhost:3002/services/</span>
+                <span className="text-sm text-bliss-500 whitespace-nowrap">customer.theblissmassageathome.com/services/</span>
                 <input
                   {...register('slug')}
                   type="text"
-                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="thai-massage-2hr"
                   readOnly={!!editData}
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-bliss-500">
                 URL ที่ใช้แสดงบริการ (สร้างอัตโนมัติจากชื่อภาษาอังกฤษ)
               </p>
             </div>
@@ -514,33 +533,42 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
             {/* Descriptions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   รายละเอียด (ไทย)
                 </label>
                 <textarea
                   {...register('description_th')}
                   rows={3}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="คำอธิบายบริการ..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   Description (English)
                 </label>
                 <textarea
                   {...register('description_en')}
                   rows={3}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="Service description..."
                 />
               </div>
             </div>
 
+            </div>{/* end Section: ข้อมูลบริการ */}
+
+            {/* ── Section: ระยะเวลา & ราคา ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <Clock className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">ระยะเวลา &amp; ราคา</h4>
+              </div>
+
             {/* Duration Options */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-bliss-700 mb-3">
                 <Clock className="w-4 h-4 inline mr-1" />
                 ระยะเวลาบริการ (เลือกได้หลายตัวเลือก)
               </label>
@@ -555,8 +583,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       key={option.value}
                       className={`relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition ${
                         isSelected
-                          ? 'border-amber-500 bg-amber-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-bliss-500 bg-bliss-50'
+                          : 'border-bliss-200 hover:border-bliss-300'
                       }`}
                     >
                       <input
@@ -575,8 +603,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       />
                       <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
                         isSelected
-                          ? 'border-amber-500 bg-amber-500'
-                          : 'border-gray-300'
+                          ? 'border-bliss-500 bg-bliss-500'
+                          : 'border-bliss-300'
                       }`}>
                         {isSelected && (
                           <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -584,7 +612,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                           </svg>
                         )}
                       </div>
-                      <span className={`text-sm font-medium ${isSelected ? 'text-amber-900' : 'text-gray-700'}`}>
+                      <span className={`text-sm font-medium ${isSelected ? 'text-bliss-900' : 'text-bliss-700'}`}>
                         {option.label}
                       </span>
                     </label>
@@ -599,19 +627,19 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
             {/* Pricing */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                <DollarSign className="w-4 h-4 inline mr-1" />
+              <label className="block text-sm font-medium text-bliss-700 mb-3">
+                <span className="inline-block mr-1 font-bold text-bliss-600">฿</span>
                 ราคาบริการตามระยะเวลา
               </label>
-              <p className="text-xs text-gray-500 mb-4">
-                💡 เลือกระยะเวลาที่ต้องการด้านบน จากนั้นกรอกราคาสำหรับแต่ละระยะเวลาที่เลือก
+              <p className="text-xs text-bliss-500 mb-4">
+                เลือกระยะเวลาที่ต้องการด้านบน จากนั้นกรอกราคาสำหรับแต่ละระยะเวลาที่เลือก
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Price for 60 minutes */}
                 {selectedDurations.includes('60') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
                       <Clock className="w-4 h-4 inline mr-1" />
                       ราคา 60 นาที
                     </label>
@@ -621,7 +649,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       min="100"
                       max="50000"
                       step="10"
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="690"
                     />
                     {errors.price_60 && (
@@ -633,7 +661,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 {/* Price for 90 minutes */}
                 {selectedDurations.includes('90') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
                       <Clock className="w-4 h-4 inline mr-1" />
                       ราคา 90 นาที
                     </label>
@@ -643,7 +671,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       min="100"
                       max="50000"
                       step="10"
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="990"
                     />
                     {errors.price_90 && (
@@ -655,7 +683,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                 {/* Price for 120 minutes */}
                 {selectedDurations.includes('120') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
                       <Clock className="w-4 h-4 inline mr-1" />
                       ราคา 120 นาที
                     </label>
@@ -665,7 +693,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       min="100"
                       max="50000"
                       step="10"
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="1280"
                     />
                     {errors.price_120 && (
@@ -677,9 +705,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
               {/* Helper message when no durations selected */}
               {selectedDurations.length === 0 && (
-                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm text-amber-800">
-                    ⚠️ กรุณาเลือกระยะเวลาบริการด้านบนก่อน จากนั้นช่องกรอกราคาจะปรากฏขึ้น
+                <div className="mt-4 p-4 bg-bliss-50 border border-bliss-200 rounded-lg">
+                  <p className="text-sm text-bliss-800">
+                    กรุณาเลือกระยะเวลาบริการด้านบนก่อน จากนั้นช่องกรอกราคาจะปรากฏขึ้น
                   </p>
                 </div>
               )}
@@ -687,9 +715,9 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
 
             {/* Fixed Pricing Preview */}
             {(price60 || price90 || price120) && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="text-sm font-medium text-green-800 mb-3">
-                  💰 ตารางราคาที่กำหนด
+              <div className="mb-4 p-4 bg-bliss-50 border border-bliss-200 rounded-lg">
+                <h4 className="text-sm font-medium text-bliss-800 mb-3">
+                  ตารางราคาที่กำหนด
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {selectedDurations.map(duration => {
@@ -718,22 +746,22 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                         key={duration}
                         className={`p-3 rounded-lg border-2 ${
                           priceEntered
-                            ? 'border-green-500 bg-green-100'
-                            : 'border-gray-200 bg-gray-50'
+                            ? 'border-bliss-500 bg-bliss-100'
+                            : 'border-bliss-200 bg-bliss-50'
                         }`}
                       >
                         <p className={`text-sm font-medium ${
-                          priceEntered ? 'text-green-800' : 'text-gray-600'
+                          priceEntered ? 'text-bliss-800' : 'text-bliss-600'
                         }`}>
                           {getDurationLabel(parseInt(duration))}
                         </p>
                         <p className={`text-lg font-bold ${
-                          priceEntered ? 'text-green-900' : 'text-gray-400'
+                          priceEntered ? 'text-bliss-900' : 'text-bliss-400'
                         }`}>
                           {priceEntered ? price.toLocaleString() : '---'} บาท
                         </p>
                         {!priceEntered && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-bliss-500">
                             รอการกรอกราคา
                           </p>
                         )}
@@ -741,27 +769,31 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                     )
                   })}
                 </div>
-                <p className="mt-3 text-xs text-green-600">
-                  💡 ราคาที่กรอกจะถูกบันทึกและใช้แสดงให้ลูกค้าโดยตรง
+                <p className="mt-3 text-xs text-bliss-600">
+                  ราคาที่กรอกจะถูกบันทึกและใช้แสดงให้ลูกค้าโดยตรง
                 </p>
               </div>
             )}
 
-            {/* Staff Earnings */}
-            <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-3">
-                <TrendingUp className="w-4 h-4 inline mr-1" />
-                รายได้ Staff
-              </p>
+            </div>{/* end Section: ระยะเวลา & ราคา */}
 
+            {/* ── Section: รายได้ Staff ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <TrendingUp className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">รายได้ Staff</h4>
+              </div>
+
+            {/* Staff Earnings */}
+            <div>
               <div className="flex gap-2 mb-4">
                 <button
                   type="button"
                   onClick={() => setValue('use_fixed_rate', false, { shouldValidate: true })}
                   className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition ${
                     !useFixedRate
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      ? 'border-bliss-500 bg-bliss-50 text-bliss-700'
+                      : 'border-bliss-200 text-bliss-500 hover:border-bliss-300'
                   }`}
                 >
                   Commission (%)
@@ -771,8 +803,8 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   onClick={() => setValue('use_fixed_rate', true, { shouldValidate: true })}
                   className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition ${
                     useFixedRate
-                      ? 'border-amber-500 bg-amber-50 text-amber-700'
-                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      ? 'border-bliss-500 bg-bliss-50 text-bliss-700'
+                      : 'border-bliss-200 text-bliss-500 hover:border-bliss-300'
                   }`}
                 >
                   Fixed Rate (฿)
@@ -788,11 +820,11 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                       min="0"
                       max="100"
                       step="0.01"
-                      className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg font-semibold"
+                      className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500 text-center text-lg font-semibold"
                       placeholder="25"
                     />
-                    <span className="text-gray-600 font-medium text-lg">%</span>
-                    <span className="text-sm text-gray-400">จากราคาที่ลูกค้าจ่าย</span>
+                    <span className="text-bliss-600 font-medium text-lg">%</span>
+                    <span className="text-sm text-bliss-400">จากราคาที่ลูกค้าจ่าย</span>
                   </div>
                   {errors.staff_commission_rate && (
                     <p className="mt-1 text-sm text-red-600">{errors.staff_commission_rate.message}</p>
@@ -803,24 +835,24 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               {useFixedRate && (
                 <div className="space-y-3">
                   {selectedDurations.length === 0 && (
-                    <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <p className="text-sm text-bliss-600 bg-bliss-50 border border-bliss-200 rounded-lg px-3 py-2">
                       กรุณาเลือกระยะเวลาบริการก่อน
                     </p>
                   )}
                   {selectedDurations.includes('60') && (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-700 w-16 shrink-0">60 นาที</span>
-                      <span className="text-gray-400 shrink-0">→ Staff ได้</span>
+                      <span className="text-sm text-bliss-700 w-16 shrink-0">60 นาที</span>
+                      <span className="text-bliss-400 shrink-0">→ Staff ได้</span>
                       <input
                         {...register('staff_earning_60')}
                         type="number"
                         min="50"
                         max="10000"
                         step="10"
-                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center font-semibold"
+                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500 text-center font-semibold"
                         placeholder="400"
                       />
-                      <span className="text-gray-600 shrink-0">บาท</span>
+                      <span className="text-bliss-600 shrink-0">บาท</span>
                       {errors.staff_earning_60 && (
                         <p className="text-sm text-red-600">{errors.staff_earning_60.message}</p>
                       )}
@@ -828,18 +860,18 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   )}
                   {selectedDurations.includes('90') && (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-700 w-16 shrink-0">90 นาที</span>
-                      <span className="text-gray-400 shrink-0">→ Staff ได้</span>
+                      <span className="text-sm text-bliss-700 w-16 shrink-0">90 นาที</span>
+                      <span className="text-bliss-400 shrink-0">→ Staff ได้</span>
                       <input
                         {...register('staff_earning_90')}
                         type="number"
                         min="50"
                         max="10000"
                         step="10"
-                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center font-semibold"
+                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500 text-center font-semibold"
                         placeholder="600"
                       />
-                      <span className="text-gray-600 shrink-0">บาท</span>
+                      <span className="text-bliss-600 shrink-0">บาท</span>
                       {errors.staff_earning_90 && (
                         <p className="text-sm text-red-600">{errors.staff_earning_90.message}</p>
                       )}
@@ -847,18 +879,18 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   )}
                   {selectedDurations.includes('120') && (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-700 w-16 shrink-0">120 นาที</span>
-                      <span className="text-gray-400 shrink-0">→ Staff ได้</span>
+                      <span className="text-sm text-bliss-700 w-16 shrink-0">120 นาที</span>
+                      <span className="text-bliss-400 shrink-0">→ Staff ได้</span>
                       <input
                         {...register('staff_earning_120')}
                         type="number"
                         min="50"
                         max="10000"
                         step="10"
-                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center font-semibold"
+                        className="w-28 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500 text-center font-semibold"
                         placeholder="800"
                       />
-                      <span className="text-gray-600 shrink-0">บาท</span>
+                      <span className="text-bliss-600 shrink-0">บาท</span>
                       {errors.staff_earning_120 && (
                         <p className="text-sm text-red-600">{errors.staff_earning_120.message}</p>
                       )}
@@ -868,9 +900,18 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               )}
             </div>
 
+            </div>{/* end Section: รายได้ Staff */}
+
+            {/* ── Section: รูปภาพ & การตั้งค่า ── */}
+            <div className="rounded-xl border border-bliss-200 p-5">
+              <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                <Upload className="w-5 h-5 text-bliss-600" />
+                <h4 className="text-lg font-bold text-bliss-900">รูปภาพ &amp; การตั้งค่า</h4>
+              </div>
+
             {/* Image Upload */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 <Upload className="w-4 h-4 inline mr-1" />
                 รูปภาพบริการ
               </label>
@@ -903,25 +944,27 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   {...register('is_active')}
                   type="checkbox"
                   id="is_active"
-                  className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-bliss-600 focus:ring-bliss-500 border-bliss-300 rounded"
                 />
-                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="is_active" className="ml-2 block text-sm text-bliss-700">
                   เปิดใช้งานบริการนี้
                 </label>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   ลำดับการแสดง
                 </label>
                 <input
                   {...register('sort_order', { valueAsNumber: true })}
                   type="number"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="0"
                 />
               </div>
             </div>
+
+            </div>{/* end Section: รูปภาพ & การตั้งค่า */}
 
             {/* Error Messages */}
             {(submitError || Object.keys(errors).length > 0) && (
@@ -963,20 +1006,22 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3">
+          </div>{/* end Scrollable Body */}
+
+            {/* Sticky Footer */}
+            <div className="flex-shrink-0 flex justify-end gap-3 border-t border-bliss-200 bg-bliss-50 px-6 py-4">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                className="px-5 py-2.5 text-sm font-medium text-bliss-700 bg-white border border-bliss-300 rounded-xl hover:bg-bliss-100 transition disabled:opacity-50"
               >
                 ยกเลิก
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-lg hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+                className="px-6 py-2.5 text-sm font-semibold bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl hover:from-bliss-700 hover:to-bliss-800 shadow-sm transition disabled:opacity-50"
               >
                 {isSubmitting ? 'กำลังบันทึก...' : editData ? 'บันทึกการแก้ไข' : 'เพิ่มบริการ'}
               </button>

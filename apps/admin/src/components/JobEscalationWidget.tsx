@@ -28,7 +28,7 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
         if (b.type === 'job_no_staff_urgent' && a.type !== 'job_no_staff_urgent') return 1
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
-      .slice(0, 5)
+      .slice(0, 3)
   }, [alerts])
 
   // Don't show widget if no alerts
@@ -38,23 +38,13 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-lg border-2 overflow-hidden transition-all duration-500 ${
-        hasUrgent ? 'border-red-500' : 'border-orange-400'
-      }`}
+      className="bg-white rounded-2xl shadow-lg border-2 overflow-hidden transition-all duration-500 border-orange-400 h-full flex flex-col"
       style={{
-        boxShadow: hasUrgent
-          ? '0 0 20px rgba(239, 68, 68, 0.3)'
-          : '0 0 15px rgba(251, 146, 60, 0.2)',
+        boxShadow: '0 0 15px rgba(251, 146, 60, 0.25)',
       }}
     >
       {/* Header */}
-      <div
-        className={`p-6 ${
-          hasUrgent
-            ? 'bg-gradient-to-r from-red-600 to-red-700'
-            : 'bg-gradient-to-r from-orange-500 to-orange-600'
-        }`}
-      >
+      <div className="p-6 bg-gradient-to-r from-orange-500 to-orange-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -69,7 +59,7 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
             </div>
             <div>
               <h3 className="font-bold text-white text-lg">
-                {hasUrgent ? '🚨' : '⚠️'} งานยังไม่มี Staff รับ
+                ⚠️ งานยังไม่มี Staff รับ
               </h3>
               <p className="text-white/90 text-sm">Unassigned Job Alerts</p>
             </div>
@@ -82,9 +72,8 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
       </div>
 
       {/* Alerts List */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 flex-1 flex flex-col gap-3">
         {topAlerts.map((alert) => {
-          const isUrgent = alert.type === 'job_no_staff_urgent'
           const bookingNumber = alert.data?.booking_number || alert.data?.job_id?.slice(0, 8)
           const scheduledDate = alert.data?.scheduled_date
           const scheduledTime = alert.data?.scheduled_time
@@ -92,15 +81,11 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
           return (
             <div
               key={alert.id}
-              className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                isUrgent
-                  ? 'bg-red-50 border-red-300 text-red-900'
-                  : 'bg-orange-50 border-orange-300 text-orange-900'
-              }`}
+              className="p-4 rounded-xl border-2 transition-all duration-300 bg-orange-50 border-orange-300 text-orange-900 flex-1"
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-start gap-2 flex-1">
-                  <span className="text-lg">{isUrgent ? '🚨' : '⚠️'}</span>
+                  <span className="text-lg">⚠️</span>
                   <div className="flex-1">
                     <div className="font-semibold text-sm">{alert.title}</div>
                     <p className="text-sm opacity-80 line-clamp-2 mt-0.5">{alert.message}</p>
@@ -129,11 +114,7 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
                 </div>
                 <button
                   onClick={() => markAsRead(alert.id)}
-                  className={`text-xs px-2 py-1 rounded-lg transition ${
-                    isUrgent
-                      ? 'bg-red-200/50 hover:bg-red-200 text-red-800'
-                      : 'bg-orange-200/50 hover:bg-orange-200 text-orange-800'
-                  }`}
+                  className="text-xs px-2 py-1 rounded-lg transition bg-orange-200/50 hover:bg-orange-200 text-orange-800"
                 >
                   รับทราบ
                 </button>
@@ -144,14 +125,10 @@ const JobEscalationWidget = memo(function JobEscalationWidget() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 bg-stone-50 border-t border-stone-200">
+      <div className="p-4 bg-bliss-50 border-t border-bliss-200">
         <Link
           to="/admin/bookings?status=pending"
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition ${
-            hasUrgent
-              ? 'bg-red-600 text-white hover:bg-red-700'
-              : 'bg-orange-600 text-white hover:bg-orange-700'
-          }`}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition bg-orange-600 text-white hover:bg-orange-700"
         >
           <span>ดูการจองทั้งหมด</span>
           <ArrowRight className="w-4 h-4" />

@@ -777,7 +777,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                       คะแนนรีวิว (Rating)
                     </label>
                     <div className="relative mt-1">
-                      <Star className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400" />
+                      <Star className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                       <input
                         {...register('rating')}
                         type="number"

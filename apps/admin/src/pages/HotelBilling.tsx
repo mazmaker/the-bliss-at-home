@@ -198,7 +198,7 @@ export default function HotelBilling() {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-amber-700" />
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-bliss-700" />
           <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function HotelBilling() {
           <p className="mt-2 text-gray-600">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="mt-4 rounded-lg bg-amber-700 px-4 py-2 text-white hover:bg-amber-800"
+            className="mt-4 rounded-lg bg-bliss-700 px-4 py-2 text-white hover:bg-bliss-800"
           >
             ลองอีกครั้ง
           </button>
@@ -446,7 +446,7 @@ export default function HotelBilling() {
                         <button
                           onClick={() => handleSendInvoiceEmail(invoice)}
                           disabled={emailSendingId === invoice.id}
-                          className="rounded p-1 text-amber-600 hover:bg-amber-50 disabled:opacity-50"
+                          className="rounded p-1 text-bliss-600 hover:bg-bliss-50 disabled:opacity-50"
                           title="ส่งอีเมล"
                         >
                           {emailSendingId === invoice.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}

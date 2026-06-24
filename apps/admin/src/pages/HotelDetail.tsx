@@ -71,7 +71,7 @@ export default function HotelDetail() {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-amber-700" />
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-bliss-700" />
           <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function HotelDetail() {
           <p className="mt-2 text-gray-600">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="mt-4 rounded-lg bg-amber-700 px-4 py-2 text-white hover:bg-amber-800"
+            className="mt-4 rounded-lg bg-bliss-700 px-4 py-2 text-white hover:bg-bliss-800"
           >
             ลองอีกครั้ง
           </button>
@@ -362,7 +362,7 @@ export default function HotelDetail() {
                 dueDate.setDate(dueDate.getDate() + creditDays)
               }
               const daysLeft = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-              const color = daysLeft <= 1 ? 'text-red-600 bg-red-50' : daysLeft <= 7 ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50'
+              const color = daysLeft <= 1 ? 'text-red-600 bg-red-50' : daysLeft <= 7 ? 'text-bliss-600 bg-bliss-50' : 'text-green-600 bg-green-50'
               return (
                 <div className={`mt-3 px-4 py-2 rounded-lg ${color} text-sm font-medium`}>
                   ครบกำหนดชำระอีก {daysLeft} วัน ({dueDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})
@@ -463,7 +463,7 @@ export default function HotelDetail() {
               {invoicesLoading ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center">
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-amber-700" />
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-bliss-700" />
                   </td>
                 </tr>
               ) : invoices && invoices.length > 0 ? (
