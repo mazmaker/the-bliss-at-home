@@ -60,7 +60,7 @@ function TestExtendSession() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-bliss-50 p-6">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">🧪 Test Extend Session Feature</h1>
 
@@ -73,13 +73,13 @@ function TestExtendSession() {
             <div className="text-green-600">
               ✅ Database Connected - Found {dbTest.length} hotel bookings
               {dbTest.map(booking => (
-                <div key={booking.id} className="text-sm mt-2 p-2 bg-gray-50 rounded">
+                <div key={booking.id} className="text-sm mt-2 p-2 bg-bliss-50 rounded">
                   🏨 {booking.booking_number} - Extensions: {booking.extension_count || 0}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-gray-600">🔄 Loading database test...</div>
+            <div className="text-bliss-600">🔄 Loading database test...</div>
           )}
         </div>
 
@@ -89,7 +89,7 @@ function TestExtendSession() {
           <div className="border p-4 rounded">
             <div className="mb-4">
               <h3 className="font-medium">Mock Booking:</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-bliss-600">
                 {mockBooking.booking_number} - {mockBooking.service_name}
                 ({mockBooking.duration} นาที) - ฿{mockBooking.final_price}
               </p>
@@ -109,7 +109,7 @@ function TestExtendSession() {
             <div className="border p-4 rounded">
               <div className="mb-4">
                 <h3 className="font-medium">Real Booking:</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-bliss-600">
                   {dbTest[0].booking_number} - Status: {dbTest[0].status}
                   - Extensions: {dbTest[0].extension_count || 0}
                 </p>
@@ -128,9 +128,9 @@ function TestExtendSession() {
         )}
 
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mt-6">
-          <h3 className="font-semibold text-blue-800 mb-2">📋 Testing Instructions:</h3>
-          <ol className="text-sm text-blue-700 space-y-1">
+        <div className="bg-bliss-50 border border-bliss-200 p-4 rounded-lg mt-6">
+          <h3 className="font-semibold text-bliss-800 mb-2">📋 Testing Instructions:</h3>
+          <ol className="text-sm text-bliss-700 space-y-1">
             <li>1. ✅ Check database connection shows green</li>
             <li>2. 🎛️ Click "เพิ่มเวลาบริการ" button (mock data)</li>
             <li>3. 📝 Verify modal opens with duration options</li>

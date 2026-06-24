@@ -50,16 +50,16 @@ export function ExtendSessionButton({
 
   const getVariantClasses = () => {
     if (!isEnabled) {
-      return 'bg-gray-300 text-gray-500 cursor-not-allowed';
+      return 'bg-bliss-300 text-bliss-500 cursor-not-allowed';
     }
 
     switch (variant) {
       case 'secondary':
-        return 'bg-stone-600 hover:bg-stone-700 text-white';
+        return 'bg-bliss-600 hover:bg-bliss-700 text-white';
       case 'outline':
-        return 'border-2 border-amber-600 text-amber-600 hover:bg-amber-50';
+        return 'border-2 border-bliss-600 text-bliss-600 hover:bg-bliss-50';
       default:
-        return 'bg-amber-600 hover:bg-amber-700 text-white';
+        return 'bg-bliss-600 hover:bg-bliss-700 text-white';
     }
   };
 
@@ -83,7 +83,7 @@ export function ExtendSessionButton({
           title={getHelpText()}
           className={`
             flex items-center gap-2 rounded-lg font-medium transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2
+            focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:ring-offset-2
             ${getSizeClasses()}
             ${getVariantClasses()}
           `}
@@ -94,7 +94,7 @@ export function ExtendSessionButton({
 
         {/* Extension status indicator */}
         {extensionStatus.hasExtensions && (
-          <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center">
+          <div className="absolute -top-2 -right-2 w-5 h-5 bg-bliss-500 text-white text-xs rounded-full flex items-center justify-center">
             {extensionStatus.extensionCount}
           </div>
         )}
@@ -112,9 +112,9 @@ export function ExtendSessionButton({
 
       {/* Extension info for bookings with extensions */}
       {extensionStatus.hasExtensions && !extensionStatus.maxExtensionsReached && (
-        <div className="flex items-center gap-2 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-          <Clock className="w-4 h-4 text-amber-600" />
-          <span className="text-sm text-amber-700">
+        <div className="flex items-center gap-2 mt-2 p-2 bg-bliss-50 border border-bliss-200 rounded-lg">
+          <Clock className="w-4 h-4 text-bliss-600" />
+          <span className="text-sm text-bliss-700">
             ขยายเวลาแล้ว {extensionStatus.extensionCount} ครั้ง
             {extensionStatus.lastExtendedAt && (
               <span className="ml-1">

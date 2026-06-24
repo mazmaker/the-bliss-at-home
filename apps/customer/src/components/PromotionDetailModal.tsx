@@ -116,38 +116,18 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
 
         {/* Hero Section */}
         <div className="relative h-48 sm:h-56 lg:h-64 bg-bliss-600 rounded-t-2xl sm:rounded-t-3xl overflow-hidden">
-          {promotion.image_url ? (
-            <>
-              <img
-                src={promotion.image_url}
-                alt={name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                    {getDiscountIcon()}
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 drop-shadow-lg">
-                    {formatDiscount()}
-                  </h1>
-                  <p className="text-base sm:text-lg opacity-90 font-semibold drop-shadow">{t('home:promotions.offText')}</p>
-                </div>
+          {/* Branded hero (uploaded promotion image hidden) */}
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-white">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                {getDiscountIcon()}
               </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-white">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  {getDiscountIcon()}
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
-                  {formatDiscount()}
-                </h1>
-                <p className="text-base sm:text-lg opacity-90">{t('home:promotions.offText')}</p>
-              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                {formatDiscount()}
+              </h1>
+              <p className="text-base sm:text-lg opacity-90">{t('home:promotions.offText')}</p>
             </div>
-          )}
+          </div>
 
           {/* Status Badge */}
           <div className="absolute top-4 left-4">

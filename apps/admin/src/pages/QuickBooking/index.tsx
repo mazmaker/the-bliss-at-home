@@ -234,12 +234,12 @@ export default function QuickBooking() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">จองแบบเร่งด่วน</h1>
-          <p className="text-stone-500">Quick Booking - สำหรับลูกค้าโทรเข้าหรือเดินเข้า</p>
+          <h1 className="text-2xl font-bold text-bliss-900">จองแบบเร่งด่วน</h1>
+          <p className="text-bliss-500">Quick Booking - สำหรับลูกค้าโทรเข้าหรือเดินเข้า</p>
         </div>
         <button
           onClick={() => window.history.back()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
         >
           <ArrowLeft className="w-5 h-5" />
           กลับ
@@ -247,7 +247,7 @@ export default function QuickBooking() {
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
         <div className="flex items-center justify-between">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
@@ -256,10 +256,10 @@ export default function QuickBooking() {
                 className={`
                   flex items-center justify-center w-10 h-10 rounded-full border-2 cursor-pointer transition-all
                   ${currentStep === step.id
-                    ? 'bg-[#d29b25] border-[#d29b25] text-white'
+                    ? 'bg-[#565b34] border-[#565b34] text-white'
                     : isStepComplete(step.id)
-                    ? 'bg-[#b6d387] border-[#b6d387] text-white'
-                    : 'bg-white border-stone-300 text-stone-500'
+                    ? 'bg-[#c8c29c] border-[#c8c29c] text-white'
+                    : 'bg-white border-bliss-300 text-bliss-500'
                   }
                 `}
                 onClick={() => goToStep(step.id)}
@@ -274,18 +274,18 @@ export default function QuickBooking() {
               {/* Step Label */}
               <div className="ml-3 hidden md:block">
                 <p className={`text-sm font-medium ${
-                  currentStep === step.id ? 'text-[#d29b25]' :
-                  isStepComplete(step.id) ? 'text-[#b6d387]' : 'text-stone-500'
+                  currentStep === step.id ? 'text-[#565b34]' :
+                  isStepComplete(step.id) ? 'text-[#c8c29c]' : 'text-bliss-500'
                 }`}>
                   {step.name}
                 </p>
-                <p className="text-xs text-stone-400">{step.description}</p>
+                <p className="text-xs text-bliss-400">{step.description}</p>
               </div>
 
               {/* Connector Line */}
               {index < steps.length - 1 && (
                 <div className={`w-12 h-0.5 mx-4 ${
-                  isStepComplete(step.id) ? 'bg-[#b6d387]' : 'bg-stone-300'
+                  isStepComplete(step.id) ? 'bg-[#c8c29c]' : 'bg-bliss-300'
                 }`} />
               )}
             </div>
@@ -302,7 +302,7 @@ export default function QuickBooking() {
       )}
 
       {/* Step Content */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
         <div className="p-6">
           {renderStepContent()}
         </div>

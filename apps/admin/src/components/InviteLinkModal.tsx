@@ -104,16 +104,16 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-stone-200">
+        <div className="flex items-center justify-between p-4 border-b border-bliss-200">
           <div className="flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-amber-600" />
-            <h2 className="text-lg font-semibold text-stone-900">ลิงก์คำเชิญ</h2>
+            <QrCode className="w-5 h-5 text-bliss-600" />
+            <h2 className="text-lg font-semibold text-bliss-900">ลิงก์คำเชิญ</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-stone-100 rounded-lg transition"
+            className="p-1 hover:bg-bliss-100 rounded-lg transition"
           >
-            <X className="w-5 h-5 text-stone-500" />
+            <X className="w-5 h-5 text-bliss-500" />
           </button>
         </div>
 
@@ -121,18 +121,18 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Staff Info */}
           <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold text-lg mx-auto mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white font-semibold text-lg mx-auto mb-2">
               {staffName.charAt(0)}
             </div>
-            <p className="font-medium text-stone-900">{staffName}</p>
-            <p className="text-sm text-stone-500">ส่งลิงก์นี้ให้พนักงานเพื่อลงทะเบียนเข้าระบบ</p>
+            <p className="font-medium text-bliss-900">{staffName}</p>
+            <p className="text-sm text-bliss-500">ส่งลิงก์นี้ให้พนักงานเพื่อลงทะเบียนเข้าระบบ</p>
           </div>
 
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-4">
-              <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
-              <p className="text-sm text-stone-500">กำลังโหลด...</p>
+              <Loader2 className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-bliss-500">กำลังโหลด...</p>
             </div>
           )}
 
@@ -174,13 +174,13 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
               {/* QR Code */}
               {!inviteData.isExpired && (
                 <div className="text-center">
-                  <div className="bg-white border border-stone-200 rounded-xl p-4 inline-block">
+                  <div className="bg-white border border-bliss-200 rounded-xl p-4 inline-block">
                     <img
                       src={inviteData.qrCode}
                       alt="QR Code for LINE invitation"
                       className="w-48 h-48 mx-auto"
                     />
-                    <p className="text-xs text-stone-500 mt-2">สแกนเพื่อเข้าสู่ระบบ</p>
+                    <p className="text-xs text-bliss-500 mt-2">สแกนเพื่อเข้าสู่ระบบ</p>
                   </div>
                 </div>
               )}
@@ -188,7 +188,7 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
               {/* Invite Link */}
               {!inviteData.isExpired && (
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     Invitation Link
                   </label>
                   <div className="flex items-center gap-2">
@@ -196,14 +196,14 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
                       type="text"
                       value={inviteData.inviteLink}
                       readOnly
-                      className="flex-1 px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm"
+                      className="flex-1 px-3 py-2 bg-bliss-50 border border-bliss-300 rounded-lg text-sm"
                     />
                     <button
                       onClick={copyInviteLink}
                       className={`px-4 py-2 rounded-lg transition flex items-center gap-1 ${
                         copied
                           ? 'bg-green-600 text-white'
-                          : 'bg-stone-600 text-white hover:bg-stone-700'
+                          : 'bg-bliss-600 text-white hover:bg-bliss-700'
                       }`}
                       title="คัดลอกลิงก์"
                     >
@@ -224,7 +224,7 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
               <button
                 onClick={handleRegenerate}
                 disabled={isRegenerating}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-amber-300 text-amber-700 bg-amber-50 rounded-xl font-medium hover:bg-amber-100 transition disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-bliss-300 text-bliss-700 bg-bliss-50 rounded-xl font-medium hover:bg-bliss-100 transition disabled:opacity-50"
               >
                 {isRegenerating ? (
                   <>
@@ -243,10 +243,10 @@ export default function InviteLinkModal({ isOpen, onClose, staffId, staffName }:
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-stone-200">
+        <div className="p-4 border-t border-bliss-200">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+            className="w-full px-4 py-2 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-50 transition"
           >
             ปิด
           </button>

@@ -59,24 +59,20 @@ const SOSWidget = memo(function SOSWidget() {
             <ShieldAlert className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h3 className="font-bold text-stone-900">ศูนย์แจ้งเตือนฉุกเฉิน</h3>
-            <p className="text-sm text-stone-500">SOS Emergency Center</p>
+            <h3 className="font-bold text-bliss-900">ศูนย์แจ้งเตือนฉุกเฉิน</h3>
+            <p className="text-sm text-bliss-500">SOS Emergency Center</p>
           </div>
         </div>
         <div className="text-center py-8">
           <p className="text-green-600 font-medium">✓ ไม่มีการแจ้งเตือนฉุกเฉิน</p>
-          <p className="text-sm text-stone-500 mt-1">ระบบทำงานปกติ</p>
+          <p className="text-sm text-bliss-500 mt-1">ระบบทำงานปกติ</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={`bg-white rounded-2xl shadow-lg border-2 overflow-hidden transition-all duration-500 ${
-      hasCriticalAlerts
-        ? 'border-red-500'
-        : 'border-orange-300'
-    }`}
+    <div className="bg-white rounded-2xl shadow-lg border-2 overflow-hidden transition-all duration-500 border-red-500 h-full flex flex-col"
       style={{
         boxShadow: hasCriticalAlerts
           ? '0 0 20px rgba(239, 68, 68, 0.4)'
@@ -84,11 +80,7 @@ const SOSWidget = memo(function SOSWidget() {
       }}
     >
       {/* Header */}
-      <div className={`p-6 ${
-        hasCriticalAlerts
-          ? 'bg-gradient-to-r from-red-600 to-red-700'
-          : 'bg-gradient-to-r from-orange-600 to-orange-700'
-      }`}>
+      <div className="p-6 bg-gradient-to-r from-red-600 to-red-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -116,7 +108,7 @@ const SOSWidget = memo(function SOSWidget() {
       </div>
 
       {/* Alerts List */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 flex-1 flex flex-col gap-3">
         {topAlerts.map((alert) => {
           const priorityStyles = {
             critical: 'bg-red-50 border-red-300 text-red-900',
@@ -137,7 +129,7 @@ const SOSWidget = memo(function SOSWidget() {
           return (
             <div
               key={alert.id}
-              className={`p-4 rounded-xl border-2 transition-all duration-300 ease-in-out ${priorityStyles[alert.priority]}`}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 ease-in-out flex-1 ${priorityStyles[alert.priority]}`}
               style={{
                 animation: 'fadeIn 0.3s ease-in-out',
               }}
@@ -174,14 +166,10 @@ const SOSWidget = memo(function SOSWidget() {
       </div>
 
       {/* Footer - View All Button */}
-      <div className="p-4 bg-stone-50 border-t border-stone-200">
+      <div className="p-4 bg-bliss-50 border-t border-bliss-200">
         <Link
           to="/admin/sos-alerts"
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition ${
-            hasCriticalAlerts
-              ? 'bg-red-600 text-white hover:bg-red-700'
-              : 'bg-orange-600 text-white hover:bg-orange-700'
-          }`}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition bg-red-600 text-white hover:bg-red-700"
         >
           <span>ดูการแจ้งเตือนทั้งหมด</span>
           <ArrowRight className="w-4 h-4" />

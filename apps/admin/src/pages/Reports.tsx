@@ -62,27 +62,27 @@ function Reports() {
       {/* Main Content Area */}
       <div className="flex-1 space-y-6">
         {/* Header with Period Selector */}
-        <div className="bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl p-6 border border-stone-200">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-2xl p-6 border border-bliss-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center shadow-lg">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-stone-900">
+                <h1 className="text-2xl font-bold text-bliss-900">
                   รายงานและการวิเคราะห์
                 </h1>
-                <p className="text-stone-500">Reports & Analytics Dashboard</p>
+                <p className="text-bliss-500">Reports & Analytics Dashboard</p>
               </div>
             </div>
 
             {/* Period Selector */}
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-stone-700">
+              <label className="text-sm font-medium text-bliss-700">
                 ช่วงเวลา • Period:
               </label>
               <select
-                className="px-4 py-2.5 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500 shadow-sm min-w-[160px]"
+                className="px-4 py-2.5 bg-white border border-bliss-200 rounded-xl focus:ring-2 focus:ring-bliss-500 shadow-sm min-w-[160px]"
                 value={selectedPeriod}
                 onChange={handlePeriodChange}
               >

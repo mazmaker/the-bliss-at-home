@@ -22,6 +22,7 @@ export async function getActivePromotions(
     .from('promotions')
     .select('*')
     .eq('status', 'active')
+    .eq('is_public', true)
     .lte('start_date', now)
     .gte('end_date', now)
     .order('created_at', { ascending: false });

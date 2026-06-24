@@ -142,7 +142,7 @@ export default function HotelPayments() {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-amber-700" />
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-bliss-700" />
           <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function HotelPayments() {
           <p className="mt-2 text-gray-600">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="mt-4 rounded-lg bg-amber-700 px-4 py-2 text-white hover:bg-amber-800"
+            className="mt-4 rounded-lg bg-bliss-700 px-4 py-2 text-white hover:bg-bliss-800"
           >
             ลองอีกครั้ง
           </button>
@@ -220,7 +220,7 @@ export default function HotelPayments() {
           </div>
           <button
             onClick={() => setIsPaymentModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-700 to-amber-800 px-4 py-2 text-white hover:from-amber-800 hover:to-amber-900"
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-bliss-700 to-bliss-800 px-4 py-2 text-white hover:from-bliss-800 hover:to-bliss-900"
           >
             <Plus className="h-4 w-4" />
             บันทึกการชำระเงิน

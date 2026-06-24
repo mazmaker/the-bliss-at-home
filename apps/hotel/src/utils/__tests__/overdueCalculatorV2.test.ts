@@ -356,8 +356,8 @@ describe('formatOverdueMessage', () => {
   it('formats OVERDUE message with amount', async () => {
     const settings = makeSettings({ overdue_message: 'กรุณาชำระ' })
     const status: OverdueStatus = {
-      level: 'OVERDUE', days: 5, color: 'yellow', bgColor: 'bg-amber-100',
-      textColor: 'text-amber-700', icon: '🟡', message: 'เลยกำหนด 5 วัน', actionRequired: true,
+      level: 'OVERDUE', days: 5, color: 'yellow', bgColor: 'bg-bliss-100',
+      textColor: 'text-bliss-700', icon: '🟡', message: 'เลยกำหนด 5 วัน', actionRequired: true,
     }
     const msg = await formatOverdueMessage(status, 28750, settings)
     expect(msg.title).toContain('บิลค้างชำระ')
@@ -379,8 +379,8 @@ describe('formatOverdueMessage', () => {
   it('formats DUE_SOON message', async () => {
     const settings = makeSettings()
     const status: OverdueStatus = {
-      level: 'DUE_SOON', days: -3, color: 'blue', bgColor: 'bg-blue-100',
-      textColor: 'text-blue-700', icon: '📅', message: 'ใกล้กำหนด 3 วัน', actionRequired: false,
+      level: 'DUE_SOON', days: -3, color: 'blue', bgColor: 'bg-bliss-100',
+      textColor: 'text-bliss-700', icon: '📅', message: 'ใกล้กำหนด 3 วัน', actionRequired: false,
     }
     const msg = await formatOverdueMessage(status, 15000, settings)
     expect(msg.actionText).toBe('ดูวิธีการชำระ')

@@ -120,11 +120,11 @@ export function PayoutVerificationPanel() {
       {/* Header with Date Selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-bliss-900 flex items-center gap-2">
             <Search className="w-5 h-5" />
             ตรวจสอบผลการทำงาน
           </h3>
-          <p className="text-sm text-stone-600 mt-1">
+          <p className="text-sm text-bliss-600 mt-1">
             ตรวจสอบ payout อัตโนมัติและสถานะพนักงาน
           </p>
         </div>
@@ -133,7 +133,7 @@ export function PayoutVerificationPanel() {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-stone-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-bliss-300 rounded-lg text-sm"
           />
           <button
             onClick={() => refetch()}
@@ -182,12 +182,12 @@ export function PayoutVerificationPanel() {
           </div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <Users className="w-8 h-8 text-amber-600" />
+            <Users className="w-8 h-8 text-bliss-600" />
             <div>
-              <p className="text-sm text-amber-600">ยอดรวม 7 วัน</p>
-              <p className="text-xl font-bold text-amber-900">
+              <p className="text-sm text-bliss-600">ยอดรวม 7 วัน</p>
+              <p className="text-xl font-bold text-bliss-900">
                 ฿{(verification?.automated_stats.weekly_amount || 0).toLocaleString()}
               </p>
             </div>
@@ -196,57 +196,57 @@ export function PayoutVerificationPanel() {
       </div>
 
       {/* Recent Payouts Table */}
-      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-stone-200">
-          <h4 className="font-semibold text-stone-900">
+      <div className="bg-white border border-bliss-200 rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-bliss-200">
+          <h4 className="font-semibold text-bliss-900">
             Payout ที่สร้างวันที่ {new Date(selectedDate).toLocaleDateString('th-TH')}
           </h4>
         </div>
 
         {verification?.recent_payouts.length === 0 ? (
           <div className="p-8 text-center">
-            <Calendar className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-            <p className="text-stone-500">ไม่มี payout ในวันนี้</p>
+            <Calendar className="w-12 h-12 text-bliss-300 mx-auto mb-3" />
+            <p className="text-bliss-500">ไม่มี payout ในวันนี้</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-stone-50">
+              <thead className="bg-bliss-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                     พนักงาน
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                     จำนวนเงิน
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                     งาน
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                     ประเภท
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                     สถานะ
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                     เวลา
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-200">
+              <tbody className="divide-y divide-bliss-200">
                 {verification?.recent_payouts.map(payout => (
-                  <tr key={payout.id} className="hover:bg-stone-50">
+                  <tr key={payout.id} className="hover:bg-bliss-50">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-stone-900">{payout.staff_name}</div>
-                      <div className="text-sm text-stone-500">{payout.period}</div>
+                      <div className="font-medium text-bliss-900">{payout.staff_name}</div>
+                      <div className="text-sm text-bliss-500">{payout.period}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-stone-900">
+                      <div className="font-semibold text-bliss-900">
                         ฿{payout.amount.toLocaleString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-stone-600">{payout.jobs_count} งาน</span>
+                      <span className="text-sm text-bliss-600">{payout.jobs_count} งาน</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -259,7 +259,7 @@ export function PayoutVerificationPanel() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        payout.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                        payout.status === 'pending' ? 'bg-bliss-100 text-bliss-800' :
                         payout.status === 'completed' ? 'bg-green-100 text-green-800' :
                         'bg-red-100 text-red-800'
                       }`}>
@@ -267,7 +267,7 @@ export function PayoutVerificationPanel() {
                          payout.status === 'completed' ? 'จ่ายแล้ว' : 'ล้มเหลว'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-stone-500">
+                    <td className="px-6 py-4 text-sm text-bliss-500">
                       {new Date(payout.created_at).toLocaleTimeString('th-TH')}
                     </td>
                   </tr>
@@ -279,47 +279,47 @@ export function PayoutVerificationPanel() {
       </div>
 
       {/* Staff Status */}
-      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-stone-200">
-          <h4 className="font-semibold text-stone-900">สถานะพนักงาน (20 คนแรก)</h4>
+      <div className="bg-white border border-bliss-200 rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-bliss-200">
+          <h4 className="font-semibold text-bliss-900">สถานะพนักงาน (20 คนแรก)</h4>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-stone-50">
+            <thead className="bg-bliss-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                   ชื่อ
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                   รอบจ่าย
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                   วันจ่ายถัดไป
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase">
                   ประมวลผลล่าสุด
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-200">
+            <tbody className="divide-y divide-bliss-200">
               {verification?.staff_status.map(staff => (
-                <tr key={staff.id} className="hover:bg-stone-50">
-                  <td className="px-6 py-4 font-medium text-stone-900">
+                <tr key={staff.id} className="hover:bg-bliss-50">
+                  <td className="px-6 py-4 font-medium text-bliss-900">
                     {staff.name_th}
                   </td>
-                  <td className="px-6 py-4 text-sm text-stone-600">
+                  <td className="px-6 py-4 text-sm text-bliss-600">
                     {staff.payout_schedule}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`${
                       staff.next_payout_date === new Date().toISOString().split('T')[0]
                         ? 'text-red-600 font-medium'
-                        : 'text-stone-600'
+                        : 'text-bliss-600'
                     }`}>
                       {new Date(staff.next_payout_date).toLocaleDateString('th-TH')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-stone-500">
+                  <td className="px-6 py-4 text-sm text-bliss-500">
                     {staff.last_payout_processed_at
                       ? new Date(staff.last_payout_processed_at).toLocaleDateString('th-TH')
                       : 'ยังไม่เคย'

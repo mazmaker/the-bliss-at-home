@@ -197,8 +197,8 @@ export function ImageUpload({
             relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
             transition-colors duration-200
             ${dragOver
-              ? 'border-amber-400 bg-amber-50'
-              : 'border-gray-300 hover:border-amber-400 hover:bg-gray-50'
+              ? 'border-bliss-400 bg-bliss-50'
+              : 'border-gray-300 hover:border-bliss-400 hover:bg-gray-50'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             ${isUploading ? 'pointer-events-none' : ''}
@@ -206,7 +206,7 @@ export function ImageUpload({
         >
           {isUploading ? (
             <div className="flex flex-col items-center space-y-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600" />
               <p className="text-sm text-gray-600">กำลังอัพโหลด...</p>
             </div>
           ) : (
@@ -233,7 +233,7 @@ export function ImageUpload({
             <img
               src={previewUrl}
               alt="Preview"
-              className="w-full h-48 object-cover rounded-lg border border-gray-200"
+              className="w-full h-64 object-cover rounded-lg border border-bliss-200"
             />
 
             {/* Upload status overlay */}

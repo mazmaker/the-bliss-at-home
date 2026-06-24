@@ -200,8 +200,8 @@ describe('useOverdueAlert styling', () => {
 
   it('should define correct styling for DUE_SOON level', () => {
     const dueSoonStyling = {
-      bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100',
-      borderClass: 'border border-blue-300',
+      bgClass: 'bg-gradient-to-r from-bliss-50 to-bliss-100',
+      borderClass: 'border border-bliss-300',
       animation: '',
     }
     expect(dueSoonStyling.bgClass).toContain('blue')
@@ -209,8 +209,8 @@ describe('useOverdueAlert styling', () => {
 
   it('should define default styling for unknown level', () => {
     const defaultStyling = {
-      bgClass: 'bg-amber-50',
-      borderClass: 'border border-amber-200',
+      bgClass: 'bg-bliss-50',
+      borderClass: 'border border-bliss-200',
       animation: '',
     }
     expect(defaultStyling.bgClass).toContain('amber')

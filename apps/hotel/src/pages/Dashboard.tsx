@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Clock, DollarSign, TrendingUp, Users, CheckCircle, AlertCircle, Loader2, RefreshCw, BarChart3, ShoppingBag, TrendingDown, Star, Sparkles, Hand, Flower, X, Edit3, CalendarClock } from 'lucide-react'
+import { Calendar, Clock, Wallet, TrendingUp, Users, CheckCircle, AlertCircle, Loader2, RefreshCw, BarChart3, ShoppingBag, TrendingDown, Star, Sparkles, Hand, Flower, X, Edit3, CalendarClock } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
 import { useQuery } from '@tanstack/react-query'
@@ -396,9 +396,9 @@ function Dashboard() {
   const getStatusBadge = (status: string) => {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      'in-progress': 'bg-purple-100 text-purple-700',
-      in_progress: 'bg-purple-100 text-purple-700',
+      confirmed: 'bg-bliss-100 text-bliss-700',
+      'in-progress': 'bg-bliss-100 text-bliss-700',
+      in_progress: 'bg-bliss-100 text-bliss-700',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
@@ -422,8 +422,8 @@ function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
-          <p className="text-stone-600">กำลังโหลดข้อมูล Dashboard...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-bliss-700 mx-auto mb-2" />
+          <p className="text-bliss-600">กำลังโหลดข้อมูล Dashboard...</p>
         </div>
       </div>
     )
@@ -441,7 +441,7 @@ function Dashboard() {
               refetchStats()
               refetchBookings()
             }}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 mx-auto"
+            className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="w-4 h-4" />
             ลองใหม่
@@ -475,7 +475,7 @@ function Dashboard() {
       // Real month-over-month growth (computed from last month's revenue); 0% when no prior data
       change: `${(stats?.spendingStats?.monthlyGrowth ?? 0) >= 0 ? '+' : ''}${stats?.spendingStats?.monthlyGrowth ?? 0}%`,
       trend: (stats?.spendingStats?.monthlyGrowth ?? 0) >= 0 ? 'up' as const : 'neutral' as const,
-      icon: DollarSign
+      icon: Wallet
     },
     {
       name: 'แขกที่ใช้บริการ',
@@ -499,10 +499,20 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900">ภาพรวม</h1>
-        <p className="text-stone-500">Dashboard</p>
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-2xl shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-bliss-200 uppercase tracking-wide">ภาพรวม • Dashboard</p>
+            <h1 className="text-2xl font-bold mt-1 truncate">{hotelData?.name_th || 'โรงแรม'}</h1>
+            {hotelData?.name_en && (
+              <p className="text-sm text-bliss-200/90 truncate">{hotelData.name_en}</p>
+            )}
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="w-6 h-6 text-white" />
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -528,10 +538,10 @@ function Dashboard() {
             return {
               bgColor: stat.trend === 'up' ? 'bg-green-100' :
                        stat.trend === 'warning' ? 'bg-red-100' :
-                       'bg-amber-100',
+                       'bg-bliss-100',
               textColor: stat.trend === 'up' ? 'text-green-600' :
                         stat.trend === 'warning' ? 'text-red-600' :
-                        'text-amber-600',
+                        'text-bliss-600',
               icon: null
             }
           }
@@ -542,7 +552,7 @@ function Dashboard() {
             <div key={stat.name} className={`bg-white rounded-2xl shadow-lg p-6 border ${
               isOverdueBill && overdueData?.level === 'URGENT' ? 'border-red-300 ring-2 ring-red-100' :
               isOverdueBill && overdueData?.level === 'WARNING' ? 'border-orange-300' :
-              'border-stone-100'
+              'border-bliss-100'
             }`}>
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-xl ${colors.bgColor}`}>
@@ -571,13 +581,13 @@ function Dashboard() {
                       </div>
                     )}
                     {stat.trend === 'neutral' && (
-                      <span className="text-sm text-amber-600 font-medium">{stat.change}</span>
+                      <span className="text-sm text-bliss-600 font-medium">{stat.change}</span>
                     )}
                   </>
                 )}
               </div>
-              <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-              <p className="text-sm text-stone-500">{stat.name}</p>
+              <p className="text-2xl font-bold text-bliss-900">{stat.value}</p>
+              <p className="text-sm text-bliss-500">{stat.name}</p>
 
               {/* Show additional overdue info */}
               {isOverdueBill && overdueData && overdueData.actionRequired && (
@@ -618,19 +628,19 @@ function Dashboard() {
         const urgencyColor = daysRemaining <= 1
           ? 'from-red-500 to-red-600'
           : daysRemaining <= 7
-            ? 'from-amber-500 to-amber-600'
+            ? 'from-bliss-500 to-bliss-600'
             : 'from-emerald-500 to-emerald-600'
 
         const urgencyBg = daysRemaining <= 1
           ? 'bg-red-50 border-red-200'
           : daysRemaining <= 7
-            ? 'bg-amber-50 border-amber-200'
+            ? 'bg-bliss-50 border-bliss-200'
             : 'bg-emerald-50 border-emerald-200'
 
         const urgencyText = daysRemaining <= 1
           ? 'text-red-700'
           : daysRemaining <= 7
-            ? 'text-amber-700'
+            ? 'text-bliss-700'
             : 'text-emerald-700'
 
         const formatDate = (d: Date) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
@@ -646,7 +656,7 @@ function Dashboard() {
                 {creditDays} วัน
               </span>
             </div>
-            <p className="text-sm text-stone-600 mb-3">
+            <p className="text-sm text-bliss-600 mb-3">
               {formatDate(cycleStart)} — {formatDate(dueDate)}
             </p>
             <div className="flex items-center gap-3">
@@ -665,7 +675,7 @@ function Dashboard() {
       <div className="max-w-md">
         <Link
           to="history"
-          className="block bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-6 text-white hover:shadow-xl transition group"
+          className="block bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-2xl shadow-lg p-6 text-white hover:shadow-xl transition group"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -680,21 +690,21 @@ function Dashboard() {
       </div>
 
       {/* Guest Activity Snapshot with Tabs */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
-        <div className="p-6 border-b border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
+        <div className="p-6 border-b border-bliss-100">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-amber-600" />
-            <h2 className="text-xl font-semibold text-stone-900">Guest Activity Snapshot</h2>
+            <Users className="w-5 h-5 text-bliss-600" />
+            <h2 className="text-xl font-semibold text-bliss-900">Guest Activity Snapshot</h2>
           </div>
 
           {/* Tabs Navigation */}
-          <div className="flex space-x-1 bg-stone-100 rounded-lg p-1">
+          <div className="flex space-x-1 bg-bliss-100 rounded-lg p-1">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition ${
                 activeTab === 'overview'
-                  ? 'bg-white text-amber-700 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-bliss-700 shadow-sm'
+                  : 'text-bliss-600 hover:text-bliss-900'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -704,8 +714,8 @@ function Dashboard() {
               onClick={() => setActiveTab('patterns')}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition ${
                 activeTab === 'patterns'
-                  ? 'bg-white text-amber-700 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-bliss-700 shadow-sm'
+                  : 'text-bliss-600 hover:text-bliss-900'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -715,8 +725,8 @@ function Dashboard() {
               onClick={() => setActiveTab('services')}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition ${
                 activeTab === 'services'
-                  ? 'bg-white text-amber-700 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-bliss-700 shadow-sm'
+                  : 'text-bliss-600 hover:text-bliss-900'
               }`}
             >
               <ShoppingBag className="w-4 h-4" />
@@ -726,11 +736,11 @@ function Dashboard() {
               onClick={() => setActiveTab('spending')}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition ${
                 activeTab === 'spending'
-                  ? 'bg-white text-amber-700 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-bliss-700 shadow-sm'
+                  : 'text-bliss-600 hover:text-bliss-900'
               }`}
             >
-              <DollarSign className="w-4 h-4" />
+              <Wallet className="w-4 h-4" />
               ค่าใช้จ่าย
             </button>
           </div>
@@ -742,13 +752,13 @@ function Dashboard() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Total Guests */}
-                <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-100/50">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                    <Users className="w-6 h-6 text-amber-700" />
+                <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-bliss-50 rounded-xl border border-orange-100/50">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-bliss-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <Users className="w-6 h-6 text-bliss-700" />
                   </div>
-                  <p className="text-2xl font-bold text-amber-900">{stats?.totalGuests || 0}</p>
-                  <p className="text-sm text-amber-700 font-medium">แขกทั้งหมด</p>
-                  <p className="text-xs text-amber-600/70 mt-1">Total Guests</p>
+                  <p className="text-2xl font-bold text-bliss-900">{stats?.totalGuests || 0}</p>
+                  <p className="text-sm text-bliss-700 font-medium">แขกทั้งหมด</p>
+                  <p className="text-xs text-bliss-600/70 mt-1">Total Guests</p>
                 </div>
 
                 {/* Repeat Guests */}
@@ -775,13 +785,13 @@ function Dashboard() {
               </div>
 
               {/* Quick Stats */}
-              <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100/50">
+              <div className="p-4 bg-gradient-to-r from-bliss-50 to-orange-50 rounded-xl border border-bliss-100/50">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-600">Customer Satisfaction</span>
-                  <span className="font-medium text-stone-900">{stats?.customerSatisfaction != null ? `${stats.customerSatisfaction}%` : '—'}</span>
+                  <span className="text-bliss-600">Customer Satisfaction</span>
+                  <span className="font-medium text-bliss-900">{stats?.customerSatisfaction != null ? `${stats.customerSatisfaction}%` : '—'}</span>
                 </div>
-                <div className="w-full bg-stone-200 rounded-full h-2 mt-2">
-                  <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${stats?.customerSatisfaction || 0}%` }}></div>
+                <div className="w-full bg-bliss-200 rounded-full h-2 mt-2">
+                  <div className="bg-bliss-500 h-2 rounded-full" style={{ width: `${stats?.customerSatisfaction || 0}%` }}></div>
                 </div>
               </div>
             </div>
@@ -791,18 +801,18 @@ function Dashboard() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Peak Hours */}
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100/50">
-                  <h3 className="font-semibold text-stone-900 mb-3">ช่วงเวลายอดนิยม</h3>
+                <div className="p-4 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-xl border border-bliss-100/50">
+                  <h3 className="font-semibold text-bliss-900 mb-3">ช่วงเวลายอดนิยม</h3>
                   <div className="space-y-2">
                     {stats?.peakHours?.map((slot, index) => (
-                      <div key={slot.time} className="flex justify-between items-center p-2 bg-gradient-to-r from-white/60 to-purple-50/60 rounded-lg border border-purple-100/30">
-                        <span className="text-sm text-stone-600">{slot.time}</span>
+                      <div key={slot.time} className="flex justify-between items-center p-2 bg-gradient-to-r from-white/60 to-bliss-50/60 rounded-lg border border-bliss-100/30">
+                        <span className="text-sm text-bliss-600">{slot.time}</span>
                         <div className="flex items-center gap-2">
-                          <div className="w-12 h-2 bg-purple-200 rounded-full">
+                          <div className="w-12 h-2 bg-bliss-200 rounded-full">
                             <div
                               className={`h-2 rounded-full ${
-                                index === 0 ? 'bg-purple-500' :
-                                index === 1 ? 'bg-purple-400' : 'bg-purple-300'
+                                index === 0 ? 'bg-bliss-500' :
+                                index === 1 ? 'bg-bliss-400' : 'bg-bliss-300'
                               }`}
                               style={{ width: `${Math.max(10, (slot.percentage / 100) * 48)}px` }}
                             ></div>
@@ -811,7 +821,7 @@ function Dashboard() {
                         </div>
                       </div>
                     )) || (
-                      <div className="text-center text-stone-500 py-4">
+                      <div className="text-center text-bliss-500 py-4">
                         ไม่มีข้อมูลการจอง
                       </div>
                     )}
@@ -819,21 +829,21 @@ function Dashboard() {
                 </div>
 
                 {/* Popular Days */}
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100/50">
-                  <h3 className="font-semibold text-stone-900 mb-3">วันยอดนิยม</h3>
+                <div className="p-4 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-xl border border-bliss-100/50">
+                  <h3 className="font-semibold text-bliss-900 mb-3">วันยอดนิยม</h3>
                   <div className="space-y-2">
                     {stats?.popularDays?.map((daySlot, index) => (
-                      <div key={daySlot.day} className="flex justify-between items-center p-2 bg-gradient-to-r from-white/60 to-blue-50/60 rounded-lg border border-blue-100/30">
-                        <span className="text-sm text-stone-600">{daySlot.day}</span>
+                      <div key={daySlot.day} className="flex justify-between items-center p-2 bg-gradient-to-r from-white/60 to-bliss-50/60 rounded-lg border border-bliss-100/30">
+                        <span className="text-sm text-bliss-600">{daySlot.day}</span>
                         <span className={`text-lg font-bold ${
-                          index === 0 ? 'text-blue-600' :
-                          index === 1 ? 'text-blue-500' : 'text-blue-400'
+                          index === 0 ? 'text-bliss-600' :
+                          index === 1 ? 'text-bliss-500' : 'text-bliss-400'
                         }`}>
                           {daySlot.percentage}%
                         </span>
                       </div>
                     )) || (
-                      <div className="text-center text-stone-500 py-4">
+                      <div className="text-center text-bliss-500 py-4">
                         ไม่มีข้อมูลการจอง
                       </div>
                     )}
@@ -843,23 +853,23 @@ function Dashboard() {
 
               {/* Booking Frequency */}
               <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100/50">
-                <h3 className="font-semibold text-stone-900 mb-3">ความถี่การจอง</h3>
+                <h3 className="font-semibold text-bliss-900 mb-3">ความถี่การจอง</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100/50">
                     <p className="text-2xl font-bold text-green-700">{stats?.bookingFrequency?.averagePerMonth || 0}</p>
-                    <p className="text-sm text-stone-600">ครั้ง/เดือน เฉลี่ย</p>
+                    <p className="text-sm text-bliss-600">ครั้ง/เดือน เฉลี่ย</p>
                   </div>
                   <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100/50">
                     <p className="text-2xl font-bold text-green-700">{stats?.bookingFrequency?.daysBetweenBookings || 0}</p>
-                    <p className="text-sm text-stone-600">วัน ระหว่างการจอง</p>
+                    <p className="text-sm text-bliss-600">วัน ระหว่างการจอง</p>
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border border-emerald-100/50">
+                  <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-bliss-50 rounded-lg border border-emerald-100/50">
                     <p className="text-2xl font-bold text-green-700">{stats?.bookingFrequency?.returnRate || 0}%</p>
-                    <p className="text-sm text-stone-600">อัตราแขกกลับมา</p>
+                    <p className="text-sm text-bliss-600">อัตราแขกกลับมา</p>
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-teal-50 to-green-50 rounded-lg border border-teal-100/50">
+                  <div className="text-center p-3 bg-gradient-to-br from-bliss-50 to-green-50 rounded-lg border border-bliss-100/50">
                     <p className="text-2xl font-bold text-green-700">{stats?.bookingFrequency?.bookingsPerDay || 0}</p>
-                    <p className="text-sm text-stone-600">การจองต่อวัน</p>
+                    <p className="text-sm text-bliss-600">การจองต่อวัน</p>
                   </div>
                 </div>
               </div>
@@ -870,12 +880,12 @@ function Dashboard() {
             <div className="space-y-6">
               {/* Top Services */}
               <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl">
-                <h3 className="font-semibold text-stone-900 mb-4">บริการยอดนิยม</h3>
+                <h3 className="font-semibold text-bliss-900 mb-4">บริการยอดนิยม</h3>
                 <div className="space-y-3">
                   {stats?.topServices && stats.topServices.length > 0 ? (
                     stats?.topServices.map((service, index) => {
                       const cardColors = [
-                        'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-100/50',
+                        'bg-gradient-to-r from-bliss-50 to-yellow-50 border-bliss-100/50',
                         'bg-gradient-to-r from-green-50 to-emerald-50 border-green-100/50',
                         'bg-gradient-to-r from-orange-50 to-red-50 border-orange-100/50'
                       ]
@@ -888,19 +898,19 @@ function Dashboard() {
                               <span className="text-orange-600 font-bold">{index + 1}</span>
                             </div>
                             <div>
-                              <p className="font-medium text-stone-900">{service.nameEn}</p>
-                              <p className="text-sm text-stone-500">{service.name}</p>
+                              <p className="font-medium text-bliss-900">{service.nameEn}</p>
+                              <p className="text-sm text-bliss-500">{service.name}</p>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-lg font-bold text-orange-600">{service.percentage}%</p>
-                            <p className="text-xs text-stone-500">จาก {service.count} การจอง</p>
+                            <p className="text-xs text-bliss-500">จาก {service.count} การจอง</p>
                           </div>
                         </div>
                       )
                     })
                   ) : (
-                    <div className="text-center text-stone-500 py-8">
+                    <div className="text-center text-bliss-500 py-8">
                       <ShoppingBag className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>ยังไม่มีข้อมูลการจองบริการ</p>
                     </div>
@@ -912,9 +922,9 @@ function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {stats?.serviceCategories?.map((category, index) => {
                   const colors = [
-                    { bg: 'bg-gradient-to-br from-pink-50 to-rose-50 border-pink-100/50', iconBg: 'bg-gradient-to-br from-pink-100 to-rose-100', text: 'text-pink-900', textSm: 'text-pink-600', IconComponent: Sparkles },
-                    { bg: 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100/50', iconBg: 'bg-gradient-to-br from-indigo-100 to-purple-100', text: 'text-indigo-900', textSm: 'text-indigo-600', IconComponent: Hand },
-                    { bg: 'bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-100/50', iconBg: 'bg-gradient-to-br from-teal-100 to-emerald-100', text: 'text-teal-900', textSm: 'text-teal-600', IconComponent: Flower }
+                    { bg: 'bg-gradient-to-br from-bliss-50 to-rose-50 border-bliss-100/50', iconBg: 'bg-gradient-to-br from-bliss-100 to-rose-100', text: 'text-bliss-900', textSm: 'text-bliss-600', IconComponent: Sparkles },
+                    { bg: 'bg-gradient-to-br from-bliss-50 to-bliss-50 border-bliss-100/50', iconBg: 'bg-gradient-to-br from-bliss-100 to-bliss-100', text: 'text-bliss-900', textSm: 'text-bliss-600', IconComponent: Hand },
+                    { bg: 'bg-gradient-to-br from-bliss-50 to-emerald-50 border-bliss-100/50', iconBg: 'bg-gradient-to-br from-bliss-100 to-emerald-100', text: 'text-bliss-900', textSm: 'text-bliss-600', IconComponent: Flower }
                   ]
                   const colorScheme = colors[index] || colors[2]
                   const IconComponent = colorScheme.IconComponent
@@ -929,7 +939,7 @@ function Dashboard() {
                     </div>
                   )
                 }) || (
-                  <div className="col-span-full text-center text-stone-500 py-4">
+                  <div className="col-span-full text-center text-bliss-500 py-4">
                     ไม่มีข้อมูลหมวดหมู่บริการ
                   </div>
                 )}
@@ -943,42 +953,42 @@ function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-100/50">
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-green-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                    <DollarSign className="w-6 h-6 text-emerald-600" />
+                    <Wallet className="w-6 h-6 text-emerald-600" />
                   </div>
                   <p className="text-2xl font-bold text-emerald-900">฿{stats?.spendingStats?.averageSpending?.toLocaleString() || 0}</p>
                   <p className="text-sm text-emerald-600 font-medium">ค่าใช้จ่ายเฉลี่ย</p>
-                  <p className="text-xs text-stone-500 mt-1">Average Spending</p>
+                  <p className="text-xs text-bliss-500 mt-1">Average Spending</p>
                 </div>
 
-                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100/50">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                <div className="text-center p-4 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-xl border border-bliss-100/50">
+                  <div className="w-12 h-12 bg-gradient-to-br from-bliss-100 to-bliss-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <TrendingUp className="w-6 h-6 text-bliss-600" />
                   </div>
-                  <p className="text-2xl font-bold text-blue-900">฿{stats?.spendingStats?.revenuePerGuest?.toLocaleString() || 0}</p>
-                  <p className="text-sm text-blue-600 font-medium">รายได้ต่อแขก</p>
-                  <p className="text-xs text-stone-500 mt-1">Revenue per Guest</p>
+                  <p className="text-2xl font-bold text-bliss-900">฿{stats?.spendingStats?.revenuePerGuest?.toLocaleString() || 0}</p>
+                  <p className="text-sm text-bliss-600 font-medium">รายได้ต่อแขก</p>
+                  <p className="text-xs text-bliss-500 mt-1">Revenue per Guest</p>
                 </div>
 
-                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100/50">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                    <BarChart3 className="w-6 h-6 text-purple-600" />
+                <div className="text-center p-4 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-xl border border-bliss-100/50">
+                  <div className="w-12 h-12 bg-gradient-to-br from-bliss-100 to-bliss-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <BarChart3 className="w-6 h-6 text-bliss-600" />
                   </div>
-                  <p className={`text-2xl font-bold ${(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? 'text-purple-900' : 'text-red-900'}`}>
+                  <p className={`text-2xl font-bold ${(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? 'text-bliss-900' : 'text-red-900'}`}>
                     {(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? '+' : ''}{stats?.spendingStats?.monthlyGrowth || 0}%
                   </p>
-                  <p className="text-sm text-purple-600 font-medium">เติบโต MoM</p>
-                  <p className="text-xs text-stone-500 mt-1">Monthly Growth</p>
+                  <p className="text-sm text-bliss-600 font-medium">เติบโต MoM</p>
+                  <p className="text-xs text-bliss-500 mt-1">Monthly Growth</p>
                 </div>
               </div>
 
               {/* Price Range Distribution */}
               <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-100/50">
-                <h3 className="font-semibold text-stone-900 mb-4">การแจกแจงราคา</h3>
+                <h3 className="font-semibold text-bliss-900 mb-4">การแจกแจงราคา</h3>
                 <div className="space-y-3">
                   {stats?.spendingStats?.priceDistribution && stats.spendingStats.priceDistribution.length > 0 ? (
                     stats?.spendingStats?.priceDistribution.map((range, index) => (
                       <div key={range.range} className="flex justify-between items-center p-2 bg-gradient-to-r from-white/60 to-yellow-50/60 rounded-lg border border-yellow-100/30">
-                        <span className="text-sm text-stone-600">{range.range}</span>
+                        <span className="text-sm text-bliss-600">{range.range}</span>
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-3 bg-yellow-200 rounded-full">
                             <div
@@ -995,7 +1005,7 @@ function Dashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center text-stone-500 py-4">
+                    <div className="text-center text-bliss-500 py-4">
                       ไม่มีข้อมูลการแจกแจงราคา
                     </div>
                   )}
@@ -1003,36 +1013,36 @@ function Dashboard() {
               </div>
 
               {/* Monthly Trends */}
-              <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-100/50">
-                <h3 className="font-semibold text-stone-900 mb-3">เทรนด์รายเดือน</h3>
+              <div className="p-4 bg-gradient-to-r from-bliss-50 to-bliss-50 rounded-xl border border-bliss-100/50">
+                <h3 className="font-semibold text-bliss-900 mb-3">เทรนด์รายเดือน</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg border border-slate-100/50">
-                    <p className="text-lg font-bold text-stone-700">฿{stats?.spendingStats?.lastMonthRevenue?.toLocaleString() || 0}</p>
-                    <p className="text-sm text-stone-500">เดือนที่แล้ว</p>
+                  <div className="text-center p-3 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-lg border border-bliss-100/50">
+                    <p className="text-lg font-bold text-bliss-700">฿{stats?.spendingStats?.lastMonthRevenue?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-bliss-500">เดือนที่แล้ว</p>
                     {(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? (
                       <TrendingUp className="w-4 h-4 text-green-500 mx-auto mt-1" />
                     ) : (
                       <TrendingDown className="w-4 h-4 text-red-500 mx-auto mt-1" />
                     )}
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-slate-50 rounded-lg border border-blue-100/50">
-                    <p className="text-lg font-bold text-stone-700">฿{(stats?.monthlyRevenue || 0).toLocaleString()}</p>
-                    <p className="text-sm text-stone-500">เดือนนี้</p>
+                  <div className="text-center p-3 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-lg border border-bliss-100/50">
+                    <p className="text-lg font-bold text-bliss-700">฿{(stats?.monthlyRevenue || 0).toLocaleString()}</p>
+                    <p className="text-sm text-bliss-500">เดือนนี้</p>
                     {(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? (
                       <TrendingUp className="w-4 h-4 text-green-500 mx-auto mt-1" />
                     ) : (
                       <TrendingDown className="w-4 h-4 text-red-500 mx-auto mt-1" />
                     )}
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg border border-amber-100/50">
-                    <p className="text-lg font-bold text-stone-700">{((stats?.bookingFrequency?.returnRate || 0) / 100 * 2.5).toFixed(1)}x</p>
-                    <p className="text-sm text-stone-500">อัตราการกลับมา</p>
+                  <div className="text-center p-3 bg-gradient-to-br from-bliss-50 to-yellow-50 rounded-lg border border-bliss-100/50">
+                    <p className="text-lg font-bold text-bliss-700">{((stats?.bookingFrequency?.returnRate || 0) / 100 * 2.5).toFixed(1)}x</p>
+                    <p className="text-sm text-bliss-500">อัตราการกลับมา</p>
                   </div>
                   <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100/50">
-                    <p className={`text-lg font-bold ${(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? 'text-stone-700' : 'text-red-700'}`}>
+                    <p className={`text-lg font-bold ${(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? 'text-bliss-700' : 'text-red-700'}`}>
                       {(stats?.spendingStats?.monthlyGrowth || 0) >= 0 ? '+' : ''}{stats?.spendingStats?.monthlyGrowth || 0}%
                     </p>
-                    <p className="text-sm text-stone-500">เติบโตรายเดือน</p>
+                    <p className="text-sm text-bliss-500">เติบโตรายเดือน</p>
                   </div>
                 </div>
               </div>
@@ -1042,13 +1052,13 @@ function Dashboard() {
       </div>
 
       {/* Recent Bookings */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
-        <div className="p-6 border-b border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
+        <div className="p-6 border-b border-bliss-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-stone-900">การจองล่าสุด</h2>
+            <h2 className="text-xl font-semibold text-bliss-900">การจองล่าสุด</h2>
             <Link
               to="history"
-              className="text-amber-600 hover:text-amber-700 text-sm font-medium"
+              className="text-bliss-600 hover:text-bliss-700 text-sm font-medium"
             >
               ดูทั้งหมด
             </Link>
@@ -1056,7 +1066,7 @@ function Dashboard() {
         </div>
         <div className="p-6">
           {recentBookings.length === 0 ? (
-            <div className="text-center py-8 text-stone-500">
+            <div className="text-center py-8 text-bliss-500">
               <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>ยังไม่มีการจอง</p>
             </div>
@@ -1064,10 +1074,10 @@ function Dashboard() {
             <div className="space-y-4">
               {recentBookings.map((booking, index) => {
                 const cardColors = [
-                  'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-100/50',
+                  'bg-gradient-to-r from-bliss-50 to-yellow-50 border-bliss-100/50',
                   'bg-gradient-to-r from-green-50 to-emerald-50 border-green-100/50',
                   'bg-gradient-to-r from-orange-50 to-red-50 border-orange-100/50',
-                  'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-100/50'
+                  'bg-gradient-to-r from-bliss-50 to-bliss-50 border-bliss-100/50'
                 ]
                 const cardColor = cardColors[index % cardColors.length]
 
@@ -1075,20 +1085,20 @@ function Dashboard() {
                   <div key={booking.id} className={`flex items-center justify-between p-4 ${cardColor} rounded-xl border`}>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="font-medium text-stone-900">{booking.guest_name}</p>
-                        <span className="text-stone-400">•</span>
-                        <p className="text-sm text-stone-600">ห้อง {booking.room_number}</p>
+                        <p className="font-medium text-bliss-900">{booking.guest_name}</p>
+                        <span className="text-bliss-400">•</span>
+                        <p className="text-sm text-bliss-600">ห้อง {booking.room_number}</p>
                       </div>
-                      <p className="text-sm text-stone-600 mb-1">{booking.service_name}</p>
+                      <p className="text-sm text-bliss-600 mb-1">{booking.service_name}</p>
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1 text-xs text-stone-500">
+                        <div className="flex items-center gap-1 text-xs text-bliss-500">
                           <Clock className="w-3 h-3" />
                           {booking.scheduled_time
                             ? booking.scheduled_time.substring(0, 5)
                             : '--:--'}
                         </div>
                         {booking.staff_name && (
-                          <div className="flex items-center gap-1 text-xs text-stone-500">
+                          <div className="flex items-center gap-1 text-xs text-bliss-500">
                             <Users className="w-3 h-3" />
                             {booking.staff_name}
                           </div>
@@ -1097,14 +1107,14 @@ function Dashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       {getStatusBadge(booking.status)}
-                      <p className="text-lg font-bold text-amber-700">฿{booking.total_amount}</p>
+                      <p className="text-lg font-bold text-bliss-700">฿{booking.total_amount}</p>
 
                       {/* Cancel/Reschedule buttons - only show for pending/confirmed bookings */}
                       {(booking.status === 'pending' || booking.status === 'confirmed') && (
                         <div className="flex items-center gap-2 ml-2">
                           <button
                             onClick={() => setRescheduleModal({ isOpen: true, booking })}
-                            className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-colors"
+                            className="p-2 bg-bliss-100 hover:bg-bliss-200 text-bliss-600 rounded-lg transition-colors"
                             title="เปลี่ยนเวลา"
                           >
                             <CalendarClock className="w-4 h-4" />

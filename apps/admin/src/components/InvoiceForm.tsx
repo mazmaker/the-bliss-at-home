@@ -248,7 +248,7 @@ export function InvoiceForm({
                   <p className="mt-1 text-sm text-red-600">{errors.period.message}</p>
                 )}
                 {availablePeriods.length === 0 && (
-                  <p className="mt-1 text-xs text-amber-600">
+                  <p className="mt-1 text-xs text-bliss-600">
                     ไม่มีช่วงเวลาที่ยังไม่มีบิล (อาจมีบิลครบทุกช่วงเวลาแล้ว)
                   </p>
                 )}
@@ -276,7 +276,7 @@ export function InvoiceForm({
                     </div>
                     <div>
                       <p className="text-xs text-blue-700">ส่วนลด ({commissionRate}%)</p>
-                      <p className="text-2xl font-bold text-amber-700">
+                      <p className="text-2xl font-bold text-bliss-700">
                         ฿{periodSummary.commissionAmount.toLocaleString()}
                       </p>
                     </div>

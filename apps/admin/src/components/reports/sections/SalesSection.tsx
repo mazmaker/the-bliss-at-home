@@ -11,6 +11,7 @@ import {
   Info,
   Target,
   PieChart,
+  Wallet,
   Clock,
   CreditCard,
   Store,
@@ -62,7 +63,7 @@ const Tooltip = ({ content, children }: { content: string, children: React.React
       {children}
       {show && (
         <div
-          className="fixed z-[9999] px-3 py-2 bg-stone-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
+          className="fixed z-[9999] px-3 py-2 bg-bliss-800 text-white text-xs rounded-lg pointer-events-none max-w-xs text-center"
           style={{
             top: pos.top,
             left: pos.left,
@@ -70,7 +71,7 @@ const Tooltip = ({ content, children }: { content: string, children: React.React
           }}
         >
           {content}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-bliss-800"></div>
         </div>
       )}
     </div>
@@ -167,16 +168,16 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
   if (isError) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-bliss-100">
           <div className="text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
-            <h2 className="text-xl font-semibold text-stone-900 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูลยอดขาย</h2>
-            <p className="text-stone-500 mb-6">
+            <h2 className="text-xl font-semibold text-bliss-900 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูลยอดขาย</h2>
+            <p className="text-bliss-500 mb-6">
               {error?.message || 'ไม่สามารถโหลดข้อมูลยอดขายได้ กรุณาลองใหม่อีกครั้ง'}
             </p>
             <button
               onClick={() => refetch.dailyRevenue()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium hover:from-bliss-700 hover:to-bliss-800 transition"
             >
               <RefreshCw className="w-5 h-5" />
               ลองใหม่
@@ -192,13 +193,14 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       {/* Section Header with Export */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
-            💰 ยอดขายและการเงิน
+          <h2 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
+            <Wallet className="w-6 h-6 text-bliss-600" />
+            ยอดขายและการเงิน
             <Tooltip content="การวิเคราะห์ขายและการเงินระดับโลก | World-class sales and financial analytics">
-              <Info className="w-5 h-5 text-stone-400 hover:text-amber-600 cursor-help" />
+              <Info className="w-5 h-5 text-bliss-400 hover:text-bliss-600 cursor-help" />
             </Tooltip>
           </h2>
-          <p className="text-stone-500 mt-1">World-class Sales Analytics • การวิเคราะห์ขายระดับโลก</p>
+          <p className="text-bliss-500 mt-1">World-class Sales Analytics • การวิเคราะห์ขายระดับโลก</p>
         </div>
 
         {/* Export Button */}
@@ -206,7 +208,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           <button
             onClick={() => setShowExportDropdown(!showExportDropdown)}
             disabled={isExporting || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium hover:from-bliss-700 hover:to-bliss-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Download className="w-5 h-5" />
             {isExporting ? 'กำลังส่งออก...' : 'ส่งออกยอดขาย'}
@@ -214,34 +216,34 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           </button>
 
           {showExportDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50">
-              <div className="px-4 py-2 bg-stone-50 border-b border-stone-200">
-                <p className="text-xs font-medium text-stone-600">Export Sales Data • ส่งออกข้อมูลยอดขาย</p>
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-bliss-200 py-2 z-50">
+              <div className="px-4 py-2 bg-bliss-50 border-b border-bliss-200">
+                <p className="text-xs font-medium text-bliss-600">Export Sales Data • ส่งออกข้อมูลยอดขาย</p>
               </div>
               <button
                 onClick={handleExportPDF}
                 disabled={isExporting || isLoading}
-                className="w-full text-left px-4 py-3 hover:bg-stone-50 flex items-center gap-3 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full text-left px-4 py-3 hover:bg-bliss-50 flex items-center gap-3 text-bliss-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                   <FileText className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
                   <div className="font-medium text-sm">Export as PDF</div>
-                  <div className="text-xs text-stone-500">ส่งออกเป็นไฟล์ PDF</div>
+                  <div className="text-xs text-bliss-500">ส่งออกเป็นไฟล์ PDF</div>
                 </div>
               </button>
               <button
                 onClick={handleExportExcel}
                 disabled={isExporting || isLoading}
-                className="w-full text-left px-4 py-3 hover:bg-stone-50 flex items-center gap-3 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full text-left px-4 py-3 hover:bg-bliss-50 flex items-center gap-3 text-bliss-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                   <Table className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
                   <div className="font-medium text-sm">Export as Excel</div>
-                  <div className="text-xs text-stone-500">ส่งออกเป็นไฟล์ Excel</div>
+                  <div className="text-xs text-bliss-500">ส่งออกเป็นไฟล์ Excel</div>
                 </div>
               </button>
             </div>
@@ -252,7 +254,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       {/* Advanced Revenue Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Gross Revenue */}
-        <div className="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-bliss-600 to-bliss-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -276,7 +278,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
 
         {/* Net Revenue */}
-        <div className="bg-gradient-to-br from-stone-600 to-stone-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-bliss-600 to-bliss-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -295,14 +297,14 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
 
         {/* Average Order Value */}
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
               <p className="text-sm opacity-70">AOV • มูลค่าเฉลี่ย</p>
               <p className="text-2xl font-bold mt-2 mb-1">
                 {advancedSalesMetrics.isLoading
-                  ? <span className="block animate-pulse bg-stone-600 bg-opacity-20 h-6 w-20 rounded"></span>
+                  ? <span className="block animate-pulse bg-bliss-600 bg-opacity-20 h-6 w-20 rounded"></span>
                   : `฿${(advancedSalesMetrics.data?.average_order_value || 0).toLocaleString()}`}
               </p>
               <div className="text-xs opacity-70">
@@ -314,7 +316,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
         </div>
 
         {/* Forecasting */}
-        <div className="bg-gradient-to-br from-stone-500 to-stone-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1">
@@ -334,15 +336,15 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       </div>
 
       {/* Sales Channel Analysis */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-200">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <PieChart className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">📊 ช่องทางการขาย • Sales Channels</h3>
-              <p className="text-sm text-stone-500">Channel performance and market share • ประสิทธิภาพช่องทางและส่วนแบ่งตลาด</p>
+              <h3 className="text-lg font-semibold text-bliss-900">📊 ช่องทางการขาย • Sales Channels</h3>
+              <p className="text-sm text-bliss-500">Channel performance and market share • ประสิทธิภาพช่องทางและส่วนแบ่งตลาด</p>
             </div>
           </div>
         </div>
@@ -352,9 +354,9 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
             {salesChannelAnalysis.isLoading ? (
               Array.from({ length: 2 }).map((_, index) => (
                 <div key={index} className="animate-pulse">
-                  <div className="bg-stone-200 h-6 w-24 rounded mb-2"></div>
-                  <div className="bg-stone-200 h-8 w-32 rounded mb-2"></div>
-                  <div className="bg-stone-200 h-4 w-20 rounded"></div>
+                  <div className="bg-bliss-200 h-6 w-24 rounded mb-2"></div>
+                  <div className="bg-bliss-200 h-8 w-32 rounded mb-2"></div>
+                  <div className="bg-bliss-200 h-4 w-20 rounded"></div>
                 </div>
               ))
             ) : (
@@ -366,37 +368,37 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 const Icon = iconMap[channel.channel_name] || Store
 
                 const colorMap = {
-                  'Hotel Direct': 'from-orange-500 to-orange-600',
-                  'Customer App': 'from-blue-500 to-blue-600',
+                  'Hotel Direct': 'from-bliss-600 to-bliss-700',
+                  'Customer App': 'from-bliss-500 to-bliss-600',
                 }
-                const bgColor = colorMap[channel.channel_name] || 'from-gray-500 to-gray-600'
+                const bgColor = colorMap[channel.channel_name] || 'from-bliss-500 to-bliss-600'
 
                 return (
-                  <div key={index} className="p-4 rounded-xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white">
+                  <div key={index} className="p-4 rounded-xl border border-bliss-200 bg-gradient-to-br from-bliss-50 to-white">
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`w-10 h-10 bg-gradient-to-r ${bgColor} rounded-lg flex items-center justify-center`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-stone-900">{channel.channel_name}</h4>
-                        <p className="text-xs text-stone-500">{channel.market_share_percent}% market share</p>
+                        <h4 className="font-semibold text-bliss-900">{channel.channel_name}</h4>
+                        <p className="text-xs text-bliss-500">{channel.market_share_percent}% market share</p>
                       </div>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-stone-600">Revenue:</span>
+                        <span className="text-bliss-600">Revenue:</span>
                         <span className="font-semibold">฿{channel.revenue?.toLocaleString() || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-stone-600">Bookings:</span>
+                        <span className="text-bliss-600">Bookings:</span>
                         <span className="font-semibold">{channel.booking_count || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-stone-600">AVG Value:</span>
+                        <span className="text-bliss-600">AVG Value:</span>
                         <span className="font-semibold">฿{channel.avg_booking_value?.toLocaleString() || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-stone-600">Growth:</span>
+                        <span className="text-bliss-600">Growth:</span>
                         {channel.growth_rate != null ? (
                           <span className={`font-semibold flex items-center gap-1 ${
                             channel.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'
@@ -405,7 +407,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                             {Math.abs(channel.growth_rate).toFixed(1)}%
                           </span>
                         ) : (
-                          <span className="font-semibold text-stone-400">-</span>
+                          <span className="font-semibold text-bliss-400">-</span>
                         )}
                       </div>
                     </div>
@@ -418,15 +420,15 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       </div>
 
       {/* Service Revenue by Category */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 border-b border-purple-200">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">🎯 รายได้ตามประเภทบริการ • Revenue by Service Type</h3>
-              <p className="text-sm text-stone-500">Performance breakdown by service categories • การแบ่งประสิทธิภาพตามหมวดบริการ</p>
+              <h3 className="text-lg font-semibold text-bliss-900">🎯 รายได้ตามประเภทบริการ • Revenue by Service Type</h3>
+              <p className="text-sm text-bliss-500">Performance breakdown by service categories • การแบ่งประสิทธิภาพตามหมวดบริการ</p>
             </div>
           </div>
         </div>
@@ -436,12 +438,12 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
             {serviceRevenueByCategory.isLoading ? (
               Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="animate-pulse flex items-center gap-4">
-                  <div className="bg-stone-200 w-12 h-12 rounded-lg"></div>
+                  <div className="bg-bliss-200 w-12 h-12 rounded-lg"></div>
                   <div className="flex-1">
-                    <div className="bg-stone-200 h-4 w-32 rounded mb-2"></div>
-                    <div className="bg-stone-200 h-3 w-24 rounded"></div>
+                    <div className="bg-bliss-200 h-4 w-32 rounded mb-2"></div>
+                    <div className="bg-bliss-200 h-3 w-24 rounded"></div>
                   </div>
-                  <div className="bg-stone-200 h-6 w-20 rounded"></div>
+                  <div className="bg-bliss-200 h-6 w-20 rounded"></div>
                 </div>
               ))
             ) : (
@@ -450,23 +452,23 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                 const totalRevenue = categories.reduce((sum, s) => sum + (s.total_revenue || 0), 0)
                 return categories.map((service, index) => {
                   const colors = [
-                    'from-pink-500 to-pink-600',
-                    'from-indigo-500 to-indigo-600',
-                    'from-emerald-500 to-emerald-600',
-                    'from-amber-500 to-amber-600',
-                    'from-violet-500 to-violet-600'
+                    'from-bliss-700 to-bliss-800',
+                    'from-bliss-600 to-bliss-700',
+                    'from-bliss-500 to-bliss-600',
+                    'from-bliss-400 to-bliss-500',
+                    'from-bliss-300 to-bliss-400'
                   ]
                   const bgColor = colors[index % colors.length]
                   const marketShare = totalRevenue > 0 ? (service.total_revenue || 0) / totalRevenue * 100 : 0
 
                   return (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-stone-50 rounded-lg">
+                    <div key={index} className="flex items-center gap-4 p-4 bg-bliss-50 rounded-lg">
                       <div className={`w-12 h-12 bg-gradient-to-r ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-lg`}>
                         {service.category?.charAt(0)?.toUpperCase() || '?'}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-stone-900">{service.category_th || service.category || 'Unknown'}</h4>
-                        <div className="flex items-center gap-4 text-sm text-stone-600">
+                        <h4 className="font-semibold text-bliss-900">{service.category_th || service.category || 'Unknown'}</h4>
+                        <div className="flex items-center gap-4 text-sm text-bliss-600">
                           <span>{service.total_bookings || 0} bookings</span>
                           <span>•</span>
                           <span>AVG: ฿{service.avg_price?.toLocaleString() || 0}</span>
@@ -479,13 +481,13 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                               {Math.abs(service.growth_rate).toFixed(1)}%
                             </span>
                           ) : (
-                            <span className="text-stone-400">-</span>
+                            <span className="text-bliss-400">-</span>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-stone-900">฿{service.total_revenue?.toLocaleString() || 0}</div>
-                        <div className="text-xs text-stone-500">{marketShare.toFixed(1)}% share</div>
+                        <div className="text-2xl font-bold text-bliss-900">฿{service.total_revenue?.toLocaleString() || 0}</div>
+                        <div className="text-xs text-bliss-500">{marketShare.toFixed(1)}% share</div>
                       </div>
                     </div>
                   )
@@ -497,15 +499,15 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       </div>
 
       {/* Payment Method Analysis */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 border-b border-green-200">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">💳 วิธีการชำระเงิน • Payment Methods</h3>
-              <p className="text-sm text-stone-500">Payment performance and processing costs • ประสิทธิภาพการชำระเงินและค่าดำเนินการ</p>
+              <h3 className="text-lg font-semibold text-bliss-900">💳 วิธีการชำระเงิน • Payment Methods</h3>
+              <p className="text-sm text-bliss-500">Payment performance and processing costs • ประสิทธิภาพการชำระเงินและค่าดำเนินการ</p>
             </div>
           </div>
         </div>
@@ -514,11 +516,11 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {paymentMethodAnalysis.isLoading ? (
               Array.from({ length: 2 }).map((_, index) => (
-                <div key={index} className="animate-pulse p-4 border border-stone-200 rounded-lg">
-                  <div className="bg-stone-200 h-6 w-20 rounded mb-3"></div>
+                <div key={index} className="animate-pulse p-4 border border-bliss-200 rounded-lg">
+                  <div className="bg-bliss-200 h-6 w-20 rounded mb-3"></div>
                   <div className="space-y-2">
-                    <div className="bg-stone-200 h-4 w-full rounded"></div>
-                    <div className="bg-stone-200 h-4 w-3/4 rounded"></div>
+                    <div className="bg-bliss-200 h-4 w-full rounded"></div>
+                    <div className="bg-bliss-200 h-4 w-3/4 rounded"></div>
                   </div>
                 </div>
               ))
@@ -531,31 +533,31 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                   mobile_banking: 'โมบายแบงก์กิ้ง',
                 }
                 return (
-                <div key={index} className="p-4 border border-stone-200 rounded-lg hover:shadow-md transition-shadow">
+                <div key={index} className="p-4 border border-bliss-200 rounded-lg hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-stone-900 flex items-center gap-2">
+                    <h4 className="font-semibold text-bliss-900 flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
                       {paymentLabels[method.payment_method] || method.payment_method}
                     </h4>
-                    <span className="text-2xl font-bold text-stone-900">
+                    <span className="text-2xl font-bold text-bliss-900">
                       ฿{method.total_amount?.toLocaleString() || 0}
                     </span>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-stone-600">Transactions:</span>
+                      <span className="text-bliss-600">Transactions:</span>
                       <span className="font-semibold">{method.transaction_count || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">Success Rate:</span>
+                      <span className="text-bliss-600">Success Rate:</span>
                       <span className="font-semibold text-green-600">{method.success_rate || 0}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">AVG Transaction:</span>
+                      <span className="text-bliss-600">AVG Transaction:</span>
                       <span className="font-semibold">฿{method.avg_transaction_value?.toLocaleString() || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">Processing Fees:</span>
+                      <span className="text-bliss-600">Processing Fees:</span>
                       <span className="font-semibold text-red-600">฿{method.processing_fees_estimated?.toLocaleString() || 0}</span>
                     </div>
                   </div>
@@ -568,15 +570,15 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       </div>
 
       {/* Peak Time Analysis */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-6 border-b border-amber-200">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-lg flex items-center justify-center">
               <Clock className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-stone-900">⏰ ช่วงเวลายอดนิยม • Peak Time Analysis</h3>
-              <p className="text-sm text-stone-500">Revenue optimization by time periods • การเพิ่มประสิทธิภาพรายได้ตามช่วงเวลา</p>
+              <h3 className="text-lg font-semibold text-bliss-900">⏰ ช่วงเวลายอดนิยม • Peak Time Analysis</h3>
+              <p className="text-sm text-bliss-500">Revenue optimization by time periods • การเพิ่มประสิทธิภาพรายได้ตามช่วงเวลา</p>
             </div>
           </div>
         </div>
@@ -585,14 +587,14 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Peak Hours */}
             <div>
-              <h4 className="font-semibold text-stone-900 mb-4">Peak Hours • ชั่วโมงยอดนิยม</h4>
+              <h4 className="font-semibold text-bliss-900 mb-4">Peak Hours • ชั่วโมงยอดนิยม</h4>
               <div className="space-y-3">
                 {timeBasedRevenueAnalysis.isLoading ? (
                   Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="animate-pulse flex items-center gap-3">
-                      <div className="bg-stone-200 w-16 h-6 rounded"></div>
-                      <div className="bg-stone-200 flex-1 h-6 rounded"></div>
-                      <div className="bg-stone-200 w-20 h-6 rounded"></div>
+                      <div className="bg-bliss-200 w-16 h-6 rounded"></div>
+                      <div className="bg-bliss-200 flex-1 h-6 rounded"></div>
+                      <div className="bg-bliss-200 w-20 h-6 rounded"></div>
                     </div>
                   ))
                 ) : (
@@ -601,21 +603,21 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                     .sort((a, b) => (b.revenue || 0) - (a.revenue || 0))
                     .slice(0, 6)
                     .map((hour, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
-                        <div className="w-16 text-sm font-semibold text-stone-700">
+                      <div key={index} className="flex items-center gap-3 p-3 bg-bliss-50 rounded-lg">
+                        <div className="w-16 text-sm font-semibold text-bliss-700">
                           {hour.time_period}
                         </div>
                         <div className="flex-1">
-                          <div className="w-full bg-stone-200 rounded-full h-2">
+                          <div className="w-full bg-bliss-200 rounded-full h-2">
                             <div
-                              className="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full transition-all"
+                              className="bg-gradient-to-r from-bliss-500 to-bliss-600 h-2 rounded-full transition-all"
                               style={{ width: `${Math.min(Math.max((hour.performance_score || 0), 10), 100)}%` }}
                             ></div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-bold text-stone-900">฿{hour.revenue?.toLocaleString() || 0}</div>
-                          <div className="text-xs text-stone-500">{hour.booking_count || 0} bookings</div>
+                          <div className="text-sm font-bold text-bliss-900">฿{hour.revenue?.toLocaleString() || 0}</div>
+                          <div className="text-xs text-bliss-500">{hour.booking_count || 0} bookings</div>
                         </div>
                       </div>
                     ))
@@ -625,14 +627,14 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
 
             {/* Peak Days */}
             <div>
-              <h4 className="font-semibold text-stone-900 mb-4">Peak Days • วันยอดนิยม</h4>
+              <h4 className="font-semibold text-bliss-900 mb-4">Peak Days • วันยอดนิยม</h4>
               <div className="space-y-3">
                 {timeBasedRevenueAnalysis.isLoading ? (
                   Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="animate-pulse flex items-center gap-3">
-                      <div className="bg-stone-200 w-20 h-6 rounded"></div>
-                      <div className="bg-stone-200 flex-1 h-6 rounded"></div>
-                      <div className="bg-stone-200 w-20 h-6 rounded"></div>
+                      <div className="bg-bliss-200 w-20 h-6 rounded"></div>
+                      <div className="bg-bliss-200 flex-1 h-6 rounded"></div>
+                      <div className="bg-bliss-200 w-20 h-6 rounded"></div>
                     </div>
                   ))
                 ) : (
@@ -640,21 +642,21 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
                     .filter(item => item.analysis_type === 'Peak Days')
                     .sort((a, b) => (b.revenue || 0) - (a.revenue || 0))
                     .map((day, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
-                        <div className="w-20 text-sm font-semibold text-stone-700">
+                      <div key={index} className="flex items-center gap-3 p-3 bg-bliss-50 rounded-lg">
+                        <div className="w-20 text-sm font-semibold text-bliss-700">
                           {day.time_period?.trim()}
                         </div>
                         <div className="flex-1">
-                          <div className="w-full bg-stone-200 rounded-full h-2">
+                          <div className="w-full bg-bliss-200 rounded-full h-2">
                             <div
-                              className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all"
+                              className="bg-gradient-to-r from-bliss-500 to-bliss-600 h-2 rounded-full transition-all"
                               style={{ width: `${Math.min(Math.max((day.performance_score || 0), 10), 100)}%` }}
                             ></div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-bold text-stone-900">฿{day.revenue?.toLocaleString() || 0}</div>
-                          <div className="text-xs text-stone-500">{day.booking_count || 0} bookings</div>
+                          <div className="text-sm font-bold text-bliss-900">฿{day.revenue?.toLocaleString() || 0}</div>
+                          <div className="text-xs text-bliss-500">{day.booking_count || 0} bookings</div>
                         </div>
                       </div>
                     ))
@@ -666,7 +668,7 @@ function SalesSection({ selectedPeriod }: SalesSectionProps) {
       </div>
 
       {/* Target Progress */}
-      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+      <div className="bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Target className="w-8 h-8" />

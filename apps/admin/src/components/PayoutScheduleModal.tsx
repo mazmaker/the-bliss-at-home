@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, CalendarClock } from 'lucide-react'
 import {
   PayoutSchedule,
   Staff,
@@ -117,35 +117,39 @@ const PayoutScheduleModal: React.FC<PayoutScheduleModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-black bg-opacity-25 transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[92vh] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                แก้ไขรอบการจ่ายเงิน
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                พนักงาน: {staff.name_th}
-              </p>
+          <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <CalendarClock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white leading-tight">แก้ไขรอบการจ่ายเงิน</h2>
+                  <p className="text-xs text-bliss-200">พนักงาน: {staff.name_th}</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
 
-          {/* Content */}
-          <div className="p-6 overflow-y-auto flex-1 min-h-0">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
               {/* Current schedule info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-blue-800 mb-2">รอบการจ่ายปัจจุบัน</h3>
-                <div className="text-sm text-blue-700">
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-bliss-900 mb-2">รอบการจ่ายปัจจุบัน</h3>
+                <div className="text-sm text-bliss-700 space-y-0.5">
                   <p>รอบ: {getPayoutScheduleLabel(staff.payout_schedule, staff.custom_payout_interval)}</p>
                   {staff.next_payout_date && (
                     <p>วันจ่ายครั้งถัดไป: {new Intl.DateTimeFormat('th-TH').format(new Date(staff.next_payout_date))}</p>
@@ -153,52 +157,60 @@ const PayoutScheduleModal: React.FC<PayoutScheduleModalProps> = ({
                 </div>
               </div>
 
-              {/* Payout schedule selector */}
-              <div>
-                <PayoutScheduleSelector
-                  value={selectedSchedule}
-                  customInterval={customInterval}
-                  onScheduleChange={setSelectedSchedule}
-                  onCustomIntervalChange={setCustomInterval}
-                  disabled={isLoading}
-                  showNextPayoutPreview={false}
-                  showComparisonTable={false}
-                />
-                {errors.schedule && (
-                  <p className="mt-1 text-sm text-red-600">{errors.schedule}</p>
-                )}
-                {errors.customInterval && (
-                  <p className="mt-1 text-sm text-red-600">{errors.customInterval}</p>
-                )}
-              </div>
+              {/* ── Section: ตั้งค่ารอบการจ่าย ── */}
+              <div className="rounded-xl border border-bliss-200 p-5">
+                <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+                  <CalendarClock className="w-5 h-5 text-bliss-600" />
+                  <h4 className="text-lg font-bold text-bliss-900">ตั้งค่ารอบการจ่าย</h4>
+                </div>
 
-              {/* Start date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  วันที่เริ่มต้นการจ่าย
-                </label>
-                <input
-                  type="date"
-                  value={payoutStartDate}
-                  onChange={(e) => setPayoutStartDate(e.target.value)}
-                  disabled={isLoading}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  วันที่เริ่มนับรอบการจ่ายใหม่
-                </p>
-                {errors.startDate && (
-                  <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
-                )}
+                {/* Payout schedule selector */}
+                <div>
+                  <PayoutScheduleSelector
+                    value={selectedSchedule}
+                    customInterval={customInterval}
+                    onScheduleChange={setSelectedSchedule}
+                    onCustomIntervalChange={setCustomInterval}
+                    disabled={isLoading}
+                    showNextPayoutPreview={false}
+                    showComparisonTable={false}
+                  />
+                  {errors.schedule && (
+                    <p className="mt-1 text-sm text-red-600">{errors.schedule}</p>
+                  )}
+                  {errors.customInterval && (
+                    <p className="mt-1 text-sm text-red-600">{errors.customInterval}</p>
+                  )}
+                </div>
+
+                {/* Start date */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-bliss-700 mb-1.5">
+                    วันที่เริ่มต้นการจ่าย
+                  </label>
+                  <input
+                    type="date"
+                    value={payoutStartDate}
+                    onChange={(e) => setPayoutStartDate(e.target.value)}
+                    disabled={isLoading}
+                    className="block w-full px-4 py-2 rounded-lg border border-bliss-300 focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500 sm:text-sm"
+                  />
+                  <p className="mt-1 text-xs text-bliss-500">
+                    วันที่เริ่มนับรอบการจ่ายใหม่
+                  </p>
+                  {errors.startDate && (
+                    <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
+                  )}
+                </div>
               </div>
 
               {/* Preview */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-green-800 mb-2">ตัวอย่างการจ่ายครั้งถัดไป</h3>
-                <p className="text-sm text-green-700">
+              <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-bliss-900 mb-2">ตัวอย่างการจ่ายครั้งถัดไป</h3>
+                <p className="text-sm text-bliss-700">
                   {getNextPayoutPreview()}
                 </p>
-                <p className="text-xs text-green-600 mt-1">
+                <p className="text-xs text-bliss-500 mt-1">
                   *คำนวณจากวันที่เริ่มต้นที่เลือก
                 </p>
               </div>
@@ -209,28 +221,27 @@ const PayoutScheduleModal: React.FC<PayoutScheduleModalProps> = ({
                   <p className="text-sm text-red-700">{errors.submit}</p>
                 </div>
               )}
-            </form>
-          </div>
+            </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
-            >
-              ยกเลิก
-            </button>
-
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading || !hasChanges()}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? 'กำลังอัปเดต...' : 'อัปเดตรอบการจ่าย'}
-            </button>
-          </div>
+            {/* Sticky Footer */}
+            <div className="flex-shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t border-bliss-200 bg-bliss-50">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+                className="px-5 py-2.5 text-sm font-medium text-bliss-700 bg-white border border-bliss-300 rounded-xl hover:bg-bliss-100 transition disabled:opacity-50"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading || !hasChanges()}
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl hover:from-bliss-700 hover:to-bliss-800 shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'กำลังอัปเดต...' : 'อัปเดตรอบการจ่าย'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

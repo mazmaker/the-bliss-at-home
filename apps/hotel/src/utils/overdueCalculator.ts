@@ -73,8 +73,8 @@ export function getOverdueStatus(overdueDays: number): OverdueStatus {
       level: 'DUE_SOON',
       days: overdueDays,
       color: 'blue',
-      bgColor: 'bg-blue-100',
-      textColor: 'text-blue-700',
+      bgColor: 'bg-bliss-100',
+      textColor: 'text-bliss-700',
       icon: '📅',
       message: `ใกล้กำหนด ${Math.abs(overdueDays)} วัน`,
       actionRequired: false
@@ -85,8 +85,8 @@ export function getOverdueStatus(overdueDays: number): OverdueStatus {
       level: 'DUE_SOON',
       days: overdueDays,
       color: 'blue',
-      bgColor: 'bg-blue-100',
-      textColor: 'text-blue-700',
+      bgColor: 'bg-bliss-100',
+      textColor: 'text-bliss-700',
       icon: '📋',
       message: 'กำหนดชำระวันนี้',
       actionRequired: true
@@ -97,8 +97,8 @@ export function getOverdueStatus(overdueDays: number): OverdueStatus {
       level: 'OVERDUE',
       days: overdueDays,
       color: 'yellow',
-      bgColor: 'bg-amber-100',
-      textColor: 'text-amber-700',
+      bgColor: 'bg-bliss-100',
+      textColor: 'text-bliss-700',
       icon: '🟡',
       message: `เลยกำหนด ${overdueDays} วัน`,
       actionRequired: true

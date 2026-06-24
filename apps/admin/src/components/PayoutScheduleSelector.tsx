@@ -60,11 +60,11 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
   const getScheduleBadge = (scheduleValue: PayoutSchedule): { text: string; color: string } => {
     switch (scheduleValue) {
       case 'weekly':
-        return { text: 'แนะนำ', color: 'bg-green-100 text-green-800' }
+        return { text: 'แนะนำ', color: 'bg-bliss-100 text-bliss-800' }
       case 'monthly':
-        return { text: 'จัดการง่าย', color: 'bg-purple-100 text-purple-800' }
+        return { text: 'จัดการง่าย', color: 'bg-bliss-100 text-bliss-800' }
       case 'custom_days':
-        return { text: 'ยืดหยุ่น', color: 'bg-yellow-100 text-yellow-800' }
+        return { text: 'ยืดหยุ่น', color: 'bg-bliss-100 text-bliss-800' }
       default:
         return { text: '', color: '' }
     }
@@ -73,14 +73,18 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           รอบการจ่ายเงิน
         </label>
 
         <div className="grid grid-cols-1 gap-3">
           {PAYOUT_SCHEDULE_OPTIONS.map((option: PayoutScheduleOption) => (
             <div key={option.value} className="relative">
-              <label className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors">
+              <label className={`flex items-start space-x-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
+                value === option.value
+                  ? 'border-bliss-500 bg-bliss-50'
+                  : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-50'
+              }`}>
                 <input
                   type="radio"
                   name="payout-schedule"
@@ -88,21 +92,21 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
                   checked={value === option.value}
                   onChange={(e) => onScheduleChange(e.target.value as PayoutSchedule)}
                   disabled={disabled}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  className="mt-1 h-4 w-4 text-bliss-600 focus:ring-bliss-500 border-bliss-300"
                 />
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 flex-wrap">
-                    <span className="text-lg">{option.icon}</span>
-                    <h3 className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-bold text-bliss-700 bg-bliss-100 px-2 py-0.5 rounded-md whitespace-nowrap">{option.icon}</span>
+                    <h3 className="text-sm font-semibold text-bliss-900">
                       {option.label}
                     </h3>
                     {value === option.value ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-bliss-600 text-white">
                         ปัจจุบัน
                       </span>
                     ) : option.isDefault ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-bliss-100 text-bliss-800">
                         แนะนำ
                       </span>
                     ) : null}
@@ -115,17 +119,17 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
                       ) : null
                     })()}
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-bliss-500">
                     {option.description}
                   </p>
                   {option.detailedDescription && (
-                    <p className="mt-2 text-xs text-gray-600 leading-relaxed">
-                      📋 {option.detailedDescription}
+                    <p className="mt-2 text-xs text-bliss-600 leading-relaxed">
+                      {option.detailedDescription}
                     </p>
                   )}
                   {option.examples && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded-md">
-                      <p className="text-xs text-gray-600">
+                    <div className="mt-2 p-2 bg-bliss-50 rounded-md">
+                      <p className="text-xs text-bliss-600">
                         <span className="font-medium">ตัวอย่าง:</span> {option.examples}
                       </p>
                     </div>
@@ -139,8 +143,8 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
 
       {/* Custom interval input for custom_days */}
       {value === 'custom_days' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             จำนวนวันที่กำหนดเอง
           </label>
           <div className="flex items-center space-x-3">
@@ -151,11 +155,11 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
               value={localCustomInterval}
               onChange={(e) => handleCustomIntervalChange(parseInt(e.target.value) || 1)}
               disabled={disabled}
-              className="block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-24 rounded-md border-bliss-300 shadow-sm focus:border-bliss-500 focus:ring-bliss-500 sm:text-sm"
             />
-            <span className="text-sm text-gray-600">วัน</span>
+            <span className="text-sm text-bliss-600">วัน</span>
           </div>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-bliss-500">
             ระบุจำนวนวันระหว่างการจ่าย (1-90 วัน)
           </p>
         </div>
@@ -163,17 +167,17 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
 
       {/* Next payout preview */}
       {showNextPayoutPreview && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">
-            <span className="text-green-600">•</span>
-            <h4 className="text-sm font-medium text-green-800">
+            <span className="text-bliss-600">•</span>
+            <h4 className="text-sm font-medium text-bliss-800">
               วันที่จ่ายครั้งถัดไป (ตัวอย่าง)
             </h4>
           </div>
-          <p className="mt-1 text-sm text-green-700">
+          <p className="mt-1 text-sm text-bliss-700">
             {getNextPayoutPreview()}
           </p>
-          <p className="mt-1 text-xs text-green-600">
+          <p className="mt-1 text-xs text-bliss-600">
             *คำนวณจากวันที่ปัจจุบัน
           </p>
         </div>
@@ -181,22 +185,22 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
 
       {/* Comparison Table */}
       {showComparisonTable && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
-            📊 เปรียบเทียบรอบการจ่าย
+        <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-bliss-900 mb-3 flex items-center gap-2">
+            เปรียบเทียบรอบการจ่าย
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-blue-200">
-                  <th className="text-left py-2 text-blue-800">รอบ</th>
-                  <th className="text-left py-2 text-blue-800">ความถี่</th>
-                  <th className="text-left py-2 text-blue-800">กระแสเงิน</th>
-                  <th className="text-left py-2 text-blue-800">การจัดการ</th>
+                <tr className="border-b border-bliss-200">
+                  <th className="text-left py-2 text-bliss-800">รอบ</th>
+                  <th className="text-left py-2 text-bliss-800">ความถี่</th>
+                  <th className="text-left py-2 text-bliss-800">กระแสเงิน</th>
+                  <th className="text-left py-2 text-bliss-800">การจัดการ</th>
                 </tr>
               </thead>
-              <tbody className="text-blue-700">
-                <tr className="bg-blue-100 rounded">
+              <tbody className="text-bliss-700">
+                <tr className="bg-bliss-100 rounded">
                   <td className="py-1">ทุกสัปดาห์</td>
                   <td className="py-1">สูงสุด</td>
                   <td className="py-1">ดีที่สุด</td>
@@ -228,8 +232,8 @@ const PayoutScheduleSelector: React.FC<PayoutScheduleSelectorProps> = ({
 
       {/* Schedule info */}
       {value && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-          <div className="text-xs text-gray-500">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
+          <div className="text-xs text-bliss-500">
             <strong>รายละเอียด:</strong>
             <br />
             • รอบการจ่าย: {getPayoutScheduleOption(value)?.label}

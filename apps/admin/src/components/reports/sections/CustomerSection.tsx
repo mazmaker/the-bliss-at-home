@@ -17,6 +17,9 @@ import {
   UserPlus,
   Repeat,
   Crown,
+  Sparkles,
+  Zap,
+  Moon,
   MapPin,
   PhoneCall,
   Smartphone
@@ -452,7 +455,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       <div className="space-y-6 animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-gray-200 rounded-2xl h-32"></div>
+            <div key={i} className="bg-bliss-200 rounded-2xl h-32"></div>
           ))}
         </div>
       </div>
@@ -486,27 +489,27 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
   return (
     <div className="space-y-8">
       {/* Header - ใช้ theme เดียวกับโปรแกรม */}
-      <div className="bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl p-6 border border-stone-200 mb-6">
+      <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-2xl p-6 border border-bliss-200 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center shadow-lg">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-stone-900">การวิเคราะห์ลูกค้า</h2>
-              <p className="text-stone-500">Customer Analytics Dashboard</p>
+              <h2 className="text-2xl font-bold text-bliss-900">การวิเคราะห์ลูกค้า</h2>
+              <p className="text-bliss-500">Customer Analytics Dashboard</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 bg-white rounded-lg border border-stone-200">
-              <p className="text-stone-700 text-sm font-medium">ข้อมูลล่าสุด</p>
-              <p className="text-stone-500 text-xs">{new Date().toLocaleDateString('th-TH')}</p>
+            <div className="px-3 py-1.5 bg-white rounded-lg border border-bliss-200">
+              <p className="text-bliss-700 text-sm font-medium">ข้อมูลล่าสุด</p>
+              <p className="text-bliss-500 text-xs">{new Date().toLocaleDateString('th-TH')}</p>
             </div>
             <button
               onClick={fetchCustomerAnalytics}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition-all duration-200 font-medium shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 bg-bliss-600 text-white rounded-xl hover:bg-bliss-700 transition-all duration-200 font-medium shadow-sm"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               รีเฟรชข้อมูล
@@ -518,57 +521,57 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       {/* Overview Cards - Stone + Amber theme */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
 
-        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-stone-100 rounded-full translate-x-12 -translate-y-12"></div>
+        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-bliss-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-bliss-100 rounded-full translate-x-12 -translate-y-12"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-stone-500 text-sm font-medium mb-1">ลูกค้าทั้งหมด</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">{analytics.totalCustomers.toLocaleString()}</p>
-              <p className="text-xs text-stone-400">Total Customers</p>
+              <p className="text-bliss-500 text-sm font-medium mb-1">ลูกค้าทั้งหมด</p>
+              <p className="text-3xl font-bold text-bliss-900 mb-1">{analytics.totalCustomers.toLocaleString()}</p>
+              <p className="text-xs text-bliss-400">Total Customers</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
               <Users className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-stone-100 rounded-full translate-x-12 -translate-y-12"></div>
+        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-bliss-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-bliss-100 rounded-full translate-x-12 -translate-y-12"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-stone-500 text-sm font-medium mb-1">ลูกค้าใหม่</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">{analytics.newCustomers.toLocaleString()}</p>
-              <p className="text-xs text-stone-400">ช่วงที่เลือก</p>
+              <p className="text-bliss-500 text-sm font-medium mb-1">ลูกค้าใหม่</p>
+              <p className="text-3xl font-bold text-bliss-900 mb-1">{analytics.newCustomers.toLocaleString()}</p>
+              <p className="text-xs text-bliss-400">ช่วงที่เลือก</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-bliss-500 to-bliss-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
               <UserPlus className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-stone-100 rounded-full translate-x-12 -translate-y-12"></div>
+        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-bliss-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-bliss-100 rounded-full translate-x-12 -translate-y-12"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-stone-500 text-sm font-medium mb-1">อัตราการกลับมา</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">{formatPercentage(analytics.repeatBookingRate)}</p>
-              <p className="text-xs text-stone-400">Repeat Rate</p>
+              <p className="text-bliss-500 text-sm font-medium mb-1">อัตราการกลับมา</p>
+              <p className="text-3xl font-bold text-bliss-900 mb-1">{formatPercentage(analytics.repeatBookingRate)}</p>
+              <p className="text-xs text-bliss-400">Repeat Rate</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-r from-stone-600 to-stone-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
               <Repeat className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-stone-100 rounded-full translate-x-12 -translate-y-12"></div>
+        <div className="group relative bg-white rounded-2xl p-6 shadow-sm border border-bliss-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-bliss-100 rounded-full translate-x-12 -translate-y-12"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-stone-500 text-sm font-medium mb-1">มูลค่าเฉลี่ย</p>
-              <p className="text-3xl font-bold text-stone-900 mb-1">{formatCurrency(analytics.averageLifetimeValue)}</p>
-              <p className="text-xs text-stone-400">ต่อลูกค้า</p>
+              <p className="text-bliss-500 text-sm font-medium mb-1">มูลค่าเฉลี่ย</p>
+              <p className="text-3xl font-bold text-bliss-900 mb-1">{formatCurrency(analytics.averageLifetimeValue)}</p>
+              <p className="text-xs text-bliss-400">ต่อลูกค้า</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-r from-amber-400 to-amber-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-bliss-400 to-bliss-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -577,21 +580,21 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       </div>
 
       {/* Customer Segments - Stone/Amber Theme */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-lg overflow-hidden mb-8">
-        <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 border-b border-stone-200">
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-bliss-50 to-bliss-100 p-6 border-b border-bliss-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-stone-900 flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl flex items-center justify-center">
+              <h3 className="text-2xl font-bold text-bliss-900 flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center">
                   <Crown className="w-6 h-6 text-white" />
                 </div>
                 การแบ่งกลุ่มลูกค้า
               </h3>
-              <p className="text-stone-600 text-lg">Customer Segmentation จากข้อมูลการจองจริง</p>
+              <p className="text-bliss-600 text-lg">Customer Segmentation จากข้อมูลการจองจริง</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-stone-900">{analytics.totalCustomers}</p>
-              <p className="text-sm text-stone-500">ลูกค้าทั้งหมด</p>
+              <p className="text-2xl font-bold text-bliss-900">{analytics.totalCustomers}</p>
+              <p className="text-sm text-bliss-500">ลูกค้าทั้งหมด</p>
             </div>
           </div>
         </div>
@@ -600,14 +603,15 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {analytics.customerSegments.map((segment, index) => {
               const segmentStyles = [
-                { bg: 'bg-gradient-to-br from-amber-600 to-amber-700', icon: '👑', ring: 'ring-amber-500/20' }, // VIP
-                { bg: 'bg-gradient-to-br from-amber-500 to-amber-600', icon: '⭐', ring: 'ring-amber-400/20' },   // Regular
-                { bg: 'bg-gradient-to-br from-stone-600 to-stone-700', icon: '🌟', ring: 'ring-stone-500/20' }, // Casual
-                { bg: 'bg-gradient-to-br from-stone-500 to-stone-600', icon: '💫', ring: 'ring-stone-400/20' }, // One-time
-                { bg: 'bg-gradient-to-br from-stone-400 to-stone-500', icon: '😴', ring: 'ring-stone-300/20' }     // Inactive
+                { bg: 'bg-gradient-to-br from-bliss-600 to-bliss-700', icon: Crown, ring: 'ring-bliss-500/20' }, // VIP
+                { bg: 'bg-gradient-to-br from-bliss-500 to-bliss-600', icon: Star, ring: 'ring-bliss-400/20' },   // Regular
+                { bg: 'bg-gradient-to-br from-bliss-600 to-bliss-700', icon: Sparkles, ring: 'ring-bliss-500/20' }, // Casual
+                { bg: 'bg-gradient-to-br from-bliss-500 to-bliss-600', icon: Zap, ring: 'ring-bliss-400/20' }, // One-time
+                { bg: 'bg-gradient-to-br from-bliss-400 to-bliss-500', icon: Moon, ring: 'ring-bliss-300/20' }     // Inactive
               ]
 
               const style = segmentStyles[index] || segmentStyles[4]
+              const SegIcon = style.icon
 
               return (
                 <div key={segment.segment} className={`group relative ${style.bg} rounded-2xl p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300 ring-2 ${style.ring}`}>
@@ -618,7 +622,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                   {/* Content */}
                   <div className="relative">
                     <div className="text-center mb-4">
-                      <div className="text-3xl mb-2">{style.icon}</div>
+                      <div className="flex justify-center mb-2"><SegIcon className="w-8 h-8" /></div>
                       <h4 className="font-bold text-lg mb-1">{segment.segment}</h4>
                       <div className="text-4xl font-black mb-1">{segment.count}</div>
                       <div className="text-sm opacity-90 font-medium">{formatPercentage(segment.percentage)}</div>
@@ -653,8 +657,8 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       </div>
 
       {/* Repeat Booking Analysis - Stone/Amber Theme */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-lg overflow-hidden mb-8">
-        <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white">
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-bliss-600 to-bliss-700 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-2xl font-bold mb-2 flex items-center gap-3">
@@ -663,11 +667,11 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                 </div>
                 พฤติกรรมการจองซ้ำ
               </h3>
-              <p className="text-amber-100 text-lg">การวิเคราะห์ลูกค้าเก่าและลูกค้าใหม่</p>
+              <p className="text-bliss-100 text-lg">การวิเคราะห์ลูกค้าเก่าและลูกค้าใหม่</p>
             </div>
             <div className="text-right">
               <div className="text-4xl font-bold">{formatPercentage(analytics.repeatBookingAnalysis.repeatRate)}</div>
-              <div className="text-amber-100 text-sm">อัตราการกลับมา</div>
+              <div className="text-bliss-100 text-sm">อัตราการกลับมา</div>
             </div>
           </div>
         </div>
@@ -677,32 +681,32 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
             {/* New Customers Card */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-stone-500 to-stone-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              <div className="relative bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-6 border border-stone-200">
+              <div className="absolute inset-0 bg-gradient-to-r from-bliss-500 to-bliss-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
+              <div className="relative bg-gradient-to-br from-bliss-50 to-bliss-100 rounded-2xl p-6 border border-bliss-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-stone-600 to-stone-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center">
                       <UserPlus className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-stone-900">ลูกค้าใหม่</h4>
-                      <p className="text-stone-600 text-sm">First-time Customers</p>
+                      <h4 className="text-lg font-bold text-bliss-900">ลูกค้าใหม่</h4>
+                      <p className="text-bliss-600 text-sm">First-time Customers</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-stone-700">{analytics.repeatBookingAnalysis.newCustomers.count}</div>
-                    <div className="text-stone-600 text-sm">คน</div>
+                    <div className="text-3xl font-bold text-bliss-700">{analytics.repeatBookingAnalysis.newCustomers.count}</div>
+                    <div className="text-bliss-600 text-sm">คน</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/70 rounded-xl p-3 text-center">
-                    <div className="text-lg font-bold text-stone-800">{formatCurrency(analytics.repeatBookingAnalysis.newCustomers.avgSpent)}</div>
-                    <div className="text-stone-600 text-xs">ใช้จ่ายเฉลี่ย</div>
+                    <div className="text-lg font-bold text-bliss-800">{formatCurrency(analytics.repeatBookingAnalysis.newCustomers.avgSpent)}</div>
+                    <div className="text-bliss-600 text-xs">ใช้จ่ายเฉลี่ย</div>
                   </div>
                   <div className="bg-white/70 rounded-xl p-3 text-center">
-                    <div className="text-lg font-bold text-stone-800">{formatPercentage(analytics.repeatBookingAnalysis.newCustomers.conversionRate)}</div>
-                    <div className="text-stone-600 text-xs">อัตราการกลับมา</div>
+                    <div className="text-lg font-bold text-bliss-800">{formatPercentage(analytics.repeatBookingAnalysis.newCustomers.conversionRate)}</div>
+                    <div className="text-bliss-600 text-xs">อัตราการกลับมา</div>
                   </div>
                 </div>
               </div>
@@ -710,32 +714,32 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
             {/* Returning Customers Card */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              <div className="relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200">
+              <div className="absolute inset-0 bg-gradient-to-r from-bliss-500 to-bliss-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
+              <div className="relative bg-gradient-to-br from-bliss-50 to-bliss-100 rounded-2xl p-6 border border-bliss-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-xl flex items-center justify-center">
                       <Repeat className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-amber-900">ลูกค้าเก่า</h4>
-                      <p className="text-amber-600 text-sm">Returning Customers</p>
+                      <h4 className="text-lg font-bold text-bliss-900">ลูกค้าเก่า</h4>
+                      <p className="text-bliss-600 text-sm">Returning Customers</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-amber-700">{analytics.repeatBookingAnalysis.returningCustomers.count}</div>
-                    <div className="text-amber-600 text-sm">คน</div>
+                    <div className="text-3xl font-bold text-bliss-700">{analytics.repeatBookingAnalysis.returningCustomers.count}</div>
+                    <div className="text-bliss-600 text-sm">คน</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/70 rounded-xl p-3 text-center">
-                    <div className="text-lg font-bold text-amber-800">{formatCurrency(analytics.repeatBookingAnalysis.returningCustomers.avgSpent)}</div>
-                    <div className="text-amber-600 text-xs">ใช้จ่ายเฉลี่ย</div>
+                    <div className="text-lg font-bold text-bliss-800">{formatCurrency(analytics.repeatBookingAnalysis.returningCustomers.avgSpent)}</div>
+                    <div className="text-bliss-600 text-xs">ใช้จ่ายเฉลี่ย</div>
                   </div>
                   <div className="bg-white/70 rounded-xl p-3 text-center">
-                    <div className="text-lg font-bold text-amber-800">{analytics.repeatBookingAnalysis.returningCustomers.avgBookings.toFixed(1)}</div>
-                    <div className="text-amber-600 text-xs">จองเฉลี่ย (ครั้ง)</div>
+                    <div className="text-lg font-bold text-bliss-800">{analytics.repeatBookingAnalysis.returningCustomers.avgBookings.toFixed(1)}</div>
+                    <div className="text-bliss-600 text-xs">จองเฉลี่ย (ครั้ง)</div>
                   </div>
                 </div>
               </div>
@@ -744,20 +748,20 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
           {/* Summary Card */}
           <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-stone-500 to-stone-600 rounded-2xl blur opacity-10"></div>
-            <div className="relative bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl p-6 border border-stone-200">
+            <div className="absolute inset-0 bg-gradient-to-r from-bliss-500 to-bliss-600 rounded-2xl blur opacity-10"></div>
+            <div className="relative bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-2xl p-6 border border-bliss-200">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="w-14 h-14 bg-gradient-to-r from-amber-600 to-amber-700 rounded-2xl flex items-center justify-center">
+                  <div className="w-14 h-14 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-2xl flex items-center justify-center">
                     <TrendingUp className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h4 className="text-2xl font-bold text-stone-900">อัตราการจองซ้ำโดยรวม</h4>
-                    <p className="text-stone-600">Overall Repeat Booking Rate</p>
+                    <h4 className="text-2xl font-bold text-bliss-900">อัตราการจองซ้ำโดยรวม</h4>
+                    <p className="text-bliss-600">Overall Repeat Booking Rate</p>
                   </div>
                 </div>
-                <div className="text-5xl font-black text-amber-700 mb-2">{formatPercentage(analytics.repeatBookingAnalysis.repeatRate)}</div>
-                <div className="text-stone-600 text-lg font-medium">ของลูกค้าทั้งหมดกลับมาใช้บริการซ้ำ</div>
+                <div className="text-5xl font-black text-bliss-700 mb-2">{formatPercentage(analytics.repeatBookingAnalysis.repeatRate)}</div>
+                <div className="text-bliss-600 text-lg font-medium">ของลูกค้าทั้งหมดกลับมาใช้บริการซ้ำ</div>
               </div>
             </div>
           </div>
@@ -766,16 +770,16 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Customer Status Distribution */}
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-lg">
-          <div className="p-6 border-b border-stone-200">
-            <h3 className="text-xl font-bold text-stone-900">สถานะลูกค้า</h3>
-            <p className="text-stone-600">Customer Status Distribution</p>
+        <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
+          <div className="p-6 border-b border-bliss-200">
+            <h3 className="text-xl font-bold text-bliss-900">สถานะลูกค้า</h3>
+            <p className="text-bliss-600">Customer Status Distribution</p>
           </div>
           <div className="p-6">
             <div className="space-y-4">
               {[
                 { key: 'active', label: 'ใช้งานปกติ', color: 'bg-green-500', count: analytics.totalCustomers },
-                { key: 'inactive', label: 'ไม่ใช้งาน', color: 'bg-gray-500', count: 0 }
+                { key: 'inactive', label: 'ไม่ใช้งาน', color: 'bg-bliss-500', count: 0 }
               ].map(item => {
                 const percentage = analytics.totalCustomers > 0 ? (item.count / analytics.totalCustomers) * 100 : 0
                 return (
@@ -786,7 +790,7 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                     </div>
                     <div className="text-right">
                       <span className="font-bold">{item.count}</span>
-                      <span className="text-stone-500 ml-2">({formatPercentage(percentage)})</span>
+                      <span className="text-bliss-500 ml-2">({formatPercentage(percentage)})</span>
                     </div>
                   </div>
                 )
@@ -796,16 +800,16 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
         </div>
 
         {/* Contact Information Completeness */}
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-lg">
-          <div className="p-6 border-b border-stone-200">
-            <h3 className="text-xl font-bold text-stone-900">ข้อมูลการติดต่อ</h3>
-            <p className="text-stone-600">Contact Information</p>
+        <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
+          <div className="p-6 border-b border-bliss-200">
+            <h3 className="text-xl font-bold text-bliss-900">ข้อมูลการติดต่อ</h3>
+            <p className="text-bliss-600">Contact Information</p>
           </div>
           <div className="p-6">
             <div className="space-y-4">
               {[
-                { key: 'phone', label: 'มีเบอร์โทร', color: 'bg-blue-500', count: analytics.communicationChannels.phone },
-                { key: 'no_phone', label: 'ไม่มีเบอร์โทร', color: 'bg-gray-500', count: analytics.totalCustomers - analytics.communicationChannels.phone }
+                { key: 'phone', label: 'มีเบอร์โทร', color: 'bg-bliss-500', count: analytics.communicationChannels.phone },
+                { key: 'no_phone', label: 'ไม่มีเบอร์โทร', color: 'bg-bliss-500', count: analytics.totalCustomers - analytics.communicationChannels.phone }
               ].map(item => {
                 const percentage = analytics.totalCustomers > 0 ? (item.count / analytics.totalCustomers) * 100 : 0
                 return (
@@ -816,13 +820,13 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
                     </div>
                     <div className="text-right">
                       <span className="font-bold">{item.count}</span>
-                      <span className="text-stone-500 ml-2">({formatPercentage(percentage)})</span>
+                      <span className="text-bliss-500 ml-2">({formatPercentage(percentage)})</span>
                     </div>
                   </div>
                 )
               })}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-700">
+              <div className="mt-4 p-3 bg-bliss-50 rounded-lg">
+                <p className="text-sm text-bliss-700">
                   <span className="font-medium">หมายเหตุ:</span> ข้อมูลอีเมลจะเพิ่มเติมในเร็วๆ นี้
                 </p>
               </div>
@@ -831,25 +835,25 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
         </div>
 
         {/* Top Provinces */}
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-lg">
-          <div className="p-6 border-b border-stone-200">
-            <h3 className="text-xl font-bold text-stone-900 flex items-center gap-2">
+        <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
+          <div className="p-6 border-b border-bliss-200">
+            <h3 className="text-xl font-bold text-bliss-900 flex items-center gap-2">
               <MapPin className="w-6 h-6 text-green-500" />
               จังหวัดที่มีลูกค้ามากที่สุด
             </h3>
-            <p className="text-stone-600">Top Provinces</p>
+            <p className="text-bliss-600">Top Provinces</p>
           </div>
           <div className="p-6">
             <div className="space-y-3">
               {analytics.topProvinces.slice(0, 8).map((province, index) => (
                 <div key={province.province} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-stone-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-bold text-bliss-500 w-6">#{index + 1}</span>
                     <span className="font-medium">{province.province}</span>
                   </div>
                   <div className="text-right">
                     <span className="font-bold">{province.count}</span>
-                    <span className="text-stone-500 ml-2">({formatPercentage(province.percentage)})</span>
+                    <span className="text-bliss-500 ml-2">({formatPercentage(province.percentage)})</span>
                   </div>
                 </div>
               ))}
@@ -859,40 +863,40 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       </div>
 
       {/* Preferred Services - Stone/Amber Theme */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-lg overflow-hidden mb-8">
-        <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white">
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-bliss-600 to-bliss-700 p-6 text-white">
           <h3 className="text-2xl font-bold flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
               <Star className="w-6 h-6" />
             </div>
             บริการที่ได้รับความนิยม
           </h3>
-          <p className="text-amber-100 text-lg">Most Popular Services</p>
+          <p className="text-bliss-100 text-lg">Most Popular Services</p>
         </div>
 
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {analytics.preferredServices.map((service, index) => {
               const rankColors = [
-                'bg-gradient-to-r from-yellow-400 to-orange-500 text-white', // #1
-                'bg-gradient-to-r from-gray-300 to-gray-400 text-white',     // #2
-                'bg-gradient-to-r from-orange-300 to-orange-400 text-white', // #3
-                'bg-gradient-to-r from-blue-500 to-indigo-500 text-white',   // #4+
-                'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
-                'bg-gradient-to-r from-green-500 to-emerald-500 text-white',
-                'bg-gradient-to-r from-pink-500 to-rose-500 text-white',
-                'bg-gradient-to-r from-cyan-500 to-teal-500 text-white'
+                'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white', // #1
+                'bg-gradient-to-r from-bliss-600 to-bliss-700 text-white', // #2
+                'bg-gradient-to-r from-bliss-500 to-bliss-600 text-white', // #3
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white', // #4+
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white',
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white',
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white',
+                'bg-gradient-to-r from-bliss-400 to-bliss-500 text-white'
               ]
 
               const bgColors = [
-                'from-amber-50 to-amber-100 border-amber-200',
-                'from-stone-50 to-stone-100 border-stone-200',
-                'from-amber-50 to-orange-50 border-amber-200',
-                'from-stone-100 to-stone-150 border-stone-200',
-                'from-amber-100 to-amber-150 border-amber-200',
-                'from-stone-50 to-stone-100 border-stone-200',
-                'from-amber-50 to-amber-100 border-amber-200',
-                'from-stone-100 to-stone-150 border-stone-200'
+                'from-bliss-50 to-bliss-100 border-bliss-200',
+                'from-bliss-50 to-bliss-100 border-bliss-200',
+                'from-bliss-50 to-bliss-100 border-bliss-200',
+                'from-bliss-100 to-bliss-200 border-bliss-200',
+                'from-bliss-100 to-bliss-200 border-bliss-200',
+                'from-bliss-50 to-bliss-100 border-bliss-200',
+                'from-bliss-50 to-bliss-100 border-bliss-200',
+                'from-bliss-100 to-bliss-200 border-bliss-200'
               ]
 
               return (
@@ -907,17 +911,17 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex-1 pr-4">
-                      <h4 className="font-bold text-stone-900 text-lg mb-1 group-hover:text-stone-700 transition-colors">
+                      <h4 className="font-bold text-bliss-900 text-lg mb-1 group-hover:text-bliss-700 transition-colors">
                         {service.service}
                       </h4>
                       <div className="flex items-center gap-2">
-                        <div className="text-2xl font-bold text-stone-800">{service.count}</div>
-                        <div className="text-sm text-stone-500">ครั้ง</div>
+                        <div className="text-2xl font-bold text-bliss-800">{service.count}</div>
+                        <div className="text-sm text-bliss-500">ครั้ง</div>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${index < 3 ? 'bg-white/70 text-amber-800' : 'bg-stone-100 text-stone-700'}`}>
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${index < 3 ? 'bg-white/70 text-bliss-800' : 'bg-bliss-100 text-bliss-700'}`}>
                         {formatPercentage(service.percentage)}
                       </div>
                     </div>
@@ -938,22 +942,22 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
       </div>
 
       {/* Customer Growth Trend */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-lg">
-        <div className="p-6 border-b border-stone-200">
-          <h3 className="text-xl font-bold text-stone-900 flex items-center gap-2">
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
+        <div className="p-6 border-b border-bliss-200">
+          <h3 className="text-xl font-bold text-bliss-900 flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-green-500" />
             แนวโน้มการเติบโตของลูกค้า
           </h3>
-          <p className="text-stone-600">Customer Growth Trend (6 เดือนย้อนหลัง)</p>
+          <p className="text-bliss-600">Customer Growth Trend (6 เดือนย้อนหลัง)</p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {analytics.customerGrowthTrend.map((month, index) => (
-              <div key={index} className="text-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
-                <p className="font-semibold text-stone-900">{month.month}</p>
-                <p className="text-2xl font-bold text-blue-600">{month.newCustomers}</p>
-                <p className="text-sm text-stone-500">ลูกค้าใหม่</p>
-                <p className="text-xs text-stone-400 mt-1">รวม: {month.totalCustomers}</p>
+              <div key={index} className="text-center p-4 bg-gradient-to-r from-bliss-50 to-bliss-100 rounded-xl">
+                <p className="font-semibold text-bliss-900">{month.month}</p>
+                <p className="text-2xl font-bold text-bliss-600">{month.newCustomers}</p>
+                <p className="text-sm text-bliss-500">ลูกค้าใหม่</p>
+                <p className="text-xs text-bliss-400 mt-1">รวม: {month.totalCustomers}</p>
               </div>
             ))}
           </div>
@@ -962,13 +966,13 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
 
       {/* Communication Channels - Available Data Only */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-lg">
-        <div className="p-6 border-b border-stone-200">
-          <h3 className="text-xl font-bold text-stone-900 flex items-center gap-2">
-            <Smartphone className="w-6 h-6 text-blue-500" />
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
+        <div className="p-6 border-b border-bliss-200">
+          <h3 className="text-xl font-bold text-bliss-900 flex items-center gap-2">
+            <Smartphone className="w-6 h-6 text-bliss-500" />
             ช่องทางการติดต่อ
           </h3>
-          <p className="text-stone-600">Communication Channels</p>
+          <p className="text-bliss-600">Communication Channels</p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -976,42 +980,42 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
               <PhoneCall className="w-12 h-12 text-green-600 mx-auto mb-4" />
               <p className="text-2xl font-bold text-green-700">{analytics.communicationChannels.phone}</p>
               <p className="text-green-600 font-medium">เบอร์โทร</p>
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-bliss-500">
                 {formatPercentage((analytics.communicationChannels.phone / analytics.totalCustomers) * 100)}
               </p>
             </div>
-            <div className="text-center p-6 bg-purple-50 rounded-xl">
-              <Users className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-purple-700">{analytics.communicationChannels.line}</p>
-              <p className="text-purple-600 font-medium">LINE (ประมาณ)</p>
-              <p className="text-sm text-stone-500">ตามเบอร์โทร</p>
+            <div className="text-center p-6 bg-bliss-50 rounded-xl">
+              <Users className="w-12 h-12 text-bliss-600 mx-auto mb-4" />
+              <p className="text-2xl font-bold text-bliss-700">{analytics.communicationChannels.line}</p>
+              <p className="text-bliss-600 font-medium">LINE (ประมาณ)</p>
+              <p className="text-sm text-bliss-500">ตามเบอร์โทร</p>
             </div>
           </div>
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl text-center">
-            <p className="text-blue-700 font-medium">ข้อมูลอีเมลจะเพิ่มเติมเร็วๆ นี้</p>
-            <p className="text-sm text-blue-600">Email analytics coming soon</p>
+          <div className="mt-6 p-4 bg-bliss-50 rounded-xl text-center">
+            <p className="text-bliss-700 font-medium">ข้อมูลอีเมลจะเพิ่มเติมเร็วๆ นี้</p>
+            <p className="text-sm text-bliss-600">Email analytics coming soon</p>
           </div>
         </div>
       </div>
 
       {/* Loyalty Points Distribution - Real Data */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-lg">
-        <div className="p-6 border-b border-stone-200">
-          <h3 className="text-xl font-bold text-stone-900 flex items-center gap-2">
-            <Target className="w-6 h-6 text-amber-500" />
+      <div className="bg-white rounded-2xl border border-bliss-200 shadow-lg">
+        <div className="p-6 border-b border-bliss-200">
+          <h3 className="text-xl font-bold text-bliss-900 flex items-center gap-2">
+            <Target className="w-6 h-6 text-bliss-500" />
             การแจกแจงแต้มสะสม
           </h3>
-          <p className="text-stone-600">Loyalty Points Distribution (คำนวณจากยอดใช้จ่าย: ฿100 = 1 แต้ม)</p>
+          <p className="text-bliss-600">Loyalty Points Distribution (คำนวณจากยอดใช้จ่าย: ฿100 = 1 แต้ม)</p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {analytics.loyaltyPointsDistribution.map((range, index) => {
               const colors = [
-                'from-stone-400 to-stone-500',   // 0 แต้ม
-                'from-stone-500 to-stone-600',   // 1-50 แต้ม
-                'from-amber-500 to-amber-600',   // 51-100 แต้ม
-                'from-amber-600 to-amber-700',   // 101-200 แต้ม
-                'from-amber-700 to-amber-800'    // 201+ แต้ม
+                'from-bliss-400 to-bliss-500',   // 0 แต้ม
+                'from-bliss-500 to-bliss-600',   // 1-50 แต้ม
+                'from-bliss-500 to-bliss-600',   // 51-100 แต้ม
+                'from-bliss-600 to-bliss-700',   // 101-200 แต้ม
+                'from-bliss-700 to-bliss-800'    // 201+ แต้ม
               ]
               return (
                 <div key={range.range} className={`bg-gradient-to-r ${colors[index]} rounded-xl p-4 text-white text-center`}>
@@ -1023,12 +1027,12 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
             })}
           </div>
 
-          <div className="mt-6 p-4 bg-amber-50 rounded-xl">
+          <div className="mt-6 p-4 bg-bliss-50 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-amber-600" />
-              <h4 className="font-semibold text-amber-900">วิธีการคำนวณแต้ม</h4>
+              <Target className="w-5 h-5 text-bliss-600" />
+              <h4 className="font-semibold text-bliss-900">วิธีการคำนวณแต้ม</h4>
             </div>
-            <div className="text-sm text-amber-700 space-y-1">
+            <div className="text-sm text-bliss-700 space-y-1">
               <p>• ทุก ฿100 ที่ใช้จ่าย = 1 แต้ม</p>
               <p>• คำนวณจากยอดใช้จ่ายทั้งหมดของลูกค้า (total_spent)</p>
               <p>• แต้มจะสะสมตามการใช้บริการจริง</p>
@@ -1037,20 +1041,20 @@ function CustomerSection({ selectedPeriod }: CustomerSectionProps) {
 
           {/* Top Point Earners */}
           <div className="mt-6">
-            <h4 className="font-semibold text-stone-900 mb-4">ลูกค้าที่มีแต้มสะสมสูงสุด Top 5</h4>
+            <h4 className="font-semibold text-bliss-900 mb-4">ลูกค้าที่มีแต้มสะสมสูงสุด Top 5</h4>
             <div className="space-y-2">
               {analytics.loyaltyPointsDistribution
                 .filter(range => range.count > 0 && range.range !== '0 แต้ม')
                 .slice(0, 5)
                 .map((range, index) => (
-                  <div key={range.range} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+                  <div key={range.range} className="flex items-center justify-between p-3 bg-bliss-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-stone-500 w-6">#{index + 1}</span>
+                      <span className="text-sm font-bold text-bliss-500 w-6">#{index + 1}</span>
                       <span className="font-medium">{range.range}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-bold text-amber-600">{range.count} คน</span>
-                      <span className="text-stone-500 ml-2">({formatPercentage(range.percentage)})</span>
+                      <span className="font-bold text-bliss-600">{range.count} คน</span>
+                      <span className="text-bliss-500 ml-2">({formatPercentage(range.percentage)})</span>
                     </div>
                   </div>
                 ))

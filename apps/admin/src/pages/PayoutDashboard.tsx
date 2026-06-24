@@ -41,13 +41,13 @@ function formatDate(dateStr: string): string {
 
 function statusLabel(status: string): { text: string; color: string } {
   switch (status) {
-    case 'pending': return { text: 'รอจ่าย', color: 'bg-amber-100 text-amber-800' }
-    case 'processing': return { text: 'กำลังโอน', color: 'bg-blue-100 text-blue-800' }
+    case 'pending': return { text: 'รอจ่าย', color: 'bg-bliss-100 text-bliss-800' }
+    case 'processing': return { text: 'กำลังโอน', color: 'bg-bliss-100 text-bliss-800' }
     case 'completed': return { text: 'จ่ายแล้ว', color: 'bg-green-100 text-green-800' }
     case 'failed': return { text: 'ล้มเหลว', color: 'bg-red-100 text-red-800' }
     case 'carry_forward': return { text: 'ยกยอด', color: 'bg-orange-100 text-orange-800' }
-    case 'not_due': return { text: 'ยังไม่ถึงรอบ', color: 'bg-gray-100 text-gray-500' }
-    default: return { text: status, color: 'bg-gray-100 text-gray-800' }
+    case 'not_due': return { text: 'ยังไม่ถึงรอบ', color: 'bg-bliss-100 text-bliss-500' }
+    default: return { text: status, color: 'bg-bliss-100 text-bliss-800' }
   }
 }
 
@@ -154,6 +154,21 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
         .eq('notification_type', 'payout_carry_forward')
         .eq('period_month', currentPeriodMonth)
 
+      // Carry-forward staff may not have a payout row → ensure their name/schedule
+      // are in the maps too, otherwise they'd fall back to 'Unknown' / 'monthly'.
+      const cfStaffIds = [...new Set((carryForwardRecords || []).map(cf => cf.staff_id))]
+        .filter(sid => !scheduleMap.has(sid))
+      if (cfStaffIds.length > 0) {
+        const { data: cfStaff } = await supabase
+          .from('staff')
+          .select('profile_id, name_th, payout_schedule')
+          .in('profile_id', cfStaffIds)
+        cfStaff?.forEach(s => {
+          if (!nameMap.has(s.profile_id)) nameMap.set(s.profile_id, s.name_th)
+          if (!scheduleMap.has(s.profile_id)) scheduleMap.set(s.profile_id, s.payout_schedule || 'monthly')
+        })
+      }
+
       const carryForwardRows: PayoutRow[] = (carryForwardRecords || []).map(cf => ({
         id: `cf-${cf.staff_id}-${cf.payout_round}`,
         staff_id: cf.staff_id,
@@ -216,13 +231,14 @@ function usePayoutDashboard(filters: { round: string; status: string; month: str
 
       // Stats
       const pendingPayouts = enrichedPayouts.filter(p => p.status === 'pending')
-      const totalStaff = new Set([...enrichedPayouts.map(p => p.staff_id), ...carryForwardRows.map(p => p.staff_id), ...notDueRows.map(p => p.staff_id)]).size
+      // Distinct staff who currently have at least one unpaid (pending) payout
+      const pendingStaffCount = new Set(pendingPayouts.map(p => p.staff_id)).size
       const pendingAmount = pendingPayouts.reduce((sum, p) => sum + Number(p.net_amount), 0)
 
       return {
         payouts: allRows,
         stats: {
-          totalStaff,
+          pendingStaffCount,
           pendingCount: pendingPayouts.length,
           pendingAmount,
           carryForwards: carryForwardRows.length,
@@ -298,38 +314,38 @@ function BatchPayoutModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">จ่ายเงิน Staff</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-bold text-bliss-900">จ่ายเงิน Staff</h3>
+          <button onClick={onClose} className="text-bliss-400 hover:text-bliss-600">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="bg-amber-50 rounded-xl p-4 mb-4">
+        <div className="bg-bliss-50 rounded-xl p-4 mb-4">
           <div className="flex justify-between mb-2">
-            <span className="text-sm text-amber-700">จำนวน Staff</span>
-            <span className="font-bold text-amber-900">{selectedPayouts.length} คน</span>
+            <span className="text-sm text-bliss-700">จำนวน Staff</span>
+            <span className="font-bold text-bliss-900">{selectedPayouts.length} คน</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-amber-700">ยอดรวม</span>
-            <span className="font-bold text-amber-900 text-lg">{formatCurrency(totalAmount)}</span>
+            <span className="text-sm text-bliss-700">ยอดรวม</span>
+            <span className="font-bold text-bliss-900 text-lg">{formatCurrency(totalAmount)}</span>
           </div>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Transfer Reference</label>
+          <label className="block text-sm font-medium text-bliss-700 mb-1">Transfer Reference</label>
           <input
             type="text"
             value={transferRef}
             onChange={e => setTransferRef(e.target.value)}
             placeholder="เลขอ้างอิงการโอน"
-            className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-500"
           />
         </div>
 
         <div className="max-h-40 overflow-y-auto mb-4">
           {selectedPayouts.map(p => (
-            <div key={p.id} className="flex justify-between py-1.5 text-sm border-b border-gray-100">
-              <span className="text-gray-700">{p.staff_name}</span>
+            <div key={p.id} className="flex justify-between py-1.5 text-sm border-b border-bliss-100">
+              <span className="text-bliss-700">{p.staff_name}</span>
               <span className="font-medium">{formatCurrency(Number(p.net_amount))}</span>
             </div>
           ))}
@@ -338,7 +354,7 @@ function BatchPayoutModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50"
+            className="flex-1 px-4 py-2.5 border border-bliss-300 rounded-xl text-bliss-700 font-medium hover:bg-bliss-50"
           >
             ยกเลิก
           </button>
@@ -445,36 +461,36 @@ export default function PayoutDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Wallet className="w-7 h-7 text-amber-600" />
+        <h1 className="text-2xl font-bold text-bliss-900 flex items-center gap-2">
+          <Wallet className="w-7 h-7 text-bliss-600" />
           รอบจ่ายเงิน Staff
         </h1>
-        <p className="text-gray-500 mt-1">Staff Payout Management</p>
+        <p className="text-bliss-500 mt-1">Staff Payout Management</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-bliss-200">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('automated')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'automated'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-bliss-600 text-bliss-700 font-semibold'
+                : 'border-transparent text-bliss-400 hover:text-bliss-700 hover:border-bliss-300'
             }`}
           >
-            ระบบอัตโนมัติ
+            รอบจ่ายเงินทั้งหมด
           </button>
           <button
             onClick={() => setActiveTab('manual')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'manual'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-bliss-600 text-bliss-700 font-semibold'
+                : 'border-transparent text-bliss-400 hover:text-bliss-700 hover:border-bliss-300'
             }`}
           >
             <Settings className="w-4 h-4 inline mr-2" />
-            จัดการ Manual
+            รายการจ่ายเงินพนักงาน
           </button>
         </nav>
       </div>
@@ -490,47 +506,47 @@ export default function PayoutDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalStaff}</p>
-            <p className="text-sm text-gray-500">Staff ทั้งหมด</p>
+            <p className="text-2xl font-bold text-bliss-900">{stats.pendingStaffCount}</p>
+            <p className="text-sm text-bliss-500">ค้างจ่าย (คน)</p>
           </div>
           <div className="bg-white rounded-xl shadow p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-amber-600" />
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex items-center justify-center">
+                <Clock className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.pendingCount}</p>
-            <p className="text-sm text-gray-500">ครบกำหนดรอบนี้</p>
+            <p className="text-2xl font-bold text-bliss-900">{stats.pendingCount}</p>
+            <p className="text-sm text-bliss-500">รายการค้างจ่าย</p>
           </div>
           <div className="bg-white rounded-xl shadow p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Banknote className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex items-center justify-center">
+                <Banknote className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.pendingAmount)}</p>
-            <p className="text-sm text-gray-500">ยอดรวมรอจ่าย</p>
+            <p className="text-2xl font-bold text-bliss-900">{formatCurrency(stats.pendingAmount)}</p>
+            <p className="text-sm text-bliss-500">ยอดค้างจ่ายรวม</p>
           </div>
           <div className="bg-white rounded-xl shadow p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-orange-600" />
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-500 to-bliss-600 rounded-xl flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.carryForwards}</p>
-            <p className="text-sm text-gray-500">ยกยอด (ต่ำกว่าขั้นต่ำ)</p>
+            <p className="text-2xl font-bold text-bliss-900">{stats.carryForwards}</p>
+            <p className="text-sm text-bliss-500">ยกยอด (ต่ำกว่าขั้นต่ำ)</p>
           </div>
         </div>
       )}
 
       {/* Enhanced Payout Schedule Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-2">
-        <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
-        <span className="text-sm text-blue-800">
+      <div className="bg-bliss-50 border border-bliss-200 rounded-xl px-4 py-3 flex items-center gap-2">
+        <Wallet className="w-4 h-4 text-bliss-600 shrink-0" />
+        <span className="text-sm text-bliss-800">
           <span className="font-medium">ระบบรอบการจ่าย:</span> {payoutScheduleSummary}
         </span>
       </div>
@@ -538,11 +554,11 @@ export default function PayoutDashboard() {
       {/* Filters + Actions */}
       <div className="bg-white rounded-xl shadow p-4">
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <Filter className="w-4 h-4 text-gray-400" />
+          <Filter className="w-4 h-4 text-bliss-400" />
           <select
             value={filters.round}
             onChange={e => setFilters(f => ({ ...f, round: e.target.value }))}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-1.5 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
           >
             <option value="all">ทุกรอบ</option>
             <option value="mid-month">งวดแรก</option>
@@ -551,7 +567,7 @@ export default function PayoutDashboard() {
           <select
             value={filters.status}
             onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-1.5 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
           >
             <option value="all">ทุกสถานะ</option>
             <option value="pending">รอจ่าย</option>
@@ -565,7 +581,7 @@ export default function PayoutDashboard() {
             type="month"
             value={filters.month}
             onChange={e => setFilters(f => ({ ...f, month: e.target.value }))}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-1.5 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
           />
 
           <div className="ml-auto flex gap-2">
@@ -580,7 +596,7 @@ export default function PayoutDashboard() {
             )}
             <button
               onClick={() => exportCSV(payouts)}
-              className="px-4 py-1.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-1.5"
+              className="px-4 py-1.5 border border-bliss-300 rounded-lg text-sm font-medium hover:bg-bliss-50 flex items-center gap-1.5"
             >
               <Download className="w-4 h-4" />
               Export CSV
@@ -591,10 +607,10 @@ export default function PayoutDashboard() {
         {/* Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-bliss-400" />
           </div>
         ) : payouts.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-bliss-400">
             <Wallet className="w-12 h-12 mx-auto mb-3 opacity-40" />
             <p>ไม่มีรายการ</p>
           </div>
@@ -602,17 +618,16 @@ export default function PayoutDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-gray-500">
+                <tr className="border-b border-bliss-200 text-left text-bliss-500">
                   <th className="py-3 px-2 w-10">
                     <input
                       type="checkbox"
                       checked={selectedIds.size > 0 && selectedIds.size === payouts.filter(p => p.status === 'pending').length}
                       onChange={toggleSelectAll}
-                      className="rounded border-gray-300"
+                      className="rounded border-bliss-300"
                     />
                   </th>
                   <th className="py-3 px-2">ชื่อ</th>
-                  <th className="py-3 px-2">รอบ</th>
                   <th className="py-3 px-2">ช่วงเวลา</th>
                   <th className="py-3 px-2 text-right">งาน</th>
                   <th className="py-3 px-2 text-right">ยอด</th>
@@ -624,22 +639,19 @@ export default function PayoutDashboard() {
                 {payouts.map(p => {
                   const st = statusLabel(p.status)
                   return (
-                    <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={p.id} className="border-b border-bliss-100 hover:bg-bliss-50">
                       <td className="py-3 px-2">
                         {p.status === 'pending' && (
                           <input
                             type="checkbox"
                             checked={selectedIds.has(p.id)}
                             onChange={() => toggleSelect(p.id)}
-                            className="rounded border-gray-300"
+                            className="rounded border-bliss-300"
                           />
                         )}
                       </td>
                       <td className="py-3 px-2">
-                        <div className="font-medium text-gray-900">{p.staff_name}</div>
-                        <div className="text-xs text-gray-400">
-                          {p.payout_schedule === 'bi-monthly' ? 'ครึ่งเดือน' : 'รายเดือน'}
-                        </div>
+                        <div className="font-medium text-bliss-900">{p.staff_name}</div>
                         {p.has_bank === false && (
                           <div className="text-xs text-red-500 flex items-center gap-1 mt-0.5">
                             <AlertCircle className="w-3 h-3" />
@@ -647,16 +659,15 @@ export default function PayoutDashboard() {
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-2 text-gray-600">{roundLabel(p.payout_round)}</td>
-                      <td className="py-3 px-2 text-gray-600 text-xs">
-                        {p.period_start ? `${formatDate(p.period_start)} - ${formatDate(p.period_end)}` : <span className="text-gray-300">—</span>}
+                      <td className="py-3 px-2 text-bliss-600 text-xs">
+                        {p.period_start ? `${formatDate(p.period_start)} - ${formatDate(p.period_end)}` : <span className="text-bliss-300">—</span>}
                       </td>
-                      <td className="py-3 px-2 text-right text-gray-700">
-                        {p.status === 'not_due' || p.status === 'carry_forward' ? <span className="text-gray-300">—</span> : p.total_jobs}
+                      <td className="py-3 px-2 text-right text-bliss-700">
+                        {p.status === 'not_due' || p.status === 'carry_forward' ? <span className="text-bliss-300">—</span> : p.total_jobs}
                       </td>
-                      <td className="py-3 px-2 text-right font-semibold text-gray-900">
+                      <td className="py-3 px-2 text-right font-semibold text-bliss-900">
                         {p.status === 'not_due' ? (
-                          <span className="text-gray-300">—</span>
+                          <span className="text-bliss-300">—</span>
                         ) : p.status === 'carry_forward' ? (
                           <span className="text-xs text-orange-500 font-normal">ต่ำกว่าขั้นต่ำ</span>
                         ) : (
@@ -684,9 +695,9 @@ export default function PayoutDashboard() {
                             จ่าย
                           </button>
                         ) : p.transfer_reference ? (
-                          <span className="text-xs text-gray-400">Ref: {p.transfer_reference}</span>
+                          <span className="text-xs text-bliss-400">Ref: {p.transfer_reference}</span>
                         ) : (
-                          <span className="text-xs text-gray-300">-</span>
+                          <span className="text-xs text-bliss-300">-</span>
                         )}
                       </td>
                     </tr>

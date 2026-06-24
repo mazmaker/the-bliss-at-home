@@ -195,26 +195,28 @@ export async function getRecentBookings(limit: number = 10): Promise<RecentBooki
 }
 
 export async function getPendingStaffApplications(limit: number = 5): Promise<PendingStaffApplication[]> {
+  // Staff awaiting approval live in the `staff` table with status = 'pending'
+  // (self-apply `staff_applications` flow is unused — admin adds staff directly).
   const { data, error } = await supabase
-    .from('staff_applications')
-    .select('id, full_name, phone_number, skills, experience_years, status, application_date')
+    .from('staff')
+    .select('id, name_th, name_en, phone, specializations, status, created_at')
     .eq('status', 'pending')
-    .order('application_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error) {
-    console.error('Error fetching pending staff applications:', error)
+    console.error('Error fetching pending staff:', error)
     return []
   }
 
-  return (data || []).map(a => ({
-    id: a.id,
-    full_name: a.full_name || '',
-    phone_number: a.phone_number,
-    skills: a.skills || [],
-    experience_years: a.experience_years || 0,
-    status: a.status,
-    application_date: a.application_date,
+  return (data || []).map(s => ({
+    id: s.id,
+    full_name: s.name_th || s.name_en || '',
+    phone_number: s.phone || null,
+    skills: s.specializations || [],
+    experience_years: 0,
+    status: s.status || 'pending',
+    application_date: s.created_at || '',
   }))
 }
 

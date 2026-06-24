@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, DollarSign, AlertCircle, Plus, Loader2, CheckCircle, Calendar, Settings } from 'lucide-react'
+import { X, Wallet, AlertCircle, Plus, Loader2, CheckCircle, Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
@@ -27,10 +27,10 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
   const [isCreating, setIsCreating] = useState(false)
   const [unpaidJobs, setUnpaidJobs] = useState<UnpaidJob[]>([])
   const [profileId, setProfileId] = useState<string | null>(null)
-  const [currentStep, setCurrentStep] = useState<'schedule' | 'jobs'>('schedule')
   const [selectedSchedule, setSelectedSchedule] = useState<PayoutSchedule>('monthly')
   const [customInterval, setCustomInterval] = useState(30)
   const [currentPayoutSchedule, setCurrentPayoutSchedule] = useState<PayoutSchedule>('bi_monthly')
+  const [hasBankAccount, setHasBankAccount] = useState(true)
   const queryClient = useQueryClient()
 
   // Fetch unpaid jobs on mount
@@ -58,6 +58,15 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
       setCurrentPayoutSchedule(staffData.payout_schedule || 'bi_monthly')
       setSelectedSchedule(staffData.payout_schedule || 'monthly')
       setCustomInterval(staffData.custom_payout_interval || 30)
+
+      // Check whether this staff has a bank account (bank_accounts.staff_id = staff.id).
+      // Missing bank account does NOT block creating the payout — we only warn.
+      const { data: bankAccounts } = await supabase
+        .from('bank_accounts')
+        .select('id')
+        .eq('staff_id', staffId)
+        .limit(1)
+      setHasBankAccount((bankAccounts?.length || 0) > 0)
 
       // Get all job_ids already in payout_jobs
       const { data: paidJobIds } = await supabase
@@ -166,6 +175,11 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
 
       toast.success(`อัปเดตรอบการจ่ายเป็น "${scheduleNames[selectedSchedule]}" และสร้างรอบจ่ายเงินสำเร็จ (${totalJobs} งาน, ฿${grossEarnings.toLocaleString()})`)
 
+      // Reminder: bank account still required before the actual transfer.
+      if (!hasBankAccount) {
+        toast('อย่าลืมเพิ่มบัญชีธนาคารของพนักงานก่อนโอนเงินจริง', { icon: '⚠️', duration: 6000 })
+      }
+
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['staff', staffId, 'payouts'] })
       queryClient.invalidateQueries({ queryKey: ['staff', staffId, 'earnings', 'summary'] })
@@ -186,134 +200,82 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-green-50 to-emerald-50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              {currentStep === 'schedule' ? (
-                <Settings className="w-6 h-6 text-green-600" />
-              ) : (
-                <Plus className="w-6 h-6 text-green-600" />
-              )}
+        <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex-shrink-0">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                <Plus className="w-5 h-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-white leading-tight">สร้างรอบจ่ายเงิน</h2>
+                <p className="text-xs text-bliss-200 truncate">{staffName}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-stone-900">
-                {currentStep === 'schedule' ? 'กำหนดรอบการจ่ายเงิน' : 'สร้างรอบจ่ายเงิน'}
-              </h2>
-              <p className="text-sm text-stone-600 mt-1">{staffName}</p>
-            </div>
-          </div>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 mr-8">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-              currentStep === 'schedule' ? 'bg-green-600 text-white' : 'bg-green-200 text-green-800'
-            }`}>
-              1
-            </div>
-            <div className="w-8 h-px bg-stone-300"></div>
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-              currentStep === 'jobs' ? 'bg-green-600 text-white' : 'bg-stone-200 text-stone-500'
-            }`}>
-              2
-            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition flex-shrink-0"
+              disabled={isCreating}
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/50 rounded-lg transition"
-            disabled={isCreating}
-          >
-            <X className="w-5 h-5 text-stone-500" />
-          </button>
         </div>
 
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-stone-400 animate-spin" />
-              <span className="ml-3 text-stone-500">กำลังโหลดข้อมูล...</span>
-            </div>
-          ) : currentStep === 'schedule' ? (
-            <div className="space-y-6">
-              {/* Current Schedule Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-blue-600 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-stone-900 mb-1">รอบการจ่ายปัจจุบัน</h3>
-                    <p className="text-sm text-stone-600">
-                      {currentPayoutSchedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
-                      {currentPayoutSchedule === 'monthly' && 'รายเดือน (30 วัน)'}
-                      {currentPayoutSchedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
-                      {currentPayoutSchedule === 'custom_days' && `กำหนดเอง (${customInterval} วัน)`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Schedule Selector */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-stone-900">เลือกรอบการจ่ายเงินใหม่</h3>
-
-                {/* Current Selection Indicator */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-green-800">
-                      ตอนนี้ตั้งค่าเลือก:
-                      {selectedSchedule === 'weekly' && ' 7 วัน (ทุกสัปดาห์)'}
-                      {selectedSchedule === 'monthly' && ' 30 วัน (รายเดือน)'}
-                      {selectedSchedule === 'bi_monthly' && ' กลางเดือน + สิ้นเดือน'}
-                      {selectedSchedule === 'custom_days' && ` ${customInterval} วัน (กำหนดเอง)`}
-                    </span>
-                  </div>
-                </div>
-
-                <PayoutScheduleSelector
-                  value={selectedSchedule}
-                  customInterval={customInterval}
-                  onScheduleChange={setSelectedSchedule}
-                  onCustomIntervalChange={setCustomInterval}
-                  showNextPayoutPreview={true}
-                />
-              </div>
-
-              {/* Info */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-amber-800">
-                  <p>
-                    การเปลี่ยนแปลงรอบการจ่ายเงินจะมีผลตั้งแต่การสร้างรอบนี้เป็นต้นไป
-                    ระบบจะคำนวณวันจ่ายครั้งถัดไปอัตโนมัติ
-                  </p>
-                </div>
-              </div>
+              <Loader2 className="w-8 h-8 text-bliss-400 animate-spin" />
+              <span className="ml-3 text-bliss-500">กำลังโหลดข้อมูล...</span>
             </div>
           ) : unpaidJobs.length === 0 ? (
-            <div className="text-center py-12">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-stone-900 mb-2">ไม่มีงานค้างจ่าย</h3>
-              <p className="text-sm text-stone-600">งานที่เสร็จสิ้นทั้งหมดถูกรวมในรอบจ่ายเงินแล้ว</p>
+            <div className="space-y-4">
+              {/* Bank account warning still shown even when there are no pending jobs */}
+              {!hasBankAccount && (
+                <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 flex items-start gap-3 text-left">
+                  <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-orange-800">
+                    <p className="font-semibold mb-0.5">พนักงานยังไม่มีบัญชีธนาคาร</p>
+                    <p>กรุณาเพิ่มบัญชีธนาคารในหน้าข้อมูลพนักงานก่อน จึงจะโอนเงินให้พนักงานคนนี้ได้</p>
+                  </div>
+                </div>
+              )}
+              <div className="text-center py-12">
+                <CheckCircle className="w-12 h-12 text-bliss-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-bliss-900 mb-2">ไม่มีงานค้างจ่าย</h3>
+                <p className="text-sm text-bliss-600">งานที่เสร็จสิ้นทั้งหมดถูกรวมในรอบจ่ายเงินแล้ว</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Bank account warning (does not block creating the payout) */}
+              {!hasBankAccount && (
+                <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-orange-800">
+                    <p className="font-semibold mb-0.5">พนักงานยังไม่มีบัญชีธนาคาร</p>
+                    <p>สามารถสร้างรอบจ่ายได้ตามปกติ แต่ <span className="font-medium">ต้องเพิ่มบัญชีธนาคารก่อนถึงจะโอนเงินจริงได้</span> — กรุณาไปเพิ่มบัญชีในหน้าข้อมูลพนักงาน (แท็บข้อมูล/บัญชีธนาคาร) ก่อนกด "ดำเนินการจ่ายเงิน"</p>
+                  </div>
+                </div>
+              )}
+
               {/* Schedule Summary */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-bliss-50 to-bliss-50 border border-bliss-200 rounded-xl p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    <Settings className="w-5 h-5 text-green-600" />
+                    <div className="w-3 h-3 bg-bliss-500 rounded-full animate-pulse"></div>
+                    <Settings className="w-5 h-5 text-bliss-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-green-900 mb-1">รอบการจ่ายที่เลือกแล้ว</h3>
-                    <p className="text-sm text-green-700 font-medium">
+                    <h3 className="font-semibold text-bliss-900 mb-1">รอบการจ่ายที่เลือกแล้ว</h3>
+                    <p className="text-sm text-bliss-700 font-medium">
                       • {selectedSchedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
                       • {selectedSchedule === 'monthly' && 'รายเดือน (30 วัน)'}
                       • {selectedSchedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
                       • {selectedSchedule === 'custom_days' && `กำหนดเอง (${customInterval} วัน)`}
                     </p>
-                    <p className="text-xs text-green-600 mt-1">
+                    <p className="text-xs text-bliss-600 mt-1">
                       ระบบจะอัปเดตรอบการจ่ายนี้ให้พนักงานคนนี้
                     </p>
                   </div>
@@ -321,30 +283,30 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
               </div>
 
               {/* Summary */}
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <DollarSign className="w-5 h-5 text-green-600" />
+                  <div className="p-2 bg-bliss-100 rounded-lg">
+                    <Wallet className="w-5 h-5 text-bliss-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-stone-900 mb-2">สรุปรอบจ่ายเงินใหม่</h3>
+                    <h3 className="font-semibold text-bliss-900 mb-2">สรุปรอบจ่ายเงินใหม่</h3>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-stone-600">จำนวนงาน:</span>
-                        <span className="font-medium text-stone-900">{unpaidJobs.length} งาน</span>
+                        <span className="text-bliss-600">จำนวนงาน:</span>
+                        <span className="font-medium text-bliss-900">{unpaidJobs.length} งาน</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-stone-600">ช่วงเวลา:</span>
-                        <span className="font-medium text-stone-900">
+                        <span className="text-bliss-600">ช่วงเวลา:</span>
+                        <span className="font-medium text-bliss-900">
                           {new Date(unpaidJobs[unpaidJobs.length - 1].scheduled_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
                           {' - '}
                           {new Date(unpaidJobs[0].scheduled_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
-                      <div className="border-t border-green-300 pt-2 mt-2">
+                      <div className="border-t border-bliss-300 pt-2 mt-2">
                         <div className="flex justify-between">
-                          <span className="font-semibold text-stone-900">ยอดรวมทั้งหมด:</span>
-                          <span className="font-bold text-xl text-green-700">฿{totalEarnings.toLocaleString()}</span>
+                          <span className="font-semibold text-bliss-900">ยอดรวมทั้งหมด:</span>
+                          <span className="font-bold text-xl text-bliss-700">฿{totalEarnings.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -354,27 +316,27 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
 
               {/* Jobs List */}
               <div>
-                <h4 className="text-sm font-semibold text-stone-700 mb-2">รายการงานที่รวมในรอบนี้ ({unpaidJobs.length} งาน)</h4>
-                <div className="border border-stone-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                <h4 className="text-sm font-semibold text-bliss-700 mb-2">รายการงานที่รวมในรอบนี้ ({unpaidJobs.length} งาน)</h4>
+                <div className="border border-bliss-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-stone-50 sticky top-0">
+                    <thead className="bg-bliss-50 sticky top-0">
                       <tr>
-                        <th className="py-2 px-3 text-left text-stone-600 font-medium">วันที่</th>
-                        <th className="py-2 px-3 text-left text-stone-600 font-medium">บริการ</th>
-                        <th className="py-2 px-3 text-right text-stone-600 font-medium">รายได้</th>
+                        <th className="py-2 px-3 text-left text-bliss-600 font-medium">วันที่</th>
+                        <th className="py-2 px-3 text-left text-bliss-600 font-medium">บริการ</th>
+                        <th className="py-2 px-3 text-right text-bliss-600 font-medium">รายได้</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-bliss-100">
                       {unpaidJobs.map((job) => (
-                        <tr key={job.id} className="hover:bg-stone-50">
-                          <td className="py-2 px-3 text-stone-600">
+                        <tr key={job.id} className="hover:bg-bliss-50">
+                          <td className="py-2 px-3 text-bliss-600">
                             {new Date(job.scheduled_date).toLocaleDateString('th-TH', {
                               day: 'numeric',
                               month: 'short',
                             })}
                           </td>
-                          <td className="py-2 px-3 text-stone-900">{job.service_name}</td>
-                          <td className="py-2 px-3 text-right font-medium text-green-700">
+                          <td className="py-2 px-3 text-bliss-900">{job.service_name}</td>
+                          <td className="py-2 px-3 text-right font-medium text-bliss-700">
                             ฿{Number(job.total_staff_earnings ?? job.staff_earnings ?? 0).toLocaleString()}
                           </td>
                         </tr>
@@ -382,18 +344,18 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-b-xl p-3">
+                <div className="bg-bliss-50 border border-bliss-200 rounded-b-xl p-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-stone-900">ยอดรวมทั้งหมด:</span>
-                    <span className="font-bold text-xl text-green-700">฿{totalEarnings.toLocaleString()}</span>
+                    <span className="font-semibold text-bliss-900">ยอดรวมทั้งหมด:</span>
+                    <span className="font-bold text-xl text-bliss-700">฿{totalEarnings.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
               {/* Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800">
+              <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3 flex gap-2">
+                <AlertCircle className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-bliss-800">
                   <p>
                     ระบบจะอัปเดตรอบการจ่ายเงินของพนักงานและสร้างรอบจ่ายเงินสถานะ "รอดำเนินการ"
                     จากนั้นสามารถกดปุ่ม "ดำเนินการจ่ายเงิน" เพื่อบันทึกการโอนเงินจริง
@@ -405,40 +367,21 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 p-6 border-t border-stone-200 bg-stone-50 flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 p-6 border-t border-bliss-200 bg-bliss-50 flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
+            className="px-4 py-2 bg-white text-bliss-700 border border-bliss-300 rounded-lg hover:bg-bliss-100 transition"
             disabled={isCreating}
           >
             ยกเลิก
           </button>
 
           <div className="flex items-center gap-3">
-            {currentStep === 'jobs' && (
-              <button
-                onClick={() => setCurrentStep('schedule')}
-                className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
-                disabled={isCreating}
-              >
-                ย้อนกลับ
-              </button>
-            )}
-
-            {currentStep === 'schedule' ? (
-              <button
-                onClick={() => setCurrentStep('jobs')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-                disabled={isLoading}
-              >
-                <Calendar className="w-4 h-4" />
-                ถัดไป: ดูรายการงาน
-              </button>
-            ) : unpaidJobs.length > 0 ? (
+            {unpaidJobs.length > 0 ? (
               <button
                 onClick={handleCreatePayout}
                 disabled={isCreating}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl hover:from-bliss-700 hover:to-bliss-800 shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isCreating ? (
                   <>
@@ -455,7 +398,7 @@ export function CreatePayoutModal({ staffId, staffName, onClose }: CreatePayoutM
             ) : (
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition"
+                className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
               >
                 ปิด
               </button>

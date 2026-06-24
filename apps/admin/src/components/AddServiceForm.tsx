@@ -237,7 +237,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Thai Name */}
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <Globe className="inline w-4 h-4 mr-1" />
             ชื่อบริการ (ไทย) *
           </label>
@@ -245,8 +245,8 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             type="text"
             value={formData.name_th}
             onChange={(e) => setFormData(prev => ({ ...prev, name_th: e.target.value }))}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
-              errors.name_th ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent ${
+              errors.name_th ? 'border-red-500' : 'border-bliss-300'
             }`}
             placeholder="เช่น นวดไทยแบบดั้งเดิม"
           />
@@ -260,7 +260,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
 
         {/* English Name */}
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <Globe className="inline w-4 h-4 mr-1" />
             Service Name (English) *
           </label>
@@ -268,8 +268,8 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             type="text"
             value={formData.name_en}
             onChange={(e) => setFormData(prev => ({ ...prev, name_en: e.target.value }))}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
-              errors.name_en ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent ${
+              errors.name_en ? 'border-red-500' : 'border-bliss-300'
             }`}
             placeholder="e.g. Traditional Thai Massage"
           />
@@ -284,7 +284,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
 
       {/* Category */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           <Tag className="inline w-4 h-4 mr-1" />
           หมวดหมู่บริการ *
         </label>
@@ -298,13 +298,13 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                 onClick={() => setFormData(prev => ({ ...prev, category: category.id as any }))}
                 className={`p-4 border-2 rounded-xl transition-all ${
                   formData.category === category.id
-                    ? 'border-amber-500 bg-amber-50 text-amber-700'
-                    : 'border-stone-200 hover:border-stone-300'
+                    ? 'border-bliss-500 bg-bliss-50 text-bliss-700'
+                    : 'border-bliss-200 hover:border-bliss-300'
                 }`}
               >
                 <Icon className="w-6 h-6 mx-auto mb-2" />
                 <div className="text-sm font-medium">{category.name}</div>
-                <div className="text-xs text-stone-500">{category.nameEn}</div>
+                <div className="text-xs text-bliss-500">{category.nameEn}</div>
               </button>
             )
           })}
@@ -314,7 +314,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
       {/* Duration and Pricing */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <Clock className="inline w-4 h-4 mr-1" />
             ระยะเวลา (นาที) *
           </label>
@@ -325,8 +325,8 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             step="15"
             value={formData.duration}
             onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
-              errors.duration ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent ${
+              errors.duration ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.duration && (
@@ -338,7 +338,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <DollarSign className="inline w-4 h-4 mr-1" />
             ราคาปกติ (บาท) *
           </label>
@@ -348,8 +348,8 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             step="50"
             value={formData.base_price}
             onChange={(e) => setFormData(prev => ({ ...prev, base_price: parseFloat(e.target.value) }))}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
-              errors.base_price ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent ${
+              errors.base_price ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.base_price && (
@@ -361,7 +361,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <DollarSign className="inline w-4 h-4 mr-1" />
             ราคาโรงแรม (บาท) *
           </label>
@@ -371,8 +371,8 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             step="50"
             value={formData.hotel_price}
             onChange={(e) => setFormData(prev => ({ ...prev, hotel_price: parseFloat(e.target.value) }))}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
-              errors.hotel_price ? 'border-red-500' : 'border-stone-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent ${
+              errors.hotel_price ? 'border-red-500' : 'border-bliss-300'
             }`}
           />
           {errors.hotel_price && (
@@ -397,26 +397,26 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
       {/* Descriptions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             คำอธิบายบริการ (ไทย)
           </label>
           <textarea
             value={formData.description_th}
             onChange={(e) => setFormData(prev => ({ ...prev, description_th: e.target.value }))}
             rows={4}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             placeholder="บรรยายรายละเอียดบริการ ขั้นตอน และประโยชน์..."
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             Service Description (English)
           </label>
           <textarea
             value={formData.description_en}
             onChange={(e) => setFormData(prev => ({ ...prev, description_en: e.target.value }))}
             rows={4}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             placeholder="Describe service details, process, and benefits..."
           />
         </div>
@@ -425,26 +425,26 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
       {/* Benefits */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             ประโยชน์ที่ได้รับ (ไทย)
           </label>
           <textarea
             value={formData.benefits_th}
             onChange={(e) => setFormData(prev => ({ ...prev, benefits_th: e.target.value }))}
             rows={3}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             placeholder="เช่น ผ่อนคลายกล้ามเนื้อ, ลดความเครียด, เพิ่มการไหลเวียนเลือด..."
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             Benefits (English)
           </label>
           <textarea
             value={formData.benefits_en}
             onChange={(e) => setFormData(prev => ({ ...prev, benefits_en: e.target.value }))}
             rows={3}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             placeholder="e.g. Muscle relaxation, stress relief, improved circulation..."
           />
         </div>
@@ -453,26 +453,26 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
       {/* Contraindications */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             ข้อห้าม/ข้อควรระวัง (ไทย)
           </label>
           <textarea
             value={formData.contraindications_th}
             onChange={(e) => setFormData(prev => ({ ...prev, contraindications_th: e.target.value }))}
             rows={3}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             placeholder="เช่น ห้ามในผู้ที่มีแผลเปิด, ผู้ป่วยโรคหัวใจ, หญิงมีครรภ์..."
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             Contraindications (English)
           </label>
           <textarea
             value={formData.contraindications_en}
             onChange={(e) => setFormData(prev => ({ ...prev, contraindications_en: e.target.value }))}
             rows={3}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             placeholder="e.g. Open wounds, heart conditions, pregnancy..."
           />
         </div>
@@ -485,14 +485,14 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
       {/* Staff and Client Requirements */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             <Users className="inline w-4 h-4 mr-1" />
             ระดับทักษะพนักงาน
           </label>
           <select
             value={formData.skill_level_required}
             onChange={(e) => setFormData(prev => ({ ...prev, skill_level_required: e.target.value as any }))}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
           >
             {skillLevels.map(level => (
               <option key={level.id} value={level.id}>
@@ -503,7 +503,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             จำนวนพนักงานขั้นต่ำ
           </label>
           <input
@@ -512,12 +512,12 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             max="5"
             value={formData.min_staff_required}
             onChange={(e) => setFormData(prev => ({ ...prev, min_staff_required: parseInt(e.target.value) }))}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-2">
+          <label className="block text-sm font-medium text-bliss-700 mb-2">
             ลูกค้าสูงสุดต่อรอบ
           </label>
           <input
@@ -526,20 +526,20 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             max="10"
             value={formData.max_clients_per_session}
             onChange={(e) => setFormData(prev => ({ ...prev, max_clients_per_session: parseInt(e.target.value) }))}
-            className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
           />
         </div>
       </div>
 
       {/* Room Requirements */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           <MapPin className="inline w-4 h-4 mr-1" />
           ความต้องการห้อง
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {roomTypes.map(room => (
-            <label key={room} className="flex items-center p-3 border border-stone-200 rounded-lg hover:bg-stone-50 cursor-pointer">
+            <label key={room} className="flex items-center p-3 border border-bliss-200 rounded-lg hover:bg-bliss-50 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.room_requirements.includes(room)}
@@ -551,7 +551,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                       : prev.room_requirements.filter(r => r !== room)
                   }))
                 }}
-                className="w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+                className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-bliss-500"
               />
               <span className="ml-3 text-sm">{room}</span>
             </label>
@@ -561,13 +561,13 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
 
       {/* Equipment Needed */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           <Settings className="inline w-4 h-4 mr-1" />
           อุปกรณ์ที่ต้องใช้
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {equipment.map(item => (
-            <label key={item} className="flex items-center p-3 border border-stone-200 rounded-lg hover:bg-stone-50 cursor-pointer">
+            <label key={item} className="flex items-center p-3 border border-bliss-200 rounded-lg hover:bg-bliss-50 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.equipment_needed.includes(item)}
@@ -579,7 +579,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                       : prev.equipment_needed.filter(eq => eq !== item)
                   }))
                 }}
-                className="w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+                className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-bliss-500"
               />
               <span className="ml-3 text-sm">{item}</span>
             </label>
@@ -593,12 +593,12 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
     <div className="space-y-6">
       {/* Main Image */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           <ImageIcon className="inline w-4 h-4 mr-1" />
           ภาพหลักของบริการ
         </label>
 
-        <div className="border-2 border-dashed border-stone-300 rounded-xl p-6 text-center">
+        <div className="border-2 border-dashed border-bliss-300 rounded-xl p-6 text-center">
           {formData.image_url ? (
             <div className="relative">
               <img
@@ -615,8 +615,8 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             </div>
           ) : (
             <div className="py-8">
-              <Upload className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-              <p className="text-stone-600 mb-4">คลิกเพื่ออัปโหลดภาพ หรือลากไฟล์มาวาง</p>
+              <Upload className="w-12 h-12 text-bliss-400 mx-auto mb-4" />
+              <p className="text-bliss-600 mb-4">คลิกเพื่ออัปโหลดภาพ หรือลากไฟล์มาวาง</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -628,14 +628,14 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
               >
                 <Upload className="w-4 h-4" />
                 เลือกภาพ
               </button>
             </div>
           )}
-          <p className="text-xs text-stone-500 mt-2">
+          <p className="text-xs text-bliss-500 mt-2">
             รองรับไฟล์: JPG, PNG, WebP (ขนาดสูงสุด 5MB)
           </p>
         </div>
@@ -643,7 +643,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
 
       {/* Tags */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-2">
+        <label className="block text-sm font-medium text-bliss-700 mb-2">
           <Tag className="inline w-4 h-4 mr-1" />
           แท็ก (คั่นด้วยเครื่องหมายจุลภาค)
         </label>
@@ -654,10 +654,10 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             ...prev,
             tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
           }))}
-          className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
           placeholder="เช่น ผ่อนคลาย, เพื่อสุขภาพ, นวดไทย, อโรมา"
         />
-        <p className="text-xs text-stone-500 mt-1">
+        <p className="text-xs text-bliss-500 mt-1">
           แท็กจะช่วยให้ลูกค้าค้นหาบริการได้ง่ายขึ้น
         </p>
       </div>
@@ -668,47 +668,47 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
     <div className="space-y-6">
       {/* Service Features */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           <Star className="inline w-4 h-4 mr-1" />
           คุณสมบัติพิเศษ
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <label className="flex items-center p-4 border border-stone-200 rounded-xl hover:bg-stone-50 cursor-pointer">
+          <label className="flex items-center p-4 border border-bliss-200 rounded-xl hover:bg-bliss-50 cursor-pointer">
             <input
               type="checkbox"
               checked={formData.is_signature_service}
               onChange={(e) => setFormData(prev => ({ ...prev, is_signature_service: e.target.checked }))}
-              className="w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+              className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-bliss-500"
             />
             <div className="ml-3">
               <div className="font-medium">Signature Service</div>
-              <div className="text-sm text-stone-500">บริการเด่นของร้าน</div>
+              <div className="text-sm text-bliss-500">บริการเด่นของร้าน</div>
             </div>
           </label>
 
-          <label className="flex items-center p-4 border border-stone-200 rounded-xl hover:bg-stone-50 cursor-pointer">
+          <label className="flex items-center p-4 border border-bliss-200 rounded-xl hover:bg-bliss-50 cursor-pointer">
             <input
               type="checkbox"
               checked={formData.is_couple_service}
               onChange={(e) => setFormData(prev => ({ ...prev, is_couple_service: e.target.checked }))}
-              className="w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+              className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-bliss-500"
             />
             <div className="ml-3">
               <div className="font-medium">Couple Service</div>
-              <div className="text-sm text-stone-500">บริการสำหรับคู่รัก</div>
+              <div className="text-sm text-bliss-500">บริการสำหรับคู่รัก</div>
             </div>
           </label>
 
-          <label className="flex items-center p-4 border border-stone-200 rounded-xl hover:bg-stone-50 cursor-pointer">
+          <label className="flex items-center p-4 border border-bliss-200 rounded-xl hover:bg-bliss-50 cursor-pointer">
             <input
               type="checkbox"
               checked={formData.is_mobile_service}
               onChange={(e) => setFormData(prev => ({ ...prev, is_mobile_service: e.target.checked }))}
-              className="w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+              className="w-4 h-4 text-bliss-600 border-bliss-300 rounded focus:ring-bliss-500"
             />
             <div className="ml-3">
               <div className="font-medium">Mobile Service</div>
-              <div className="text-sm text-stone-500">บริการถึงที่</div>
+              <div className="text-sm text-bliss-500">บริการถึงที่</div>
             </div>
           </label>
         </div>
@@ -716,13 +716,13 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
 
       {/* Booking Settings */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           <Calendar className="inline w-4 h-4 mr-1" />
           การตั้งค่าการจอง
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm text-stone-600 mb-2">จองล่วงหน้า (วัน)</label>
+            <label className="block text-sm text-bliss-600 mb-2">จองล่วงหน้า (วัน)</label>
             <input
               type="number"
               min="0"
@@ -735,12 +735,12 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                   advance_booking_days: parseInt(e.target.value)
                 }
               }))}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-stone-600 mb-2">ยกเลิกล่วงหน้า (ชั่วโมง)</label>
+            <label className="block text-sm text-bliss-600 mb-2">ยกเลิกล่วงหน้า (ชั่วโมง)</label>
             <input
               type="number"
               min="1"
@@ -753,12 +753,12 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                   cancellation_hours: parseInt(e.target.value)
                 }
               }))}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-stone-600 mb-2">เลื่อนนัดล่วงหน้า (ชั่วโมง)</label>
+            <label className="block text-sm text-bliss-600 mb-2">เลื่อนนัดล่วงหน้า (ชั่วโมง)</label>
             <input
               type="number"
               min="1"
@@ -771,7 +771,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                   reschedule_hours: parseInt(e.target.value)
                 }
               }))}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -779,24 +779,24 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
 
       {/* Business Settings */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
+        <label className="block text-sm font-medium text-bliss-700 mb-3">
           การตั้งค่าธุรกิจ
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm text-stone-600 mb-2">คะแนนสะสม</label>
+            <label className="block text-sm text-bliss-600 mb-2">คะแนนสะสม</label>
             <input
               type="number"
               min="0"
               max="100"
               value={formData.loyalty_points}
               onChange={(e) => setFormData(prev => ({ ...prev, loyalty_points: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-stone-600 mb-2">คอมมิชชั่น (%)</label>
+            <label className="block text-sm text-bliss-600 mb-2">คอมมิชชั่น (%)</label>
             <input
               type="number"
               min="0"
@@ -804,18 +804,18 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
               step="0.1"
               value={formData.commission_rate}
               onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: parseFloat(e.target.value) }))}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-stone-600 mb-2">ลำดับการแสดง</label>
+            <label className="block text-sm text-bliss-600 mb-2">ลำดับการแสดง</label>
             <input
               type="number"
               min="0"
               value={formData.sort_order}
               onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -827,16 +827,16 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-stone-900">เพิ่มบริการใหม่</h2>
+            <h2 className="text-2xl font-bold text-bliss-900">เพิ่มบริการใหม่</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPreview(!showPreview)}
                 className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition ${
                   showPreview
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                    ? 'bg-bliss-100 text-bliss-700'
+                    : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                 }`}
               >
                 {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -846,14 +846,14 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition"
+            className="p-2 text-bliss-400 hover:text-bliss-600 hover:bg-bliss-100 rounded-lg transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-4 border-b border-stone-100">
+        <div className="px-6 py-4 border-b border-bliss-100">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
@@ -861,23 +861,23 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
                   onClick={() => setCurrentStep(step.id)}
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition ${
                     currentStep >= step.id
-                      ? 'bg-amber-600 border-amber-600 text-white'
-                      : 'border-stone-300 text-stone-400'
+                      ? 'bg-bliss-600 border-bliss-600 text-white'
+                      : 'border-bliss-300 text-bliss-400'
                   }`}
                 >
                   <step.icon className="w-5 h-5" />
                 </button>
                 <div className="ml-3 min-w-0">
                   <div className={`text-sm font-medium ${
-                    currentStep >= step.id ? 'text-amber-600' : 'text-stone-400'
+                    currentStep >= step.id ? 'text-bliss-600' : 'text-bliss-400'
                   }`}>
                     {step.name}
                   </div>
-                  <div className="text-xs text-stone-500">{step.nameEn}</div>
+                  <div className="text-xs text-bliss-500">{step.nameEn}</div>
                 </div>
                 {index < steps.length - 1 && (
                   <div className={`w-12 h-0.5 mx-4 ${
-                    currentStep > step.id ? 'bg-amber-600' : 'bg-stone-200'
+                    currentStep > step.id ? 'bg-bliss-600' : 'bg-bliss-200'
                   }`} />
                 )}
               </div>
@@ -895,20 +895,20 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-stone-200 bg-stone-50">
+        <div className="flex items-center justify-between p-6 border-t border-bliss-200 bg-bliss-50">
           <button
             onClick={handlePrevious}
             disabled={currentStep === 1}
             className={`px-6 py-2 border rounded-xl transition ${
               currentStep === 1
-                ? 'border-stone-200 text-stone-400 cursor-not-allowed'
-                : 'border-stone-300 text-stone-700 hover:bg-stone-100'
+                ? 'border-bliss-200 text-bliss-400 cursor-not-allowed'
+                : 'border-bliss-300 text-bliss-700 hover:bg-bliss-100'
             }`}
           >
             ก่อนหน้า
           </button>
 
-          <div className="text-sm text-stone-500">
+          <div className="text-sm text-bliss-500">
             ขั้นตอน {currentStep} จาก {steps.length}
           </div>
 
@@ -924,7 +924,7 @@ function AddServiceForm({ isOpen, onClose, onSave }: AddServiceFormProps) {
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-medium hover:from-amber-700 hover:to-amber-800 transition"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium hover:from-bliss-700 hover:to-bliss-800 transition"
               >
                 ถัดไป
                 <ChevronRight className="w-4 h-4" />

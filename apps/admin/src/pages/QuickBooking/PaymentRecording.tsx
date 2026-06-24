@@ -126,9 +126,9 @@ export default function PaymentRecording({
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <h2 className="text-xl font-semibold text-stone-900">บันทึกการชำระเงิน</h2>
+          <h2 className="text-xl font-semibold text-bliss-900">บันทึกการชำระเงิน</h2>
           {isSaving && (
-            <div className="w-5 h-5 border-2 border-[#d29b25] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-5 h-5 border-2 border-[#565b34] border-t-transparent rounded-full animate-spin"></div>
           )}
           {saveStatus === 'success' && (
             <div className="flex items-center gap-1 text-green-600">
@@ -137,7 +137,7 @@ export default function PaymentRecording({
             </div>
           )}
         </div>
-        <p className="text-stone-600">บันทึกวิธีการชำระเงินที่ลูกค้าใช้ สำหรับการรายงานและสถิติ</p>
+        <p className="text-bliss-600">บันทึกวิธีการชำระเงินที่ลูกค้าใช้ สำหรับการรายงานและสถิติ</p>
       </div>
 
       {/* Error Display */}
@@ -149,9 +149,9 @@ export default function PaymentRecording({
       )}
 
       {/* Payment Summary */}
-      <div className="bg-[#ffe79d]/20 border border-[#d29b25]/30 rounded-xl p-6">
-        <h3 className="font-medium text-[#d29b25] mb-2">สรุปยอดชำระ</h3>
-        <div className="text-3xl font-bold text-stone-800 mb-4">
+      <div className="bg-[#ebe6d0]/20 border border-[#565b34]/30 rounded-xl p-6">
+        <h3 className="font-medium text-[#565b34] mb-2">สรุปยอดชำระ</h3>
+        <div className="text-3xl font-bold text-bliss-800 mb-4">
           {formatCurrency(totalAmount)}
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
@@ -169,7 +169,7 @@ export default function PaymentRecording({
 
       {/* Payment Method Selection */}
       <div>
-        <h3 className="font-medium text-stone-900 mb-3">ลูกค้าจ่ายเงินผ่านช่องทางไหน?</h3>
+        <h3 className="font-medium text-bliss-900 mb-3">ลูกค้าจ่ายเงินผ่านช่องทางไหน?</h3>
         <div className="grid grid-cols-2 gap-3">
           {paymentMethods.map((method) => {
             const Icon = method.icon
@@ -183,22 +183,22 @@ export default function PaymentRecording({
                 className={`
                   p-4 border-2 rounded-xl text-left transition-all duration-300 shadow-sm
                   ${isSelected
-                    ? 'border-[#d29b25] bg-[#ffe79d]/30 text-stone-900 shadow-md transform scale-[1.02]'
-                    : 'border-stone-200 hover:border-[#d29b25]/50 hover:bg-stone-50 hover:shadow-md'
+                    ? 'border-[#565b34] bg-[#ebe6d0]/30 text-bliss-900 shadow-md transform scale-[1.02]'
+                    : 'border-bliss-200 hover:border-[#565b34]/50 hover:bg-bliss-50 hover:shadow-md'
                   }
                   ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-[#d29b25]' : 'text-stone-500'}`} />
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-[#565b34]' : 'text-bliss-500'}`} />
                   <span className="font-medium">{method.label}</span>
                   {isSelected && (
-                    <div className="ml-auto w-6 h-6 bg-[#d29b25] rounded-full flex items-center justify-center shadow-md">
+                    <div className="ml-auto w-6 h-6 bg-[#565b34] rounded-full flex items-center justify-center shadow-md">
                       <Check className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
                 </div>
-                <p className={`text-sm ${isSelected ? 'text-stone-700' : 'text-stone-500'}`}>
+                <p className={`text-sm ${isSelected ? 'text-bliss-700' : 'text-bliss-500'}`}>
                   {method.description}
                 </p>
               </button>
@@ -211,27 +211,27 @@ export default function PaymentRecording({
       {selectedMethod && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               หมายเหตุการชำระเงิน (ถ้ามี)
             </label>
             <textarea
               value={notes}
               onChange={(e) => handleNotesUpdate(e.target.value, adminNotesText)}
               placeholder="เช่น: จ่ายเงินสด 3,000 บาท ทอนเงิน 500 บาท, หมายเลขการโอน: xxx, etc."
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25] resize-none"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34] resize-none"
               rows={3}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               หมายเหตุเพิ่มเติม (Admin)
             </label>
             <textarea
               value={adminNotesText}
               onChange={(e) => handleNotesUpdate(notes, e.target.value)}
               placeholder="หมายเหตุสำหรับ Admin เท่านั้น..."
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#d29b25] focus:border-[#d29b25] resize-none"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34] resize-none"
               rows={2}
             />
           </div>
@@ -241,7 +241,7 @@ export default function PaymentRecording({
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 text-stone-600 border border-stone-300 rounded-xl hover:bg-stone-50"
+          className="flex items-center gap-2 px-4 py-2 text-bliss-600 border border-bliss-300 rounded-xl hover:bg-bliss-50"
         >
           <ArrowLeft className="w-4 h-4" />
           กลับ
@@ -250,7 +250,7 @@ export default function PaymentRecording({
         {selectedMethod && onNext && (
           <button
             onClick={onNext}
-            className="flex items-center gap-2 bg-[#d29b25] text-white px-6 py-3 rounded-xl hover:bg-[#b8851e] transition-colors"
+            className="flex items-center gap-2 bg-[#565b34] text-white px-6 py-3 rounded-xl hover:bg-[#464a28] transition-colors"
           >
             ถัดไป: ยืนยันการจอง
             <ArrowRight className="w-4 h-4" />

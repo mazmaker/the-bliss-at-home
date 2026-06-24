@@ -94,7 +94,7 @@ export const APP_CONFIGS: Record<UserRole, AppConfig> = {
     allowedRole: 'ADMIN',
     loginPath: '/admin/login',
     defaultPath: '/admin/dashboard',
-    primaryColor: '#6366f1',
+    primaryColor: '#565b34',
   },
   CUSTOMER: {
     name: 'The Bliss Massage at Home',

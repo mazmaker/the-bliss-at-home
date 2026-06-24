@@ -158,13 +158,13 @@ export default function GuestActivitySnapshot() {
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'text-yellow-600 bg-yellow-100',
-      confirmed: 'text-blue-600 bg-blue-100',
-      'in-progress': 'text-purple-600 bg-purple-100',
-      in_progress: 'text-purple-600 bg-purple-100',
+      confirmed: 'text-bliss-600 bg-bliss-100',
+      'in-progress': 'text-bliss-600 bg-bliss-100',
+      in_progress: 'text-bliss-600 bg-bliss-100',
       completed: 'text-green-600 bg-green-100',
       cancelled: 'text-red-600 bg-red-100',
     }
-    return colors[status as keyof typeof colors] || 'text-gray-600 bg-gray-100'
+    return colors[status as keyof typeof colors] || 'text-bliss-600 bg-bliss-100'
   }
 
   const getCategoryIcon = (category: string) => {
@@ -179,12 +179,12 @@ export default function GuestActivitySnapshot() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-stone-200 rounded w-48"></div>
+          <div className="h-6 bg-bliss-200 rounded w-48"></div>
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-16 bg-stone-100 rounded-xl"></div>
+              <div key={i} className="h-16 bg-bliss-100 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -194,68 +194,68 @@ export default function GuestActivitySnapshot() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 p-6">
         <p className="text-red-600">เกิดข้อผิดพลาดในการโหลดข้อมูลแขก</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
+    <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
       {/* Header */}
-      <div className="p-6 border-b border-stone-100">
+      <div className="p-6 border-b border-bliss-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-xl">
-              <Users className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-bliss-100 rounded-xl">
+              <Users className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-stone-900">Guest Activity Snapshot</h2>
-              <p className="text-sm text-stone-500">ภาพรวมกิจกรรมแขกในโรงแรม</p>
+              <h2 className="text-lg font-semibold text-bliss-900">Guest Activity Snapshot</h2>
+              <p className="text-sm text-bliss-500">ภาพรวมกิจกรรมแขกในโรงแรม</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-blue-600">{stats?.todayGuests || 0}</div>
-            <div className="text-xs text-stone-500">แขกวันนี้</div>
+            <div className="text-2xl font-bold text-bliss-600">{stats?.todayGuests || 0}</div>
+            <div className="text-xs text-bliss-500">แขกวันนี้</div>
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="p-6 border-b border-stone-100">
+      <div className="p-6 border-b border-bliss-100">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-green-50 rounded-xl">
             <div className="text-lg font-bold text-green-600">{stats?.totalGuests || 0}</div>
             <div className="text-xs text-green-700">แขกทั้งหมด</div>
-            <div className="text-xs text-stone-500">เดือนนี้</div>
+            <div className="text-xs text-bliss-500">เดือนนี้</div>
           </div>
 
-          <div className="text-center p-3 bg-blue-50 rounded-xl">
-            <div className="text-lg font-bold text-blue-600">{stats?.totalBookings || 0}</div>
-            <div className="text-xs text-blue-700">การจอง</div>
-            <div className="text-xs text-stone-500">ทั้งหมด</div>
+          <div className="text-center p-3 bg-bliss-50 rounded-xl">
+            <div className="text-lg font-bold text-bliss-600">{stats?.totalBookings || 0}</div>
+            <div className="text-xs text-bliss-700">การจอง</div>
+            <div className="text-xs text-bliss-500">ทั้งหมด</div>
           </div>
 
-          <div className="text-center p-3 bg-amber-50 rounded-xl">
-            <div className="text-lg font-bold text-amber-600">฿{stats?.averageSpending?.toLocaleString() || 0}</div>
-            <div className="text-xs text-amber-700">ค่าใช้จ่ายเฉลี่ย</div>
-            <div className="text-xs text-stone-500">ต่อแขก</div>
+          <div className="text-center p-3 bg-bliss-50 rounded-xl">
+            <div className="text-lg font-bold text-bliss-600">฿{stats?.averageSpending?.toLocaleString() || 0}</div>
+            <div className="text-xs text-bliss-700">ค่าใช้จ่ายเฉลี่ย</div>
+            <div className="text-xs text-bliss-500">ต่อแขก</div>
           </div>
 
-          <div className="text-center p-3 bg-purple-50 rounded-xl">
-            <div className="text-lg font-bold text-purple-600">{stats?.repeatGuests || 0}</div>
-            <div className="text-xs text-purple-700">ลูกค้าซ้ำ</div>
-            <div className="text-xs text-stone-500">เดือนนี้</div>
+          <div className="text-center p-3 bg-bliss-50 rounded-xl">
+            <div className="text-lg font-bold text-bliss-600">{stats?.repeatGuests || 0}</div>
+            <div className="text-xs text-bliss-700">ลูกค้าซ้ำ</div>
+            <div className="text-xs text-bliss-500">เดือนนี้</div>
           </div>
         </div>
 
         {/* Popular Service */}
         {stats?.popularService && stats.popularService !== 'ไม่มีข้อมูล' && (
-          <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+          <div className="mt-4 p-3 bg-gradient-to-r from-bliss-50 to-orange-50 rounded-xl border border-bliss-200">
             <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-amber-800">บริการยอดนิยม:</span>
-              <span className="text-sm text-amber-700">{stats.popularService}</span>
+              <Star className="w-4 h-4 text-bliss-600" />
+              <span className="text-sm font-medium text-bliss-800">บริการยอดนิยม:</span>
+              <span className="text-sm text-bliss-700">{stats.popularService}</span>
             </div>
           </div>
         )}
@@ -264,30 +264,30 @@ export default function GuestActivitySnapshot() {
       {/* Recent Activities */}
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-stone-900">กิจกรรมล่าสุด</h3>
-          <div className="text-xs text-stone-500">7 วันที่ผ่านมา</div>
+          <h3 className="font-semibold text-bliss-900">กิจกรรมล่าสุด</h3>
+          <div className="text-xs text-bliss-500">7 วันที่ผ่านมา</div>
         </div>
 
         {activities.length === 0 ? (
           <div className="text-center py-8">
-            <Calendar className="w-8 h-8 mx-auto text-stone-300 mb-2" />
-            <p className="text-stone-500">ยังไม่มีกิจกรรม</p>
+            <Calendar className="w-8 h-8 mx-auto text-bliss-300 mb-2" />
+            <p className="text-bliss-500">ยังไม่มีกิจกรรม</p>
           </div>
         ) : (
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {activities.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl hover:bg-stone-100 transition">
+              <div key={activity.id} className="flex items-center justify-between p-3 bg-bliss-50 rounded-xl hover:bg-bliss-100 transition">
                 <div className="flex items-center gap-3">
                   <div className="text-lg">
                     {getCategoryIcon(activity.service_category)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-stone-900">{activity.guest_name}</span>
-                      <span className="text-xs text-stone-500">ห้อง {activity.room_number}</span>
+                      <span className="font-medium text-bliss-900">{activity.guest_name}</span>
+                      <span className="text-xs text-bliss-500">ห้อง {activity.room_number}</span>
                     </div>
-                    <div className="text-sm text-stone-600">{activity.service_name}</div>
-                    <div className="flex items-center gap-2 text-xs text-stone-500">
+                    <div className="text-sm text-bliss-600">{activity.service_name}</div>
+                    <div className="flex items-center gap-2 text-xs text-bliss-500">
                       <Calendar className="w-3 h-3" />
                       <span>{new Date(activity.booking_date).toLocaleDateString('th-TH')}</span>
                       <Clock className="w-3 h-3 ml-2" />
@@ -297,7 +297,7 @@ export default function GuestActivitySnapshot() {
                 </div>
 
                 <div className="text-right">
-                  <div className="text-sm font-bold text-amber-700 mb-1">
+                  <div className="text-sm font-bold text-bliss-700 mb-1">
                     ฿{activity.total_amount.toLocaleString()}
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(activity.status)}`}>
@@ -315,7 +315,7 @@ export default function GuestActivitySnapshot() {
         {/* View More Link */}
         {activities.length > 0 && (
           <div className="mt-4 text-center">
-            <button className="inline-flex items-center gap-1 text-sm text-amber-600 hover:text-amber-700 font-medium">
+            <button className="inline-flex items-center gap-1 text-sm text-bliss-600 hover:text-bliss-700 font-medium">
               ดูประวัติทั้งหมด
               <ArrowRight className="w-4 h-4" />
             </button>

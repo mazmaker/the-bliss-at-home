@@ -1,4 +1,4 @@
-import { TrendingUp, Users, DollarSign, RefreshCw, UserCheck } from 'lucide-react'
+import { TrendingUp, Users, Wallet, RefreshCw, UserCheck } from 'lucide-react'
 import { useCustomerStatistics } from '../hooks/useCustomers'
 
 function CustomerStats() {
@@ -6,11 +6,11 @@ function CustomerStats() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
         <div className="flex items-center justify-center h-32">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700 mx-auto mb-2" />
-            <p className="text-sm text-stone-600">กำลังโหลดสถิติ...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-700 mx-auto mb-2" />
+            <p className="text-sm text-bliss-600">กำลังโหลดสถิติ...</p>
           </div>
         </div>
       </div>
@@ -29,21 +29,21 @@ function CustomerStats() {
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h3 className="text-lg font-bold text-stone-900">สถิติพฤติกรรมลูกค้า</h3>
-        <p className="text-sm text-stone-500">Customer Behavior Analytics</p>
+        <h3 className="text-lg font-bold text-bliss-900">สถิติพฤติกรรมลูกค้า</h3>
+        <p className="text-sm text-bliss-500">Customer Behavior Analytics</p>
       </div>
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Customers */}
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">ลูกค้าทั้งหมด</p>
-              <p className="text-2xl font-bold text-stone-900">{stats.total.toLocaleString()}</p>
+              <p className="text-xs text-bliss-500">ลูกค้าทั้งหมด</p>
+              <p className="text-2xl font-bold text-bliss-900">{stats.total.toLocaleString()}</p>
             </div>
           </div>
           <div className="flex gap-2 text-xs">
@@ -60,55 +60,55 @@ function CustomerStats() {
         </div>
 
         {/* Total Revenue */}
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">รายได้รวมทั้งหมด</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-xs text-bliss-500">รายได้รวมทั้งหมด</p>
+              <p className="text-2xl font-bold text-bliss-900">
                 ฿{stats.total_revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
             </div>
           </div>
-          <p className="text-xs text-stone-600">
+          <p className="text-xs text-bliss-600">
             จากลูกค้าทั้งหมด {stats.total.toLocaleString()} คน
           </p>
         </div>
 
         {/* Repeat Customers */}
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <RefreshCw className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">ลูกค้าจองซ้ำ</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-xs text-bliss-500">ลูกค้าจองซ้ำ</p>
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats.repeat_customers.toLocaleString()}
               </p>
             </div>
           </div>
-          <p className="text-xs text-stone-600">
+          <p className="text-xs text-bliss-600">
             จาก {stats.total.toLocaleString()} คนทั้งหมด
           </p>
         </div>
 
         {/* Repeat Booking Rate */}
-        <div className="bg-white rounded-xl shadow p-4 border border-stone-100">
+        <div className="bg-white rounded-xl shadow p-4 border border-bliss-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-amber-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">อัตราการจองซ้ำ</p>
-              <p className="text-2xl font-bold text-amber-600">
+              <p className="text-xs text-bliss-500">อัตราการจองซ้ำ</p>
+              <p className="text-2xl font-bold text-bliss-900">
                 {stats.repeat_rate.toFixed(1)}%
               </p>
             </div>
           </div>
-          <p className="text-xs text-stone-600">
+          <p className="text-xs text-bliss-600">
             Repeat Booking Rate
           </p>
         </div>
@@ -117,7 +117,7 @@ function CustomerStats() {
       {/* Additional Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Average Lifetime Value */}
-        <div className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-xl shadow p-6 text-white">
+        <div className="bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-xl shadow p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
               <UserCheck className="w-6 h-6" />
@@ -136,27 +136,27 @@ function CustomerStats() {
         </div>
 
         {/* Insights */}
-        <div className="bg-white rounded-xl shadow p-6 border border-stone-100">
-          <h4 className="font-semibold text-stone-900 mb-4">ข้อมูลเชิงลึก (Insights)</h4>
+        <div className="bg-white rounded-xl shadow p-6 border border-bliss-100">
+          <h4 className="font-semibold text-bliss-900 mb-4">ข้อมูลเชิงลึก (Insights)</h4>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
               <div>
-                <p className="text-sm font-medium text-stone-900">
+                <p className="text-sm font-medium text-bliss-900">
                   {((stats.active / stats.total) * 100).toFixed(1)}% ของลูกค้าเป็น Active
                 </p>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-bliss-500">
                   ลูกค้าส่วนใหญ่ยังคงใช้บริการอยู่
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-bliss-500 mt-1.5" />
               <div>
-                <p className="text-sm font-medium text-stone-900">
+                <p className="text-sm font-medium text-bliss-900">
                   {stats.repeat_rate.toFixed(1)}% อัตราการจองซ้ำ
                 </p>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-bliss-500">
                   {stats.repeat_rate > 50
                     ? 'ลูกค้ามีความพึงพอใจสูง มีการกลับมาใช้บริการซ้ำเป็นจำนวนมาก'
                     : 'ควรปรับปรุงการบริการเพื่อเพิ่มอัตราการกลับมาใช้บริการซ้ำ'}
@@ -164,12 +164,12 @@ function CustomerStats() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-bliss-500 mt-1.5" />
               <div>
-                <p className="text-sm font-medium text-stone-900">
+                <p className="text-sm font-medium text-bliss-900">
                   CLV เฉลี่ย ฿{stats.average_lifetime_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-bliss-500">
                   สามารถใช้เป็นข้อมูลในการวางแผนการตลาดและโปรโมชัน
                 </p>
               </div>

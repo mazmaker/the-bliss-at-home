@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, Loader } from '@bliss/ui'
+import { Button, Loader } from '@bliss/ui'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import type { LoginCredentials } from '@bliss/supabase/auth'
@@ -17,7 +17,7 @@ export interface AdminLoginFormProps {
 
 export function AdminLoginForm({
   appTitle,
-  primaryColor = '#6366f1',
+  primaryColor = '#565b34',
   redirectTo = '/admin/dashboard',
 }: AdminLoginFormProps) {
   const navigate = useNavigate()
@@ -79,7 +79,12 @@ export function AdminLoginForm({
       <div className="bg-white rounded-lg shadow-md p-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <img
+            src="/logo.jpg"
+            alt="The Bliss Massage at Home"
+            className="h-24 w-24 object-contain mx-auto mb-4"
+          />
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">
             เข้าสู่ระบบ {appTitle}
           </h1>
         </div>
@@ -95,23 +100,26 @@ export function AdminLoginForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Input */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-bliss-700 mb-1">
               อีเมล
             </label>
-            <Input
+            <input
               id="email"
               type="email"
               placeholder="กรุณากรอกอีเมล"
               value={credentials.email}
               onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
-              error={validationErrors.email}
               disabled={isLoading}
+              className="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 border-bliss-300 focus:ring-bliss-500 focus:border-bliss-500 disabled:bg-bliss-100 disabled:cursor-not-allowed"
             />
+            {validationErrors.email && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
+            )}
           </div>
 
           {/* Password Input */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-bliss-700 mb-1">
               รหัสผ่าน
             </label>
             <div className="w-full">
@@ -123,7 +131,7 @@ export function AdminLoginForm({
                   value={credentials.password}
                   onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
                   disabled={isLoading}
-                  className="w-full px-4 py-3 pr-12 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 border-stone-300 focus:ring-amber-500 focus:border-amber-500 disabled:bg-stone-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 pr-12 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 border-bliss-300 focus:ring-bliss-500 focus:border-bliss-500 disabled:bg-bliss-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
@@ -152,10 +160,10 @@ export function AdminLoginForm({
               type="checkbox"
               checked={credentials.rememberMe}
               onChange={(e) => setCredentials(prev => ({ ...prev, rememberMe: e.target.checked }))}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              className="h-4 w-4 text-bliss-600 focus:ring-bliss-500 border-bliss-300 rounded"
               disabled={isLoading}
             />
-            <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="rememberMe" className="ml-2 block text-sm text-bliss-700">
               จดจำการเข้าสู่ระบบ
             </label>
           </div>
@@ -164,7 +172,7 @@ export function AdminLoginForm({
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full"
+            className="w-full [background-image:none] hover:opacity-90"
             style={{ backgroundColor: primaryColor }}
           >
             {isLoading ? (

@@ -158,55 +158,21 @@ export function UniversalPromotionModal({
       {/* Modal ที่ปรับขนาดตามรูปโปรโมชัน */}
       <div className="bg-bliss-50 rounded-2xl min-w-[400px] max-w-[90vw] max-h-[90vh] overflow-y-auto shadow-lg border border-bliss-100">
 
-        {/* Header - รูปโปรโมชันขนาดจริง */}
+        {/* Header - branded discount banner (uploaded promotion image hidden) */}
         <div className="relative overflow-hidden bg-bliss-50">
-          {/* Promotion Image */}
-          {promotion.image_url ? (
-            <div className="relative">
-              <img
-                src={promotion.image_url}
-                alt={name}
-                className="w-full h-auto max-h-[60vh] object-contain bg-bliss-50"
-                onError={(e) => {
-                  // Fallback to fixed height gradient
-                  e.currentTarget.style.display = 'none'
-                  const fallback = document.createElement('div')
-                  fallback.className = `w-full h-80 flex items-center justify-center ${currentVariant.headerBg}`
-                  fallback.innerHTML = `
-                    <div class="text-center ${currentVariant.text.primary}">
-                      <div class="flex items-center justify-center mb-4">
-                        <div class="p-4 bg-white/20 rounded-xl backdrop-blur-sm">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="19" x2="5" y1="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
-                        </div>
-                      </div>
-                      <div class="text-4xl font-bold mb-2">${formatDiscount()}</div>
-                      <div class="text-lg font-medium opacity-90">
-                        ${t('home:promotion.label')}
-                      </div>
-                    </div>
-                  `
-                  e.currentTarget.parentElement?.appendChild(fallback)
-                }}
-              />
-              {/* Image overlay for contrast */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
-            </div>
-          ) : (
-            // Fallback gradient with icon
-            <div className="w-full h-full flex items-center justify-center">
-              <div className={`text-center ${currentVariant.text.primary}`}>
-                <div className="flex items-center justify-center mb-4">
-                  <div className="p-4 bg-white/20 rounded-xl backdrop-blur-sm">
-                    {getDiscountIcon()}
-                  </div>
-                </div>
-                <div className="text-4xl font-bold mb-2">{formatDiscount()}</div>
-                <div className="text-lg font-medium opacity-90">
-                  {t('home:promotion.label')}
+          <div className={`w-full py-14 flex items-center justify-center ${currentVariant.headerBg}`}>
+            <div className={`text-center ${currentVariant.text.primary}`}>
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+                  {getDiscountIcon()}
                 </div>
               </div>
+              <div className="text-4xl font-bold mb-2">{formatDiscount()}</div>
+              <div className="text-lg font-medium opacity-90">
+                {t('home:promotion.label')}
+              </div>
             </div>
-          )}
+          </div>
 
           {/* Close button */}
           <button

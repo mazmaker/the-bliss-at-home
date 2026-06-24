@@ -206,12 +206,8 @@ const PromotionsPage = () => {
                   {/* ── Banner Area ── */}
                   <div className="relative" style={{ height: '340px', background: '#fbfaf6' }}>
 
-                    {promo.image_url && (
-                      <img src={promo.image_url} alt={name} className="absolute inset-0 w-full h-full object-cover" />
-                    )}
-
-                    {/* Background SVG — 3 layers */}
-                    {!promo.image_url && (
+                    {/* Background SVG — 3 layers (branded design for all promos, uploaded image hidden) */}
+                    {(
                       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                           <radialGradient id={`wg_${promo.id}`} cx="44%" cy="42%" r="58%">

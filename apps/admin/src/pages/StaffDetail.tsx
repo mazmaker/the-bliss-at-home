@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Edit,
@@ -11,7 +11,7 @@ import {
   TrendingUp,
   FileText,
   Clock,
-  DollarSign,
+  Wallet,
   MessageSquare,
   AlertCircle,
   CheckCircle,
@@ -95,7 +95,12 @@ function StaffDetail() {
   const navigate = useNavigate()
   const adminAuth = useAdminAuth()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as TabType | null
+  const validTabs: TabType[] = ['overview', 'documents', 'schedule', 'performance', 'reviews', 'earnings']
+  const [activeTab, setActiveTab] = useState<TabType>(
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
+  )
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false) // [R2] admin set staff photo
@@ -126,8 +131,8 @@ function StaffDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-amber-600" />
-          <p className="text-stone-600">กำลังโหลดข้อมูลพนักงาน...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-bliss-600" />
+          <p className="text-bliss-600">กำลังโหลดข้อมูลพนักงาน...</p>
         </div>
       </div>
     )
@@ -138,10 +143,10 @@ function StaffDetail() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-stone-900 mb-2">ไม่พบข้อมูลพนักงาน</h3>
+          <h3 className="text-lg font-semibold text-bliss-900 mb-2">ไม่พบข้อมูลพนักงาน</h3>
           <button
             onClick={() => navigate('/admin/staff')}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+            className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
           >
             กลับหน้ารายการ
           </button>
@@ -156,13 +161,13 @@ function StaffDetail() {
     { id: 'schedule', label: 'ตารางงาน', icon: Calendar },
     { id: 'performance', label: 'ประสิทธิภาพ', icon: TrendingUp },
     { id: 'reviews', label: 'รีวิว', icon: MessageSquare },
-    { id: 'earnings', label: 'รายได้', icon: DollarSign },
+    { id: 'earnings', label: 'รายได้', icon: Wallet },
   ]
 
   const getStatusBadge = (status: Staff['status']) => {
     const badges = {
       active: { bg: 'bg-green-100', text: 'text-green-700', label: 'ใช้งานอยู่', icon: CheckCircle },
-      inactive: { bg: 'bg-stone-100', text: 'text-stone-600', label: 'ไม่ใช้งาน', icon: XCircle },
+      inactive: { bg: 'bg-bliss-100', text: 'text-bliss-600', label: 'ไม่ใช้งาน', icon: XCircle },
       pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'รออนุมัติ', icon: Clock },
       suspended: { bg: 'bg-red-100', text: 'text-red-700', label: 'ระงับการใช้งาน', icon: Ban },
     }
@@ -182,19 +187,19 @@ function StaffDetail() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/admin/staff')}
-          className="p-2 hover:bg-stone-100 rounded-lg transition"
+          className="p-2 hover:bg-bliss-100 rounded-lg transition"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">รายละเอียดพนักงาน</h1>
-          <p className="text-stone-500">Staff Profile & Management</p>
+          <h1 className="text-2xl font-bold text-bliss-900">รายละเอียดพนักงาน</h1>
+          <p className="text-bliss-500">Staff Profile & Management</p>
         </div>
       </div>
 
       {/* Staff Header Card */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-amber-700 to-amber-800" />
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
+        <div className="h-32 bg-gradient-to-r from-bliss-700 to-bliss-800" />
         <div className="px-6 pb-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 -mt-16">
             <div className="flex items-end gap-4">
@@ -202,33 +207,33 @@ function StaffDetail() {
                 {staff.avatar_url ? (
                   <img src={staff.avatar_url} alt={staff.name_th} className="w-32 h-32 object-cover bg-white rounded-2xl border-4 border-white shadow-lg" />
                 ) : (
-                  <div className="w-32 h-32 bg-white rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-amber-700">
+                  <div className="w-32 h-32 bg-white rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-bliss-700">
                     {staff.name_th.charAt(0)}
                   </div>
                 )}
-                <label className="absolute bottom-1 right-1 bg-amber-600 hover:bg-amber-700 text-white text-xs px-2 py-1 rounded-lg cursor-pointer shadow transition">
+                <label className="absolute bottom-1 right-1 bg-bliss-600 hover:bg-bliss-700 text-white text-xs px-2 py-1 rounded-lg cursor-pointer shadow transition">
                   {uploadingPhoto ? '...' : 'เปลี่ยนรูป'}
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={uploadingPhoto} />
                 </label>
               </div>
               <div className="pb-2 pt-16">
-                <h2 className="text-2xl font-bold text-stone-900">{staff.name_th}</h2>
-                <p className="text-stone-500">{staff.name_en}</p>
+                <h2 className="text-2xl font-bold text-bliss-900">{staff.name_th}</h2>
+                <p className="text-bliss-500">{staff.name_en}</p>
                 <div className="flex items-center gap-2 mt-2">
                   {getStatusBadge(staff.status)}
                   <div className="flex items-center gap-1">
                     {staff.total_reviews > 0 ? (
                       <>
-                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span className="text-sm font-medium text-stone-700">
+                        <Star className="w-4 h-4 text-bliss-500 fill-bliss-500" />
+                        <span className="text-sm font-medium text-bliss-700">
                           {staff.rating.toFixed(1)}
                         </span>
-                        <span className="text-xs text-stone-400">
+                        <span className="text-xs text-bliss-400">
                           ({staff.total_reviews} รีวิว)
                         </span>
                       </>
                     ) : (
-                      <span className="text-xs text-stone-400">ยังไม่มีรีวิว</span>
+                      <span className="text-xs text-bliss-400">ยังไม่มีรีวิว</span>
                     )}
                   </div>
                 </div>
@@ -237,14 +242,14 @@ function StaffDetail() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition flex items-center gap-2"
+                className="px-4 py-2 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
                 แก้ไขข้อมูล
               </button>
               <button
                 onClick={() => setShowStatusModal(true)}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2"
+                className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition flex items-center gap-2"
               >
                 <UserCheck className="w-4 h-4" />
                 จัดการสถานะ
@@ -254,51 +259,51 @@ function StaffDetail() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-stone-50 rounded-xl p-4">
+            <div className="bg-bliss-50 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Briefcase className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-bliss-100 rounded-lg">
+                  <Briefcase className="w-5 h-5 text-bliss-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-stone-900">{staff.total_jobs}</p>
-                  <p className="text-xs text-stone-500">งานทั้งหมด</p>
+                  <p className="text-2xl font-bold text-bliss-900">{staff.total_jobs}</p>
+                  <p className="text-xs text-bliss-500">งานทั้งหมด</p>
                 </div>
               </div>
             </div>
-            <div className="bg-stone-50 rounded-xl p-4">
+            <div className="bg-bliss-50 rounded-xl p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-stone-900">{staff.completed_jobs || 0}</p>
-                  <p className="text-xs text-stone-500">งานสำเร็จ</p>
+                  <p className="text-2xl font-bold text-bliss-900">{staff.completed_jobs || 0}</p>
+                  <p className="text-xs text-bliss-500">งานสำเร็จ</p>
                 </div>
               </div>
             </div>
-            <div className="bg-stone-50 rounded-xl p-4">
+            <div className="bg-bliss-50 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-amber-600" />
+                <div className="p-2 bg-bliss-100 rounded-lg">
+                  <Wallet className="w-5 h-5 text-bliss-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-stone-900">
+                  <p className="text-2xl font-bold text-bliss-900">
                     ฿{staff.total_earnings.toLocaleString()}
                   </p>
-                  <p className="text-xs text-stone-500">รายได้รวม</p>
+                  <p className="text-xs text-bliss-500">รายได้รวม</p>
                 </div>
               </div>
             </div>
-            <div className="bg-stone-50 rounded-xl p-4">
+            <div className="bg-bliss-50 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Award className="w-5 h-5 text-purple-600" />
+                <div className="p-2 bg-bliss-100 rounded-lg">
+                  <Award className="w-5 h-5 text-bliss-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-stone-900">
+                  <p className="text-2xl font-bold text-bliss-900">
                     {((staff.completed_jobs || 0) / (staff.total_jobs || 1) * 100).toFixed(0)}%
                   </p>
-                  <p className="text-xs text-stone-500">อัตราความสำเร็จ</p>
+                  <p className="text-xs text-bliss-500">อัตราความสำเร็จ</p>
                 </div>
               </div>
             </div>
@@ -307,8 +312,8 @@ function StaffDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
-        <div className="border-b border-stone-200 px-6">
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
+        <div className="border-b border-bliss-200 px-6">
           <div className="flex gap-4 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon
@@ -318,8 +323,8 @@ function StaffDetail() {
                   onClick={() => setActiveTab(tab.id as TabType)}
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'border-amber-600 text-amber-600'
-                      : 'border-transparent text-stone-600 hover:text-stone-900'
+                      ? 'border-bliss-600 text-bliss-700 font-semibold'
+                      : 'border-transparent text-bliss-400 hover:text-bliss-700 hover:border-bliss-300'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -366,38 +371,38 @@ function OverviewTab({ staff }: { staff: Staff }) {
     <div className="space-y-6">
       {/* Contact Information */}
       <div>
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลติดต่อ</h3>
+        <h3 className="text-lg font-semibold text-bliss-900 mb-4">ข้อมูลติดต่อ</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
-            <Phone className="w-5 h-5 text-stone-400 mt-1" />
+            <Phone className="w-5 h-5 text-bliss-400 mt-1" />
             <div>
-              <p className="text-sm text-stone-500">เบอร์โทรศัพท์</p>
-              <p className="font-medium text-stone-900">{staff.phone}</p>
+              <p className="text-sm text-bliss-500">เบอร์โทรศัพท์</p>
+              <p className="font-medium text-bliss-900">{staff.phone}</p>
             </div>
           </div>
           {staff.profile?.email && (
             <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-stone-400 mt-1" />
+              <Mail className="w-5 h-5 text-bliss-400 mt-1" />
               <div>
-                <p className="text-sm text-stone-500">อีเมล</p>
-                <p className="font-medium text-stone-900">{staff.profile.email}</p>
+                <p className="text-sm text-bliss-500">อีเมล</p>
+                <p className="font-medium text-bliss-900">{staff.profile.email}</p>
               </div>
             </div>
           )}
           {staff.address && (
             <div className="flex items-start gap-3 md:col-span-2">
-              <MapPin className="w-5 h-5 text-stone-400 mt-1" />
+              <MapPin className="w-5 h-5 text-bliss-400 mt-1" />
               <div>
-                <p className="text-sm text-stone-500">ที่อยู่</p>
-                <p className="font-medium text-stone-900">{staff.address}</p>
+                <p className="text-sm text-bliss-500">ที่อยู่</p>
+                <p className="font-medium text-bliss-900">{staff.address}</p>
               </div>
             </div>
           )}
           <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-stone-400 mt-1" />
+            <Calendar className="w-5 h-5 text-bliss-400 mt-1" />
             <div>
-              <p className="text-sm text-stone-500">วันที่เริ่มงาน</p>
-              <p className="font-medium text-stone-900">
+              <p className="text-sm text-bliss-500">วันที่เริ่มงาน</p>
+              <p className="font-medium text-bliss-900">
                 {new Date(staff.created_at).toLocaleDateString('th-TH', {
                   year: 'numeric',
                   month: 'long',
@@ -411,76 +416,76 @@ function OverviewTab({ staff }: { staff: Staff }) {
 
       {/* Emergency Contact */}
       <div>
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)</h3>
+        <h3 className="text-lg font-semibold text-bliss-900 mb-4">บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)</h3>
         {(staff as any).emergency_contact_name ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-start gap-3">
-              <Users className="w-5 h-5 text-stone-400 mt-1" />
+              <Users className="w-5 h-5 text-bliss-400 mt-1" />
               <div>
-                <p className="text-sm text-stone-500">ชื่อ-นามสกุล</p>
-                <p className="font-medium text-stone-900">{(staff as any).emergency_contact_name}</p>
+                <p className="text-sm text-bliss-500">ชื่อ-นามสกุล</p>
+                <p className="font-medium text-bliss-900">{(staff as any).emergency_contact_name}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Phone className="w-5 h-5 text-stone-400 mt-1" />
+              <Phone className="w-5 h-5 text-bliss-400 mt-1" />
               <div>
-                <p className="text-sm text-stone-500">เบอร์โทรศัพท์</p>
-                <p className="font-medium text-stone-900">{(staff as any).emergency_contact_phone}</p>
+                <p className="text-sm text-bliss-500">เบอร์โทรศัพท์</p>
+                <p className="font-medium text-bliss-900">{(staff as any).emergency_contact_phone}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <FileText className="w-5 h-5 text-bliss-400 mt-1" />
               <div>
-                <p className="text-sm text-stone-500">ความสัมพันธ์</p>
-                <p className="font-medium text-stone-900">
+                <p className="text-sm text-bliss-500">ความสัมพันธ์</p>
+                <p className="font-medium text-bliss-900">
                   {EMERGENCY_CONTACT_RELATIONSHIPS.find((r) => r.value === (staff as any).emergency_contact_relationship)?.label || (staff as any).emergency_contact_relationship || 'ไม่ระบุ'}
                 </p>
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-stone-400">ยังไม่ได้กรอกข้อมูลบุคคลอ้างอิง</p>
+          <p className="text-bliss-400">ยังไม่ได้กรอกข้อมูลบุคคลอ้างอิง</p>
         )}
       </div>
 
       {/* Skills */}
       <div>
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">ทักษะและบริการ</h3>
+        <h3 className="text-lg font-semibold text-bliss-900 mb-4">ทักษะและบริการ</h3>
         <div className="flex flex-wrap gap-2">
           {staff.skills?.length ? (
             staff.skills.map((skill) => (
               <span
                 key={skill.id}
-                className="px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium"
+                className="px-4 py-2 bg-bliss-100 text-bliss-700 rounded-full text-sm font-medium"
               >
                 {skill.skill?.name_th || skill.skill?.name_en}
               </span>
             ))
           ) : (
-            <p className="text-stone-500">ไม่มีข้อมูลทักษะ</p>
+            <p className="text-bliss-500">ไม่มีข้อมูลทักษะ</p>
           )}
         </div>
       </div>
 
       {/* Bio */}
       <div>
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">ข้อมูลเพิ่มเติม</h3>
+        <h3 className="text-lg font-semibold text-bliss-900 mb-4">ข้อมูลเพิ่มเติม</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
-            <FileText className="w-5 h-5 text-stone-400 mt-1" />
+            <FileText className="w-5 h-5 text-bliss-400 mt-1" />
             <div>
-              <p className="text-sm text-stone-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
-              <p className="font-medium text-stone-900 leading-relaxed">
-                {staff.bio_th || <span className="text-stone-400">ไม่ระบุ</span>}
+              <p className="text-sm text-bliss-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
+              <p className="font-medium text-bliss-900 leading-relaxed">
+                {staff.bio_th || <span className="text-bliss-400">ไม่ระบุ</span>}
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <FileText className="w-5 h-5 text-stone-400 mt-1" />
+            <FileText className="w-5 h-5 text-bliss-400 mt-1" />
             <div>
-              <p className="text-sm text-stone-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
-              <p className="font-medium text-stone-900 leading-relaxed">
-                {staff.bio_en || <span className="text-stone-400">ไม่ระบุ</span>}
+              <p className="text-sm text-bliss-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
+              <p className="font-medium text-bliss-900 leading-relaxed">
+                {staff.bio_en || <span className="text-bliss-400">ไม่ระบุ</span>}
               </p>
             </div>
           </div>
@@ -557,7 +562,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
   const getStatusBadge = (status: string) => {
     const badges = {
       pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'รอตรวจสอบ', icon: Clock },
-      reviewing: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'กำลังตรวจสอบ', icon: Clock },
+      reviewing: { bg: 'bg-bliss-100', text: 'text-bliss-700', label: 'กำลังตรวจสอบ', icon: Clock },
       verified: { bg: 'bg-green-100', text: 'text-green-700', label: 'ยืนยันแล้ว', icon: CheckCircle },
       rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'ถูกปฏิเสธ', icon: XCircle },
     }
@@ -587,8 +592,8 @@ function DocumentsTab({ staff }: { staff: Staff }) {
   if (isLoading) {
     return (
       <div className="text-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-amber-600" />
-        <p className="text-stone-600">กำลังโหลดเอกสาร...</p>
+        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-bliss-600" />
+        <p className="text-bliss-600">กำลังโหลดเอกสาร...</p>
       </div>
     )
   }
@@ -597,7 +602,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-stone-600">เกิดข้อผิดพลาดในการโหลดเอกสาร</p>
+        <p className="text-bliss-600">เกิดข้อผิดพลาดในการโหลดเอกสาร</p>
       </div>
     )
   }
@@ -607,17 +612,17 @@ function DocumentsTab({ staff }: { staff: Staff }) {
       {/* Stats Summary */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="bg-stone-50 rounded-lg p-3">
-            <p className="text-2xl font-bold text-stone-900">{stats.total}</p>
-            <p className="text-xs text-stone-500">เอกสารทั้งหมด</p>
+          <div className="bg-bliss-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-bliss-900">{stats.total}</p>
+            <p className="text-xs text-bliss-500">เอกสารทั้งหมด</p>
           </div>
           <div className="bg-yellow-50 rounded-lg p-3">
             <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
             <p className="text-xs text-yellow-600">รอตรวจสอบ</p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-3">
-            <p className="text-2xl font-bold text-blue-900">{stats.reviewing}</p>
-            <p className="text-xs text-blue-600">กำลังตรวจสอบ</p>
+          <div className="bg-bliss-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-bliss-900">{stats.reviewing}</p>
+            <p className="text-xs text-bliss-600">กำลังตรวจสอบ</p>
           </div>
           <div className="bg-green-50 rounded-lg p-3">
             <p className="text-2xl font-bold text-green-900">{stats.verified}</p>
@@ -632,10 +637,10 @@ function DocumentsTab({ staff }: { staff: Staff }) {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-stone-900">เอกสาร KYC</h3>
+        <h3 className="text-lg font-semibold text-bliss-900">เอกสาร KYC</h3>
         <button
           onClick={() => setShowUploadModal(true)}
-          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-sm flex items-center gap-2"
         >
           <FileText className="w-4 h-4" />
           เพิ่มเอกสาร
@@ -646,16 +651,16 @@ function DocumentsTab({ staff }: { staff: Staff }) {
       {documents && documents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {documents.map((doc) => (
-            <div key={doc.id} className="border border-stone-200 rounded-xl p-4 hover:shadow-md transition">
+            <div key={doc.id} className="border border-bliss-200 rounded-xl p-4 hover:shadow-md transition">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <FileText className="w-5 h-5 text-blue-600" />
+                  <div className="p-2 bg-bliss-100 rounded-lg">
+                    <FileText className="w-5 h-5 text-bliss-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-stone-900">{getDocumentTypeLabel(doc.document_type)}</p>
-                    <p className="text-xs text-stone-500">{doc.file_name}</p>
-                    <p className="text-xs text-stone-400 mt-1">
+                    <p className="font-medium text-bliss-900">{getDocumentTypeLabel(doc.document_type)}</p>
+                    <p className="text-xs text-bliss-500">{doc.file_name}</p>
+                    <p className="text-xs text-bliss-400 mt-1">
                       {new Date(doc.uploaded_at).toLocaleDateString('th-TH', {
                         year: 'numeric',
                         month: 'short',
@@ -678,8 +683,8 @@ function DocumentsTab({ staff }: { staff: Staff }) {
 
               {/* Notes */}
               {doc.notes && (
-                <div className="mb-3 p-2 bg-stone-50 rounded-lg">
-                  <p className="text-xs text-stone-600">
+                <div className="mb-3 p-2 bg-bliss-50 rounded-lg">
+                  <p className="text-xs text-bliss-600">
                     <strong>หมายเหตุ:</strong> {doc.notes}
                   </p>
                 </div>
@@ -689,7 +694,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleViewDocument(doc)}
-                  className="flex-1 px-3 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-sm flex items-center justify-center gap-2"
+                  className="flex-1 px-3 py-2 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-sm flex items-center justify-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
                   ดู
@@ -697,7 +702,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
                 <button
                   onClick={() => handleDownload(doc)}
                   disabled={downloadMutation.isPending}
-                  className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Download className="w-4 h-4" />
                   ดาวน์โหลด
@@ -740,12 +745,12 @@ function DocumentsTab({ staff }: { staff: Staff }) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-stone-50 rounded-xl">
-          <FileText className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-          <p className="text-stone-500">ยังไม่มีเอกสาร</p>
+        <div className="text-center py-12 bg-bliss-50 rounded-xl">
+          <FileText className="w-16 h-16 text-bliss-300 mx-auto mb-4" />
+          <p className="text-bliss-500">ยังไม่มีเอกสาร</p>
           <button
             onClick={() => setShowUploadModal(true)}
-            className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm"
+            className="mt-4 px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-sm"
           >
             เพิ่มเอกสารแรก
           </button>
@@ -773,12 +778,12 @@ function DocumentsTab({ staff }: { staff: Staff }) {
       {showRejectModal && selectedDocument && (
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-stone-900 mb-4">
+            <h3 className="text-lg font-semibold text-bliss-900 mb-4">
               ระบุเหตุผลในการปฏิเสธ
             </h3>
             <textarea
               placeholder="กรุณาระบุเหตุผลที่ชัดเจน..."
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
               rows={4}
             />
             <div className="flex gap-3 mt-4">
@@ -787,7 +792,7 @@ function DocumentsTab({ staff }: { staff: Staff }) {
                   setShowRejectModal(false)
                   setSelectedDocument(null)
                 }}
-                className="flex-1 px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition"
+                className="flex-1 px-4 py-2 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition"
               >
                 ยกเลิก
               </button>
@@ -867,8 +872,8 @@ function ScheduleTab({ staff }: { staff: Staff }) {
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { bg: string; text: string; label: string; icon: any }> = {
       pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'รอยืนยัน', icon: Clock },
-      confirmed: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'ยืนยันแล้ว', icon: CheckCircle },
-      in_progress: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'กำลังดำเนินการ', icon: Clock },
+      confirmed: { bg: 'bg-bliss-100', text: 'text-bliss-700', label: 'ยืนยันแล้ว', icon: CheckCircle },
+      in_progress: { bg: 'bg-bliss-100', text: 'text-bliss-700', label: 'กำลังดำเนินการ', icon: Clock },
       completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'เสร็จสิ้น', icon: CheckCircle },
       cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'ยกเลิก', icon: XCircle },
     }
@@ -885,8 +890,8 @@ function ScheduleTab({ staff }: { staff: Staff }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
-        <span className="ml-2 text-stone-500">กำลังโหลดข้อมูล...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-bliss-600" />
+        <span className="ml-2 text-bliss-500">กำลังโหลดข้อมูล...</span>
       </div>
     )
   }
@@ -896,21 +901,21 @@ function ScheduleTab({ staff }: { staff: Staff }) {
       {/* Stats Summary */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="bg-stone-50 rounded-lg p-3">
-            <p className="text-2xl font-bold text-stone-900">{stats.total}</p>
-            <p className="text-xs text-stone-500">ทั้งหมด</p>
+          <div className="bg-bliss-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-bliss-900">{stats.total}</p>
+            <p className="text-xs text-bliss-500">ทั้งหมด</p>
           </div>
           <div className="bg-yellow-50 rounded-lg p-3">
             <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
             <p className="text-xs text-yellow-600">รอยืนยัน</p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-3">
-            <p className="text-2xl font-bold text-blue-900">{stats.confirmed}</p>
-            <p className="text-xs text-blue-600">ยืนยันแล้ว</p>
+          <div className="bg-bliss-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-bliss-900">{stats.confirmed}</p>
+            <p className="text-xs text-bliss-600">ยืนยันแล้ว</p>
           </div>
-          <div className="bg-purple-50 rounded-lg p-3">
-            <p className="text-2xl font-bold text-purple-900">{stats.in_progress}</p>
-            <p className="text-xs text-purple-600">กำลังดำเนินการ</p>
+          <div className="bg-bliss-50 rounded-lg p-3">
+            <p className="text-2xl font-bold text-bliss-900">{stats.in_progress}</p>
+            <p className="text-xs text-bliss-600">กำลังดำเนินการ</p>
           </div>
           <div className="bg-green-50 rounded-lg p-3">
             <p className="text-2xl font-bold text-green-900">{stats.completed}</p>
@@ -926,11 +931,11 @@ function ScheduleTab({ staff }: { staff: Staff }) {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <label className="text-sm font-medium text-stone-700 mr-2">ช่วงเวลา:</label>
+          <label className="text-sm font-medium text-bliss-700 mr-2">ช่วงเวลา:</label>
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as any)}
-            className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2 bg-white border border-bliss-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bliss-500"
           >
             <option value="today">วันนี้</option>
             <option value="week">7 วันที่ผ่านมา</option>
@@ -939,11 +944,11 @@ function ScheduleTab({ staff }: { staff: Staff }) {
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium text-stone-700 mr-2">สถานะ:</label>
+          <label className="text-sm font-medium text-bliss-700 mr-2">สถานะ:</label>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2 bg-white border border-bliss-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bliss-500"
           >
             <option value="all">ทั้งหมด</option>
             <option value="pending">รอยืนยัน</option>
@@ -956,20 +961,20 @@ function ScheduleTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Jobs List */}
-      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-bliss-200 rounded-xl overflow-hidden">
         {jobs && jobs.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-stone-50 border-b border-stone-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">เวลา</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">บริการ</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานที่</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ราคา</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รายได้พนักงาน</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
+                <tr className="bg-bliss-50 border-b border-bliss-200">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">วันที่</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">เวลา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">บริการ</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ลูกค้า</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">สถานที่</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ราคา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">รายได้พนักงาน</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">สถานะ</th>
                 </tr>
               </thead>
               <tbody>
@@ -980,35 +985,35 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                       setSelectedJob(job)
                       setShowJobModal(true)
                     }}
-                    className="border-b border-stone-100 hover:bg-blue-50 cursor-pointer transition-colors"
+                    className="border-b border-bliss-100 hover:bg-bliss-50 cursor-pointer transition-colors"
                   >
-                    <td className="py-3 px-4 text-sm text-stone-900">
+                    <td className="py-3 px-4 text-sm text-bliss-900">
                       {new Date(job.scheduled_date).toLocaleDateString('th-TH', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
                       })}
                     </td>
-                    <td className="py-3 px-4 text-sm text-stone-900">{job.scheduled_time}</td>
+                    <td className="py-3 px-4 text-sm text-bliss-900">{job.scheduled_time}</td>
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium text-stone-900">{job.service_name}</p>
+                        <p className="font-medium text-bliss-900">{job.service_name}</p>
                         {job.notes && (
-                          <p className="text-xs text-stone-500 mt-1">{job.notes}</p>
+                          <p className="text-xs text-bliss-500 mt-1">{job.notes}</p>
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm text-stone-900">{job.customer_name}</td>
+                    <td className="py-3 px-4 text-sm text-bliss-900">{job.customer_name}</td>
                     <td className="py-3 px-4">
-                      <p className="text-sm text-stone-600 max-w-xs truncate">{job.address}</p>
+                      <p className="text-sm text-bliss-600 max-w-xs truncate">{job.address}</p>
                     </td>
-                    <td className="py-3 px-4 text-sm font-medium text-amber-700">
+                    <td className="py-3 px-4 text-sm font-medium text-bliss-700">
                       ฿{(job.amount + (job.total_extensions_price || 0)).toLocaleString()}
                       {job.total_extensions_price ? (
-                        <span className="text-xs text-stone-400 ml-1">(+{job.total_extensions_price.toLocaleString()})</span>
+                        <span className="text-xs text-bliss-400 ml-1">(+{job.total_extensions_price.toLocaleString()})</span>
                       ) : null}
                     </td>
-                    <td className="py-3 px-4 text-sm font-medium text-purple-700">
+                    <td className="py-3 px-4 text-sm font-medium text-bliss-700">
                       ฿{Number(job.total_staff_earnings ?? job.staff_earnings).toLocaleString()}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(job.status)}</td>
@@ -1016,15 +1021,15 @@ function ScheduleTab({ staff }: { staff: Staff }) {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-stone-50 border-t-2 border-stone-300">
+                <tr className="bg-bliss-50 border-t-2 border-bliss-300">
                   <td colSpan={5} className="py-3 px-4 text-right">
-                    <span className="text-sm font-bold text-stone-900">รวม</span>
-                    <span className="text-xs text-stone-400 ml-2">(เฉพาะเสร็จสิ้น)</span>
+                    <span className="text-sm font-bold text-bliss-900">รวม</span>
+                    <span className="text-xs text-bliss-400 ml-2">(เฉพาะเสร็จสิ้น)</span>
                   </td>
-                  <td className="py-3 px-4 text-sm font-bold text-amber-700">
+                  <td className="py-3 px-4 text-sm font-bold text-bliss-700">
                     ฿{jobs.filter(j => j.status === 'completed').reduce((sum, j) => sum + Number(j.amount) + Number(j.total_extensions_price || 0), 0).toLocaleString()}
                   </td>
-                  <td className="py-3 px-4 text-sm font-bold text-purple-700">
+                  <td className="py-3 px-4 text-sm font-bold text-bliss-700">
                     ฿{jobs.filter(j => j.status === 'completed').reduce((sum, j) => sum + Number(j.total_staff_earnings ?? j.staff_earnings), 0).toLocaleString()}
                   </td>
                   <td></td>
@@ -1034,9 +1039,9 @@ function ScheduleTab({ staff }: { staff: Staff }) {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-            <p className="text-stone-500">ไม่พบงานในช่วงเวลาที่เลือก</p>
-            <p className="text-sm text-stone-400 mt-2">ลองเปลี่ยนตัวกรองเพื่อดูงานอื่นๆ</p>
+            <Calendar className="w-16 h-16 text-bliss-300 mx-auto mb-4" />
+            <p className="text-bliss-500">ไม่พบงานในช่วงเวลาที่เลือก</p>
+            <p className="text-sm text-bliss-400 mt-2">ลองเปลี่ยนตัวกรองเพื่อดูงานอื่นๆ</p>
           </div>
         )}
       </div>
@@ -1087,7 +1092,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
   if (historyLoading || currentLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-bliss-600" />
       </div>
     )
   }
@@ -1104,9 +1109,9 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 
   // Calculate trends (compare with previous month)
   const previous = performanceHistory.length >= 2 ? performanceHistory[performanceHistory.length - 2] : null
-  const completionTrend = previous ? calculateTrend(parseFloat(completionRate), previous.completion_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
-  const responseTrend = previous ? calculateTrend(responseRate, previous.response_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
-  const cancelTrend = previous ? calculateTrend(cancelRate, previous.cancel_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-stone-500' }
+  const completionTrend = previous ? calculateTrend(parseFloat(completionRate), previous.completion_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-bliss-500' }
+  const responseTrend = previous ? calculateTrend(responseRate, previous.response_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-bliss-500' }
+  const cancelTrend = previous ? calculateTrend(cancelRate, previous.cancel_rate) : { direction: 'stable' as const, value: '0.0', color: 'text-bliss-500' }
 
   // Safe platform average with fallback
   const platformAverageData = platformAverage || {
@@ -1122,20 +1127,20 @@ function PerformanceTab({ staff }: { staff: Staff }) {
   return (
     <div className="space-y-6">
       {/* Overall Performance Score */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-6">
+      <div className="bg-gradient-to-br from-bliss-50 to-bliss-50 border border-bliss-200 rounded-2xl p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-stone-900 mb-1">Performance Score</h3>
-            <p className="text-sm text-stone-600">คะแนนประสิทธิภาพรวม</p>
+            <h3 className="text-lg font-semibold text-bliss-900 mb-1">Performance Score</h3>
+            <p className="text-sm text-bliss-600">คะแนนประสิทธิภาพรวม</p>
           </div>
           <div className="text-right">
-            <div className="text-5xl font-bold text-purple-600">{performanceScore}</div>
-            <div className="text-sm text-stone-500 mt-1">/ 100</div>
+            <div className="text-5xl font-bold text-bliss-600">{performanceScore}</div>
+            <div className="text-sm text-bliss-500 mt-1">/ 100</div>
           </div>
         </div>
-        <div className="mt-4 h-3 bg-purple-200 rounded-full overflow-hidden">
+        <div className="mt-4 h-3 bg-bliss-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-bliss-500 to-bliss-600 transition-all duration-500"
             style={{ width: `${performanceScore}%` }}
           />
         </div>
@@ -1144,90 +1149,90 @@ function PerformanceTab({ staff }: { staff: Staff }) {
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Completion Rate */}
-        <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <div className="bg-white border border-bliss-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <ThumbsUp className="w-8 h-8 text-green-600" />
             <span className={`text-xs font-medium ${completionTrend.color}`}>
               {completionTrend.direction === 'up' ? '↑' : completionTrend.direction === 'down' ? '↓' : '−'} {completionTrend.value}%
             </span>
           </div>
-          <div className="text-3xl font-bold text-stone-900 mb-1">{completionRate}%</div>
-          <p className="text-sm font-medium text-stone-700">Job Completion</p>
-          <p className="text-xs text-stone-500 mt-1">อัตราความสำเร็จในการทำงาน</p>
-          <div className="mt-3 pt-3 border-t border-stone-100">
+          <div className="text-3xl font-bold text-bliss-900 mb-1">{completionRate}%</div>
+          <p className="text-sm font-medium text-bliss-700">Job Completion</p>
+          <p className="text-xs text-bliss-500 mt-1">อัตราความสำเร็จในการทำงาน</p>
+          <div className="mt-3 pt-3 border-t border-bliss-100">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverageData.avg_completion_rate.toFixed(1)}%</span>
+              <span className="text-bliss-500">Platform Avg.</span>
+              <span className="font-medium text-bliss-700">{platformAverageData.avg_completion_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
 
         {/* Response Rate */}
-        <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <div className="bg-white border border-bliss-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <Clock className="w-8 h-8 text-blue-600" />
+            <Clock className="w-8 h-8 text-bliss-600" />
             <span className={`text-xs font-medium ${responseTrend.color}`}>
               {responseTrend.direction === 'up' ? '↑' : responseTrend.direction === 'down' ? '↓' : '−'} {responseTrend.value}%
             </span>
           </div>
-          <div className="text-3xl font-bold text-stone-900 mb-1">{responseRate}%</div>
-          <p className="text-sm font-medium text-stone-700">Response Rate</p>
-          <p className="text-xs text-stone-500 mt-1">อัตราการตอบรับงาน</p>
-          <div className="mt-3 pt-3 border-t border-stone-100">
+          <div className="text-3xl font-bold text-bliss-900 mb-1">{responseRate}%</div>
+          <p className="text-sm font-medium text-bliss-700">Response Rate</p>
+          <p className="text-xs text-bliss-500 mt-1">อัตราการตอบรับงาน</p>
+          <div className="mt-3 pt-3 border-t border-bliss-100">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverageData.avg_response_rate.toFixed(1)}%</span>
+              <span className="text-bliss-500">Platform Avg.</span>
+              <span className="font-medium text-bliss-700">{platformAverageData.avg_response_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
 
         {/* Cancel Rate */}
-        <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <div className="bg-white border border-bliss-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <ThumbsDown className="w-8 h-8 text-red-600" />
             <span className={`text-xs font-medium ${cancelTrend.direction === 'down' ? 'text-green-600' : 'text-red-600'}`}>
               {cancelTrend.direction === 'up' ? '↑' : cancelTrend.direction === 'down' ? '↓' : '−'} {cancelTrend.value}%
             </span>
           </div>
-          <div className="text-3xl font-bold text-stone-900 mb-1">{cancelRate}%</div>
-          <p className="text-sm font-medium text-stone-700">Cancel Rate</p>
-          <p className="text-xs text-stone-500 mt-1">อัตราการยกเลิกงาน</p>
-          <div className="mt-3 pt-3 border-t border-stone-100">
+          <div className="text-3xl font-bold text-bliss-900 mb-1">{cancelRate}%</div>
+          <p className="text-sm font-medium text-bliss-700">Cancel Rate</p>
+          <p className="text-xs text-bliss-500 mt-1">อัตราการยกเลิกงาน</p>
+          <div className="mt-3 pt-3 border-t border-bliss-100">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverageData.avg_cancel_rate.toFixed(1)}%</span>
+              <span className="text-bliss-500">Platform Avg.</span>
+              <span className="font-medium text-bliss-700">{platformAverageData.avg_cancel_rate.toFixed(1)}%</span>
             </div>
           </div>
         </div>
 
         {/* Customer Satisfaction */}
-        <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <div className="bg-white border border-bliss-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <Star className="w-8 h-8 text-amber-500 fill-amber-500" />
+            <Star className="w-8 h-8 text-bliss-500 fill-bliss-500" />
             <span className="text-xs font-medium text-green-600">
               ↑ 0.1
             </span>
           </div>
-          <div className="text-3xl font-bold text-stone-900 mb-1">{customerSatisfaction}</div>
-          <p className="text-sm font-medium text-stone-700">Satisfaction</p>
-          <p className="text-xs text-stone-500 mt-1">ความพึงพอใจของลูกค้า</p>
-          <div className="mt-3 pt-3 border-t border-stone-100">
+          <div className="text-3xl font-bold text-bliss-900 mb-1">{customerSatisfaction}</div>
+          <p className="text-sm font-medium text-bliss-700">Satisfaction</p>
+          <p className="text-xs text-bliss-500 mt-1">ความพึงพอใจของลูกค้า</p>
+          <div className="mt-3 pt-3 border-t border-bliss-100">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-stone-500">Platform Avg.</span>
-              <span className="font-medium text-stone-700">{platformAverageData.avg_rating.toFixed(1)}</span>
+              <span className="text-bliss-500">Platform Avg.</span>
+              <span className="font-medium text-bliss-700">{platformAverageData.avg_rating.toFixed(1)}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Performance History Chart */}
-      <div className="bg-white border border-stone-200 rounded-xl p-6">
+      <div className="bg-white border border-bliss-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-stone-900">Performance Trend</h3>
+          <h3 className="text-lg font-semibold text-bliss-900">Performance Trend</h3>
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as any)}
-            className="px-3 py-2 bg-stone-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2 bg-bliss-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
           >
             <option value="week">2 เดือนล่าสุด</option>
             <option value="month">6 เดือนที่ผ่านมา</option>
@@ -1242,54 +1247,54 @@ function PerformanceTab({ staff }: { staff: Staff }) {
             performanceHistory.map((data, index) => (
               <div key={data.id} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-stone-700 w-16">{formatMonthThai(data.year, data.month)}</span>
+                  <span className="font-medium text-bliss-700 w-16">{formatMonthThai(data.year, data.month)}</span>
                   <div className="flex-1 grid grid-cols-4 gap-2">
                     <div className="text-center">
-                      <div className="text-xs text-stone-500 mb-1">Complete</div>
-                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                      <div className="text-xs text-bliss-500 mb-1">Complete</div>
+                      <div className="h-2 bg-bliss-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-green-500"
                           style={{ width: `${data.completion_rate}%` }}
                         />
                       </div>
-                      <div className="text-xs font-medium text-stone-700 mt-1">{data.completion_rate.toFixed(1)}%</div>
+                      <div className="text-xs font-medium text-bliss-700 mt-1">{data.completion_rate.toFixed(1)}%</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xs text-stone-500 mb-1">Response</div>
-                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                      <div className="text-xs text-bliss-500 mb-1">Response</div>
+                      <div className="h-2 bg-bliss-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-blue-500"
+                          className="h-full bg-bliss-500"
                           style={{ width: `${data.response_rate}%` }}
                         />
                       </div>
-                      <div className="text-xs font-medium text-stone-700 mt-1">{data.response_rate.toFixed(1)}%</div>
+                      <div className="text-xs font-medium text-bliss-700 mt-1">{data.response_rate.toFixed(1)}%</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xs text-stone-500 mb-1">Cancel</div>
-                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                      <div className="text-xs text-bliss-500 mb-1">Cancel</div>
+                      <div className="h-2 bg-bliss-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-red-500"
                           style={{ width: `${Math.min(data.cancel_rate * 10, 100)}%` }}
                         />
                       </div>
-                      <div className="text-xs font-medium text-stone-700 mt-1">{data.cancel_rate.toFixed(1)}%</div>
+                      <div className="text-xs font-medium text-bliss-700 mt-1">{data.cancel_rate.toFixed(1)}%</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xs text-stone-500 mb-1">Rating</div>
-                      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                      <div className="text-xs text-bliss-500 mb-1">Rating</div>
+                      <div className="h-2 bg-bliss-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-amber-500"
+                          className="h-full bg-bliss-500"
                           style={{ width: `${(data.avg_rating / 5) * 100}%` }}
                         />
                       </div>
-                      <div className="text-xs font-medium text-stone-700 mt-1">{data.avg_rating.toFixed(1)}</div>
+                      <div className="text-xs font-medium text-bliss-700 mt-1">{data.avg_rating.toFixed(1)}</div>
                     </div>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-stone-500">
+            <div className="text-center py-8 text-bliss-500">
               ยังไม่มีข้อมูลประสิทธิภาพย้อนหลัง
             </div>
           )}
@@ -1297,31 +1302,31 @@ function PerformanceTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Performance Comparison */}
-      <div className="bg-white border border-stone-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">เปรียบเทียบกับ Platform Average</h3>
+      <div className="bg-white border border-bliss-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-bliss-900 mb-4">เปรียบเทียบกับ Platform Average</h3>
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-stone-600">Job Completion Rate</span>
-              <span className="text-sm font-medium text-stone-900">
+              <span className="text-sm text-bliss-600">Job Completion Rate</span>
+              <span className="text-sm font-medium text-bliss-900">
                 {(parseFloat(completionRate) - (platformAverage?.avg_completion_rate || 88.5)).toFixed(1)}% {parseFloat(completionRate) > (platformAverage?.avg_completion_rate || 88.5) ? 'สูงกว่า' : 'ต่ำกว่า'}
               </span>
             </div>
             <div className="flex gap-2">
-              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500"
                   style={{ width: `${platformAverage?.avg_completion_rate || 88.5}%` }}
                 />
               </div>
-              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-600"
                   style={{ width: `${completionRate}%` }}
                 />
               </div>
             </div>
-            <div className="flex justify-between text-xs text-stone-500 mt-1">
+            <div className="flex justify-between text-xs text-bliss-500 mt-1">
               <span>Avg: {(platformAverage?.avg_completion_rate || 88.5).toFixed(1)}%</span>
               <span>You: {completionRate}%</span>
             </div>
@@ -1329,26 +1334,26 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-stone-600">Response Rate</span>
-              <span className="text-sm font-medium text-stone-900">
+              <span className="text-sm text-bliss-600">Response Rate</span>
+              <span className="text-sm font-medium text-bliss-900">
                 {(responseRate - (platformAverage?.avg_response_rate || 89.2)).toFixed(1)}% {responseRate > (platformAverage?.avg_response_rate || 89.2) ? 'สูงกว่า' : 'ต่ำกว่า'}
               </span>
             </div>
             <div className="flex gap-2">
-              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-500"
+                  className="h-full bg-bliss-500"
                   style={{ width: `${platformAverage?.avg_response_rate || 89.2}%` }}
                 />
               </div>
-              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-600"
+                  className="h-full bg-bliss-600"
                   style={{ width: `${responseRate}%` }}
                 />
               </div>
             </div>
-            <div className="flex justify-between text-xs text-stone-500 mt-1">
+            <div className="flex justify-between text-xs text-bliss-500 mt-1">
               <span>Avg: {(platformAverage?.avg_response_rate || 89.2).toFixed(1)}%</span>
               <span>You: {responseRate.toFixed(1)}%</span>
             </div>
@@ -1356,26 +1361,26 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-stone-600">Cancel Rate</span>
+              <span className="text-sm text-bliss-600">Cancel Rate</span>
               <span className="text-sm font-medium text-green-600">
                 {((platformAverage?.avg_cancel_rate || 5.8) - cancelRate).toFixed(1)}% ดีกว่า
               </span>
             </div>
             <div className="flex gap-2">
-              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-500"
                   style={{ width: `${(platformAverage?.avg_cancel_rate || 5.8) * 10}%` }}
                 />
               </div>
-              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-bliss-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-400"
                   style={{ width: `${cancelRate * 10}%` }}
                 />
               </div>
             </div>
-            <div className="flex justify-between text-xs text-stone-500 mt-1">
+            <div className="flex justify-between text-xs text-bliss-500 mt-1">
               <span>Avg: {(platformAverage?.avg_cancel_rate || 5.8).toFixed(1)}%</span>
               <span>You: {cancelRate.toFixed(1)}%</span>
             </div>
@@ -1384,14 +1389,14 @@ function PerformanceTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Performance Insights */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+      <div className="bg-gradient-to-r from-bliss-50 to-bliss-50 border border-bliss-200 rounded-xl p-6">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-blue-100 rounded-xl">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
+          <div className="p-3 bg-bliss-100 rounded-xl">
+            <TrendingUp className="w-6 h-6 text-bliss-600" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-stone-900 mb-2">Performance Insights</h3>
-            <ul className="space-y-2 text-sm text-stone-600">
+            <h3 className="text-lg font-semibold text-bliss-900 mb-2">Performance Insights</h3>
+            <ul className="space-y-2 text-sm text-bliss-600">
               {recommendations.map((recommendation, index) => (
                 <li key={index} className="flex items-start gap-2">
                   {recommendation.startsWith('✅') || recommendation.startsWith('🏆') ? (
@@ -1399,7 +1404,7 @@ function PerformanceTab({ staff }: { staff: Staff }) {
                   ) : recommendation.startsWith('🔴') || recommendation.startsWith('📉') ? (
                     <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-bliss-600 mt-0.5 flex-shrink-0" />
                   )}
                   <span>{recommendation.replace(/^[✅🏆🔴📉⚡⚠️⭐💪]\s*/, '')}</span>
                 </li>
@@ -1449,8 +1454,10 @@ function EarningsTab({ staff }: { staff: Staff }) {
         try {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['staff', id] }),
+            queryClient.invalidateQueries({ queryKey: ['staff', 'detail', id] }),
             queryClient.invalidateQueries({ queryKey: ['staff-earnings'] }),
-            queryClient.invalidateQueries({ queryKey: ['staff-payouts'] })
+            queryClient.invalidateQueries({ queryKey: ['staff-payouts'] }),
+            queryClient.invalidateQueries({ queryKey: ['payout-dashboard'] })
           ])
         } catch (cacheError) {
           console.warn('Cache invalidation failed:', cacheError)
@@ -1620,7 +1627,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
     const badges = {
       paid: { bg: 'bg-green-100', text: 'text-green-700', label: 'จ่ายแล้ว', icon: CheckCircle },
       pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'รอดำเนินการ', icon: Clock },
-      processing: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'กำลังดำเนินการ', icon: Clock },
+      processing: { bg: 'bg-bliss-100', text: 'text-bliss-700', label: 'กำลังดำเนินการ', icon: Clock },
       failed: { bg: 'bg-red-100', text: 'text-red-700', label: 'ล้มเหลว', icon: XCircle },
     }
     const badge = badges[status]
@@ -1637,8 +1644,8 @@ function EarningsTab({ staff }: { staff: Staff }) {
   if (isLoadingSummary || isLoadingPayouts) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-stone-400" />
-        <span className="ml-2 text-stone-500">กำลังโหลดข้อมูล...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-bliss-400" />
+        <span className="ml-2 text-bliss-500">กำลังโหลดข้อมูล...</span>
       </div>
     )
   }
@@ -1647,15 +1654,15 @@ function EarningsTab({ staff }: { staff: Staff }) {
     <div className="space-y-6">
       {/* Earnings Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-6">
+        <div className="bg-gradient-to-br from-bliss-50 to-bliss-100 border border-bliss-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
-            <DollarSign className="w-8 h-8 text-amber-600" />
+            <Wallet className="w-8 h-8 text-bliss-600" />
           </div>
-          <p className="text-3xl font-bold text-amber-900">
+          <p className="text-3xl font-bold text-bliss-900">
             ฿{(earningsSummary?.total_earnings || 0).toLocaleString()}
           </p>
-          <p className="text-sm font-medium text-amber-700 mt-1">รายได้รวมทั้งหมด</p>
-          <p className="text-xs text-amber-600 mt-1">Total Earnings</p>
+          <p className="text-sm font-medium text-bliss-700 mt-1">รายได้รวมทั้งหมด</p>
+          <p className="text-xs text-bliss-600 mt-1">Total Earnings</p>
         </div>
 
         <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
@@ -1680,27 +1687,27 @@ function EarningsTab({ staff }: { staff: Staff }) {
           <p className="text-xs text-green-600 mt-1">Paid This Month</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
+        <div className="bg-gradient-to-br from-bliss-50 to-bliss-100 border border-bliss-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
-            <Award className="w-8 h-8 text-blue-600" />
+            <Award className="w-8 h-8 text-bliss-600" />
           </div>
-          <p className="text-3xl font-bold text-blue-900">
+          <p className="text-3xl font-bold text-bliss-900">
             ฿{(earningsSummary?.total_paid || 0).toLocaleString()}
           </p>
-          <p className="text-sm font-medium text-blue-700 mt-1">จ่ายแล้วทั้งหมด</p>
-          <p className="text-xs text-blue-600 mt-1">Total Paid</p>
+          <p className="text-sm font-medium text-bliss-700 mt-1">จ่ายแล้วทั้งหมด</p>
+          <p className="text-xs text-bliss-600 mt-1">Total Paid</p>
         </div>
       </div>
 
       {/* Bank Information */}
-      <div className="bg-white border border-stone-200 rounded-xl p-6">
+      <div className="bg-white border border-bliss-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-stone-900">ข้อมูลบัญชีธนาคาร</h3>
+          <h3 className="text-lg font-semibold text-bliss-900">ข้อมูลบัญชีธนาคาร</h3>
           {bankAccount && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowBankModal(true)}
-                className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-sm flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
                 แก้ไข
@@ -1717,31 +1724,31 @@ function EarningsTab({ staff }: { staff: Staff }) {
         </div>
         {isBankLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
-            <span className="ml-2 text-stone-500">กำลังโหลดข้อมูลบัญชี...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-bliss-400" />
+            <span className="ml-2 text-bliss-500">กำลังโหลดข้อมูลบัญชี...</span>
           </div>
         ) : bankAccount ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-stone-500">ธนาคาร</p>
-              <p className="font-medium text-stone-900">{bankAccount.bank_name}</p>
+              <p className="text-sm text-bliss-500">ธนาคาร</p>
+              <p className="font-medium text-bliss-900">{bankAccount.bank_name}</p>
             </div>
             <div>
-              <p className="text-sm text-stone-500">ชื่อบัญชี</p>
-              <p className="font-medium text-stone-900">{bankAccount.account_name}</p>
+              <p className="text-sm text-bliss-500">ชื่อบัญชี</p>
+              <p className="font-medium text-bliss-900">{bankAccount.account_name}</p>
             </div>
             <div>
-              <p className="text-sm text-stone-500">เลขที่บัญชี</p>
-              <p className="font-medium text-stone-900">{bankAccount.account_number}</p>
+              <p className="text-sm text-bliss-500">เลขที่บัญชี</p>
+              <p className="font-medium text-bliss-900">{bankAccount.account_number}</p>
             </div>
           </div>
         ) : (
-          <div className="text-center py-8 text-stone-500">
-            <AlertCircle className="w-12 h-12 mx-auto mb-3 text-stone-300" />
+          <div className="text-center py-8 text-bliss-500">
+            <AlertCircle className="w-12 h-12 mx-auto mb-3 text-bliss-300" />
             <p className="text-sm mb-4">ยังไม่มีข้อมูลบัญชีธนาคาร</p>
             <button
               onClick={() => setShowAddBankModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm inline-flex items-center gap-2"
+              className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-sm inline-flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               เพิ่มบัญชี
@@ -1750,15 +1757,60 @@ function EarningsTab({ staff }: { staff: Staff }) {
         )}
       </div>
 
+      {/* Quick Actions — Payment management (prominent, above history) */}
+      <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 rounded-2xl p-6 shadow-lg">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-white/15 rounded-xl flex-shrink-0">
+            <Wallet className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-white mb-1">การจัดการการจ่ายเงิน</h3>
+            <p className="text-sm text-bliss-200 mb-4">
+              กดปุ่มด้านล่างเพื่อสร้างรอบจ่ายเงินใหม่ หรือจัดการรายการที่มีอยู่
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowCreatePayoutModal(true)}
+                className="px-4 py-2.5 bg-white text-bliss-700 rounded-lg hover:bg-bliss-50 transition text-sm font-semibold flex items-center gap-1 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                สร้างรอบจ่ายเงิน
+              </button>
+              <button
+                onClick={() => {
+                  // Find first pending payout
+                  const firstPending = payoutHistory.find(p => p.status === 'pending')
+                  if (firstPending) {
+                    setSelectedPayout(firstPending.id)
+                    setShowPayoutModal(true)
+                  } else {
+                    toast.error('ไม่มีรายการรอดำเนินการในขณะนี้')
+                  }
+                }}
+                className="px-4 py-2.5 bg-white/15 text-white border border-white/30 rounded-lg hover:bg-white/25 transition text-sm font-medium"
+              >
+                ดำเนินการจ่ายเงิน
+              </button>
+              <button
+                onClick={() => setShowCalculationModal(true)}
+                className="px-4 py-2.5 bg-white/15 text-white border border-white/30 rounded-lg hover:bg-white/25 transition text-sm font-medium"
+              >
+                ดูรายละเอียดการคำนวณ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Payout History */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-stone-900">ประวัติการจ่ายเงิน</h3>
+          <h3 className="text-lg font-semibold text-bliss-900">ประวัติการจ่ายเงิน</h3>
           <div className="flex items-center gap-2">
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value as any)}
-              className="px-3 py-2 bg-stone-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+              className="px-3 py-2 bg-bliss-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
             >
               <option value="week">สัปดาห์นี้</option>
               <option value="month">เดือนนี้</option>
@@ -1766,7 +1818,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
             </select>
             <button
               onClick={handleDownloadReport}
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm flex items-center gap-2"
+              className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-sm flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               ดาวน์โหลดรายงาน
@@ -1774,37 +1826,37 @@ function EarningsTab({ staff }: { staff: Staff }) {
           </div>
         </div>
 
-        <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-bliss-200 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-stone-50 border-b border-stone-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ช่วงเวลา</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จำนวนงาน</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จำนวนเงิน</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่จ่าย</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">การกระทำ</th>
+                <tr className="bg-bliss-50 border-b border-bliss-200">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">วันที่</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ช่วงเวลา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">จำนวนงาน</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">จำนวนเงิน</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">สถานะ</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">วันที่จ่าย</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">การกระทำ</th>
                 </tr>
               </thead>
               <tbody>
                 {payoutHistory.map((payout) => (
-                  <tr key={payout.id} className="border-b border-stone-100 hover:bg-stone-50">
-                    <td className="py-3 px-4 text-sm text-stone-900">
+                  <tr key={payout.id} className="border-b border-bliss-100 hover:bg-bliss-50">
+                    <td className="py-3 px-4 text-sm text-bliss-900">
                       {new Date(payout.date).toLocaleDateString('th-TH', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
                       })}
                     </td>
-                    <td className="py-3 px-4 text-sm text-stone-900">{payout.period}</td>
-                    <td className="py-3 px-4 text-sm text-stone-600">{payout.jobs_count} งาน</td>
-                    <td className="py-3 px-4 text-sm font-medium text-amber-700">
+                    <td className="py-3 px-4 text-sm text-bliss-900">{payout.period}</td>
+                    <td className="py-3 px-4 text-sm text-bliss-600">{payout.jobs_count} งาน</td>
+                    <td className="py-3 px-4 text-sm font-medium text-bliss-700">
                       ฿{payout.amount.toLocaleString()}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(payout.status)}</td>
-                    <td className="py-3 px-4 text-sm text-stone-600">
+                    <td className="py-3 px-4 text-sm text-bliss-600">
                       {payout.payment_date
                         ? new Date(payout.payment_date).toLocaleDateString('th-TH', {
                             year: 'numeric',
@@ -1821,7 +1873,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
                               setSelectedPayout(payout.id)
                               setShowPayoutModal(true)
                             }}
-                            className="px-3 py-1 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-xs"
+                            className="px-3 py-1 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-xs"
                           >
                             ดำเนินการจ่าย
                           </button>
@@ -1831,10 +1883,10 @@ function EarningsTab({ staff }: { staff: Staff }) {
                             setSelectedPayout(payout.id)
                             setShowPayoutDetailModal(true)
                           }}
-                          className="p-1 hover:bg-stone-100 rounded transition"
+                          className="p-1 hover:bg-bliss-100 rounded transition"
                           title="ดูรายละเอียด"
                         >
-                          <Eye className="w-4 h-4 text-stone-600" />
+                          <Eye className="w-4 h-4 text-bliss-600" />
                         </button>
                       </div>
                     </td>
@@ -1847,16 +1899,16 @@ function EarningsTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Current Payout Schedule Display */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+      <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <Calendar className="w-5 h-5 text-blue-600" />
+              <div className="w-3 h-3 bg-bliss-500 rounded-full"></div>
+              <Calendar className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <h4 className="font-semibold text-blue-900">รอบการจ่ายเงินปัจจุบัน</h4>
-              <p className="text-sm text-blue-700">
+              <h4 className="font-semibold text-bliss-900">รอบการจ่ายเงินปัจจุบัน</h4>
+              <p className="text-sm text-bliss-700">
                 • {staff.payout_schedule === 'weekly' && 'ทุกสัปดาห์ (7 วัน)'}
                 • {staff.payout_schedule === 'monthly' && 'รายเดือน (30 วัน)'}
                 • {staff.payout_schedule === 'bi_monthly' && 'กลางเดือน + สิ้นเดือน'}
@@ -1864,7 +1916,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
                 • {!staff.payout_schedule && 'กลางเดือน + สิ้นเดือน (ค่าเริ่มต้น)'}
               </p>
               {staff.next_payout_date && (
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-bliss-600 mt-1">
                   จ่ายครั้งถัดไป: {new Date(staff.next_payout_date).toLocaleDateString('th-TH', {
                     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
                   })}
@@ -1875,56 +1927,11 @@ function EarningsTab({ staff }: { staff: Staff }) {
 
           <button
             onClick={() => setShowScheduleModal(true)}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1"
+            className="px-3 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-sm flex items-center gap-1"
           >
             <Settings className="w-4 h-4" />
             แก้ไขรอบจ่าย
           </button>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-amber-100 rounded-xl">
-            <DollarSign className="w-6 h-6 text-amber-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-stone-900 mb-2">การจัดการการจ่ายเงิน</h3>
-            <p className="text-sm text-stone-600 mb-4">
-              กดปุ่มด้านล่างเพื่อสร้างรอบจ่ายเงินใหม่ หรือจัดการรายการที่มีอยู่
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setShowCreatePayoutModal(true)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                สร้างรอบจ่ายเงิน
-              </button>
-              <button
-                onClick={() => {
-                  // Find first pending payout
-                  const firstPending = payoutHistory.find(p => p.status === 'pending')
-                  if (firstPending) {
-                    setSelectedPayout(firstPending.id)
-                    setShowPayoutModal(true)
-                  } else {
-                    toast.error('ไม่มีรายการรอดำเนินการในขณะนี้')
-                  }
-                }}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm"
-              >
-                ดำเนินการจ่ายเงิน
-              </button>
-              <button
-                onClick={() => setShowCalculationModal(true)}
-                className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 transition text-sm"
-              >
-                ดูรายละเอียดการคำนวณ
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -2033,14 +2040,14 @@ function EarningsTab({ staff }: { staff: Staff }) {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-stone-900 mb-2">ยืนยันการลบ</h3>
-              <p className="text-sm text-stone-500 mb-6">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-2">ยืนยันการลบ</h3>
+              <p className="text-sm text-bliss-500 mb-6">
                 ต้องการลบบัญชีธนาคาร {bankAccount.bank_name} ({bankAccount.account_number}) หรือไม่?
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteBankConfirm(false)}
-                  className="flex-1 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+                  className="flex-1 py-2.5 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
                 >
                   ยกเลิก
                 </button>
@@ -2077,24 +2084,24 @@ function EarningsTab({ staff }: { staff: Staff }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-stone-900">เพิ่มบัญชีธนาคาร</h3>
+              <h3 className="font-semibold text-lg text-bliss-900">เพิ่มบัญชีธนาคาร</h3>
               <button
                 onClick={() => {
                   setShowAddBankModal(false)
                   setNewBankForm({ bank_code: '', account_number: '', account_name: '' })
                 }}
-                className="p-2 hover:bg-stone-100 rounded-lg transition"
+                className="p-2 hover:bg-bliss-100 rounded-lg transition"
               >
-                <XCircle className="w-5 h-5 text-stone-500" />
+                <XCircle className="w-5 h-5 text-bliss-500" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ธนาคาร</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">ธนาคาร</label>
                 <select
                   value={newBankForm.bank_code}
                   onChange={(e) => setNewBankForm({ ...newBankForm, bank_code: e.target.value })}
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 >
                   <option value="">เลือกธนาคาร</option>
                   {THAI_BANKS.map((bank) => (
@@ -2105,23 +2112,23 @@ function EarningsTab({ staff }: { staff: Staff }) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">เลขที่บัญชี</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">เลขที่บัญชี</label>
                 <input
                   type="text"
                   value={newBankForm.account_number}
                   onChange={(e) => setNewBankForm({ ...newBankForm, account_number: e.target.value })}
                   placeholder="xxx-x-xxxxx-x"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500 font-mono"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ชื่อบัญชี</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">ชื่อบัญชี</label>
                 <input
                   type="text"
                   value={newBankForm.account_name}
                   onChange={(e) => setNewBankForm({ ...newBankForm, account_name: e.target.value })}
                   placeholder="ชื่อ-นามสกุล ตามบัญชี"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 />
               </div>
               <button
@@ -2170,7 +2177,7 @@ function EarningsTab({ staff }: { staff: Staff }) {
                   }
                 }}
                 disabled={isAddingBank}
-                className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                className="w-full py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:opacity-50"
               >
                 {isAddingBank ? (
                   <Loader2 className="w-5 h-5 animate-spin mx-auto" />

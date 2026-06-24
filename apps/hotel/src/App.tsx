@@ -31,7 +31,7 @@ function App() {
   if (isLoading && initialLoad) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bliss-600" />
       </div>
     )
   }
@@ -116,11 +116,11 @@ function App() {
           },
           loading: {
             iconTheme: {
-              primary: '#f59e0b',
+              primary: '#565b34',
               secondary: '#fff',
             },
             style: {
-              border: '1px solid #f59e0b',
+              border: '1px solid #565b34',
             },
           },
         }}

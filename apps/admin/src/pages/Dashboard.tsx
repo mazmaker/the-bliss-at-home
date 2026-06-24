@@ -43,9 +43,9 @@ function formatTime(timeStr: string): string {
 
 function getStatusBadge(status: string) {
   const badges: Record<string, string> = {
-    confirmed: 'bg-blue-100 text-blue-700',
+    confirmed: 'bg-bliss-100 text-bliss-700',
     completed: 'bg-green-100 text-green-700',
-    in_progress: 'bg-purple-100 text-purple-700',
+    in_progress: 'bg-bliss-100 text-bliss-700',
     pending: 'bg-yellow-100 text-yellow-700',
     cancelled: 'bg-red-100 text-red-700',
   }
@@ -57,14 +57,14 @@ function getStatusBadge(status: string) {
     cancelled: 'ยกเลิก',
   }
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${badges[status] || 'bg-stone-100 text-stone-700'}`}>
+    <span className={`inline-block whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium ${badges[status] || 'bg-bliss-100 text-bliss-700'}`}>
       {labels[status] || status}
     </span>
   )
 }
 
 function LoadingSkeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-stone-200 rounded ${className}`} />
+  return <div className={`animate-pulse bg-bliss-200 rounded ${className}`} />
 }
 
 // ============================================
@@ -91,12 +91,21 @@ function Dashboard() {
   // Stats cards configuration
   const statsCards = [
     {
+      name: 'พนักงานทั้งหมด',
+      nameEn: 'Total Staff',
+      value: data?.totalStaff ?? '-',
+      subtitle: `ใช้งาน: ${data?.activeStaff ?? '-'} คน`,
+      highlight: `พร้อมรับงาน: ${data?.availableStaff ?? '-'} คน`,
+      icon: Users,
+      color: 'from-bliss-500 to-bliss-600',
+    },
+    {
       name: 'การจองวันนี้',
       nameEn: "Today's Bookings",
       value: data?.todayBookings ?? '-',
       subtitle: `เดือนนี้: ${data?.monthBookings ?? '-'} รายการ`,
       icon: Calendar,
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-bliss-500 to-bliss-600',
     },
     {
       name: 'รายได้วันนี้',
@@ -104,7 +113,8 @@ function Dashboard() {
       value: data ? formatCurrency(data.todayRevenue) : '-',
       subtitle: `เดือนนี้: ${data ? formatCurrency(data.monthRevenue) : '-'}`,
       icon: DollarSign,
-      color: 'from-green-500 to-emerald-600',
+      iconText: '฿',
+      color: 'from-bliss-500 to-bliss-600',
     },
     {
       name: 'ผู้ใช้ใหม่',
@@ -112,15 +122,7 @@ function Dashboard() {
       value: data?.newCustomersToday ?? '-',
       subtitle: `เดือนนี้: ${data?.newCustomersMonth ?? '-'} คน (ทั้งหมด ${data?.totalCustomers ?? '-'})`,
       icon: UserPlus,
-      color: 'from-pink-500 to-rose-600',
-    },
-    {
-      name: 'พนักงานทั้งหมด',
-      nameEn: 'Total Staff',
-      value: data?.totalStaff ?? '-',
-      subtitle: `ใช้งาน: ${data?.activeStaff ?? '-'} • พร้อมรับงาน: ${data?.availableStaff ?? '-'} คน`,
-      icon: Users,
-      color: 'from-purple-500 to-purple-600',
+      color: 'from-bliss-500 to-bliss-600',
     },
     {
       name: 'โรงแรมทั้งหมด',
@@ -128,7 +130,7 @@ function Dashboard() {
       value: data?.totalHotels ?? '-',
       subtitle: null,
       icon: Building,
-      color: 'from-amber-500 to-amber-600',
+      color: 'from-bliss-500 to-bliss-600',
     },
     {
       name: 'บริการทั้งหมด',
@@ -136,7 +138,7 @@ function Dashboard() {
       value: data?.totalServices ?? '-',
       subtitle: `ใช้งาน: ${data?.activeServices ?? '-'} รายการ`,
       icon: Briefcase,
-      color: 'from-teal-500 to-teal-600',
+      color: 'from-bliss-500 to-bliss-600',
     },
     {
       name: 'มูลค่าเฉลี่ย/การจอง',
@@ -144,7 +146,7 @@ function Dashboard() {
       value: data ? formatCurrency(data.avgBookingValue) : '-',
       subtitle: 'เฉลี่ยเดือนนี้',
       icon: Package,
-      color: 'from-indigo-500 to-indigo-600',
+      color: 'from-bliss-500 to-bliss-600',
     },
   ]
 
@@ -153,20 +155,23 @@ function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">ภาพรวม</h1>
-          <p className="text-stone-500">Dashboard Overview</p>
+          <h1 className="text-2xl font-bold text-bliss-900">ภาพรวม</h1>
+          <p className="text-bliss-500">Dashboard Overview</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-stone-500">
+        <div className="flex items-center gap-2 text-sm text-bliss-500">
           <Clock className="w-4 h-4" />
           <span>อัปเดตล่าสุด: {lastUpdated.toLocaleString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
         </div>
       </div>
 
-      {/* SOS Emergency Widget - Highest Priority */}
-      <SOSWidget />
+      {/* Priority Widgets - SOS (left) + Unassigned Jobs (right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        {/* SOS Emergency Widget - Highest Priority */}
+        <SOSWidget />
 
-      {/* Job Escalation Widget - Unassigned Jobs */}
-      <JobEscalationWidget />
+        {/* Job Escalation Widget - Unassigned Jobs */}
+        <JobEscalationWidget />
+      </div>
 
       {/* Stats Grid - Row 1: 4 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -175,70 +180,97 @@ function Dashboard() {
           return (
             <div
               key={stat.name}
-              className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100 hover:shadow-xl transition"
+              className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100 hover:shadow-xl transition"
             >
-              <div className="flex items-start justify-between">
-                <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl`}>
-                  <Icon className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}>
+                    {(stat as any).iconText ? (
+                      <span className="w-6 h-6 flex items-center justify-center text-white text-2xl font-bold leading-none">{(stat as any).iconText}</span>
+                    ) : (
+                      <Icon className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-bliss-700">{stat.name}</p>
+                    {stat.subtitle && (
+                      <p className="text-xs font-semibold text-bliss-500 mt-0.5">{overview.isLoading ? '' : stat.subtitle}</p>
+                    )}
+                    {(stat as any).highlight && !overview.isLoading && (
+                      <span className="inline-block mt-1.5 px-2.5 py-1 rounded-lg bg-bliss-500 text-white text-xs font-bold shadow-sm animate-pulse">
+                        {(stat as any).highlight}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4">
-                {overview.isLoading ? (
-                  <LoadingSkeleton className="h-8 w-20 mb-1" />
-                ) : (
-                  <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                )}
-                <p className="text-sm text-stone-500">{stat.name}</p>
-                {stat.subtitle && (
-                  <p className="text-xs text-stone-400 mt-1">{overview.isLoading ? '' : stat.subtitle}</p>
-                )}
+                <div className="flex-shrink-0 text-right">
+                  {overview.isLoading ? (
+                    <LoadingSkeleton className="h-9 w-16" />
+                  ) : (
+                    <p className="text-3xl font-bold text-bliss-900 leading-none">{stat.value}</p>
+                  )}
+                </div>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Stats Grid - Row 2: 3 cards */}
+      {/* Stats Grid - Row 2: 3 cards (full width) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {statsCards.slice(4).map((stat) => {
           const Icon = stat.icon
           return (
             <div
               key={stat.name}
-              className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100 hover:shadow-xl transition"
+              className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100 hover:shadow-xl transition"
             >
-              <div className="flex items-start justify-between">
-                <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl`}>
-                  <Icon className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}>
+                    {(stat as any).iconText ? (
+                      <span className="w-6 h-6 flex items-center justify-center text-white text-2xl font-bold leading-none">{(stat as any).iconText}</span>
+                    ) : (
+                      <Icon className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-bliss-700">{stat.name}</p>
+                    {stat.subtitle && (
+                      <p className="text-xs font-semibold text-bliss-500 mt-0.5">{overview.isLoading ? '' : stat.subtitle}</p>
+                    )}
+                    {(stat as any).highlight && !overview.isLoading && (
+                      <span className="inline-block mt-1.5 px-2.5 py-1 rounded-lg bg-bliss-500 text-white text-xs font-bold shadow-sm animate-pulse">
+                        {(stat as any).highlight}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4">
-                {overview.isLoading ? (
-                  <LoadingSkeleton className="h-8 w-20 mb-1" />
-                ) : (
-                  <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                )}
-                <p className="text-sm text-stone-500">{stat.name}</p>
-                {stat.subtitle && (
-                  <p className="text-xs text-stone-400 mt-1">{overview.isLoading ? '' : stat.subtitle}</p>
-                )}
+                <div className="flex-shrink-0 text-right">
+                  {overview.isLoading ? (
+                    <LoadingSkeleton className="h-9 w-16" />
+                  ) : (
+                    <p className="text-3xl font-bold text-bliss-900 leading-none">{stat.value}</p>
+                  )}
+                </div>
               </div>
             </div>
           )
         })}
       </div>
 
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Bookings */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-stone-900">การจองล่าสุด</h2>
-              <p className="text-sm text-stone-500">Recent Bookings</p>
+              <h2 className="text-lg font-semibold text-bliss-900">การจองล่าสุด</h2>
+              <p className="text-sm text-bliss-500">Recent Bookings</p>
             </div>
             <Link
               to="/admin/bookings"
-              className="flex items-center gap-1 text-amber-700 hover:text-amber-800 text-sm font-medium transition"
+              className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm font-medium transition"
             >
               ดูทั้งหมด
               <ArrowRight className="w-4 h-4" />
@@ -248,19 +280,19 @@ function Dashboard() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-stone-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">รหัส</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">ลูกค้า</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">บริการ</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">วันที่/เวลา</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">จำนวน</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-stone-700">สถานะ</th>
+                <tr className="border-b border-bliss-200">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">รหัส</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">ลูกค้า</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">บริการ</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">วันที่/เวลา</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">จำนวน</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-bliss-700">สถานะ</th>
                 </tr>
               </thead>
               <tbody>
                 {recentBookings.isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="border-b border-stone-100">
+                    <tr key={i} className="border-b border-bliss-100">
                       <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-28" /></td>
                       <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-24" /></td>
                       <td className="py-3 px-4"><LoadingSkeleton className="h-4 w-32" /></td>
@@ -271,24 +303,24 @@ function Dashboard() {
                   ))
                 ) : recentBookings.data?.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-stone-400">ไม่มีข้อมูลการจอง</td>
+                    <td colSpan={6} className="py-8 text-center text-bliss-400">ไม่มีข้อมูลการจอง</td>
                   </tr>
                 ) : (
                   recentBookings.data?.map((booking) => (
-                    <tr key={booking.id} className="border-b border-stone-100 hover:bg-stone-50">
-                      <td className="py-3 px-4 text-sm font-medium text-stone-900">{booking.booking_number}</td>
-                      <td className="py-3 px-4 text-sm text-stone-600">{booking.customer_name || '-'}</td>
-                      <td className="py-3 px-4 text-sm text-stone-600">
+                    <tr key={booking.id} className="border-b border-bliss-100 hover:bg-bliss-50">
+                      <td className="py-3 px-4 text-sm font-medium text-bliss-900 whitespace-nowrap">{booking.booking_number}</td>
+                      <td className="py-3 px-4 text-sm text-bliss-600 whitespace-nowrap">{booking.customer_name || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-bliss-600 whitespace-nowrap">
                         <div>{booking.service_name || '-'}</div>
                         {booking.hotel_name && (
-                          <div className="text-xs text-amber-700">{booking.hotel_name}</div>
+                          <div className="text-xs text-bliss-700">{booking.hotel_name}</div>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-sm text-stone-600">
+                      <td className="py-3 px-4 text-sm text-bliss-600 whitespace-nowrap">
                         <div>{formatDate(booking.booking_date)}</div>
                         <div className="text-xs">{formatTime(booking.booking_time)}</div>
                       </td>
-                      <td className="py-3 px-4 text-sm font-medium text-stone-900">{formatCurrency(booking.final_price)}</td>
+                      <td className="py-3 px-4 text-sm font-medium text-bliss-900">{formatCurrency(booking.final_price)}</td>
                       <td className="py-3 px-4">{getStatusBadge(booking.status)}</td>
                     </tr>
                   ))
@@ -299,13 +331,13 @@ function Dashboard() {
         </div>
 
         {/* Pending Approvals */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-stone-900">รออนุมัติ</h2>
-              <p className="text-sm text-stone-500">Pending Staff Applications</p>
+              <h2 className="text-lg font-semibold text-bliss-900">รออนุมัติ</h2>
+              <p className="text-sm text-bliss-500">Pending Staff Applications</p>
             </div>
-            <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+            <span className="px-3 py-1 bg-bliss-100 text-bliss-700 rounded-full text-sm font-medium">
               {pendingApprovals.isLoading ? '...' : pendingApprovals.data?.length || 0}
             </span>
           </div>
@@ -313,7 +345,7 @@ function Dashboard() {
           <div className="space-y-4">
             {pendingApprovals.isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="p-4 bg-stone-50 rounded-xl">
+                <div key={i} className="p-4 bg-bliss-50 rounded-xl">
                   <div className="flex items-center gap-3 mb-3">
                     <LoadingSkeleton className="w-10 h-10 rounded-full" />
                     <div className="space-y-2 flex-1">
@@ -325,29 +357,29 @@ function Dashboard() {
                 </div>
               ))
             ) : pendingApprovals.data?.length === 0 ? (
-              <div className="py-8 text-center text-stone-400 text-sm">
+              <div className="py-8 text-center text-bliss-400 text-sm">
                 ไม่มีคำขออนุมัติ
               </div>
             ) : (
               pendingApprovals.data?.map((staff) => (
                 <div
                   key={staff.id}
-                  className="p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition"
+                  className="p-4 bg-bliss-50 rounded-xl hover:bg-bliss-100 transition"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white font-semibold">
                         {staff.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="font-medium text-stone-900">{staff.full_name}</p>
-                        <p className="text-sm text-stone-500">{staff.skills?.join(', ') || '-'}</p>
+                        <p className="font-medium text-bliss-900">{staff.full_name}</p>
+                        <p className="text-sm text-bliss-500">{staff.skills?.join(', ') || '-'}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-stone-500">
-                    <span>ประสบการณ์ {staff.experience_years} ปี</span>
-                    <span>สมัคร {staff.application_date ? formatDate(staff.application_date) : '-'}</span>
+                  <div className="flex items-center justify-between text-xs text-bliss-500">
+                    <span>{staff.phone_number || '-'}</span>
+                    <span>เพิ่มเมื่อ {staff.application_date ? formatDate(staff.application_date) : '-'}</span>
                   </div>
                 </div>
               ))
@@ -356,7 +388,7 @@ function Dashboard() {
 
           <Link
             to="/admin/staff"
-            className="mt-4 w-full flex items-center justify-center gap-1 py-2 text-amber-700 hover:text-amber-800 text-sm font-medium border border-amber-200 rounded-xl hover:bg-amber-50 transition"
+            className="mt-4 w-full flex items-center justify-center gap-1 py-2 text-bliss-700 hover:text-bliss-800 text-sm font-medium border border-bliss-200 rounded-xl hover:bg-bliss-50 transition"
           >
             ดูทั้งหมด
             <ArrowRight className="w-4 h-4" />
@@ -365,15 +397,15 @@ function Dashboard() {
       </div>
 
       {/* Popular Services */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-stone-900">บริการยอดนิยม</h2>
-            <p className="text-sm text-stone-500">Popular Services This Month</p>
+            <h2 className="text-lg font-semibold text-bliss-900">บริการยอดนิยม</h2>
+            <p className="text-sm text-bliss-500">Popular Services This Month</p>
           </div>
           <Link
             to="/admin/services"
-            className="flex items-center gap-1 text-amber-700 hover:text-amber-800 text-sm font-medium transition"
+            className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm font-medium transition"
           >
             จัดการบริการ
             <ArrowRight className="w-4 h-4" />
@@ -383,7 +415,7 @@ function Dashboard() {
         {popularServices.isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 bg-stone-50 rounded-xl">
+              <div key={i} className="p-4 bg-bliss-50 rounded-xl">
                 <LoadingSkeleton className="h-6 w-6 rounded-full mb-3" />
                 <LoadingSkeleton className="h-4 w-full mb-2" />
                 <LoadingSkeleton className="h-3 w-20 mb-1" />
@@ -392,7 +424,7 @@ function Dashboard() {
             ))}
           </div>
         ) : popularServices.data?.length === 0 ? (
-          <div className="py-8 text-center text-stone-400 text-sm">
+          <div className="py-8 text-center text-bliss-400 text-sm">
             ไม่มีข้อมูลบริการเดือนนี้
           </div>
         ) : (
@@ -404,23 +436,23 @@ function Dashboard() {
             {popularServices.data?.map((service, index) => (
               <div
                 key={service.service_id}
-                className="p-4 bg-gradient-to-br from-stone-50 to-amber-50 rounded-xl border border-stone-100"
+                className="p-4 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-xl border border-bliss-100"
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-6 h-6 bg-gradient-to-r from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  <span className="w-6 h-6 bg-gradient-to-r from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {index + 1}
                   </span>
-                  <Package className="w-4 h-4 text-amber-700" />
+                  <Package className="w-4 h-4 text-bliss-700" />
                 </div>
-                <p className="font-medium text-stone-900 text-sm mb-2">{service.name}</p>
-                <div className="space-y-1 text-xs text-stone-500">
+                <p className="font-medium text-bliss-900 text-sm mb-2">{service.name}</p>
+                <div className="space-y-1 text-xs text-bliss-500">
                   <div className="flex justify-between">
                     <span>การจอง:</span>
-                    <span className="font-medium text-stone-700">{service.bookings}</span>
+                    <span className="font-medium text-bliss-700">{service.bookings}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>รายได้:</span>
-                    <span className="font-medium text-stone-900">{formatCurrency(service.revenue)}</span>
+                    <span className="font-medium text-bliss-900">{formatCurrency(service.revenue)}</span>
                   </div>
                 </div>
               </div>
@@ -431,7 +463,7 @@ function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-green-100 rounded-xl">
               <CheckCircle className="w-6 h-6 text-green-600" />
@@ -440,14 +472,14 @@ function Dashboard() {
               {quickStats.isLoading ? (
                 <LoadingSkeleton className="h-8 w-12 mb-1" />
               ) : (
-                <p className="text-2xl font-bold text-stone-900">{quickStats.data?.completedToday ?? 0}</p>
+                <p className="text-2xl font-bold text-bliss-900">{quickStats.data?.completedToday ?? 0}</p>
               )}
-              <p className="text-sm text-stone-500">การจองสำเร็จวันนี้</p>
+              <p className="text-sm text-bliss-500">การจองสำเร็จวันนี้</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-yellow-100 rounded-xl">
               <AlertCircle className="w-6 h-6 text-yellow-600" />
@@ -456,14 +488,14 @@ function Dashboard() {
               {quickStats.isLoading ? (
                 <LoadingSkeleton className="h-8 w-12 mb-1" />
               ) : (
-                <p className="text-2xl font-bold text-stone-900">{quickStats.data?.pendingToday ?? 0}</p>
+                <p className="text-2xl font-bold text-bliss-900">{quickStats.data?.pendingToday ?? 0}</p>
               )}
-              <p className="text-sm text-stone-500">รอดำเนินการวันนี้</p>
+              <p className="text-sm text-bliss-500">รอดำเนินการวันนี้</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-red-100 rounded-xl">
               <XCircle className="w-6 h-6 text-red-600" />
@@ -472,9 +504,9 @@ function Dashboard() {
               {quickStats.isLoading ? (
                 <LoadingSkeleton className="h-8 w-12 mb-1" />
               ) : (
-                <p className="text-2xl font-bold text-stone-900">{quickStats.data?.cancelledToday ?? 0}</p>
+                <p className="text-2xl font-bold text-bliss-900">{quickStats.data?.cancelledToday ?? 0}</p>
               )}
-              <p className="text-sm text-stone-500">การยกเลิกวันนี้</p>
+              <p className="text-sm text-bliss-500">การยกเลิกวันนี้</p>
             </div>
           </div>
         </div>

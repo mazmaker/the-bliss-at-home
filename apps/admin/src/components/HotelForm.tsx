@@ -23,7 +23,7 @@ import {
   Mail,
   MapPin,
   Globe,
-  DollarSign,
+  Wallet,
   CreditCard,
   AlertCircle,
   CheckCircle,
@@ -463,48 +463,50 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative w-full max-w-4xl rounded-lg bg-white shadow-xl">
+        <div className="relative w-full max-w-4xl bg-white text-left shadow-2xl rounded-2xl flex flex-col max-h-[92vh] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between border-b px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-100 p-2">
-                <Building className="h-6 w-6 text-blue-600" />
+          <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <Building className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white leading-tight">
+                    {editData ? 'แก้ไขข้อมูลโรงแรม' : 'เพิ่มโรงแรมใหม่'}
+                  </h2>
+                  <p className="text-xs text-bliss-200">
+                    {editData ? 'อัปเดตข้อมูลโรงแรมในระบบ' : 'กรอกข้อมูลเพื่อเพิ่มโรงแรมใหม่'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {editData ? 'แก้ไขข้อมูลโรงแรม' : 'เพิ่มโรงแรมใหม่'}
-                </h2>
-                <p className="text-sm text-gray-500">
-                  {editData ? 'อัพเดทข้อมูลโรงแรมในระบบ' : 'เพิ่มโรงแรมเข้าสู่ระบบ'}
-                </p>
-              </div>
+              <button
+                onClick={onClose}
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-            <div className="max-h-[calc(100vh-300px)] space-y-6 overflow-y-auto pr-2">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-0 flex-1" noValidate>
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
               {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <Building className="h-5 w-5" />
+              <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                  <Building className="h-5 w-5 text-bliss-600" />
                   ข้อมูลพื้นฐาน
                 </h3>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       ชื่อโรงแรม (ภาษาไทย) *
                     </label>
                     <input
                       {...register('name_th')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="โรงแรมฮิลตัน กรุงเทพฯ"
                     />
                     {errors.name_th && (
@@ -513,12 +515,12 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       ชื่อโรงแรม (English) *
                     </label>
                     <input
                       {...register('name_en')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="Hilton Bangkok"
                     />
                     {errors.name_en && (
@@ -528,19 +530,19 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-bliss-700">
                     Hotel Slug (URL สำหรับโรงแรม) *
                   </label>
                   <input
                     {...register('hotel_slug')}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm bg-gray-50 text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm bg-bliss-50 text-bliss-700 focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                     placeholder="hilton-bangkok"
                     readOnly={!editData} // Auto-generate for new hotels, allow edit for existing ones
                   />
                   {errors.hotel_slug && (
                     <p className="mt-1 text-sm text-red-600">{errors.hotel_slug.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-bliss-500">
                     {editData
                       ? "สามารถแก้ไขได้หากจำเป็น (จะส่งผลต่อ URL ของโรงแรม)"
                       : "สร้างอัตโนมัติจากชื่อภาษาอังกฤษ - ใช้สำหรับ URL และระบุตัวตน"
@@ -549,33 +551,33 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-bliss-700">
                     คำอธิบาย (ถ้ามี)
                   </label>
                   <textarea
                     {...register('description')}
                     rows={3}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                     placeholder="รายละเอียดเกี่ยวกับโรงแรม..."
                   />
                 </div>
               </div>
 
               {/* Contact Information */}
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <User className="h-5 w-5" />
+              <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                  <User className="h-5 w-5 text-bliss-600" />
                   ข้อมูลการติดต่อ
                 </h3>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       ชื่อผู้ติดต่อ *
                     </label>
                     <input
                       {...register('contact_person')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="คุณสมชาย ใจดี"
                     />
                     {errors.contact_person && (
@@ -584,14 +586,14 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       เบอร์โทรศัพท์ *
                     </label>
                     <div className="relative mt-1">
-                      <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                      <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                       <input
                         {...register('phone')}
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-bliss-300 py-2 pl-10 pr-3 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                         placeholder="02-123-4567"
                       />
                     </div>
@@ -601,13 +603,13 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">อีเมล *</label>
+                    <label className="block text-sm font-medium text-bliss-700">อีเมล *</label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                       <input
                         {...register('email')}
                         type="email"
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-bliss-300 py-2 pl-10 pr-3 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                         placeholder="contact@hotel.com"
                       />
                     </div>
@@ -617,14 +619,14 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       เว็บไซต์ (ถ้ามี)
                     </label>
                     <div className="relative mt-1">
-                      <Globe className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                      <Globe className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                       <input
                         {...register('website')}
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-bliss-300 py-2 pl-10 pr-3 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                         placeholder="https://www.hotel.com"
                       />
                     </div>
@@ -634,21 +636,21 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       เซลล์ที่แนะนำ
                     </label>
                     <div className="relative mt-1">
-                      <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                      <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                       <input
                         {...register('recommended_sales_staff')}
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-bliss-300 py-2 pl-10 pr-3 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                         placeholder="ชื่อหรือรหัสเซลล์ที่แนะนำสำหรับโรงแรมนี้"
                       />
                     </div>
                     {errors.recommended_sales_staff && (
                       <p className="mt-1 text-sm text-red-600">{errors.recommended_sales_staff.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-bliss-500">
                       ระบุชื่อหรือรหัสพนักงานขายที่รับผิดชอบโรงแรมนี้
                     </p>
                   </div>
@@ -656,18 +658,18 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
               </div>
 
               {/* Credit Settings */}
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <CreditCard className="h-5 w-5" />
+              <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                  <CreditCard className="h-5 w-5 text-bliss-600" />
                   ตั้งค่าเครดิต
                 </h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">จำนวนวันเครดิต</label>
+                    <label className="block text-sm font-medium text-bliss-700">จำนวนวันเครดิต</label>
                     <input
                       type="number"
                       {...register('credit_days')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="30"
                       min={1}
                       max={365}
@@ -675,23 +677,23 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                     {errors.credit_days && (
                       <p className="mt-1 text-sm text-red-600">{errors.credit_days.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">ระยะเวลาเครดิต (วัน) ก่อนต้องชำระ</p>
+                    <p className="mt-1 text-xs text-bliss-500">ระยะเวลาเครดิต (วัน) ก่อนต้องชำระ</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">วันเริ่มรอบเครดิต</label>
+                    <label className="block text-sm font-medium text-bliss-700">วันเริ่มรอบเครดิต</label>
                     <input
                       type="date"
                       {...register('credit_start_date')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                     />
-                    <p className="mt-1 text-xs text-gray-500">วันที่เริ่มนับรอบเครดิตแรก</p>
+                    <p className="mt-1 text-xs text-bliss-500">วันที่เริ่มนับรอบเครดิตแรก</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">วันครบรอบในเดือน</label>
+                    <label className="block text-sm font-medium text-bliss-700">วันครบรอบในเดือน</label>
                     <input
                       type="number"
                       {...register('credit_cycle_day')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="1"
                       min={1}
                       max={31}
@@ -699,24 +701,24 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                     {errors.credit_cycle_day && (
                       <p className="mt-1 text-sm text-red-600">{errors.credit_cycle_day.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">คำนวณอัตโนมัติจากวันเริ่มรอบ + จำนวนวัน (แก้ไขได้)</p>
+                    <p className="mt-1 text-xs text-bliss-500">คำนวณอัตโนมัติจากวันเริ่มรอบ + จำนวนวัน (แก้ไขได้)</p>
                   </div>
                 </div>
               </div>
 
               {/* Location Information */}
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <MapPin className="h-5 w-5" />
+              <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                  <MapPin className="h-5 w-5 text-bliss-600" />
                   ที่ตั้ง
                 </h3>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">ที่อยู่ *</label>
+                  <label className="block text-sm font-medium text-bliss-700">ที่อยู่ *</label>
                   <textarea
                     {...register('address')}
                     rows={2}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                     placeholder="123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110"
                   />
                   {errors.address && (
@@ -726,7 +728,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
                 {/* Google Maps Picker */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     เลือกตำแหน่งบนแผนที่
                   </label>
                   <GoogleMapsPicker
@@ -741,64 +743,64 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
               </div>
 
               {/* Business Information */}
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <DollarSign className="h-5 w-5" />
+              <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                  <Wallet className="h-5 w-5 text-bliss-600" />
                   ข้อมูลทางธุรกิจ
                 </h3>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-bliss-700">
                     จำนวนเงินส่วนลด (บาท) *
                   </label>
                   <div className="relative mt-1">
-                    <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-bliss-500 font-semibold">฿</span>
                     <input
                       {...register('discount_amount')}
                       type="number"
                       step="1"
                       min="0"
                       max="10000"
-                      className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="block w-full rounded-lg border border-bliss-300 py-2 pl-10 pr-3 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="0"
                     />
                   </div>
                   {errors.discount_amount && (
                     <p className="mt-1 text-sm text-red-600">{errors.discount_amount.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-bliss-500">
                     จำนวนเงินคงที่ที่ลดให้ลูกค้า (เช่น 100 บาท, 500 บาท)
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       คะแนนรีวิว (Rating)
                     </label>
                     <div className="relative mt-1">
-                      <Star className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400" />
+                      <Star className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                       <input
                         {...register('rating')}
                         type="number"
                         step="0.1"
                         min="0"
                         max="5"
-                        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-bliss-300 py-2 pl-10 pr-3 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                         placeholder="4.5"
                       />
                     </div>
                     {errors.rating && (
                       <p className="mt-1 text-sm text-red-600">{errors.rating.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">คะแนน 0-5 ดาว</p>
+                    <p className="mt-1 text-xs text-bliss-500">คะแนน 0-5 ดาว</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">สถานะ *</label>
+                    <label className="block text-sm font-medium text-bliss-700">สถานะ *</label>
                     <select
                       {...register('status')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                     >
                       {statusOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -812,12 +814,12 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       เลขประจำตัวผู้เสียภาษี
                     </label>
                     <input
                       {...register('tax_id')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="0123456789012"
                       maxLength={13}
                     />
@@ -826,38 +828,38 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
               </div>
 
               {/* Payment Information */}
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <CreditCard className="h-5 w-5" />
+              <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                  <CreditCard className="h-5 w-5 text-bliss-600" />
                   ข้อมูลการชำระเงิน
                 </h3>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">ชื่อธนาคาร</label>
+                    <label className="block text-sm font-medium text-bliss-700">ชื่อธนาคาร</label>
                     <input
                       {...register('bank_name')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="ธนาคารกรุงเทพ"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-bliss-700">
                       เลขที่บัญชี
                     </label>
                     <input
                       {...register('bank_account_number')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="123-4-56789-0"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">ชื่อบัญชี</label>
+                    <label className="block text-sm font-medium text-bliss-700">ชื่อบัญชี</label>
                     <input
                       {...register('bank_account_name')}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 block w-full rounded-lg border border-bliss-300 px-3 py-2 shadow-sm focus:border-bliss-500 focus:outline-none focus:ring-1 focus:ring-bliss-500"
                       placeholder="บริษัท โรงแรมฮิลตัน จำกัด"
                     />
                   </div>
@@ -866,22 +868,22 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
               {/* Login Account Management */}
               {editData?.id && (
-                <div className="space-y-4 border-t pt-6">
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                    <KeyRound className="h-5 w-5" />
+                <div className="rounded-xl border border-bliss-200 p-5 space-y-4">
+                  <h3 className="flex items-center gap-2.5 pb-3 mb-1 border-b border-bliss-100 text-lg font-bold text-bliss-900">
+                    <KeyRound className="h-5 w-5 text-bliss-600" />
                     จัดการบัญชีผู้ใช้
                   </h3>
 
-                  <div className="rounded-lg bg-gray-50 p-4">
+                  <div className="rounded-lg bg-bliss-50 p-4">
                     {/* Login Status */}
                     <div className="mb-4 flex items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <Shield className={`h-5 w-5 ${authStatus.hasAccount ? 'text-green-500' : 'text-gray-400'}`} />
+                        <Shield className={`h-5 w-5 ${authStatus.hasAccount ? 'text-green-500' : 'text-bliss-400'}`} />
                         <span className="text-sm font-medium">
                           สถานะบัญชี: {authStatus.hasAccount ? 'มีบัญชีแล้ว' : 'ยังไม่มีบัญชี'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-bliss-600">
                         <Clock className="h-4 w-4" />
                         เข้าสู่ระบบล่าสุด: {formatLastLogin(authStatus.lastLogin || null)}
                       </div>
@@ -889,10 +891,10 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
                     {/* Login Email */}
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-bliss-700 mb-2">
                         อีเมลสำหรับเข้าสู่ระบบ
                       </label>
-                      <div className="text-sm text-gray-600 bg-white rounded border px-3 py-2">
+                      <div className="text-sm text-bliss-600 bg-white rounded border px-3 py-2">
                         {authStatus.loginEmail || watch('email') || 'ใช้อีเมลติดต่อหลัก'}
                       </div>
                     </div>
@@ -904,14 +906,14 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                           type="checkbox"
                           checked={loginEnabled}
                           onChange={(e) => toggleLoginAccess(e.target.checked)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-bliss-600 focus:ring-bliss-500 border-bliss-300 rounded"
                           disabled={!authStatus.hasAccount}
                         />
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-bliss-700">
                           เปิดใช้งานการเข้าสู่ระบบ
                         </span>
                       </label>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-bliss-500 mt-1">
                         อนุญาตให้โรงแรมเข้าสู่ระบบผ่านแอปพลิเคชัน Hotel
                       </p>
                     </div>
@@ -923,7 +925,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                           type="button"
                           onClick={generateTemporaryPassword}
                           disabled={isGeneratingPassword || !watch('email')}
-                          className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex items-center justify-center gap-2 rounded-lg bg-bliss-600 px-4 py-2 text-sm font-medium text-white hover:bg-bliss-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {isGeneratingPassword ? (
                             <RefreshCw className="h-4 w-4 animate-spin" />
@@ -938,7 +940,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                             type="button"
                             onClick={sendInvitationEmail}
                             disabled={isSendingInvitation}
-                            className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 rounded-lg bg-bliss-600 px-4 py-2 text-sm font-medium text-white hover:bg-bliss-700 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {isSendingInvitation ? (
                               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -952,7 +954,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                             type="button"
                             onClick={resetPassword}
                             disabled={isResettingPassword}
-                            className="flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 rounded-lg bg-bliss-500 px-4 py-2 text-sm font-medium text-white hover:bg-bliss-600 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {isResettingPassword ? (
                               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -981,12 +983,12 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                                 type={showPassword ? 'text' : 'password'}
                                 value={temporaryPassword}
                                 readOnly
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono"
+                                className="w-full px-3 py-2 bg-white border border-bliss-300 rounded text-sm font-mono"
                               />
                               <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-600"
                               >
                                 {showPassword ? (
                                   <EyeOff className="h-4 w-4" />
@@ -999,7 +1001,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                           <button
                             type="button"
                             onClick={copyPassword}
-                            className="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded text-sm"
+                            className="flex items-center gap-1 px-3 py-2 bg-bliss-100 hover:bg-bliss-200 border border-bliss-300 rounded text-sm"
                           >
                             <Copy className="h-4 w-4" />
                             คัดลอก
@@ -1012,7 +1014,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
                     )}
 
                     {/* Help Text */}
-                    <div className="mt-4 text-xs text-gray-500">
+                    <div className="mt-4 text-xs text-bliss-500">
                       <p className="mb-1">
                         • สร้างบัญชีผู้ใช้เพื่อให้โรงแรมสามารถเข้าสู่ระบบแอปพลิเคชัน Hotel ได้
                       </p>
@@ -1029,35 +1031,38 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             </div>
 
             {/* Error/Success Messages */}
-            {submitError && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                <p className="text-sm">{submitError}</p>
-              </div>
-            )}
-
-            {submitSuccess && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700">
-                <CheckCircle className="h-5 w-5 flex-shrink-0" />
-                <p className="text-sm">
-                  {editData ? 'อัพเดทข้อมูลสำเร็จ!' : 'เพิ่มโรงแรมสำเร็จ!'}
-                </p>
+            {(submitError || submitSuccess) && (
+              <div className="flex-shrink-0 px-6 pt-4">
+                {submitError && (
+                  <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                    <p className="text-sm">{submitError}</p>
+                  </div>
+                )}
+                {submitSuccess && (
+                  <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700">
+                    <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                    <p className="text-sm">
+                      {editData ? 'อัพเดทข้อมูลสำเร็จ!' : 'เพิ่มโรงแรมสำเร็จ!'}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Footer */}
-            <div className="mt-6 flex justify-end gap-3 border-t pt-4">
+            <div className="flex-shrink-0 flex justify-end gap-3 border-t border-bliss-200 bg-bliss-50 px-6 py-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-bliss-300 px-5 py-2.5 text-sm font-semibold text-bliss-700 hover:bg-bliss-100 transition"
                 disabled={isSubmitting}
               >
                 ยกเลิก
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-bliss-600 to-bliss-700 px-6 py-2.5 text-sm font-semibold text-white hover:from-bliss-700 hover:to-bliss-800 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'กำลังบันทึก...' : editData ? 'บันทึกการแก้ไข' : 'เพิ่มโรงแรม'}

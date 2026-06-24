@@ -210,31 +210,31 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
     <div className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[9999]">
       <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto mx-4 my-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-100">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-100">
           <div>
-            <h2 className="text-xl font-bold text-stone-900">จองบริการให้แขก</h2>
-            <p className="text-stone-500">ระบบจองแบบใหม่ - เลือกเดี่ยวหรือคู่</p>
+            <h2 className="text-xl font-bold text-bliss-900">จองบริการให้แขก</h2>
+            <p className="text-bliss-500">ระบบจองแบบใหม่ - เลือกเดี่ยวหรือคู่</p>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-xl transition"
+            className="p-2 text-bliss-400 hover:text-bliss-600 hover:bg-bliss-100 rounded-xl transition"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="px-6 py-4 border-b border-stone-100">
+        <div className="px-6 py-4 border-b border-bliss-100">
           <div className="flex items-center justify-between">
             {stepTitles.map((title, index) => (
               <div key={index} className="flex items-center">
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
                     index === currentStep
-                      ? 'bg-amber-600 text-white'
+                      ? 'bg-bliss-600 text-white'
                       : index < currentStep
                         ? 'bg-green-600 text-white'
-                        : 'bg-stone-200 text-stone-500'
+                        : 'bg-bliss-200 text-bliss-500'
                   }`}
                 >
                   {index < currentStep ? <Check className="w-4 h-4" /> : index + 1}
@@ -242,16 +242,16 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                 <span
                   className={`ml-2 text-sm ${
                     index === currentStep
-                      ? 'text-stone-900 font-semibold'
+                      ? 'text-bliss-900 font-semibold'
                       : index < currentStep
                         ? 'text-green-600'
-                        : 'text-stone-500'
+                        : 'text-bliss-500'
                   }`}
                 >
                   {title}
                 </span>
                 {index < stepTitles.length - 1 && (
-                  <div className="w-8 h-px bg-stone-200 mx-4" />
+                  <div className="w-8 h-px bg-bliss-200 mx-4" />
                 )}
               </div>
             ))}
@@ -264,7 +264,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
           {currentStep === 0 && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-stone-900 mb-2">เลือกประเภทการรับบริการ</h3>
+                <h3 className="text-lg font-semibold text-bliss-900 mb-2">เลือกประเภทการรับบริการ</h3>
                 <ServiceModeSelector
                   selectedMode={serviceConfiguration.mode}
                   onModeSelect={setServiceMode}
@@ -273,7 +273,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
 
               {serviceConfiguration.mode === 'couple' && (
                 <div>
-                  <h3 className="text-lg font-semibold text-stone-900 mb-2">รูปแบบการรับบริการสำหรับคู่</h3>
+                  <h3 className="text-lg font-semibold text-bliss-900 mb-2">รูปแบบการรับบริการสำหรับคู่</h3>
                   <CoupleFormatSelector
                     selectedFormat={serviceConfiguration.coupleFormat}
                     onFormatSelect={setCoupleFormat}
@@ -282,19 +282,19 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
               )}
 
               <div>
-                <h3 className="text-lg font-semibold text-stone-900 mb-2">เลือกบริการ</h3>
+                <h3 className="text-lg font-semibold text-bliss-900 mb-2">เลือกบริการ</h3>
                 {servicesLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto" />
-                      <p className="mt-2 text-stone-500">กำลังโหลดบริการ...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto" />
+                      <p className="mt-2 text-bliss-500">กำลังโหลดบริการ...</p>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {Array.from({ length: serviceConfiguration.recipientCount }).map((_, index) => (
-                      <div key={index} className="border border-stone-200 rounded-lg p-4">
-                        <h4 className="font-medium text-stone-900 mb-3">
+                      <div key={index} className="border border-bliss-200 rounded-lg p-4">
+                        <h4 className="font-medium text-bliss-900 mb-3">
                           {serviceConfiguration.mode === 'couple'
                             ? `ผู้รับบริการคนที่ ${index + 1}`
                             : 'เลือกบริการ'
@@ -320,8 +320,8 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
 
               {/* Price Summary */}
               {serviceConfiguration.selections.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-900 mb-2">สรุปราคา</h4>
+                <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-bliss-900 mb-2">สรุปราคา</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>ระยะเวลารวม:</span>
@@ -357,36 +357,36 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
           {/* Step 1: Guest Information */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-stone-900">ข้อมูลแขก</h3>
+              <h3 className="text-lg font-semibold text-bliss-900">ข้อมูลแขก</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     ชื่อแขก *
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                     <input
                       type="text"
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                      className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-lg focus:border-bliss-500 focus:ring-2 focus:ring-bliss-500/20 outline-none transition"
                       placeholder="เช่น คุณสมชาย ใจดี"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     เลขห้อง *
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                    <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                     <input
                       type="text"
                       value={roomNumber}
                       onChange={(e) => setRoomNumber(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                      className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-lg focus:border-bliss-500 focus:ring-2 focus:ring-bliss-500/20 outline-none transition"
                       placeholder="เช่น 1205"
                     />
                   </div>
@@ -394,16 +394,16 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-bliss-700 mb-2">
                   เบอร์โทรศัพท์ *
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                  <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                   <input
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                    className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-lg focus:border-bliss-500 focus:ring-2 focus:ring-bliss-500/20 outline-none transition"
                     placeholder="เช่น 081-234-5678"
                   />
                 </div>
@@ -431,28 +431,28 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
           {/* Step 2: Date & Time */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-stone-900">เลือกวันที่และเวลา</h3>
+              <h3 className="text-lg font-semibold text-bliss-900">เลือกวันที่และเวลา</h3>
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     วันที่ *
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+                    <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-bliss-400" />
                     <input
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       min={today}
-                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition"
+                      className="w-full pl-10 pr-4 py-3 border border-bliss-300 rounded-lg focus:border-bliss-500 focus:ring-2 focus:ring-bliss-500/20 outline-none transition"
                     />
                   </div>
                 </div>
 
                 {/* Time Selection - Step 1: Hour */}
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     เลือกชั่วโมง *
                   </label>
                   <div className="grid grid-cols-4 gap-2">
@@ -466,8 +466,8 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                         }}
                         className={`py-2 px-3 rounded-lg border transition text-sm ${
                           selectedHour === hour
-                            ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
-                            : 'border-stone-300 hover:border-amber-300'
+                            ? 'border-bliss-500 bg-bliss-50 text-bliss-700 font-medium'
+                            : 'border-bliss-300 hover:border-bliss-300'
                         }`}
                       >
                         {hour}:00
@@ -479,7 +479,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                 {/* Time Selection - Step 2: Minute */}
                 {selectedHour && (
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                    <label className="block text-sm font-medium text-bliss-700 mb-2">
                       เลือกนาที *
                     </label>
                     <div className="grid grid-cols-4 gap-2">
@@ -490,8 +490,8 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                           onClick={() => setSelectedMinute(minute)}
                           className={`py-2 px-3 rounded-lg border transition ${
                             selectedMinute === minute
-                              ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
-                              : 'border-stone-300 hover:border-amber-300'
+                              ? 'border-bliss-500 bg-bliss-50 text-bliss-700 font-medium'
+                              : 'border-bliss-300 hover:border-bliss-300'
                           }`}
                         >
                           {selectedHour}:{minute}
@@ -503,21 +503,21 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-bliss-700 mb-2">
                   หมายเหตุ (ไม่บังคับ)
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition resize-none"
+                  className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:border-bliss-500 focus:ring-2 focus:ring-bliss-500/20 outline-none transition resize-none"
                   placeholder="หมายเหตุเพิ่มเติม..."
                 />
               </div>
 
               {/* Provider Preference for all bookings */}
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-bliss-700 mb-2">
                   ความต้องการผู้ให้บริการ
                 </label>
                 <ProviderPreferenceSelector
@@ -544,8 +544,8 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
               )}
 
               {/* Final Summary */}
-              <div className="bg-stone-50 border border-stone-200 rounded-lg p-4">
-                <h4 className="font-semibold text-stone-900 mb-3">สรุปการจอง</h4>
+              <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
+                <h4 className="font-semibold text-bliss-900 mb-3">สรุปการจอง</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>ประเภท:</span>
@@ -574,7 +574,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
                       {date && new Date(date).toLocaleDateString('th-TH')} {time}
                     </span>
                   </div>
-                  <div className="border-t border-stone-300 pt-2 mt-2">
+                  <div className="border-t border-bliss-300 pt-2 mt-2">
                     <div className="flex justify-between text-lg font-semibold">
                       <span>ราคารวม:</span>
                       <span>฿{totalPrice.toLocaleString()}</span>
@@ -587,12 +587,12 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-stone-100 px-6 py-4">
+        <div className="flex items-center justify-between border-t border-bliss-100 px-6 py-4">
           <div className="flex items-center gap-3">
             {currentStep > 0 && (
               <button
                 onClick={handlePrevious}
-                className="flex items-center gap-2 px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition"
+                className="flex items-center gap-2 px-4 py-2 border border-bliss-300 text-bliss-700 rounded-lg hover:bg-bliss-50 transition"
               >
                 <ChevronLeft className="w-4 h-4" />
                 ย้อนกลับ
@@ -603,7 +603,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
           <div className="flex items-center gap-3">
             <button
               onClick={handleClose}
-              className="px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition"
+              className="px-4 py-2 border border-bliss-300 text-bliss-700 rounded-lg hover:bg-bliss-50 transition"
             >
               ยกเลิก
             </button>
@@ -612,7 +612,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
               <button
                 onClick={handleNext}
                 disabled={!canProceedToStep(currentStep + 1)}
-                className="flex items-center gap-2 px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed transition"
+                className="flex items-center gap-2 px-6 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 disabled:bg-bliss-300 disabled:cursor-not-allowed transition"
               >
                 ถัดไป
                 <ChevronRight className="w-4 h-4" />
@@ -621,7 +621,7 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
               <button
                 onClick={handleSubmit}
                 disabled={!isConfigurationComplete() || !currentValidation.isValid}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-stone-300 disabled:cursor-not-allowed transition"
+                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-bliss-300 disabled:cursor-not-allowed transition"
               >
                 <Check className="w-4 h-4" />
                 ยืนยันการจอง
@@ -634,8 +634,8 @@ function BookingModal({ isOpen, onClose, onSuccess, service }: BookingModalProps
         {isLoading && (
           <div className="absolute inset-0 bg-black/20 rounded-3xl flex items-center justify-center">
             <div className="bg-white p-4 rounded-lg shadow-lg">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto" />
-              <p className="mt-2 text-stone-600">กำลังดำเนินการ...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600 mx-auto" />
+              <p className="mt-2 text-bliss-600">กำลังดำเนินการ...</p>
             </div>
           </div>
         )}

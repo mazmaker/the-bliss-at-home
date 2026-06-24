@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, AlertCircle, UserCheck, UserX, Clock, Ban } from 'lucide-react'
+import { X, AlertCircle, UserCheck, UserX, Clock, Ban, UserCog } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { Staff } from '../services/staffService'
@@ -33,9 +33,9 @@ export function StatusManagementModal({ staff, onClose }: StatusManagementModalP
       label: 'ไม่ใช้งาน',
       description: 'พนักงานหยุดพักชั่วคราว ไม่สามารถรับงานใหม่ได้',
       icon: UserX,
-      color: 'text-stone-600',
-      bg: 'bg-stone-50',
-      border: 'border-stone-200',
+      color: 'text-bliss-600',
+      bg: 'bg-bliss-100',
+      border: 'border-bliss-300',
     },
     {
       value: 'pending' as StaffStatus,
@@ -109,99 +109,112 @@ export function StatusManagementModal({ staff, onClose }: StatusManagementModalP
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[92vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div>
-            <h2 className="text-xl font-semibold text-stone-900">จัดการสถานะพนักงาน</h2>
-            <p className="text-sm text-stone-600 mt-1">
-              {staff.name_th} ({staff.name_en})
-            </p>
+        <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                <UserCog className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white leading-tight">จัดการสถานะพนักงาน</h2>
+                <p className="text-xs text-bliss-200">
+                  {staff.name_th}{staff.name_en ? ` (${staff.name_en})` : ''}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition"
+              disabled={isSaving}
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/50 rounded-lg transition"
-            disabled={isSaving}
-          >
-            <X className="w-5 h-5 text-stone-500" />
-          </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {/* Current Status */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="p-4 bg-bliss-50 border border-bliss-200 rounded-xl">
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-blue-900">สถานะปัจจุบัน</span>
+              <AlertCircle className="w-5 h-5 text-bliss-600" />
+              <span className="font-medium text-bliss-900">สถานะปัจจุบัน</span>
             </div>
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-bliss-700">
               {statusOptions.find(opt => opt.value === staff.status)?.label || staff.status}
             </p>
           </div>
 
-          {/* Status Options */}
-          <div className="space-y-3 mb-6">
-            <h3 className="font-semibold text-stone-900 mb-3">เลือกสถานะใหม่</h3>
-            {statusOptions.map((option) => {
-              const Icon = option.icon
-              const isSelected = selectedStatus === option.value
-              const isCurrent = staff.status === option.value
+          {/* ── Section: เลือกสถานะใหม่ ── */}
+          <div className="rounded-xl border border-bliss-200 p-5">
+            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-bliss-100">
+              <UserCog className="w-5 h-5 text-bliss-600" />
+              <h4 className="text-lg font-bold text-bliss-900">เลือกสถานะใหม่</h4>
+            </div>
 
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => setSelectedStatus(option.value)}
-                  disabled={isSaving || isCurrent}
-                  className={`w-full p-4 rounded-xl border-2 transition text-left ${
-                    isSelected
-                      ? `${option.border} ${option.bg} ring-2 ring-offset-2 ring-${option.color.split('-')[1]}-500`
-                      : isCurrent
-                      ? 'border-stone-200 bg-stone-50 opacity-50 cursor-not-allowed'
-                      : 'border-stone-200 hover:border-stone-300 bg-white'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${option.bg}`}>
-                      <Icon className={`w-5 h-5 ${option.color}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-stone-900">{option.label}</span>
-                        {isCurrent && (
-                          <span className="text-xs px-2 py-0.5 bg-stone-200 text-stone-600 rounded-full">
-                            ปัจจุบัน
-                          </span>
-                        )}
-                        {isSelected && !isCurrent && (
-                          <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                            เลือกแล้ว
-                          </span>
-                        )}
+            <div className="space-y-3">
+              {statusOptions.map((option) => {
+                const Icon = option.icon
+                const isSelected = selectedStatus === option.value
+                const isCurrent = staff.status === option.value
+
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedStatus(option.value)}
+                    disabled={isSaving || isCurrent}
+                    className={`w-full p-4 rounded-xl border-2 transition text-left ${
+                      isSelected
+                        ? `${option.border} ${option.bg} ring-2 ring-bliss-500 ring-offset-1`
+                        : isCurrent
+                        ? 'border-bliss-200 bg-bliss-50 opacity-50 cursor-not-allowed'
+                        : 'border-bliss-200 hover:border-bliss-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg ${option.bg}`}>
+                        <Icon className={`w-5 h-5 ${option.color}`} />
                       </div>
-                      <p className="text-sm text-stone-600 mt-1">{option.description}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-bliss-900">{option.label}</span>
+                          {isCurrent && (
+                            <span className="text-xs px-2 py-0.5 bg-bliss-200 text-bliss-600 rounded-full">
+                              ปัจจุบัน
+                            </span>
+                          )}
+                          {isSelected && !isCurrent && (
+                            <span className="text-xs px-2 py-0.5 bg-bliss-600 text-white rounded-full">
+                              เลือกแล้ว
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-bliss-600 mt-1">{option.description}</p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              )
-            })}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Reason (for suspended status) */}
           {selectedStatus === 'suspended' && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+            <div>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 เหตุผลในการระงับการใช้งาน <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="กรุณาระบุเหตุผลที่ชัดเจน เช่น ละเมิดกฎระเบียบ, ได้รับข้อร้องเรียน, etc."
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                 rows={4}
                 disabled={isSaving}
               />
-              <p className="text-xs text-stone-500 mt-1">
+              <p className="text-xs text-bliss-500 mt-1">
                 เหตุผลนี้จะถูกบันทึกในประวัติและอาจแสดงให้พนักงานทราบ
               </p>
             </div>
@@ -209,15 +222,15 @@ export function StatusManagementModal({ staff, onClose }: StatusManagementModalP
 
           {/* Optional Reason (for other statuses) */}
           {selectedStatus !== 'suspended' && selectedStatus !== staff.status && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+            <div>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 หมายเหตุ (ไม่บังคับ)
               </label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="เหตุผลในการเปลี่ยนสถานะ (ถ้ามี)"
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-4 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 resize-none"
                 rows={3}
                 disabled={isSaving}
               />
@@ -229,7 +242,7 @@ export function StatusManagementModal({ staff, onClose }: StatusManagementModalP
             <div className="flex gap-2">
               <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-yellow-800">
-                <p className="font-medium mb-1">⚠️ โปรดตรวจสอบก่อนบันทึก</p>
+                <p className="font-medium mb-1">โปรดตรวจสอบก่อนบันทึก</p>
                 <p>
                   การเปลี่ยนสถานะจะมีผลทันที และอาจส่งผลต่อการให้บริการของพนักงาน
                   กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ
@@ -239,11 +252,11 @@ export function StatusManagementModal({ staff, onClose }: StatusManagementModalP
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50">
+        {/* Sticky Footer */}
+        <div className="flex-shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t border-bliss-200 bg-bliss-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-100 transition"
+            className="px-5 py-2.5 text-sm font-medium bg-white text-bliss-700 border border-bliss-300 rounded-xl hover:bg-bliss-100 transition"
             disabled={isSaving}
           >
             ยกเลิก
@@ -251,7 +264,7 @@ export function StatusManagementModal({ staff, onClose }: StatusManagementModalP
           <button
             onClick={handleSave}
             disabled={isSaving || selectedStatus === staff.status}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2.5 text-sm font-semibold bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl hover:from-bliss-700 hover:to-bliss-800 shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSaving ? (
               <>

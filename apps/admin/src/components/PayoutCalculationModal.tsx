@@ -83,18 +83,18 @@ export function PayoutCalculationModal({ staffId, staffName, onClose }: PayoutCa
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-gradient-to-r from-amber-50 to-orange-50">
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200 bg-gradient-to-r from-bliss-50 to-orange-50">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Calculator className="w-6 h-6 text-amber-600" />
+            <div className="p-2 bg-bliss-100 rounded-lg">
+              <Calculator className="w-6 h-6 text-bliss-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-stone-900">รายละเอียดการคำนวณ</h2>
-              <p className="text-sm text-stone-600 mt-1">{staffName} — งานที่ยังไม่ได้รับเงิน</p>
+              <h2 className="text-xl font-semibold text-bliss-900">รายละเอียดการคำนวณ</h2>
+              <p className="text-sm text-bliss-600 mt-1">{staffName} — งานที่ยังไม่ได้รับเงิน</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/50 rounded-lg transition">
-            <X className="w-5 h-5 text-stone-500" />
+            <X className="w-5 h-5 text-bliss-500" />
           </button>
         </div>
 
@@ -111,7 +111,7 @@ export function PayoutCalculationModal({ staffId, staffName, onClose }: PayoutCa
 
           {/* Job list */}
           {isLoading ? (
-            <div className="flex items-center justify-center py-12 gap-3 text-stone-500">
+            <div className="flex items-center justify-center py-12 gap-3 text-bliss-500">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>กำลังโหลด...</span>
             </div>
@@ -121,32 +121,32 @@ export function PayoutCalculationModal({ staffId, staffName, onClose }: PayoutCa
               <span>{error}</span>
             </div>
           ) : jobs.length === 0 ? (
-            <div className="text-center py-12 text-stone-400">
+            <div className="text-center py-12 text-bliss-400">
               <p className="text-lg font-medium">ไม่มีงานที่ยังค้างจ่าย</p>
               <p className="text-sm mt-1">งานทั้งหมดอยู่ในรอบจ่ายเงินแล้ว</p>
             </div>
           ) : (
             <>
-              <div className="border border-stone-200 rounded-xl overflow-hidden">
+              <div className="border border-bliss-200 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-stone-50 border-b border-stone-200">
-                      <th className="text-left py-3 px-4 text-stone-600 font-medium whitespace-nowrap">วันที่</th>
-                      <th className="text-left py-3 px-4 text-stone-600 font-medium">บริการ</th>
-                      <th className="text-right py-3 px-4 text-stone-600 font-medium whitespace-nowrap">รายได้</th>
+                    <tr className="bg-bliss-50 border-b border-bliss-200">
+                      <th className="text-left py-3 px-4 text-bliss-600 font-medium whitespace-nowrap">วันที่</th>
+                      <th className="text-left py-3 px-4 text-bliss-600 font-medium">บริการ</th>
+                      <th className="text-right py-3 px-4 text-bliss-600 font-medium whitespace-nowrap">รายได้</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-bliss-100">
                     {jobs.map(job => (
-                      <tr key={job.id} className="hover:bg-stone-50">
-                        <td className="py-2.5 px-4 text-stone-500 whitespace-nowrap">
+                      <tr key={job.id} className="hover:bg-bliss-50">
+                        <td className="py-2.5 px-4 text-bliss-500 whitespace-nowrap">
                           {formatDate(job.scheduled_date)}
                         </td>
-                        <td className="py-2.5 px-4 text-stone-900">{job.service_name}</td>
+                        <td className="py-2.5 px-4 text-bliss-900">{job.service_name}</td>
                         <td className="py-2.5 px-4 text-right font-medium text-green-700 whitespace-nowrap">
                           ฿{getJobEarnings(job).toLocaleString()}
                           {job.total_staff_earnings != null && job.total_staff_earnings !== job.staff_earnings && (
-                            <span className="text-xs text-amber-600 block">รวมเพิ่มเวลา</span>
+                            <span className="text-xs text-bliss-600 block">รวมเพิ่มเวลา</span>
                           )}
                         </td>
                       </tr>
@@ -156,13 +156,13 @@ export function PayoutCalculationModal({ staffId, staffName, onClose }: PayoutCa
               </div>
 
               {/* Total */}
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+              <div className="bg-bliss-50 border-2 border-bliss-300 rounded-xl p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-semibold text-amber-900">ยอดรวมทั้งหมด</p>
-                    <p className="text-xs text-amber-700 mt-0.5">{jobs.length} งาน — ยังไม่ได้รับเงิน</p>
+                    <p className="font-semibold text-bliss-900">ยอดรวมทั้งหมด</p>
+                    <p className="text-xs text-bliss-700 mt-0.5">{jobs.length} งาน — ยังไม่ได้รับเงิน</p>
                   </div>
-                  <p className="text-3xl font-bold text-amber-900">฿{total.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-bliss-900">฿{total.toLocaleString()}</p>
                 </div>
               </div>
             </>
@@ -170,10 +170,10 @@ export function PayoutCalculationModal({ staffId, staffName, onClose }: PayoutCa
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end p-6 border-t border-stone-200 bg-stone-50">
+        <div className="flex items-center justify-end p-6 border-t border-bliss-200 bg-bliss-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+            className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
           >
             ปิด
           </button>

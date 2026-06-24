@@ -326,7 +326,7 @@ export function PaymentForm({ isOpen, onClose, onSuccess, hotelId, invoices }: P
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-700 to-amber-800 px-4 py-2 text-sm font-medium text-white hover:from-amber-800 hover:to-amber-900 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-bliss-700 to-bliss-800 px-4 py-2 text-sm font-medium text-white hover:from-bliss-800 hover:to-bliss-900 disabled:opacity-50"
                 disabled={isSubmitting || submitSuccess}
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}

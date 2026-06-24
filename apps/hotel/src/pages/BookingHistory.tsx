@@ -4,7 +4,7 @@ import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
   Filter, MapPin, Clock, User, CheckCircle, XCircle, List, Grid3X3, X,
   Phone, FileText, Edit, Image, History, Save,
-  Briefcase, DollarSign, CreditCard, CalendarClock
+  Briefcase, Wallet, CreditCard, CalendarClock
 } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
@@ -72,14 +72,14 @@ function getProviderPreferenceLabel(preference: ProviderPreference | null): stri
 
 // Helper function to get provider preference badge color
 function getProviderPreferenceBadgeStyle(preference: ProviderPreference | null): string {
-  if (!preference || preference === 'no-preference') return 'bg-gray-100 text-gray-700'
+  if (!preference || preference === 'no-preference') return 'bg-bliss-100 text-bliss-700'
 
   switch (preference) {
-    case 'female-only': return 'bg-pink-100 text-pink-700'
-    case 'male-only': return 'bg-blue-100 text-blue-700'
-    case 'prefer-female': return 'bg-pink-50 text-pink-600'
-    case 'prefer-male': return 'bg-blue-50 text-blue-600'
-    default: return 'bg-gray-100 text-gray-700'
+    case 'female-only': return 'bg-bliss-100 text-bliss-700'
+    case 'male-only': return 'bg-bliss-100 text-bliss-700'
+    case 'prefer-female': return 'bg-bliss-50 text-bliss-600'
+    case 'prefer-male': return 'bg-bliss-50 text-bliss-600'
+    default: return 'bg-bliss-100 text-bliss-700'
   }
 }
 
@@ -446,9 +446,9 @@ function BookingHistory() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      pending: 'bg-gradient-to-r from-amber-100 to-yellow-100 border-amber-200 text-amber-800',
-      confirmed: 'bg-gradient-to-r from-blue-100 to-sky-100 border-blue-200 text-blue-800',
-      'in_progress': 'bg-gradient-to-r from-purple-100 to-violet-100 border-purple-200 text-purple-800',
+      pending: 'bg-gradient-to-r from-bliss-100 to-yellow-100 border-bliss-200 text-bliss-800',
+      confirmed: 'bg-gradient-to-r from-bliss-100 to-bliss-100 border-bliss-200 text-bliss-800',
+      'in_progress': 'bg-gradient-to-r from-bliss-100 to-bliss-100 border-bliss-200 text-bliss-800',
       completed: 'bg-gradient-to-r from-emerald-100 to-green-100 border-emerald-200 text-emerald-800',
       cancelled: 'bg-gradient-to-r from-rose-100 to-red-100 border-rose-200 text-rose-800',
     }
@@ -468,7 +468,7 @@ function BookingHistory() {
     }
     const IconComponent = icons[status as keyof typeof icons] || Clock
     return (
-      <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+      <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${badges[status as keyof typeof badges] || 'bg-bliss-100 text-bliss-700 border-bliss-200'}`}>
         <IconComponent className={`w-4 h-4 ${status === 'in_progress' ? 'animate-spin' : ''}`} />
         <span>{labels[status as keyof typeof labels] || status}</span>
       </div>
@@ -477,11 +477,11 @@ function BookingHistory() {
 
   const getPaymentBadge = (paymentStatus: string) => {
     const badges = {
-      pending: 'bg-gradient-to-r from-amber-100 to-orange-100 border-amber-200 text-amber-800',
-      processing: 'bg-gradient-to-r from-blue-100 to-indigo-100 border-blue-200 text-blue-800',
+      pending: 'bg-gradient-to-r from-bliss-100 to-orange-100 border-bliss-200 text-bliss-800',
+      processing: 'bg-gradient-to-r from-bliss-100 to-bliss-100 border-bliss-200 text-bliss-800',
       paid: 'bg-gradient-to-r from-emerald-100 to-green-100 border-emerald-200 text-emerald-800',
       failed: 'bg-gradient-to-r from-rose-100 to-red-100 border-rose-200 text-rose-800',
-      refunded: 'bg-gradient-to-r from-slate-100 to-gray-100 border-slate-200 text-slate-800',
+      refunded: 'bg-gradient-to-r from-bliss-100 to-bliss-100 border-bliss-200 text-bliss-800',
     }
     const labels = {
       pending: 'รอชำระ',
@@ -499,7 +499,7 @@ function BookingHistory() {
     }
     const IconComponent = icons[paymentStatus as keyof typeof icons] || Clock
     return (
-      <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${badges[paymentStatus as keyof typeof badges] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+      <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${badges[paymentStatus as keyof typeof badges] || 'bg-bliss-100 text-bliss-700 border-bliss-200'}`}>
         <IconComponent className={`w-4 h-4 ${paymentStatus === 'processing' ? 'animate-spin' : ''}`} />
         <span>{labels[paymentStatus as keyof typeof labels] || paymentStatus}</span>
       </div>
@@ -575,8 +575,8 @@ function BookingHistory() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
-          <p className="text-stone-600">กำลังโหลดข้อมูลการจอง...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-bliss-700 mx-auto mb-2" />
+          <p className="text-bliss-600">กำลังโหลดข้อมูลการจอง...</p>
         </div>
       </div>
     )
@@ -591,7 +591,7 @@ function BookingHistory() {
           <p className="text-red-600 mb-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 mx-auto"
+            className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="w-4 h-4" />
             ลองใหม่
@@ -606,19 +606,19 @@ function BookingHistory() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">ประวัติการจอง</h1>
-          <p className="text-stone-500">Booking History</p>
+          <h1 className="text-2xl font-bold text-bliss-900">ประวัติการจอง</h1>
+          <p className="text-bliss-500">Booking History</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-2xl font-bold text-amber-700">{filteredBookings.length}</p>
-            <p className="text-sm text-stone-500">รายการทั้งหมด</p>
+            <p className="text-2xl font-bold text-bliss-700">{filteredBookings.length}</p>
+            <p className="text-sm text-bliss-500">รายการทั้งหมด</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
               disabled={filteredBookings.length === 0}
-              className="flex items-center gap-2 px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 border border-bliss-300 text-bliss-700 rounded-lg hover:bg-bliss-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               Export CSV
@@ -626,7 +626,7 @@ function BookingHistory() {
             <button
               onClick={handleExport}
               disabled={filteredBookings.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               Export PDF
@@ -636,20 +636,20 @@ function BookingHistory() {
       </div>
 
       {/* Filters & View Toggle */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
         {/* View Mode Toggle */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-stone-500" />
-            <span className="text-sm font-medium text-stone-700">ตัวกรอง & มุมมอง</span>
+            <Filter className="w-4 h-4 text-bliss-500" />
+            <span className="text-sm font-medium text-bliss-700">ตัวกรอง & มุมมอง</span>
           </div>
-          <div className="flex items-center bg-stone-100 rounded-lg p-1">
+          <div className="flex items-center bg-bliss-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition ${
                 viewMode === 'table'
-                  ? 'bg-white text-stone-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-bliss-900 shadow-sm'
+                  : 'text-bliss-600 hover:text-bliss-900'
               }`}
             >
               <List className="w-3 h-3" />
@@ -659,8 +659,8 @@ function BookingHistory() {
               onClick={() => setViewMode('grouped')}
               className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition ${
                 viewMode === 'grouped'
-                  ? 'bg-white text-stone-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-bliss-900 shadow-sm'
+                  : 'text-bliss-600 hover:text-bliss-900'
               }`}
             >
               <Grid3X3 className="w-3 h-3" />
@@ -672,30 +672,30 @@ function BookingHistory() {
         <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               ค้นหา
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-bliss-400" />
               <input
                 type="text"
                 placeholder="ชื่อแขก, ห้อง, บริการ, เลขที่จอง"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                className="w-full pl-10 pr-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
               />
             </div>
           </div>
 
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               สถานะ
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
             >
               <option value="all">ทั้งหมด</option>
               <option value="active">กำลังดำเนินการทั้งหมด</option>
@@ -709,13 +709,13 @@ function BookingHistory() {
 
           {/* Time Filter */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               ช่วงเวลา
             </label>
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
             >
               <option value="all">ทั้งหมด</option>
               <option value="today">วันนี้</option>
@@ -726,13 +726,13 @@ function BookingHistory() {
 
           {/* Service Filter */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               บริการ
             </label>
             <select
               value={serviceFilter}
               onChange={(e) => setServiceFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
             >
               <option value="all">ทั้งหมด</option>
               {availableServices.map((service) => (
@@ -745,7 +745,7 @@ function BookingHistory() {
 
           {/* Date Filter */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               วันที่
             </label>
             <div className="space-y-2">
@@ -758,7 +758,7 @@ function BookingHistory() {
                     setSelectedDate(e.target.value)
                     setHasSelectedDate(true)
                   }}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                  className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
                   placeholder="เลือกวันที่"
                 />
               )}
@@ -769,35 +769,35 @@ function BookingHistory() {
                   type="checkbox"
                   checked={isDateRangeMode}
                   onChange={(e) => setIsDateRangeMode(e.target.checked)}
-                  className="rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                  className="rounded border-bliss-300 text-bliss-600 focus:ring-bliss-500"
                 />
-                <span className="text-xs text-stone-600">ดูแบบลากวัน</span>
+                <span className="text-xs text-bliss-600">ดูแบบลากวัน</span>
               </label>
 
               {/* Date Range Inputs (Only shown when checkbox is checked) */}
               {isDateRangeMode && (
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <div>
-                    <label className="block text-xs font-medium text-stone-600 mb-1">
+                    <label className="block text-xs font-medium text-bliss-600 mb-1">
                       จากวันที่
                     </label>
                     <input
                       type="date"
                       value={dateFrom}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full px-2 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                      className="w-full px-2 py-2 text-sm border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
                       placeholder=""
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-stone-600 mb-1">
+                    <label className="block text-xs font-medium text-bliss-600 mb-1">
                       ถึงวันที่
                     </label>
                     <input
                       type="date"
                       value={dateTo}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="w-full px-2 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                      className="w-full px-2 py-2 text-sm border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent bg-white"
                       placeholder=""
                     />
                   </div>
@@ -814,7 +814,7 @@ function BookingHistory() {
                     setDateTo('')
                     setHasSelectedDate(false)
                   }}
-                  className="flex items-center gap-1 px-2 py-1 text-xs text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded transition"
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-bliss-500 hover:text-bliss-700 hover:bg-bliss-100 rounded transition"
                   title="รีเซ็ตตัวกรองวันที่"
                 >
                   <X className="w-3 h-3" />
@@ -828,7 +828,7 @@ function BookingHistory() {
 
         {/* Results count */}
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-bliss-600">
             พบ {filteredBookings.length} รายการ จากทั้งหมด {bookings.length} รายการ
           </p>
         </div>
@@ -837,9 +837,9 @@ function BookingHistory() {
       {/* Content */}
       {viewMode === 'table' ? (
         // Table View
-        <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg border border-bliss-100 overflow-hidden">
           {filteredBookings.length === 0 ? (
-            <div className="text-center py-12 text-stone-500">
+            <div className="text-center py-12 text-bliss-500">
               <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg mb-2">ไม่พบประวัติการจอง</p>
               <p className="text-sm">ลองเปลี่ยนเงื่อนไขการค้นหาหรือเพิ่มข้อมูลการจอง</p>
@@ -847,70 +847,70 @@ function BookingHistory() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full table-fixed">
-                <thead className="bg-stone-50">
+                <thead className="bg-bliss-50">
                   <tr>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[15%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[15%]">
                       เลขที่จอง & วันที่
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[14%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[14%]">
                       แขก
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[16%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[16%]">
                       บริการ
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[10%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[10%]">
                       ความต้องการ
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[10%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[10%]">
                       ยอดเงิน
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[12%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[12%]">
                       สถานะ
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-[12%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider w-[12%]">
                       การชำระ
                     </th>
-                    <th className="px-3 py-3 text-center text-xs font-medium text-stone-500 uppercase tracking-wider w-[6%]">
+                    <th className="px-3 py-3 text-center text-xs font-medium text-bliss-500 uppercase tracking-wider w-[6%]">
                       ดู
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-stone-200">
+                <tbody className="bg-white divide-y divide-bliss-200">
                   {filteredBookings.map((booking) => (
-                    <tr key={booking.id} className="hover:bg-stone-50">
+                    <tr key={booking.id} className="hover:bg-bliss-50">
                       <td className="px-3 py-3">
                         <div className="text-sm truncate">
-                          <div className="font-medium text-stone-900 truncate">
+                          <div className="font-medium text-bliss-900 truncate">
                             #{booking.booking_number}
                           </div>
-                          <div className="text-stone-500">
+                          <div className="text-bliss-500">
                             {new Date(booking.booking_date).toLocaleDateString('th-TH')}
                           </div>
-                          <div className="text-xs text-stone-400">
+                          <div className="text-xs text-bliss-400">
                             {(booking.booking_time || '--:--').substring(0, 5)}
                           </div>
                         </div>
                       </td>
                       <td className="px-3 py-3">
                         <div className="text-sm">
-                          <div className="font-medium text-stone-900 truncate">{booking.guest_name}</div>
-                          <div className="text-stone-500">ห้อง {booking.room_number}</div>
+                          <div className="font-medium text-bliss-900 truncate">{booking.guest_name}</div>
+                          <div className="text-bliss-500">ห้อง {booking.room_number}</div>
                           {booking.staff_name && (
-                            <div className="text-xs text-stone-400 truncate">เจ้าหน้าที่: {booking.staff_name}</div>
+                            <div className="text-xs text-bliss-400 truncate">เจ้าหน้าที่: {booking.staff_name}</div>
                           )}
                         </div>
                       </td>
                       <td className="px-3 py-3">
-                        <div className="text-sm text-stone-900">
+                        <div className="text-sm text-bliss-900">
                           <div className="font-medium truncate">
                             {booking.service_name || 'ไม่ระบุบริการ'}
                             {booking.recipient_count > 1 && (
-                              <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">
+                              <span className="text-xs bg-bliss-100 text-bliss-700 px-1 rounded ml-1">
                                 {booking.recipient_count} คน
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-stone-500">ระยะเวลา: {booking.duration} นาที</div>
+                          <div className="text-xs text-bliss-500">ระยะเวลา: {booking.duration} นาที</div>
                         </div>
                       </td>
                       <td className="px-3 py-3">
@@ -920,9 +920,9 @@ function BookingHistory() {
                       </td>
                       <td className="px-3 py-3">
                         <div className="text-sm">
-                          <div className="font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
+                          <div className="font-bold text-bliss-700">฿{booking.final_price.toLocaleString()}</div>
                           {booking.discount_amount > 0 && (
-                            <div className="text-xs text-stone-500">
+                            <div className="text-xs text-bliss-500">
                               ส่วนลด -฿{booking.discount_amount.toLocaleString()}
                             </div>
                           )}
@@ -937,7 +937,7 @@ function BookingHistory() {
                       <td className="px-3 py-3 text-center">
                         <button
                           onClick={() => setSelectedBooking(booking)}
-                          className="text-amber-600 hover:text-amber-700 transition"
+                          className="text-bliss-600 hover:text-bliss-700 transition"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -953,8 +953,8 @@ function BookingHistory() {
         // Grouped View
         <div className="space-y-6">
           {Object.keys(groupedBookings).length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
-              <div className="text-center py-12 text-stone-500">
+            <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
+              <div className="text-center py-12 text-bliss-500">
                 <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg mb-2">ไม่มีการจองในขณะนี้</p>
                 <p className="text-sm">การจองใหม่จะแสดงที่นี่</p>
@@ -964,12 +964,12 @@ function BookingHistory() {
             Object.keys(groupedBookings)
               .sort((a, b) => b.localeCompare(a)) // ล่าสุดไว้บนสุด
               .map((date) => (
-                <div key={date} className="bg-white rounded-2xl shadow-lg border border-stone-100">
+                <div key={date} className="bg-white rounded-2xl shadow-lg border border-bliss-100">
                   {/* Date Header */}
-                  <div className="p-4 border-b border-stone-100 bg-stone-50 rounded-t-2xl">
+                  <div className="p-4 border-b border-bliss-100 bg-bliss-50 rounded-t-2xl">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-amber-600" />
-                      <h3 className="text-lg font-semibold text-stone-900">
+                      <Calendar className="w-5 h-5 text-bliss-600" />
+                      <h3 className="text-lg font-semibold text-bliss-900">
                         {new Date(date).toLocaleDateString('th-TH', {
                           weekday: 'long',
                           year: 'numeric',
@@ -977,7 +977,7 @@ function BookingHistory() {
                           day: 'numeric'
                         })}
                       </h3>
-                      <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium">
+                      <span className="bg-bliss-100 text-bliss-700 px-2 py-1 rounded-full text-xs font-medium">
                         {groupedBookings[date].length} รายการ
                       </span>
                     </div>
@@ -988,42 +988,42 @@ function BookingHistory() {
                     {groupedBookings[date].map((booking) => (
                       <div
                         key={booking.id}
-                        className="flex items-center justify-between p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition cursor-pointer"
+                        className="flex items-center justify-between p-4 bg-bliss-50 rounded-xl hover:bg-bliss-100 transition cursor-pointer"
                         onClick={() => setSelectedBooking(booking)}
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-amber-700" />
+                            <div className="w-8 h-8 bg-bliss-100 rounded-full flex items-center justify-center">
+                              <User className="w-4 h-4 text-bliss-700" />
                             </div>
                             <div>
-                              <p className="font-medium text-stone-900">
+                              <p className="font-medium text-bliss-900">
                                 {booking.guest_name}
-                                <span className="text-xs text-stone-500 ml-2">#{booking.booking_number}</span>
+                                <span className="text-xs text-bliss-500 ml-2">#{booking.booking_number}</span>
                               </p>
-                              <p className="text-sm text-stone-500">ห้อง {booking.room_number}</p>
+                              <p className="text-sm text-bliss-500">ห้อง {booking.room_number}</p>
                             </div>
                           </div>
 
                           <div className="ml-11">
-                            <p className="text-sm font-medium text-stone-800 mb-1">
+                            <p className="text-sm font-medium text-bliss-800 mb-1">
                               {booking.service_name || 'ไม่ระบุบริการ'}
                               {booking.recipient_count > 1 && (
-                                <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">
+                                <span className="text-xs bg-bliss-100 text-bliss-700 px-1 rounded ml-1">
                                   {booking.recipient_count} คน
                                 </span>
                               )}
                             </p>
-                            <p className="text-xs text-stone-600 mb-1">
+                            <p className="text-xs text-bliss-600 mb-1">
                               ระยะเวลา: {booking.duration} นาที
                             </p>
-                            <p className="text-xs text-stone-600 mb-2">
+                            <p className="text-xs text-bliss-600 mb-2">
                               ความต้องการ: <span className={`px-2 py-1 rounded ${getProviderPreferenceBadgeStyle(booking.provider_preference)}`}>
                                 {getProviderPreferenceLabel(booking.provider_preference)}
                               </span>
                             </p>
 
-                            <div className="flex items-center gap-4 text-xs text-stone-500">
+                            <div className="flex items-center gap-4 text-xs text-bliss-500">
                               <div className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {(booking.booking_time || '--:--').substring(0, 5)}
@@ -1046,11 +1046,11 @@ function BookingHistory() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</p>
+                            <p className="text-lg font-bold text-bliss-700">฿{booking.final_price.toLocaleString()}</p>
                             {booking.discount_amount > 0 && (
-                              <p className="text-xs text-stone-500">ส่วนลด -฿{booking.discount_amount.toLocaleString()}</p>
+                              <p className="text-xs text-bliss-500">ส่วนลด -฿{booking.discount_amount.toLocaleString()}</p>
                             )}
-                            <button className="text-xs text-amber-600 hover:text-amber-700">
+                            <button className="text-xs text-bliss-600 hover:text-bliss-700">
                               <Eye className="w-4 h-4" />
                             </button>
                           </div>
@@ -1069,17 +1069,22 @@ function BookingHistory() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-5xl w-full shadow-2xl max-h-[95vh] overflow-hidden">
 
-            {/* Clean Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">รายละเอียดการจอง</h2>
-                <p className="text-sm text-gray-500">Booking Details</p>
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-bliss-700 to-bliss-800 px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white leading-tight">รายละเอียดการจอง</h2>
+                  <p className="text-xs text-bliss-200">Booking Details</p>
+                </div>
               </div>
               <button
                 onClick={() => setSelectedBooking(null)}
-                className="p-2 hover:bg-gray-50 rounded-lg transition"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition"
               >
-                <X className="w-6 h-6 text-gray-400" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -1089,52 +1094,52 @@ function BookingHistory() {
               {/* Booking ID & Status */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">รหัสการจอง</p>
-                  <p className="text-xl font-bold text-gray-900">#{selectedBooking.booking_number}</p>
+                  <p className="text-sm text-bliss-500">รหัสการจอง</p>
+                  <p className="text-xl font-bold text-bliss-900">#{selectedBooking.booking_number}</p>
                 </div>
                 {getStatusBadge(selectedBooking.status)}
               </div>
 
               {/* Guest Information */}
-              <div className="bg-gray-50 rounded-xl p-5">
+              <div className="bg-bliss-50 rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-600" />
+                  <div className="w-10 h-10 bg-bliss-200 rounded-lg flex items-center justify-center">
+                    <User className="w-5 h-5 text-bliss-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">ข้อมูลแขก</h3>
+                  <h3 className="font-semibold text-bliss-900">ข้อมูลแขก</h3>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-500">ชื่อแขก</p>
-                    <p className="font-medium text-gray-900">{selectedBooking.guest_name}</p>
+                    <p className="text-sm text-bliss-500">ชื่อแขก</p>
+                    <p className="font-medium text-bliss-900">{selectedBooking.guest_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">ห้องพัก</p>
-                    <p className="font-medium text-gray-900">{selectedBooking.room_number}</p>
+                    <p className="text-sm text-bliss-500">ห้องพัก</p>
+                    <p className="font-medium text-bliss-900">{selectedBooking.room_number}</p>
                   </div>
                   {selectedBooking.staff_name && (
                     <div>
-                      <p className="text-sm text-gray-500">เจ้าหน้าที่</p>
-                      <p className="font-medium text-gray-900">{selectedBooking.staff_name}</p>
+                      <p className="text-sm text-bliss-500">เจ้าหน้าที่</p>
+                      <p className="font-medium text-bliss-900">{selectedBooking.staff_name}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Service Details */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-bliss-200 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-bliss-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">รายละเอียดบริการ</h3>
+                    <h3 className="font-semibold text-bliss-900">รายละเอียดบริการ</h3>
                   </div>
                   <div className="text-right">
                     <div className="space-y-1">
                       {selectedBooking.discount_amount > 0 && (
                         <>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-bliss-500">
                             ราคาเต็ม: ฿{selectedBooking.base_price.toLocaleString()}
                           </div>
                           <div className="text-sm text-red-600">
@@ -1142,7 +1147,7 @@ function BookingHistory() {
                           </div>
                         </>
                       )}
-                      <p className="text-2xl font-bold text-blue-600">
+                      <p className="text-2xl font-bold text-bliss-600">
                         ฿{selectedBooking.final_price.toLocaleString()}
                       </p>
                     </div>
@@ -1151,20 +1156,20 @@ function BookingHistory() {
 
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <Calendar className="w-5 h-5 text-bliss-400 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-500">บริการ</p>
+                      <p className="text-sm text-bliss-500">บริการ</p>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-bliss-900">
                           {selectedBooking.service_name || 'ไม่ระบุบริการ'}
                         </p>
                         {selectedBooking.recipient_count > 1 && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                          <span className="px-2 py-1 bg-bliss-100 text-bliss-700 text-xs font-medium rounded-full">
                             {selectedBooking.recipient_count} คน
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-bliss-500 mt-1">
                         ระยะเวลา: {selectedBooking.duration} นาที
                       </p>
                       <div className="mt-2">
@@ -1176,10 +1181,10 @@ function BookingHistory() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <Calendar className="w-5 h-5 text-bliss-400 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500">วันที่</p>
-                      <p className="font-medium text-gray-900">
+                      <p className="text-sm text-bliss-500">วันที่</p>
+                      <p className="font-medium text-bliss-900">
                         {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {
                           weekday: 'long',
                           year: 'numeric',
@@ -1191,10 +1196,10 @@ function BookingHistory() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <Clock className="w-5 h-5 text-bliss-400 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500">เวลา</p>
-                      <p className="font-medium text-gray-900">
+                      <p className="text-sm text-bliss-500">เวลา</p>
+                      <p className="font-medium text-bliss-900">
                         {selectedBooking.booking_time ?
                           new Date(`1970-01-01T${selectedBooking.booking_time}`).toLocaleTimeString('th-TH', {
                             hour: '2-digit',
@@ -1220,18 +1225,18 @@ function BookingHistory() {
               )}
 
               {/* Payment Information */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-bliss-200 rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-gray-600" />
+                  <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-bliss-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">ข้อมูลการชำระเงิน</h3>
+                  <h3 className="font-semibold text-bliss-900">ข้อมูลการชำระเงิน</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <CreditCard className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <CreditCard className="w-5 h-5 text-bliss-600 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-500">สถานะการชำระ</p>
+                      <p className="text-sm text-bliss-500">สถานะการชำระ</p>
                       {getPaymentBadge(selectedBooking.payment_status)}
                     </div>
                   </div>
@@ -1240,14 +1245,14 @@ function BookingHistory() {
 
               {/* Customer Notes */}
               {selectedBooking.customer_notes && (
-                <div className="bg-blue-50 rounded-xl p-5">
+                <div className="bg-bliss-50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-bliss-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">หมายเหตุ</h3>
+                    <h3 className="font-semibold text-bliss-900">หมายเหตุ</h3>
                   </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">
+                  <p className="text-bliss-700 whitespace-pre-wrap">
                     {selectedBooking.customer_notes}
                   </p>
                 </div>
@@ -1255,37 +1260,37 @@ function BookingHistory() {
 
               {/* Hotel Information */}
               {selectedBooking.hotel && (
-                <div className="bg-amber-50 rounded-xl p-5">
+                <div className="bg-bliss-50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-amber-600" />
+                    <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-bliss-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">ข้อมูลโรงแรม</h3>
+                    <h3 className="font-semibold text-bliss-900">ข้อมูลโรงแรม</h3>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm text-gray-500">ชื่อโรงแรม</p>
-                      <p className="font-medium text-gray-900">{selectedBooking.hotel.name_th}</p>
+                      <p className="text-sm text-bliss-500">ชื่อโรงแรม</p>
+                      <p className="font-medium text-bliss-900">{selectedBooking.hotel.name_th}</p>
                     </div>
                     {selectedBooking.hotel.address && (
                       <div>
-                        <p className="text-sm text-gray-500">ที่อยู่</p>
-                        <p className="text-gray-700">{selectedBooking.hotel.address}</p>
+                        <p className="text-sm text-bliss-500">ที่อยู่</p>
+                        <p className="text-bliss-700">{selectedBooking.hotel.address}</p>
                       </div>
                     )}
                     <div className="flex gap-6">
                       {selectedBooking.hotel.phone && (
                         <div>
-                          <p className="text-sm text-gray-500">เบอร์โทร</p>
-                          <p className="font-medium text-gray-900">{selectedBooking.hotel.phone}</p>
+                          <p className="text-sm text-bliss-500">เบอร์โทร</p>
+                          <p className="font-medium text-bliss-900">{selectedBooking.hotel.phone}</p>
                         </div>
                       )}
                       {selectedBooking.hotel.rating > 0 && (
                         <div>
-                          <p className="text-sm text-gray-500">คะแนน</p>
+                          <p className="text-sm text-bliss-500">คะแนน</p>
                           <div className="flex items-center gap-1">
-                            <span className="text-amber-500">⭐</span>
-                            <span className="font-medium text-gray-900">{selectedBooking.hotel.rating.toFixed(1)}</span>
+                            <span className="text-bliss-500">⭐</span>
+                            <span className="font-medium text-bliss-900">{selectedBooking.hotel.rating.toFixed(1)}</span>
                           </div>
                         </div>
                       )}
@@ -1295,13 +1300,13 @@ function BookingHistory() {
               )}
 
               {/* Action Buttons */}
-              <div className="border-t border-gray-100 pt-6">
-                <h3 className="font-semibold text-gray-900 mb-4">การจัดการ</h3>
+              <div className="border-t border-bliss-100 pt-6">
+                <h3 className="font-semibold text-bliss-900 mb-4">การจัดการ</h3>
                 <div className="flex flex-wrap gap-3">
 
                   <button
                     onClick={() => setNotesModal({ isOpen: true, booking: selectedBooking })}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition text-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-bliss-50 hover:bg-bliss-100 text-bliss-700 rounded-lg transition text-sm"
                   >
                     <Edit className="w-4 h-4" />
                     แก้ไขหมายเหตุ
@@ -1311,7 +1316,7 @@ function BookingHistory() {
                   {selectedBooking.status === 'in_progress' && (
                     <button
                       onClick={() => setExtendSessionModal({ isOpen: true, booking: selectedBooking })}
-                      className="flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition text-sm"
+                      className="flex items-center gap-2 px-4 py-2 bg-bliss-50 hover:bg-bliss-100 text-bliss-700 rounded-lg transition text-sm"
                     >
                       <Clock className="w-4 h-4" />
                       เพิ่มเวลาบริการ
@@ -1334,7 +1339,7 @@ function BookingHistory() {
 
                   <button
                     onClick={() => handleExportPDF(selectedBooking)}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition text-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-bliss-50 hover:bg-bliss-100 text-bliss-700 rounded-lg transition text-sm"
                   >
                     <FileText className="w-4 h-4" />
                     {selectedBooking.payment_status === 'paid' ? 'ออกใบเสร็จรับเงิน' : 'ออกใบแจ้งหนี้'}
@@ -1344,7 +1349,7 @@ function BookingHistory() {
                     <>
                       <button
                         onClick={() => setRescheduleModal({ isOpen: true, booking: selectedBooking })}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition text-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-bliss-50 hover:bg-bliss-100 text-bliss-700 rounded-lg transition text-sm"
                       >
                         <CalendarClock className="w-4 h-4" />
                         เลื่อนนัด
@@ -1363,10 +1368,10 @@ function BookingHistory() {
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-end">
+            <div className="sticky bottom-0 bg-bliss-50 border-t border-bliss-100 px-6 py-4 flex justify-end">
               <button
                 onClick={() => setSelectedBooking(null)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-white transition"
+                className="px-6 py-2 border border-bliss-300 text-bliss-700 rounded-lg font-medium hover:bg-white transition"
               >
                 ปิด
               </button>
@@ -1429,26 +1434,26 @@ function BookingHistory() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-amber-100 rounded-full">
-                <Edit className="w-5 h-5 text-amber-600" />
+              <div className="p-2 bg-bliss-100 rounded-full">
+                <Edit className="w-5 h-5 text-bliss-600" />
               </div>
-              <h3 className="text-lg font-semibold text-stone-900">แก้ไขหมายเหตุ</h3>
+              <h3 className="text-lg font-semibold text-bliss-900">แก้ไขหมายเหตุ</h3>
             </div>
 
             <div className="mb-6">
-              <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                <p className="font-medium text-stone-900">{notesModal.booking?.guest_name}</p>
-                <p className="text-sm text-stone-600">{notesModal.booking?.service_name}</p>
-                <p className="text-sm text-stone-600">ห้อง {notesModal.booking?.room_number}</p>
+              <div className="p-3 bg-bliss-50 rounded-lg mb-4">
+                <p className="font-medium text-bliss-900">{notesModal.booking?.guest_name}</p>
+                <p className="text-sm text-bliss-600">{notesModal.booking?.service_name}</p>
+                <p className="text-sm text-bliss-600">ห้อง {notesModal.booking?.room_number}</p>
               </div>
 
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
                 หมายเหตุ
               </label>
               <textarea
                 id="newNotes"
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent resize-none"
                 placeholder="เพิ่มหมายเหตุสำหรับการจองนี้..."
                 defaultValue={notesModal.booking?.customer_notes || ''}
               />
@@ -1457,7 +1462,7 @@ function BookingHistory() {
             <div className="flex gap-3">
               <button
                 onClick={() => setNotesModal({ isOpen: false, booking: null })}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-lg transition-colors"
               >
                 ยกเลิก
               </button>
@@ -1468,7 +1473,7 @@ function BookingHistory() {
                     handleNotesUpdate(notesModal.booking.id, newNotes || '')
                   }
                 }}
-                className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                className="flex-1 px-4 py-2 bg-bliss-500 hover:bg-bliss-600 text-white rounded-lg transition-colors flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 บันทึก
@@ -1483,47 +1488,47 @@ function BookingHistory() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-indigo-100 rounded-full">
-                <Image className="w-5 h-5 text-indigo-600" />
+              <div className="p-2 bg-bliss-100 rounded-full">
+                <Image className="w-5 h-5 text-bliss-600" />
               </div>
-              <h3 className="text-lg font-semibold text-stone-900">เพิ่มรูปภาพ</h3>
+              <h3 className="text-lg font-semibold text-bliss-900">เพิ่มรูปภาพ</h3>
             </div>
 
             <div className="mb-6">
-              <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                <p className="font-medium text-stone-900">{imageModal.booking?.guest_name}</p>
-                <p className="text-sm text-stone-600">{imageModal.booking?.service_name}</p>
-                <p className="text-sm text-stone-600">ห้อง {imageModal.booking?.room_number}</p>
+              <div className="p-3 bg-bliss-50 rounded-lg mb-4">
+                <p className="font-medium text-bliss-900">{imageModal.booking?.guest_name}</p>
+                <p className="text-sm text-bliss-600">{imageModal.booking?.service_name}</p>
+                <p className="text-sm text-bliss-600">ห้อง {imageModal.booking?.room_number}</p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     รูปภาพก่อนให้บริการ
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                     placeholder="เลือกรูปภาพ"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     รูปภาพหลังให้บริการ
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                     placeholder="เลือกรูปภาพ"
                   />
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-bliss-500 mt-2">
                 * รูปภาพจะถูกบันทึกเป็นหลักฐานการให้บริการ
               </p>
             </div>
@@ -1531,7 +1536,7 @@ function BookingHistory() {
             <div className="flex gap-3">
               <button
                 onClick={() => setImageModal({ isOpen: false, booking: null })}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-lg transition-colors"
               >
                 ยกเลิก
               </button>
@@ -1541,7 +1546,7 @@ function BookingHistory() {
                   alert('ฟีเจอร์นี้จะพัฒนาในเร็วๆ นี้')
                   setImageModal({ isOpen: false, booking: null })
                 }}
-                className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-bliss-500 hover:bg-bliss-600 text-white rounded-lg transition-colors"
               >
                 อัปโหลด
               </button>
@@ -1555,55 +1560,55 @@ function BookingHistory() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl max-h-[80vh] overflow-y-auto">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gray-100 rounded-full">
-                <History className="w-5 h-5 text-gray-600" />
+              <div className="p-2 bg-bliss-100 rounded-full">
+                <History className="w-5 h-5 text-bliss-600" />
               </div>
-              <h3 className="text-lg font-semibold text-stone-900">ประวัติการเปลี่ยนแปลง</h3>
+              <h3 className="text-lg font-semibold text-bliss-900">ประวัติการเปลี่ยนแปลง</h3>
             </div>
 
             <div className="mb-6">
-              <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                <p className="font-medium text-stone-900">{auditModal.booking?.guest_name}</p>
-                <p className="text-sm text-stone-600">{auditModal.booking?.service_name}</p>
-                <p className="text-sm text-stone-600">ห้อง {auditModal.booking?.room_number}</p>
+              <div className="p-3 bg-bliss-50 rounded-lg mb-4">
+                <p className="font-medium text-bliss-900">{auditModal.booking?.guest_name}</p>
+                <p className="text-sm text-bliss-600">{auditModal.booking?.service_name}</p>
+                <p className="text-sm text-bliss-600">ห้อง {auditModal.booking?.room_number}</p>
               </div>
 
               {/* Mock audit trail data */}
               <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                <div className="flex items-start gap-3 p-3 bg-bliss-50 rounded-lg">
+                  <div className="w-2 h-2 bg-bliss-500 rounded-full mt-2"></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-stone-900">สร้างการจอง</p>
-                    <p className="text-xs text-stone-600">
+                    <p className="text-sm font-medium text-bliss-900">สร้างการจอง</p>
+                    <p className="text-xs text-bliss-600">
                       {auditModal.booking && new Date(auditModal.booking.created_at).toLocaleString('th-TH')}
                     </p>
-                    <p className="text-xs text-stone-500">ผู้ใช้: {auditModal.booking?.guest_name}</p>
+                    <p className="text-xs text-bliss-500">ผู้ใช้: {auditModal.booking?.guest_name}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
                   <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-stone-900">ยืนยันการจอง</p>
-                    <p className="text-xs text-stone-600">เมื่อสักครู่นี้</p>
-                    <p className="text-xs text-stone-500">ผู้ใช้: เจ้าหน้าที่โรงแรม</p>
+                    <p className="text-sm font-medium text-bliss-900">ยืนยันการจอง</p>
+                    <p className="text-xs text-bliss-600">เมื่อสักครู่นี้</p>
+                    <p className="text-xs text-bliss-500">ผู้ใช้: เจ้าหน้าที่โรงแรม</p>
                   </div>
                 </div>
 
                 {auditModal.booking?.status === 'completed' && (
-                  <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                  <div className="flex items-start gap-3 p-3 bg-bliss-50 rounded-lg">
+                    <div className="w-2 h-2 bg-bliss-500 rounded-full mt-2"></div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-stone-900">เสร็จสิ้นการให้บริการ</p>
-                      <p className="text-xs text-stone-600">เมื่อไม่นานมานี้</p>
-                      <p className="text-xs text-stone-500">ผู้ใช้: {auditModal.booking?.staff_name || 'เจ้าหน้าที่'}</p>
+                      <p className="text-sm font-medium text-bliss-900">เสร็จสิ้นการให้บริการ</p>
+                      <p className="text-xs text-bliss-600">เมื่อไม่นานมานี้</p>
+                      <p className="text-xs text-bliss-500">ผู้ใช้: {auditModal.booking?.staff_name || 'เจ้าหน้าที่'}</p>
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="mt-4 text-center">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-bliss-500">
                   * ประวัติการเปลี่ยนแปลงแบบจริงจะถูกพัฒนาในเร็วๆ นี้
                 </p>
               </div>
@@ -1612,7 +1617,7 @@ function BookingHistory() {
             <div className="flex gap-3">
               <button
                 onClick={() => setAuditModal({ isOpen: false, booking: null })}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 rounded-lg transition-colors"
               >
                 ปิด
               </button>

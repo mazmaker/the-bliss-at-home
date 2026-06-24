@@ -270,13 +270,13 @@ export default function BookingConfirmation({
         <div className="flex justify-center gap-4">
           <button
             onClick={() => window.location.reload()}
-            className="bg-amber-600 text-white px-6 py-3 rounded-xl hover:bg-amber-700"
+            className="bg-bliss-600 text-white px-6 py-3 rounded-xl hover:bg-bliss-700"
           >
             สร้างการจองใหม่
           </button>
           <button
             onClick={() => window.location.href = '/admin/bookings'}
-            className="border border-stone-300 text-stone-700 px-6 py-3 rounded-xl hover:bg-stone-50"
+            className="border border-bliss-300 text-bliss-700 px-6 py-3 rounded-xl hover:bg-bliss-50"
           >
             ดูรายการจอง
           </button>
@@ -288,8 +288,8 @@ export default function BookingConfirmation({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-stone-900 mb-2">ยืนยันการจอง</h2>
-        <p className="text-stone-600">ตรวจสอบข้อมูลและส่งให้พนักงานดำเนินการ</p>
+        <h2 className="text-xl font-semibold text-bliss-900 mb-2">ยืนยันการจอง</h2>
+        <p className="text-bliss-600">ตรวจสอบข้อมูลและส่งให้พนักงานดำเนินการ</p>
       </div>
 
       {error && (
@@ -301,36 +301,36 @@ export default function BookingConfirmation({
 
       <div className="space-y-4">
         {/* Customer Info */}
-        <div className="bg-stone-50 rounded-xl p-4">
+        <div className="bg-bliss-50 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
-            <User className="w-5 h-5 text-amber-600" />
-            <h3 className="font-medium text-stone-900">ข้อมูลลูกค้า</h3>
+            <User className="w-5 h-5 text-bliss-600" />
+            <h3 className="font-medium text-bliss-900">ข้อมูลลูกค้า</h3>
           </div>
           <div className="space-y-1 text-sm">
-            <p><span className="text-stone-500">ชื่อ:</span> {bookingData.customer?.full_name}</p>
-            <p><span className="text-stone-500">เบอร์โทร:</span> {bookingData.customer?.phone}</p>
+            <p><span className="text-bliss-500">ชื่อ:</span> {bookingData.customer?.full_name}</p>
+            <p><span className="text-bliss-500">เบอร์โทร:</span> {bookingData.customer?.phone}</p>
             {bookingData.customer?.address && (
-              <p><span className="text-stone-500">ที่อยู่:</span> {bookingData.customer.address}</p>
+              <p><span className="text-bliss-500">ที่อยู่:</span> {bookingData.customer.address}</p>
             )}
           </div>
         </div>
 
         {/* Service Info */}
-        <div className="bg-stone-50 rounded-xl p-4">
+        <div className="bg-bliss-50 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
             <Calendar className="w-5 h-5 text-green-600" />
-            <h3 className="font-medium text-stone-900">ข้อมูลบริการ</h3>
+            <h3 className="font-medium text-bliss-900">ข้อมูลบริการ</h3>
           </div>
           <div className="space-y-1 text-sm">
-            <p><span className="text-stone-500">บริการ:</span> {bookingData.service?.name_th}</p>
-            <p><span className="text-stone-500">ระยะเวลา:</span> {bookingData.service?.duration} นาที</p>
+            <p><span className="text-bliss-500">บริการ:</span> {bookingData.service?.name_th}</p>
+            <p><span className="text-bliss-500">ระยะเวลา:</span> {bookingData.service?.duration} นาที</p>
             {bookingData.bookingDate && (
-              <p><span className="text-stone-500">วันที่:</span> {formatDate(bookingData.bookingDate)}</p>
+              <p><span className="text-bliss-500">วันที่:</span> {formatDate(bookingData.bookingDate)}</p>
             )}
             {bookingData.bookingTime && (
-              <p><span className="text-stone-500">เวลา:</span> {formatTime(bookingData.bookingTime)}</p>
+              <p><span className="text-bliss-500">เวลา:</span> {formatTime(bookingData.bookingTime)}</p>
             )}
-            <p><span className="text-stone-500">เพศผู้ให้บริการ:</span> {getProviderLabel(bookingData.providerPreference)}</p>
+            <p><span className="text-bliss-500">เพศผู้ให้บริการ:</span> {getProviderLabel(bookingData.providerPreference)}</p>
           </div>
         </div>
 
@@ -338,19 +338,19 @@ export default function BookingConfirmation({
         <div className="bg-blue-50 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
             <Users className="w-5 h-5 text-blue-600" />
-            <h3 className="font-medium text-stone-900">สถานที่ให้บริการ</h3>
+            <h3 className="font-medium text-bliss-900">สถานที่ให้บริการ</h3>
           </div>
           <div className="space-y-1 text-sm">
             {bookingData.isHotelBooking && bookingData.hotelId ? (
               <>
-                <p><span className="text-stone-500">ประเภท:</span> ที่โรงแรม</p>
+                <p><span className="text-bliss-500">ประเภท:</span> ที่โรงแรม</p>
                 {bookingData.hotelRoomNumber && (
-                  <p><span className="text-stone-500">ห้อง:</span> {bookingData.hotelRoomNumber}</p>
+                  <p><span className="text-bliss-500">ห้อง:</span> {bookingData.hotelRoomNumber}</p>
                 )}
               </>
             ) : (
               <>
-                <p><span className="text-stone-500">ประเภท:</span> ที่บ้าน/ออฟฟิศ</p>
+                <p><span className="text-bliss-500">ประเภท:</span> ที่บ้าน/ออฟฟิศ</p>
 
                 {/* Enhanced address display with source information */}
                 {bookingData.addressDetails ? (
@@ -367,7 +367,7 @@ export default function BookingConfirmation({
                           </span>
                         )}
                         {bookingData.addressDetails.savedAddressIsDefault && (
-                          <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">
+                          <span className="inline-block px-2 py-1 bg-bliss-100 text-bliss-700 text-xs rounded">
                             ค่าเริ่มต้น
                           </span>
                         )}
@@ -380,12 +380,12 @@ export default function BookingConfirmation({
                       </div>
                     )}
 
-                    <p><span className="text-stone-500">ที่อยู่:</span> {bookingData.addressDetails.formattedAddress}</p>
+                    <p><span className="text-bliss-500">ที่อยู่:</span> {bookingData.addressDetails.formattedAddress}</p>
                     {bookingData.addressDetails.contactName && (
-                      <p><span className="text-stone-500">ผู้ติดต่อ:</span> {bookingData.addressDetails.contactName}</p>
+                      <p><span className="text-bliss-500">ผู้ติดต่อ:</span> {bookingData.addressDetails.contactName}</p>
                     )}
                     {bookingData.addressDetails.contactPhone && (
-                      <p><span className="text-stone-500">เบอร์ติดต่อ:</span> {bookingData.addressDetails.contactPhone}</p>
+                      <p><span className="text-bliss-500">เบอร์ติดต่อ:</span> {bookingData.addressDetails.contactPhone}</p>
                     )}
                   </>
                 ) : bookingData.customer?.address ? (
@@ -395,10 +395,10 @@ export default function BookingConfirmation({
                         👤 ที่อยู่จากโปรไฟล์ลูกค้า
                       </span>
                     </div>
-                    <p><span className="text-stone-500">ที่อยู่:</span> {bookingData.customer.address}</p>
+                    <p><span className="text-bliss-500">ที่อยู่:</span> {bookingData.customer.address}</p>
                   </>
                 ) : (
-                  <p><span className="text-stone-500 text-red-600">⚠️ ที่อยู่:</span> <span className="text-red-600">ไม่พบข้อมูลที่อยู่</span></p>
+                  <p><span className="text-bliss-500 text-red-600">⚠️ ที่อยู่:</span> <span className="text-red-600">ไม่พบข้อมูลที่อยู่</span></p>
                 )}
               </>
             )}
@@ -408,14 +408,14 @@ export default function BookingConfirmation({
 
         {/* Pricing Info */}
         {bookingData.basePricing && (
-          <div className="bg-amber-50 rounded-xl p-4">
+          <div className="bg-bliss-50 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
-              <CreditCard className="w-5 h-5 text-amber-600" />
-              <h3 className="font-medium text-stone-900">สรุปราคา</h3>
+              <CreditCard className="w-5 h-5 text-bliss-600" />
+              <h3 className="font-medium text-bliss-900">สรุปราคา</h3>
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-stone-500">ราคาฐาน:</span>
+                <span className="text-bliss-500">ราคาฐาน:</span>
                 <span>{formatCurrency(bookingData.basePricing.base_price)}</span>
               </div>
               {bookingData.basePricing.discount_amount > 0 && (
@@ -430,9 +430,9 @@ export default function BookingConfirmation({
                   <span>{bookingData.discountCode}</span>
                 </div>
               )}
-              <div className="border-t border-amber-200 pt-1 flex justify-between font-medium">
+              <div className="border-t border-bliss-200 pt-1 flex justify-between font-medium">
                 <span>ยอดรวม:</span>
-                <span className="text-amber-700 text-lg">
+                <span className="text-bliss-700 text-lg">
                   {formatCurrency(bookingData.basePricing.final_price)}
                 </span>
               </div>
@@ -442,15 +442,15 @@ export default function BookingConfirmation({
 
         {/* Payment Method */}
         {bookingData.paymentMethod && (
-          <div className="bg-stone-50 rounded-xl p-4">
+          <div className="bg-bliss-50 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
               <CreditCard className="w-5 h-5 text-orange-600" />
-              <h3 className="font-medium text-stone-900">ช่องทางการชำระเงิน</h3>
+              <h3 className="font-medium text-bliss-900">ช่องทางการชำระเงิน</h3>
             </div>
             <div className="space-y-1 text-sm">
-              <p><span className="text-stone-500">วิธีการจ่าย:</span> {getPaymentMethodLabel(bookingData.paymentMethod)}</p>
+              <p><span className="text-bliss-500">วิธีการจ่าย:</span> {getPaymentMethodLabel(bookingData.paymentMethod)}</p>
               {bookingData.paymentNotes && (
-                <p><span className="text-stone-500">หมายเหตุ:</span> {bookingData.paymentNotes}</p>
+                <p><span className="text-bliss-500">หมายเหตุ:</span> {bookingData.paymentNotes}</p>
               )}
             </div>
           </div>
@@ -480,7 +480,7 @@ export default function BookingConfirmation({
         <button
           onClick={onBack}
           disabled={isCreating}
-          className="flex items-center gap-2 px-4 py-2 text-stone-600 border border-stone-300 rounded-xl hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2 text-bliss-600 border border-bliss-300 rounded-xl hover:bg-bliss-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ArrowLeft className="w-4 h-4" />
           กลับแก้ไข

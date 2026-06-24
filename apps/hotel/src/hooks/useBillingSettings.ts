@@ -243,32 +243,32 @@ export function useOverdueAlert(month: string, pendingAmount?: number) {
               }
             case 'OVERDUE':
               return {
-                bgClass: 'bg-gradient-to-r from-amber-50 to-amber-100',
-                borderClass: 'border border-amber-300',
-                iconBg: 'bg-amber-200',
-                iconColor: 'text-amber-700',
-                titleColor: 'text-amber-800',
-                textColor: 'text-amber-700',
+                bgClass: 'bg-gradient-to-r from-bliss-50 to-bliss-100',
+                borderClass: 'border border-bliss-300',
+                iconBg: 'bg-bliss-200',
+                iconColor: 'text-bliss-700',
+                titleColor: 'text-bliss-800',
+                textColor: 'text-bliss-700',
                 animation: ''
               }
             case 'DUE_SOON':
               return {
-                bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100',
-                borderClass: 'border border-blue-300',
-                iconBg: 'bg-blue-200',
-                iconColor: 'text-blue-700',
-                titleColor: 'text-blue-800',
-                textColor: 'text-blue-700',
+                bgClass: 'bg-gradient-to-r from-bliss-50 to-bliss-100',
+                borderClass: 'border border-bliss-300',
+                iconBg: 'bg-bliss-200',
+                iconColor: 'text-bliss-700',
+                titleColor: 'text-bliss-800',
+                textColor: 'text-bliss-700',
                 animation: ''
               }
             default:
               return {
-                bgClass: 'bg-amber-50',
-                borderClass: 'border border-amber-200',
-                iconBg: 'bg-amber-200',
-                iconColor: 'text-amber-600',
-                titleColor: 'text-amber-800',
-                textColor: 'text-amber-700',
+                bgClass: 'bg-bliss-50',
+                borderClass: 'border border-bliss-200',
+                iconBg: 'bg-bliss-200',
+                iconColor: 'text-bliss-600',
+                titleColor: 'text-bliss-800',
+                textColor: 'text-bliss-700',
                 animation: ''
               }
           }

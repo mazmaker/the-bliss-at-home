@@ -30,9 +30,9 @@ export function CustomerTypeBadge({
         }
       : {
           label: 'ลูกค้าเก่า',
-          bgColor: 'bg-blue-100',
-          textColor: 'text-blue-800',
-          borderColor: 'border-blue-200'
+          bgColor: 'bg-bliss-100',
+          textColor: 'text-bliss-800',
+          borderColor: 'border-bliss-200'
         }
   }
 
@@ -45,7 +45,7 @@ export function CustomerTypeBadge({
   return (
     <span
       className={`
-        inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border
+        inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium border
         ${config.bgColor} ${config.textColor} ${config.borderColor}
         cursor-help transition-colors hover:opacity-80
       `}

@@ -180,7 +180,7 @@ export default function HotelBookings() {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-amber-700" />
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-bliss-700" />
           <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -196,7 +196,7 @@ export default function HotelBookings() {
           <p className="mt-2 text-gray-600">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="mt-4 rounded-lg bg-amber-700 px-4 py-2 text-white hover:bg-amber-800"
+            className="mt-4 rounded-lg bg-bliss-700 px-4 py-2 text-white hover:bg-bliss-800"
           >
             ลองอีกครั้ง
           </button>

@@ -165,14 +165,14 @@ function ServiceSelector({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-700 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-bliss-600 to-bliss-700 rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h4 className="font-medium text-stone-900">
+            <h4 className="font-medium text-bliss-900">
               {recipientName || `ผู้รับบริการ ${recipientIndex + 1}`}
             </h4>
-            <p className="text-xs text-stone-600">
+            <p className="text-xs text-bliss-600">
               {step === 'service' ? 'เลือกบริการ' :
                step === 'duration' ? 'เลือกระยะเวลา' :
                'เลือกแล้ว'}
@@ -184,7 +184,7 @@ function ServiceSelector({
           <button
             onClick={handleClearSelection}
             disabled={disabled}
-            className="text-xs text-stone-500 hover:text-red-600 transition"
+            className="text-xs text-bliss-500 hover:text-red-600 transition"
           >
             เคลียร์การเลือก
           </button>
@@ -212,25 +212,25 @@ function ServiceSelector({
                   className={`
                     p-4 rounded-xl border-2 text-left transition-all duration-300 shadow-sm
                     ${isSelected
-                      ? 'border-[#d29b25] bg-gradient-to-r from-[#ffe79d] to-[#ffe79d]/70 shadow-md transform scale-[1.01]'
-                      : 'border-stone-300 bg-white hover:border-[#d29b25]/50 hover:bg-[#ffe79d]/20 hover:shadow-md'
+                      ? 'border-[#565b34] bg-gradient-to-r from-[#ebe6d0] to-[#ebe6d0]/70 shadow-md transform scale-[1.01]'
+                      : 'border-bliss-300 bg-white hover:border-[#565b34]/50 hover:bg-[#ebe6d0]/20 hover:shadow-md'
                     }
                     ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    focus:outline-none focus:ring-2 focus:ring-[#d29b25] focus:ring-offset-1
+                    focus:outline-none focus:ring-2 focus:ring-[#565b34] focus:ring-offset-1
                   `}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h5 className="font-medium text-stone-900 mb-1 truncate">
+                      <h5 className="font-medium text-bliss-900 mb-1 truncate">
                         {service.name_th}
                       </h5>
-                      <p className="text-xs text-stone-500 mb-2 truncate">
+                      <p className="text-xs text-bliss-500 mb-2 truncate">
                         {service.name_en}
                       </p>
 
                       <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-3 h-3 text-stone-400" />
-                        <span className="text-xs text-stone-600">
+                        <Clock className="w-3 h-3 text-bliss-400" />
+                        <span className="text-xs text-bliss-600">
                           {service.duration_options && service.duration_options.length > 1
                             ? `${Math.min(...service.duration_options)}-${Math.max(...service.duration_options)} นาที`
                             : `${service.duration} นาที`
@@ -247,7 +247,7 @@ function ServiceSelector({
                           : PriceCalculator.calculateServicePrice(service, defaultDuration, 'single')
 
                         return (
-                          <div className={`text-sm font-bold ${isSelected ? 'text-[#d29b25]' : 'text-[#b6d387]'}`}>
+                          <div className={`text-sm font-bold ${isSelected ? 'text-[#565b34]' : 'text-[#7a875f]'}`}>
                             {service.duration_options && service.duration_options.length > 1 ? (
                               // For services with multiple duration options, show starting price
                               <span>เริ่มต้น ฿{displayPrice.toLocaleString()}</span>
@@ -262,11 +262,11 @@ function ServiceSelector({
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {isSelected && (
-                        <div className="w-6 h-6 bg-[#d29b25] rounded-full flex items-center justify-center shadow-md">
+                        <div className="w-6 h-6 bg-[#565b34] rounded-full flex items-center justify-center shadow-md">
                           <Check className="w-3.5 h-3.5 text-white" />
                         </div>
                       )}
-                      <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-[#d29b25]' : 'text-stone-400'}`} />
+                      <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-[#565b34]' : 'text-bliss-400'}`} />
                     </div>
                   </div>
                 </button>
@@ -283,25 +283,25 @@ function ServiceSelector({
           <button
             onClick={handleBackToServices}
             disabled={disabled}
-            className="flex items-center gap-2 text-sm text-stone-600 hover:text-stone-800 transition"
+            className="flex items-center gap-2 text-sm text-bliss-600 hover:text-bliss-800 transition"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
             <span>เปลี่ยนบริการ</span>
           </button>
 
           {/* Selected service info */}
-          <div className="p-4 bg-stone-50 rounded-xl">
-            <h5 className="font-medium text-stone-900 mb-1">
+          <div className="p-4 bg-bliss-50 rounded-xl">
+            <h5 className="font-medium text-bliss-900 mb-1">
               {selectedServiceData.name_th}
             </h5>
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-bliss-600">
               {selectedServiceData.description_th || selectedServiceData.description_en}
             </p>
           </div>
 
           {/* Duration options */}
           <div>
-            <h6 className="text-sm font-medium text-stone-900 mb-3">
+            <h6 className="text-sm font-medium text-bliss-900 mb-3">
               เลือกระยะเวลาบริการ <span className="text-red-500">*</span>
             </h6>
 
@@ -322,18 +322,18 @@ function ServiceSelector({
                     className={`
                       p-3 rounded-lg border-2 text-center transition-all duration-300 shadow-sm
                       ${isSelected
-                        ? 'border-[#d29b25] bg-[#d29b25] text-white shadow-md transform scale-[1.05]'
-                        : 'border-stone-300 bg-white text-stone-700 hover:border-[#d29b25]/50 hover:bg-[#ffe79d]/20 hover:shadow-md'
+                        ? 'border-[#565b34] bg-[#565b34] text-white shadow-md transform scale-[1.05]'
+                        : 'border-bliss-300 bg-white text-bliss-700 hover:border-[#565b34]/50 hover:bg-[#ebe6d0]/20 hover:shadow-md'
                       }
                       ${(!option.isAvailable || disabled) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                      focus:outline-none focus:ring-2 focus:ring-[#d29b25] focus:ring-offset-1
+                      focus:outline-none focus:ring-2 focus:ring-[#565b34] focus:ring-offset-1
                     `}
                   >
                     <div className="text-sm font-medium">
                       {option.label}
                     </div>
                     {showPrice && (
-                      <div className={`text-xs mt-1 font-semibold ${isSelected ? 'text-amber-100' : 'text-[#d29b25]'}`}>
+                      <div className={`text-xs mt-1 font-semibold ${isSelected ? 'text-bliss-100' : 'text-[#565b34]'}`}>
                         ฿{calculatedPrice.toLocaleString()}
                       </div>
                     )}
@@ -356,7 +356,7 @@ function ServiceSelector({
               </div>
               <span className="text-sm font-bold text-green-700">เลือกแล้ว</span>
             </div>
-            <div className="text-sm font-medium text-stone-800">
+            <div className="text-sm font-medium text-bliss-800">
               {selectedServiceData.name_th} • {selectedService.duration} นาที • ฿{selectedService.price.toLocaleString()}
             </div>
           </div>
@@ -366,7 +366,7 @@ function ServiceSelector({
             <button
               onClick={handleBackToServices}
               disabled={disabled}
-              className="flex-1 px-3 py-2 text-xs bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition"
+              className="flex-1 px-3 py-2 text-xs bg-bliss-100 text-bliss-600 rounded-lg hover:bg-bliss-200 transition"
             >
               เปลี่ยนบริการ
             </button>
@@ -374,7 +374,7 @@ function ServiceSelector({
               <button
                 onClick={() => setStep('duration')}
                 disabled={disabled}
-                className="flex-1 px-3 py-2 text-xs bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
+                className="flex-1 px-3 py-2 text-xs bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition"
               >
                 เปลี่ยนระยะเวลา
               </button>
@@ -385,17 +385,17 @@ function ServiceSelector({
 
       {/* Selection Summary - Only show for duration step */}
       {selectedService && step === 'duration' && (
-        <div className="p-4 bg-gradient-to-r from-[#b6d387]/20 to-[#b6d387]/10 border-2 border-[#b6d387]/30 rounded-xl shadow-sm">
+        <div className="p-4 bg-gradient-to-r from-[#7a875f]/20 to-[#7a875f]/10 border-2 border-[#7a875f]/30 rounded-xl shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 bg-[#b6d387] rounded-full flex items-center justify-center">
+            <div className="w-5 h-5 bg-[#7a875f] rounded-full flex items-center justify-center">
               <Check className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm font-bold text-[#b6d387]">เลือกแล้ว</span>
+            <span className="text-sm font-bold text-[#7a875f]">เลือกแล้ว</span>
           </div>
-          <div className="text-sm font-medium text-stone-800">
+          <div className="text-sm font-medium text-bliss-800">
             {selectedService.service.name_th} • {selectedService.duration} นาที
             {showPrice && (
-              <span className="text-[#d29b25] font-bold"> • ฿{selectedService.price.toLocaleString()}</span>
+              <span className="text-[#565b34] font-bold"> • ฿{selectedService.price.toLocaleString()}</span>
             )}
           </div>
         </div>
