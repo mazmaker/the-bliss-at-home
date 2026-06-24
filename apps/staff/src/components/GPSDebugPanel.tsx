@@ -62,10 +62,10 @@ export default function GPSDebugPanel() {
   }, [watchId])
 
   return (
-    <div className="bg-white border border-gray-300 rounded-lg p-4 m-4 max-w-md">
+    <div className="bg-white border border-bliss-300 rounded-lg p-4 m-4 max-w-md">
       <div className="flex items-center gap-2 mb-4">
-        <Activity className="w-5 h-5 text-blue-600" />
-        <h3 className="font-medium text-gray-900">GPS Debug Panel</h3>
+        <Activity className="w-5 h-5 text-bliss-600" />
+        <h3 className="font-medium text-bliss-900">GPS Debug Panel</h3>
       </div>
 
       {/* Control Buttons */}
@@ -87,7 +87,7 @@ export default function GPSDebugPanel() {
         )}
         <button
           onClick={() => setLogs([])}
-          className="bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-700"
+          className="bg-bliss-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-bliss-700"
         >
           Clear Logs
         </button>
@@ -96,20 +96,20 @@ export default function GPSDebugPanel() {
       {/* Status Info */}
       <div className="space-y-2 mb-4">
         <div className="flex items-center gap-2 text-sm">
-          <Activity className="w-4 h-4 text-gray-500" />
+          <Activity className="w-4 h-4 text-bliss-500" />
           <span>Updates: {updateCount}</span>
         </div>
 
         {position && (
           <>
             <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-gray-500" />
+              <MapPin className="w-4 h-4 text-bliss-500" />
               <span>
                 {position.coords.latitude.toFixed(6)}, {position.coords.longitude.toFixed(6)}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Accuracy:</span>
+              <span className="text-bliss-500">Accuracy:</span>
               <span>{position.coords.accuracy?.toFixed(0)}m</span>
             </div>
           </>
@@ -117,26 +117,26 @@ export default function GPSDebugPanel() {
 
         {lastUpdate && (
           <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-gray-500" />
+            <Clock className="w-4 h-4 text-bliss-500" />
             <span>Last: {lastUpdate}</span>
           </div>
         )}
 
         <div className="flex items-center gap-2 text-sm">
-          <Database className="w-4 h-4 text-gray-500" />
+          <Database className="w-4 h-4 text-bliss-500" />
           <span>Journey: {localStorage.getItem('current_journey_id') || 'None'}</span>
         </div>
       </div>
 
       {/* Activity Logs */}
       <div className="border-t pt-3">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Activity Log</h4>
-        <div className="bg-gray-50 rounded p-2 max-h-32 overflow-y-auto">
+        <h4 className="text-sm font-medium text-bliss-700 mb-2">Activity Log</h4>
+        <div className="bg-bliss-50 rounded p-2 max-h-32 overflow-y-auto">
           {logs.length === 0 ? (
-            <p className="text-xs text-gray-500">No activity yet</p>
+            <p className="text-xs text-bliss-500">No activity yet</p>
           ) : (
             logs.map((log, index) => (
-              <div key={index} className="text-xs font-mono text-gray-700 mb-1">
+              <div key={index} className="text-xs font-mono text-bliss-700 mb-1">
                 {log}
               </div>
             ))
@@ -145,9 +145,9 @@ export default function GPSDebugPanel() {
       </div>
 
       {/* Instructions */}
-      <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-        <p className="font-medium text-blue-700">How to test:</p>
-        <ul className="text-blue-600 mt-1 space-y-1">
+      <div className="mt-3 p-2 bg-bliss-50 border border-bliss-200 rounded text-xs">
+        <p className="font-medium text-bliss-700">How to test:</p>
+        <ul className="text-bliss-600 mt-1 space-y-1">
           <li>• Click "Start Monitoring"</li>
           <li>• Walk around (indoors GPS may be slow)</li>
           <li>• Watch for position updates</li>

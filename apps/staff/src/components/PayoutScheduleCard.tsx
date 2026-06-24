@@ -58,17 +58,17 @@ const PayoutScheduleCard: React.FC<PayoutScheduleCardProps> = ({
     if (daysUntil <= 7) {
       return {
         message: `อีก ${daysUntil} วัน`,
-        color: 'text-amber-600',
-        bgColor: 'bg-amber-50',
-        borderColor: 'border-amber-200'
+        color: 'text-bliss-600',
+        bgColor: 'bg-bliss-50',
+        borderColor: 'border-bliss-200'
       }
     }
 
     return {
       message: `อีก ${daysUntil} วัน`,
-      color: 'text-stone-600',
-      bgColor: 'bg-stone-50',
-      borderColor: 'border-stone-200'
+      color: 'text-bliss-600',
+      bgColor: 'bg-bliss-50',
+      borderColor: 'border-bliss-200'
     }
   }
 
@@ -77,23 +77,23 @@ const PayoutScheduleCard: React.FC<PayoutScheduleCardProps> = ({
   return (
     <div className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b border-stone-100">
+      <div className="p-4 border-b border-bliss-100">
         <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-lg text-amber-600">•</span>
+          <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-lg text-bliss-600">•</span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-stone-900 text-lg truncate">{displayInfo.title}</h3>
-                <p className="text-sm text-stone-600 mt-1">{displayInfo.description}</p>
+                <h3 className="font-semibold text-bliss-900 text-lg truncate">{displayInfo.title}</h3>
+                <p className="text-sm text-bliss-600 mt-1">{displayInfo.description}</p>
               </div>
             </div>
 
             {/* Badge moved below to avoid overlap */}
             <div className="mt-2">
-              <div className="inline-block bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg">
-                <span className="text-sm font-semibold text-amber-700">{displayInfo.frequency}</span>
+              <div className="inline-block bg-bliss-50 border border-bliss-200 px-3 py-1 rounded-lg">
+                <span className="text-sm font-semibold text-bliss-700">{displayInfo.frequency}</span>
               </div>
             </div>
           </div>
@@ -105,13 +105,13 @@ const PayoutScheduleCard: React.FC<PayoutScheduleCardProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${isDue ? 'bg-red-500 animate-pulse' : daysUntil <= 1 ? 'bg-yellow-500' : 'bg-amber-500'}`}></div>
+              <div className={`w-3 h-3 rounded-full ${isDue ? 'bg-red-500 animate-pulse' : daysUntil <= 1 ? 'bg-yellow-500' : 'bg-bliss-500'}`}></div>
               <p className={`font-semibold text-lg ${statusInfo.color}`}>
                 {statusInfo.message}
               </p>
             </div>
             {payoutInfo.next_payout_date && (
-              <p className="text-sm text-gray-700 mt-2 ml-5">
+              <p className="text-sm text-bliss-700 mt-2 ml-5">
                 • {formatPayoutDate(payoutInfo.next_payout_date)}
               </p>
             )}
@@ -129,22 +129,22 @@ const PayoutScheduleCard: React.FC<PayoutScheduleCardProps> = ({
 
       {/* Details */}
       {showDetails && (
-        <div className="p-4 bg-gray-50 space-y-3">
+        <div className="p-4 bg-bliss-50 space-y-3">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">รอบปัจจุบัน:</span>
-              <p className="font-medium text-gray-900">{displayInfo.title}</p>
+              <span className="text-bliss-500">รอบปัจจุบัน:</span>
+              <p className="font-medium text-bliss-900">{displayInfo.title}</p>
             </div>
             <div>
-              <span className="text-gray-500">ความถี่:</span>
-              <p className="font-medium text-gray-900">{displayInfo.frequency}</p>
+              <span className="text-bliss-500">ความถี่:</span>
+              <p className="font-medium text-bliss-900">{displayInfo.frequency}</p>
             </div>
           </div>
 
           {payoutInfo.last_payout_processed_at && (
-            <div className="pt-2 border-t border-gray-200">
-              <span className="text-gray-500 text-sm">รับเงินครั้งล่าสุด:</span>
-              <p className="font-medium text-gray-900 text-sm">
+            <div className="pt-2 border-t border-bliss-200">
+              <span className="text-bliss-500 text-sm">รับเงินครั้งล่าสุด:</span>
+              <p className="font-medium text-bliss-900 text-sm">
                 {formatPayoutDate(payoutInfo.last_payout_processed_at)}
               </p>
             </div>
@@ -152,10 +152,10 @@ const PayoutScheduleCard: React.FC<PayoutScheduleCardProps> = ({
 
           {/* Custom interval info */}
           {payoutInfo.payout_schedule === 'custom_days' && payoutInfo.custom_payout_interval && (
-            <div className="pt-2 border-t border-gray-200">
+            <div className="pt-2 border-t border-bliss-200">
               <div className="flex items-center space-x-2">
                 <span className="text-yellow-600 font-bold">•</span>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-bliss-700">
                   กำหนดรับเงินทุก {payoutInfo.custom_payout_interval} วัน
                 </span>
               </div>
@@ -163,8 +163,8 @@ const PayoutScheduleCard: React.FC<PayoutScheduleCardProps> = ({
           )}
 
           {/* Help text */}
-          <div className="pt-2 border-t border-gray-200">
-            <p className="text-xs text-gray-500">
+          <div className="pt-2 border-t border-bliss-200">
+            <p className="text-xs text-bliss-500">
               • เงินจะถูกโอนเข้าบัญชีหลังจากแอดมินอนุมัติ
             </p>
           </div>

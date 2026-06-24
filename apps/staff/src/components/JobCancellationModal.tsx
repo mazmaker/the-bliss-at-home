@@ -89,9 +89,9 @@ export function JobCancellationModal({
         {/* Content - scrollable */}
         <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
           {serviceName && (
-            <div className="px-3 py-2 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500">งาน</p>
-              <p className="font-medium text-gray-900 text-sm">{serviceName}</p>
+            <div className="px-3 py-2 bg-bliss-50 rounded-lg">
+              <p className="text-xs text-bliss-500">งาน</p>
+              <p className="font-medium text-bliss-900 text-sm">{serviceName}</p>
             </div>
           )}
 
@@ -103,7 +103,7 @@ export function JobCancellationModal({
           )}
 
           <div>
-            <p className="font-medium text-gray-900 mb-2 text-sm">เลือกเหตุผลในการยกเลิก</p>
+            <p className="font-medium text-bliss-900 mb-2 text-sm">เลือกเหตุผลในการยกเลิก</p>
             <div className="space-y-1.5">
               {CANCELLATION_REASONS.map((reason) => (
                 <button
@@ -112,12 +112,12 @@ export function JobCancellationModal({
                   disabled={isSubmitting}
                   className={`w-full px-3 py-2 rounded-lg text-left transition border-2 ${
                     selectedReason?.code === reason.code
-                      ? 'border-amber-500 bg-amber-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-bliss-500 bg-bliss-50'
+                      : 'border-bliss-200 hover:border-bliss-300'
                   } disabled:opacity-50`}
                 >
-                  <p className="font-medium text-gray-900 text-sm">{reason.label_th}</p>
-                  <p className="text-xs text-gray-500">{reason.label_en}</p>
+                  <p className="font-medium text-bliss-900 text-sm">{reason.label_th}</p>
+                  <p className="text-xs text-bliss-500">{reason.label_en}</p>
                 </button>
               ))}
             </div>
@@ -126,7 +126,7 @@ export function JobCancellationModal({
           {/* Notes input (required for "OTHER" reason) */}
           {(selectedReason?.code === 'OTHER' || notes) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-bliss-700 mb-1">
                 รายละเอียดเพิ่มเติม
                 {selectedReason?.code === 'OTHER' && (
                   <span className="text-red-500 ml-1">*</span>
@@ -137,7 +137,7 @@ export function JobCancellationModal({
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={isSubmitting}
                 placeholder="กรุณาระบุรายละเอียด..."
-                className="w-full p-2 border border-gray-300 rounded-lg resize-none text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
+                className="w-full p-2 border border-bliss-300 rounded-lg resize-none text-sm focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent disabled:opacity-50"
                 rows={2}
               />
             </div>
@@ -149,11 +149,11 @@ export function JobCancellationModal({
         </div>
 
         {/* Actions - always visible */}
-        <div className="p-3 border-t border-gray-100 flex gap-3 shrink-0">
+        <div className="p-3 border-t border-bliss-100 flex gap-3 shrink-0">
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition disabled:opacity-50 text-sm"
+            className="flex-1 py-2.5 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition disabled:opacity-50 text-sm"
           >
             ยกเลิก
           </button>

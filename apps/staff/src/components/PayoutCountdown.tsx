@@ -33,7 +33,7 @@ const PayoutCountdown: React.FC<PayoutCountdownProps> = ({
   if (!nextPayoutDate) {
     return (
       <div className={`text-center p-4 ${className}`}>
-        <p className="text-gray-500">ไม่มีข้อมูลวันที่รับเงิน</p>
+        <p className="text-bliss-500">ไม่มีข้อมูลวันที่รับเงิน</p>
       </div>
     )
   }
@@ -50,10 +50,10 @@ const PayoutCountdown: React.FC<PayoutCountdownProps> = ({
 
   if (compact) {
     return (
-      <div className={`flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 ${className}`}>
+      <div className={`flex items-center justify-between p-4 bg-gradient-to-r from-bliss-50 to-orange-50 rounded-xl border border-bliss-200 ${className}`}>
         <div className="flex-1">
-          <p className="text-sm font-medium text-amber-900 mb-1">รอบการจ่ายถัดไป</p>
-          <p className="text-xs text-amber-700">{formatPayoutDate(nextPayoutDate)}</p>
+          <p className="text-sm font-medium text-bliss-900 mb-1">รอบการจ่ายถัดไป</p>
+          <p className="text-xs text-bliss-700">{formatPayoutDate(nextPayoutDate)}</p>
         </div>
         <div className="text-right bg-white rounded-lg px-3 py-2 shadow-sm">
           {countdown.isToday ? (
@@ -63,21 +63,21 @@ const PayoutCountdown: React.FC<PayoutCountdownProps> = ({
             </div>
           ) : countdown.isTomorrow ? (
             <div>
-              <p className="text-lg font-bold text-amber-600">พรุ่งนี้</p>
-              <p className="text-xs text-amber-500">เกือบถึงแล้ว</p>
+              <p className="text-lg font-bold text-bliss-600">พรุ่งนี้</p>
+              <p className="text-xs text-bliss-500">เกือบถึงแล้ว</p>
             </div>
           ) : (
             <div className="flex items-center space-x-2">
               <div className="text-center">
-                <p className="text-xl font-bold text-amber-600">{countdown.days}</p>
-                <p className="text-xs text-amber-500">วัน</p>
+                <p className="text-xl font-bold text-bliss-600">{countdown.days}</p>
+                <p className="text-xs text-bliss-500">วัน</p>
               </div>
               {countdown.days <= 7 && (
                 <>
-                  <span className="text-amber-400 font-bold">:</span>
+                  <span className="text-bliss-400 font-bold">:</span>
                   <div className="text-center">
-                    <p className="text-lg font-semibold text-amber-600">{countdown.hours.toString().padStart(2, '0')}</p>
-                    <p className="text-xs text-amber-500">ชม.</p>
+                    <p className="text-lg font-semibold text-bliss-600">{countdown.hours.toString().padStart(2, '0')}</p>
+                    <p className="text-xs text-bliss-500">ชม.</p>
                   </div>
                 </>
               )}
@@ -89,11 +89,11 @@ const PayoutCountdown: React.FC<PayoutCountdownProps> = ({
   }
 
   return (
-    <div className={`text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 ${className}`}>
+    <div className={`text-center p-6 bg-gradient-to-br from-bliss-50 to-bliss-50 rounded-xl border border-bliss-200 ${className}`}>
       {/* Header */}
       <div className="mb-4">
-        <p className="text-lg font-semibold text-gray-800 mb-1">เวลาถึงรับเงิน</p>
-        <p className="text-sm text-gray-600">{formatPayoutDate(nextPayoutDate)}</p>
+        <p className="text-lg font-semibold text-bliss-800 mb-1">เวลาถึงรับเงิน</p>
+        <p className="text-sm text-bliss-600">{formatPayoutDate(nextPayoutDate)}</p>
       </div>
 
       {/* Countdown Display */}
@@ -113,26 +113,26 @@ const PayoutCountdown: React.FC<PayoutCountdownProps> = ({
         <div className="grid grid-cols-4 gap-2 py-4">
           {/* Days */}
           <div className="bg-white rounded-lg p-3 shadow-sm">
-            <p className="text-2xl font-bold text-blue-600">{countdown.days}</p>
-            <p className="text-xs text-gray-600">วัน</p>
+            <p className="text-2xl font-bold text-bliss-600">{countdown.days}</p>
+            <p className="text-xs text-bliss-600">วัน</p>
           </div>
 
           {/* Hours */}
           <div className="bg-white rounded-lg p-3 shadow-sm">
-            <p className="text-2xl font-bold text-blue-600">{countdown.hours.toString().padStart(2, '0')}</p>
-            <p className="text-xs text-gray-600">ชม.</p>
+            <p className="text-2xl font-bold text-bliss-600">{countdown.hours.toString().padStart(2, '0')}</p>
+            <p className="text-xs text-bliss-600">ชม.</p>
           </div>
 
           {/* Minutes */}
           <div className="bg-white rounded-lg p-3 shadow-sm">
-            <p className="text-2xl font-bold text-blue-600">{countdown.minutes.toString().padStart(2, '0')}</p>
-            <p className="text-xs text-gray-600">นาที</p>
+            <p className="text-2xl font-bold text-bliss-600">{countdown.minutes.toString().padStart(2, '0')}</p>
+            <p className="text-xs text-bliss-600">นาที</p>
           </div>
 
           {/* Seconds */}
           <div className="bg-white rounded-lg p-3 shadow-sm">
-            <p className="text-2xl font-bold text-blue-600">{countdown.seconds.toString().padStart(2, '0')}</p>
-            <p className="text-xs text-gray-600">วินาทีs</p>
+            <p className="text-2xl font-bold text-bliss-600">{countdown.seconds.toString().padStart(2, '0')}</p>
+            <p className="text-xs text-bliss-600">วินาทีs</p>
           </div>
         </div>
       )}
@@ -140,21 +140,21 @@ const PayoutCountdown: React.FC<PayoutCountdownProps> = ({
       {/* Progress Indicator */}
       {countdown.days <= 7 && !countdown.isToday && !countdown.isDue && (
         <div className="mt-4">
-          <div className="bg-gray-200 rounded-full h-2">
+          <div className="bg-bliss-200 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-bliss-500 to-bliss-600 h-2 rounded-full transition-all duration-300"
               style={{
                 width: `${Math.max(0, 100 - (countdown.days / 7) * 100)}%`
               }}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">เกือบถึงเวลาแล้ว!</p>
+          <p className="text-xs text-bliss-500 mt-1">เกือบถึงเวลาแล้ว!</p>
         </div>
       )}
 
       {/* Encouragement Message */}
-      <div className="mt-4 pt-4 border-t border-blue-200">
-        <p className="text-xs text-gray-600">
+      <div className="mt-4 pt-4 border-t border-bliss-200">
+        <p className="text-xs text-bliss-600">
           • ทำงานหนักต่อไป เงินจะโอนเข้าบัญชีหลังอนุมัติ
         </p>
       </div>

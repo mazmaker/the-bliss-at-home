@@ -355,7 +355,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartJobClick}
           disabled={externalProcessing || !canStartWork}
-          className="flex items-center gap-1 text-amber-700 hover:text-amber-800 text-sm disabled:opacity-50"
+          className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm disabled:opacity-50"
         >
           {externalProcessing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -371,7 +371,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartGPS}
           disabled={isProcessing}
-          className="flex items-center gap-1 text-amber-700 hover:text-amber-800 text-sm disabled:opacity-50"
+          className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm disabled:opacity-50"
         >
           {isProcessing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -397,16 +397,16 @@ export default function JobGPSControls({
     <div className="space-y-3">
       {shouldShowTracking ? (
         // GPS Active Status - The Bliss Brand Colors
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-            <span className="text-amber-800 font-medium text-sm">กำลังติดตาม GPS</span>
+            <div className="w-2 h-2 bg-bliss-500 rounded-full animate-pulse"></div>
+            <span className="text-bliss-800 font-medium text-sm">กำลังติดตาม GPS</span>
           </div>
 
-          <p className="text-xs text-amber-700 mb-2">ลูกค้าเห็นตำแหน่งของคุณแล้ว</p>
+          <p className="text-xs text-bliss-700 mb-2">ลูกค้าเห็นตำแหน่งของคุณแล้ว</p>
 
           {currentPosition && (
-            <div className="text-xs text-amber-700 mb-2">
+            <div className="text-xs text-bliss-700 mb-2">
               อัพเดทล่าสุด: {new Date(currentPosition.timestamp).toLocaleTimeString('th-TH')}
             </div>
           )}
@@ -426,14 +426,14 @@ export default function JobGPSControls({
 
           {/* Share tracking link */}
           {journeyId && (
-            <div className="bg-amber-50 border border-amber-200 rounded p-2 mb-3">
+            <div className="bg-bliss-50 border border-bliss-200 rounded p-2 mb-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-amber-700 flex-1">
+                <p className="text-xs text-bliss-700 flex-1">
                   📱 ส่งลิงก์ให้ลูกค้าดูตำแหน่งของคุณ
                 </p>
                 <button
                   onClick={shareTrackingLink}
-                  className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded text-xs font-medium flex items-center gap-1"
+                  className="bg-bliss-500 hover:bg-bliss-600 text-white px-3 py-1 rounded text-xs font-medium flex items-center gap-1"
                   title="แชร์ลิงก์ติดตาม"
                 >
                   <Share2 className="w-3 h-3" />
@@ -447,7 +447,7 @@ export default function JobGPSControls({
             <button
               onClick={handleStopGPS}
               disabled={gpsProcessing || isStoppingGPS}
-              className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50"
               title={(gpsProcessing || isStoppingGPS) ? 'กำลังประมวลผล กรุณารอ...' : undefined}
             >
               {(gpsProcessing || isStoppingGPS) ? (
@@ -461,7 +461,7 @@ export default function JobGPSControls({
             {job.customer_phone && (
               <a
                 href={`tel:${job.customer_phone}`}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm flex items-center gap-1"
+                className="bg-bliss-100 hover:bg-bliss-200 text-bliss-700 py-2 px-3 rounded-lg text-sm flex items-center gap-1"
               >
                 โทร
               </a>
@@ -472,7 +472,7 @@ export default function JobGPSControls({
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.customer_address)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm flex items-center gap-1"
+                className="bg-bliss-100 hover:bg-bliss-200 text-bliss-700 py-2 px-3 rounded-lg text-sm flex items-center gap-1"
               >
                 <MapPin className="w-3 h-3" />
               </a>
@@ -484,7 +484,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartJobClick}
           disabled={externalProcessing || !canStartWork}
-          className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           title={!canStartWork ? 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้' : undefined}
         >
           {externalProcessing ? (
@@ -499,7 +499,7 @@ export default function JobGPSControls({
         <button
           onClick={handleStartGPS}
           disabled={isProcessing}
-          className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {isProcessing ? (
             <Loader2 className="w-4 h-4 animate-spin" />

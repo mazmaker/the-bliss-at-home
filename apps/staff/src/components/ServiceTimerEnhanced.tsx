@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Clock, Car, DollarSign } from 'lucide-react'
+import { Clock, Car, Wallet } from 'lucide-react'
 
 interface ServiceTimerEnhancedProps {
   travelStartedAt?: string // ISO timestamp when travel started
@@ -73,27 +73,27 @@ export function ServiceTimerEnhanced({
     <div className="space-y-4">
       {/* Travel Time Display */}
       {travelStartedAt && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Car className="w-5 h-5 text-blue-600" />
-            <span className="font-medium text-blue-900">เวลาเดินทาง</span>
+            <Car className="w-5 h-5 text-bliss-600" />
+            <span className="font-medium text-bliss-900">เวลาเดินทาง</span>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-bliss-600">
                 {formatDuration(travelDuration)}
               </div>
-              <div className="text-sm text-blue-600">
+              <div className="text-sm text-bliss-600">
                 {new Date(travelStartedAt).toLocaleTimeString('th-TH')}
                 {serviceStartedAt && ` - ${new Date(serviceStartedAt).toLocaleTimeString('th-TH')}`}
               </div>
             </div>
 
             <div className="text-right">
-              <div className="text-sm text-blue-600">เวลาเดินทาง</div>
+              <div className="text-sm text-bliss-600">เวลาเดินทาง</div>
               {showBilling && (
-                <div className="text-xs text-blue-500">
+                <div className="text-xs text-bliss-500">
                   ค่าชดเชย: {travelCompensationAmount} บาท
                 </div>
               )}
@@ -110,7 +110,7 @@ export function ServiceTimerEnhanced({
             เวลาบริการ
           </span>
           {!serviceStartedAt && (
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+            <span className="text-xs bg-bliss-100 text-bliss-600 px-2 py-1 rounded">
               ยังไม่เริ่ม
             </span>
           )}
@@ -143,7 +143,7 @@ export function ServiceTimerEnhanced({
             </div>
 
             {/* Progress Bar */}
-            <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="relative w-full h-2 bg-bliss-200 rounded-full overflow-hidden">
               <div
                 className={`absolute top-0 left-0 h-full bg-${serviceColor}-600 transition-all duration-1000 ease-linear`}
                 style={{
@@ -165,9 +165,9 @@ export function ServiceTimerEnhanced({
           </div>
         ) : (
           <div className="text-center py-4">
-            <div className="text-gray-400 text-lg mb-2">⏳</div>
-            <div className="text-gray-600 text-sm">ยังไม่เริ่มให้บริการ</div>
-            <div className="text-gray-500 text-xs">
+            <div className="text-bliss-400 text-lg mb-2">⏳</div>
+            <div className="text-bliss-600 text-sm">ยังไม่เริ่มให้บริการ</div>
+            <div className="text-bliss-500 text-xs">
               จะเริ่มนับเวลาเมื่อเริ่มงาน
             </div>
           </div>
@@ -176,10 +176,10 @@ export function ServiceTimerEnhanced({
 
       {/* Billing Summary */}
       {showBilling && serviceStartedAt && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-bliss-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="w-5 h-5 text-green-600" />
-            <span className="font-medium text-gray-900">ค่าบริการ</span>
+            <Wallet className="w-5 h-5 text-green-600" />
+            <span className="font-medium text-bliss-900">ค่าบริการ</span>
           </div>
 
           <div className="space-y-2">
@@ -188,13 +188,13 @@ export function ServiceTimerEnhanced({
               <span>{serviceCost.toLocaleString()} บาท</span>
             </div>
 
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-bliss-500">
               <span>เวลาบริการ: {formatDuration(serviceDuration)}</span>
               <span>จำนวนคงที่</span>
             </div>
 
             {travelCompensationAmount > 0 && (
-              <div className="flex justify-between text-sm text-blue-600">
+              <div className="flex justify-between text-sm text-bliss-600">
                 <span>ค่าชดเชยการเดินทาง</span>
                 <span>+{travelCompensationAmount.toLocaleString()} บาท</span>
               </div>
@@ -210,7 +210,7 @@ export function ServiceTimerEnhanced({
             </div>
 
             {isServiceActive && (
-              <div className="text-xs text-gray-500 text-center">
+              <div className="text-xs text-bliss-500 text-center">
                 * คำนวณแบบ real-time ตามเวลาจริง
               </div>
             )}

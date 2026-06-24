@@ -252,7 +252,7 @@ export default function JobGPSControlsEnhanced({
           <button
             onClick={handleArrival}
             disabled={isProcessing || externalProcessing}
-            className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm disabled:opacity-50"
+            className="flex items-center gap-1 text-bliss-600 hover:text-bliss-700 text-sm disabled:opacity-50"
           >
             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
             มาถึงแล้ว
@@ -331,14 +331,14 @@ export default function JobGPSControlsEnhanced({
 
           {/* Share tracking link */}
           {journeyId && (
-            <div className="bg-amber-50 border border-amber-200 rounded p-2 mb-3">
+            <div className="bg-bliss-50 border border-bliss-200 rounded p-2 mb-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-amber-700 flex-1">
+                <p className="text-xs text-bliss-700 flex-1">
                   📱 ส่งลิงก์ให้ลูกค้าดูตำแหน่ง
                 </p>
                 <button
                   onClick={shareTrackingLink}
-                  className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded text-xs font-medium flex items-center gap-1"
+                  className="bg-bliss-500 hover:bg-bliss-600 text-white px-3 py-1 rounded text-xs font-medium flex items-center gap-1"
                 >
                   <Share2 className="w-3 h-3" />
                   แชร์
@@ -366,7 +366,7 @@ export default function JobGPSControlsEnhanced({
           <button
             onClick={handleArrival}
             disabled={isProcessing || externalProcessing || !currentPosition}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-bliss-500 hover:bg-bliss-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
             📍 มาถึงแล้ว
@@ -377,7 +377,7 @@ export default function JobGPSControlsEnhanced({
           <button
             onClick={handleStartService}
             disabled={isProcessing || externalProcessing || !canStartWork}
-            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             title={!canStartWork ? 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้' : undefined}
           >
             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
@@ -403,7 +403,7 @@ export default function JobGPSControlsEnhanced({
         <div className="flex gap-2">
           <a
             href={`tel:${job.customer_phone}`}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-1"
+            className="flex-1 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-1"
           >
             <Phone className="w-4 h-4" />
             โทรหาลูกค้า
@@ -414,7 +414,7 @@ export default function JobGPSControlsEnhanced({
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.customer_address)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-1"
+              className="flex-1 bg-bliss-100 hover:bg-bliss-200 text-bliss-700 py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-1"
             >
               <MapPin className="w-4 h-4" />
               เปิดแผนที่
@@ -428,7 +428,7 @@ export default function JobGPSControlsEnhanced({
         <div className={`rounded-lg p-3 ${
           feedback.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' :
           feedback.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' :
-          'bg-blue-50 border border-blue-200 text-blue-700'
+          'bg-bliss-50 border border-bliss-200 text-bliss-700'
         }`}>
           <p className="text-sm">{feedback.message}</p>
         </div>

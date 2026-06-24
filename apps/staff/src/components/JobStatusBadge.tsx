@@ -18,10 +18,10 @@ export default function JobStatusBadge({ status, isGPSTracking = false, classNam
   const badges: Record<JobStatus, string> = {
     pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
     assigned: 'bg-orange-100 text-orange-700 border-orange-200',
-    confirmed: 'bg-amber-100 text-amber-700 border-amber-200',
-    traveling: 'bg-amber-100 text-amber-700 border-amber-200',
-    arrived: 'bg-purple-100 text-purple-700 border-purple-200',
-    in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
+    confirmed: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    traveling: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    arrived: 'bg-bliss-100 text-bliss-700 border-bliss-200',
+    in_progress: 'bg-bliss-100 text-bliss-700 border-bliss-200',
     completed: 'bg-green-100 text-green-700 border-green-200',
     cancelled: 'bg-red-100 text-red-700 border-red-200',
   }

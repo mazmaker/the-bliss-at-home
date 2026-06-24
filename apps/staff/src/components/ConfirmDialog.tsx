@@ -51,13 +51,13 @@ export function ConfirmDialog({
               {icon}
             </div>
           )}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-          <p className="text-sm text-gray-500 mb-6">{message}</p>
+          <h3 className="text-lg font-semibold text-bliss-900 mb-2">{title}</h3>
+          <p className="text-sm text-bliss-500 mb-6">{message}</p>
           <div className="flex gap-3">
             <button
               onClick={onCancel}
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 border border-bliss-300 rounded-xl text-bliss-700 font-medium hover:bg-bliss-50 transition disabled:opacity-50"
             >
               {cancelText}
             </button>
