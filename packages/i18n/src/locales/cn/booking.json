@@ -156,7 +156,22 @@
       "bbl": "Bangkok Bank",
       "ktb": "Krungthai",
       "bay": "Krungsri",
-      "ttb": "TTB"
+      "ttb": "TTB",
+      "manualQr": {
+        "title": "支付金额并发送凭证以确认付款",
+        "instruction": "扫描下方二维码支付，然后通过 LINE OA 将凭证发送给管理员以核对付款",
+        "qrImageLabel": "收款二维码",
+        "amountLabel": "应付金额",
+        "bookingNumberLabel": "预订编号",
+        "copyButton": "复制",
+        "copied": "已复制",
+        "lineOALabel": "通过 LINE OA 发送凭证",
+        "lineIdLabel": "LINE ID",
+        "lineOpenButton": "打开 LINE OA",
+        "sendSlipNote": "转账后，请将凭证和预订编号通过 LINE OA 一起发送给管理员",
+        "pendingVerification": "在管理员确认付款之前，您的预订将保持待确认状态",
+        "noQrConfigured": "尚未设置收款二维码，请通过 LINE OA 联系管理员"
+      }
     },
     "serviceNotFound": "未找到服务",
     "backToServices": "← 返回服务列表",
@@ -278,6 +293,7 @@
     "successMessage": "预约编号 {{bookingNumber}} 已成功取消",
     "refundInfo": "您将在 {{days}} 个工作日内收到 ฿{{amount}} 的退款",
     "refundWithinDays": "（在 {{days}} 个工作日内）",
+    "manualQrRefundNotice": "退款在平台外处理 — 请通过 LINE OA 联系管理员",
     "error": "无法取消预约"
   },
   "reschedule": {
@@ -350,7 +366,8 @@
     "promptpay": "泰国电子支付",
     "pendingPayment": "等待支付",
     "creditCard": "信用卡",
-    "internetBanking": "网上银行"
+    "internetBanking": "网上银行",
+    "manualQrExternal": "转账/QR（外部支付）"
   },
   "jobStatus": {
     "pending": "等待服务技师确认",

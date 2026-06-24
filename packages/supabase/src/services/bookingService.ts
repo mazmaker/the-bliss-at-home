@@ -392,6 +392,7 @@ export async function createBookingWithServices(
     latitude?: number | null;
     longitude?: number | null;
     customer_notes?: string | null;
+    admin_notes?: string | null;
     service_format: 'single' | 'simultaneous' | 'sequential';
     recipient_count: number;
     discount_amount?: number;
@@ -431,6 +432,7 @@ export async function createBookingWithServices(
     latitude: bookingData.latitude || null,
     longitude: bookingData.longitude || null,
     customer_notes: bookingData.customer_notes || null,
+    admin_notes: bookingData.admin_notes || null, // [manual-QR] '[MANUAL_QR]' marker when payment_mode=manual_qr (single source of truth; NOT customer_notes — leaks to staff)
     recipient_count: bookingData.recipient_count,
     service_format: bookingData.service_format,
     promotion_id: bookingData.promotion_id || null,

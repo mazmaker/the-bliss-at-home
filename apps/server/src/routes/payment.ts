@@ -9,7 +9,7 @@ import { omiseService } from '../services/omiseService.js'
 import { processBookingConfirmed } from '../services/notificationService.js'
 import { sendReceiptEmailForTransaction, sendCreditNoteEmailForRefund } from './receipts.js'
 import { paymentAuthGuard } from '../middleware/auth.js'
-import { getEnabledPaymentChannels, sourceTypeToChannel, DEFAULT_ENABLED_CHANNELS, type PaymentChannel } from '../lib/paymentChannels.js'
+import { getEnabledPaymentChannels, getPaymentMode, getManualQrConfig, sourceTypeToChannel, DEFAULT_ENABLED_CHANNELS, type PaymentChannel } from '../lib/paymentChannels.js'
 
 const router = Router()
 
@@ -253,17 +253,23 @@ export async function applyExtensionAfterPayment(transactionId: string): Promise
 
 /**
  * GET /api/payments/enabled-channels
- * Returns the admin-controlled allowlist of enabled payment channels (R1).
- * Read by the customer booking wizard / pay-later page to render only enabled channels.
+ * Returns the admin-controlled allowlist of enabled payment channels (R1) PLUS the
+ * payment mode (omise | manual_qr) and, when manual_qr, the admin-uploaded manual-QR
+ * config (payment QR + LINE OA QR/ID). Read by the customer booking wizard / pay-later
+ * page / extension page to decide whether to render Omise channels or the manual screen.
  */
 router.get('/enabled-channels', async (_req: Request, res: Response) => {
   try {
-    const channels = await getEnabledPaymentChannels()
-    return res.json({ success: true, channels })
+    const [channels, payment_mode] = await Promise.all([
+      getEnabledPaymentChannels(),
+      getPaymentMode(),
+    ])
+    const manual_qr = payment_mode === 'manual_qr' ? await getManualQrConfig() : null
+    return res.json({ success: true, channels, payment_mode, manual_qr })
   } catch (error: any) {
     console.error('Get enabled channels error:', error)
-    // Fail safe → still return a usable channel so the wizard can render.
-    return res.json({ success: true, channels: DEFAULT_ENABLED_CHANNELS })
+    // Fail safe → still return a usable channel + default mode so the wizard can render.
+    return res.json({ success: true, channels: DEFAULT_ENABLED_CHANNELS, payment_mode: 'omise', manual_qr: null })
   }
 })
 
@@ -273,6 +279,11 @@ router.get('/enabled-channels', async (_req: Request, res: Response) => {
  */
 router.post('/create-charge', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
+    // [manual-QR] gate: in manual_qr mode the customer pays off-platform (QR + LINE slip) → no Omise
+    // charge here. Reject to prevent bypass + avoid getOmiseClient throwing on a no-Omise-key deploy.
+    if (await getPaymentMode() === 'manual_qr') {
+      return res.status(410).json({ success: false, error: 'Payment is in manual-QR mode; Omise charges are disabled', code: 'PAYMENT_MODE_MANUAL_QR' })
+    }
     const { booking_id, customer_id, amount, token, omise_card_id, payment_method, card_info } = req.body
 
     // Validate required fields - need either token (new card) or omise_card_id (saved card)
@@ -988,6 +999,10 @@ router.post('/refund', paymentAuthGuard, async (req: Request, res: Response) => 
  */
 router.post('/create-source', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
+    // [manual-QR] gate: in manual_qr mode the customer pays off-platform (QR + LINE slip) → no Omise source here.
+    if (await getPaymentMode() === 'manual_qr') {
+      return res.status(410).json({ success: false, error: 'Payment is in manual-QR mode; Omise sources are disabled', code: 'PAYMENT_MODE_MANUAL_QR' })
+    }
     console.log('📥 Create source request:', { body: req.body })
     const { booking_id, customer_id, amount, source_type, payment_method } = req.body
 
@@ -1242,6 +1257,10 @@ router.get('/status/:chargeId', async (req: Request, res: Response) => {
  */
 router.post('/add-payment-method', async (req: Request, res: Response) => {
   try {
+    // [manual-QR] gate: manual_qr mode has no Omise vault → block saving a card.
+    if (await getPaymentMode() === 'manual_qr') {
+      return res.status(410).json({ success: false, error: 'Payment is in manual-QR mode; card vault is disabled', code: 'PAYMENT_MODE_MANUAL_QR' })
+    }
     const { customer_id, card_token, is_default } = req.body
 
     if (!customer_id || !card_token) {

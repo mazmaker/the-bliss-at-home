@@ -11,6 +11,7 @@ import { usePaymentMethods } from '@bliss/supabase/hooks/usePaymentMethods'
 import { Database, PromoValidationResult, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { supabase } from '@bliss/supabase/auth'
 import PaymentForm from '../components/PaymentForm'
+import ManualPaymentInstructions, { type ManualQrConfig } from '../components/ManualPaymentInstructions'
 import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
 import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
 import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
@@ -86,6 +87,9 @@ function BookingWizard() {
   // [R1] Admin-controlled allowlist of payment channels (fetched from server); default = PromptPay only.
   const [enabledChannels, setEnabledChannels] = useState<string[]>(['promptpay'])
   const [channelsLoaded, setChannelsLoaded] = useState(false)
+  // [manual-QR] Admin payment mode + manual-QR config (fetched alongside channels at mount). Default = omise.
+  const [paymentMode, setPaymentMode] = useState<'omise' | 'manual_qr'>('omise')
+  const [manualQrConfig, setManualQrConfig] = useState<ManualQrConfig | null>(null)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [promptpayQRCode, setPromptpayQRCode] = useState<string | null>(null)
@@ -322,17 +326,25 @@ function BookingWizard() {
     const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
     fetch(`${apiBase}/api/payments/enabled-channels`)
       .then(r => r.json())
-      .then(d => { if (d?.success && Array.isArray(d.channels) && d.channels.length > 0) setEnabledChannels(d.channels) })
+      .then(d => {
+        if (d?.success && Array.isArray(d.channels) && d.channels.length > 0) setEnabledChannels(d.channels)
+        // [manual-QR] capture mode + config so Step 6 can render the manual screen instead of Omise
+        if (d?.payment_mode === 'manual_qr') {
+          setPaymentMode('manual_qr')
+          if (d.manual_qr) setManualQrConfig(d.manual_qr)
+        }
+      })
       .catch(err => console.error('Failed to fetch enabled payment channels:', err))
       .finally(() => setChannelsLoaded(true))
   }, [])
 
   // [R1] When only one channel is enabled, auto-select it so the chooser is skipped.
+  // [manual-QR] G22: do NOT auto-select in manual_qr mode (server defaults to 1 channel) — would race-mount the Omise form under the manual screen.
   useEffect(() => {
-    if (currentStep === 6 && channelsLoaded && !selectedPaymentChannel && enabledChannels.length === 1) {
+    if (currentStep === 6 && channelsLoaded && paymentMode !== 'manual_qr' && !selectedPaymentChannel && enabledChannels.length === 1) {
       setSelectedPaymentChannel(enabledChannels[0])
     }
-  }, [currentStep, channelsLoaded, selectedPaymentChannel, enabledChannels])
+  }, [currentStep, channelsLoaded, paymentMode, selectedPaymentChannel, enabledChannels])
 
   const handlePayWithPromptPay = async () => {
     if (!customer || !createdBookingId) {
@@ -593,6 +605,7 @@ function BookingWizard() {
           latitude: manualAddressLocation.latitude,
           longitude: manualAddressLocation.longitude,
           customer_notes: notes || null,
+          admin_notes: paymentMode === 'manual_qr' ? '[MANUAL_QR]' : null, // [manual-QR] G15: marker from the SAME payment_mode snapshot as the Step-6 branch; decoupled from lat/lng (C11)
           service_format: serviceFormat as 'single' | 'simultaneous' | 'sequential',
           recipient_count: recipientCount,
           discount_amount: discountAmount,
@@ -608,7 +621,18 @@ function BookingWizard() {
 
       // Store booking ID
       setCreatedBookingId(bookingId)
-      setCreatedBookingNumber(null) // will be set by DB trigger
+      // [manual-QR] fetch the trigger-generated booking_number to show on the manual-QR payment screen
+      try {
+        const { getBrowserClient } = await import('@bliss/supabase')
+        const { data: bRow } = await getBrowserClient()
+          .from('bookings')
+          .select('booking_number')
+          .eq('id', bookingId)
+          .single()
+        setCreatedBookingNumber((bRow as any)?.booking_number ?? null)
+      } catch {
+        setCreatedBookingNumber(null)
+      }
 
       // Redeem loyalty points if used
       if (pointsRedeemed > 0 && pointsDiscount > 0 && customer) {
@@ -1321,8 +1345,14 @@ function BookingWizard() {
             <div>
               <h2 className="text-xl font-bold text-bliss-900 mb-6">{t('wizard.payment.title')}</h2>
 
-              {/* Payment Channel Selection - Show if no channel selected yet */}
-              {!selectedPaymentChannel ? (
+              {/* [manual-QR] Manual payment mode → static QR + send slip via LINE; NO Omise chooser/form/poll. */}
+              {paymentMode === 'manual_qr' ? (
+                <ManualPaymentInstructions
+                  bookingNumber={createdBookingNumber}
+                  amount={totalPrice}
+                  config={manualQrConfig}
+                />
+              ) : !selectedPaymentChannel ? (
                 <div className="space-y-4">
                   <p className="text-bliss-700 mb-4">{t('wizard.payment.selectChannel')}</p>
 

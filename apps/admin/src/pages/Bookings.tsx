@@ -7,6 +7,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
 
+// [manual-QR] single source of truth for "is this a manual-QR booking" — marker prefix-match
+// (matches BOTH '[MANUAL_QR]' stamped at create AND '[MANUAL_QR PAID] …' appended after admin
+// mark-paid — G24/G27). Read from admin_notes only (never payment_status/payment_method).
+const isManualQrBooking = (b?: { admin_notes?: string | null }) => !!b?.admin_notes?.includes('[MANUAL_QR')
+
 function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialStatus = searchParams.get('status') as BookingStatus | null
@@ -65,9 +70,9 @@ function Bookings() {
     queryClient.invalidateQueries({ queryKey: ['bookings'] })
   }
 
-  const handleStatusChange = async (bookingId: string, newStatus: BookingStatus) => {
+  const handleStatusChange = async (bookingId: string, newStatus: BookingStatus, autoMarkPaid?: boolean) => {
     try {
-      await updateStatus.mutateAsync({ id: bookingId, status: newStatus })
+      await updateStatus.mutateAsync({ id: bookingId, status: newStatus, autoMarkPaid })
     } catch (error) {
       console.error('Error updating booking status:', error)
       alert('เกิดข้อผิดพลาดในการอัพเดทสถานะ: ' + (error as Error).message)
@@ -176,9 +181,22 @@ function Bookings() {
       paid: 'ชำระแล้ว',
       refunded: 'คืนเงิน',
     }
+    // [manual-QR] G31: flag manual-QR bookings so admin can tell off-platform settlement (QR + LINE slip)
+    // apart from an Omise-paid booking, which otherwise both just read "ชำระแล้ว".
+    const isManual = isManualQrBooking(booking)
     return (
-      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${badges[status as keyof typeof badges]}`}>
-        {labels[status as keyof typeof labels]}
+      <span className="inline-flex items-center gap-1">
+        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${badges[status as keyof typeof badges]}`}>
+          {labels[status as keyof typeof labels]}
+        </span>
+        {isManual && (
+          <span
+            className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-700"
+            title="ชำระผ่าน QR + ส่งสลิปทาง LINE (นอกแพลตฟอร์ม)"
+          >
+            ชำระภายนอก
+          </span>
+        )}
       </span>
     )
   }
@@ -417,7 +435,7 @@ interface BookingDetailModalProps {
   booking: Booking
   isOpen: boolean
   onClose: () => void
-  onStatusChange: (bookingId: string, newStatus: BookingStatus) => void
+  onStatusChange: (bookingId: string, newStatus: BookingStatus, autoMarkPaid?: boolean) => void
   onOpenCancellation: () => void
 }
 
@@ -436,7 +454,15 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
 
     setIsChangingStatus(true)
     try {
-      await onStatusChange(booking.id, selectedStatus)
+      // [manual-QR] ส่วน B: confirming a manual-QR customer booking that is still pending → auto mark-paid
+      // (opt-in flag). Eligibility computed HERE where the full booking object is available; the service
+      // re-verifies it against the persisted row before actually flipping.
+      const autoMarkPaid =
+        selectedStatus === 'confirmed' &&
+        isManualQrBooking(booking) &&
+        !booking.is_hotel_booking &&
+        booking.payment_status === 'pending'
+      await onStatusChange(booking.id, selectedStatus, autoMarkPaid)
       onClose()
     } catch (error) {
       console.error('Error updating status:', error)

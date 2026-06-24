@@ -29,8 +29,8 @@ export function useUpdateBookingStatus() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: BookingStatus }) =>
-      bookingService.updateBookingStatus(id, status),
+    mutationFn: ({ id, status, autoMarkPaid }: { id: string; status: BookingStatus; autoMarkPaid?: boolean }) =>
+      bookingService.updateBookingStatus(id, status, { autoMarkPaid }),
     onSuccess: (data) => {
       // Invalidate and refetch bookings (force refetch all queries)
       queryClient.invalidateQueries({

@@ -27,6 +27,7 @@ interface BookingStatusCardEnhancedProps {
       rating?: number
       reviews?: number
     }
+    payment?: { status?: string }
   } | null
   bookingData?: any
   onRefresh?: () => void
@@ -43,6 +44,11 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
   }, [])
 
   if (!booking) return null
+
+  // R-5 G25: manual-QR booking — derived from the raw row (bookingData carries admin_notes via
+  // select('*')). Used to suppress the Omise "รอชำระเงิน" pay-prompt banner: manual bookings have
+  // NO Omise charge, so the incomplete-payment warning must not show even while still pending.
+  const isManualQr = ((bookingData as any)?.admin_notes || '').includes('[MANUAL_QR')
 
   // Use status_v2 if available, fallback to legacy status
   let currentStatus = booking.status_v2 || booking.status?.toUpperCase() || 'PENDING'
@@ -148,8 +154,9 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
   const config = getStatusConfig(currentStatus as BookingStatus)
 
   // Check actual payment status vs booking status
+  // R-5 G25: a manual-QR booking is never an Omise "incomplete payment" → never show the pay-prompt banner.
   const isPaymentPending = booking && booking.payment &&
-    booking.payment.status === 'pending'
+    booking.payment.status === 'pending' && !isManualQr
   const isBookingConfirmed = ['confirmed', 'assigned', 'ASSIGNED'].includes(currentStatus)
 
   // Override billing message if payment is pending

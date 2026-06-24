@@ -47,6 +47,8 @@ interface CancelBookingModalProps {
   bookingTime: string
   totalPrice: number
   paymentStatus: 'pending' | 'paid' | 'refunded'
+  // R-5 G19/D2: manual-QR booking → no on-platform refund; show "contact LINE OA" instead of "฿X จะคืน"
+  isManualQr?: boolean
 }
 
 // Pre-defined cancellation reasons (i18n keys, resolved at render time)
@@ -72,6 +74,7 @@ export function CancelBookingModal({
   bookingTime,
   totalPrice,
   paymentStatus,
+  isManualQr = false,
 }: CancelBookingModalProps) {
   const { t } = useTranslation()
   // Auto UI/UX review test - improved component structure
@@ -169,7 +172,8 @@ export function CancelBookingModal({
       setEligibility(eligibilityData)
 
       // Calculate refund amount with safe checking
-      if (paymentStatus === 'paid' && eligibilityData.refundPercentage && eligibilityData.refundPercentage > 0) {
+      // R-5 G19: manual-QR booking gets no on-platform refund — keep refundAmount at 0
+      if (!isManualQr && paymentStatus === 'paid' && eligibilityData.refundPercentage && eligibilityData.refundPercentage > 0) {
         setRefundAmount(Math.round(totalPrice * eligibilityData.refundPercentage / 100))
       }
 
@@ -284,7 +288,16 @@ export function CancelBookingModal({
             </div>
 
             {/* Refund Info */}
-            {paymentStatus === 'paid' && (
+            {/* R-5 G19/D2: manual-QR → off-platform refund notice, not the fake "฿X จะคืน" */}
+            {paymentStatus === 'paid' && isManualQr && (
+              <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4">
+                <div className="flex items-start gap-2">
+                  <Info className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm font-medium text-bliss-700">{t('booking:cancelBooking.manualQrRefundNotice')}</p>
+                </div>
+              </div>
+            )}
+            {paymentStatus === 'paid' && !isManualQr && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -301,7 +314,7 @@ export function CancelBookingModal({
               </div>
             )}
 
-            {paymentStatus === 'paid' && eligibility.refundPercentage === 0 && (
+            {paymentStatus === 'paid' && !isManualQr && eligibility.refundPercentage === 0 && (
               <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4">
                 <div className="flex items-start gap-2">
                   <Info className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
@@ -404,7 +417,14 @@ export function CancelBookingModal({
                     {selectedReason === OTHER_REASON_KEY ? customReason : t(selectedReason)}
                   </span>
                 </div>
-                {paymentStatus === 'paid' && refundAmount > 0 && (
+                {/* R-5 G19/D2: manual-QR → off-platform refund notice in the confirm summary */}
+                {paymentStatus === 'paid' && isManualQr && (
+                  <div className="flex justify-between pt-2 border-t border-bliss-200">
+                    <span className="text-bliss-700">{t('booking:cancelBooking.refund')}</span>
+                    <span className="text-sm text-bliss-700 text-right max-w-[60%]">{t('booking:cancelBooking.manualQrRefundNotice')}</span>
+                  </div>
+                )}
+                {paymentStatus === 'paid' && !isManualQr && refundAmount > 0 && (
                   <div className="flex justify-between pt-2 border-t border-bliss-200">
                     <span className="text-bliss-700">{t('booking:cancelBooking.refund')}</span>
                     <span className="font-bold text-green-600">฿{refundAmount.toLocaleString()}</span>
@@ -450,7 +470,16 @@ export function CancelBookingModal({
               {t('booking:cancelBooking.successMessage', { bookingNumber })}
             </p>
 
-            {paymentStatus === 'paid' && refundAmount > 0 && (
+            {/* R-5 G19/D2: manual-QR → post-cancel off-platform refund notice, not the fake "฿X จะคืน" green box */}
+            {paymentStatus === 'paid' && isManualQr && (
+              <div className="bg-bliss-100 border border-bliss-300 rounded-xl p-4 text-left mb-6">
+                <div className="flex items-start gap-2">
+                  <Info className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm font-medium text-bliss-700">{t('booking:cancelBooking.manualQrRefundNotice')}</p>
+                </div>
+              </div>
+            )}
+            {paymentStatus === 'paid' && !isManualQr && refundAmount > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-left mb-6">
                 <div className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />

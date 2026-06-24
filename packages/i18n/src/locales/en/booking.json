@@ -156,7 +156,22 @@
       "bbl": "Bangkok Bank",
       "ktb": "Krungthai",
       "bay": "Krungsri",
-      "ttb": "TTB"
+      "ttb": "TTB",
+      "manualQr": {
+        "title": "Pay the amount and send the slip to confirm payment",
+        "instruction": "Scan the QR below to pay, then send the slip to admin via LINE OA to verify the payment",
+        "qrImageLabel": "Payment QR",
+        "amountLabel": "Amount to pay",
+        "bookingNumberLabel": "Booking number",
+        "copyButton": "Copy",
+        "copied": "Copied",
+        "lineOALabel": "Send slip via LINE OA",
+        "lineIdLabel": "LINE ID",
+        "lineOpenButton": "Open LINE OA",
+        "sendSlipNote": "After transferring, please send the slip together with your booking number to admin via LINE OA",
+        "pendingVerification": "Your booking stays pending until an admin verifies the payment",
+        "noQrConfigured": "No payment QR configured yet — please contact admin via LINE OA"
+      }
     },
     "serviceNotFound": "Service not found",
     "backToServices": "← Back to Services",
@@ -278,6 +293,7 @@
     "successMessage": "Booking number {{bookingNumber}} has been cancelled",
     "refundInfo": "You will receive a refund of ฿{{amount}} within {{days}} business days",
     "refundWithinDays": "(within {{days}} business days)",
+    "manualQrRefundNotice": "Refund handled off-platform — contact admin via LINE OA",
     "error": "Unable to Cancel Booking"
   },
   "reschedule": {
@@ -350,7 +366,8 @@
     "promptpay": "PromptPay",
     "pendingPayment": "Pending Payment",
     "creditCard": "Credit Card",
-    "internetBanking": "Internet Banking"
+    "internetBanking": "Internet Banking",
+    "manualQrExternal": "Bank transfer / QR (paid externally)"
   },
   "jobStatus": {
     "pending": "Awaiting Staff Confirmation",
