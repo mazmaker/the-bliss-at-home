@@ -95,13 +95,13 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
     switch (status) {
       case 'confirmed':
       case 'assigned':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-bliss-100 text-bliss-700'
       case 'traveling':
         return 'bg-green-100 text-green-700'
       case 'in_progress':
         return 'bg-yellow-100 text-yellow-700'
       default:
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-bliss-100 text-bliss-700'
     }
   }
 
@@ -124,67 +124,67 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
   const hasActiveJourney = booking.journey_status === 'traveling'
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-lg border border-bliss-200 overflow-hidden">
       {/* Header */}
-      <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+      <div className="p-4 bg-gradient-to-r from-bliss-50 to-bliss-50 border-b border-bliss-200">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{booking.service_name}</h3>
-            <p className="text-sm text-gray-600">{formatDate(booking.scheduled_date)} • {formatTime(booking.scheduled_time)}</p>
+            <h3 className="text-lg font-bold text-bliss-900">{booking.service_name}</h3>
+            <p className="text-sm text-bliss-600">{formatDate(booking.scheduled_date)} • {formatTime(booking.scheduled_time)}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
               {getStatusText(booking.status)}
             </span>
-            <span className="text-lg font-bold text-blue-600">
+            <span className="text-lg font-bold text-bliss-600">
               ฿{(booking.total_staff_earnings || booking.staff_earnings).toLocaleString()}
             </span>
           </div>
         </div>
 
         {booking.booking_id && (
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-bliss-500">
             รหัสการจอง: {booking.booking_id}
           </div>
         )}
       </div>
 
       {/* Customer Info */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-bliss-100">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-gray-500" />
-            <span className="font-medium text-gray-900">{booking.customer_name}</span>
+            <User className="w-4 h-4 text-bliss-500" />
+            <span className="font-medium text-bliss-900">{booking.customer_name}</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-gray-500" />
-            <a href={`tel:${booking.customer_phone}`} className="text-blue-600 underline">
+            <Phone className="w-4 h-4 text-bliss-500" />
+            <a href={`tel:${booking.customer_phone}`} className="text-bliss-600 underline">
               {booking.customer_phone}
             </a>
           </div>
 
           <div className="flex items-start gap-2">
-            <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+            <MapPin className="w-4 h-4 text-bliss-500 mt-0.5" />
             <div>
               {booking.is_hotel_booking && booking.hotel_name ? (
                 <>
-                  <p className="text-gray-700 text-sm">{booking.hotel_name}</p>
+                  <p className="text-bliss-700 text-sm">{booking.hotel_name}</p>
                   {booking.room_number && (
-                    <p className="text-blue-600 text-sm font-medium">
+                    <p className="text-bliss-600 text-sm font-medium">
                       ห้อง: {booking.room_number}
                     </p>
                   )}
                 </>
               ) : (
-                <p className="text-gray-700 text-sm">{booking.customer_address}</p>
+                <p className="text-bliss-700 text-sm">{booking.customer_address}</p>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-600">ระยะเวลา: {booking.duration_minutes} นาที</span>
+            <Clock className="w-4 h-4 text-bliss-500" />
+            <span className="text-sm text-bliss-600">ระยะเวลา: {booking.duration_minutes} นาที</span>
           </div>
 
           {booking.customer_notes && (
@@ -246,7 +246,7 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
             {/* Arrive Button */}
             <button
               onClick={handleArriveAtCustomer}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-bliss-500 hover:bg-bliss-600 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
             >
               <CheckCircle className="w-5 h-5" />
               มาถึงลูกค้าแล้ว
@@ -257,7 +257,7 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
           <button
             onClick={handleStartJourney}
             disabled={booking.status !== 'confirmed' && booking.status !== 'assigned'}
-            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-bliss-300 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
           >
             <Navigation className="w-5 h-5" />
             เริ่มเดินทาง
@@ -266,7 +266,7 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
 
         {/* Additional Info */}
         {booking.status === 'confirmed' || booking.status === 'assigned' ? (
-          <p className="text-xs text-gray-500 text-center mt-2">
+          <p className="text-xs text-bliss-500 text-center mt-2">
             กดเริ่มเดินทางเพื่อให้ลูกค้าติดตามตำแหน่งของคุณ
           </p>
         ) : null}

@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, Clock, DollarSign, User, CheckCircle, Loader2 } from 'lucide-react'
+import { Bell, Clock, Wallet, User, CheckCircle, Loader2 } from 'lucide-react'
 import { usePendingExtensionAcknowledgments, type PendingExtension } from '../hooks/usePendingExtensionAcknowledgments'
 import { toast } from 'react-hot-toast'
 
@@ -49,30 +49,30 @@ export function ExtensionAcceptanceCard() {
   }
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
+    <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Bell className="w-5 h-5 text-amber-600" />
-        <h3 className="font-semibold text-amber-800">
+        <Bell className="w-5 h-5 text-bliss-600" />
+        <h3 className="font-semibold text-bliss-800">
           การเพิ่มเวลาบริการที่รอรับทราบ
         </h3>
-        <span className="px-2 py-1 bg-amber-200 text-amber-800 text-xs rounded-full font-medium">
+        <span className="px-2 py-1 bg-bliss-200 text-bliss-800 text-xs rounded-full font-medium">
           {pendingExtensions.length} รายการ
         </span>
       </div>
 
       {/* Summary */}
-      <div className="bg-white rounded-lg p-3 mb-4 border border-amber-100">
+      <div className="bg-white rounded-lg p-3 mb-4 border border-bliss-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-gray-600" />
-              <span className="text-sm text-gray-600">
+              <Clock className="w-4 h-4 text-bliss-600" />
+              <span className="text-sm text-bliss-600">
                 รวม {pendingExtensions.reduce((sum, ext) => sum + ext.duration, 0)} นาที
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <DollarSign className="w-4 h-4 text-green-600" />
+              <Wallet className="w-4 h-4 text-green-600" />
               <span className="text-sm text-green-600 font-medium">
                 รายได้อัปเดตในรายละเอียดงาน
               </span>
@@ -82,7 +82,7 @@ export function ExtensionAcceptanceCard() {
             <button
               onClick={handleAcknowledgeAll}
               disabled={isAcknowledging}
-              className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1"
+              className="bg-bliss-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1"
             >
               {isAcknowledging ? (
                 <>
@@ -115,7 +115,7 @@ export function ExtensionAcceptanceCard() {
       </div>
 
       {/* Info Note */}
-      <div className="mt-4 p-2 bg-amber-100 rounded-lg text-xs text-amber-700 flex items-start gap-2">
+      <div className="mt-4 p-2 bg-bliss-100 rounded-lg text-xs text-bliss-700 flex items-start gap-2">
         <Bell className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <span>
           💡 การเพิ่มเวลาเหล่านี้ได้รับการชำระเงินแล้ว และจะส่งผลต่อรายได้ของคุณ
@@ -145,22 +145,22 @@ function ExtensionItem({
   return (
     <Link
       to={`/staff/jobs/${extension.jobId}`}
-      className="block bg-white rounded-lg p-3 border border-amber-100 active:bg-amber-50 transition-colors"
+      className="block bg-white rounded-lg p-3 border border-bliss-100 active:bg-bliss-50 transition-colors"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-6 h-6 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-medium">
+            <span className="w-6 h-6 bg-bliss-100 text-bliss-700 rounded-full flex items-center justify-center text-xs font-medium">
               {index + 1}
             </span>
             <div>
-              <span className="font-medium text-gray-900">{extension.serviceName}</span>
-              <span className="text-gray-500 text-sm ml-2">#{extension.bookingNumber}</span>
+              <span className="font-medium text-bliss-900">{extension.serviceName}</span>
+              <span className="text-bliss-500 text-sm ml-2">#{extension.bookingNumber}</span>
             </div>
           </div>
 
           <div className="ml-8 space-y-1">
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-4 text-sm text-bliss-600">
               <div className="flex items-center gap-1">
                 <User className="w-3 h-3" />
                 <span>{extension.customerName}</span>
@@ -170,7 +170,7 @@ function ExtensionItem({
                 <span>+{extension.duration} นาที</span>
               </div>
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-bliss-500">
               🕐 เพิ่มเมื่อ: {formatTime(extension.extendedAt)}
             </div>
           </div>
@@ -184,7 +184,7 @@ function ExtensionItem({
               await onAcknowledge(extension.acknowledgmentId, extension.serviceName)
             }}
             disabled={isAcknowledging}
-            className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1"
+            className="bg-bliss-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1"
           >
             {isAcknowledging ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -193,7 +193,7 @@ function ExtensionItem({
             )}
             รับทราบ
           </button>
-          <span className="text-xs text-center text-gray-400">กดเพื่อดูงาน</span>
+          <span className="text-xs text-center text-bliss-400">กดเพื่อดูงาน</span>
         </div>
       </div>
     </Link>

@@ -140,8 +140,8 @@ function StaffDashboard() {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-amber-600 mx-auto" />
-          <p className="text-gray-500 mt-3">กำลังโหลด...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-bliss-600 mx-auto" />
+          <p className="text-bliss-500 mt-3">กำลังโหลด...</p>
         </div>
       </div>
     )
@@ -150,7 +150,7 @@ function StaffDashboard() {
   return (
     <div className="space-y-4 pb-4">
       {/* Staff Info Card */}
-      <div className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-4 text-white">
+      <div className="bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-2xl shadow-lg p-4 text-white">
         <div className="flex items-center gap-4">
           {user?.avatar_url ? (
             <img
@@ -165,40 +165,35 @@ function StaffDashboard() {
           )}
           <div className="flex-1">
             <h2 className="font-semibold text-lg">{user?.full_name || 'Staff'}</h2>
-            <p className="text-sm opacity-90">
-              {currentJob ? 'กำลังทำงาน' : eligibility?.canWork ? 'พร้อมรับงาน' : 'ยังไม่พร้อมรับงาน'}
-            </p>
           </div>
-          <div className="text-right">
-            {stats?.rating_count ? (
+          {stats?.rating_count ? (
+            <div className="text-right">
               <div className="flex items-center gap-1">
                 <span className="text-yellow-300">★</span>
                 <span className="font-semibold">{stats.average_rating.toFixed(1)}</span>
               </div>
-            ) : (
-              <span className="text-sm font-medium opacity-80">ใหม่</span>
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
       {/* Eligibility Warning Banner */}
       {!isEligibilityLoading && eligibility && !eligibility.canWork && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-900 mb-1">ยังไม่สามารถรับงานได้</h3>
-              <p className="text-sm text-amber-800 mb-2">
+              <h3 className="font-semibold text-bliss-900 mb-1">ยังไม่สามารถรับงานได้</h3>
+              <p className="text-sm text-bliss-800 mb-2">
                 คุณต้องดำเนินการให้ครบก่อนจึงจะสามารถรับงานได้:
               </p>
-              <ul className="text-sm text-amber-800 space-y-1 ml-4">
+              <ul className="text-sm text-bliss-800 space-y-1 ml-4">
                 {eligibility.status !== 'active' && (
                   <li className="list-disc">รอการอนุมัติจากผู้ดูแลระบบ</li>
                 )}
                 {!eligibility.gender && (
                   <li className="list-disc">
-                    <Link to="/profile" className="underline hover:text-amber-900">ระบุเพศในข้อมูลส่วนตัว</Link>
+                    <Link to="/profile" className="underline hover:text-bliss-900">ระบุเพศในข้อมูลส่วนตัว</Link>
                   </li>
                 )}
                 {!eligibility.documents?.id_card?.verified && (
@@ -212,17 +207,17 @@ function StaffDashboard() {
                 )}
                 {!eligibility.documents?.license?.verified && (
                   <li className="list-disc">
-                    <Link to="/staff/profile" className="underline hover:text-amber-900">อัปโหลด/รออนุมัติ ใบประกอบวิชาชีพ</Link>
+                    <Link to="/staff/profile" className="underline hover:text-bliss-900">อัปโหลด/รออนุมัติ ใบประกอบวิชาชีพ</Link>
                   </li>
                 )}
                 {!eligibility.documents?.criminal_record?.verified && (
                   <li className="list-disc">
-                    <Link to="/staff/profile" className="underline hover:text-amber-900">อัปโหลด/รออนุมัติ ใบตรวจสอบประวัติอาชญากรรม</Link>
+                    <Link to="/staff/profile" className="underline hover:text-bliss-900">อัปโหลด/รออนุมัติ ใบตรวจสอบประวัติอาชญากรรม</Link>
                   </li>
                 )}
                 {!eligibility.emergencyContact?.filled && (
                   <li className="list-disc">
-                    <Link to="/staff/profile" className="underline hover:text-amber-900">กรอกข้อมูลบุคคลอ้างอิง</Link>
+                    <Link to="/staff/profile" className="underline hover:text-bliss-900">กรอกข้อมูลบุคคลอ้างอิง</Link>
                   </li>
                 )}
               </ul>
@@ -237,18 +232,18 @@ function StaffDashboard() {
       {/* Today's Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl shadow p-3 text-center">
-          <p className="text-2xl font-bold text-stone-900">{stats?.today_jobs_count || 0}</p>
-          <p className="text-xs text-stone-500">งานวันนี้</p>
+          <p className="text-2xl font-bold text-bliss-900">{stats?.today_jobs_count || 0}</p>
+          <p className="text-xs text-bliss-500">งานวันนี้</p>
         </div>
         <div className="bg-white rounded-xl shadow p-3 text-center">
           <p className="text-2xl font-bold text-green-600">
             ฿{(stats?.today_earnings || 0).toLocaleString()}
           </p>
-          <p className="text-xs text-stone-500">รายได้วันนี้</p>
+          <p className="text-xs text-bliss-500">รายได้วันนี้</p>
         </div>
         <div className="bg-white rounded-xl shadow p-3 text-center">
-          <p className="text-2xl font-bold text-blue-600">{stats?.today_completed || 0}</p>
-          <p className="text-xs text-stone-500">เสร็จสิ้น</p>
+          <p className="text-2xl font-bold text-bliss-600">{stats?.today_completed || 0}</p>
+          <p className="text-xs text-bliss-500">เสร็จสิ้น</p>
         </div>
       </div>
 
@@ -261,8 +256,8 @@ function StaffDashboard() {
 
       {/* Current Job (if any) */}
       {currentJob && (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100">
-          <Link to={`/staff/jobs/${currentJob.id}`} className="block bg-gradient-to-r from-purple-700 to-purple-800 text-white p-4">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-bliss-100">
+          <Link to={`/staff/jobs/${currentJob.id}`} className="block bg-gradient-to-r from-bliss-700 to-bliss-800 text-white p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -282,18 +277,18 @@ function StaffDashboard() {
             )}
 
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-stone-400" />
+              <User className="w-5 h-5 text-bliss-400" />
               <div>
-                <p className="text-sm text-stone-500">ลูกค้า</p>
-                <p className="font-medium text-stone-900">{currentJob.customer_name}</p>
+                <p className="text-sm text-bliss-500">ลูกค้า</p>
+                <p className="font-medium text-bliss-900">{currentJob.customer_name}</p>
               </div>
             </div>
             {currentJob.hotel_name && (
               <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-stone-400" />
+                <MapPin className="w-5 h-5 text-bliss-400" />
                 <div>
-                  <p className="text-sm text-stone-500">สถานที่</p>
-                  <p className="font-medium text-stone-900">
+                  <p className="text-sm text-bliss-500">สถานที่</p>
+                  <p className="font-medium text-bliss-900">
                     {currentJob.hotel_name} {currentJob.room_number ? `ห้อง ${currentJob.room_number}` : ''}
                   </p>
                 </div>
@@ -301,16 +296,16 @@ function StaffDashboard() {
             )}
             {!currentJob.hotel_name && currentJob.address && (
               <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-stone-400" />
+                <MapPin className="w-5 h-5 text-bliss-400" />
                 <div className="flex-1">
-                  <p className="text-sm text-stone-500">ที่อยู่</p>
-                  <p className="font-medium text-stone-900">{currentJob.address}</p>
+                  <p className="text-sm text-bliss-500">ที่อยู่</p>
+                  <p className="font-medium text-bliss-900">{currentJob.address}</p>
                 </div>
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${currentJob.latitude},${currentJob.longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-amber-100 text-amber-700 rounded-lg"
+                  className="p-2 bg-bliss-100 text-bliss-700 rounded-lg"
                 >
                   <Navigation className="w-5 h-5" />
                 </a>
@@ -318,8 +313,8 @@ function StaffDashboard() {
             )}
             {currentJob.customer_phone && (
               <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-stone-400" />
-                <a href={`tel:${currentJob.customer_phone}`} className="font-medium text-amber-700">
+                <Phone className="w-5 h-5 text-bliss-400" />
+                <a href={`tel:${currentJob.customer_phone}`} className="font-medium text-bliss-700">
                   โทรติดต่อลูกค้า
                 </a>
               </div>
@@ -349,7 +344,7 @@ function StaffDashboard() {
             <button
               onClick={handleCompleteJob}
               disabled={isProcessing === currentJob.id}
-              className="flex-1 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isProcessing === currentJob.id ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -366,7 +361,7 @@ function StaffDashboard() {
       {myJobs.length > 0 && !currentJob && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-stone-900">งานของฉัน</h3>
+            <h3 className="font-semibold text-bliss-900">งานของฉัน</h3>
             <Link
               to="/staff/tracking"
               className="text-green-600 hover:text-green-700 text-sm flex items-center gap-1"
@@ -377,12 +372,12 @@ function StaffDashboard() {
           </div>
           <div className="space-y-3">
             {myJobs.map((job) => (
-              <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-stone-100">
+              <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-bliss-100">
                 <Link to={`/staff/jobs/${job.id}`} className="block mb-3">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
-                      <p className="text-sm text-stone-500">
+                      <h4 className="font-semibold text-bliss-900">{job.service_name}</h4>
+                      <p className="text-sm text-bliss-500">
                         {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                       </p>
                     </div>
@@ -390,23 +385,23 @@ function StaffDashboard() {
                   </div>
 
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-stone-600">
+                    <div className="flex items-center gap-2 text-bliss-600">
                       <User className="w-4 h-4" />
                       <span>{job.customer_name}</span>
                     </div>
                     {job.hotel_name ? (
-                      <div className="flex items-center gap-2 text-stone-600">
+                      <div className="flex items-center gap-2 text-bliss-600">
                         <MapPin className="w-4 h-4" />
                         <span>{job.hotel_name} {job.room_number ? `ห้อง ${job.room_number}` : ''}</span>
                       </div>
                     ) : (
-                      <div className="flex items-start gap-2 text-stone-600">
+                      <div className="flex items-start gap-2 text-bliss-600">
                         <MapPin className="w-4 h-4 mt-0.5" />
                         <span className="flex-1">{job.address}</span>
                       </div>
                     )}
                     {job.distance_km && (
-                      <div className="flex items-center gap-2 text-stone-600">
+                      <div className="flex items-center gap-2 text-bliss-600">
                         <Navigation className="w-4 h-4" />
                         <span>{job.distance_km} กม.</span>
                       </div>
@@ -432,7 +427,7 @@ function StaffDashboard() {
                 />
 
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
+                  <p className="text-lg font-bold text-bliss-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                 </div>
               </div>
             ))}
@@ -443,15 +438,15 @@ function StaffDashboard() {
       {/* Available Jobs (pending) */}
       {pendingJobs.length > 0 && (
         <div>
-          <h3 className="font-semibold text-stone-900 mb-3">งานที่รอมอบหมาย</h3>
+          <h3 className="font-semibold text-bliss-900 mb-3">งานที่รอมอบหมาย</h3>
           <div className="space-y-3">
             {pendingJobs.map((job) => (
-              <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-stone-100">
+              <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-bliss-100">
                 <Link to={`/staff/jobs/${job.id}`} className="block mb-3">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
-                      <p className="text-sm text-stone-500">
+                      <h4 className="font-semibold text-bliss-900">{job.service_name}</h4>
+                      <p className="text-sm text-bliss-500">
                         {job.scheduled_date} • {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                       </p>
                     </div>
@@ -465,23 +460,23 @@ function StaffDashboard() {
                   )}
 
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-stone-600">
+                    <div className="flex items-center gap-2 text-bliss-600">
                       <User className="w-4 h-4" />
                       <span>{job.customer_name}</span>
                     </div>
                     {job.hotel_name ? (
-                      <div className="flex items-center gap-2 text-stone-600">
+                      <div className="flex items-center gap-2 text-bliss-600">
                         <MapPin className="w-4 h-4" />
                         <span>{job.hotel_name} {job.room_number ? `ห้อง ${job.room_number}` : ''}</span>
                       </div>
                     ) : (
-                      <div className="flex items-start gap-2 text-stone-600">
+                      <div className="flex items-start gap-2 text-bliss-600">
                         <MapPin className="w-4 h-4 mt-0.5" />
                         <span className="flex-1">{job.address}</span>
                       </div>
                     )}
                     {job.distance_km && (
-                      <div className="flex items-center gap-2 text-stone-600">
+                      <div className="flex items-center gap-2 text-bliss-600">
                         <Navigation className="w-4 h-4" />
                         <span>{job.distance_km} กม.</span>
                       </div>
@@ -496,11 +491,11 @@ function StaffDashboard() {
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
+                  <p className="text-lg font-bold text-bliss-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                   <div className="flex items-center gap-2">
                     <Link
                       to={`/staff/jobs/${job.id}`}
-                      className="px-3 py-2 text-stone-600 hover:bg-stone-50 rounded-xl text-sm flex items-center gap-1"
+                      className="px-3 py-2 text-bliss-600 hover:bg-bliss-50 rounded-xl text-sm flex items-center gap-1"
                     >
                       ดูรายละเอียด
                       <ChevronRight className="w-4 h-4" />
@@ -508,7 +503,7 @@ function StaffDashboard() {
                     <button
                       onClick={() => handleAcceptJob(job.id)}
                       disabled={isProcessing === job.id || !eligibility?.canWork || !!getScheduleConflict(job)}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-1"
+                      className="px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-1"
                       title={getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : !eligibility?.canWork ? 'คุณยังไม่สามารถรับงานได้ในขณะนี้' : undefined}
                     >
                       {isProcessing === job.id ? (
@@ -529,14 +524,14 @@ function StaffDashboard() {
         <div>
           {upcomingJobs.length > 0 ? (
             <div>
-              <h3 className="font-semibold text-stone-900 mb-3">งานที่กำลังจะมาถึง</h3>
+              <h3 className="font-semibold text-bliss-900 mb-3">งานที่กำลังจะมาถึง</h3>
               <div className="space-y-3">
                 {upcomingJobs.map((job) => (
-                  <Link key={job.id} to={`/staff/jobs/${job.id}`} className="block bg-white rounded-xl shadow p-4 border border-stone-100">
+                  <Link key={job.id} to={`/staff/jobs/${job.id}`} className="block bg-white rounded-xl shadow p-4 border border-bliss-100">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="font-semibold text-stone-900">{job.service_name}</h4>
-                        <p className="text-sm text-stone-500">
+                        <h4 className="font-semibold text-bliss-900">{job.service_name}</h4>
+                        <p className="text-sm text-bliss-500">
                           {job.scheduled_date} • {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
                         </p>
                       </div>
@@ -544,23 +539,23 @@ function StaffDashboard() {
                     </div>
 
                     <div className="space-y-2 mb-3 text-sm">
-                      <div className="flex items-center gap-2 text-stone-600">
+                      <div className="flex items-center gap-2 text-bliss-600">
                         <User className="w-4 h-4" />
                         <span>{job.customer_name}</span>
                       </div>
                       {job.hotel_name ? (
-                        <div className="flex items-center gap-2 text-stone-600">
+                        <div className="flex items-center gap-2 text-bliss-600">
                           <MapPin className="w-4 h-4" />
                           <span>{job.hotel_name} {job.room_number ? `ห้อง ${job.room_number}` : ''}</span>
                         </div>
                       ) : (
-                        <div className="flex items-start gap-2 text-stone-600">
+                        <div className="flex items-start gap-2 text-bliss-600">
                           <MapPin className="w-4 h-4 mt-0.5" />
                           <span className="flex-1">{job.address}</span>
                         </div>
                       )}
                       {job.distance_km && (
-                        <div className="flex items-center gap-2 text-stone-600">
+                        <div className="flex items-center gap-2 text-bliss-600">
                           <Navigation className="w-4 h-4" />
                           <span>{job.distance_km} กม.</span>
                         </div>
@@ -568,8 +563,8 @@ function StaffDashboard() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
-                      <div className="flex items-center gap-1 text-stone-500 text-xs">
+                      <p className="text-lg font-bold text-bliss-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
+                      <div className="flex items-center gap-1 text-bliss-500 text-xs">
                         <span>ดูรายละเอียด</span>
                         <ChevronRight className="w-4 h-4" />
                       </div>
@@ -580,24 +575,24 @@ function StaffDashboard() {
             </div>
           ) : recentCompletedJobs.length > 0 ? (
             <div>
-              <h3 className="font-semibold text-stone-900 mb-3">งานที่เสร็จสิ้นล่าสุด</h3>
+              <h3 className="font-semibold text-bliss-900 mb-3">งานที่เสร็จสิ้นล่าสุด</h3>
               <div className="space-y-3">
                 {recentCompletedJobs.map((job) => (
-                  <Link key={job.id} to={`/staff/jobs/${job.id}`} className="block bg-white rounded-xl shadow p-4 border border-stone-100 opacity-75">
+                  <Link key={job.id} to={`/staff/jobs/${job.id}`} className="block bg-white rounded-xl shadow p-4 border border-bliss-100 opacity-75">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h4 className="font-medium text-stone-900">{job.service_name}</h4>
-                        <p className="text-sm text-stone-500">
+                        <h4 className="font-medium text-bliss-900">{job.service_name}</h4>
+                        <p className="text-sm text-bliss-500">
                           {job.scheduled_date} • {job.scheduled_time}
                         </p>
-                        <p className="text-sm text-stone-600 mt-1">{job.customer_name}</p>
+                        <p className="text-sm text-bliss-600 mt-1">{job.customer_name}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-green-600">+฿{job.total_staff_earnings || job.staff_earnings}</p>
                       </div>
                     </div>
                     {job.hotel_name && (
-                      <div className="flex items-center gap-2 text-stone-500 text-sm mt-2">
+                      <div className="flex items-center gap-2 text-bliss-500 text-sm mt-2">
                         <MapPin className="w-4 h-4" />
                         <span>{job.hotel_name} {job.room_number ? `ห้อง ${job.room_number}` : ''}</span>
                       </div>
@@ -608,14 +603,14 @@ function StaffDashboard() {
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow p-8 text-center">
-              <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-8 h-8 text-stone-400" />
+              <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 text-bliss-400" />
               </div>
-              <h3 className="font-semibold text-stone-900 mb-2">ยังไม่มีงานใหม่</h3>
-              <p className="text-sm text-stone-500">รอรับงานใหม่ได้เลย ระบบจะแจ้งเตือนเมื่อมีงานเข้ามา</p>
+              <h3 className="font-semibold text-bliss-900 mb-2">ยังไม่มีงานใหม่</h3>
+              <p className="text-sm text-bliss-500">รอรับงานใหม่ได้เลย ระบบจะแจ้งเตือนเมื่อมีงานเข้ามา</p>
               <button
                 onClick={refresh}
-                className="mt-4 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200 transition"
+                className="mt-4 px-4 py-2 bg-bliss-100 text-bliss-700 rounded-lg text-sm font-medium hover:bg-bliss-200 transition"
               >
                 รีเฟรช
               </button>
@@ -627,14 +622,14 @@ function StaffDashboard() {
       {/* Completed Jobs */}
       {completedTodayJobs.length > 0 && (
         <div>
-          <h3 className="font-semibold text-stone-900 mb-3">เสร็จสิ้นแล้ว</h3>
+          <h3 className="font-semibold text-bliss-900 mb-3">เสร็จสิ้นแล้ว</h3>
           <div className="space-y-3">
             {completedTodayJobs.map((job) => (
-              <Link key={job.id} to={`/staff/jobs/${job.id}`} className="block bg-white rounded-xl shadow p-4 border border-stone-100 opacity-75">
+              <Link key={job.id} to={`/staff/jobs/${job.id}`} className="block bg-white rounded-xl shadow p-4 border border-bliss-100 opacity-75">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium text-stone-900">{job.service_name}</h4>
-                    <p className="text-sm text-stone-500">{job.scheduled_time} • {job.customer_name}</p>
+                    <h4 className="font-medium text-bliss-900">{job.service_name}</h4>
+                    <p className="text-sm text-bliss-500">{job.scheduled_time} • {job.customer_name}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600">+฿{job.total_staff_earnings || job.staff_earnings}</p>

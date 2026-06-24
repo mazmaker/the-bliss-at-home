@@ -66,7 +66,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-bliss-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
       </div>
     )
@@ -187,15 +187,15 @@ function App() {
       toastOptions={{
         duration: 6000,
         style: {
-          background: '#fef3c7',
-          color: '#92400e',
-          border: '1px solid #fcd34d',
+          background: '#ebe6d0',
+          color: '#464a28',
+          border: '1px solid #dfd9b9',
           borderRadius: '12px',
           padding: '12px 16px',
         },
         success: {
           iconTheme: {
-            primary: '#f59e0b',
+            primary: '#565b34',
             secondary: '#fff',
           },
         },

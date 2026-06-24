@@ -103,22 +103,22 @@ export function ServiceTimer({ startedAt, durationMinutes }: ServiceTimerProps) 
 
   const getTimerColor = (): string => {
     if (isOvertime) return 'text-red-600'
-    if (timeRemaining < 300) return 'text-amber-600' // Less than 5 minutes
-    return 'text-purple-700'
+    if (timeRemaining < 300) return 'text-bliss-600' // Less than 5 minutes
+    return 'text-bliss-700'
   }
 
   const getProgressBarColor = (): string => {
     if (isOvertime) return 'bg-red-600'
-    if (timeRemaining < 300) return 'bg-amber-600'
-    return 'bg-purple-600'
+    if (timeRemaining < 300) return 'bg-bliss-600'
+    return 'bg-bliss-600'
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+    <div className="bg-gradient-to-br from-bliss-50 to-bliss-100 rounded-xl p-4 border border-bliss-200">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Clock className={`w-5 h-5 ${getTimerColor()}`} />
-          <span className="text-sm font-medium text-purple-900">
+          <span className="text-sm font-medium text-bliss-900">
             {isOvertime ? 'เวลาเพิ่มเติม' : 'เวลาที่เหลือ'}
           </span>
         </div>
@@ -129,7 +129,7 @@ export function ServiceTimer({ startedAt, durationMinutes }: ServiceTimerProps) 
       </div>
 
       {/* Progress Bar */}
-      <div className="relative w-full h-2 bg-purple-200 rounded-full overflow-hidden">
+      <div className="relative w-full h-2 bg-bliss-200 rounded-full overflow-hidden">
         <div
           className={`absolute top-0 left-0 h-full ${getProgressBarColor()} transition-all duration-1000 ease-linear`}
           style={{ width: `${getProgressPercentage()}%` }}
@@ -138,7 +138,7 @@ export function ServiceTimer({ startedAt, durationMinutes }: ServiceTimerProps) 
 
       {/* Duration Info */}
       <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-purple-600">
+        <span className="text-xs text-bliss-600">
           ระยะเวลา: {durationMinutes} นาที
         </span>
         {isOvertime && (
@@ -147,7 +147,7 @@ export function ServiceTimer({ startedAt, durationMinutes }: ServiceTimerProps) 
           </span>
         )}
         {!isOvertime && timeRemaining < 300 && timeRemaining > 0 && (
-          <span className="text-xs text-amber-600 font-medium">
+          <span className="text-xs text-bliss-600 font-medium">
             ใกล้หมดเวลา
           </span>
         )}

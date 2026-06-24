@@ -38,21 +38,21 @@ export const PAYOUT_SCHEDULE_DISPLAY: Record<PayoutSchedule, PayoutScheduleDispl
     title: 'รายเดือน',
     description: 'รับเงินทุก 30 วัน',
     frequency: '30 วัน',
-    color: 'bg-purple-100 text-purple-800'
+    color: 'bg-bliss-100 text-bliss-800'
   },
   bi_monthly: {
     icon: '📋',
     title: 'กลาง+สิ้นเดือน',
     description: 'รับเงิน 2 ครั้งต่อเดือน',
     frequency: 'วันที่ 15 และ 1',
-    color: 'bg-amber-100 text-amber-800'
+    color: 'bg-bliss-100 text-bliss-800'
   },
   custom_days: {
     icon: '⚙️',
     title: 'กำหนดเอง',
     description: 'รับเงินตามที่กำหนด',
     frequency: 'ตามที่กำหนด',
-    color: 'bg-gray-100 text-gray-800'
+    color: 'bg-bliss-100 text-bliss-800'
   }
 }
 

@@ -166,14 +166,14 @@ function StaffSettings() {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <LogOut className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">ออกจากระบบ</h3>
-              <p className="text-sm text-gray-500 mb-6">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-2">ออกจากระบบ</h3>
+              <p className="text-sm text-bliss-500 mb-6">
                 คุณต้องการออกจากระบบใช่หรือไม่?
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2.5 border border-bliss-300 rounded-xl text-bliss-700 font-medium hover:bg-bliss-50 transition"
                 >
                   ยกเลิก
                 </button>
@@ -191,35 +191,35 @@ function StaffSettings() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-stone-900">ตั้งค่า</h1>
-        <p className="text-stone-500">Settings</p>
+        <h1 className="text-xl font-bold text-bliss-900">ตั้งค่า</h1>
+        <p className="text-bliss-500">Settings</p>
       </div>
 
       {/* Notification Settings */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
-              <Bell className="w-5 h-5 text-stone-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-xl flex items-center justify-center">
+              <Bell className="w-5 h-5 text-bliss-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-stone-900">การแจ้งเตือน</h3>
-              <p className="text-xs text-stone-500">Notifications</p>
+              <h3 className="font-semibold text-bliss-900">การแจ้งเตือน</h3>
+              <p className="text-xs text-bliss-500">Notifications</p>
             </div>
           </div>
-          <p className="text-sm text-stone-600">จัดการการแจ้งเตือนในแอป</p>
+          <p className="text-sm text-bliss-600">จัดการการแจ้งเตือนในแอป</p>
 
           <div className="mt-4 space-y-3">
             {/* Notification Toggle */}
             <div className="flex items-center justify-between py-2">
               <div>
-                <span className="text-sm text-stone-700">เปิดการแจ้งเตือน</span>
-                <p className="text-xs text-stone-400 mt-0.5">แสดงการแจ้งเตือนงานใหม่ การยกเลิก และอื่นๆ</p>
+                <span className="text-sm text-bliss-700">เปิดการแจ้งเตือน</span>
+                <p className="text-xs text-bliss-400 mt-0.5">แสดงการแจ้งเตือนงานใหม่ การยกเลิก และอื่นๆ</p>
               </div>
               <button
                 onClick={() => handleNotificationsToggle(!notificationsEnabled)}
                 className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
-                  notificationsEnabled ? 'bg-amber-700' : 'bg-stone-300'
+                  notificationsEnabled ? 'bg-bliss-700' : 'bg-bliss-300'
                 }`}
                 style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
               >
@@ -241,23 +241,23 @@ function StaffSettings() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
-              <Volume2 className="w-5 h-5 text-stone-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-xl flex items-center justify-center">
+              <Volume2 className="w-5 h-5 text-bliss-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-stone-900">เสียงแจ้งเตือน</h3>
-              <p className="text-xs text-stone-500">Sound Notifications</p>
+              <h3 className="font-semibold text-bliss-900">เสียงแจ้งเตือน</h3>
+              <p className="text-xs text-bliss-500">Sound Notifications</p>
             </div>
           </div>
-          <p className="text-sm text-stone-600">เปิด/ปิดเสียงเมื่อมีงานใหม่หรือเปลี่ยนสถานะ</p>
+          <p className="text-sm text-bliss-600">เปิด/ปิดเสียงเมื่อมีงานใหม่หรือเปลี่ยนสถานะ</p>
 
           <div className="mt-4">
             <div className="flex items-center justify-between py-2">
-              <span className="text-sm text-stone-700">เปิดเสียงแจ้งเตือน</span>
+              <span className="text-sm text-bliss-700">เปิดเสียงแจ้งเตือน</span>
               <button
                 onClick={() => handleSoundToggle(!soundEnabled)}
                 className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
-                  soundEnabled ? 'bg-amber-700' : 'bg-stone-300'
+                  soundEnabled ? 'bg-bliss-700' : 'bg-bliss-300'
                 }`}
                 style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
               >
@@ -279,31 +279,31 @@ function StaffSettings() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center">
-              <Clock className="w-5 h-5 text-stone-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-bliss-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-stone-900">เตือนก่อนเริ่มงาน</h3>
-              <p className="text-xs text-stone-500">Job Reminders</p>
+              <h3 className="font-semibold text-bliss-900">เตือนก่อนเริ่มงาน</h3>
+              <p className="text-xs text-bliss-500">Job Reminders</p>
             </div>
           </div>
-          <p className="text-sm text-stone-600">ระบบจะแจ้งเตือนผ่าน LINE ก่อนเริ่มงานตามเวลาที่เลือก</p>
+          <p className="text-sm text-bliss-600">ระบบจะแจ้งเตือนผ่าน LINE ก่อนเริ่มงานตามเวลาที่เลือก</p>
 
           {isLoadingReminder ? (
             <div className="mt-4 flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-stone-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-bliss-400" />
             </div>
           ) : (
             <div className="mt-4 space-y-3">
               {/* Enable/Disable Toggle */}
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-stone-700">เปิดการเตือนก่อนงาน</span>
+                <span className="text-sm text-bliss-700">เปิดการเตือนก่อนงาน</span>
                 <button
                   onClick={() =>
                     setReminderSettings({ ...reminderSettings, enabled: !reminderSettings.enabled })
                   }
                   className={`relative inline-flex shrink-0 items-center rounded-full transition-colors ${
-                    reminderSettings.enabled ? 'bg-amber-700' : 'bg-stone-300'
+                    reminderSettings.enabled ? 'bg-bliss-700' : 'bg-bliss-300'
                   }`}
                   style={{ width: '44px', height: '24px', minHeight: 'unset', minWidth: 'unset' }}
                 >
@@ -327,15 +327,15 @@ function StaffSettings() {
                     disabled={!reminderSettings.enabled}
                     className={`w-full flex items-center justify-between p-3 rounded-xl transition ${
                       !reminderSettings.enabled
-                        ? 'bg-stone-100 opacity-50 cursor-not-allowed'
+                        ? 'bg-bliss-100 opacity-50 cursor-not-allowed'
                         : reminderSettings.times.includes(option.value)
-                        ? 'bg-amber-50 border-2 border-amber-500'
-                        : 'bg-stone-50 hover:bg-stone-100'
+                        ? 'bg-bliss-50 border-2 border-bliss-500'
+                        : 'bg-bliss-50 hover:bg-bliss-100'
                     }`}
                   >
-                    <span className="text-stone-700 text-sm">{option.label}ก่อน</span>
+                    <span className="text-bliss-700 text-sm">{option.label}ก่อน</span>
                     {reminderSettings.times.includes(option.value) && (
-                      <Check className="w-5 h-5 text-amber-600" />
+                      <Check className="w-5 h-5 text-bliss-600" />
                     )}
                   </button>
                 ))}
@@ -345,7 +345,7 @@ function StaffSettings() {
               <button
                 onClick={handleSaveReminderSettings}
                 disabled={isSavingReminder}
-                className="w-full py-2.5 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                className="w-full py-2.5 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
               >
                 {isSavingReminder ? (
                   <>
@@ -370,27 +370,27 @@ function StaffSettings() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-amber-700" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-xl flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-bliss-700" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-stone-900">รอบการรับเงิน</h3>
-              <p className="text-xs text-stone-500">Payout Schedule</p>
+              <h3 className="font-semibold text-bliss-900">รอบการรับเงิน</h3>
+              <p className="text-xs text-bliss-500">Payout Schedule</p>
             </div>
           </div>
-          <p className="text-xs text-stone-500">รอบการรับเงินกำหนดโดย Admin</p>
+          <p className="text-xs text-bliss-500">รอบการรับเงินกำหนดโดย Admin</p>
 
           {isLoadingPayout ? (
             <div className="mt-4 flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-stone-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-bliss-400" />
             </div>
           ) : (
             <div className="mt-4 space-y-3">
               {/* Current Schedule Display */}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-stone-600">รอบปัจจุบัน</span>
-                  <span className="text-sm font-semibold text-amber-800">
+                  <span className="text-sm text-bliss-600">รอบปัจจุบัน</span>
+                  <span className="text-sm font-semibold text-bliss-800">
                     {payoutSchedule === 'weekly' && 'ทุกสัปดาห์'}
                     {payoutSchedule === 'monthly' && 'รายเดือน'}
                     {payoutSchedule === 'custom_days' && 'กำหนดเอง'}
@@ -400,23 +400,23 @@ function StaffSettings() {
 
               {/* Next Payout Info */}
               {nextPayoutInfo && (
-                <div className="bg-stone-50 rounded-xl p-3 space-y-2">
-                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">รอบถัดไป</p>
+                <div className="bg-bliss-50 rounded-xl p-3 space-y-2">
+                  <p className="text-xs font-semibold text-bliss-500 uppercase tracking-wide">รอบถัดไป</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-stone-600">ตัดรอบ</span>
-                    <span className="text-sm font-medium text-stone-900">
+                    <span className="text-sm text-bliss-600">ตัดรอบ</span>
+                    <span className="text-sm font-medium text-bliss-900">
                       {new Date(nextPayoutInfo.next_cutoff_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-stone-600">รับเงิน</span>
-                    <span className="text-sm font-medium text-stone-900">
+                    <span className="text-sm text-bliss-600">รับเงิน</span>
+                    <span className="text-sm font-medium text-bliss-900">
                       {new Date(nextPayoutInfo.next_payout_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-stone-200">
-                    <span className="text-sm text-stone-600">ยอดสะสม</span>
-                    <span className="text-sm font-bold text-amber-700">
+                  <div className="flex items-center justify-between pt-1 border-t border-bliss-200">
+                    <span className="text-sm text-bliss-600">ยอดสะสม</span>
+                    <span className="text-sm font-bold text-bliss-700">
                       ฿{nextPayoutInfo.accumulated_earnings.toLocaleString('th-TH')}
                     </span>
                   </div>

@@ -12,9 +12,9 @@ export default function StaffTrackingDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bliss-50">
       {/* GPS Tracking Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 sticky top-0 z-20 shadow-lg">
+      <div className="bg-gradient-to-r from-bliss-600 to-bliss-700 text-white p-4 sticky top-0 z-20 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -82,36 +82,36 @@ export default function StaffTrackingDashboard() {
         </div>
 
         {/* How GPS Works */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-          <h3 className="font-bold text-blue-800 mb-3">วิธีการทำงาน GPS ฟรี</h3>
+        <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4 mb-6">
+          <h3 className="font-bold text-bliss-800 mb-3">วิธีการทำงาน GPS ฟรี</h3>
           <div className="grid grid-cols-1 gap-3 text-sm">
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-green-600 font-bold text-xs">1</span>
+              <div className="w-6 h-6 bg-bliss-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-bliss-600 font-bold text-xs">1</span>
               </div>
               <div>
-                <div className="font-medium text-blue-800">กด "เริ่มเดินทาง"</div>
-                <div className="text-blue-600">เริ่มติดตาม GPS อัตโนมัติ</div>
+                <div className="font-medium text-bliss-800">กด "เริ่มเดินทาง"</div>
+                <div className="text-bliss-600">เริ่มติดตาม GPS อัตโนมัติ</div>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-blue-600 font-bold text-xs">2</span>
+              <div className="w-6 h-6 bg-bliss-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-bliss-600 font-bold text-xs">2</span>
               </div>
               <div>
-                <div className="font-medium text-blue-800">ลูกค้าเห็นตำแหน่ง</div>
-                <div className="text-blue-600">อัพเดททุก 10 วินาที</div>
+                <div className="font-medium text-bliss-800">ลูกค้าเห็นตำแหน่ง</div>
+                <div className="text-bliss-600">อัพเดททุก 10 วินาที</div>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600 font-bold text-xs">3</span>
+              <div className="w-6 h-6 bg-bliss-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-bliss-600 font-bold text-xs">3</span>
               </div>
               <div>
-                <div className="font-medium text-blue-800">กด "มาถึงแล้ว"</div>
-                <div className="text-blue-600">หยุดติดตาม เริ่มงาน</div>
+                <div className="font-medium text-bliss-800">กด "มาถึงแล้ว"</div>
+                <div className="text-bliss-600">หยุดติดตาม เริ่มงาน</div>
               </div>
             </div>
           </div>

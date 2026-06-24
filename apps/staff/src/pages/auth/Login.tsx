@@ -405,7 +405,7 @@ export function StaffLoginPage() {
       >
         <div className="text-center py-8">
           <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-          <p className="text-stone-600">กำลังตรวจสอบคำเชิญ...</p>
+          <p className="text-bliss-600">กำลังตรวจสอบคำเชิญ...</p>
         </div>
       </AuthLayout>
     )
@@ -443,16 +443,16 @@ export function StaffLoginPage() {
 
       {/* LINE Login Button - Staff ลงทะเบียนและเข้าสู่ระบบผ่าน LINE เท่านั้น */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-stone-900 mb-2">เข้าสู่ระบบ Staff</h2>
-        <p className="text-sm text-stone-600">ใช้บัญชี LINE ของคุณในการเข้าสู่ระบบ</p>
+        <h2 className="text-2xl font-bold text-bliss-900 mb-2">เข้าสู่ระบบ Staff</h2>
+        <p className="text-sm text-bliss-600">ใช้บัญชี LINE ของคุณในการเข้าสู่ระบบ</p>
       </div>
 
       <Button
         onClick={handleLINELogin}
         disabled={isLoading || !isLiffReady}
-        className="w-full hover:opacity-90 transition-opacity"
+        className="w-full hover:opacity-90 transition-opacity [background-image:none]"
         style={{
-          backgroundColor: '#06C755',
+          backgroundColor: '#565b34',
           height: '56px',
           fontSize: '18px',
           fontWeight: '600',
@@ -472,14 +472,14 @@ export function StaffLoginPage() {
           <span className="flex items-center justify-center gap-3">
             {/* LINE Logo */}
             <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 5.64 2 10.14c0 4.08 3.6 7.49 8.47 8.14.33.07.78.21.89.49.1.25.07.64.03.89l-.14.85c-.04.26-.2 1.02.89.56.09-.04.18-.08.27-.12 3.66-1.88 6.59-4.54 6.59-8.81C19 5.64 15.52 2 12 2zm4.24 10.15l-.98.02c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0h-.98c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0H8.76c-.18 0-.33-.15-.33-.33V9.34c0-.18.15-.33.33-.33h2.48c.18 0 .33.15.33.33v2.48c0 .18-.15.33-.33.33z"/>
+              <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.63V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.63V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.63V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.63V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
             </svg>
             เข้าสู่ระบบด้วย LINE
           </span>
         )}
       </Button>
 
-      <p className="text-xs text-stone-500 text-center mt-3">
+      <p className="text-xs text-bliss-500 text-center mt-3">
         {isLiffReady ? 'ยังไม่มีบัญชี? ระบบจะสร้างบัญชีให้อัตโนมัติเมื่อคุณเข้าสู่ระบบครั้งแรก' : 'LINE Login not available'}
       </p>
     </AuthLayout>
