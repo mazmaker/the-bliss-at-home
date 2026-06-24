@@ -110,15 +110,15 @@ function HotelNotifications() {
       case 'booking_cancelled':
         return <AlertCircle className="w-5 h-5 text-red-600" />
       case 'booking_rescheduled':
-        return <Calendar className="w-5 h-5 text-blue-600" />
+        return <Calendar className="w-5 h-5 text-bliss-600" />
       case 'staff_assigned':
-        return <UserCheck className="w-5 h-5 text-purple-600" />
+        return <UserCheck className="w-5 h-5 text-bliss-600" />
       case 'staff_cancelled':
         return <XCircle className="w-5 h-5 text-orange-600" />
       case 'new_job':
-        return <Bell className="w-5 h-5 text-amber-600" />
+        return <Bell className="w-5 h-5 text-bliss-600" />
       default:
-        return <Info className="w-5 h-5 text-stone-600" />
+        return <Info className="w-5 h-5 text-bliss-600" />
     }
   }
 
@@ -148,7 +148,7 @@ function HotelNotifications() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-8 h-8 text-amber-600 animate-spin" />
+        <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin" />
       </div>
     )
   }
@@ -158,16 +158,16 @@ function HotelNotifications() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">การแจ้งเตือน</h1>
+          <h1 className="text-2xl font-bold text-bliss-900">การแจ้งเตือน</h1>
           {unreadCount > 0 && (
-            <p className="text-sm text-stone-500">{unreadCount} รายการที่ยังไม่ได้อ่าน</p>
+            <p className="text-sm text-bliss-500">{unreadCount} รายการที่ยังไม่ได้อ่าน</p>
           )}
         </div>
         {unreadCount > 0 && (
           <button
             onClick={() => markAllAsRead.mutate()}
             disabled={markAllAsRead.isPending}
-            className="text-sm text-amber-700 hover:text-amber-800 font-medium disabled:opacity-50"
+            className="text-sm text-bliss-700 hover:text-bliss-800 font-medium disabled:opacity-50"
           >
             {markAllAsRead.isPending ? 'กำลังดำเนินการ...' : 'อ่านทั้งหมด'}
           </button>
@@ -178,22 +178,22 @@ function HotelNotifications() {
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {notifications.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-8 h-8 text-stone-400" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-bliss-400" />
             </div>
-            <h3 className="font-semibold text-stone-900 mb-2">ไม่มีการแจ้งเตือน</h3>
-            <p className="text-sm text-stone-500">
+            <h3 className="font-semibold text-bliss-900 mb-2">ไม่มีการแจ้งเตือน</h3>
+            <p className="text-sm text-bliss-500">
               การแจ้งเตือนเกี่ยวกับการจองจะแสดงที่นี่
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-stone-100">
+          <div className="divide-y divide-bliss-100">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className={`p-4 hover:bg-stone-50 cursor-pointer transition ${
-                  !notification.is_read ? 'bg-amber-50/50' : ''
+                className={`p-4 hover:bg-bliss-50 cursor-pointer transition ${
+                  !notification.is_read ? 'bg-bliss-50/50' : ''
                 }`}
               >
                 <div className="flex gap-3">
@@ -202,17 +202,17 @@ function HotelNotifications() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <h4 className={`font-medium text-stone-900 ${!notification.is_read ? 'font-semibold' : ''}`}>
+                      <h4 className={`font-medium text-bliss-900 ${!notification.is_read ? 'font-semibold' : ''}`}>
                         {notification.title}
                       </h4>
                       {!notification.is_read && (
-                        <span className="flex-shrink-0 w-2 h-2 bg-amber-600 rounded-full mt-1.5" />
+                        <span className="flex-shrink-0 w-2 h-2 bg-bliss-600 rounded-full mt-1.5" />
                       )}
                     </div>
-                    <p className="text-sm text-stone-600 mb-2">
+                    <p className="text-sm text-bliss-600 mb-2">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-stone-400">
+                    <p className="text-xs text-bliss-400">
                       {getTimeAgo(notification.created_at)}
                     </p>
                   </div>

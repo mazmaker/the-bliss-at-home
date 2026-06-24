@@ -34,13 +34,13 @@ export function HotelMapDisplay({
   // Show placeholder if no coordinates
   if (!latitude || !longitude) {
     return (
-      <div className={`bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl p-8 text-center ${className}`} style={{ height }}>
-        <MapPin className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-        <h3 className="font-medium text-stone-600 mb-2">ยังไม่ได้ระบุตำแหน่งโรงแรม</h3>
-        <p className="text-sm text-stone-500 mb-4">
+      <div className={`bg-bliss-50 border-2 border-dashed border-bliss-200 rounded-xl p-8 text-center ${className}`} style={{ height }}>
+        <MapPin className="w-12 h-12 text-bliss-400 mx-auto mb-4" />
+        <h3 className="font-medium text-bliss-600 mb-2">ยังไม่ได้ระบุตำแหน่งโรงแรม</h3>
+        <p className="text-sm text-bliss-500 mb-4">
           {hotelAddress ? `ที่อยู่: ${hotelAddress}` : 'กรุณาติดต่อ Admin เพื่อเพิ่มตำแหน่งบนแผนที่'}
         </p>
-        <div className="inline-flex items-center gap-2 text-xs text-stone-400">
+        <div className="inline-flex items-center gap-2 text-xs text-bliss-400">
           <AlertCircle className="w-4 h-4" />
           <span>ต้องการ latitude/longitude จาก Admin</span>
         </div>
@@ -142,9 +142,9 @@ export function HotelMapDisplay({
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 0C7.163 0 0 7.163 0 16C0 24.837 16 40 16 40C16 40 32 24.837 32 16C32 7.163 24.837 0 16 0Z" fill="#B45309"/>
+              <path d="M16 0C7.163 0 0 7.163 0 16C0 24.837 16 40 16 40C16 40 32 24.837 32 16C32 7.163 24.837 0 16 0Z" fill="#464a28"/>
               <circle cx="16" cy="16" r="8" fill="white"/>
-              <circle cx="16" cy="16" r="4" fill="#B45309"/>
+              <circle cx="16" cy="16" r="4" fill="#464a28"/>
             </svg>
           `),
           scaledSize: new window.google.maps.Size(32, 40),
@@ -214,12 +214,12 @@ export function HotelMapDisplay({
   }
 
   return (
-    <div className={`relative bg-white rounded-xl overflow-hidden border border-stone-200 ${className}`} style={{ height }}>
+    <div className={`relative bg-white rounded-xl overflow-hidden border border-bliss-200 ${className}`} style={{ height }}>
       {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto mb-3" />
-            <p className="text-sm text-stone-600">กำลังโหลดแผนที่...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-bliss-600 mx-auto mb-3" />
+            <p className="text-sm text-bliss-600">กำลังโหลดแผนที่...</p>
           </div>
         </div>
       )}
@@ -231,10 +231,10 @@ export function HotelMapDisplay({
       {!isLoading && !error && (
         <button
           onClick={openInGoogleMaps}
-          className="absolute top-3 right-3 bg-white shadow-lg rounded-lg p-2 hover:bg-stone-50 transition z-10"
+          className="absolute top-3 right-3 bg-white shadow-lg rounded-lg p-2 hover:bg-bliss-50 transition z-10"
           title="เปิดใน Google Maps"
         >
-          <ExternalLink className="w-4 h-4 text-stone-600" />
+          <ExternalLink className="w-4 h-4 text-bliss-600" />
         </button>
       )}
 

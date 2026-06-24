@@ -89,8 +89,8 @@ export function ExtendSessionModal({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-            <span className="ml-3 text-stone-600">กำลังโหลด...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600"></div>
+            <span className="ml-3 text-bliss-600">กำลังโหลด...</span>
           </div>
         </div>
       </div>
@@ -101,45 +101,45 @@ export function ExtendSessionModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200">
-          <h3 className="text-xl font-semibold text-stone-900 flex items-center gap-2">
-            <Clock className="w-6 h-6 text-amber-600" />
+        <div className="flex items-center justify-between p-6 border-b border-bliss-200">
+          <h3 className="text-xl font-semibold text-bliss-900 flex items-center gap-2">
+            <Clock className="w-6 h-6 text-bliss-600" />
             เพิ่มเวลาบริการ
           </h3>
           <button
             onClick={handleCancel}
-            className="p-1 hover:bg-stone-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-bliss-100 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-stone-500" />
+            <X className="w-5 h-5 text-bliss-500" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
           {/* Current booking info */}
-          <div className="bg-stone-50 p-4 rounded-lg">
-            <h4 className="font-medium text-stone-700 mb-3">การจองปัจจุบัน:</h4>
+          <div className="bg-bliss-50 p-4 rounded-lg">
+            <h4 className="font-medium text-bliss-700 mb-3">การจองปัจจุบัน:</h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-stone-500" />
+                <User className="w-4 h-4 text-bliss-500" />
                 <span>{booking.customer_name || 'ลูกค้า'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-stone-500" />
+                <MapPin className="w-4 h-4 text-bliss-500" />
                 <span>ห้อง {booking.hotel_room_number || '-'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-stone-500" />
+                <Clock className="w-4 h-4 text-bliss-500" />
                 <span>{currentTotals.duration} นาที</span>
               </div>
               <div className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-stone-500" />
+                <CreditCard className="w-4 h-4 text-bliss-500" />
                 <span>฿{currentTotals.price.toLocaleString()}</span>
               </div>
             </div>
 
             {currentTotals.extensionCount > 0 && (
-              <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded">
-                <span className="text-xs text-amber-700">
+              <div className="mt-3 p-2 bg-bliss-50 border border-bliss-200 rounded">
+                <span className="text-xs text-bliss-700">
                   📈 ขยายเวลาแล้ว {currentTotals.extensionCount} ครั้ง
                 </span>
               </div>
@@ -159,10 +159,10 @@ export function ExtendSessionModal({
 
           {/* Extension options */}
           <div className="space-y-4">
-            <h4 className="font-medium text-stone-700">เลือกเวลาเพิ่มเติม:</h4>
+            <h4 className="font-medium text-bliss-700">เลือกเวลาเพิ่มเติม:</h4>
 
             {extensionOptions.length === 0 ? (
-              <div className="text-center py-8 text-stone-500">
+              <div className="text-center py-8 text-bliss-500">
                 <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-orange-500" />
                 <p>ไม่มีตัวเลือกเวลาที่สามารถเพิ่มได้</p>
                 <p className="text-sm mt-1">
@@ -177,8 +177,8 @@ export function ExtendSessionModal({
                     className={`
                       flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-all
                       ${selectedDuration === option.duration
-                        ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200'
-                        : 'border-stone-200 hover:bg-stone-50'
+                        ? 'border-bliss-500 bg-bliss-50 ring-2 ring-bliss-200'
+                        : 'border-bliss-200 hover:bg-bliss-50'
                       }
                       ${!option.isAvailable ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
@@ -190,14 +190,14 @@ export function ExtendSessionModal({
                       checked={selectedDuration === option.duration}
                       onChange={(e) => setSelectedDuration(Number(e.target.value))}
                       disabled={!option.isAvailable}
-                      className="w-4 h-4 text-amber-600 focus:ring-amber-500"
+                      className="w-4 h-4 text-bliss-600 focus:ring-bliss-500"
                     />
 
                     <div className="flex-1">
-                      <div className="font-medium text-stone-900">
+                      <div className="font-medium text-bliss-900">
                         เพิ่ม {option.duration} นาที - ฿{option.price.toLocaleString()}
                       </div>
-                      <div className="text-sm text-stone-600 mt-1">
+                      <div className="text-sm text-bliss-600 mt-1">
                         รวม: {option.totalNewDuration} นาที - ฿{option.totalNewPrice.toLocaleString()}
                       </div>
                     </div>
@@ -213,7 +213,7 @@ export function ExtendSessionModal({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-bliss-700 mb-2">
               หมายเหตุ (ถ้ามี):
             </label>
             <textarea
@@ -221,7 +221,7 @@ export function ExtendSessionModal({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="ระบุเหตุผลการเพิ่มเวลาหรือความต้องการพิเศษ..."
               rows={3}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
             />
           </div>
 
@@ -239,10 +239,10 @@ export function ExtendSessionModal({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t border-stone-200">
+        <div className="flex gap-3 p-6 border-t border-bliss-200">
           <button
             onClick={handleCancel}
-            className="flex-1 px-4 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors"
+            className="flex-1 px-4 py-2 border border-bliss-300 rounded-lg text-bliss-700 hover:bg-bliss-50 transition-colors"
           >
             ยกเลิก
           </button>
@@ -252,8 +252,8 @@ export function ExtendSessionModal({
             className={`
               flex-1 px-4 py-2 rounded-lg font-medium transition-colors
               ${!selectedDuration || loading || extensionOptions.length === 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-amber-600 hover:bg-amber-700 text-white'
+                ? 'bg-bliss-300 text-bliss-500 cursor-not-allowed'
+                : 'bg-bliss-600 hover:bg-bliss-700 text-white'
               }
             `}
           >

@@ -118,7 +118,7 @@ export class PDFInvoiceGenerator {
 
   private addHeader(data: InvoiceData): void {
     // Amber header bar
-    this.doc.setFillColor(217, 119, 6) // amber-700
+    this.doc.setFillColor(217, 119, 6) // bliss-700
     this.doc.rect(this.margin, this.margin, this.contentWidth, 28, 'F')
 
     // Company Name

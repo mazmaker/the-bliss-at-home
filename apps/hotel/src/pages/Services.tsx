@@ -126,8 +126,8 @@ function Services() {
     return (
       <div className="min-h-96 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-2" />
-          <p className="text-stone-600">กำลังโหลดบริการ...</p>
+          <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-2" />
+          <p className="text-bliss-600">กำลังโหลดบริการ...</p>
         </div>
       </div>
     )
@@ -139,11 +139,11 @@ function Services() {
       <div className="min-h-96 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-          <p className="text-stone-900 font-medium mb-1">เกิดข้อผิดพลาด</p>
-          <p className="text-stone-600 text-sm mb-4">{(error as Error).message}</p>
+          <p className="text-bliss-900 font-medium mb-1">เกิดข้อผิดพลาด</p>
+          <p className="text-bliss-600 text-sm mb-4">{(error as Error).message}</p>
           <button
             onClick={() => refetch()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-700 text-white rounded-xl hover:bg-bliss-800 transition"
           >
             <RefreshCw className="w-4 h-4" />
             ลองใหม่
@@ -157,12 +157,12 @@ function Services() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">บริการทั้งหมด</h1>
-        <p className="text-stone-500">All Services</p>
+        <h1 className="text-2xl font-bold text-bliss-900">บริการทั้งหมด</h1>
+        <p className="text-bliss-500">All Services</p>
       </div>
 
       {/* Info Banner */}
-      <div className="bg-gradient-to-r from-amber-700 to-amber-800 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 rounded-2xl shadow-lg p-6 text-white">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-white/20 rounded-xl">
             <Info className="w-6 h-6" />
@@ -177,16 +177,16 @@ function Services() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-4 border border-bliss-100">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
             <input
               type="text"
               placeholder="ค้นหาบริการ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-stone-100 border-0 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+              className="w-full pl-10 pr-4 py-2 bg-bliss-100 border-0 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:bg-white transition"
             />
           </div>
           <div className="flex gap-2">
@@ -196,8 +196,8 @@ function Services() {
                 onClick={() => setCategoryFilter(category)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                   categoryFilter === category
-                    ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                    ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                    : 'bg-bliss-100 text-bliss-700 hover:bg-bliss-200'
                 }`}
               >
                 {categoryLabels[category]}
@@ -208,7 +208,7 @@ function Services() {
       </div>
 
       {/* Results */}
-      <div className="text-sm text-stone-500">
+      <div className="text-sm text-bliss-500">
         พบ {filteredServices.length} บริการ
       </div>
 
@@ -216,9 +216,9 @@ function Services() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredServices.map((service) => {
           return (
-            <div key={service.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100 hover:shadow-xl transition">
+            <div key={service.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-bliss-100 hover:shadow-xl transition">
               {/* Image */}
-              <div className="relative h-48 bg-stone-200">
+              <div className="relative h-48 bg-bliss-200">
                 <img
                   src={getServiceImage(service.image_url, service.category)}
                   alt={service.name_th}
@@ -228,14 +228,14 @@ function Services() {
 
               {/* Content */}
               <div className="p-5">
-                <h3 className="font-semibold text-stone-900 mb-1">{service.name_th}</h3>
-                <p className="text-sm text-stone-500 mb-3">{service.name_en}</p>
-                <p className="text-sm text-stone-600 mb-4 line-clamp-2">{service.description_th || service.description_en}</p>
+                <h3 className="font-semibold text-bliss-900 mb-1">{service.name_th}</h3>
+                <p className="text-sm text-bliss-500 mb-3">{service.name_en}</p>
+                <p className="text-sm text-bliss-600 mb-4 line-clamp-2">{service.description_th || service.description_en}</p>
 
                 {/* Duration Options with Prices */}
-                <div className="bg-stone-50 rounded-xl p-3 mb-4">
+                <div className="bg-bliss-50 rounded-xl p-3 mb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-stone-700">ราคาบริการ</span>
+                    <span className="text-sm font-medium text-bliss-700">ราคาบริการ</span>
                     {/* แสดงส่วนลดเฉพาะเมื่อมีส่วนลด */}
                     {getDiscountDisplay().amount > 0 && (
                       <div className="flex items-center gap-1 text-green-600">
@@ -270,17 +270,17 @@ function Services() {
                           return (
                             <div key={duration} className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <Clock className="w-3 h-3 text-stone-400" />
-                                <span className="text-xs text-stone-600">{duration} นาที</span>
+                                <Clock className="w-3 h-3 text-bliss-400" />
+                                <span className="text-xs text-bliss-600">{duration} นาที</span>
                               </div>
                               <div className="text-right">
                                 {/* แสดงราคาขีดฆ่าเฉพาะเมื่อมีส่วนลด */}
                                 {getDiscountDisplay().amount > 0 && (
-                                  <div className="text-xs text-stone-500 line-through">
+                                  <div className="text-xs text-bliss-500 line-through">
                                     ฿{originalPriceForDuration.toLocaleString()}
                                   </div>
                                 )}
-                                <div className="text-sm font-bold text-amber-700">
+                                <div className="text-sm font-bold text-bliss-700">
                                   ฿{discountedPriceForDuration.toLocaleString()}
                                 </div>
                               </div>
@@ -291,17 +291,17 @@ function Services() {
                         // Fallback for single duration
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Clock className="w-3 h-3 text-stone-400" />
-                            <span className="text-xs text-stone-600">{service.duration} นาที</span>
+                            <Clock className="w-3 h-3 text-bliss-400" />
+                            <span className="text-xs text-bliss-600">{service.duration} นาที</span>
                           </div>
                           <div className="text-right">
                             {/* แสดงราคาขีดฆ่าเฉพาะเมื่อมีส่วนลด */}
                             {getDiscountDisplay().amount > 0 && (
-                              <div className="text-xs text-stone-500 line-through">
+                              <div className="text-xs text-bliss-500 line-through">
                                 ฿{service.hotel_price}
                               </div>
                             )}
-                            <div className="text-sm font-bold text-amber-700">
+                            <div className="text-sm font-bold text-bliss-700">
                               ฿{Math.round(calculateDiscountedPrice(service.hotel_price))}
                             </div>
                           </div>
@@ -314,7 +314,7 @@ function Services() {
                 {/* Book Button */}
                 <button
                   onClick={() => handleBookService(service)}
-                  className="w-full py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition"
+                  className="w-full py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition"
                 >
                   จองบริการนี้
                 </button>
@@ -327,11 +327,11 @@ function Services() {
       {/* Empty State */}
       {filteredServices.length === 0 && !isLoading && !error && (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
+          <div className="text-bliss-400 mb-4">
             <Search className="w-16 h-16 mx-auto" />
           </div>
-          <p className="text-gray-600 text-lg font-medium mb-2">ไม่พบบริการที่ค้นหา</p>
-          <p className="text-gray-500 text-sm">ลองค้นหาด้วยคำอื่นหรือเปลี่ยนหมวดหมู่</p>
+          <p className="text-bliss-600 text-lg font-medium mb-2">ไม่พบบริการที่ค้นหา</p>
+          <p className="text-bliss-500 text-sm">ลองค้นหาด้วยคำอื่นหรือเปลี่ยนหมวดหมู่</p>
         </div>
       )}
 

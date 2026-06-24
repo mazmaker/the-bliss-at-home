@@ -31,10 +31,10 @@ export function BookingCard({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'text-green-600 bg-green-50 border-green-200';
-      case 'confirmed': return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'in_progress': return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'confirmed': return 'text-bliss-600 bg-bliss-50 border-bliss-200';
+      case 'in_progress': return 'text-bliss-600 bg-bliss-50 border-bliss-200';
       case 'cancelled': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-stone-600 bg-stone-50 border-stone-200';
+      default: return 'text-bliss-600 bg-bliss-50 border-bliss-200';
     }
   };
 
@@ -54,14 +54,14 @@ export function BookingCard({
     (booking.extension_count || 0) < 3;
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-white rounded-xl border border-bliss-200 shadow-sm hover:shadow-md transition-all duration-200">
       {/* Header */}
-      <div className="p-4 border-b border-stone-100">
+      <div className="p-4 border-b border-bliss-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h3 className="font-semibold text-stone-900">{booking.booking_number}</h3>
-              <p className="text-sm text-stone-500">{booking.guest_name}</p>
+              <h3 className="font-semibold text-bliss-900">{booking.booking_number}</h3>
+              <p className="text-sm text-bliss-500">{booking.guest_name}</p>
             </div>
           </div>
 
@@ -82,37 +82,37 @@ export function BookingCard({
       <div className="p-4 space-y-3">
         {/* Service Info */}
         <div className="flex items-center gap-2 text-sm">
-          <Briefcase className="w-4 h-4 text-stone-500" />
+          <Briefcase className="w-4 h-4 text-bliss-500" />
           <span className="font-medium">{booking.service_name}</span>
-          <span className="text-stone-500">({booking.duration} นาที)</span>
+          <span className="text-bliss-500">({booking.duration} นาที)</span>
         </div>
 
         {/* Location & Time */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-stone-500" />
+            <MapPin className="w-4 h-4 text-bliss-500" />
             <span>ห้อง {booking.room_number}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-stone-500" />
+            <Calendar className="w-4 h-4 text-bliss-500" />
             <span>{new Date(booking.booking_date).toLocaleDateString('th-TH')}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-stone-500" />
+            <Clock className="w-4 h-4 text-bliss-500" />
             <span>{booking.booking_time}</span>
           </div>
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-stone-500" />
+            <User className="w-4 h-4 text-bliss-500" />
             <span>{booking.staff_name || 'ยังไม่กำหนด'}</span>
           </div>
         </div>
 
         {/* Price */}
         <div className="flex items-center gap-2 text-sm">
-          <CreditCard className="w-4 h-4 text-stone-500" />
+          <CreditCard className="w-4 h-4 text-bliss-500" />
           <span className="font-semibold">฿{booking.final_price.toLocaleString()}</span>
           <span className={`
             px-2 py-1 rounded text-xs
@@ -127,9 +127,9 @@ export function BookingCard({
 
         {/* Extension Info */}
         {(booking.extension_count || 0) > 0 && (
-          <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-            <History className="w-4 h-4 text-amber-600" />
-            <span className="text-sm text-amber-700">
+          <div className="flex items-center gap-2 p-2 bg-bliss-50 border border-bliss-200 rounded-lg">
+            <History className="w-4 h-4 text-bliss-600" />
+            <span className="text-sm text-bliss-700">
               ขยายเวลาแล้ว {booking.extension_count} ครั้ง
               {booking.total_extensions_price && (
                 <span className="ml-1">
@@ -142,19 +142,19 @@ export function BookingCard({
 
         {/* Notes */}
         {booking.customer_notes && (
-          <div className="text-xs text-stone-600 bg-stone-50 p-2 rounded">
+          <div className="text-xs text-bliss-600 bg-bliss-50 p-2 rounded">
             {booking.customer_notes}
           </div>
         )}
       </div>
 
       {/* Actions */}
-      <div className="p-4 border-t border-stone-100">
+      <div className="p-4 border-t border-bliss-100">
         <div className="flex items-center gap-2">
           {/* View Details Button */}
           <button
             onClick={() => onView?.(booking)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-bliss-300 rounded-lg hover:bg-bliss-50 transition-colors"
           >
             <Eye className="w-4 h-4" />
             ดูรายละเอียด
@@ -164,7 +164,7 @@ export function BookingCard({
           {['confirmed', 'pending'].includes(booking.status) && (
             <button
               onClick={() => onEdit?.(booking)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm border border-bliss-300 rounded-lg hover:bg-bliss-50 transition-colors"
             >
               <Edit className="w-4 h-4" />
               แก้ไข

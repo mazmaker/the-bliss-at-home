@@ -130,8 +130,8 @@ function HotelProfile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
-          <p className="text-stone-600">กำลังโหลดข้อมูลโรงแรม...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-bliss-700 mx-auto mb-2" />
+          <p className="text-bliss-600">กำลังโหลดข้อมูลโรงแรม...</p>
         </div>
       </div>
     )
@@ -146,7 +146,7 @@ function HotelProfile() {
           <p className="text-red-600 mb-4">ไม่พบข้อมูลโรงแรม</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 mx-auto"
+            className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="w-4 h-4" />
             รีเฟรชหน้า
@@ -184,13 +184,13 @@ function HotelProfile() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">ข้อมูลโรงแรม</h1>
-          <p className="text-stone-500">Hotel Profile</p>
+          <h1 className="text-2xl font-bold text-bliss-900">ข้อมูลโรงแรม</h1>
+          <p className="text-bliss-500">Hotel Profile</p>
         </div>
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
           >
             <Edit className="w-5 h-5" />
             แก้ไขข้อมูล
@@ -200,14 +200,14 @@ function HotelProfile() {
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition disabled:opacity-50"
             >
               ยกเลิก
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium hover:from-amber-800 hover:to-amber-900 transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium hover:from-bliss-800 hover:to-bliss-900 transition disabled:opacity-50"
             >
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -221,16 +221,16 @@ function HotelProfile() {
       </div>
 
       {/* Hotel Info Card */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-bliss-100">
         {/* Header */}
-        <div className="bg-gradient-to-r from-stone-800 to-stone-900 p-6 text-white">
+        <div className="bg-gradient-to-r from-bliss-800 to-bliss-900 p-6 text-white">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl flex items-center justify-center text-2xl font-bold">
+            <div className="w-16 h-16 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-2xl flex items-center justify-center text-2xl font-bold">
               {avatarChar}
             </div>
             <div>
               <h2 className="text-xl font-bold">{hotelData?.name_th}</h2>
-              <p className="text-stone-300">{hotelData?.name_en}</p>
+              <p className="text-bliss-300">{hotelData?.name_en}</p>
             </div>
           </div>
         </div>
@@ -241,32 +241,32 @@ function HotelProfile() {
             {/* Basic Information - Read Only */}
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-stone-900">ข้อมูลพื้นฐาน</h3>
-                <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">ไม่สามารถแก้ไขได้</span>
+                <h3 className="font-semibold text-bliss-900">ข้อมูลพื้นฐาน</h3>
+                <span className="text-xs bg-bliss-100 text-bliss-600 px-2 py-1 rounded-full">ไม่สามารถแก้ไขได้</span>
               </div>
 
-              <div className="bg-stone-50 rounded-xl p-4 space-y-4">
+              <div className="bg-bliss-50 rounded-xl p-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-500 mb-2">ชื่อโรงแรม (ไทย)</label>
-                  <p className="text-stone-900 font-medium">{hotelData?.name_th || 'ไม่ระบุ'}</p>
+                  <label className="block text-sm font-medium text-bliss-500 mb-2">ชื่อโรงแรม (ไทย)</label>
+                  <p className="text-bliss-900 font-medium">{hotelData?.name_th || 'ไม่ระบุ'}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-500 mb-2">ชื่อโรงแรม (อังกฤษ)</label>
-                  <p className="text-stone-900 font-medium">{hotelData?.name_en || 'ไม่ระบุ'}</p>
-                  <p className="text-xs text-stone-500 mt-1">ใช้สำหรับสร้าง URL: {hotelData?.hotel_slug}</p>
+                  <label className="block text-sm font-medium text-bliss-500 mb-2">ชื่อโรงแรม (อังกฤษ)</label>
+                  <p className="text-bliss-900 font-medium">{hotelData?.name_en || 'ไม่ระบุ'}</p>
+                  <p className="text-xs text-bliss-500 mt-1">ใช้สำหรับสร้าง URL: {hotelData?.hotel_slug}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-500 mb-2">ที่อยู่</label>
+                  <label className="block text-sm font-medium text-bliss-500 mb-2">ที่อยู่</label>
                   <div className="flex items-start gap-2">
-                    <MapPin className="w-5 h-5 text-stone-400 mt-0.5" />
-                    <p className="text-stone-900">{hotelData?.address || 'ไม่ระบุ'}</p>
+                    <MapPin className="w-5 h-5 text-bliss-400 mt-0.5" />
+                    <p className="text-bliss-900">{hotelData?.address || 'ไม่ระบุ'}</p>
                   </div>
                 </div>
 
-                <div className="border-t border-stone-200 pt-3 mt-3">
-                  <p className="text-xs text-stone-500 flex items-center gap-1">
+                <div className="border-t border-bliss-200 pt-3 mt-3">
+                  <p className="text-xs text-bliss-500 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     ต้องการเปลี่ยนแปลงข้อมูลนี้? กรุณาติดต่อ Admin
                   </p>
@@ -276,98 +276,98 @@ function HotelProfile() {
 
             {/* Contact Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-stone-900 mb-4">ข้อมูลติดต่อ</h3>
+              <h3 className="font-semibold text-bliss-900 mb-4">ข้อมูลติดต่อ</h3>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">ผู้ติดต่อ</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-2">ผู้ติดต่อ</label>
                 {isEditing ? (
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                     <input
                       type="text"
                       value={formData.contact_person}
                       onChange={(e) => updateFormData('contact_person', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="กรอกชื่อผู้ติดต่อ"
                     />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-stone-400" />
-                    <p className="text-stone-900">{formData.contact_person || 'ไม่ระบุ'}</p>
+                    <User className="w-5 h-5 text-bliss-400" />
+                    <p className="text-bliss-900">{formData.contact_person || 'ไม่ระบุ'}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">อีเมล</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-2">อีเมล</label>
                 {isEditing ? (
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => updateFormData('email', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="example@hotel.com"
                     />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-stone-400" />
-                    <p className="text-stone-900">{formData.email || 'ไม่ระบุ'}</p>
+                    <Mail className="w-5 h-5 text-bliss-400" />
+                    <p className="text-bliss-900">{formData.email || 'ไม่ระบุ'}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">เบอร์โทรศัพท์</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-2">เบอร์โทรศัพท์</label>
                 {isEditing ? (
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => updateFormData('phone', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="02-xxx-xxxx"
                     />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Phone className="w-5 h-5 text-stone-400" />
-                    <p className="text-stone-900">{formData.phone || 'ไม่ระบุ'}</p>
+                    <Phone className="w-5 h-5 text-bliss-400" />
+                    <p className="text-bliss-900">{formData.phone || 'ไม่ระบุ'}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">เว็บไซต์</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-2">เว็บไซต์</label>
                 {isEditing ? (
                   <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bliss-400" />
                     <input
                       type="url"
                       value={formData.website}
                       onChange={(e) => updateFormData('website', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="https://www.example.com"
                     />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-stone-400" />
+                    <Globe className="w-5 h-5 text-bliss-400" />
                     {formData.website ? (
                       <a
                         href={formData.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-amber-700 hover:text-amber-800 font-medium hover:underline"
+                        className="text-bliss-700 hover:text-bliss-800 font-medium hover:underline"
                       >
                         {formData.website}
                       </a>
                     ) : (
-                      <p className="text-stone-900">ไม่ระบุ</p>
+                      <p className="text-bliss-900">ไม่ระบุ</p>
                     )}
                   </div>
                 )}
@@ -376,71 +376,71 @@ function HotelProfile() {
           </div>
 
           {/* Tax & Business Info */}
-          <div className="mt-6 pt-6 border-t border-stone-200">
-            <h3 className="font-semibold text-stone-900 mb-4">ข้อมูลภาษี</h3>
+          <div className="mt-6 pt-6 border-t border-bliss-200">
+            <h3 className="font-semibold text-bliss-900 mb-4">ข้อมูลภาษี</h3>
             <div className="max-w-md">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">เลขประจำตัวผู้เสียภาษี</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-2">เลขประจำตัวผู้เสียภาษี</label>
                 {isEditing ? (
                   <input
                     type="text"
                     value={formData.tax_id}
                     onChange={(e) => updateFormData('tax_id', e.target.value)}
-                    className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                     placeholder="0123456789012"
                   />
                 ) : (
-                  <p className="font-mono text-stone-900">{formData.tax_id || 'ไม่ระบุ'}</p>
+                  <p className="font-mono text-bliss-900">{formData.tax_id || 'ไม่ระบุ'}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Bank Account */}
-          <div className="mt-6 pt-6 border-t border-stone-200">
-            <h3 className="font-semibold text-stone-900 mb-4">ข้อมูลบัญชีธนาคาร</h3>
-            <div className="bg-stone-50 rounded-xl p-4">
+          <div className="mt-6 pt-6 border-t border-bliss-200">
+            <h3 className="font-semibold text-bliss-900 mb-4">ข้อมูลบัญชีธนาคาร</h3>
+            <div className="bg-bliss-50 rounded-xl p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">ธนาคาร</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">ธนาคาร</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={formData.bank_name}
                       onChange={(e) => updateFormData('bank_name', e.target.value)}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="ธนาคารกสิกรไทย"
                     />
                   ) : (
-                    <p className="text-stone-900">{formData.bank_name || 'ไม่ระบุ'}</p>
+                    <p className="text-bliss-900">{formData.bank_name || 'ไม่ระบุ'}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">เลขที่บัญชี</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เลขที่บัญชี</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={formData.bank_account_number}
                       onChange={(e) => updateFormData('bank_account_number', e.target.value)}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="012-3-45678-9"
                     />
                   ) : (
-                    <p className="font-mono text-stone-900">{formData.bank_account_number || 'ไม่ระบุ'}</p>
+                    <p className="font-mono text-bliss-900">{formData.bank_account_number || 'ไม่ระบุ'}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">ชื่อบัญชี</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">ชื่อบัญชี</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={formData.bank_account_name}
                       onChange={(e) => updateFormData('bank_account_name', e.target.value)}
-                      className="w-full px-4 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-4 py-2 border border-bliss-300 rounded-xl focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="โรงแรม จำกัด"
                     />
                   ) : (
-                    <p className="text-stone-900">{formData.bank_account_name || 'ไม่ระบุ'}</p>
+                    <p className="text-bliss-900">{formData.bank_account_name || 'ไม่ระบุ'}</p>
                   )}
                 </div>
               </div>
@@ -448,10 +448,10 @@ function HotelProfile() {
           </div>
 
           {/* Hotel Map Section */}
-          <div className="mt-6 pt-6 border-t border-stone-200">
+          <div className="mt-6 pt-6 border-t border-bliss-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-stone-900">ที่ตั้งโรงแรม</h3>
-              <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">ไม่สามารถแก้ไขได้</span>
+              <h3 className="font-semibold text-bliss-900">ที่ตั้งโรงแรม</h3>
+              <span className="text-xs bg-bliss-100 text-bliss-600 px-2 py-1 rounded-full">ไม่สามารถแก้ไขได้</span>
             </div>
             <HotelMapDisplay
               latitude={hotelData?.latitude}
@@ -461,7 +461,7 @@ function HotelProfile() {
               height="400px"
             />
             <div className="mt-3">
-              <p className="text-xs text-stone-500 flex items-center gap-1">
+              <p className="text-xs text-bliss-500 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 ต้องการเปลี่ยนแปลงข้อมูลนี้? กรุณาติดต่อ Admin
               </p>

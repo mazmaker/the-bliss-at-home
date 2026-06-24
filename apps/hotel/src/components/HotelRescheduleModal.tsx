@@ -223,8 +223,8 @@ export function HotelRescheduleModal({
         {/* Loading State */}
         {loading && step === 'check' && (
           <div className="text-center py-8">
-            <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
-            <p className="text-stone-600">กำลังตรวจสอบเงื่อนไขการเลื่อนนัด...</p>
+            <RefreshCw className="w-8 h-8 text-bliss-600 animate-spin mx-auto mb-4" />
+            <p className="text-bliss-600">กำลังตรวจสอบเงื่อนไขการเลื่อนนัด...</p>
           </div>
         )}
 
@@ -242,18 +242,18 @@ export function HotelRescheduleModal({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Ban className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">ไม่สามารถเลื่อนนัดได้</h3>
-            <p className="text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">ไม่สามารถเลื่อนนัดได้</h3>
+            <p className="text-bliss-600 mb-4">
               {eligibility.reason || 'การจองนี้ไม่สามารถเลื่อนนัดได้ในขณะนี้'}
             </p>
 
             {eligibility.hoursUntilBooking > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6">
-                <div className="flex items-center gap-2 text-amber-800 mb-2">
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4 text-left mb-6">
+                <div className="flex items-center gap-2 text-bliss-800 mb-2">
                   <Clock className="w-5 h-5" />
                   <span className="font-medium">เหลือเวลา {eligibility.hoursUntilBooking.toFixed(1)} ชั่วโมงก่อนนัด</span>
                 </div>
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-bliss-700">
                   ตามนโยบาย ต้องเลื่อนนัดล่วงหน้าอย่างน้อย 3 ชั่วโมงก่อนเวลานัด
                 </p>
               </div>
@@ -261,7 +261,7 @@ export function HotelRescheduleModal({
 
             <button
               onClick={handleClose}
-              className="px-6 py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition"
+              className="px-6 py-3 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
             >
               ปิด
             </button>
@@ -272,42 +272,42 @@ export function HotelRescheduleModal({
         {step === 'select' && eligibility?.canReschedule && (
           <div className="space-y-6">
             {/* Current Booking Info */}
-            <div className="bg-stone-50 rounded-xl p-4">
-              <p className="text-sm text-stone-500 mb-1">การจองปัจจุบัน</p>
-              <p className="font-medium text-stone-900">{guestName} - ห้อง {roomNumber}</p>
-              <p className="text-sm text-stone-600">{serviceName}</p>
-              <p className="text-sm text-stone-600">{formatDate(currentDate)} เวลา {currentTime}</p>
+            <div className="bg-bliss-50 rounded-xl p-4">
+              <p className="text-sm text-bliss-500 mb-1">การจองปัจจุบัน</p>
+              <p className="font-medium text-bliss-900">{guestName} - ห้อง {roomNumber}</p>
+              <p className="text-sm text-bliss-600">{serviceName}</p>
+              <p className="text-sm text-bliss-600">{formatDate(currentDate)} เวลา {currentTime}</p>
             </div>
 
             {/* Date Selection */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-3">
+              <label className="block text-sm font-medium text-bliss-700 mb-3">
                 เลือกวันใหม่
               </label>
-              <div className="bg-white border border-stone-200 rounded-xl p-4">
+              <div className="bg-white border border-bliss-200 rounded-xl p-4">
                 {/* Month Navigation */}
                 <div className="flex items-center justify-between mb-4">
                   <button
                     onClick={() => navigateMonth('prev')}
-                    className="p-2 hover:bg-stone-100 rounded-lg transition"
+                    className="p-2 hover:bg-bliss-100 rounded-lg transition"
                   >
-                    <ChevronLeft className="w-5 h-5 text-stone-600" />
+                    <ChevronLeft className="w-5 h-5 text-bliss-600" />
                   </button>
-                  <span className="font-medium text-stone-900">
+                  <span className="font-medium text-bliss-900">
                     {currentMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
                   </span>
                   <button
                     onClick={() => navigateMonth('next')}
-                    className="p-2 hover:bg-stone-100 rounded-lg transition"
+                    className="p-2 hover:bg-bliss-100 rounded-lg transition"
                   >
-                    <ChevronRight className="w-5 h-5 text-stone-600" />
+                    <ChevronRight className="w-5 h-5 text-bliss-600" />
                   </button>
                 </div>
 
                 {/* Day Headers */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((day) => (
-                    <div key={day} className="text-center text-xs font-medium text-stone-500 py-2">
+                    <div key={day} className="text-center text-xs font-medium text-bliss-500 py-2">
                       {day}
                     </div>
                   ))}
@@ -335,11 +335,11 @@ export function HotelRescheduleModal({
                         disabled={!isSelectable}
                         className={`p-2 text-sm rounded-lg transition ${
                           isSelected
-                            ? 'bg-amber-600 text-white font-bold'
+                            ? 'bg-bliss-600 text-white font-bold'
                             : isSelectable
-                            ? 'hover:bg-amber-100 text-stone-700'
-                            : 'text-stone-300 cursor-not-allowed'
-                        } ${isToday && !isSelected ? 'ring-2 ring-amber-300' : ''}`}
+                            ? 'hover:bg-bliss-100 text-bliss-700'
+                            : 'text-bliss-300 cursor-not-allowed'
+                        } ${isToday && !isSelected ? 'ring-2 ring-bliss-300' : ''}`}
                       >
                         {date.getDate()}
                       </button>
@@ -352,7 +352,7 @@ export function HotelRescheduleModal({
             {/* Time Selection */}
             {selectedDate && (
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-3">
+                <label className="block text-sm font-medium text-bliss-700 mb-3">
                   เลือกเวลาใหม่
                 </label>
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
@@ -365,8 +365,8 @@ export function HotelRescheduleModal({
                         onClick={() => setSelectedTime(time)}
                         className={`px-3 py-2 text-sm rounded-lg border-2 transition ${
                           isSelected
-                            ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium'
-                            : 'border-stone-200 hover:border-amber-300 text-stone-700'
+                            ? 'border-bliss-500 bg-bliss-50 text-bliss-700 font-medium'
+                            : 'border-bliss-200 hover:border-bliss-300 text-bliss-700'
                         }`}
                       >
                         {time}
@@ -381,14 +381,14 @@ export function HotelRescheduleModal({
             <div className="flex gap-3">
               <button
                 onClick={handleClose}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition"
+                className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-50 transition"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={() => setStep('confirm')}
                 disabled={!selectedDate || !selectedTime}
-                className="flex-1 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ดำเนินการต่อ
               </button>
@@ -399,33 +399,33 @@ export function HotelRescheduleModal({
         {/* Confirm Step */}
         {step === 'confirm' && (
           <div className="text-center py-4">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-amber-600" />
+            <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-bliss-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">ยืนยันการเลื่อนนัด</h3>
-            <p className="text-stone-600 mb-6">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">ยืนยันการเลื่อนนัด</h3>
+            <p className="text-bliss-600 mb-6">
               กรุณาตรวจสอบรายละเอียดการเลื่อนนัดก่อนยืนยัน
             </p>
 
-            <div className="bg-stone-50 rounded-xl p-4 text-left mb-6 space-y-4">
+            <div className="bg-bliss-50 rounded-xl p-4 text-left mb-6 space-y-4">
               <div>
-                <p className="text-sm text-stone-500 mb-1">แขก: {guestName} - ห้อง {roomNumber}</p>
-                <p className="text-sm text-stone-500 mb-2">บริการ: {serviceName}</p>
+                <p className="text-sm text-bliss-500 mb-1">แขก: {guestName} - ห้อง {roomNumber}</p>
+                <p className="text-sm text-bliss-500 mb-2">บริการ: {serviceName}</p>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">วันเวลาเดิม</p>
-                <p className="font-medium text-stone-900 line-through opacity-60">
+                <p className="text-sm text-bliss-500 mb-1">วันเวลาเดิม</p>
+                <p className="font-medium text-bliss-900 line-through opacity-60">
                   {formatDate(currentDate)} เวลา {currentTime}
                 </p>
               </div>
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                  <ChevronRight className="w-5 h-5 text-amber-600" />
+                <div className="w-8 h-8 bg-bliss-100 rounded-full flex items-center justify-center">
+                  <ChevronRight className="w-5 h-5 text-bliss-600" />
                 </div>
               </div>
               <div>
-                <p className="text-sm text-stone-500 mb-1">วันเวลาใหม่</p>
-                <p className="font-bold text-amber-700 text-lg">
+                <p className="text-sm text-bliss-500 mb-1">วันเวลาใหม่</p>
+                <p className="font-bold text-bliss-700 text-lg">
                   {formatDate(selectedDate)} เวลา {selectedTime}
                 </p>
               </div>
@@ -435,14 +435,14 @@ export function HotelRescheduleModal({
               <button
                 onClick={() => setStep('select')}
                 disabled={loading}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-700 rounded-xl font-medium hover:bg-stone-50 transition disabled:opacity-50"
+                className="flex-1 px-6 py-3 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-bliss-50 transition disabled:opacity-50"
               >
                 กลับ
               </button>
               <button
                 onClick={handleConfirmReschedule}
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -463,8 +463,8 @@ export function HotelRescheduleModal({
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">เลื่อนนัดเรียบร้อยแล้ว</h3>
-            <p className="text-stone-600 mb-4">
+            <h3 className="text-xl font-bold text-bliss-900 mb-2">เลื่อนนัดเรียบร้อยแล้ว</h3>
+            <p className="text-bliss-600 mb-4">
               การจองหมายเลข {bookingNumber} ได้เปลี่ยนเป็นวันเวลาใหม่แล้ว
             </p>
 
@@ -485,7 +485,7 @@ export function HotelRescheduleModal({
 
             <button
               onClick={handleClose}
-              className="px-8 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition"
+              className="px-8 py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition"
             >
               ปิด
             </button>

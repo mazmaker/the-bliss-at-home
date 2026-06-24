@@ -19,8 +19,6 @@ import {
   Lock,
   AlertCircle,
   CheckCircle,
-  Building,
-  ArrowLeft,
   RefreshCw,
   Shield,
   Key,
@@ -225,10 +223,10 @@ export function EnhancedHotelLogin() {
   // Show loading while checking password requirements
   if (isAuthenticated && user?.role === 'HOTEL' && isCheckingPasswordRequirement) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-bliss-50 via-white to-bliss-50 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-amber-600 mx-auto mb-4" />
-          <p className="text-gray-600">กำลังตรวจสอบข้อมูล...</p>
+          <RefreshCw className="h-8 w-8 animate-spin text-bliss-600 mx-auto mb-4" />
+          <p className="text-bliss-600">กำลังตรวจสอบข้อมูล...</p>
         </div>
       </div>
     )
@@ -439,37 +437,22 @@ export function EnhancedHotelLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-md mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-              <Building className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                The Bliss at Home
-              </h1>
-              <p className="text-sm text-gray-500">Hotel Portal</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-bliss-50 via-white to-bliss-50">
+      <div className="flex items-center justify-center px-4 py-8 min-h-screen">
         <div className="w-full max-w-md">
           {/* Login Step */}
           {loginStep === 'login' && (
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-amber-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <img
+                  src="/logo.jpg"
+                  alt="The Bliss at Home"
+                  className="w-20 h-20 object-contain rounded-2xl mx-auto mb-4"
+                />
+                <h2 className="text-2xl font-bold text-bliss-900 mb-2">
                   เข้าสู่ระบบโรงแรม
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-bliss-600">
                   กรุณาเข้าสู่ระบบด้วยบัญชีโรงแรมของท่าน
                 </p>
               </div>
@@ -477,15 +460,15 @@ export function EnhancedHotelLogin() {
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
                 {/* Email Field */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     อีเมล *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-bliss-400" />
                     <input
                       {...loginForm.register('email')}
                       type="email"
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                       placeholder="hotel@example.com"
                       disabled={isSubmitting}
                     />
@@ -499,22 +482,22 @@ export function EnhancedHotelLogin() {
 
                 {/* Password Field */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     รหัสผ่าน *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-bliss-400" />
                     <input
                       {...loginForm.register('password')}
                       type={showPassword ? 'text' : 'password'}
-                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full pl-10 pr-10 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                       placeholder="รหัสผ่านของท่าน"
                       disabled={isSubmitting}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-600"
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -532,17 +515,17 @@ export function EnhancedHotelLogin() {
                     <input
                       {...loginForm.register('rememberMe')}
                       type="checkbox"
-                      className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-bliss-600 focus:ring-bliss-500 border-bliss-300 rounded"
                       disabled={isSubmitting}
                     />
-                    <span className="ml-2 text-sm text-gray-700">
+                    <span className="ml-2 text-sm text-bliss-700">
                       จำการเข้าสู่ระบบ
                     </span>
                   </label>
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-sm text-amber-600 hover:text-amber-700"
+                    className="text-sm text-bliss-600 hover:text-bliss-700"
                     disabled={isSubmitting}
                   >
                     ลืมรหัสผ่าน?
@@ -553,7 +536,7 @@ export function EnhancedHotelLogin() {
                 <button
                   type="submit"
                   disabled={isSubmitting || authLoading}
-                  className="w-full bg-amber-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-bliss-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-bliss-700 focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting || authLoading ? (
                     <RefreshCw className="h-5 w-5 animate-spin" />
@@ -587,10 +570,10 @@ export function EnhancedHotelLogin() {
               </form>
 
               {/* Help Text */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <div className="mt-6 p-4 bg-bliss-50 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-blue-800">
+                  <AlertCircle className="h-5 w-5 text-bliss-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-bliss-800">
                     <p className="font-medium mb-1">สำหรับโรงแรมใหม่:</p>
                     <p>หากเป็นการเข้าสู่ระบบครั้งแรก กรุณาใช้รหัสผ่านชั่วคราวที่ได้รับจากระบบ ระบบจะให้เปลี่ยนรหัสผ่านใหม่เพื่อความปลอดภัย</p>
                   </div>
@@ -606,10 +589,10 @@ export function EnhancedHotelLogin() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Key className="w-8 h-8 text-green-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl font-bold text-bliss-900 mb-2">
                   เปลี่ยนรหัสผ่าน
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-bliss-600">
                   กรุณาเปลี่ยนรหัสผ่านใหม่เพื่อความปลอดภัย
                 </p>
               </div>
@@ -617,22 +600,22 @@ export function EnhancedHotelLogin() {
               <form onSubmit={changePasswordForm.handleSubmit(handleChangePassword)} className="space-y-6">
                 {/* Current Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     รหัสผ่านปัจจุบัน *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-bliss-400" />
                     <input
                       {...changePasswordForm.register('currentPassword')}
                       type={showCurrentPassword ? 'text' : 'password'}
-                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full pl-10 pr-10 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="รหัสผ่านชั่วคราว"
                       disabled={isSubmitting}
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-600"
                     >
                       {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -646,22 +629,22 @@ export function EnhancedHotelLogin() {
 
                 {/* New Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     รหัสผ่านใหม่ *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-bliss-400" />
                     <input
                       {...changePasswordForm.register('newPassword')}
                       type={showNewPassword ? 'text' : 'password'}
-                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full pl-10 pr-10 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="รหัสผ่านใหม่"
                       disabled={isSubmitting}
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-600"
                     >
                       {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -674,8 +657,8 @@ export function EnhancedHotelLogin() {
 
                   {/* Password Requirements */}
                   {watchNewPassword && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs font-medium text-gray-700 mb-2">ข้อกำหนดรหัสผ่าน:</p>
+                    <div className="mt-2 p-3 bg-bliss-50 rounded-lg">
+                      <p className="text-xs font-medium text-bliss-700 mb-2">ข้อกำหนดรหัสผ่าน:</p>
                       <div className="space-y-1">
                         {passwordRequirements.map((req, index) => {
                           const isValid = req.test(watchNewPassword)
@@ -684,10 +667,10 @@ export function EnhancedHotelLogin() {
                               {isValid ? (
                                 <CheckCircle className="h-3 w-3 text-green-500" />
                               ) : (
-                                <div className="h-3 w-3 rounded-full border border-gray-300" />
+                                <div className="h-3 w-3 rounded-full border border-bliss-300" />
                               )}
                               <span className={`text-xs ${
-                                isValid ? 'text-green-600' : 'text-gray-500'
+                                isValid ? 'text-green-600' : 'text-bliss-500'
                               }`}>
                                 {req.label}
                               </span>
@@ -701,22 +684,22 @@ export function EnhancedHotelLogin() {
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">
                     ยืนยันรหัสผ่านใหม่ *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-bliss-400" />
                     <input
                       {...changePasswordForm.register('confirmPassword')}
                       type={showConfirmPassword ? 'text' : 'password'}
-                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full pl-10 pr-10 py-3 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="ยืนยันรหัสผ่านใหม่"
                       disabled={isSubmitting}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-bliss-400 hover:text-bliss-600"
                     >
                       {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -768,16 +751,6 @@ export function EnhancedHotelLogin() {
           )}
 
 
-          {/* Back to Home */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => navigate('/')}
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              กลับสู่หน้าหลัก
-            </button>
-          </div>
         </div>
       </div>
     </div>

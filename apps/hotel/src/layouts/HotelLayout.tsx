@@ -57,10 +57,10 @@ function HotelLayout() {
   // Loading state
   if (isLoading || ownHotelLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-bliss-50">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
-          <p className="text-stone-600">กำลังโหลดข้อมูลโรงแรม...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-bliss-700 mx-auto mb-2" />
+          <p className="text-bliss-600">กำลังโหลดข้อมูลโรงแรม...</p>
         </div>
       </div>
     )
@@ -69,22 +69,22 @@ function HotelLayout() {
   // Hotel is suspended or banned
   if (isBlocked) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-bliss-50">
         <div className="text-center max-w-md mx-auto p-8">
           <div className={`w-16 h-16 ${hotelStatus === 'banned' ? 'bg-red-100' : 'bg-orange-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
             <AlertTriangle className={`w-8 h-8 ${hotelStatus === 'banned' ? 'text-red-500' : 'text-orange-500'}`} />
           </div>
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">
             {hotelStatus === 'banned' ? 'บัญชีถูกแบนถาวร' : 'บัญชีถูกระงับการใช้งาน'}
           </h1>
-          <p className="text-stone-600 mb-6">
+          <p className="text-bliss-600 mb-6">
             {hotelStatus === 'banned'
               ? 'บัญชีโรงแรมของท่านถูกแบนถาวร ไม่สามารถเข้าใช้งานระบบได้ กรุณาติดต่อผู้ดูแลระบบ'
               : 'บัญชีโรงแรมของท่านถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบเพื่อขอเปิดใช้งานอีกครั้ง'}
           </p>
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-700 text-white rounded-lg hover:bg-stone-800 transition"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-bliss-700 text-white rounded-lg hover:bg-bliss-800 transition"
           >
             <LogOut className="w-4 h-4" />
             ออกจากระบบ
@@ -97,16 +97,16 @@ function HotelLayout() {
   // Invalid hotel ID
   if (!isValidHotel) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-bliss-50">
         <div className="text-center max-w-md mx-auto p-8">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">โรงแรมไม่พบ</h1>
-          <p className="text-stone-600 mb-6">
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">โรงแรมไม่พบ</h1>
+          <p className="text-bliss-600 mb-6">
             ไม่พบข้อมูลโรงแรมที่ระบุ: {hotelSlug}
           </p>
           <Link
             to="/hotel/resort-chiang-mai"
-            className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+            className="inline-flex items-center px-4 py-2 bg-bliss-700 text-white rounded-lg hover:bg-bliss-800 transition"
           >
             ไปยังโรงแรมเริ่มต้น
           </Link>
@@ -122,26 +122,26 @@ function HotelLayout() {
   if (ownHotelId && hotelId && ownHotelId !== hotelId) {
     const ownHotel = availableHotels.find((h) => h.id === ownHotelId)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-bliss-50">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="w-8 h-8 text-red-500" />
           </div>
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">ไม่มีสิทธิ์เข้าถึงโรงแรมนี้</h1>
-          <p className="text-stone-600 mb-6">
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">ไม่มีสิทธิ์เข้าถึงโรงแรมนี้</h1>
+          <p className="text-bliss-600 mb-6">
             บัญชีของท่านไม่มีสิทธิ์เข้าถึงข้อมูลของโรงแรมนี้ ท่านสามารถเข้าถึงได้เฉพาะโรงแรมของท่านเท่านั้น
           </p>
           {ownHotel ? (
             <Link
               to={`/hotel/${ownHotel.hotel_slug}`}
-              className="inline-flex items-center px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+              className="inline-flex items-center px-4 py-2 bg-bliss-700 text-white rounded-lg hover:bg-bliss-800 transition"
             >
               ไปยังโรงแรมของท่าน
             </Link>
           ) : (
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-stone-700 text-white rounded-lg hover:bg-stone-800 transition"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-bliss-700 text-white rounded-lg hover:bg-bliss-800 transition"
             >
               <LogOut className="w-4 h-4" />
               ออกจากระบบ
@@ -168,7 +168,7 @@ function HotelLayout() {
   const hotelAvatar = getHotelName().charAt(0) || 'H'
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-bliss-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -179,20 +179,20 @@ function HotelLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl border-r border-stone-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl border-r border-bliss-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-4 border-b border-stone-200">
+          <div className="flex items-center justify-between p-4 border-b border-bliss-200">
             <div>
-              <h1 className="text-xl font-bold text-stone-900">{getHotelName()}</h1>
-              <p className="text-xs text-stone-500">{getHotelNameEn()}</p>
+              <h1 className="text-xl font-bold text-bliss-900">{getHotelName()}</h1>
+              <p className="text-xs text-bliss-500">{getHotelNameEn()}</p>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 text-stone-500 hover:text-stone-700"
+              className="lg:hidden p-2 text-bliss-500 hover:text-bliss-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -211,8 +211,8 @@ function HotelLayout() {
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
                     isActive
-                      ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                      ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                      : 'text-bliss-600 hover:bg-bliss-100 hover:text-bliss-900'
                   }`}
                 >
                   <div className="relative">
@@ -233,19 +233,19 @@ function HotelLayout() {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-stone-200">
+          <div className="p-4 border-t border-bliss-200">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white font-semibold">
                 {hotelAvatar}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-stone-900 truncate">{getHotelName()}</p>
-                <p className="text-xs text-stone-500 truncate">{getHotelNameEn()}</p>
+                <p className="text-sm font-medium text-bliss-900 truncate">{getHotelName()}</p>
+                <p className="text-xs text-bliss-500 truncate">{getHotelNameEn()}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition w-full"
+              className="flex items-center gap-2 px-4 py-2 text-bliss-600 hover:text-bliss-900 hover:bg-bliss-100 rounded-lg transition w-full"
             >
               <LogOut className="w-4 h-4" />
               <span className="text-sm">ออกจากระบบ</span>
@@ -257,11 +257,11 @@ function HotelLayout() {
       {/* Main content */}
       <div className="lg:pl-64 min-w-0 overflow-x-hidden">
         {/* Top bar */}
-        <header className="bg-white border-b border-stone-200 sticky top-0 z-30">
+        <header className="bg-white border-b border-bliss-200 sticky top-0 z-30">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-stone-600 hover:bg-stone-100 rounded-lg"
+              className="lg:hidden p-2 text-bliss-600 hover:bg-bliss-100 rounded-lg"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -269,7 +269,7 @@ function HotelLayout() {
             <div className="flex items-center gap-4">
               <Link
                 to={`/hotel/${currentSlug}/notifications`}
-                className="relative p-2 text-stone-600 hover:bg-stone-100 rounded-lg transition"
+                className="relative p-2 text-bliss-600 hover:bg-bliss-100 rounded-lg transition"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -279,10 +279,10 @@ function HotelLayout() {
                 )}
               </Link>
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-stone-900">{getHotelName()}</p>
-                <p className="text-xs text-stone-500">{getHotelNameEn()}</p>
+                <p className="text-sm font-medium text-bliss-900">{getHotelName()}</p>
+                <p className="text-xs text-bliss-500">{getHotelNameEn()}</p>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-800 rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-full flex items-center justify-center text-white font-semibold">
                 {hotelAvatar}
               </div>
             </div>

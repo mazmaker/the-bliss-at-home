@@ -345,8 +345,8 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
   if (!paymentMethods) {
     return (
       <div className="mt-4 p-3 bg-white bg-opacity-70 rounded-lg">
-        <p className="text-xs text-stone-600 mb-2 font-medium">วิธีการชำระเงิน:</p>
-        <div className="text-xs text-stone-600 space-y-1">
+        <p className="text-xs text-bliss-600 mb-2 font-medium">วิธีการชำระเงิน:</p>
+        <div className="text-xs text-bliss-600 space-y-1">
           <p>• กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -356,31 +356,31 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
   return (
     <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg">
       <div className="flex items-center gap-2 mb-3">
-        <CreditCard className="w-4 h-4 text-stone-700" />
-        <p className="text-sm text-stone-700 font-medium">ช่องทางการชำระเงิน:</p>
+        <CreditCard className="w-4 h-4 text-bliss-700" />
+        <p className="text-sm text-bliss-700 font-medium">ช่องทางการชำระเงิน:</p>
       </div>
 
       <div className="space-y-3 text-sm">
         {/* Bank Transfer */}
         {paymentMethods.bankTransfer?.enabled && (
-          <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-            <Banknote className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 bg-bliss-50 rounded-lg">
+            <Banknote className="w-5 h-5 text-bliss-600 mt-0.5" />
             <div className="flex-1">
-              <div className="font-medium text-blue-800 mb-1">โอนเงินผ่านธนาคาร</div>
+              <div className="font-medium text-bliss-800 mb-1">โอนเงินผ่านธนาคาร</div>
               {paymentMethods.bankTransfer.bankName && (
-                <div className="text-blue-700 flex items-center gap-2">
+                <div className="text-bliss-700 flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
                   {paymentMethods.bankTransfer.bankName}
                 </div>
               )}
               {paymentMethods.bankTransfer.accountNumber && (
-                <div className="text-blue-700 flex items-center gap-2">
+                <div className="text-bliss-700 flex items-center gap-2">
                   <CreditCard className="w-4 h-4" />
                   {paymentMethods.bankTransfer.accountNumber}
                 </div>
               )}
               {paymentMethods.bankTransfer.accountName && (
-                <div className="text-blue-700 flex items-center gap-2">
+                <div className="text-bliss-700 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   {paymentMethods.bankTransfer.accountName}
                 </div>
@@ -413,18 +413,18 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
 
         {/* Check Payment */}
         {paymentMethods.checkPayment?.enabled && (
-          <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
-            <Receipt className="w-5 h-5 text-amber-600 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 bg-bliss-50 rounded-lg">
+            <Receipt className="w-5 h-5 text-bliss-600 mt-0.5" />
             <div className="flex-1">
-              <div className="font-medium text-amber-800 mb-1">ชำระด้วยเช็ค</div>
+              <div className="font-medium text-bliss-800 mb-1">ชำระด้วยเช็ค</div>
               {paymentMethods.checkPayment.payableTo && (
-                <div className="text-amber-700 flex items-center gap-2">
+                <div className="text-bliss-700 flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   สั่งจ่าย: {paymentMethods.checkPayment.payableTo}
                 </div>
               )}
               {paymentMethods.checkPayment.mailingAddress && (
-                <div className="text-amber-700 flex items-start gap-2">
+                <div className="text-bliss-700 flex items-start gap-2">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>ส่งไปรษณีย์: {paymentMethods.checkPayment.mailingAddress}</span>
                 </div>
@@ -435,12 +435,12 @@ function PaymentMethodsSection({ adminContact }: { adminContact: any }) {
 
         {/* Admin Contact Info */}
         {adminContact && (
-          <div className="mt-3 pt-3 border-t border-gray-300">
-            <div className="text-xs text-stone-600 font-medium mb-2 flex items-center gap-2">
+          <div className="mt-3 pt-3 border-t border-bliss-300">
+            <div className="text-xs text-bliss-600 font-medium mb-2 flex items-center gap-2">
               <Phone className="w-4 h-4" />
               สอบถามเพิ่มเติม:
             </div>
-            <div className="text-xs text-stone-600 space-y-2">
+            <div className="text-xs text-bliss-600 space-y-2">
               {adminContact.phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
@@ -582,8 +582,8 @@ function MonthlyBill() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-700 mx-auto mb-2" />
-          <p className="text-stone-600">กำลังโหลดข้อมูลบิลรายเดือน...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-bliss-700 mx-auto mb-2" />
+          <p className="text-bliss-600">กำลังโหลดข้อมูลบิลรายเดือน...</p>
         </div>
       </div>
     )
@@ -596,18 +596,18 @@ function MonthlyBill() {
         <div className="text-center max-w-md">
           <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
           <p className="text-red-600 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-bliss-600 mb-4">
             {error instanceof Error ? error.message : 'Unknown error'}
           </p>
           <div className="space-y-2">
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 mx-auto"
+              className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition flex items-center gap-2 mx-auto"
             >
               <RefreshCw className="w-4 h-4" />
               ลองใหม่
             </button>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-bliss-500">
               หากยังมีปัญหาให้ลองเลือกเดือนอื่นดู
             </p>
           </div>
@@ -625,8 +625,8 @@ function MonthlyBill() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">บิลรายเดือน</h1>
-          <p className="text-stone-500">Monthly Bill</p>
+          <h1 className="text-2xl font-bold text-bliss-900">บิลรายเดือน</h1>
+          <p className="text-bliss-500">Monthly Bill</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -634,7 +634,7 @@ function MonthlyBill() {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="px-3 py-2 border border-bliss-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
           >
             {monthOptions.map((month) => (
               <option key={month.value} value={month.value}>
@@ -646,7 +646,7 @@ function MonthlyBill() {
           <button
             onClick={handleDownloadPDF}
             disabled={!billData || billData.totalBookings === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
             ดาวน์โหลดบิล
@@ -655,29 +655,29 @@ function MonthlyBill() {
       </div>
 
       {/* Bill Header */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-stone-900 mb-2">{getHotelName()}</h2>
-            <p className="text-stone-600">{getHotelNameEn()}</p>
+            <h2 className="text-xl font-bold text-bliss-900 mb-2">{getHotelName()}</h2>
+            <p className="text-bliss-600">{getHotelNameEn()}</p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-stone-500 mb-1">เลขที่บิล</div>
-            <div className="font-mono text-stone-900">{generateBillNumber(selectedMonth, hotelId!)}</div>
+            <div className="text-sm text-bliss-500 mb-1">เลขที่บิล</div>
+            <div className="font-mono text-bliss-900">{generateBillNumber(selectedMonth, hotelId!)}</div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
-            <div className="text-stone-500 mb-1">ประจำเดือน</div>
+            <div className="text-bliss-500 mb-1">ประจำเดือน</div>
             <div className="font-medium">{billData?.monthLabel}</div>
           </div>
           <div>
-            <div className="text-stone-500 mb-1">กำหนดชำระ</div>
+            <div className="text-bliss-500 mb-1">กำหนดชำระ</div>
             <div className="font-medium">{getDueDate(selectedMonth)}</div>
           </div>
           <div>
-            <div className="text-stone-500 mb-1">สถานะ</div>
+            <div className="text-bliss-500 mb-1">สถานะ</div>
             <div className="flex items-center gap-2">
               {billStatus === 'paid' ? (
                 <>
@@ -686,8 +686,8 @@ function MonthlyBill() {
                 </>
               ) : (
                 <>
-                  <CreditCard className="w-4 h-4 text-amber-600" />
-                  <span className="text-amber-600 font-medium">รอชำระ</span>
+                  <CreditCard className="w-4 h-4 text-bliss-600" />
+                  <span className="text-bliss-600 font-medium">รอชำระ</span>
                 </>
               )}
             </div>
@@ -699,80 +699,80 @@ function MonthlyBill() {
       {/* Bill Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* การจองที่เสร็จสิ้น */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">{billData?.totalBookings || 0}</p>
-              <p className="text-sm text-stone-500">การจองเสร็จสิ้น</p>
+              <p className="text-2xl font-bold text-bliss-900">{billData?.totalBookings || 0}</p>
+              <p className="text-sm text-bliss-500">การจองเสร็จสิ้น</p>
             </div>
           </div>
         </div>
 
         {/* ยอดเรียกเก็บรวม */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">฿{billData?.totalRevenue.toLocaleString() || 0}</p>
-              <p className="text-sm text-stone-500">ยอดเรียกเก็บรวม</p>
+              <p className="text-2xl font-bold text-bliss-900">฿{billData?.totalRevenue.toLocaleString() || 0}</p>
+              <p className="text-sm text-bliss-500">ยอดเรียกเก็บรวม</p>
             </div>
           </div>
         </div>
 
         {/* บิลค้างชำระ */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-orange-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-orange-600">฿{billData?.pendingPayments?.toLocaleString() || 0}</p>
-              <p className="text-sm text-stone-500">บิลค้างชำระ</p>
+              <p className="text-sm text-bliss-500">บิลค้างชำระ</p>
             </div>
           </div>
         </div>
 
         {/* ค่าปรับล่าช้า */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-red-600">฿{billData?.lateFee?.toLocaleString() || 0}</p>
-              <p className="text-sm text-stone-500">ค่าปรับล่าช้า</p>
+              <p className="text-sm text-bliss-500">ค่าปรับล่าช้า</p>
             </div>
           </div>
         </div>
 
         {/* ยอดชำระสุทธิ */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-stone-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-bliss-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Calculator className="w-5 h-5 text-amber-600" />
+            <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+              <Calculator className="w-5 h-5 text-bliss-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-700">
+              <p className="text-2xl font-bold text-bliss-700">
                 ฿{((billData?.totalRevenue || 0) - (billData?.lateFee || 0)).toLocaleString()}
               </p>
-              <p className="text-sm text-stone-500">ยอดชำระสุทธิ</p>
+              <p className="text-sm text-bliss-500">ยอดชำระสุทธิ</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bookings Detail */}
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100">
-        <div className="p-6 border-b border-stone-100">
-          <h3 className="text-lg font-semibold text-stone-900">รายละเอียดการจอง</h3>
+      <div className="bg-white rounded-2xl shadow-lg border border-bliss-100">
+        <div className="p-6 border-b border-bliss-100">
+          <h3 className="text-lg font-semibold text-bliss-900">รายละเอียดการจอง</h3>
         </div>
         {!billData || billData.bookings.length === 0 ? (
-          <div className="text-center py-12 text-stone-500">
+          <div className="text-center py-12 text-bliss-500">
             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p className="text-lg mb-2">ไม่มีการจองในเดือนนี้</p>
             <p className="text-sm">เลือกเดือนอื่นหรือรอการจองใหม่</p>
@@ -780,62 +780,62 @@ function MonthlyBill() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-stone-50">
+              <thead className="bg-bliss-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     วันที่/เวลา
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     แขก/ห้อง
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     บริการ/ผู้ให้บริการ
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     สถานะ
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     ส่วนลด
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     รายได้โรงแรม
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     ยอดชำระ
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     การชำระ
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-bliss-500 uppercase tracking-wider">
                     ดูรายละเอียด
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-stone-200">
+              <tbody className="bg-white divide-y divide-bliss-200">
                 {billData.bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-stone-50">
+                  <tr key={booking.id} className="hover:bg-bliss-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        <div className="font-medium text-stone-900">
+                        <div className="font-medium text-bliss-900">
                           {new Date(booking.booking_date).toLocaleDateString('th-TH')}
                         </div>
-                        <div className="text-stone-500">
+                        <div className="text-bliss-500">
                           {booking.booking_time} • {booking.duration} นาที
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        <div className="font-medium text-stone-900">{booking.guest_name}</div>
-                        <div className="text-stone-500">ห้อง {booking.room_number}</div>
+                        <div className="font-medium text-bliss-900">{booking.guest_name}</div>
+                        <div className="text-bliss-500">ห้อง {booking.room_number}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm">
-                        <div className="font-medium text-stone-900">{booking.service_name}</div>
-                        <div className="text-stone-500">{booking.staff_name}</div>
+                        <div className="font-medium text-bliss-900">{booking.service_name}</div>
+                        <div className="text-bliss-500">{booking.staff_name}</div>
                         {(booking.customer_notes || booking.staff_notes) && (
-                          <div className="text-xs text-stone-400 mt-1">
+                          <div className="text-xs text-bliss-400 mt-1">
                             {booking.customer_notes && (
                               <div>แขก: {booking.customer_notes}</div>
                             )}
@@ -851,12 +851,12 @@ function MonthlyBill() {
                         booking.status === 'completed'
                           ? 'bg-green-100 text-green-700'
                           : booking.status === 'in_progress'
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-bliss-100 text-bliss-700'
                           : booking.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-700'
                           : booking.status === 'cancelled'
                           ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-700'
+                          : 'bg-bliss-100 text-bliss-700'
                       }`}>
                         {booking.status === 'completed'
                           ? 'เสร็จสิ้น'
@@ -874,7 +874,7 @@ function MonthlyBill() {
                         <div className="text-base font-bold text-red-600">
                           -฿{booking.discount_amount.toLocaleString()}
                         </div>
-                        <div className="text-xs text-stone-500">
+                        <div className="text-xs text-bliss-500">
                           ส่วนลด
                         </div>
                       </div>
@@ -884,13 +884,13 @@ function MonthlyBill() {
                         <div className="text-base font-bold text-green-600">
                           ฿{(booking.base_price - booking.discount_amount).toLocaleString()}
                         </div>
-                        <div className="text-xs text-stone-500">
+                        <div className="text-xs text-bliss-500">
                           รายได้โรงแรม
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-lg font-bold text-amber-700">฿{booking.final_price.toLocaleString()}</div>
+                      <div className="text-lg font-bold text-bliss-700">฿{booking.final_price.toLocaleString()}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -907,7 +907,7 @@ function MonthlyBill() {
                           setSelectedBookingForDetail(booking)
                           setIsDetailModalOpen(true)
                         }}
-                        className="inline-flex items-center justify-center w-8 h-8 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-full transition-colors"
+                        className="inline-flex items-center justify-center w-8 h-8 text-bliss-400 hover:text-bliss-600 hover:bg-bliss-50 rounded-full transition-colors"
                         title="ดูรายละเอียดการจอง"
                       >
                         <Eye className="w-4 h-4" />
@@ -972,7 +972,7 @@ function MonthlyBill() {
                 </div>
 
                 {alertData.lateFee > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="mt-3 pt-3 border-t border-bliss-200">
                     <div className="flex justify-between items-center">
                       <span className={`font-medium ${alertData.styling.textColor}`}>ยอดรวมทั้งหมด:</span>
                       <span className={`text-2xl font-bold ${alertData.styling.titleColor}`}>
@@ -994,7 +994,7 @@ function MonthlyBill() {
                   {adminContact.phone && (
                     <a
                       href={`tel:${adminContact.phone}`}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
+                      className="flex items-center gap-2 px-4 py-2 bg-bliss-600 hover:bg-bliss-700 text-white rounded-lg text-sm font-medium transition"
                     >
                       <Phone className="w-4 h-4" />
                       โทร {adminContact.phone}
@@ -1013,7 +1013,7 @@ function MonthlyBill() {
               )}
 
               {/* Due date info */}
-              <div className="flex items-center gap-2 text-xs text-stone-600">
+              <div className="flex items-center gap-2 text-xs text-bliss-600">
                 <Clock className="w-3 h-3" />
                 <span>
                   กำหนดชำระเดิม: {getDueDate(selectedMonth)}
@@ -1037,11 +1037,11 @@ function MonthlyBill() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-6">
+            <div className="bg-gradient-to-r from-bliss-500 to-orange-500 text-white p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold">รายละเอียดการจอง</h2>
-                  <p className="text-amber-100 text-sm mt-1">
+                  <p className="text-bliss-100 text-sm mt-1">
                     วันที่ {new Date(selectedBookingForDetail.booking_date).toLocaleDateString('th-TH')}
                   </p>
                 </div>
@@ -1061,50 +1061,50 @@ function MonthlyBill() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm font-medium text-stone-500">ชื่อแขก</label>
-                      <p className="text-stone-900 font-medium">{selectedBookingForDetail.guest_name}</p>
+                      <label className="text-sm font-medium text-bliss-500">ชื่อแขก</label>
+                      <p className="text-bliss-900 font-medium">{selectedBookingForDetail.guest_name}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-stone-500">เลขห้อง</label>
-                      <p className="text-stone-900">{selectedBookingForDetail.room_number}</p>
+                      <label className="text-sm font-medium text-bliss-500">เลขห้อง</label>
+                      <p className="text-bliss-900">{selectedBookingForDetail.room_number}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-stone-500">บริการ</label>
-                      <p className="text-stone-900">{selectedBookingForDetail.service_name}</p>
+                      <label className="text-sm font-medium text-bliss-500">บริการ</label>
+                      <p className="text-bliss-900">{selectedBookingForDetail.service_name}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-stone-500">ผู้ให้บริการ</label>
-                      <p className="text-stone-900">{selectedBookingForDetail.staff_name}</p>
+                      <label className="text-sm font-medium text-bliss-500">ผู้ให้บริการ</label>
+                      <p className="text-bliss-900">{selectedBookingForDetail.staff_name}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm font-medium text-stone-500">วันที่จอง</label>
-                      <p className="text-stone-900">
+                      <label className="text-sm font-medium text-bliss-500">วันที่จอง</label>
+                      <p className="text-bliss-900">
                         {new Date(selectedBookingForDetail.booking_date).toLocaleDateString('th-TH')}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-stone-500">เวลา</label>
-                      <p className="text-stone-900">{selectedBookingForDetail.booking_time}</p>
+                      <label className="text-sm font-medium text-bliss-500">เวลา</label>
+                      <p className="text-bliss-900">{selectedBookingForDetail.booking_time}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-stone-500">ระยะเวลา</label>
-                      <p className="text-stone-900">{selectedBookingForDetail.duration} นาที</p>
+                      <label className="text-sm font-medium text-bliss-500">ระยะเวลา</label>
+                      <p className="text-bliss-900">{selectedBookingForDetail.duration} นาที</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-stone-500">สถานะ</label>
+                      <label className="text-sm font-medium text-bliss-500">สถานะ</label>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                         selectedBookingForDetail.status === 'completed'
                           ? 'bg-green-100 text-green-700'
                           : selectedBookingForDetail.status === 'in_progress'
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-bliss-100 text-bliss-700'
                           : selectedBookingForDetail.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-700'
                           : selectedBookingForDetail.status === 'cancelled'
                           ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-700'
+                          : 'bg-bliss-100 text-bliss-700'
                       }`}>
                         {selectedBookingForDetail.status === 'completed'
                           ? 'เสร็จสิ้น'
@@ -1121,45 +1121,45 @@ function MonthlyBill() {
                 </div>
 
                 {/* Price Details */}
-                <div className="border-t border-stone-200 pt-6">
-                  <h3 className="text-lg font-semibold text-stone-900 mb-4">รายละเอียดราคา</h3>
-                  <div className="bg-stone-50 rounded-lg p-4 space-y-2">
+                <div className="border-t border-bliss-200 pt-6">
+                  <h3 className="text-lg font-semibold text-bliss-900 mb-4">รายละเอียดราคา</h3>
+                  <div className="bg-bliss-50 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-stone-600">ราคาเต็ม</span>
+                      <span className="text-bliss-600">ราคาเต็ม</span>
                       <span className="font-medium">฿{selectedBookingForDetail.base_price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">ส่วนลด</span>
+                      <span className="text-bliss-600">ส่วนลด</span>
                       <span className="font-medium text-red-600">-฿{selectedBookingForDetail.discount_amount.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">รายได้โรงแรม</span>
+                      <span className="text-bliss-600">รายได้โรงแรม</span>
                       <span className="font-medium text-green-600">฿{(selectedBookingForDetail.base_price - selectedBookingForDetail.discount_amount).toLocaleString()}</span>
                     </div>
-                    <div className="border-t border-stone-200 pt-2 flex justify-between">
-                      <span className="font-semibold text-stone-900">ราคาสุดท้าย</span>
-                      <span className="font-bold text-amber-600">฿{selectedBookingForDetail.final_price.toLocaleString()}</span>
+                    <div className="border-t border-bliss-200 pt-2 flex justify-between">
+                      <span className="font-semibold text-bliss-900">ราคาสุดท้าย</span>
+                      <span className="font-bold text-bliss-600">฿{selectedBookingForDetail.final_price.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Notes */}
                 {(selectedBookingForDetail.customer_notes || selectedBookingForDetail.staff_notes) && (
-                  <div className="border-t border-stone-200 pt-6">
-                    <h3 className="text-lg font-semibold text-stone-900 mb-4">หมายเหตุ</h3>
+                  <div className="border-t border-bliss-200 pt-6">
+                    <h3 className="text-lg font-semibold text-bliss-900 mb-4">หมายเหตุ</h3>
                     <div className="space-y-3">
                       {selectedBookingForDetail.customer_notes && (
                         <div>
-                          <label className="text-sm font-medium text-stone-500">หมายเหตุจากแขก</label>
-                          <p className="text-stone-900 bg-blue-50 p-3 rounded-lg">
+                          <label className="text-sm font-medium text-bliss-500">หมายเหตุจากแขก</label>
+                          <p className="text-bliss-900 bg-bliss-50 p-3 rounded-lg">
                             {selectedBookingForDetail.customer_notes}
                           </p>
                         </div>
                       )}
                       {selectedBookingForDetail.staff_notes && (
                         <div>
-                          <label className="text-sm font-medium text-stone-500">หมายเหตุจากผู้ให้บริการ</label>
-                          <p className="text-stone-900 bg-green-50 p-3 rounded-lg">
+                          <label className="text-sm font-medium text-bliss-500">หมายเหตุจากผู้ให้บริการ</label>
+                          <p className="text-bliss-900 bg-green-50 p-3 rounded-lg">
                             {selectedBookingForDetail.staff_notes}
                           </p>
                         </div>
@@ -1171,10 +1171,10 @@ function MonthlyBill() {
             </div>
 
             {/* Modal Footer */}
-            <div className="bg-stone-50 px-6 py-4 flex justify-end">
+            <div className="bg-bliss-50 px-6 py-4 flex justify-end">
               <button
                 onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg font-medium transition-colors"
+                className="px-4 py-2 bg-bliss-200 hover:bg-bliss-300 text-bliss-700 rounded-lg font-medium transition-colors"
               >
                 ปิด
               </button>
