@@ -304,16 +304,16 @@ export function StaffAuthCallback() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bliss-50 to-bliss-100">
         <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full mx-4">
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-xl font-semibold text-bliss-800 mb-2">
               Authentication Failed
             </h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-bliss-600 mb-6">{error}</p>
             <button
               onClick={() => navigate('/staff/login', { replace: true })}
               className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
@@ -327,14 +327,14 @@ export function StaffAuthCallback() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bliss-50 to-bliss-100">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full mx-4">
         <div className="flex flex-col items-center text-center">
           <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          <h2 className="text-xl font-semibold text-bliss-800 mb-2">
             Signing you in...
           </h2>
-          <p className="text-gray-600">
+          <p className="text-bliss-600">
             Please wait while we complete your authentication.
           </p>
         </div>

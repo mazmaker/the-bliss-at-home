@@ -186,10 +186,10 @@ function StaffSchedule() {
     const badges: Record<JobStatus, string> = {
       pending: 'bg-yellow-100 text-yellow-700',
       assigned: 'bg-orange-100 text-orange-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      traveling: 'bg-indigo-100 text-indigo-700',
-      arrived: 'bg-purple-100 text-purple-700',
-      in_progress: 'bg-purple-100 text-purple-700',
+      confirmed: 'bg-bliss-100 text-bliss-700',
+      traveling: 'bg-bliss-100 text-bliss-700',
+      arrived: 'bg-bliss-100 text-bliss-700',
+      in_progress: 'bg-bliss-100 text-bliss-700',
       completed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
@@ -226,12 +226,12 @@ function StaffSchedule() {
       days.push(
         <div key={i} className="flex-1 min-w-0">
           <div
-            className={`text-center py-2 border-b ${isToday ? 'bg-amber-50' : 'bg-stone-50'}`}
+            className={`text-center py-2 border-b ${isToday ? 'bg-bliss-50' : 'bg-bliss-50'}`}
           >
-            <div className="text-xs text-stone-500">{THAI_DAYS[i]}</div>
+            <div className="text-xs text-bliss-500">{THAI_DAYS[i]}</div>
             <div
               className={`text-lg font-semibold ${
-                isToday ? 'text-amber-700' : 'text-stone-900'
+                isToday ? 'text-bliss-700' : 'text-bliss-900'
               }`}
             >
               {date.getDate()}
@@ -247,7 +247,7 @@ function StaffSchedule() {
                     ? 'bg-green-50 text-green-700'
                     : job.status === 'cancelled'
                     ? 'bg-red-50 text-red-700 line-through'
-                    : 'bg-amber-50 text-amber-700'
+                    : 'bg-bliss-50 text-bliss-700'
                 }`}
               >
                 <div className="font-medium truncate">{job.scheduled_time}</div>
@@ -267,7 +267,7 @@ function StaffSchedule() {
                     return next
                   })
                 }}
-                className="w-full text-xs text-center text-amber-700 font-medium py-1 hover:bg-amber-50 rounded transition"
+                className="w-full text-xs text-center text-bliss-700 font-medium py-1 hover:bg-bliss-50 rounded transition"
               >
                 {expandedDates.has(dateKey) ? 'ย่อ' : `+${dayJobs.length - 3} งาน`}
               </button>
@@ -305,10 +305,10 @@ function StaffSchedule() {
       days.push(
         <div
           key={day}
-          className={`aspect-square p-1 border-t ${isToday ? 'bg-amber-50' : ''}`}
+          className={`aspect-square p-1 border-t ${isToday ? 'bg-bliss-50' : ''}`}
         >
           <div
-            className={`text-xs font-medium ${isToday ? 'text-amber-700' : 'text-stone-700'}`}
+            className={`text-xs font-medium ${isToday ? 'text-bliss-700' : 'text-bliss-700'}`}
           >
             {day}
           </div>
@@ -329,13 +329,13 @@ function StaffSchedule() {
                         ? 'bg-green-500'
                         : job.status === 'cancelled'
                         ? 'bg-red-500'
-                        : 'bg-amber-500'
+                        : 'bg-bliss-500'
                     }`}
                   />
                 ))}
               </div>
               {dayJobs.length > 0 && (
-                <div className="text-[10px] text-stone-500 mt-0.5">{dayJobs.length} งาน</div>
+                <div className="text-[10px] text-bliss-500 mt-0.5">{dayJobs.length} งาน</div>
               )}
             </button>
           )}
@@ -354,9 +354,9 @@ function StaffSchedule() {
 
     return (
       <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="grid grid-cols-7 border-b bg-stone-50">
+        <div className="grid grid-cols-7 border-b bg-bliss-50">
           {THAI_DAYS.map((day) => (
-            <div key={day} className="text-center py-2 text-xs font-medium text-stone-600">
+            <div key={day} className="text-center py-2 text-xs font-medium text-bliss-600">
               {day}
             </div>
           ))}
@@ -398,8 +398,8 @@ function StaffSchedule() {
     if (todayJobs.length === 0) {
       return (
         <div className="bg-white rounded-xl p-8 text-center">
-          <Calendar className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-          <p className="text-stone-500">ไม่มีงานในวันนี้</p>
+          <Calendar className="w-12 h-12 text-bliss-300 mx-auto mb-3" />
+          <p className="text-bliss-500">ไม่มีงานในวันนี้</p>
         </div>
       )
     }
@@ -410,31 +410,31 @@ function StaffSchedule() {
           <button
             key={job.id}
             onClick={() => setSelectedJob(job)}
-            className="w-full bg-white rounded-xl shadow p-4 text-left border border-stone-100 hover:border-amber-200 transition"
+            className="w-full bg-white rounded-xl shadow p-4 text-left border border-bliss-100 hover:border-bliss-200 transition"
           >
             <div className="flex items-start justify-between mb-2">
               <div>
-                <div className="flex items-center gap-2 text-amber-700 font-semibold">
+                <div className="flex items-center gap-2 text-bliss-700 font-semibold">
                   <Clock className="w-4 h-4" />
                   {job.scheduled_time}
                 </div>
-                <h4 className="font-medium text-stone-900 mt-1">{job.service_name}</h4>
+                <h4 className="font-medium text-bliss-900 mt-1">{job.service_name}</h4>
               </div>
               {getStatusBadge(job.status)}
             </div>
-            <div className="flex items-center gap-2 text-sm text-stone-600">
+            <div className="flex items-center gap-2 text-sm text-bliss-600">
               <User className="w-4 h-4" />
               <span>{job.customer_name}</span>
             </div>
             {job.hotel_name && (
-              <div className="flex items-center gap-2 text-sm text-stone-600 mt-1">
+              <div className="flex items-center gap-2 text-sm text-bliss-600 mt-1">
                 <MapPin className="w-4 h-4" />
                 <span>{job.hotel_name}</span>
               </div>
             )}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
-              <span className="text-sm text-stone-500">{job.total_duration_minutes || job.duration_minutes} นาที</span>
-              <span className="font-bold text-amber-700">฿{job.total_staff_earnings || job.staff_earnings}</span>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-bliss-100">
+              <span className="text-sm text-bliss-500">{job.total_duration_minutes || job.duration_minutes} นาที</span>
+              <span className="font-bold text-bliss-700">฿{job.total_staff_earnings || job.staff_earnings}</span>
             </div>
           </button>
         ))}
@@ -453,8 +453,8 @@ function StaffSchedule() {
     if (upcoming.length === 0) {
       return (
         <div className="bg-white rounded-xl p-6 text-center">
-          <Calendar className="w-10 h-10 text-stone-300 mx-auto mb-2" />
-          <p className="text-sm text-stone-500">ไม่มีงานที่กำลังจะมาถึง</p>
+          <Calendar className="w-10 h-10 text-bliss-300 mx-auto mb-2" />
+          <p className="text-sm text-bliss-500">ไม่มีงานที่กำลังจะมาถึง</p>
         </div>
       )
     }
@@ -471,11 +471,11 @@ function StaffSchedule() {
             <button
               key={job.id}
               onClick={() => setSelectedJob(job)}
-              className="w-full flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-stone-100 hover:border-amber-200 transition"
+              className="w-full flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-bliss-100 hover:border-bliss-200 transition"
             >
               <div
                 className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center ${
-                  isToday ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'
+                  isToday ? 'bg-bliss-100 text-bliss-700' : 'bg-bliss-100 text-bliss-600'
                 }`}
               >
                 <span className="text-xs">
@@ -485,13 +485,13 @@ function StaffSchedule() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-amber-700">{job.scheduled_time}</span>
+                  <span className="font-semibold text-bliss-700">{job.scheduled_time}</span>
                   {getStatusBadge(job.status)}
                 </div>
-                <p className="text-sm text-stone-900 truncate">{job.service_name}</p>
-                <p className="text-xs text-stone-500 truncate">{job.customer_name}</p>
+                <p className="text-sm text-bliss-900 truncate">{job.service_name}</p>
+                <p className="text-xs text-bliss-500 truncate">{job.customer_name}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-stone-400" />
+              <ChevronRight className="w-5 h-5 text-bliss-400" />
             </button>
           )
         })}
@@ -503,8 +503,8 @@ function StaffSchedule() {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-amber-600 mx-auto" />
-          <p className="text-gray-500 mt-3">กำลังโหลด...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-bliss-600 mx-auto" />
+          <p className="text-bliss-500 mt-3">กำลังโหลด...</p>
         </div>
       </div>
     )
@@ -514,8 +514,8 @@ function StaffSchedule() {
     <div className="space-y-4 pb-4">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-stone-900">ตารางงาน</h1>
-        <p className="text-stone-500 text-sm">Schedule</p>
+        <h1 className="text-xl font-bold text-bliss-900">ตารางงาน</h1>
+        <p className="text-bliss-500 text-sm">Schedule</p>
       </div>
 
       {/* View Mode Selector */}
@@ -524,8 +524,8 @@ function StaffSchedule() {
           onClick={() => setViewMode('day')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
             viewMode === 'day'
-              ? 'bg-amber-700 text-white'
-              : 'text-stone-600 hover:bg-stone-100'
+              ? 'bg-bliss-700 text-white'
+              : 'text-bliss-600 hover:bg-bliss-100'
           }`}
         >
           <List className="w-4 h-4" />
@@ -535,8 +535,8 @@ function StaffSchedule() {
           onClick={() => setViewMode('week')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
             viewMode === 'week'
-              ? 'bg-amber-700 text-white'
-              : 'text-stone-600 hover:bg-stone-100'
+              ? 'bg-bliss-700 text-white'
+              : 'text-bliss-600 hover:bg-bliss-100'
           }`}
         >
           <Grid3X3 className="w-4 h-4" />
@@ -546,8 +546,8 @@ function StaffSchedule() {
           onClick={() => setViewMode('month')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
             viewMode === 'month'
-              ? 'bg-amber-700 text-white'
-              : 'text-stone-600 hover:bg-stone-100'
+              ? 'bg-bliss-700 text-white'
+              : 'text-bliss-600 hover:bg-bliss-100'
           }`}
         >
           <CalendarDays className="w-4 h-4" />
@@ -557,26 +557,26 @@ function StaffSchedule() {
 
       {/* Date Navigation */}
       <div className="flex items-center justify-between bg-white rounded-xl shadow-sm p-3">
-        <button onClick={goToPrevious} className="p-2 hover:bg-stone-100 rounded-lg transition">
-          <ChevronLeft className="w-5 h-5 text-stone-600" />
+        <button onClick={goToPrevious} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+          <ChevronLeft className="w-5 h-5 text-bliss-600" />
         </button>
         <div className="text-center">
-          <p className="font-semibold text-stone-900">{getDateLabel()}</p>
+          <p className="font-semibold text-bliss-900">{getDateLabel()}</p>
           <button
             onClick={goToToday}
-            className="text-xs text-amber-700 font-medium hover:underline"
+            className="text-xs text-bliss-700 font-medium hover:underline"
           >
             วันนี้
           </button>
         </div>
-        <button onClick={goToNext} className="p-2 hover:bg-stone-100 rounded-lg transition">
-          <ChevronRight className="w-5 h-5 text-stone-600" />
+        <button onClick={goToNext} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+          <ChevronRight className="w-5 h-5 text-bliss-600" />
         </button>
       </div>
 
       {/* Filter */}
       <div className="flex items-center gap-2">
-        <Filter className="w-4 h-4 text-stone-500" />
+        <Filter className="w-4 h-4 text-bliss-500" />
         <div className="flex gap-1 flex-1">
           {[
             { key: 'all', label: 'ทั้งหมด' },
@@ -588,8 +588,8 @@ function StaffSchedule() {
               onClick={() => setFilterMode(filter.key as FilterMode)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                 filterMode === filter.key
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-bliss-100 text-bliss-700'
+                  : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
               }`}
             >
               {filter.label}
@@ -601,22 +601,22 @@ function StaffSchedule() {
       {/* Summary Stats */}
       <div className="grid grid-cols-4 gap-2">
         <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-          <p className="text-lg font-bold text-stone-900">{summaryStats.totalJobs}</p>
-          <p className="text-xs text-stone-500">ทั้งหมด</p>
+          <p className="text-lg font-bold text-bliss-900">{summaryStats.totalJobs}</p>
+          <p className="text-xs text-bliss-500">ทั้งหมด</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-          <p className="text-lg font-bold text-blue-600">{summaryStats.upcomingJobs}</p>
-          <p className="text-xs text-stone-500">กำลังมา</p>
+          <p className="text-lg font-bold text-bliss-600">{summaryStats.upcomingJobs}</p>
+          <p className="text-xs text-bliss-500">กำลังมา</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center shadow-sm">
           <p className="text-lg font-bold text-green-600">{summaryStats.completedJobs}</p>
-          <p className="text-xs text-stone-500">เสร็จสิ้น</p>
+          <p className="text-xs text-bliss-500">เสร็จสิ้น</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-          <p className="text-lg font-bold text-amber-600">
+          <p className="text-lg font-bold text-bliss-600">
             {summaryStats.totalHours.toFixed(1)}
           </p>
-          <p className="text-xs text-stone-500">ชั่วโมง</p>
+          <p className="text-xs text-bliss-500">ชั่วโมง</p>
         </div>
       </div>
 
@@ -628,8 +628,8 @@ function StaffSchedule() {
       {/* Upcoming Jobs Section (always show) */}
       {viewMode !== 'day' && (
         <div className="mt-6">
-          <h3 className="font-semibold text-stone-900 mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-600" />
+          <h3 className="font-semibold text-bliss-900 mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-bliss-600" />
             งานที่กำลังจะมาถึง
           </h3>
           {renderUpcomingList()}
@@ -637,15 +637,15 @@ function StaffSchedule() {
       )}
 
       {/* Period Summary */}
-      <div className="bg-gradient-to-r from-amber-700 to-amber-800 rounded-xl p-4 text-white">
+      <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 rounded-xl p-4 text-white">
         <h3 className="font-semibold mb-3">สรุป{viewMode === 'day' ? 'วันนี้' : viewMode === 'week' ? 'สัปดาห์นี้' : 'เดือนนี้'}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-amber-200 text-sm">รายได้รวม</p>
+            <p className="text-bliss-200 text-sm">รายได้รวม</p>
             <p className="text-2xl font-bold">฿{summaryStats.totalEarnings.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-amber-200 text-sm">งานทั้งหมด</p>
+            <p className="text-bliss-200 text-sm">งานทั้งหมด</p>
             <p className="text-2xl font-bold">{summaryStats.totalJobs} งาน</p>
           </div>
         </div>
@@ -663,12 +663,12 @@ function StaffSchedule() {
           >
             {/* Header - fixed */}
             <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
-              <h3 className="font-semibold text-lg text-stone-900">รายละเอียดงาน</h3>
+              <h3 className="font-semibold text-lg text-bliss-900">รายละเอียดงาน</h3>
               <button
                 onClick={() => setSelectedJob(null)}
-                className="p-1.5 hover:bg-stone-100 rounded-lg transition"
+                className="p-1.5 hover:bg-bliss-100 rounded-lg transition"
               >
-                <X className="w-5 h-5 text-stone-600" />
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
 
@@ -677,17 +677,17 @@ function StaffSchedule() {
               {/* Status & Service */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h4 className="text-lg font-bold text-stone-900">{selectedJob.service_name}</h4>
-                  <p className="text-xs text-stone-500">{selectedJob.service_name_en}</p>
+                  <h4 className="text-lg font-bold text-bliss-900">{selectedJob.service_name}</h4>
+                  <p className="text-xs text-bliss-500">{selectedJob.service_name_en}</p>
                 </div>
                 {getStatusBadge(selectedJob.status)}
               </div>
 
               {/* Date & Time */}
-              <div className="flex items-center gap-3 px-3 py-2 bg-amber-50 rounded-xl">
-                <Calendar className="w-5 h-5 text-amber-700 shrink-0" />
+              <div className="flex items-center gap-3 px-3 py-2 bg-bliss-50 rounded-xl">
+                <Calendar className="w-5 h-5 text-bliss-700 shrink-0" />
                 <div>
-                  <p className="font-semibold text-amber-900 text-sm">
+                  <p className="font-semibold text-bliss-900 text-sm">
                     {new Date(selectedJob.scheduled_date).toLocaleDateString('th-TH', {
                       weekday: 'long',
                       day: 'numeric',
@@ -695,7 +695,7 @@ function StaffSchedule() {
                       year: 'numeric',
                     })}
                   </p>
-                  <p className="text-xs text-amber-700">
+                  <p className="text-xs text-bliss-700">
                     {selectedJob.scheduled_time} • {selectedJob.total_duration_minutes || selectedJob.duration_minutes} นาที
                   </p>
                 </div>
@@ -704,7 +704,7 @@ function StaffSchedule() {
               {/* Provider Preference */}
               {isSpecificPreference(selectedJob.provider_preference) && (
                 <div className="space-y-1">
-                  <h5 className="font-medium text-stone-900 text-sm">ความต้องการผู้ให้บริการ</h5>
+                  <h5 className="font-medium text-bliss-900 text-sm">ความต้องการผู้ให้บริการ</h5>
                   <span className={`inline-block text-xs px-2 py-1 rounded-full ${getProviderPreferenceBadgeStyle(selectedJob.provider_preference)}`}>
                     {getProviderPreferenceLabel(selectedJob.provider_preference)}
                   </span>
@@ -713,7 +713,7 @@ function StaffSchedule() {
 
               {/* Customer Info */}
               <div className="space-y-2">
-                <h5 className="font-medium text-stone-900 text-sm">ข้อมูลลูกค้า</h5>
+                <h5 className="font-medium text-bliss-900 text-sm">ข้อมูลลูกค้า</h5>
                 <div className="flex items-center gap-3">
                   {selectedJob.customer_avatar_url ? (
                     <img
@@ -722,16 +722,16 @@ function StaffSchedule() {
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-stone-500" />
+                    <div className="w-10 h-10 bg-bliss-200 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-bliss-500" />
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-stone-900 text-sm">{selectedJob.customer_name}</p>
+                    <p className="font-medium text-bliss-900 text-sm">{selectedJob.customer_name}</p>
                     {selectedJob.customer_phone && (
                       <a
                         href={`tel:${selectedJob.customer_phone}`}
-                        className="text-xs text-amber-700 flex items-center gap-1"
+                        className="text-xs text-bliss-700 flex items-center gap-1"
                       >
                         <Phone className="w-3 h-3" />
                         {selectedJob.customer_phone}
@@ -743,27 +743,27 @@ function StaffSchedule() {
 
               {/* Location */}
               <div className="space-y-1.5">
-                <h5 className="font-medium text-stone-900 text-sm">สถานที่</h5>
+                <h5 className="font-medium text-bliss-900 text-sm">สถานที่</h5>
                 {selectedJob.hotel_name && (
-                  <p className="text-sm text-stone-700">
+                  <p className="text-sm text-bliss-700">
                     {selectedJob.hotel_name}
                     {selectedJob.room_number && ` ห้อง ${selectedJob.room_number}`}
                   </p>
                 )}
                 {selectedJob.address && (
-                  <p className="text-xs text-stone-600">{selectedJob.address}</p>
+                  <p className="text-xs text-bliss-600">{selectedJob.address}</p>
                 )}
                 {selectedJob.latitude && selectedJob.longitude && (
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${selectedJob.latitude},${selectedJob.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-medium"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg text-xs font-medium"
                   >
                     <Navigation className="w-3.5 h-3.5" />
                     นำทาง
                     {selectedJob.distance_km && (
-                      <span className="text-amber-600">({selectedJob.distance_km} กม.)</span>
+                      <span className="text-bliss-600">({selectedJob.distance_km} กม.)</span>
                     )}
                   </a>
                 )}
@@ -772,25 +772,25 @@ function StaffSchedule() {
               {/* Gender Preference */}
               {selectedJob.bookings?.provider_preference && selectedJob.bookings.provider_preference !== 'no-preference' && (
                 <div className="space-y-1">
-                  <h5 className="font-medium text-stone-900 text-sm">ความต้องการเพศของผู้ให้บริการ</h5>
+                  <h5 className="font-medium text-bliss-900 text-sm">ความต้องการเพศของผู้ให้บริการ</h5>
                   <div className="flex flex-wrap gap-1">
                     {selectedJob.bookings.provider_preference === 'female-only' && (
-                      <span className="px-2 py-1 text-xs font-medium bg-pink-100 text-pink-700 rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-bliss-100 text-bliss-700 rounded-full">
                         ผู้หญิงเท่านั้น (บังคับ)
                       </span>
                     )}
                     {selectedJob.bookings.provider_preference === 'male-only' && (
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-bliss-100 text-bliss-700 rounded-full">
                         ผู้ชายเท่านั้น (บังคับ)
                       </span>
                     )}
                     {selectedJob.bookings.provider_preference === 'prefer-female' && (
-                      <span className="px-2 py-1 text-xs font-medium bg-pink-50 text-pink-600 rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-bliss-50 text-bliss-600 rounded-full">
                         ต้องการผู้หญิง (ยืดหยุ่น)
                       </span>
                     )}
                     {selectedJob.bookings.provider_preference === 'prefer-male' && (
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-bliss-50 text-bliss-600 rounded-full">
                         ต้องการผู้ชาย (ยืดหยุ่น)
                       </span>
                     )}
@@ -801,8 +801,8 @@ function StaffSchedule() {
               {/* Notes */}
               {selectedJob.customer_notes && (
                 <div className="space-y-1">
-                  <h5 className="font-medium text-stone-900 text-sm">หมายเหตุจากลูกค้า</h5>
-                  <p className="text-xs text-stone-600 bg-stone-50 p-2 rounded-lg">
+                  <h5 className="font-medium text-bliss-900 text-sm">หมายเหตุจากลูกค้า</h5>
+                  <p className="text-xs text-bliss-600 bg-bliss-50 p-2 rounded-lg">
                     {selectedJob.customer_notes}
                   </p>
                 </div>
@@ -821,7 +821,7 @@ function StaffSchedule() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-green-600">รายได้เดิม: ฿{selectedJob.staff_earnings?.toLocaleString()}</span>
-                      <span className="text-amber-600">รวมค่าเพิ่มเวลาบริการแล้ว</span>
+                      <span className="text-bliss-600">รวมค่าเพิ่มเวลาบริการแล้ว</span>
                     </div>
                   </div>
                 ) : (
@@ -837,13 +837,13 @@ function StaffSchedule() {
             </div>
 
             {/* Action Buttons - fixed at bottom */}
-            <div className="p-3 border-t border-stone-100 flex gap-2 shrink-0">
+            <div className="p-3 border-t border-bliss-100 flex gap-2 shrink-0">
               <button
                 onClick={() => {
                   setSelectedJob(null)
                   navigate(`/staff/jobs/${selectedJob.id}`)
                 }}
-                className="flex-1 py-2.5 bg-amber-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
+                className="flex-1 py-2.5 bg-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
               >
                 <ExternalLink className="w-4 h-4" />
                 ดูรายละเอียด

@@ -60,8 +60,8 @@ export default function BookingList() {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลดรายการจอง...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-500 mx-auto mb-4"></div>
+          <p className="text-bliss-600">กำลังโหลดรายการจอง...</p>
         </div>
       </div>
     )
@@ -71,11 +71,11 @@ export default function BookingList() {
     return (
       <div className="flex flex-col items-center justify-center min-h-64 px-4">
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">เกิดข้อผิดพลาด</h3>
-        <p className="text-gray-600 text-center mb-4">{error}</p>
+        <h3 className="text-lg font-semibold text-bliss-900 mb-2">เกิดข้อผิดพลาด</h3>
+        <p className="text-bliss-600 text-center mb-4">{error}</p>
         <button
           onClick={handleRefresh}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          className="bg-bliss-500 text-white px-4 py-2 rounded-lg hover:bg-bliss-600 transition-colors"
         >
           ลองใหม่อีกครั้ง
         </button>
@@ -84,14 +84,14 @@ export default function BookingList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bliss-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white shadow-sm border-b border-bliss-200 sticky top-0 z-10">
         <div className="p-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">งานของคุณ</h1>
-              <p className="text-gray-600">
+              <h1 className="text-2xl font-bold text-bliss-900">งานของคุณ</h1>
+              <p className="text-bliss-600">
                 {totalBookings > 0 ? `${totalBookings} งานรอดำเนินการ` : 'ไม่มีงานในขณะนี้'}
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function BookingList() {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-bliss-500 hover:text-bliss-700 hover:bg-bliss-100 rounded-lg transition-colors"
             >
               <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
@@ -108,10 +108,10 @@ export default function BookingList() {
           {/* Stats */}
           {totalBookings > 0 && (
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-blue-50 rounded-lg p-3 text-center">
-                <Calendar className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-                <div className="text-lg font-bold text-blue-600">{todayBookings}</div>
-                <div className="text-xs text-blue-600">งานวันนี้</div>
+              <div className="bg-bliss-50 rounded-lg p-3 text-center">
+                <Calendar className="w-5 h-5 text-bliss-500 mx-auto mb-1" />
+                <div className="text-lg font-bold text-bliss-600">{todayBookings}</div>
+                <div className="text-xs text-bliss-600">งานวันนี้</div>
               </div>
 
               <div className="bg-green-50 rounded-lg p-3 text-center">
@@ -120,10 +120,10 @@ export default function BookingList() {
                 <div className="text-xs text-green-600">กำลังเดินทาง</div>
               </div>
 
-              <div className="bg-purple-50 rounded-lg p-3 text-center">
-                <RefreshCw className="w-5 h-5 text-purple-500 mx-auto mb-1" />
-                <div className="text-lg font-bold text-purple-600">{totalBookings}</div>
-                <div className="text-xs text-purple-600">ทั้งหมด</div>
+              <div className="bg-bliss-50 rounded-lg p-3 text-center">
+                <RefreshCw className="w-5 h-5 text-bliss-500 mx-auto mb-1" />
+                <div className="text-lg font-bold text-bliss-600">{totalBookings}</div>
+                <div className="text-xs text-bliss-600">ทั้งหมด</div>
               </div>
             </div>
           )}
@@ -135,14 +135,14 @@ export default function BookingList() {
         {totalBookings === 0 ? (
           /* Empty State */
           <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">ไม่มีงานในขณะนี้</h3>
-            <p className="text-gray-600 mb-6">
+            <Calendar className="w-16 h-16 text-bliss-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-bliss-900 mb-2">ไม่มีงานในขณะนี้</h3>
+            <p className="text-bliss-600 mb-6">
               คุณไม่มีงานที่ต้องดำเนินการในขณะนี้
             </p>
             <button
               onClick={handleRefresh}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              className="bg-bliss-500 text-white px-6 py-2 rounded-lg hover:bg-bliss-600 transition-colors"
             >
               ตรวจสอบงานใหม่
             </button>
@@ -154,11 +154,11 @@ export default function BookingList() {
               <div key={date}>
                 {/* Date Header */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px bg-gray-300 flex-1"></div>
-                  <h2 className="text-lg font-semibold text-gray-700 bg-gray-50 px-4 py-2 rounded-full">
+                  <div className="h-px bg-bliss-300 flex-1"></div>
+                  <h2 className="text-lg font-semibold text-bliss-700 bg-bliss-50 px-4 py-2 rounded-full">
                     {formatDateHeader(date)}
                   </h2>
-                  <div className="h-px bg-gray-300 flex-1"></div>
+                  <div className="h-px bg-bliss-300 flex-1"></div>
                 </div>
 
                 {/* Bookings for this date */}

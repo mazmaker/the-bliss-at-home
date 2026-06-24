@@ -9,8 +9,8 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
-  color: rgba(55, 65, 81, 1);
-  background-color: #fafaf9;
+  color: #1a1a1a;
+  background-color: #fbfaf6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -53,16 +53,16 @@ textarea {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #ebe6d0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: #dfd9b9;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+  background: #c8c29c;
 }
 
 /* Animations */

@@ -3,7 +3,7 @@
  * Shows fixed earnings amount set by admin (not calculated from time)
  */
 
-import { DollarSign, Clock } from 'lucide-react'
+import { Wallet, Clock } from 'lucide-react'
 
 interface EarningsCardProps {
   serviceDuration?: number // Current service duration in minutes
@@ -30,10 +30,10 @@ export function EarningsCard({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+    <div className="bg-white border border-bliss-200 rounded-xl p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
-        <DollarSign className="w-5 h-5 text-green-600" />
-        <span className="font-medium text-gray-900">รายได้งาน</span>
+        <Wallet className="w-5 h-5 text-green-600" />
+        <span className="font-medium text-bliss-900">รายได้งาน</span>
         {isServiceActive && (
           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
             🟢 กำลังทำงาน
@@ -59,25 +59,25 @@ export function EarningsCard({
 
         {/* Travel Compensation */}
         {travelCompensation > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-blue-700">ค่าชดเชยการเดินทาง</span>
-              <span className="font-medium text-blue-600">+{travelCompensation.toLocaleString()} บาท</span>
+              <span className="text-sm text-bliss-700">ค่าชดเชยการเดินทาง</span>
+              <span className="font-medium text-bliss-600">+{travelCompensation.toLocaleString()} บาท</span>
             </div>
           </div>
         )}
 
         {/* Service Time Info */}
         {showServiceTime && isServiceActive && (
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+          <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-purple-600" />
-                <span className="text-sm text-purple-700">เวลาบริการปัจจุบัน</span>
+                <Clock className="w-4 h-4 text-bliss-600" />
+                <span className="text-sm text-bliss-700">เวลาบริการปัจจุบัน</span>
               </div>
-              <span className="font-medium text-purple-600">{formatDuration(serviceDuration)}</span>
+              <span className="font-medium text-bliss-600">{formatDuration(serviceDuration)}</span>
             </div>
-            <div className="text-xs text-purple-600 mt-1">
+            <div className="text-xs text-bliss-600 mt-1">
               * รายได้ไม่ขึ้นอยู่กับเวลา (จำนวนคงที่)
             </div>
           </div>
@@ -86,13 +86,13 @@ export function EarningsCard({
         {/* Total Earnings */}
         <div className="border-t pt-3">
           <div className="flex justify-between items-center">
-            <span className="font-semibold text-gray-900">รวมรายได้ทั้งหมด</span>
+            <span className="font-semibold text-bliss-900">รวมรายได้ทั้งหมด</span>
             <span className="text-2xl font-bold text-green-600">
               {totalEarnings.toLocaleString()} บาท
             </span>
           </div>
 
-          <div className="text-xs text-gray-500 mt-2 text-center">
+          <div className="text-xs text-bliss-500 mt-2 text-center">
             {isServiceActive ?
               "💰 จะได้รับหลังจากบริการเสร็จสิ้น" :
               "💳 ตามที่แอดมินกำหนดล่วงหน้า"

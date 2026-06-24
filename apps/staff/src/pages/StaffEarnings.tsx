@@ -4,7 +4,7 @@ import {
   Download,
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Wallet,
   PieChart,
   CreditCard,
   Clock,
@@ -219,7 +219,7 @@ function StaffEarnings() {
   const getPayoutStatusBadge = (status: PayoutStatus) => {
     const styles: Record<PayoutStatus, string> = {
       pending: 'bg-yellow-100 text-yellow-700',
-      processing: 'bg-blue-100 text-blue-700',
+      processing: 'bg-bliss-100 text-bliss-700',
       completed: 'bg-green-100 text-green-700',
       failed: 'bg-red-100 text-red-700',
     }
@@ -252,8 +252,8 @@ function StaffEarnings() {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-amber-600 mx-auto" />
-          <p className="text-gray-500 mt-3">กำลังโหลด...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-bliss-600 mx-auto" />
+          <p className="text-bliss-500 mt-3">กำลังโหลด...</p>
         </div>
       </div>
     )
@@ -264,11 +264,11 @@ function StaffEarnings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-stone-900">รายได้</h1>
-          <p className="text-stone-500 text-sm">Earnings</p>
+          <h1 className="text-xl font-bold text-bliss-900">รายได้</h1>
+          <p className="text-bliss-500 text-sm">Earnings</p>
         </div>
-        <button className="p-2 bg-white rounded-lg shadow-sm border border-stone-200">
-          <Download className="w-5 h-5 text-stone-600" />
+        <button className="p-2 bg-white rounded-lg shadow-sm border border-bliss-200">
+          <Download className="w-5 h-5 text-bliss-600" />
         </button>
       </div>
 
@@ -285,8 +285,8 @@ function StaffEarnings() {
             onClick={() => setViewPeriod(period.key as ViewPeriod)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
               viewPeriod === period.key
-                ? 'bg-amber-700 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
+                ? 'bg-bliss-700 text-white'
+                : 'text-bliss-600 hover:bg-bliss-100'
             }`}
           >
             {period.label}
@@ -296,19 +296,19 @@ function StaffEarnings() {
 
       {/* Date Navigation */}
       <div className="flex items-center justify-between bg-white rounded-xl shadow-sm p-3">
-        <button onClick={goToPrevious} className="p-2 hover:bg-stone-100 rounded-lg transition">
-          <ChevronLeft className="w-5 h-5 text-stone-600" />
+        <button onClick={goToPrevious} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+          <ChevronLeft className="w-5 h-5 text-bliss-600" />
         </button>
         <div className="text-center">
-          <p className="font-semibold text-stone-900">{getPeriodLabel()}</p>
+          <p className="font-semibold text-bliss-900">{getPeriodLabel()}</p>
         </div>
-        <button onClick={goToNext} className="p-2 hover:bg-stone-100 rounded-lg transition">
-          <ChevronRight className="w-5 h-5 text-stone-600" />
+        <button onClick={goToNext} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+          <ChevronRight className="w-5 h-5 text-bliss-600" />
         </button>
       </div>
 
       {/* Earnings Summary Card */}
-      <div className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl shadow-lg p-4 text-white">
+      <div className="bg-gradient-to-br from-bliss-700 to-bliss-800 rounded-2xl shadow-lg p-4 text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-sm opacity-90">รายได้{
@@ -354,10 +354,10 @@ function StaffEarnings() {
               // Enhanced design for Day view only
               <>
                 <div className="flex items-center gap-2 mb-5">
-                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm font-bold text-amber-700">฿</span>
+                  <div className="w-8 h-8 bg-bliss-100 rounded-lg flex items-center justify-center">
+                    <span className="text-sm font-bold text-bliss-700">฿</span>
                   </div>
-                  <h3 className="font-semibold text-stone-900">รายได้รายวัน</h3>
+                  <h3 className="font-semibold text-bliss-900">รายได้รายวัน</h3>
                 </div>
 
                 <div className="flex justify-center">
@@ -372,7 +372,7 @@ function StaffEarnings() {
                         {/* Earnings amount on top */}
                         {hasEarnings && (
                           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-                            <span className="text-sm font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-lg whitespace-nowrap shadow-sm">
+                            <span className="text-sm font-bold text-bliss-700 bg-bliss-50 px-3 py-1 rounded-lg whitespace-nowrap shadow-sm">
                               ฿{day.earnings.toLocaleString()}
                             </span>
                           </div>
@@ -383,9 +383,9 @@ function StaffEarnings() {
                           className={`w-16 rounded-lg shadow-lg transition-all ${
                             hasEarnings
                               ? isToday
-                                ? 'bg-gradient-to-t from-green-600 to-green-500'
-                                : 'bg-gradient-to-t from-amber-600 to-amber-500'
-                              : 'bg-gradient-to-t from-stone-200 to-stone-100'
+                                ? 'bg-gradient-to-t from-bliss-600 to-bliss-500'
+                                : 'bg-gradient-to-t from-bliss-600 to-bliss-500'
+                              : 'bg-gradient-to-t from-bliss-200 to-bliss-100'
                           }`}
                           style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 160, hasEarnings ? 12 : 8)}px` }}
                         />
@@ -397,8 +397,8 @@ function StaffEarnings() {
                           isToday
                             ? 'text-green-700 bg-green-100 px-3 py-1 rounded-full'
                             : hasEarnings
-                              ? 'text-amber-700'
-                              : 'text-stone-400'
+                              ? 'text-bliss-700'
+                              : 'text-bliss-400'
                         }`}>
                           {dayDate.getDate()}
                         </span>
@@ -414,7 +414,7 @@ function StaffEarnings() {
           ) : (
             // Original simple design for Week/Month views
             <>
-              <h3 className="font-semibold text-stone-900 mb-4">รายได้รายวัน</h3>
+              <h3 className="font-semibold text-bliss-900 mb-4">รายได้รายวัน</h3>
               <div className="flex justify-between gap-0.5 h-32">
                 {chartData.map((day) => {
                   const dayDate = new Date(day.date)
@@ -424,14 +424,14 @@ function StaffEarnings() {
                         <div
                           className={`w-full rounded-t-lg transition-all ${
                             day.earnings > 0
-                              ? 'bg-gradient-to-t from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700'
-                              : 'bg-stone-200'
+                              ? 'bg-gradient-to-t from-bliss-700 to-bliss-600 hover:from-bliss-800 hover:to-bliss-700'
+                              : 'bg-bliss-200'
                           }`}
                           style={{ height: `${Math.max((day.earnings / maxDailyEarning) * 100, 4)}%` }}
                           title={`${day.date}: ฿${day.earnings.toLocaleString()}`}
                         />
                       </div>
-                      <span className="text-[10px] text-stone-500 mt-1">{dayDate.getDate()}</span>
+                      <span className="text-[10px] text-bliss-500 mt-1">{dayDate.getDate()}</span>
                     </div>
                   )
                 })}
@@ -442,11 +442,11 @@ function StaffEarnings() {
         ) : (
           // Empty state when no data
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-stone-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl text-stone-400">📊</span>
+            <div className="w-16 h-16 bg-bliss-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl text-bliss-400">📊</span>
             </div>
-            <h3 className="font-semibold text-stone-900 mb-2">ยังไม่มีข้อมูลรายได้</h3>
-            <p className="text-sm text-stone-500">
+            <h3 className="font-semibold text-bliss-900 mb-2">ยังไม่มีข้อมูลรายได้</h3>
+            <p className="text-sm text-bliss-500">
               {viewPeriod === 'day' ? 'วันนี้' :
                viewPeriod === 'week' ? '7 วันนี้' :
                viewPeriod === '15days' ? '15 วันนี้' :
@@ -460,21 +460,21 @@ function StaffEarnings() {
       {services.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center gap-2 mb-4">
-            <PieChart className="w-5 h-5 text-stone-400" />
-            <h3 className="font-semibold text-stone-900">แยกตามบริการ</h3>
+            <PieChart className="w-5 h-5 text-bliss-400" />
+            <h3 className="font-semibold text-bliss-900">แยกตามบริการ</h3>
           </div>
           <div className="space-y-3">
             {services.map((item) => (
               <div key={item.service_name}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-stone-700">{item.service_name}</span>
-                  <span className="text-sm text-stone-500">
+                  <span className="text-sm font-medium text-bliss-700">{item.service_name}</span>
+                  <span className="text-sm text-bliss-500">
                     {item.total_jobs} งาน • ฿{item.total_earnings.toLocaleString()}
                   </span>
                 </div>
-                <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-bliss-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-700 to-amber-600 rounded-full transition-all"
+                    className="h-full bg-gradient-to-r from-bliss-700 to-bliss-600 rounded-full transition-all"
                     style={{ width: `${item.percentage}%` }}
                   />
                 </div>
@@ -502,9 +502,9 @@ function StaffEarnings() {
             />
             <button
               onClick={() => setShowPayoutSchedule(false)}
-              className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-colors"
+              className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm hover:bg-bliss-100 transition-colors"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-bliss-500" />
             </button>
           </div>
         </div>
@@ -514,7 +514,7 @@ function StaffEarnings() {
       {payoutInfo && !showPayoutSchedule && (
         <button
           onClick={() => setShowPayoutSchedule(true)}
-          className="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+          className="w-full p-3 bg-bliss-50 border border-bliss-200 rounded-lg text-bliss-700 font-medium hover:bg-bliss-100 transition-colors flex items-center justify-center gap-2"
         >
           <Calendar className="w-4 h-4" />
           ดูรอบการจ่ายเงิน
@@ -524,9 +524,9 @@ function StaffEarnings() {
       {/* Payout History */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-stone-900">ประวัติการโอนเงิน</h3>
+          <h3 className="font-semibold text-bliss-900">ประวัติการโอนเงิน</h3>
           {payouts.some((p) => p.status === 'completed' && !p.transfer_reference) && (
-            <span className="flex items-center gap-1 text-xs text-amber-600">
+            <span className="flex items-center gap-1 text-xs text-bliss-600">
               <BellRing className="w-3 h-3" />
               มีรายการใหม่
             </span>
@@ -535,8 +535,8 @@ function StaffEarnings() {
 
         {payouts.length === 0 ? (
           <div className="text-center py-8">
-            <CreditCard className="w-10 h-10 text-stone-300 mx-auto mb-2" />
-            <p className="text-sm text-stone-500">ยังไม่มีประวัติการโอนเงิน</p>
+            <CreditCard className="w-10 h-10 text-bliss-300 mx-auto mb-2" />
+            <p className="text-sm text-bliss-500">ยังไม่มีประวัติการโอนเงิน</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -544,7 +544,7 @@ function StaffEarnings() {
               <button
                 key={payout.id}
                 onClick={() => setShowPayoutDetail(payout)}
-                className="w-full flex items-center justify-between py-3 px-3 bg-stone-50 rounded-xl hover:bg-stone-100 transition text-left"
+                className="w-full flex items-center justify-between py-3 px-3 bg-bliss-50 rounded-xl hover:bg-bliss-100 transition text-left"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -553,7 +553,7 @@ function StaffEarnings() {
                         ? 'bg-green-100'
                         : payout.status === 'failed'
                         ? 'bg-red-100'
-                        : 'bg-amber-100'
+                        : 'bg-bliss-100'
                     }`}
                   >
                     {payout.status === 'completed' ? (
@@ -561,11 +561,11 @@ function StaffEarnings() {
                     ) : payout.status === 'failed' ? (
                       <AlertCircle className="w-5 h-5 text-red-600" />
                     ) : (
-                      <Clock className="w-5 h-5 text-amber-600" />
+                      <Clock className="w-5 h-5 text-bliss-600" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-stone-900">
+                    <p className="font-medium text-bliss-900">
                       {new Date(payout.period_start).toLocaleDateString('th-TH-u-ca-gregory', {
                         day: 'numeric',
                         month: 'short',
@@ -576,7 +576,7 @@ function StaffEarnings() {
                         month: 'short',
                       })}
                     </p>
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-bliss-500">
                       {payout.total_jobs} งาน
                       {(payout as any).payout_round === 'mid-month' && ' • งวดแรก'}
                       {(payout as any).payout_round === 'end-month' && ' • งวดหลัง'}
@@ -585,7 +585,7 @@ function StaffEarnings() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-stone-900">
+                  <p className="font-bold text-bliss-900">
                     ฿{payout.net_amount.toLocaleString()}
                   </p>
                   {getPayoutStatusBadge(payout.status)}
@@ -599,18 +599,18 @@ function StaffEarnings() {
       {/* Bank Account Info Link */}
       <a
         href="/staff/profile#bank"
-        className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:bg-stone-50 transition"
+        className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:bg-bliss-50 transition"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-blue-600" />
+          <div className="w-10 h-10 bg-bliss-100 rounded-xl flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-bliss-600" />
           </div>
           <div>
-            <p className="font-medium text-stone-900">บัญชีรับเงิน</p>
-            <p className="text-xs text-stone-500">ตั้งค่าบัญชีธนาคารสำหรับรับชำระเงิน</p>
+            <p className="font-medium text-bliss-900">บัญชีรับเงิน</p>
+            <p className="text-xs text-bliss-500">ตั้งค่าบัญชีธนาคารสำหรับรับชำระเงิน</p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-stone-400" />
+        <ChevronRight className="w-5 h-5 text-bliss-400" />
       </a>
 
       {/* Payout Detail Modal */}
@@ -618,26 +618,26 @@ function StaffEarnings() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-20" onClick={() => setShowPayoutDetail(null)}>
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] overflow-hidden shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
-              <h3 className="font-semibold text-lg text-stone-900">รายละเอียดการโอนเงิน</h3>
+              <h3 className="font-semibold text-lg text-bliss-900">รายละเอียดการโอนเงิน</h3>
               <button
                 onClick={() => setShowPayoutDetail(null)}
-                className="p-1.5 hover:bg-stone-100 rounded-lg transition"
+                className="p-1.5 hover:bg-bliss-100 rounded-lg transition"
               >
-                <X className="w-5 h-5 text-stone-600" />
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
 
             <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
               {/* Status */}
               <div className="flex items-center justify-between">
-                <span className="text-stone-500">สถานะ</span>
+                <span className="text-bliss-500">สถานะ</span>
                 {getPayoutStatusBadge(showPayoutDetail.status)}
               </div>
 
               {/* Round label */}
               {(showPayoutDetail as any).payout_round && (
                 <div className="flex items-center justify-between">
-                  <span className="text-stone-500">รอบ</span>
+                  <span className="text-bliss-500">รอบ</span>
                   <span className="font-medium">
                     {(showPayoutDetail as any).payout_round === 'mid-month' ? 'งวดแรก (วันที่ 16)' : 'งวดหลัง (วันที่ 1)'}
                   </span>
@@ -646,7 +646,7 @@ function StaffEarnings() {
 
               {/* Period */}
               <div className="flex items-center justify-between">
-                <span className="text-stone-500">ช่วงเวลา</span>
+                <span className="text-bliss-500">ช่วงเวลา</span>
                 <span className="font-medium">
                   {new Date(showPayoutDetail.period_start).toLocaleDateString('th-TH-u-ca-gregory')}
                   {' - '}
@@ -663,32 +663,32 @@ function StaffEarnings() {
               )}
 
               {/* Earnings breakdown */}
-              <div className="bg-stone-50 rounded-xl p-4 space-y-2">
+              <div className="bg-bliss-50 rounded-xl p-4 space-y-2">
                 <div className="flex justify-between font-bold">
                   <span>ยอดโอน</span>
-                  <span className="text-amber-700">฿{showPayoutDetail.gross_earnings.toLocaleString()}</span>
+                  <span className="text-bliss-700">฿{showPayoutDetail.gross_earnings.toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Jobs count */}
               <div className="flex items-center justify-between">
-                <span className="text-stone-500">จำนวนงาน</span>
+                <span className="text-bliss-500">จำนวนงาน</span>
                 <span className="font-medium">{showPayoutDetail.total_jobs} งาน</span>
               </div>
 
               {/* Transfer Reference */}
               {showPayoutDetail.transfer_reference && (
                 <div className="flex items-center justify-between">
-                  <span className="text-stone-500">เลขที่อ้างอิง</span>
+                  <span className="text-bliss-500">เลขที่อ้างอิง</span>
                   <button
                     onClick={() => copyReference(showPayoutDetail.transfer_reference!)}
-                    className="flex items-center gap-2 font-mono text-sm bg-stone-100 px-3 py-1.5 rounded-lg"
+                    className="flex items-center gap-2 font-mono text-sm bg-bliss-100 px-3 py-1.5 rounded-lg"
                   >
                     {showPayoutDetail.transfer_reference}
                     {copiedRef === showPayoutDetail.transfer_reference ? (
                       <Check className="w-4 h-4 text-green-600" />
                     ) : (
-                      <Copy className="w-4 h-4 text-stone-400" />
+                      <Copy className="w-4 h-4 text-bliss-400" />
                     )}
                   </button>
                 </div>
@@ -697,7 +697,7 @@ function StaffEarnings() {
               {/* Transfer date */}
               {showPayoutDetail.transferred_at && (
                 <div className="flex items-center justify-between">
-                  <span className="text-stone-500">วันที่โอน</span>
+                  <span className="text-bliss-500">วันที่โอน</span>
                   <span className="font-medium">
                     {new Date(showPayoutDetail.transferred_at).toLocaleDateString('th-TH-u-ca-gregory', {
                       day: 'numeric',
@@ -713,11 +713,11 @@ function StaffEarnings() {
               {/* Transfer Slip */}
               {showPayoutDetail.transfer_slip_url && (
                 <div>
-                  <p className="text-stone-500 mb-2">สลิปการโอน</p>
+                  <p className="text-bliss-500 mb-2">สลิปการโอน</p>
                   <img
                     src={showPayoutDetail.transfer_slip_url}
                     alt="Transfer Slip"
-                    className="w-full rounded-xl border border-stone-200"
+                    className="w-full rounded-xl border border-bliss-200"
                   />
                 </div>
               )}
@@ -725,12 +725,12 @@ function StaffEarnings() {
               {/* Payout Jobs */}
               {payoutJobs.length > 0 && (
                 <div>
-                  <p className="text-stone-500 mb-2">งานในรอบนี้ ({payoutJobs.length} งาน)</p>
+                  <p className="text-bliss-500 mb-2">งานในรอบนี้ ({payoutJobs.length} งาน)</p>
                   <div className="space-y-1.5">
                     {payoutJobs.map((pj: any) => (
-                      <div key={pj.id} className="flex justify-between text-sm bg-stone-50 px-3 py-2 rounded-lg">
-                        <span className="text-stone-700">{pj.job?.service_name || 'งาน'}</span>
-                        <span className="font-medium text-stone-900">
+                      <div key={pj.id} className="flex justify-between text-sm bg-bliss-50 px-3 py-2 rounded-lg">
+                        <span className="text-bliss-700">{pj.job?.service_name || 'งาน'}</span>
+                        <span className="font-medium text-bliss-900">
                           ฿{(pj.job?.total_staff_earnings || pj.job?.staff_earnings || pj.amount || 0).toLocaleString()}
                         </span>
                       </div>
@@ -742,8 +742,8 @@ function StaffEarnings() {
               {/* Notes */}
               {showPayoutDetail.notes && (
                 <div>
-                  <p className="text-stone-500 mb-1">หมายเหตุ</p>
-                  <p className="text-sm text-stone-700 bg-stone-50 p-3 rounded-lg">
+                  <p className="text-bliss-500 mb-1">หมายเหตุ</p>
+                  <p className="text-sm text-bliss-700 bg-bliss-50 p-3 rounded-lg">
                     {showPayoutDetail.notes}
                   </p>
                 </div>

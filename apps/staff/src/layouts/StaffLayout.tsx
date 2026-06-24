@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home,
   Clock,
-  DollarSign,
+  Wallet,
   User,
   Settings,
   LogOut,
@@ -22,7 +22,7 @@ const navigation = [
   { name: 'หน้าแรก', nameEn: 'Home', href: '/staff', icon: Home },
   { name: 'ติดตาม GPS', nameEn: 'GPS Tracking', href: '/staff/tracking', icon: Navigation },
   { name: 'ตารางงาน', nameEn: 'Schedule', href: '/staff/schedule', icon: Clock },
-  { name: 'รายได้', nameEn: 'Earnings', href: '/staff/earnings', icon: DollarSign },
+  { name: 'รายได้', nameEn: 'Earnings', href: '/staff/earnings', icon: Wallet },
   { name: 'โปรไฟล์', nameEn: 'Profile', href: '/staff/profile', icon: User },
   { name: 'ตั้งค่า', nameEn: 'Settings', href: '/staff/settings', icon: Settings },
 ]
@@ -132,7 +132,7 @@ function StaffLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-20">
+    <div className="min-h-screen bg-bliss-50 pb-20">
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
@@ -141,14 +141,14 @@ function StaffLayout() {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <LogOut className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">ออกจากระบบ</h3>
-              <p className="text-sm text-gray-500 mb-6">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-2">ออกจากระบบ</h3>
+              <p className="text-sm text-bliss-500 mb-6">
                 คุณต้องการออกจากระบบใช่หรือไม่?
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2.5 border border-bliss-300 rounded-xl text-bliss-700 font-medium hover:bg-bliss-50 transition"
                 >
                   ยกเลิก
                 </button>
@@ -182,16 +182,23 @@ function StaffLayout() {
       />
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-700 to-amber-800 text-white sticky top-0 z-30">
+      <header className="bg-gradient-to-r from-bliss-700 to-bliss-800 text-white sticky top-0 z-30">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-bold">The Bliss Massage at Home</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <img
+              src="/logo.jpg"
+              alt="The Bliss Massage at Home"
+              className="h-12 w-12 object-contain rounded-full bg-white/95 p-0.5 shadow-sm flex-shrink-0"
+            />
+            <span className="text-xs font-semibold leading-tight">The Bliss Massage<br />at Home</span>
+          </div>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowAvailabilityConfirm(true)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
                 isAvailable
                   ? 'bg-green-500/90 text-white hover:bg-green-500'
-                  : 'bg-white/15 text-amber-100 hover:bg-white/25'
+                  : 'bg-white/15 text-bliss-100 hover:bg-white/25'
               }`}
               title={
                 isAvailable
@@ -199,7 +206,7 @@ function StaffLayout() {
                   : 'กำลังหยุดรับงาน — แตะเพื่อกลับมาพร้อมรับงาน'
               }
             >
-              <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-white' : 'bg-amber-300'}`} />
+              <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-white' : 'bg-bliss-300'}`} />
               {isAvailable ? 'พร้อมรับงาน' : 'หยุดรับงาน'}
             </button>
             <button
@@ -240,7 +247,7 @@ function StaffLayout() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-bliss-200 z-50">
         <div className="flex items-center justify-around py-2">
           {navigation.map((item) => {
             const Icon = item.icon
@@ -250,10 +257,10 @@ function StaffLayout() {
                 key={item.name}
                 to={item.href}
                 className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition min-w-0 ${
-                  isActive ? 'text-amber-700' : 'text-stone-500'
+                  isActive ? 'text-bliss-700' : 'text-bliss-500'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'fill-amber-700' : ''}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'fill-bliss-700' : ''}`} />
                 <span className="text-xs font-medium truncate">{item.name}</span>
               </Link>
             )

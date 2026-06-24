@@ -1,4 +1,4 @@
-import { X, Bell, CheckCircle, AlertCircle, Info, DollarSign, UserX, UserCheck, Star } from 'lucide-react'
+import { X, Bell, CheckCircle, AlertCircle, Info, Wallet, UserX, UserCheck, Star } from 'lucide-react'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 
 export interface Notification {
@@ -33,23 +33,23 @@ export function NotificationPanel({
   const getIcon = (type: Notification['type']) => {
     switch (type) {
       case 'new_job':
-        return <Bell className="w-5 h-5 text-blue-600" />
+        return <Bell className="w-5 h-5 text-bliss-600" />
       case 'job_cancelled':
         return <AlertCircle className="w-5 h-5 text-red-600" />
       case 'booking_cancelled':
         return <AlertCircle className="w-5 h-5 text-red-600" />
       case 'job_updated':
-        return <Info className="w-5 h-5 text-amber-600" />
+        return <Info className="w-5 h-5 text-bliss-600" />
       case 'payment_received':
-        return <DollarSign className="w-5 h-5 text-green-600" />
+        return <Wallet className="w-5 h-5 text-green-600" />
       case 'job_no_staff':
         return <UserX className="w-5 h-5 text-orange-600" />
       case 'job_accepted':
-        return <UserCheck className="w-5 h-5 text-purple-600" />
+        return <UserCheck className="w-5 h-5 text-bliss-600" />
       case 'new_review':
         return <Star className="w-5 h-5 text-yellow-500" />
       default:
-        return <Bell className="w-5 h-5 text-gray-600" />
+        return <Bell className="w-5 h-5 text-bliss-600" />
     }
   }
 
@@ -66,34 +66,34 @@ export function NotificationPanel({
     if (!d) return null
 
     return (
-      <div className="mt-2 bg-amber-50 rounded-lg p-3 space-y-2">
+      <div className="mt-2 bg-bliss-50 rounded-lg p-3 space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-lg">{renderStars(d.rating || 0)}</span>
         </div>
         {(d.cleanliness_rating || d.professionalism_rating || d.skill_rating) && (
-          <div className="grid grid-cols-3 gap-1 text-xs text-stone-500">
+          <div className="grid grid-cols-3 gap-1 text-xs text-bliss-500">
             {d.cleanliness_rating && (
               <div>
-                <span className="block text-stone-400">ความสะอาด</span>
+                <span className="block text-bliss-400">ความสะอาด</span>
                 <span className="text-yellow-500">{'★'.repeat(d.cleanliness_rating)}{'☆'.repeat(5 - d.cleanliness_rating)}</span>
               </div>
             )}
             {d.professionalism_rating && (
               <div>
-                <span className="block text-stone-400">มืออาชีพ</span>
+                <span className="block text-bliss-400">มืออาชีพ</span>
                 <span className="text-yellow-500">{'★'.repeat(d.professionalism_rating)}{'☆'.repeat(5 - d.professionalism_rating)}</span>
               </div>
             )}
             {d.skill_rating && (
               <div>
-                <span className="block text-stone-400">ทักษะ</span>
+                <span className="block text-bliss-400">ทักษะ</span>
                 <span className="text-yellow-500">{'★'.repeat(d.skill_rating)}{'☆'.repeat(5 - d.skill_rating)}</span>
               </div>
             )}
           </div>
         )}
         {d.review && d.review.length > 0 && (
-          <p className="text-sm text-stone-700 italic">"{d.review}"</p>
+          <p className="text-sm text-bliss-700 italic">"{d.review}"</p>
         )}
       </div>
     )
@@ -125,7 +125,7 @@ export function NotificationPanel({
       {/* Panel */}
       <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col animate-slide-in-right">
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 text-white p-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold">การแจ้งเตือน</h2>
             {unreadCount > 0 && (
@@ -142,10 +142,10 @@ export function NotificationPanel({
 
         {/* Actions */}
         {notifications.length > 0 && unreadCount > 0 && (
-          <div className="p-3 border-b border-stone-200 bg-stone-50">
+          <div className="p-3 border-b border-bliss-200 bg-bliss-50">
             <button
               onClick={onMarkAllAsRead}
-              className="text-sm text-amber-700 font-medium hover:text-amber-800 transition"
+              className="text-sm text-bliss-700 font-medium hover:text-bliss-800 transition"
             >
               ✓ ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว
             </button>
@@ -156,22 +156,22 @@ export function NotificationPanel({
         <div className="flex-1 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4">
-                <Bell className="w-8 h-8 text-stone-400" />
+              <div className="w-16 h-16 bg-bliss-100 rounded-full flex items-center justify-center mb-4">
+                <Bell className="w-8 h-8 text-bliss-400" />
               </div>
-              <h3 className="font-semibold text-stone-900 mb-2">ไม่มีการแจ้งเตือน</h3>
-              <p className="text-sm text-stone-500">
+              <h3 className="font-semibold text-bliss-900 mb-2">ไม่มีการแจ้งเตือน</h3>
+              <p className="text-sm text-bliss-500">
                 การแจ้งเตือนของคุณจะแสดงที่นี่
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-stone-200">
+            <div className="divide-y divide-bliss-200">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
                   onClick={() => !notification.read && onMarkAsRead(notification.id)}
-                  className={`p-4 hover:bg-stone-50 transition cursor-pointer ${
-                    !notification.read ? 'bg-blue-50/50' : ''
+                  className={`p-4 hover:bg-bliss-50 transition cursor-pointer ${
+                    !notification.read ? 'bg-bliss-50/50' : ''
                   }`}
                 >
                   <div className="flex gap-3">
@@ -180,14 +180,14 @@ export function NotificationPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h4 className={`font-medium text-stone-900 ${!notification.read ? 'font-semibold' : ''}`}>
+                        <h4 className={`font-medium text-bliss-900 ${!notification.read ? 'font-semibold' : ''}`}>
                           {notification.title}
                         </h4>
                         {!notification.read && (
-                          <span className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-1.5" />
+                          <span className="flex-shrink-0 w-2 h-2 bg-bliss-600 rounded-full mt-1.5" />
                         )}
                       </div>
-                      <p className="text-sm text-stone-600 mb-2">
+                      <p className="text-sm text-bliss-600 mb-2">
                         {notification.message}
                       </p>
                       {(notification.type === 'new_job' || notification.type === 'job_no_staff') &&
@@ -197,7 +197,7 @@ export function NotificationPanel({
                         </span>
                       )}
                       {notification.type === 'new_review' && renderReviewDetails(notification)}
-                      <p className="text-xs text-stone-400 mt-2">
+                      <p className="text-xs text-bliss-400 mt-2">
                         {getTimeAgo(notification.created_at)}
                       </p>
                     </div>

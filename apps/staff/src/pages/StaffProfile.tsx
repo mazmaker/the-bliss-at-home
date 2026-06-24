@@ -400,10 +400,10 @@ function StaffProfile() {
       case 'rejected':
         return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">ถูกปฏิเสธ</span>
       case 'reviewing':
-        return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">กำลังตรวจสอบ</span>
+        return <span className="px-2 py-0.5 bg-bliss-100 text-bliss-700 text-xs rounded-full">กำลังตรวจสอบ</span>
       case 'pending':
       default:
-        return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">รอตรวจสอบ</span>
+        return <span className="px-2 py-0.5 bg-bliss-100 text-bliss-700 text-xs rounded-full">รอตรวจสอบ</span>
     }
   }
 
@@ -412,8 +412,8 @@ function StaffProfile() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-stone-900">โปรไฟล์</h1>
-        <p className="text-stone-500 text-sm">Profile</p>
+        <h1 className="text-xl font-bold text-bliss-900">โปรไฟล์</h1>
+        <p className="text-bliss-500 text-sm">Profile</p>
       </div>
 
       {/* Error/Success Message */}
@@ -436,7 +436,7 @@ function StaffProfile() {
       {/* Profile Card */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-br from-amber-700 to-amber-800 p-6 text-white">
+        <div className="bg-gradient-to-br from-bliss-700 to-bliss-800 p-6 text-white">
           <div className="flex flex-col items-center">
             <div className="relative">
               {user?.avatar_url ? (
@@ -450,7 +450,7 @@ function StaffProfile() {
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute bottom-2 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg"
               >
-                <Camera className="w-4 h-4 text-stone-600" />
+                <Camera className="w-4 h-4 text-bliss-600" />
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }} onChange={handleAvatarChange} className="hidden" />
             </div>
@@ -477,18 +477,18 @@ function StaffProfile() {
         {/* Content */}
         <div className="p-4 space-y-4">
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 py-4 border-b border-stone-100">
+          <div className="grid grid-cols-3 gap-3 py-4 border-b border-bliss-100">
             <div className="text-center">
-              <p className="text-xl font-bold text-stone-900">{stats?.total_jobs || 0}</p>
-              <p className="text-xs text-stone-500">งานที่ทำ</p>
+              <p className="text-xl font-bold text-bliss-900">{stats?.total_jobs || 0}</p>
+              <p className="text-xs text-bliss-500">งานที่ทำ</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold text-green-600">฿{((stats?.total_earnings || 0) / 1000).toFixed(0)}k</p>
-              <p className="text-xs text-stone-500">รายได้รวม</p>
+              <p className="text-xs text-bliss-500">รายได้รวม</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-amber-600">{stats?.rating_count ? stats.average_rating.toFixed(1) : '–'}</p>
-              <p className="text-xs text-stone-500">คะแนน</p>
+              <p className="text-xl font-bold text-bliss-600">{stats?.rating_count ? stats.average_rating.toFixed(1) : '–'}</p>
+              <p className="text-xs text-bliss-500">คะแนน</p>
             </div>
           </div>
 
@@ -497,25 +497,25 @@ function StaffProfile() {
             <div className={`p-4 rounded-xl border-2 ${
               eligibility.canWork
                 ? 'bg-green-50 border-green-200'
-                : 'bg-amber-50 border-amber-200'
+                : 'bg-bliss-50 border-bliss-200'
             }`}>
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${
                   eligibility.canWork
                     ? 'bg-green-100'
-                    : 'bg-amber-100'
+                    : 'bg-bliss-100'
                 }`}>
                   {eligibility.canWork ? (
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   ) : (
-                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <AlertCircle className="w-5 h-5 text-bliss-600" />
                   )}
                 </div>
                 <div className="flex-1">
                   <h4 className={`font-semibold text-sm ${
                     eligibility.canWork
                       ? 'text-green-900'
-                      : 'text-amber-900'
+                      : 'text-bliss-900'
                   }`}>
                     {eligibility.canWork
                       ? '✓ พร้อมรับงาน'
@@ -525,7 +525,7 @@ function StaffProfile() {
                     <ul className={`mt-2 space-y-1 text-xs ${
                       eligibility.canWork
                         ? 'text-green-700'
-                        : 'text-amber-700'
+                        : 'text-bliss-700'
                     }`}>
                       {eligibility.reasons.map((reason, index) => (
                         <li key={index} className="flex items-start gap-1">
@@ -544,7 +544,7 @@ function StaffProfile() {
                       {eligibility.documents.id_card.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.id_card.uploaded ? (
-                        <span className="text-amber-600">รอตรวจ</span>
+                        <span className="text-bliss-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />
                       )}
@@ -555,7 +555,7 @@ function StaffProfile() {
                       {eligibility.documents.house_registration.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.house_registration.uploaded ? (
-                        <span className="text-amber-600">รอตรวจ</span>
+                        <span className="text-bliss-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />
                       )}
@@ -566,7 +566,7 @@ function StaffProfile() {
                       {eligibility.documents.bank_statement.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.bank_statement.uploaded ? (
-                        <span className="text-amber-600">รอตรวจ</span>
+                        <span className="text-bliss-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />
                       )}
@@ -577,7 +577,7 @@ function StaffProfile() {
                       {eligibility.documents.license.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.license.uploaded ? (
-                        <span className="text-amber-600">รอตรวจ</span>
+                        <span className="text-bliss-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />
                       )}
@@ -588,7 +588,7 @@ function StaffProfile() {
                       {eligibility.documents.criminal_record.verified ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                       ) : eligibility.documents.criminal_record.uploaded ? (
-                        <span className="text-amber-600">รอตรวจ</span>
+                        <span className="text-bliss-600">รอตรวจ</span>
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-600" />
                       )}
@@ -630,17 +630,17 @@ function StaffProfile() {
           {/* Personal Info */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-stone-900">ข้อมูลส่วนตัว</h3>
+              <h3 className="font-semibold text-bliss-900">ข้อมูลส่วนตัว</h3>
               {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="p-2 bg-white rounded-lg shadow-sm border border-stone-200">
-                  <Edit className="w-5 h-5 text-stone-600" />
+                <button onClick={() => setIsEditing(true)} className="p-2 bg-white rounded-lg shadow-sm border border-bliss-200">
+                  <Edit className="w-5 h-5 text-bliss-600" />
                 </button>
               ) : (
                 <div className="flex gap-2">
-                  <button onClick={() => setIsEditing(false)} className="p-2 bg-stone-100 rounded-lg">
-                    <X className="w-5 h-5 text-stone-600" />
+                  <button onClick={() => setIsEditing(false)} className="p-2 bg-bliss-100 rounded-lg">
+                    <X className="w-5 h-5 text-bliss-600" />
                   </button>
-                  <button onClick={handleSave} disabled={isProfileSaving} className="p-2 bg-amber-700 rounded-lg disabled:opacity-50">
+                  <button onClick={handleSave} disabled={isProfileSaving} className="p-2 bg-bliss-700 rounded-lg disabled:opacity-50">
                     {isProfileSaving ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Check className="w-5 h-5 text-white" />}
                   </button>
                 </div>
@@ -648,45 +648,45 @@ function StaffProfile() {
             </div>
 
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-stone-400" />
+              <User className="w-5 h-5 text-bliss-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">ชื่อ (ภาษาไทย) *</p>
+                <p className="text-xs text-bliss-500">ชื่อ (ภาษาไทย) *</p>
                 {isEditing ? (
                   <input
                     type="text"
                     value={profile.name_th}
                     onChange={(e) => setProfile({ ...profile, name_th: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="เช่น สมหญิง นวดเก่ง"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.name_th || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.name_th || '-'}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-stone-400" />
+              <User className="w-5 h-5 text-bliss-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">ชื่อ (ภาษาอังกฤษ)</p>
+                <p className="text-xs text-bliss-500">ชื่อ (ภาษาอังกฤษ)</p>
                 {isEditing ? (
                   <input
                     type="text"
                     value={profile.name_en}
                     onChange={(e) => setProfile({ ...profile, name_en: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="เช่น Somying Massage"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.name_en || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.name_en || '-'}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-stone-400" />
+              <User className="w-5 h-5 text-bliss-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">เพศ *</p>
+                <p className="text-xs text-bliss-500">เพศ *</p>
                 {isEditing ? (
                   <div className="flex gap-2 mt-1">
                     <button
@@ -694,8 +694,8 @@ function StaffProfile() {
                       onClick={() => setProfile({ ...profile, gender: 'female' })}
                       className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                         profile.gender === 'female'
-                          ? 'bg-pink-50 border-pink-400 text-pink-700'
-                          : 'bg-white border-stone-300 text-stone-600 hover:border-stone-400'
+                          ? 'bg-bliss-50 border-bliss-400 text-bliss-700'
+                          : 'bg-white border-bliss-300 text-bliss-600 hover:border-bliss-400'
                       }`}
                     >
                       หญิง
@@ -705,15 +705,15 @@ function StaffProfile() {
                       onClick={() => setProfile({ ...profile, gender: 'male' })}
                       className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                         profile.gender === 'male'
-                          ? 'bg-blue-50 border-blue-400 text-blue-700'
-                          : 'bg-white border-stone-300 text-stone-600 hover:border-stone-400'
+                          ? 'bg-bliss-50 border-bliss-400 text-bliss-700'
+                          : 'bg-white border-bliss-300 text-bliss-600 hover:border-bliss-400'
                       }`}
                     >
                       ชาย
                     </button>
                   </div>
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">
+                  <p className="text-sm font-medium text-bliss-900">
                     {profile.gender === 'female' ? 'หญิง' : profile.gender === 'male' ? 'ชาย' : <span className="text-red-500">ยังไม่ได้ระบุ</span>}
                   </p>
                 )}
@@ -721,9 +721,9 @@ function StaffProfile() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-stone-400" />
+              <Mail className="w-5 h-5 text-bliss-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">บัญชี LINE</p>
+                <p className="text-xs text-bliss-500">บัญชี LINE</p>
                 <p className="text-sm font-medium text-green-600 flex items-center gap-2">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 5.64 2 10.14c0 4.08 3.6 7.49 8.47 8.14.33.07.78.21.89.49.1.25.07.64.03.89l-.14.85c-.04.26-.2 1.02.89.56.09-.04.18-.08.27-.12 3.66-1.88 6.59-4.54 6.59-8.81C19 5.64 15.52 2 12 2zm4.24 10.15l-.98.02c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0h-.98c-.18 0-.33-.15-.33-.33v-2.5c0-.18.15-.33.33-.33h.98c.18 0 .33.15.33.33v2.5c0 .18-.15.33-.33.33zm-2.5 0H8.76c-.18 0-.33-.15-.33-.33V9.34c0-.18.15-.33.33-.33h2.48c.18 0 .33.15.33.33v2.48c0 .18-.15.33-.33.33z"/>
@@ -734,91 +734,91 @@ function StaffProfile() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-stone-400" />
+              <Phone className="w-5 h-5 text-bliss-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">เบอร์โทรศัพท์ *</p>
+                <p className="text-xs text-bliss-500">เบอร์โทรศัพท์ *</p>
                 {isEditing ? (
                   <input
                     type="tel"
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="เช่น 081-234-5678"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.phone || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.phone || '-'}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-stone-400" />
+              <FileText className="w-5 h-5 text-bliss-400" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">เลขบัตรประชาชน</p>
+                <p className="text-xs text-bliss-500">เลขบัตรประชาชน</p>
                 {isEditing ? (
                   <input
                     type="text"
                     value={profile.id_card}
                     onChange={(e) => setProfile({ ...profile, id_card: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="เช่น 1234567890123"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.id_card || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.id_card || '-'}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-stone-400 mt-1" />
+              <MapPin className="w-5 h-5 text-bliss-400 mt-1" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">ที่อยู่</p>
+                <p className="text-xs text-bliss-500">ที่อยู่</p>
                 {isEditing ? (
                   <textarea
                     value={profile.address}
                     onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                     rows={2}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="กรอกที่อยู่..."
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.address || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.address || '-'}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <FileText className="w-5 h-5 text-bliss-400 mt-1" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
+                <p className="text-xs text-bliss-500">ข้อมูลเพิ่มเติม (ภาษาไทย)</p>
                 {isEditing ? (
                   <textarea
                     value={profile.bio_th}
                     onChange={(e) => setProfile({ ...profile, bio_th: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="เช่น มีประสบการณ์นวดมา 5 ปี เชี่ยวชาญการนวดแผนไทย"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.bio_th || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.bio_th || '-'}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-stone-400 mt-1" />
+              <FileText className="w-5 h-5 text-bliss-400 mt-1" />
               <div className="flex-1">
-                <p className="text-xs text-stone-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
+                <p className="text-xs text-bliss-500">ข้อมูลเพิ่มเติม (ภาษาอังกฤษ)</p>
                 {isEditing ? (
                   <textarea
                     value={profile.bio_en}
                     onChange={(e) => setProfile({ ...profile, bio_en: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg text-sm focus:ring-2 focus:ring-bliss-500"
                     placeholder="e.g. 5 years experience in Thai massage therapy"
                   />
                 ) : (
-                  <p className="text-sm font-medium text-stone-900">{profile.bio_en || '-'}</p>
+                  <p className="text-sm font-medium text-bliss-900">{profile.bio_en || '-'}</p>
                 )}
               </div>
             </div>
@@ -830,12 +830,12 @@ function StaffProfile() {
       <div className="bg-white rounded-2xl shadow-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Star className="w-5 h-5 text-stone-600" />
-            <h3 className="font-semibold text-stone-900">ทักษะ / บริการที่ทำได้</h3>
+            <Star className="w-5 h-5 text-bliss-600" />
+            <h3 className="font-semibold text-bliss-900">ทักษะ / บริการที่ทำได้</h3>
           </div>
           <button
             onClick={() => setShowAddSkill(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium"
+            className="flex items-center gap-1 px-3 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             เพิ่มทักษะ
@@ -844,13 +844,13 @@ function StaffProfile() {
 
         {isSkillsLoading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+            <Loader2 className="w-6 h-6 animate-spin text-bliss-600" />
           </div>
         ) : skills.length === 0 ? (
           <div className="text-center py-8">
-            <Star className="w-12 h-12 text-stone-300 mx-auto mb-2" />
-            <p className="text-sm text-stone-500">ยังไม่มีทักษะ</p>
-            <p className="text-xs text-stone-400">เพิ่มทักษะเพื่อให้ลูกค้าเห็นความสามารถของคุณ</p>
+            <Star className="w-12 h-12 text-bliss-300 mx-auto mb-2" />
+            <p className="text-sm text-bliss-500">ยังไม่มีทักษะ</p>
+            <p className="text-xs text-bliss-400">เพิ่มทักษะเพื่อให้ลูกค้าเห็นความสามารถของคุณ</p>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -858,12 +858,12 @@ function StaffProfile() {
               const skillData = availableSkillsData.find(s => s.id === skill.skill_id)
               const Icon = skillData?.icon || Star
               return (
-                <div key={skill.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-amber-50 text-amber-800 rounded-full text-sm font-medium border border-amber-200">
+                <div key={skill.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-bliss-100 to-bliss-50 text-bliss-800 rounded-full text-sm font-medium border border-bliss-200">
                   <Icon className="w-4 h-4" />
                   <span>{skill.skill?.name_th || 'Unknown'}</span>
                   <button
                     onClick={() => setDeleteConfirm({ type: 'skill', id: skill.skill_id })}
-                    className="ml-1 p-0.5 hover:bg-amber-200 rounded-full transition"
+                    className="ml-1 p-0.5 hover:bg-bliss-200 rounded-full transition"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -878,12 +878,12 @@ function StaffProfile() {
       <div className="bg-white rounded-2xl shadow-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-stone-600" />
-            <h3 className="font-semibold text-stone-900">เอกสาร KYC</h3>
+            <FileText className="w-5 h-5 text-bliss-600" />
+            <h3 className="font-semibold text-bliss-900">เอกสาร KYC</h3>
           </div>
           <button
             onClick={() => setShowAddDocument(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700"
+            className="flex items-center gap-1 px-3 py-1.5 bg-bliss-600 text-white rounded-lg text-sm font-medium hover:bg-bliss-700"
           >
             <Plus className="w-4 h-4" />
             เพิ่มเอกสาร
@@ -893,9 +893,9 @@ function StaffProfile() {
         {/* Stats Summary */}
         {documents.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
-            <div className="bg-stone-50 rounded-lg p-2">
-              <p className="text-xl font-bold text-stone-900">{documents.length}</p>
-              <p className="text-xs text-stone-500">ทั้งหมด</p>
+            <div className="bg-bliss-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-bliss-900">{documents.length}</p>
+              <p className="text-xs text-bliss-500">ทั้งหมด</p>
             </div>
             <div className="bg-yellow-50 rounded-lg p-2">
               <p className="text-xl font-bold text-yellow-900">
@@ -903,11 +903,11 @@ function StaffProfile() {
               </p>
               <p className="text-xs text-yellow-600">รอตรวจสอบ</p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-2">
-              <p className="text-xl font-bold text-blue-900">
+            <div className="bg-bliss-50 rounded-lg p-2">
+              <p className="text-xl font-bold text-bliss-900">
                 {documents.filter(d => d.verification_status === 'reviewing').length}
               </p>
-              <p className="text-xs text-blue-600">กำลังตรวจ</p>
+              <p className="text-xs text-bliss-600">กำลังตรวจ</p>
             </div>
             <div className="bg-green-50 rounded-lg p-2">
               <p className="text-xl font-bold text-green-900">
@@ -926,16 +926,16 @@ function StaffProfile() {
 
         {isDocsLoading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+            <Loader2 className="w-6 h-6 animate-spin text-bliss-600" />
           </div>
         ) : documents.length === 0 ? (
-          <div className="text-center py-8 bg-stone-50 rounded-xl">
-            <FileText className="w-12 h-12 text-stone-300 mx-auto mb-2" />
-            <p className="text-sm text-stone-500">ยังไม่มีเอกสาร</p>
-            <p className="text-xs text-stone-400">อัปโหลดเอกสารเพื่อยืนยันตัวตน</p>
+          <div className="text-center py-8 bg-bliss-50 rounded-xl">
+            <FileText className="w-12 h-12 text-bliss-300 mx-auto mb-2" />
+            <p className="text-sm text-bliss-500">ยังไม่มีเอกสาร</p>
+            <p className="text-xs text-bliss-400">อัปโหลดเอกสารเพื่อยืนยันตัวตน</p>
             <button
               onClick={() => setShowAddDocument(true)}
-              className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm"
+              className="mt-4 px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition text-sm"
             >
               เพิ่มเอกสารแรก
             </button>
@@ -943,16 +943,16 @@ function StaffProfile() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {documents.map((doc) => (
-              <div key={doc.id} className="border border-stone-200 rounded-xl p-3 hover:shadow-md transition">
+              <div key={doc.id} className="border border-bliss-200 rounded-xl p-3 hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-blue-100 rounded-lg">
-                      <FileText className="w-4 h-4 text-blue-600" />
+                    <div className="p-1.5 bg-bliss-100 rounded-lg">
+                      <FileText className="w-4 h-4 text-bliss-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-stone-900 text-sm">{DOCUMENT_TYPES[doc.document_type]?.th}</p>
-                      <p className="text-xs text-stone-500">{doc.file_name}</p>
-                      <p className="text-xs text-stone-400 mt-0.5">
+                      <p className="font-medium text-bliss-900 text-sm">{DOCUMENT_TYPES[doc.document_type]?.th}</p>
+                      <p className="text-xs text-bliss-500">{doc.file_name}</p>
+                      <p className="text-xs text-bliss-400 mt-0.5">
                         {new Date(doc.created_at).toLocaleDateString('th-TH', {
                           year: 'numeric',
                           month: 'short',
@@ -975,8 +975,8 @@ function StaffProfile() {
 
                 {/* Notes */}
                 {doc.notes && (
-                  <div className="mb-2 p-2 bg-stone-50 rounded-lg">
-                    <p className="text-xs text-stone-600">
+                  <div className="mb-2 p-2 bg-bliss-50 rounded-lg">
+                    <p className="text-xs text-bliss-600">
                       <strong>หมายเหตุ:</strong> {doc.notes}
                     </p>
                   </div>
@@ -988,7 +988,7 @@ function StaffProfile() {
                     href={doc.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-2 py-1.5 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-xs flex items-center justify-center gap-1"
+                    className="flex-1 px-2 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-xs flex items-center justify-center gap-1"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     ดู
@@ -996,7 +996,7 @@ function StaffProfile() {
                   <a
                     href={doc.file_url}
                     download
-                    className="flex-1 px-2 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-xs flex items-center justify-center gap-1"
+                    className="flex-1 px-2 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-xs flex items-center justify-center gap-1"
                   >
                     <Download className="w-3.5 h-3.5" />
                     ดาวน์โหลด
@@ -1021,13 +1021,13 @@ function StaffProfile() {
       <div className="bg-white rounded-2xl shadow-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Phone className="w-5 h-5 text-stone-600" />
-            <h3 className="font-semibold text-stone-900">บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)</h3>
+            <Phone className="w-5 h-5 text-bliss-600" />
+            <h3 className="font-semibold text-bliss-900">บุคคลอ้างอิง (ผู้ติดต่อฉุกเฉิน)</h3>
           </div>
           {!isEditingEmergency && (
             <button
               onClick={() => setIsEditingEmergency(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700"
+              className="flex items-center gap-1 px-3 py-1.5 bg-bliss-600 text-white rounded-lg text-sm font-medium hover:bg-bliss-700"
             >
               <Edit className="w-4 h-4" />
               {emergencyContact.name ? 'แก้ไข' : 'เพิ่ม'}
@@ -1037,36 +1037,36 @@ function StaffProfile() {
 
         {isEmergencyLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+            <Loader2 className="w-6 h-6 animate-spin text-bliss-600" />
           </div>
         ) : isEditingEmergency ? (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">ชื่อ-นามสกุล *</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-1">ชื่อ-นามสกุล *</label>
               <input
                 type="text"
                 value={emergencyForm.name}
                 onChange={(e) => setEmergencyForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="กรอกชื่อ-นามสกุลบุคคลอ้างอิง"
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">เบอร์โทรศัพท์ *</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-1">เบอร์โทรศัพท์ *</label>
               <input
                 type="tel"
                 value={emergencyForm.phone}
                 onChange={(e) => setEmergencyForm((f) => ({ ...f, phone: e.target.value }))}
                 placeholder="081-234-5678"
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">ความสัมพันธ์ *</label>
+              <label className="block text-sm font-medium text-bliss-700 mb-1">ความสัมพันธ์ *</label>
               <select
                 value={emergencyForm.relationship}
                 onChange={(e) => setEmergencyForm((f) => ({ ...f, relationship: e.target.value }))}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
               >
                 <option value="">-- เลือกความสัมพันธ์ --</option>
                 {EMERGENCY_CONTACT_RELATIONSHIPS.map((r) => (
@@ -1094,7 +1094,7 @@ function StaffProfile() {
                   }
                 }}
                 disabled={isEmergencySaving}
-                className="flex-1 flex items-center justify-center gap-2 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-2 bg-bliss-600 text-white rounded-lg font-medium hover:bg-bliss-700 disabled:opacity-50"
               >
                 {isEmergencySaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 บันทึก
@@ -1104,7 +1104,7 @@ function StaffProfile() {
                   setIsEditingEmergency(false)
                   setEmergencyForm(emergencyContact)
                 }}
-                className="px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50"
+                className="px-4 py-2 border border-bliss-300 text-bliss-700 rounded-lg hover:bg-bliss-50"
               >
                 ยกเลิก
               </button>
@@ -1113,28 +1113,28 @@ function StaffProfile() {
         ) : emergencyContact.name ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-stone-400" />
-              <span className="text-sm text-stone-600">ชื่อ:</span>
-              <span className="text-sm font-medium text-stone-900">{emergencyContact.name}</span>
+              <User className="w-4 h-4 text-bliss-400" />
+              <span className="text-sm text-bliss-600">ชื่อ:</span>
+              <span className="text-sm font-medium text-bliss-900">{emergencyContact.name}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-stone-400" />
-              <span className="text-sm text-stone-600">เบอร์โทร:</span>
-              <span className="text-sm font-medium text-stone-900">{emergencyContact.phone}</span>
+              <Phone className="w-4 h-4 text-bliss-400" />
+              <span className="text-sm text-bliss-600">เบอร์โทร:</span>
+              <span className="text-sm font-medium text-bliss-900">{emergencyContact.phone}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-stone-400" />
-              <span className="text-sm text-stone-600">ความสัมพันธ์:</span>
-              <span className="text-sm font-medium text-stone-900">
+              <Shield className="w-4 h-4 text-bliss-400" />
+              <span className="text-sm text-bliss-600">ความสัมพันธ์:</span>
+              <span className="text-sm font-medium text-bliss-900">
                 {EMERGENCY_CONTACT_RELATIONSHIPS.find((r) => r.value === emergencyContact.relationship)?.label || emergencyContact.relationship}
               </span>
             </div>
           </div>
         ) : (
-          <div className="text-center py-6 text-stone-400">
+          <div className="text-center py-6 text-bliss-400">
             <User className="w-8 h-8 mx-auto mb-2" />
             <p className="text-sm">ยังไม่ได้กรอกข้อมูลบุคคลอ้างอิง</p>
-            <p className="text-xs text-stone-400 mt-1">กดปุ่ม "เพิ่ม" เพื่อกรอกข้อมูล</p>
+            <p className="text-xs text-bliss-400 mt-1">กดปุ่ม "เพิ่ม" เพื่อกรอกข้อมูล</p>
           </div>
         )}
       </div>
@@ -1143,13 +1143,13 @@ function StaffProfile() {
       <div id="bank" className="bg-white rounded-2xl shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-stone-900">บัญชีรับเงิน</h2>
-            <p className="text-sm text-stone-500">Bank Accounts</p>
+            <h2 className="text-lg font-bold text-bliss-900">บัญชีรับเงิน</h2>
+            <p className="text-sm text-bliss-500">Bank Accounts</p>
           </div>
           {bankAccounts.length === 0 && (
             <button
               onClick={() => setShowAddBank(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-bliss-700 text-white rounded-lg hover:bg-bliss-800 transition"
             >
               <Plus className="w-4 h-4" />
               เพิ่มบัญชี
@@ -1159,13 +1159,13 @@ function StaffProfile() {
 
         {isBankLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-bliss-400" />
           </div>
         ) : bankAccounts.length === 0 ? (
-          <div className="text-center py-8 text-stone-500">
-            <CreditCard className="w-12 h-12 mx-auto mb-3 text-stone-300" />
+          <div className="text-center py-8 text-bliss-500">
+            <CreditCard className="w-12 h-12 mx-auto mb-3 text-bliss-300" />
             <p className="text-sm">ยังไม่มีบัญชีรับเงิน</p>
-            <p className="text-xs text-stone-400 mt-1">กดปุ่ม "เพิ่มบัญชี" เพื่อเพิ่มบัญชีธนาคาร</p>
+            <p className="text-xs text-bliss-400 mt-1">กดปุ่ม "เพิ่มบัญชี" เพื่อเพิ่มบัญชีธนาคาร</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -1174,15 +1174,15 @@ function StaffProfile() {
               return (
                 <div
                   key={account.id}
-                  className="flex items-center gap-3 p-4 border border-stone-200 rounded-xl hover:border-stone-300 transition"
+                  className="flex items-center gap-3 p-4 border border-bliss-200 rounded-xl hover:border-bliss-300 transition"
                 >
-                  <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Building2 className="w-5 h-5 text-stone-600" />
+                  <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-bliss-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-stone-900 truncate mb-1">{bank?.name || account.bank_code}</p>
-                    <p className="text-sm text-stone-600 font-mono">{account.account_number}</p>
-                    <p className="text-xs text-stone-500 truncate">{account.account_name}</p>
+                    <p className="font-medium text-bliss-900 truncate mb-1">{bank?.name || account.bank_code}</p>
+                    <p className="text-sm text-bliss-600 font-mono">{account.account_number}</p>
+                    <p className="text-xs text-bliss-500 truncate">{account.account_name}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -1197,7 +1197,7 @@ function StaffProfile() {
                         setShowAddBank(true)
                       }}
                       disabled={isBankSaving}
-                      className="px-3 py-1.5 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-xs disabled:opacity-50"
+                      className="px-3 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-xs disabled:opacity-50"
                       title="แก้ไข"
                     >
                       <Edit className="w-3.5 h-3.5" />
@@ -1223,7 +1223,7 @@ function StaffProfile() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-stone-900">
+              <h3 className="font-semibold text-lg text-bliss-900">
                 {editingBankId ? 'แก้ไขบัญชีธนาคาร' : 'เพิ่มบัญชีธนาคาร'}
               </h3>
               <button
@@ -1232,18 +1232,18 @@ function StaffProfile() {
                   setEditingBankId(null)
                   setNewBank({ bank_code: '', account_number: '', account_name: '', is_primary: false })
                 }}
-                className="p-2 hover:bg-stone-100 rounded-lg transition"
+                className="p-2 hover:bg-bliss-100 rounded-lg transition"
               >
-                <X className="w-5 h-5 text-stone-600" />
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ธนาคาร</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">ธนาคาร</label>
                 <select
                   value={newBank.bank_code}
                   onChange={(e) => setNewBank({ ...newBank, bank_code: e.target.value })}
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 >
                   <option value="">เลือกธนาคาร</option>
                   {THAI_BANKS.map((bank) => (
@@ -1254,29 +1254,29 @@ function StaffProfile() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">เลขที่บัญชี</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">เลขที่บัญชี</label>
                 <input
                   type="text"
                   value={newBank.account_number}
                   onChange={(e) => setNewBank({ ...newBank, account_number: e.target.value })}
                   placeholder="xxx-x-xxxxx-x"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 font-mono"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500 font-mono"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ชื่อบัญชี</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">ชื่อบัญชี</label>
                 <input
                   type="text"
                   value={newBank.account_name}
                   onChange={(e) => setNewBank({ ...newBank, account_name: e.target.value })}
                   placeholder="ชื่อ-นามสกุล ตามบัญชี"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 />
               </div>
               <button
                 onClick={handleAddBankAccount}
                 disabled={isBankSaving}
-                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50"
+                className="w-full py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50"
               >
                 {isBankSaving ? (
                   <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -1297,22 +1297,22 @@ function StaffProfile() {
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] flex flex-col">
             {/* Header */}
             <div className="p-4 border-b flex items-center justify-between flex-shrink-0">
-              <h3 className="font-semibold text-lg text-stone-900">อัปโหลดเอกสาร</h3>
-              <button onClick={() => setShowAddDocument(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
-                <X className="w-5 h-5 text-stone-600" />
+              <h3 className="font-semibold text-lg text-bliss-900">อัปโหลดเอกสาร</h3>
+              <button onClick={() => setShowAddDocument(false)} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
 
             {/* Scrollable Content */}
             <div className="p-4 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   ประเภทเอกสาร <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newDocument.type}
                   onChange={(e) => setNewDocument({ ...newDocument, type: e.target.value as DocumentType })}
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 >
                   {Object.entries(DOCUMENT_TYPES).map(([key, value]) => (
                     <option key={key} value={key}>
@@ -1322,15 +1322,15 @@ function StaffProfile() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   ไฟล์เอกสาร <span className="text-red-500">*</span>
                 </label>
-                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-stone-300 rounded-xl cursor-pointer hover:border-amber-500 transition">
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-bliss-300 rounded-xl cursor-pointer hover:border-bliss-500 transition">
                   {newDocument.file ? (
                     <div className="text-center">
-                      <FileText className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-                      <p className="text-sm text-stone-700">{newDocument.file.name}</p>
-                      <p className="text-xs text-stone-500">{(newDocument.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <FileText className="w-8 h-8 text-bliss-600 mx-auto mb-2" />
+                      <p className="text-sm text-bliss-700">{newDocument.file.name}</p>
+                      <p className="text-xs text-bliss-500">{(newDocument.file.size / 1024 / 1024).toFixed(2)} MB</p>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -1344,9 +1344,9 @@ function StaffProfile() {
                     </div>
                   ) : (
                     <div className="text-center">
-                      <Upload className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-                      <p className="text-sm text-stone-600">คลิกเพื่อเลือกไฟล์</p>
-                      <p className="text-xs text-stone-400">รองรับ JPG, PNG, PDF (ขนาดไม่เกิน 10MB)</p>
+                      <Upload className="w-8 h-8 text-bliss-400 mx-auto mb-2" />
+                      <p className="text-sm text-bliss-600">คลิกเพื่อเลือกไฟล์</p>
+                      <p className="text-xs text-bliss-400">รองรับ JPG, PNG, PDF (ขนาดไม่เกิน 10MB)</p>
                     </div>
                   )}
                   <input
@@ -1359,24 +1359,24 @@ function StaffProfile() {
                 </label>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">หมายเหตุ (ถ้ามี)</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">หมายเหตุ (ถ้ามี)</label>
                 <textarea
                   value={newDocument.notes}
                   onChange={(e) => setNewDocument({ ...newDocument, notes: e.target.value })}
                   placeholder="ระบุรายละเอียดเพิ่มเติม..."
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 resize-none"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500 resize-none"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">วันหมดอายุ (ถ้ามี)</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">วันหมดอายุ (ถ้ามี)</label>
                 <input
                   type="date"
                   value={newDocument.expires_at}
                   onChange={(e) => setNewDocument({ ...newDocument, expires_at: e.target.value })}
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 />
-                <p className="text-xs text-stone-500 mt-1">
+                <p className="text-xs text-bliss-500 mt-1">
                   สำหรับเอกสารที่มีวันหมดอายุ เช่น ใบประกอบวิชาชีพ
                 </p>
               </div>
@@ -1387,7 +1387,7 @@ function StaffProfile() {
               <button
                 onClick={handleAddDocument}
                 disabled={isUploading}
-                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50"
+                className="w-full py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50"
               >
                 {isUploading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'อัปโหลด'}
               </button>
@@ -1401,18 +1401,18 @@ function StaffProfile() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-stone-900">เพิ่มพื้นที่บริการ</h3>
-              <button onClick={() => setShowAddArea(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
-                <X className="w-5 h-5 text-stone-600" />
+              <h3 className="font-semibold text-lg text-bliss-900">เพิ่มพื้นที่บริการ</h3>
+              <button onClick={() => setShowAddArea(false)} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">จังหวัด</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">จังหวัด</label>
                 <select
                   value={newArea.province}
                   onChange={(e) => setNewArea({ ...newArea, province: e.target.value })}
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 >
                   <option value="">เลือกจังหวัด</option>
                   {THAI_PROVINCES.map((province) => (
@@ -1423,17 +1423,17 @@ function StaffProfile() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">เขต/อำเภอ (ไม่บังคับ)</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">เขต/อำเภอ (ไม่บังคับ)</label>
                 <input
                   type="text"
                   value={newArea.district}
                   onChange={(e) => setNewArea({ ...newArea, district: e.target.value })}
                   placeholder="เช่น บางรัก, เมือง"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">รัศมีบริการ (กม.)</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">รัศมีบริการ (กม.)</label>
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
@@ -1442,15 +1442,15 @@ function StaffProfile() {
                     step="5"
                     value={newArea.radius_km}
                     onChange={(e) => setNewArea({ ...newArea, radius_km: parseInt(e.target.value) })}
-                    className="flex-1 h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                    className="flex-1 h-2 bg-bliss-200 rounded-lg appearance-none cursor-pointer"
                   />
-                  <span className="w-16 text-center text-sm font-medium text-stone-900">{newArea.radius_km} กม.</span>
+                  <span className="w-16 text-center text-sm font-medium text-bliss-900">{newArea.radius_km} กม.</span>
                 </div>
               </div>
               <button
                 onClick={handleAddServiceArea}
                 disabled={isAreaSaving}
-                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50"
+                className="w-full py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50"
               >
                 {isAreaSaving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'เพิ่มพื้นที่'}
               </button>
@@ -1464,36 +1464,36 @@ function StaffProfile() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-stone-900">เปลี่ยนรหัสผ่าน</h3>
-              <button onClick={() => setShowChangePassword(false)} className="p-2 hover:bg-stone-100 rounded-lg transition">
-                <X className="w-5 h-5 text-stone-600" />
+              <h3 className="font-semibold text-lg text-bliss-900">เปลี่ยนรหัสผ่าน</h3>
+              <button onClick={() => setShowChangePassword(false)} className="p-2 hover:bg-bliss-100 rounded-lg transition">
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">รหัสผ่านใหม่</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">รหัสผ่านใหม่</label>
                 <input
                   type="password"
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                   placeholder="อย่างน้อย 6 ตัวอักษร"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">ยืนยันรหัสผ่านใหม่</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">ยืนยันรหัสผ่านใหม่</label>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   placeholder="กรอกรหัสผ่านอีกครั้ง"
-                  className="w-full px-3 py-3 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-3 border border-bliss-300 rounded-xl text-sm focus:ring-2 focus:ring-bliss-500"
                 />
               </div>
               <button
                 onClick={handleChangePassword}
                 disabled={isProfileSaving}
-                className="w-full py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800 transition disabled:opacity-50"
+                className="w-full py-3 bg-bliss-700 text-white rounded-xl font-medium hover:bg-bliss-800 transition disabled:opacity-50"
               >
                 {isProfileSaving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'เปลี่ยนรหัสผ่าน'}
               </button>
@@ -1507,14 +1507,14 @@ function StaffProfile() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setShowAddSkill(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
             <div className="px-4 py-3 border-b flex items-center justify-between bg-white rounded-t-2xl" style={{ flexShrink: 0 }}>
-              <h3 className="font-semibold text-base text-stone-900">เพิ่มทักษะ</h3>
-              <button onClick={() => setShowAddSkill(false)} className="p-1.5 hover:bg-stone-100 rounded-lg">
-                <X className="w-5 h-5 text-stone-600" />
+              <h3 className="font-semibold text-base text-bliss-900">เพิ่มทักษะ</h3>
+              <button onClick={() => setShowAddSkill(false)} className="p-1.5 hover:bg-bliss-100 rounded-lg">
+                <X className="w-5 h-5 text-bliss-600" />
               </button>
             </div>
             <div className="px-4 py-3 space-y-3" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-3">
+                <label className="block text-sm font-medium text-bliss-700 mb-3">
                   ทักษะ/ความสามารถ
                 </label>
                 <div className="grid grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
@@ -1534,8 +1534,8 @@ function StaffProfile() {
                           onClick={() => handleSkillToggle(skill.id)}
                           className={`flex flex-col items-center gap-2 px-3 py-3 rounded-xl font-medium transition relative ${
                             isSelected
-                              ? 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'
-                              : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                              ? 'bg-gradient-to-r from-bliss-700 to-bliss-800 text-white'
+                              : 'bg-bliss-100 text-bliss-600 hover:bg-bliss-200'
                           }`}
                         >
                           <Icon className="w-5 h-5" />
@@ -1546,7 +1546,7 @@ function StaffProfile() {
                     })}
                 </div>
                 {availableSkills.filter((skill) => !skills.find((s) => s.skill_id === skill.id)).length === 0 && (
-                  <p className="text-sm text-stone-500 text-center py-4">คุณมีทักษะครบทุกด้านแล้ว</p>
+                  <p className="text-sm text-bliss-500 text-center py-4">คุณมีทักษะครบทุกด้านแล้ว</p>
                 )}
               </div>
             </div>
@@ -1554,7 +1554,7 @@ function StaffProfile() {
               <button
                 onClick={handleAddSkills}
                 disabled={isSkillSaving || selectedSkills.length === 0}
-                className="w-full py-2.5 bg-amber-700 text-white rounded-lg font-medium text-sm shadow-lg hover:bg-amber-800 disabled:opacity-50"
+                className="w-full py-2.5 bg-bliss-700 text-white rounded-lg font-medium text-sm shadow-lg hover:bg-bliss-800 disabled:opacity-50"
               >
                 {isSkillSaving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'เพิ่มทักษะ'}
               </button>
@@ -1572,8 +1572,8 @@ function StaffProfile() {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-stone-900 mb-2">ยืนยันการลบ</h3>
-              <p className="text-sm text-stone-500 mb-6">
+              <h3 className="text-lg font-semibold text-bliss-900 mb-2">ยืนยันการลบ</h3>
+              <p className="text-sm text-bliss-500 mb-6">
                 {deleteConfirm.type === 'bank' && 'ต้องการลบบัญชีธนาคารนี้?'}
                 {deleteConfirm.type === 'document' && 'ต้องการลบเอกสารนี้?'}
                 {deleteConfirm.type === 'area' && 'ต้องการลบพื้นที่บริการนี้?'}
@@ -1582,7 +1582,7 @@ function StaffProfile() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium"
+                  className="flex-1 py-2.5 bg-bliss-100 text-bliss-700 rounded-xl font-medium"
                 >
                   ยกเลิก
                 </button>

@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import { AlertTriangle, Clock, DollarSign, CheckCircle, Loader2 } from 'lucide-react'
+import { AlertTriangle, Clock, Wallet, CheckCircle, Loader2 } from 'lucide-react'
 import { usePendingExtensionAcknowledgments } from '../hooks/usePendingExtensionAcknowledgments'
 import { toast } from 'react-hot-toast'
 
@@ -72,7 +72,7 @@ export function ExtensionAlertBanner({ jobId, className = "" }: ExtensionAlertBa
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <DollarSign className="w-4 h-4 text-green-600" />
+              <Wallet className="w-4 h-4 text-green-600" />
               <span className="text-sm text-green-600 font-medium">
                 รายได้อัปเดตในรายละเอียดงาน
               </span>

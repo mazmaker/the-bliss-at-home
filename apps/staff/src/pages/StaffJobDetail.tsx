@@ -250,7 +250,7 @@ function StaffJobDetail() {
   if (isLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-amber-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-bliss-600" />
       </div>
     )
   }
@@ -258,7 +258,7 @@ function StaffJobDetail() {
   if (error || !job) {
     return (
       <div className="p-4">
-        <button onClick={goBack} className="flex items-center gap-2 text-stone-600 mb-4">
+        <button onClick={goBack} className="flex items-center gap-2 text-bliss-600 mb-4">
           <ArrowLeft className="w-5 h-5" />
           <span>กลับ</span>
         </button>
@@ -293,10 +293,10 @@ function StaffJobDetail() {
     <div className="pb-6 space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={goBack} className="p-2 -ml-2 text-stone-600 hover:bg-stone-100 rounded-lg">
+        <button onClick={goBack} className="p-2 -ml-2 text-bliss-600 hover:bg-bliss-100 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-semibold text-stone-900 flex-1">รายละเอียดงาน</h1>
+        <h1 className="text-lg font-semibold text-bliss-900 flex-1">รายละเอียดงาน</h1>
         <JobStatusBadge status={job.status} isGPSTracking={jobGPSStatus.isTracking} />
       </div>
 
@@ -312,33 +312,33 @@ function StaffJobDetail() {
       )}
 
       {/* Service Info Card */}
-      <div className="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-4">
+      <div className="bg-white rounded-xl shadow border border-bliss-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-bliss-700 to-bliss-800 text-white p-4">
           <h2 className="text-xl font-bold">{job.service_name}</h2>
-          <p className="text-amber-100 text-sm mt-1">{job.total_duration_minutes || job.duration_minutes} นาที</p>
+          <p className="text-bliss-100 text-sm mt-1">{job.total_duration_minutes || job.duration_minutes} นาที</p>
         </div>
 
         <div className="p-4 space-y-4">
           {/* Date & Time */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-amber-700" />
+            <div className="w-10 h-10 bg-bliss-50 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-bliss-700" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">วันที่และเวลา</p>
-              <p className="font-medium text-stone-900">{formatDate(job.scheduled_date)}</p>
-              <p className="text-sm text-stone-700">{formatTime(job.scheduled_time)}</p>
+              <p className="text-xs text-bliss-500">วันที่และเวลา</p>
+              <p className="font-medium text-bliss-900">{formatDate(job.scheduled_date)}</p>
+              <p className="text-sm text-bliss-700">{formatTime(job.scheduled_time)}</p>
             </div>
           </div>
 
           {/* Provider Preference */}
           {isSpecificPreference(job.provider_preference) && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                <User className="w-5 h-5 text-purple-700" />
+              <div className="w-10 h-10 bg-bliss-50 rounded-lg flex items-center justify-center">
+                <User className="w-5 h-5 text-bliss-700" />
               </div>
               <div>
-                <p className="text-xs text-stone-500">ความต้องการผู้ให้บริการ</p>
+                <p className="text-xs text-bliss-500">ความต้องการผู้ให้บริการ</p>
                 <span className={`inline-block text-xs px-2 py-1 rounded-full mt-1 ${getProviderPreferenceBadgeStyle(job.provider_preference)}`}>
                   {getProviderPreferenceLabel(job.provider_preference)}
                 </span>
@@ -348,12 +348,12 @@ function StaffJobDetail() {
 
           {/* Customer */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-blue-700" />
+            <div className="w-10 h-10 bg-bliss-50 rounded-lg flex items-center justify-center">
+              <User className="w-5 h-5 text-bliss-700" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-stone-500">ลูกค้า</p>
-              <p className="font-medium text-stone-900">{job.customer_name}</p>
+              <p className="text-xs text-bliss-500">ลูกค้า</p>
+              <p className="font-medium text-bliss-900">{job.customer_name}</p>
             </div>
             {job.customer_phone && (
               <a
@@ -371,17 +371,17 @@ function StaffJobDetail() {
               <MapPin className="w-5 h-5 text-red-700" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-stone-500">สถานที่</p>
+              <p className="text-xs text-bliss-500">สถานที่</p>
               {job.hotel_name ? (
                 <>
-                  <p className="font-medium text-stone-900">{job.hotel_name}</p>
-                  {job.room_number && <p className="text-sm text-stone-600">ห้อง {job.room_number}</p>}
+                  <p className="font-medium text-bliss-900">{job.hotel_name}</p>
+                  {job.room_number && <p className="text-sm text-bliss-600">ห้อง {job.room_number}</p>}
                 </>
               ) : (
-                <p className="font-medium text-stone-900">{job.address}</p>
+                <p className="font-medium text-bliss-900">{job.address}</p>
               )}
               {job.distance_km && (
-                <p className="text-sm text-stone-500 mt-1">ระยะทาง {job.distance_km} กม.</p>
+                <p className="text-sm text-bliss-500 mt-1">ระยะทาง {job.distance_km} กม.</p>
               )}
             </div>
             {job.latitude && job.longitude && (
@@ -389,7 +389,7 @@ function StaffJobDetail() {
                 href={`https://www.google.com/maps/dir/?api=1&destination=${job.latitude},${job.longitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition"
+                className="p-2 bg-bliss-50 text-bliss-700 rounded-lg hover:bg-bliss-100 transition"
               >
                 <Navigation className="w-5 h-5" />
               </a>
@@ -402,37 +402,37 @@ function StaffJobDetail() {
               <Banknote className="w-5 h-5 text-green-700" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">รายได้</p>
-              <p className="text-xl font-bold text-amber-700">฿{Number(totalPrice).toLocaleString()}</p>
+              <p className="text-xs text-bliss-500">รายได้</p>
+              <p className="text-xl font-bold text-bliss-700">฿{Number(totalPrice).toLocaleString()}</p>
             </div>
           </div>
 
           {/* Gender Preference */}
           {job.bookings?.provider_preference && job.bookings.provider_preference !== 'no-preference' && (
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <User className="w-5 h-5 text-purple-500" />
+              <div className="w-10 h-10 bg-bliss-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-bliss-500" />
               </div>
               <div>
-                <p className="text-xs text-stone-500">ความต้องการเพศของผู้ให้บริการ</p>
+                <p className="text-xs text-bliss-500">ความต้องการเพศของผู้ให้บริการ</p>
                 <div className="flex items-center gap-2 mt-1">
                   {job.bookings.provider_preference === 'female-only' && (
-                    <span className="px-2 py-1 text-xs font-medium bg-pink-100 text-pink-700 rounded-full">
+                    <span className="px-2 py-1 text-xs font-medium bg-bliss-100 text-bliss-700 rounded-full">
                       ผู้หญิงเท่านั้น (บังคับ)
                     </span>
                   )}
                   {job.bookings.provider_preference === 'male-only' && (
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                    <span className="px-2 py-1 text-xs font-medium bg-bliss-100 text-bliss-700 rounded-full">
                       ผู้ชายเท่านั้น (บังคับ)
                     </span>
                   )}
                   {job.bookings.provider_preference === 'prefer-female' && (
-                    <span className="px-2 py-1 text-xs font-medium bg-pink-50 text-pink-600 rounded-full">
+                    <span className="px-2 py-1 text-xs font-medium bg-bliss-50 text-bliss-600 rounded-full">
                       ต้องการผู้หญิง (ยืดหยุ่น)
                     </span>
                   )}
                   {job.bookings.provider_preference === 'prefer-male' && (
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">
+                    <span className="px-2 py-1 text-xs font-medium bg-bliss-50 text-bliss-600 rounded-full">
                       ต้องการผู้ชาย (ยืดหยุ่น)
                     </span>
                   )}
@@ -444,12 +444,12 @@ function StaffJobDetail() {
           {/* Customer Notes */}
           {job.customer_notes && (
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-stone-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FileText className="w-5 h-5 text-stone-500" />
+              <div className="w-10 h-10 bg-bliss-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-bliss-500" />
               </div>
               <div>
-                <p className="text-xs text-stone-500">หมายเหตุจากลูกค้า</p>
-                <p className="text-sm text-stone-700 mt-1">{job.customer_notes}</p>
+                <p className="text-xs text-bliss-500">หมายเหตุจากลูกค้า</p>
+                <p className="text-sm text-bliss-700 mt-1">{job.customer_notes}</p>
               </div>
             </div>
           )}
@@ -525,33 +525,33 @@ function StaffJobDetail() {
 
       {/* Timestamps */}
       {(job.accepted_at || job.started_at || job.completed_at || job.cancelled_at) && (
-        <div className="bg-white rounded-xl shadow border border-stone-100 p-4">
-          <h3 className="font-semibold text-stone-900 mb-3 text-sm">ไทม์ไลน์</h3>
+        <div className="bg-white rounded-xl shadow border border-bliss-100 p-4">
+          <h3 className="font-semibold text-bliss-900 mb-3 text-sm">ไทม์ไลน์</h3>
           <div className="space-y-2 text-sm">
             {job.accepted_at && (
-              <div className="flex items-center gap-2 text-stone-600">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+              <div className="flex items-center gap-2 text-bliss-600">
+                <div className="w-2 h-2 bg-bliss-500 rounded-full" />
                 <span>รับงาน: {new Date(job.accepted_at).toLocaleString('th-TH')}</span>
               </div>
             )}
             {job.started_at && (
-              <div className="flex items-center gap-2 text-stone-600">
-                <div className="w-2 h-2 bg-purple-500 rounded-full" />
+              <div className="flex items-center gap-2 text-bliss-600">
+                <div className="w-2 h-2 bg-bliss-500 rounded-full" />
                 <span>เริ่มงาน: {new Date(job.started_at).toLocaleString('th-TH')}</span>
               </div>
             )}
             {job.completed_at && (
-              <div className="flex items-center gap-2 text-stone-600">
+              <div className="flex items-center gap-2 text-bliss-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full" />
                 <span>เสร็จสิ้น: {new Date(job.completed_at).toLocaleString('th-TH')}</span>
               </div>
             )}
             {job.cancelled_at && (
-              <div className="flex items-center gap-2 text-stone-600">
+              <div className="flex items-center gap-2 text-bliss-600">
                 <div className="w-2 h-2 bg-red-500 rounded-full" />
                 <span>ยกเลิก: {new Date(job.cancelled_at).toLocaleString('th-TH')}</span>
                 {job.cancellation_reason && (
-                  <span className="text-stone-500">({job.cancellation_reason})</span>
+                  <span className="text-bliss-500">({job.cancellation_reason})</span>
                 )}
               </div>
             )}
@@ -595,7 +595,7 @@ function StaffJobDetail() {
             <button
               onClick={handleAccept}
               disabled={isProcessing || !eligibility?.canWork || !!(job && getScheduleConflict(job))}
-              className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               title={job && getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : undefined}
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
@@ -607,7 +607,7 @@ function StaffJobDetail() {
             <button
               onClick={handleStart}
               disabled={isProcessing || !eligibility?.canWork}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
               เริ่มงาน
@@ -618,7 +618,7 @@ function StaffJobDetail() {
             <button
               onClick={handleComplete}
               disabled={isProcessing}
-              className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
               เสร็จสิ้นงาน
@@ -626,8 +626,8 @@ function StaffJobDetail() {
           )}
 
           {isMyJob && !isPending && (
-            <div className="w-full py-3 px-4 bg-stone-50 border border-stone-200 rounded-xl text-center">
-              <p className="text-sm text-stone-500">หากต้องการยกเลิกงาน กรุณาติดต่อ Admin</p>
+            <div className="w-full py-3 px-4 bg-bliss-50 border border-bliss-200 rounded-xl text-center">
+              <p className="text-sm text-bliss-500">หากต้องการยกเลิกงาน กรุณาติดต่อ Admin</p>
             </div>
           )}
         </div>

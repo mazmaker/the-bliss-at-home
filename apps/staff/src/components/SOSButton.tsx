@@ -74,7 +74,7 @@ export function SOSButton({ currentJobId }: SOSButtonProps) {
 
             {/* Content */}
             <div className="p-4 space-y-4">
-              <p className="text-gray-600 text-sm">
+              <p className="text-bliss-600 text-sm">
                 หากคุณต้องการความช่วยเหลือฉุกเฉิน กรุณาเลือกวิธีการติดต่อ
               </p>
 
@@ -102,9 +102,9 @@ export function SOSButton({ currentJobId }: SOSButtonProps) {
               <button
                 onClick={handleSOS}
                 disabled={isReporting}
-                className="w-full flex items-center gap-3 p-4 bg-amber-50 rounded-xl text-amber-700 hover:bg-amber-100 transition disabled:opacity-50"
+                className="w-full flex items-center gap-3 p-4 bg-bliss-50 rounded-xl text-bliss-700 hover:bg-bliss-100 transition disabled:opacity-50"
               >
-                <div className="w-12 h-12 bg-amber-600 text-white rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-bliss-600 text-white rounded-full flex items-center justify-center">
                   {isReporting ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
@@ -119,7 +119,7 @@ export function SOSButton({ currentJobId }: SOSButtonProps) {
                 </div>
               </button>
 
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-xs text-bliss-400 text-center">
                 ระบบจะส่งตำแหน่งปัจจุบันของคุณไปยังทีมงาน
               </p>
             </div>
@@ -128,7 +128,7 @@ export function SOSButton({ currentJobId }: SOSButtonProps) {
             <div className="p-4 pt-0">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition"
+                className="w-full py-3 bg-bliss-100 text-bliss-700 rounded-xl font-medium hover:bg-bliss-200 transition"
               >
                 ยกเลิก
               </button>

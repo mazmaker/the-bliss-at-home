@@ -44,14 +44,14 @@ export default function JobLocationMap({
 
   if (!showMap) {
     return (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+      <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-amber-700" />
+          <div className="w-10 h-10 bg-bliss-100 rounded-lg flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-bliss-700" />
           </div>
           <div className="flex-1">
-            <p className="font-medium text-amber-800">ตำแหน่งปลายทาง</p>
-            <p className="text-sm text-amber-600 mt-1">{destinationName}</p>
+            <p className="font-medium text-bliss-800">ตำแหน่งปลายทาง</p>
+            <p className="text-sm text-bliss-600 mt-1">{destinationName}</p>
           </div>
           <div className="flex gap-2">
             {customerPhone && (
@@ -70,7 +70,7 @@ export default function JobLocationMap({
                 href={navigationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition"
+                className="p-2 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition"
                 title="นำทางด้วย Google Maps"
               >
                 <Navigation className="w-4 h-4" />
@@ -83,13 +83,13 @@ export default function JobLocationMap({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
-      <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-4">
+    <div className="bg-white rounded-xl shadow border border-bliss-100 overflow-hidden">
+      <div className="bg-gradient-to-r from-bliss-600 to-bliss-700 text-white p-4">
         <h3 className="font-semibold flex items-center gap-2">
           <MapPin className="w-5 h-5" />
           แผนที่และการนำทาง
         </h3>
-        <p className="text-amber-100 text-sm mt-1">ตำแหน่งปัจจุบันและปลายทาง</p>
+        <p className="text-bliss-100 text-sm mt-1">ตำแหน่งปัจจุบันและปลายทาง</p>
       </div>
 
       <div className="p-4 space-y-4">
@@ -119,14 +119,14 @@ export default function JobLocationMap({
         )}
 
         {/* Destination */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-amber-700" />
-            <span className="text-amber-700 font-medium text-sm">ปลายทาง</span>
+            <MapPin className="w-4 h-4 text-bliss-700" />
+            <span className="text-bliss-700 font-medium text-sm">ปลายทาง</span>
           </div>
-          <p className="text-sm text-amber-600 mb-3">{destinationName}</p>
+          <p className="text-sm text-bliss-600 mb-3">{destinationName}</p>
           {destinationLat && destinationLng && (
-            <p className="text-xs text-amber-500 mb-2">
+            <p className="text-xs text-bliss-500 mb-2">
               พิกัด: {destinationLat.toFixed(6)}, {destinationLng.toFixed(6)}
             </p>
           )}
@@ -137,7 +137,7 @@ export default function JobLocationMap({
                 href={destinationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded hover:bg-amber-200 transition flex items-center gap-1"
+                className="text-xs bg-bliss-100 text-bliss-700 px-3 py-1 rounded hover:bg-bliss-200 transition flex items-center gap-1"
               >
                 <MapPin className="w-3 h-3" />
                 ดูตำแหน่ง
@@ -148,7 +148,7 @@ export default function JobLocationMap({
                 href={navigationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition flex items-center gap-1"
+                className="text-xs bg-bliss-100 text-bliss-700 px-3 py-1 rounded hover:bg-bliss-200 transition flex items-center gap-1"
               >
                 <Navigation className="w-3 h-3" />
                 นำทาง
@@ -170,9 +170,9 @@ export default function JobLocationMap({
 
         {/* Distance & ETA (placeholder for future enhancement) */}
         {currentLat && currentLng && destinationLat && destinationLng && (
-          <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
-            <p className="text-xs text-stone-500 mb-1">ข้อมูลเพิ่มเติม</p>
-            <p className="text-sm text-stone-700">
+          <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-3">
+            <p className="text-xs text-bliss-500 mb-1">ข้อมูลเพิ่มเติม</p>
+            <p className="text-sm text-bliss-700">
               💡 เพื่อประสบการณ์ที่ดีที่สุด ควรใช้แอป Google Maps สำหรับการนำทาง
             </p>
           </div>

@@ -117,13 +117,13 @@ export default function DebugJobsData() {
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 m-4">
-      <h3 className="font-bold text-blue-800 mb-3">🔍 Database Debug Info</h3>
+    <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4 m-4">
+      <h3 className="font-bold text-bliss-800 mb-3">🔍 Database Debug Info</h3>
 
       <button
         onClick={checkDatabase}
         disabled={isLoading}
-        className="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+        className="mb-4 bg-bliss-500 text-white px-4 py-2 rounded hover:bg-bliss-600 disabled:opacity-50"
       >
         {isLoading ? 'Checking...' : 'Check Database'}
       </button>
