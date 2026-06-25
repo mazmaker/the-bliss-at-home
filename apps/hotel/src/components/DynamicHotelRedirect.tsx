@@ -80,9 +80,9 @@ export function DynamicHotelRedirect({
         })
         .catch(err => {
           console.error('❌ Error getting hotel slug:', err)
-          // Get slug from current URL instead of hard fallback
-          const currentPath = window.location.pathname
-          const urlSlug = currentPath.match(/\/hotel\/([^\/]+)/)?.[1] || 'resort-chiang-mai'
+          // Use the slug already in the URL if present; otherwise null → fall through to /login
+          // (do NOT fall back to a hardcoded slug, which would 404 when that hotel doesn't exist)
+          const urlSlug = window.location.pathname.match(/\/hotel\/([^\/]+)/)?.[1] ?? null
           console.log('🔄 Using URL-based fallback:', urlSlug)
           setHotelSlug(urlSlug)
         })

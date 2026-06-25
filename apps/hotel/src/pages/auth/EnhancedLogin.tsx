@@ -236,12 +236,12 @@ export function EnhancedHotelLogin() {
   const getHotelUrl = async (): Promise<string> => {
     if (userHotelId) {
       const hotelSlug = await getHotelSlugFromId(userHotelId)
-      return `/hotel/${hotelSlug}`
+      if (hotelSlug) return `/hotel/${hotelSlug}`
     }
-    // Get current hotel context from URL instead of hard fallback
-    const currentPath = window.location.pathname
-    const urlSlug = currentPath.match(/\/hotel\/([^\/]+)/)?.[1] || 'resort-chiang-mai'
-    return `/hotel/${urlSlug}`
+    // No resolvable hotel — use a slug already in the URL if present, else go to /login
+    // (avoid a hardcoded fallback slug that 404s when that hotel doesn't exist)
+    const urlSlug = window.location.pathname.match(/\/hotel\/([^\/]+)/)?.[1]
+    return urlSlug ? `/hotel/${urlSlug}` : '/login'
   }
 
   const handleLogin = async (data: LoginFormData) => {

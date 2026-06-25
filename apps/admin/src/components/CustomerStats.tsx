@@ -143,7 +143,7 @@ function CustomerStats() {
               <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
               <div>
                 <p className="text-sm font-medium text-bliss-900">
-                  {((stats.active / stats.total) * 100).toFixed(1)}% ของลูกค้าเป็น Active
+                  {(stats.total > 0 ? (stats.active / stats.total) * 100 : 0).toFixed(1)}% ของลูกค้าเป็น Active
                 </p>
                 <p className="text-xs text-bliss-500">
                   ลูกค้าส่วนใหญ่ยังคงใช้บริการอยู่

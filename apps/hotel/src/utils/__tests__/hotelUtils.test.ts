@@ -46,16 +46,16 @@ describe('hotelUtils', () => {
       expect(mockFrom).toHaveBeenCalledWith('hotels')
     })
 
-    it('returns fallback on error', async () => {
+    it('returns null on error (caller routes to /login)', async () => {
       mockResults['default'] = { data: null, error: { message: 'error' } }
       const result = await getHotelSlugFromId('bad-id')
-      expect(result).toBe('resort-chiang-mai')
+      expect(result).toBeNull()
     })
 
-    it('returns fallback when slug is null', async () => {
+    it('returns null when slug is null (caller routes to /login)', async () => {
       mockResults['default'] = { data: { hotel_slug: null }, error: null }
       const result = await getHotelSlugFromId('no-slug')
-      expect(result).toBe('resort-chiang-mai')
+      expect(result).toBeNull()
     })
 
     it('uses cache for repeated calls', async () => {

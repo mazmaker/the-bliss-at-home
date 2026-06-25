@@ -24,9 +24,9 @@ const cache = new Map<string, CacheEntry>()
 /**
  * Convert hotel ID to slug using database query
  * @param hotelId - The hotel ID
- * @returns Promise<string> - The hotel slug or fallback
+ * @returns Promise<string | null> - The hotel slug, or null if not found (caller should route to /login)
  */
-export async function getHotelSlugFromId(hotelId: string): Promise<string> {
+export async function getHotelSlugFromId(hotelId: string): Promise<string | null> {
   // Check cache first
   const cacheKey = `id-to-slug:${hotelId}`
   const cached = cache.get(cacheKey)
@@ -43,8 +43,8 @@ export async function getHotelSlugFromId(hotelId: string): Promise<string> {
       .single()
 
     if (error || !data?.hotel_slug) {
-      console.warn('Hotel ID not found, using fallback:', hotelId)
-      return 'resort-chiang-mai' // Fallback slug
+      console.warn('Hotel ID not found (no slug); caller should route to /login:', hotelId)
+      return null // Not found — do NOT fall back to a hardcoded slug (would 404)
     }
 
     // Cache the result
@@ -56,7 +56,7 @@ export async function getHotelSlugFromId(hotelId: string): Promise<string> {
     return data.hotel_slug
   } catch (error) {
     console.error('Error fetching hotel slug:', error)
-    return 'resort-chiang-mai' // Fallback slug
+    return null // On error, route to /login rather than a non-existent hotel
   }
 }
 

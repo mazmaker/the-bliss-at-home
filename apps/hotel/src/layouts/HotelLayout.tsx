@@ -105,10 +105,10 @@ function HotelLayout() {
             ไม่พบข้อมูลโรงแรมที่ระบุ: {hotelSlug}
           </p>
           <Link
-            to="/hotel/resort-chiang-mai"
+            to="/login"
             className="inline-flex items-center px-4 py-2 bg-bliss-700 text-white rounded-lg hover:bg-bliss-800 transition"
           >
-            ไปยังโรงแรมเริ่มต้น
+            กลับไปหน้าเข้าสู่ระบบ
           </Link>
         </div>
       </div>
