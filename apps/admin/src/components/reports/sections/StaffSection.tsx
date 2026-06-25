@@ -18,7 +18,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   UserCheck,
-  Zap
+  Zap,
+  Award
 } from 'lucide-react'
 import StaffReports from '../StaffReports'
 import { useStaffOverview, useStaffPerformance, useStaffEarnings, useStaffRankings } from '../../../hooks/useAnalytics'
