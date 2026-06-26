@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout, LoginForm, PasswordResetForm } from '@bliss/ui'
 import { APP_CONFIGS, authService } from '@bliss/supabase/auth'
 import { useTranslation } from '@bliss/i18n'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 type AuthView = 'login' | 'register' | 'forgot-password'
 
@@ -59,6 +60,11 @@ export function CustomerLoginPage() {
       showBackLink={false}
       className="bg-[#fbfaf6]"
     >
+      {/* Language Switcher */}
+      <div className="flex justify-end mb-4">
+        <LanguageSwitcher />
+      </div>
+
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
           <p className="text-sm text-red-800">{error}</p>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Smartphone, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '@bliss/i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 interface OTPVerificationProps {
   phoneNumber?: string
@@ -171,14 +172,17 @@ function OTPVerification({ phoneNumber: propPhoneNumber, onVerified }: OTPVerifi
   return (
     <div className="min-h-screen bg-bliss-100 py-8">
       <div className="container mx-auto px-4 max-w-md">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-bliss-700 hover:text-bliss-900 mb-6"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>{t('common:buttons.back')}</span>
-        </button>
+        {/* Back Button + Language Switcher */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-bliss-700 hover:text-bliss-900"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>{t('common:buttons.back')}</span>
+          </button>
+          <LanguageSwitcher />
+        </div>
 
         {/* OTP Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">

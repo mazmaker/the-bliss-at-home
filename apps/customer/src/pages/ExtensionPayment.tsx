@@ -8,6 +8,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, QrCode, CreditCard, Clock, AlertTriangle, CheckCircle, Lock, Building2, Smartphone } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 import { supabase } from '@bliss/supabase/auth'
 import ManualPaymentInstructions, { type ManualQrConfig } from '../components/ManualPaymentInstructions'
 
@@ -44,6 +45,7 @@ const BANKS = [
 function ExtensionPayment() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { t } = useTranslation('extension')
 
   const bookingId     = searchParams.get('booking_id')     || ''
   const bookingNumber = searchParams.get('booking_number') || ''
@@ -123,7 +125,7 @@ function ExtensionPayment() {
           }, 2000)
         } else if (data.status === 'failed') {
           stopPolling()
-          setError('การชำระเงินล้มเหลว กรุณาลองใหม่หรือติดต่อเจ้าหน้าที่')
+          setError(t('payment.errPaymentFailed'))
         }
       } catch {
         // transient error — keep polling
@@ -175,10 +177,10 @@ function ExtensionPayment() {
         setPaymentSuccess(true)
         setTimeout(() => navigate(`/bookings/${bookingNumber || bookingId}?payment=success&type=extension`), 2000)
       } else {
-        setError(result.message || 'ไม่สามารถสร้าง QR ได้ กรุณาลองใหม่')
+        setError(result.message || t('payment.errQRFailed'))
       }
     } catch {
-      setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
+      setError(t('payment.errGeneric'))
     } finally {
       setIsLoading(false)
     }
@@ -200,10 +202,10 @@ function ExtensionPayment() {
           setTimeout(() => navigate(`/bookings/${bookingNumber || bookingId}?payment=success&type=extension`), 2000)
         }
       } else {
-        setError(result.message || 'การชำระเงินล้มเหลว')
+        setError(result.message || t('payment.errPaymentFailedShort'))
       }
     } catch {
-      setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
+      setError(t('payment.errGeneric'))
     } finally {
       setIsLoading(false)
     }
@@ -222,18 +224,18 @@ function ExtensionPayment() {
         }
         window.location.href = result.payment.authorize_uri
       } else {
-        setError(result.message || 'ไม่สามารถเชื่อมต่อธนาคารได้ กรุณาลองใหม่')
+        setError(result.message || t('payment.errBankFailed'))
         setIsLoading(false)
       }
     } catch {
-      setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
+      setError(t('payment.errGeneric'))
       setIsLoading(false)
     }
   }
 
   const handleCardSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!omiseReady) { setError('ระบบชำระเงินยังไม่พร้อม กรุณารอสักครู่'); return }
+    if (!omiseReady) { setError(t('payment.errSystemNotReady')); return }
 
     const [mm, yy] = cardForm.expiry.split('/')
     ;(window as any).Omise.createToken(
@@ -247,7 +249,7 @@ function ExtensionPayment() {
       },
       (statusCode: number, response: any) => {
         if (statusCode === 200) handleCreditCard(response.id)
-        else setError(response.message || 'ข้อมูลบัตรไม่ถูกต้อง')
+        else setError(response.message || t('payment.errInvalidCard'))
       }
     )
   }
@@ -274,8 +276,8 @@ function ExtensionPayment() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold text-bliss-900 mb-2">ชำระเงินสำเร็จ!</h1>
-          <p className="text-bliss-700">กำลังพาคุณกลับไปที่การจอง...</p>
+          <h1 className="text-2xl font-bold text-bliss-900 mb-2">{t('payment.successTitle')}</h1>
+          <p className="text-bliss-700">{t('payment.successRedirect')}</p>
         </div>
       </div>
     )
@@ -291,17 +293,17 @@ function ExtensionPayment() {
               <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-lg font-semibold text-bliss-900">ชำระเงินเพิ่มเวลา</h1>
+              <h1 className="text-lg font-semibold text-bliss-900">{t('payment.title')}</h1>
             </div>
           </div>
         </div>
         <div className="max-w-md mx-auto p-4 space-y-4">
           {duration > 0 && (
             <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
-              <h2 className="text-lg font-semibold text-bliss-900 mb-4">สรุปการเพิ่มเวลา</h2>
+              <h2 className="text-lg font-semibold text-bliss-900 mb-4">{t('payment.summaryTitle')}</h2>
               <div className="flex justify-between">
-                <span className="text-bliss-700 flex items-center gap-1"><Clock className="w-4 h-4" />เพิ่มเวลา</span>
-                <span className="font-medium">{duration} นาที</span>
+                <span className="text-bliss-700 flex items-center gap-1"><Clock className="w-4 h-4" />{t('payment.addTime')}</span>
+                <span className="font-medium">{duration} {t('payment.minutes')}</span>
               </div>
             </div>
           )}
@@ -329,7 +331,7 @@ function ExtensionPayment() {
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-bliss-900">ชำระเงินเพิ่มเวลา</h1>
+            <h1 className="text-lg font-semibold text-bliss-900">{t('payment.title')}</h1>
           </div>
         </div>
       </div>
@@ -337,11 +339,11 @@ function ExtensionPayment() {
       <div className="max-w-md mx-auto p-4 space-y-4">
         {/* Summary */}
         <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200">
-          <h2 className="text-lg font-semibold text-bliss-900 mb-4">สรุปการเพิ่มเวลา</h2>
+          <h2 className="text-lg font-semibold text-bliss-900 mb-4">{t('payment.summaryTitle')}</h2>
           <div className="space-y-3">
             {bookingNumber && (
               <div className="flex justify-between">
-                <span className="text-bliss-700">หมายเลขจอง</span>
+                <span className="text-bliss-700">{t('payment.bookingNumber')}</span>
                 <span className="font-medium">{bookingNumber}</span>
               </div>
             )}
@@ -349,14 +351,14 @@ function ExtensionPayment() {
               <div className="flex justify-between">
                 <span className="text-bliss-700 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  เพิ่มเวลา
+                  {t('payment.addTime')}
                 </span>
-                <span className="font-medium">{duration} นาที</span>
+                <span className="font-medium">{duration} {t('payment.minutes')}</span>
               </div>
             )}
             <div className="border-t border-bliss-200 pt-3">
               <div className="flex justify-between text-lg font-semibold">
-                <span>ยอดชำระ</span>
+                <span>{t('payment.amountDue')}</span>
                 <span className="text-bliss-600">฿{amount.toLocaleString()}</span>
               </div>
             </div>
@@ -368,10 +370,10 @@ function ExtensionPayment() {
           <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-red-800">เกิดข้อผิดพลาด</p>
+              <p className="font-medium text-red-800">{t('payment.errorTitle')}</p>
               <p className="text-sm text-red-600 mt-1">{error}</p>
               <button onClick={resetChannel} className="mt-2 text-sm text-bliss-600 font-medium underline">
-                ลองใหม่
+                {t('payment.retry')}
               </button>
             </div>
           </div>
@@ -380,7 +382,7 @@ function ExtensionPayment() {
         {/* ── Channel selection ─────────────────────────────────────── */}
         {!selectedChannel && !error && (
           <div className="bg-bliss-50 rounded-xl p-6 border border-bliss-200 space-y-4">
-            <h3 className="font-semibold text-bliss-900">เลือกวิธีชำระเงิน</h3>
+            <h3 className="font-semibold text-bliss-900">{t('payment.selectMethod')}</h3>
             <div className="grid gap-3">
 
               {enabledChannels.includes('promptpay') && (
@@ -393,7 +395,7 @@ function ExtensionPayment() {
                   </div>
                   <div>
                     <p className="font-semibold text-bliss-900">PromptPay</p>
-                    <p className="text-sm text-bliss-500">สแกน QR ผ่านแอปธนาคาร</p>
+                    <p className="text-sm text-bliss-500">{t('payment.promptpayDesc')}</p>
                   </div>
                 </button>
               )}
@@ -407,7 +409,7 @@ function ExtensionPayment() {
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-bliss-900">บัตรเครดิต / เดบิต</p>
+                    <p className="font-semibold text-bliss-900">{t('payment.creditCard')}</p>
                     <p className="text-sm text-bliss-500">Visa, Mastercard</p>
                   </div>
                 </button>
@@ -423,7 +425,7 @@ function ExtensionPayment() {
                   </div>
                   <div>
                     <p className="font-semibold text-bliss-900">Internet Banking</p>
-                    <p className="text-sm text-bliss-500">ชำระผ่านเว็บธนาคาร</p>
+                    <p className="text-sm text-bliss-500">{t('payment.internetBankingDesc')}</p>
                   </div>
                 </button>
               )}
@@ -438,13 +440,13 @@ function ExtensionPayment() {
                   </div>
                   <div>
                     <p className="font-semibold text-bliss-900">Mobile Banking</p>
-                    <p className="text-sm text-bliss-500">ชำระผ่านแอปธนาคาร</p>
+                    <p className="text-sm text-bliss-500">{t('payment.mobileBankingDesc')}</p>
                   </div>
                 </button>
               )}
 
               {enabledChannels.length === 0 && (
-                <p className="text-center text-bliss-500 py-4 text-sm">กำลังโหลดช่องทางชำระเงิน...</p>
+                <p className="text-center text-bliss-500 py-4 text-sm">{t('payment.loadingChannels')}</p>
               )}
             </div>
           </div>
@@ -459,22 +461,22 @@ function ExtensionPayment() {
               </button>
               <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
-                ชำระด้วย PromptPay
+                {t('payment.payWithPromptpay')}
               </h3>
             </div>
 
             {isLoading && !promptpayQR ? (
               <div className="flex flex-col items-center py-10 gap-3 text-bliss-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                <span>กำลังสร้าง QR...</span>
+                <span>{t('payment.generatingQR')}</span>
               </div>
             ) : promptpayQR ? (
               <div className="text-center">
                 <img src={promptpayQR} alt="PromptPay QR Code" className="w-64 h-64 mx-auto rounded-xl" />
-                <p className="text-sm text-bliss-700 mt-3">สแกน QR ด้วยแอปธนาคารเพื่อชำระเงิน</p>
+                <p className="text-sm text-bliss-700 mt-3">{t('payment.scanQR')}</p>
                 <div className="flex items-center justify-center gap-2 mt-2 text-bliss-500 text-sm">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-bliss-600" />
-                  กำลังรอการชำระเงิน...
+                  {t('payment.waitingPayment')}
                 </div>
               </div>
             ) : null}
@@ -490,22 +492,22 @@ function ExtensionPayment() {
               </button>
               <h3 className="font-semibold text-bliss-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
-                ชำระด้วยบัตรเครดิต / เดบิต
+                {t('payment.payWithCard')}
               </h3>
             </div>
 
             <form onSubmit={handleCardSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-bliss-700 mb-1">ชื่อบนบัตร</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">{t('payment.cardName')}</label>
                 <input
-                  type="text" required placeholder="ชื่อ นามสกุล"
+                  type="text" required placeholder={t('payment.cardNamePlaceholder')}
                   value={cardForm.name}
                   onChange={e => setCardForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-bliss-700 mb-1">หมายเลขบัตร</label>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">{t('payment.cardNumber')}</label>
                 <input
                   type="text" required inputMode="numeric" placeholder="0000 0000 0000 0000"
                   value={cardForm.number}
@@ -515,7 +517,7 @@ function ExtensionPayment() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-bliss-700 mb-1">วันหมดอายุ</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-1">{t('payment.cardExpiry')}</label>
                   <input
                     type="text" required inputMode="numeric" placeholder="MM/YY"
                     value={cardForm.expiry}
@@ -542,13 +544,13 @@ function ExtensionPayment() {
                     : 'bg-bliss-600 hover:bg-bliss-600 text-white shadow-lg shadow-bliss-600/20'
                 }`}
               >
-                {isLoading ? 'กำลังดำเนินการ...' : `ชำระ ฿${amount.toLocaleString()}`}
+                {isLoading ? t('payment.processing') : t('payment.pay', { amount: amount.toLocaleString() })}
               </button>
             </form>
 
             <div className="flex items-center justify-center gap-2 mt-4 text-bliss-500 text-xs">
               <Lock className="w-3 h-3" />
-              ปลอดภัยด้วย SSL และ Omise
+              {t('payment.securedBy')}
             </div>
           </div>
         )}
@@ -564,12 +566,12 @@ function ExtensionPayment() {
                 {selectedChannel === 'internet_banking' ? 'Internet Banking' : 'Mobile Banking'}
               </h3>
             </div>
-            <p className="text-sm text-bliss-500 mb-4 ml-8">เลือกธนาคารที่ต้องการชำระ</p>
+            <p className="text-sm text-bliss-500 mb-4 ml-8">{t('payment.selectBank')}</p>
 
             {isLoading ? (
               <div className="flex flex-col items-center py-8 gap-3 text-bliss-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600" />
-                <span>กำลังเชื่อมต่อธนาคาร...</span>
+                <span>{t('payment.connectingBank')}</span>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-3">
@@ -596,7 +598,7 @@ function ExtensionPayment() {
         {/* Security notice */}
         <div className="p-4 bg-bliss-100 border border-bliss-300 rounded-xl">
           <p className="text-sm text-bliss-700 text-center">
-            การชำระเงินปลอดภัยด้วยระบบ SSL และ Omise
+            {t('payment.securityNotice')}
           </p>
         </div>
       </div>

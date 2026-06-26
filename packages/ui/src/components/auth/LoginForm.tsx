@@ -6,6 +6,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaGoogle, FaFacebook, FaExternalLinkAlt } from 'react-icons/fa'
+import { useTranslation } from '@bliss/i18n'
 
 function isWebView(): boolean {
   const ua = navigator.userAgent || ''
@@ -75,6 +76,7 @@ export function LoginForm({
   onSocialLogin,
 }: LoginFormProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation('auth')
   // Skip initial auth check on login page - only load during login attempt
   const { login, isLoading, error, clearError } = useAuth(expectedRole, { skipInitialCheck: true })
 
@@ -100,7 +102,7 @@ export function LoginForm({
       setTimeout(() => setCopied(false), 3000)
     } catch {
       // Fallback: prompt user
-      window.prompt('คัดลอก URL นี้ไปเปิดใน Browser:', url)
+      window.prompt(t('webView.copyUrl'), url)
     }
   }
 
@@ -109,16 +111,16 @@ export function LoginForm({
 
     // Email validation
     if (!credentials.email) {
-      errors.email = 'กรุณากรอกอีเมล'
+      errors.email = t('validation.emailRequired')
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
-      errors.email = 'รูปแบบอีเมลไม่ถูกต้อง'
+      errors.email = t('validation.emailInvalid')
     }
 
     // Password validation
     if (!credentials.password) {
-      errors.password = 'กรุณากรอกรหัสผ่าน'
+      errors.password = t('validation.passwordRequired')
     } else if (credentials.password.length < 6) {
-      errors.password = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
+      errors.password = t('validation.passwordMinLength')
     }
 
     setValidationErrors(errors)
@@ -167,7 +169,7 @@ export function LoginForm({
             <img src={appLogo} alt={appTitle} className="h-16 mx-auto mb-4" />
           )}
           <h1 className="text-2xl font-bold text-gray-900">{appTitle}</h1>
-          <p className="text-gray-600 mt-2">เข้าสู่ระบบบัญชีของคุณ</p>
+          <p className="text-gray-600 mt-2">{t('login.headerSubtitle')}</p>
         </div>
       )}
 
@@ -185,10 +187,10 @@ export function LoginForm({
       {showSocialLogin && inWebView && (
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
           <p className="text-sm text-amber-800 font-medium mb-2">
-            ไม่สามารถใช้ Google Login ใน App นี้ได้
+            {t('webView.title')}
           </p>
           <p className="text-xs text-amber-700 mb-3">
-            กรุณาเปิดใน Chrome หรือ Safari เพื่อเข้าสู่ระบบด้วย Google หรือใช้อีเมล/รหัสผ่านด้านล่าง
+            {t('webView.description')}
           </p>
           <button
             type="button"
@@ -196,7 +198,7 @@ export function LoginForm({
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-100 border border-amber-300 rounded-lg text-sm font-medium text-amber-900 hover:bg-amber-200 transition-colors"
           >
             <FaExternalLinkAlt className="w-3.5 h-3.5" />
-            {copied ? 'คัดลอก URL แล้ว! วางใน Browser เพื่อเปิด' : 'คัดลอก URL เพื่อเปิดใน Browser'}
+            {copied ? t('webView.copiedUrl') : t('webView.copyUrl')}
           </button>
         </div>
       )}
@@ -212,7 +214,7 @@ export function LoginForm({
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-stone-200 rounded-xl font-medium text-stone-700 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
             >
               <FaGoogle className="w-5 h-5 text-red-500" />
-              เข้าสู่ระบบด้วย Google
+              {t('login.googleButton')}
             </button>
           </div>
 
@@ -222,7 +224,7 @@ export function LoginForm({
               <div className="w-full border-t border-stone-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-stone-500">หรือเข้าสู่ระบบด้วยอีเมล</span>
+              <span className="px-4 bg-white text-stone-500">{t('login.orWithEmail')}</span>
             </div>
           </div>
         </>
@@ -236,7 +238,7 @@ export function LoginForm({
             htmlFor="email"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            อีเมล
+            {t('login.emailLabel')}
           </label>
           <Input
             id="email"
@@ -257,7 +259,7 @@ export function LoginForm({
             htmlFor="password"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            รหัสผ่าน
+            {t('login.passwordLabel')}
           </label>
           <Input
             id="password"
@@ -290,7 +292,7 @@ export function LoginForm({
                   className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-2 focus:ring-offset-0"
                   style={{ accentColor: primaryColor }}
                 />
-                <span className="ml-2 text-sm text-gray-600">จดจำฉัน</span>
+                <span className="ml-2 text-sm text-gray-600">{t('rememberMe')}</span>
               </label>
             )}
 
@@ -302,7 +304,7 @@ export function LoginForm({
                 className="text-sm font-medium hover:underline disabled:opacity-50"
                 style={{ color: primaryColor }}
               >
-                ลืมรหัสผ่าน?
+                {t('login.forgotPassword')}
               </button>
             )}
           </div>
@@ -318,10 +320,10 @@ export function LoginForm({
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
               <Loader size="sm" />
-              กำลังเข้าสู่ระบบ...
+              {t('login.submitting')}
             </span>
           ) : (
-            'เข้าสู่ระบบ'
+            t('login.submit')
           )}
         </Button>
       </form>
@@ -329,7 +331,7 @@ export function LoginForm({
       {/* Register Link */}
       {showRegister && onRegisterClick && (
         <p className="mt-6 text-center text-sm text-gray-600">
-          ยังไม่มีบัญชี?{' '}
+          {t('login.noAccount')}{' '}
           <button
             type="button"
             onClick={onRegisterClick}
@@ -337,7 +339,7 @@ export function LoginForm({
             className="font-medium hover:underline disabled:opacity-50"
             style={{ color: primaryColor }}
           >
-            สร้างบัญชี
+            {t('login.createAccount')}
           </button>
         </p>
       )}

@@ -9,6 +9,7 @@ import { AuthLayout } from '@bliss/ui'
 import { useTranslation } from '@bliss/i18n'
 import { APP_CONFIGS, authService, supabase } from '@bliss/supabase/auth'
 import { Eye, EyeOff, Lock } from 'lucide-react'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 type PageState = 'loading' | 'form' | 'success' | 'error'
 
@@ -127,6 +128,11 @@ export function ResetPasswordPage() {
       backgroundVariant="default"
       showBackLink={false}
     >
+      {/* Language Switcher */}
+      <div className="flex justify-end mb-4">
+        <LanguageSwitcher />
+      </div>
+
       {/* Loading State */}
       {pageState === 'loading' && (
         <div className="text-center py-8">

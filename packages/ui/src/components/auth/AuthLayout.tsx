@@ -5,6 +5,7 @@
 
 import { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from '@bliss/i18n'
 
 export interface AuthLayoutProps {
   children: ReactNode
@@ -30,6 +31,7 @@ export function AuthLayout({
   backgroundVariant = 'default',
   className,
 }: AuthLayoutProps) {
+  const { t } = useTranslation('auth')
   const backgroundStyles = {
     default: 'bg-gray-50',
     gradient: 'bg-gradient-to-br from-gray-50 to-gray-100',
@@ -89,7 +91,7 @@ export function AuthLayout({
       {/* Footer */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <p className="text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} {appTitle}. สงวนลิขสิทธิ์
+          © {new Date().getFullYear()} {appTitle}. {t('copyright')}
         </p>
       </div>
     </div>

@@ -433,6 +433,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@bliss/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@bliss/supabase':
         specifier: workspace:*
         version: link:../supabase

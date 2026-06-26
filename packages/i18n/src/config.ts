@@ -10,6 +10,7 @@ import thBooking from './locales/th/booking.json'
 import thProfile from './locales/th/profile.json'
 import thEmergency from './locales/th/emergency.json'
 import thLegal from './locales/th/legal.json'
+import thExtension from './locales/th/extension.json'
 
 import enCommon from './locales/en/common.json'
 import enHome from './locales/en/home.json'
@@ -19,6 +20,7 @@ import enBooking from './locales/en/booking.json'
 import enProfile from './locales/en/profile.json'
 import enEmergency from './locales/en/emergency.json'
 import enLegal from './locales/en/legal.json'
+import enExtension from './locales/en/extension.json'
 
 import cnCommon from './locales/cn/common.json'
 import cnHome from './locales/cn/home.json'
@@ -28,6 +30,7 @@ import cnBooking from './locales/cn/booking.json'
 import cnProfile from './locales/cn/profile.json'
 import cnEmergency from './locales/cn/emergency.json'
 import cnLegal from './locales/cn/legal.json'
+import cnExtension from './locales/cn/extension.json'
 
 const STORAGE_KEY = 'bliss-language'
 
@@ -58,6 +61,7 @@ i18n.use(initReactI18next).init({
       profile: thProfile,
       emergency: thEmergency,
       legal: thLegal,
+      extension: thExtension,
     },
     en: {
       common: enCommon,
@@ -68,6 +72,7 @@ i18n.use(initReactI18next).init({
       profile: enProfile,
       emergency: enEmergency,
       legal: enLegal,
+      extension: enExtension,
     },
     cn: {
       common: cnCommon,
@@ -78,12 +83,13 @@ i18n.use(initReactI18next).init({
       profile: cnProfile,
       emergency: cnEmergency,
       legal: cnLegal,
+      extension: cnExtension,
     },
   },
   lng: getStoredLanguage(),
   fallbackLng: 'th',
   defaultNS: 'common',
-  ns: ['common', 'home', 'auth', 'services', 'booking', 'profile', 'emergency', 'legal'],
+  ns: ['common', 'home', 'auth', 'services', 'booking', 'profile', 'emergency', 'legal', 'extension'],
   interpolation: {
     escapeValue: false,
   },

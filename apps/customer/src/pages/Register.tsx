@@ -5,6 +5,7 @@ import { authService } from '@bliss/supabase/auth'
 import type { RegisterCredentials } from '@bliss/supabase/auth'
 import { supabase, getCurrentCustomer } from '@bliss/supabase'
 import { useTranslation } from '@bliss/i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 import { RefundPolicyConsent } from '../components/RefundPolicyConsent'
 import {
   HealthChecklistFields,
@@ -96,14 +97,17 @@ function Register() {
   return (
     <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md md:max-w-lg lg:max-w-xl">
-        {/* Back Button */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-bliss-700 hover:text-bliss-900 mb-6"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>{t('register.backToHome')}</span>
-        </Link>
+        {/* Back Button + Language Switcher */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-bliss-700 hover:text-bliss-900"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>{t('register.backToHome')}</span>
+          </Link>
+          <LanguageSwitcher />
+        </div>
 
         {/* Register Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-bliss-100">

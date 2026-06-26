@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Clock, CreditCard, AlertTriangle, CheckCircle, User, Calendar, Sparkles, Tag } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 import { useExtendBooking } from '../hooks/useExtendBooking'
 import { BookingWithExtensions, ExtensionOption } from '../types/extendService'
 import { VoucherCodeInput } from './VoucherCodeInput'
@@ -23,6 +24,7 @@ export function ExtendServiceModal({
   onCancel
 }: ExtendServiceModalProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation('extension')
   const [selectedDuration, setSelectedDuration] = useState<number>()
   const [notes, setNotes] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
@@ -76,14 +78,14 @@ export function ExtendServiceModal({
 
   const handleConfirm = () => {
     if (!selectedDuration) {
-      alert('กรุณาเลือกเวลาที่ต้องการเพิ่ม')
+      alert(t('modal.alertSelectDuration'))
       return
     }
 
     const finalPrice = selectedOption ? (selectedOption.discountedPrice ?? selectedOption.price) : 0
 
     if (finalPrice > 0 && !acceptTerms) {
-      alert('กรุณายอมรับเงื่อนไขการชำระเงินเพิ่มเติม')
+      alert(t('modal.alertAcceptTerms'))
       return
     }
 
@@ -130,7 +132,7 @@ export function ExtendServiceModal({
         <div className="bg-bliss-50 rounded-2xl p-6 w-full max-w-md mx-4">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bliss-600"></div>
-            <span className="ml-3 text-bliss-700">กำลังโหลดตัวเลือกเวลา...</span>
+            <span className="ml-3 text-bliss-700">{t('modal.loadingOptions')}</span>
           </div>
         </div>
       </div>
@@ -144,7 +146,7 @@ export function ExtendServiceModal({
         <div className="flex items-center justify-between p-6 border-b border-bliss-200">
           <h3 className="text-xl font-semibold text-bliss-900 flex items-center gap-2">
             <Clock className="w-6 h-6 text-bliss-600" />
-            เพิ่มเวลาบริการ
+            {t('modal.title')}
           </h3>
           <button
             onClick={handleCancel}
@@ -159,34 +161,34 @@ export function ExtendServiceModal({
           <div className="bg-bliss-100 p-4 rounded-xl border border-bliss-300">
             <h4 className="font-medium text-bliss-700 mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              การจองปัจจุบัน
+              {t('modal.currentBooking')}
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-bliss-700">
                   <User className="w-4 h-4" />
-                  บริการ
+                  {t('modal.service')}
                 </span>
                 <span className="font-medium">{booking.service.name_th}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-bliss-700">
                   <Clock className="w-4 h-4" />
-                  เวลา
+                  {t('modal.duration')}
                 </span>
-                <span className="font-medium">{currentTotals.duration} นาที</span>
+                <span className="font-medium">{currentTotals.duration} {t('modal.minutes')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-bliss-700">
                   <CreditCard className="w-4 h-4" />
-                  ราคา
+                  {t('modal.price')}
                 </span>
                 <span className="font-medium">฿{currentTotals.price.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-bliss-700">
                   <Calendar className="w-4 h-4" />
-                  เลขที่การจอง
+                  {t('modal.bookingNumber')}
                 </span>
                 <span className="font-medium text-bliss-600">{booking.booking_number}</span>
               </div>
@@ -195,7 +197,7 @@ export function ExtendServiceModal({
             {currentTotals.extensionCount > 0 && (
               <div className="mt-3 p-2 bg-bliss-200 border border-bliss-400 rounded-lg">
                 <span className="text-xs text-bliss-700 font-medium">
-                  📈 ขยายเวลาแล้ว {currentTotals.extensionCount} ครั้ง
+                  {t('modal.extendedTimes', { count: currentTotals.extensionCount })}
                 </span>
               </div>
             )}
@@ -206,7 +208,7 @@ export function ExtendServiceModal({
             <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               <div>
-                <p className="font-medium text-red-800">ไม่สามารถเพิ่มเวลาได้</p>
+                <p className="font-medium text-red-800">{t('modal.cannotExtend')}</p>
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             </div>
@@ -214,14 +216,14 @@ export function ExtendServiceModal({
 
           {/* Extension options */}
           <div className="space-y-4">
-            <h4 className="font-medium text-bliss-700">เลือกเวลาที่ต้องการเพิ่ม:</h4>
+            <h4 className="font-medium text-bliss-700">{t('modal.selectDuration')}</h4>
 
             {extensionOptions.length === 0 ? (
               <div className="text-center py-8 text-bliss-500 bg-bliss-100 rounded-xl">
                 <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-                <p className="font-medium">ไม่สามารถเพิ่มเวลาได้</p>
+                <p className="font-medium">{t('modal.noOptions')}</p>
                 <p className="text-sm mt-1">
-                  อาจเนื่องจากเพิ่มเวลาครบจำนวนสูงสุดแล้ว หรือการจองไม่อยู่ในสถานะที่เหมาะสม
+                  {t('modal.noOptionsHint')}
                 </p>
               </div>
             ) : (
@@ -250,13 +252,13 @@ export function ExtendServiceModal({
 
                     <div className="flex-1">
                       <div className="font-semibold text-bliss-900">
-                        + {option.duration} นาที
+                        {t('modal.addMinutes', { minutes: option.duration })}
                       </div>
                       <div className="text-bliss-600 font-medium">
                         ฿{option.price.toLocaleString()}
                       </div>
                       <div className="text-sm text-bliss-700 mt-1">
-                        รวมทั้งสิ้น: {option.totalNewDuration} นาที • ฿{option.totalNewPrice.toLocaleString()}
+                        {t('modal.totalAll', { duration: option.totalNewDuration, price: option.totalNewPrice.toLocaleString() })}
                       </div>
                     </div>
 
@@ -273,7 +275,7 @@ export function ExtendServiceModal({
           <div className="space-y-4">
             <h4 className="flex items-center gap-2 font-medium text-bliss-700">
               <Tag className="w-4 h-4" />
-              โค้ดส่วนลด (ถ้ามี):
+              {t('modal.promoCode')}
             </h4>
             <VoucherCodeInput
               orderAmount={selectedOption?.price || 0}
@@ -289,12 +291,12 @@ export function ExtendServiceModal({
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-bliss-700 mb-2">
-              หมายเหตุเพิ่มเติม (ถ้ามี):
+              {t('modal.notes')}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="เช่น ต้องการเพิ่มเวลาเนื่องจาก..."
+              placeholder={t('modal.notesPlaceholder')}
               rows={3}
               className="w-full px-3 py-2 border border-bliss-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bliss-600 focus:border-bliss-600"
             />
@@ -304,19 +306,19 @@ export function ExtendServiceModal({
           {selectedOption && (selectedOption.discountedPrice || selectedOption.price) > 0 && (
             <div className="space-y-3">
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <h5 className="font-medium text-blue-800 mb-2">การชำระเงินเพิ่มเติม:</h5>
+                <h5 className="font-medium text-blue-800 mb-2">{t('modal.paymentTitle')}</h5>
                 <div className="text-sm text-blue-700 space-y-1">
                   {selectedOption.discount > 0 && (
                     <>
-                      <div className="line-through text-blue-500">ราคาเต็ม: ฿{selectedOption.price.toLocaleString()}</div>
-                      <div className="text-green-600 font-medium">ส่วนลด: -฿{selectedOption.discount.toLocaleString()}</div>
-                      <div className="font-bold">จำนวนเงิน: ฿{(selectedOption.discountedPrice || 0).toLocaleString()}</div>
+                      <div className="line-through text-blue-500">{t('modal.fullPrice', { price: selectedOption.price.toLocaleString() })}</div>
+                      <div className="text-green-600 font-medium">{t('modal.discount', { amount: selectedOption.discount.toLocaleString() })}</div>
+                      <div className="font-bold">{t('modal.amount', { amount: (selectedOption.discountedPrice || 0).toLocaleString() })}</div>
                     </>
                   )}
                   {(!selectedOption.discount || selectedOption.discount === 0) && (
-                    <div>จำนวนเงิน: ฿{selectedOption.price.toLocaleString()}</div>
+                    <div>{t('modal.amount', { amount: selectedOption.price.toLocaleString() })}</div>
                   )}
-                  <div>ชำระทันทีหลังยืนยัน</div>
+                  <div>{t('modal.payImmediately')}</div>
                 </div>
               </div>
 
@@ -328,8 +330,7 @@ export function ExtendServiceModal({
                   className="mt-1 w-4 h-4 text-bliss-600 focus:ring-bliss-600"
                 />
                 <span className="text-sm text-bliss-700">
-                  ฉันยอมรับการชำระเงินเพิ่มเติม ฿{(selectedOption.discountedPrice || selectedOption.price).toLocaleString()}
-                  สำหรับการเพิ่มเวลาบริการ และเข้าใจว่าการชำระเงินจะดำเนินการทันทีหลังจากยืนยัน
+                  {t('modal.acceptTerms', { amount: (selectedOption.discountedPrice || selectedOption.price).toLocaleString() })}
                 </span>
               </label>
             </div>
@@ -338,16 +339,16 @@ export function ExtendServiceModal({
           {/* Summary */}
           {selectedOption && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h5 className="font-medium text-green-800 mb-2">สรุปการเพิ่มเวลา:</h5>
+              <h5 className="font-medium text-green-800 mb-2">{t('modal.summaryTitle')}</h5>
               <div className="text-sm text-green-700 space-y-1">
-                <div>เวลาเดิม: {currentTotals.duration} นาที → เวลาใหม่: {selectedOption.totalNewDuration} นาที</div>
-                <div>ราคาเดิม: ฿{currentTotals.price.toLocaleString()} → ราคาใหม่: ฿{(selectedOption.discountedTotalPrice || selectedOption.totalNewPrice).toLocaleString()}</div>
-                <div>ค่าเพิ่มเติม: ฿{(selectedOption.discountedPrice || selectedOption.price).toLocaleString()}</div>
+                <div>{t('modal.summaryDuration', { from: currentTotals.duration, to: selectedOption.totalNewDuration })}</div>
+                <div>{t('modal.summaryPrice', { from: currentTotals.price.toLocaleString(), to: (selectedOption.discountedTotalPrice || selectedOption.totalNewPrice).toLocaleString() })}</div>
+                <div>{t('modal.summaryExtra', { amount: (selectedOption.discountedPrice || selectedOption.price).toLocaleString() })}</div>
                 {selectedOption.discount > 0 && (
-                  <div className="text-green-600 font-medium">ประหยัด: ฿{selectedOption.discount.toLocaleString()}</div>
+                  <div className="text-green-600 font-medium">{t('modal.summarySaved', { amount: selectedOption.discount.toLocaleString() })}</div>
                 )}
                 {(selectedOption.discountedPrice || selectedOption.price) === 0 && (
-                  <div className="text-green-600 font-medium">ไม่มีค่าใช้จ่ายเพิ่มเติม</div>
+                  <div className="text-green-600 font-medium">{t('modal.summaryFree')}</div>
                 )}
               </div>
             </div>
@@ -360,7 +361,7 @@ export function ExtendServiceModal({
             onClick={handleCancel}
             className="flex-1 px-4 py-3 border border-bliss-300 rounded-xl text-bliss-700 font-medium hover:bg-bliss-50 transition-colors"
           >
-            ยกเลิก
+            {t('modal.cancel')}
           </button>
           <button
             onClick={handleConfirm}
@@ -378,8 +379,8 @@ export function ExtendServiceModal({
             `}
           >
             {selectedOption && (selectedOption.discountedPrice ?? selectedOption.price) > 0
-              ? `ยืนยัน — เลือกวิธีชำระเงิน ฿${(selectedOption.discountedPrice ?? selectedOption.price).toLocaleString()}`
-              : 'ยืนยันเพิ่มเวลา'}
+              ? t('modal.confirmPay', { amount: (selectedOption.discountedPrice ?? selectedOption.price).toLocaleString() })
+              : t('modal.confirmFree')}
           </button>
         </div>
       </div>

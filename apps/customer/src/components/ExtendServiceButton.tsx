@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react'
 import { Plus, Clock, AlertCircle, Sparkles } from 'lucide-react'
+import { useTranslation } from '@bliss/i18n'
 import { ExtendServiceModal } from './ExtendServiceModal'
 import { useExtensionStatus } from '../hooks/useExtendBooking'
 import { BookingWithExtensions } from '../types/extendService'
@@ -26,6 +27,7 @@ export function ExtendServiceButton({
   variant = 'primary',
   fullWidth = false
 }: ExtendServiceButtonProps) {
+  const { t } = useTranslation('extension')
   const [showModal, setShowModal] = useState(false)
   const extensionStatus = useExtensionStatus(booking)
 
@@ -79,17 +81,17 @@ export function ExtendServiceButton({
   // Get tooltip/help text
   const getHelpText = () => {
     if (!extensionStatus.canExtend) {
-      return extensionStatus.reasonIfCannot || 'ไม่สามารถเพิ่มเวลาได้ในขณะนี้'
+      return extensionStatus.reasonIfCannot || t('button.cannotExtendNow')
     }
-    return 'เพิ่มเวลาบริการสำหรับการจองนี้'
+    return t('button.help')
   }
 
   // Get button text based on status
   const getButtonText = () => {
     if (size === 'sm') {
-      return 'เพิ่มเวลา'
+      return t('button.extendShort')
     }
-    return 'เพิ่มเวลาบริการ'
+    return t('button.extend')
   }
 
   return (
@@ -131,7 +133,7 @@ export function ExtendServiceButton({
           <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
             <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0" />
             <span className="text-sm text-orange-700">
-              เพิ่มเวลาครบ 3 ครั้งแล้ว (สูงสุด)
+              {t('button.maxReached')}
             </span>
           </div>
         )}
@@ -141,10 +143,10 @@ export function ExtendServiceButton({
           <div className="flex items-center gap-2 p-3 bg-bliss-100 border border-bliss-300 rounded-lg">
             <Sparkles className="w-4 h-4 text-bliss-600 flex-shrink-0" />
             <div className="text-sm text-bliss-600">
-              <div className="font-medium">ขยายเวลาแล้ว {extensionStatus.extensionCount} ครั้ง</div>
+              <div className="font-medium">{t('button.extendedTimes', { count: extensionStatus.extensionCount })}</div>
               {extensionStatus.lastExtendedAt && (
                 <div className="text-xs text-bliss-600">
-                  ล่าสุด: {new Date(extensionStatus.lastExtendedAt).toLocaleDateString('th-TH', {
+                  {t('button.lastExtended')}: {new Date(extensionStatus.lastExtendedAt).toLocaleDateString('th-TH', {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',

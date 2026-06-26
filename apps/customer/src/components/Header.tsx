@@ -6,6 +6,7 @@ import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useNotifications, useNotificationSubscription } from '@bliss/supabase/hooks/useNotifications'
 import { useTranslation } from '@bliss/i18n'
 import SOSButton from './SOSButton'
+import LanguageSwitcher from './LanguageSwitcher'
 
 function Header() {
   const location = useLocation()
@@ -120,6 +121,9 @@ function Header() {
                 <span>{item.label}</span>
               </Link>
             ))}
+
+            {/* Language Switcher - inline with nav */}
+            <LanguageSwitcher />
           </nav>
 
           {/* Desktop Auth */}
@@ -229,6 +233,11 @@ function Header() {
                   <span>{item.label}</span>
                 </Link>
               ))}
+
+              {/* Language Switcher - Mobile */}
+              <div className="border-t border-bliss-200 pt-3 mt-1">
+                <LanguageSwitcher variant="inline" />
+              </div>
 
               {/* Notification - Mobile */}
               {!isLoading && isLoggedIn && (

@@ -122,20 +122,18 @@ function Profile() {
     }
   }, [customer])
 
-  // Load language from profiles table and sync with i18n
+  // Always reflect the language currently active in the app (set via the
+  // top-menu switcher / localStorage) — the top menu is the source of truth.
+  // We intentionally do NOT override it with the DB value here, so the setting
+  // shown matches whatever language was just selected.
   useEffect(() => {
-    async function loadLanguage() {
+    setSelectedLanguage(getStoredLanguage())
+
+    async function loadUserEmail() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        if (user.email) setUserEmail(user.email)
-        const { data } = await supabase.from('profiles').select('language').eq('id', user.id).single()
-        if (data?.language) {
-          setSelectedLanguage(data.language)
-          changeAppLanguage(data.language)
-        }
-      }
+      if (user?.email) setUserEmail(user.email)
     }
-    loadLanguage()
+    loadUserEmail()
   }, [])
 
   useEffect(() => {
