@@ -17,23 +17,23 @@
     "title": "Settings",
     "notifications": {
       "title": "Notifications",
-      "bookingUpdates": "Booking Status Updates",
+      "bookingUpdates": "Bookings & Status Updates",
       "bookingUpdatesDesc": "Get notified when booking status changes",
       "promotions": "Promotions & Special Offers",
-      "promotionsDesc": "Receive promotional news and special discounts",
+      "promotionsDesc": "Receive promotions updates and special discounts",
       "news": "News & Events",
       "newsDesc": "General news and events from The Bliss Massage at Home"
     },
     "privacy": {
       "title": "Privacy",
       "publicProfile": "Show Public Profile",
-      "publicProfileDesc": "Allow others to see your profile information",
+      "publicProfileDesc": "Allow others to view your profile information",
       "marketingEmails": "Allow Marketing Emails",
       "marketingEmailsDesc": "Receive promotional emails and special offers"
     },
     "language": {
       "title": "Language",
-      "thai": "ภาษาไทย",
+      "thai": "Thai",
       "english": "English",
       "chinese": "中文",
       "selected": "Selected"
@@ -54,9 +54,9 @@
     "labelHome": "Home",
     "validation": {
       "recipientNameRequired": "Please enter recipient name",
-      "phoneRequired": "Please enter phone number",
+      "phoneRequired": "Please enter a phone number",
       "phoneInvalid": "Invalid phone number (Mobile: 06/08/09, Landline: 02/03/04/05/07, Special: 1xxx)",
-      "addressRequired": "Please enter address",
+      "addressRequired": "Please enter an address",
       "provinceRequired": "Please select province",
       "zipcodeRequired": "Please enter postal code",
       "zipcodeFormat": "Postal code must be 5 digits",
@@ -66,14 +66,14 @@
     "editTitle": "Edit Address",
     "addNewTitle": "Add New Address",
     "label": "Label",
-    "labelWork": "Office",
+    "labelWork": "Workplace",
     "labelOther": "Other",
     "setAsDefault": "Set as Default",
     "recipientName": "Recipient Name",
-    "recipientNamePlaceholder": "First and Last Name",
+    "recipientNamePlaceholder": "Full Name",
     "phone": "Phone Number",
     "address": "Address",
-    "addressPlaceholder": "House number, Soi, Street",
+    "addressPlaceholder": "House No., Soi, Street",
     "mapLocation": "Select Location on Map",
     "buttonCancel": "Cancel",
     "buttonSaving": "Saving...",
@@ -90,9 +90,9 @@
     "delete": "Delete",
     "expires": "Expires",
     "deleteTitle": "Delete Payment Method",
-    "deleteMessage": "Are you sure you want to delete this payment method? This action cannot be undone.",
+    "deleteMessage": "Are you sure you want to delete this payment method? This action cannot be undone",
     "setAsDefault": "Set as default payment method",
-    "cardDisabledMessage": "Currently supports PromptPay (QR) payment only — credit card payments are temporarily disabled"
+    "cardDisabledMessage": "Currently only PromptPay (QR) is supported — card payments are temporarily disabled"
   },
   "tax": {
     "title": "Tax Invoice Information",
@@ -114,7 +114,7 @@
     "note": "Note:",
     "noteItems": {
       "usage": "This information will be used for tax invoices/receipts",
-      "accuracy": "Please fill in accurate and complete information",
+      "accuracy": "Please fill in all information correctly and completely",
       "editable": "You can edit this information at any time"
     }
   },
@@ -151,19 +151,19 @@
     "title": "Health Information Before Service",
     "editButton": "Edit",
     "fillButton": "Fill Information",
-    "notFilledYet": "Health information not yet provided — required before booking",
-    "noCondition": "No medical conditions or chronic diseases"
+    "notFilledYet": "Health information has not been completed — it is required before making a booking",
+    "noCondition": "No symptoms or underlying medical conditions"
   },
   "pointsHistory": {
     "backToProfile": "Back to Profile",
-    "title": "Loyalty Points",
-    "subtitle": "View your accumulated points and transaction history",
+    "title": "Reward Points",
+    "subtitle": "View your point balance and point history",
     "card": {
-      "remaining": "Available",
+      "remaining": "Balance",
       "value": "Value",
       "totalEarned": "Total Earned",
       "points": "Points",
-      "redeemed": "Used",
+      "redeemed": "Redeemed",
       "pointsLabel": "Points",
       "expired": "Expired",
       "pointsLabelExpired": "Points"
@@ -174,7 +174,7 @@
     "loading": "Loading...",
     "empty": {
       "title": "No points history yet",
-      "description": "Complete a booking to earn points and see them displayed here"
+      "description": "You will earn reward points here after completing a booking"
     }
   }
 }

@@ -12,7 +12,7 @@
     "priceHighToLow": "Price: High to Low",
     "topRated": "Top Rated",
     "resultsCount": "{{count}} services found",
-    "noResults": "No services found",
+    "noResults": "No services available",
     "book": "Book",
     "reviews": "reviews",
     "min": "min",
@@ -46,10 +46,10 @@
     "startingFrom": "Starting from",
     "noDescription": "No description available for this service",
     "questions": "Have a question?",
-    "askMore": "Ask Us",
+    "askMore": "Contact Us",
     "hour": "hour",
     "priceIncludesServiceAndTransport": "Price includes service and transportation fees, excluding parking",
-    "oilSurchargeNote": "Additional 100 THB charge applies if oil is requested"
+    "oilSurchargeNote": "An additional 100 THB charge applies if balm is requested (Except for Thai Balm Massage.)"
   },
   "reviews": {
     "title": "Customer Reviews",

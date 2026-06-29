@@ -7,7 +7,7 @@
     "massage": "按摩",
     "nail": "美甲",
     "spa": "水疗",
-    "popular": "热门",
+    "popular": "热门推荐",
     "priceLowToHigh": "价格：从低到高",
     "priceHighToLow": "价格：从高到低",
     "topRated": "最高评分",
@@ -46,10 +46,10 @@
     "startingFrom": "起价",
     "noDescription": "暂无此服务的描述",
     "questions": "有问题？",
-    "askMore": "咨询更多",
+    "askMore": "联系我们",
     "hour": "小时",
     "priceIncludesServiceAndTransport": "价格包括服务费和交通费，不包括停车费",
-    "oilSurchargeNote": "如需油类产品额外收费 100 泰铢"
+    "oilSurchargeNote": "如需青草药膏额外收费 100 泰铢。 （Thai Balm Massage 除外）"
   },
   "reviews": {
     "title": "客户评价",
@@ -62,12 +62,12 @@
     "skill": "技术"
   },
   "service": {
-    "label": "服务"
+    "label": "服务项目"
   },
   "emergencyService": {
     "badge": "紧急服务",
-    "heading": "需要在30分钟内进行按摩吗？",
-    "subtitle": "无法提前3小时预订？我们的特殊团队随时准备帮助"
+    "heading": "想在30分钟内享受按摩服务？",
+    "subtitle": "无需提前3小时预约，会员可享即时预约服务。"
   },
   "durationLabel": "{{duration}} 分钟起",
   "discount": {

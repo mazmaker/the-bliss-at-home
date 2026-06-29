@@ -7,7 +7,7 @@
     "steps": {
       "service": "服务",
       "dateTime": "日期/时间",
-      "provider": "技师",
+      "provider": "理疗师",
       "address": "地址",
       "confirm": "确认",
       "payment": "支付"
@@ -16,7 +16,7 @@
       "title": "确认已选服务",
       "selectedAddons": "已选附加服务",
       "quantity": "数量：{{count}} 人",
-      "totalPrice": "总价",
+      "totalPrice": "总金额",
       "customerType": "客户人数",
       "single": "单人",
       "singleDesc": "单人服务",
@@ -27,16 +27,16 @@
       "simultaneousDesc": "每人各配一位服务师，同时享受服务",
       "sequential": "轮流进行",
       "sequentialDesc": "一位服务师为每人轮流提供服务",
-      "person1": "第1位",
-      "person2": "第2位",
+      "person1": "第1位客人",
+      "person2": "第2位客人",
       "selectService": "选择服务",
       "changeService": "更换服务",
-      "duration": "时长",
+      "duration": "服务时长",
       "minutes": "{{count}} 分钟",
       "addons": "附加服务"
     },
     "step2": {
-      "title": "选择您偏好的日期和时间",
+      "title": "请选择您希望预约的日期和时间",
       "date": "日期",
       "time": "时间",
       "pleaseSelect": "请选择日期和时间",
@@ -49,25 +49,25 @@
     },
     "step3": {
       "title": "技师偏好",
-      "subtitle": "请选择您偏好的服务技师",
-      "femaleOnly": "仅限女性",
-      "femaleOnlyDesc": "仅限女性服务技师",
-      "maleOnly": "仅限男性",
-      "maleOnlyDesc": "仅限男性服务技师",
-      "preferFemale": "优先女性",
-      "preferFemaleDesc": "优先女性，如无则男性",
-      "preferMale": "优先男性",
-      "preferMaleDesc": "优先男性，如无则女性",
+      "subtitle": "请选择您偏好的理疗师",
+      "femaleOnly": "仅限女性理疗师",
+      "femaleOnlyDesc": "仅限女性理疗师",
+      "maleOnly": "仅限男性理疗师",
+      "maleOnlyDesc": "仅限男性理疗师",
+      "preferFemale": "优先女性技师",
+      "preferFemaleDesc": "优先女性理疗师，如无空位将安排男性理疗师",
+      "preferMale": "优先男性理疗师",
+      "preferMaleDesc": "优先男性理疗师，如无则安排女性理疗师",
       "noPreference": "无偏好",
-      "noPreferenceDesc": "任何可用的服务技师"
+      "noPreferenceDesc": "由可用理疗师安排"
     },
     "step4": {
-      "title": "地址和联系信息",
+      "title": "地址与联系方式",
       "selectSaved": "选择已保存的地址或添加新地址",
       "addNew": "添加新地址",
       "backToSaved": "返回已保存的地址",
       "contactName": "联系人姓名",
-      "phoneNumber": "电话号码",
+      "phoneNumber": "联系电话",
       "address": "地址",
       "subdistrict": "街道/乡镇",
       "district": "区/县",
@@ -104,12 +104,12 @@
       "confirmBooking": "确认预约",
       "voucher": "优惠码",
       "voucherPlaceholder": "输入促销代码",
-      "apply": "使用",
-      "remove": "移除",
+      "apply": "使用优惠码",
+      "remove": "删除",
       "discount": "折扣",
-      "subtotal": "小计",
+      "subtotal": "折扣前价格",
       "serviceSummary": "服务摘要",
-      "voucherApplied": "代码使用成功",
+      "voucherApplied": "优惠码使用成功",
       "voucherInvalid": "代码无效或已过期",
       "voucherMinOrder": "最低消费 ฿{{amount}}",
       "voucherUsed": "此代码已被使用",
@@ -205,13 +205,13 @@
     "location": "服务地点",
     "viewMap": "查看地图",
     "notes": "备注",
-    "provider": "服务技师",
+    "provider": "按摩师",
     "reviews": "评价",
     "chat": "聊天",
     "reschedule": "改期",
-    "priceSummary": "价格摘要",
-    "mainService": "主要服务",
-    "serviceFee": "服务费",
+    "priceSummary": "价格汇总",
+    "mainService": "主服务",
+    "serviceFee": "服务费用",
     "total": "总计",
     "paymentTitle": "支付",
     "paymentMethod": "支付方式",
@@ -227,13 +227,13 @@
     "bookedOn": "预约于 {{date}}",
     "errorLoading": "加载预约失败",
     "notFound": "未找到预约",
-    "notFoundMessage": "您查找的预约不存在",
+    "notFoundMessage": "未找到您要查找的预约",
     "hours": "小时"
   },
   "healthDeclaration": {
     "conditions": {
       "heartDisease": "心脏病",
-      "bloodPressure": "高血压或低血压",
+      "bloodPressure": "高血压 / 低血压",
       "diabetes": "糖尿病",
       "pregnancy": "妊娠期",
       "postSurgery": "术后恢复或未愈合的手术伤口",
@@ -243,20 +243,20 @@
     "intro": "为了您的安全，如果您患有以下任何医学疾病或健康状况，请在每次预约按摩前告知我们的工作人员。",
     "otherDetailPlaceholder": "请说明您的症状或健康状况",
     "noCondition": "我没有上述任何疾病",
-    "confirmationSectionTitle": "确认声明",
-    "confirmAccuracy": "我确认上述信息准确真实",
-    "confirmAdjustment": "如果我患有上述任何疾病，我同意服务提供者为了安全起见调整按摩方式",
-    "privacyNote": "所有信息将被严格保密，仅用于服务安全交付",
+    "confirmationSectionTitle": "信息确认",
+    "confirmAccuracy": "我确认以上信息真实无误。",
+    "confirmAdjustment": "如本人患有上述任何一种情况，本人同意治疗师在必要时基于安全考虑调整按摩疗程。",
+    "privacyNote": "所有信息将严格保密，仅用于服务安全。",
     "saveError": "保存失败。请重试。",
-    "title": "服务前的健康声明和注意事项",
+    "title": "服务前健康信息与注意事项",
     "saving": "保存中...",
     "confirmData": "确认信息"
   },
   "cancelReason": {
-    "urgent": "紧急事务",
+    "urgent": "临时有事",
     "travelPlanChange": "更改旅行计划",
-    "notConvenient": "所选日期不方便",
-    "health": "健康问题",
+    "notConvenient": "选择的日期不方便",
+    "health": "身体不适",
     "other": "其他"
   },
   "cancelBooking": {
@@ -270,17 +270,17 @@
     "cannotCancel": "无法取消",
     "notEligible": "此预订目前无法取消",
     "hoursUntilBooking": "距离预约还有 {{hours}} 小时",
-    "policyMessage": "根据政策，必须在预约前至少3小时取消",
+    "policyMessage": "根据规定，需至少提前3小时取消预约。",
     "rescheduleOption": "如要更改时间，可以改期而不是取消",
-    "bookingSummary": "要取消的预订",
-    "refundAmount": "退款金额",
+    "bookingSummary": "将要取消的预约",
+    "refundAmount": "可退款金额",
     "refundPercentage": "支付金额的 {{percentage}}%",
     "refundProcessing": "退款处理中",
     "noRefund": "无退款",
     "noRefundReason": "根据条款，此时取消不符合退款条件",
     "reasonLabel": "取消原因",
-    "reasonPlaceholder": "说明原因...",
-    "confirmTitle": "确认取消预订",
+    "reasonPlaceholder": "请输入原因...",
+    "confirmTitle": "确认取消预约",
     "confirmMessage": "您确定要取消此预订吗？此操作无法撤销。",
     "service": "服务:",
     "date": "日期:",
@@ -292,46 +292,46 @@
     "successTitle": "预订已成功取消",
     "successMessage": "预约编号 {{bookingNumber}} 已成功取消",
     "refundInfo": "您将在 {{days}} 个工作日内收到 ฿{{amount}} 的退款",
-    "refundWithinDays": "（在 {{days}} 个工作日内）",
-    "manualQrRefundNotice": "退款在平台外处理 — 请通过 LINE OA 联系管理员",
+    "refundWithinDays": "({{days}}个工作日内）",
+    "manualQrRefundNotice": "平台外退款，请联系 LINE OA 管理员",
     "error": "无法取消预约"
   },
   "reschedule": {
-    "checkError": "无法检查改期资格",
-    "checkFailed": "检查资格时出错",
+    "checkError": "无法确认改期状态",
+    "checkFailed": "验证时发生错误",
     "selectDateTimeRequired": "请选择新的日期和时间",
     "error": "改期预约出错",
     "modalTitle": "改期预约",
-    "checking": "正在检查改期资格...",
+    "checking": "正在检查改期规则...",
     "cannotReschedule": "无法改期",
     "notEligibleDefault": "该预约目前无法改期",
     "hoursUntilBooking": "距离预约还有 {{hours}} 小时",
-    "policyMessage": "根据政策，需要在预约时间前至少提前3小时改期",
+    "policyMessage": "根据规定，必须在预约时间至少3小时前进行改期。",
     "currentBooking": "当前预约",
     "selectNewDate": "选择新日期",
     "selectNewTime": "选择新时间",
     "continue": "继续",
     "confirmTitle": "确认改期",
-    "confirmMessage": "请在确认前查看改期详情",
+    "confirmMessage": "请在确认前检查改期详情。",
     "originalDateTime": "原始日期和时间",
     "newDateTime": "新日期和时间",
     "confirmButton": "确认改期",
     "processing": "处理中...",
     "successTitle": "改期成功",
-    "successMessage": "预约编号 {{number}} 已成功改期",
+    "successMessage": "预约编号 {{number}} 已更改为新的日期和时间。",
     "newAppointment": "新预约",
     "unableTitle": "无法改期"
   },
   "review": {
-    "ratingRequired": "请提供总体评分",
-    "alreadyReviewed": "您已经评价过此预订",
+    "ratingRequired": "请给出总体评分",
+    "alreadyReviewed": "您已经评价过该预约。",
     "modalTitle": "评分和评价",
     "bookingNumber": "编号",
     "overallRating": "总体评分",
     "cleanliness": "清洁度",
     "professionalism": "专业性",
     "skill": "技能",
-    "reviewMessage": "评价消息",
+    "reviewMessage": "评论内容",
     "forBooking": "预订评价",
     "subRatingsOptional": "子评分(可选)",
     "reviewMessageOptional": "评价消息(可选)",
@@ -342,9 +342,9 @@
   },
   "dateTime": "{{date}} {{time}}",
   "bookingNumberLabel": "编号：",
-  "staffLabel": "员工：",
+  "staffLabel": "技师：",
   "error": {
-    "missingRequired": "缺少必需信息",
+    "missingRequired": "信息不完整，请填写完整",
     "paymentFailedAlert": "支付失败：{{error}}",
     "paymentFailed": "支付失败。请重试。",
     "paymentTimeout": "支付超时。请重试。",
@@ -353,33 +353,33 @@
   },
   "provider": {
     "unnamedProvider": "未命名的服务技师",
-    "notAssigned": "还未分配服务技师",
+    "notAssigned": "尚未分配技师",
     "assignedStaffInfo": "分配的服务技师信息",
     "avatarInitial": "服",
     "reviews": "评价",
     "noReviews": "暂无评价"
   },
   "recipient": {
-    "default": "服务接收者"
+    "default": "客户"
   },
   "paymentMethod": {
-    "promptpay": "泰国电子支付",
+    "promptpay": "PromptPay",
     "pendingPayment": "等待支付",
     "creditCard": "信用卡",
-    "internetBanking": "网上银行",
-    "manualQrExternal": "转账/QR（外部支付）"
+    "internetBanking": "银行转账",
+    "manualQrExternal": "转账/二维码（外部支付）"
   },
   "jobStatus": {
-    "pending": "等待服务技师确认",
-    "confirmed": "服务技师已确认",
-    "traveling": "运输中",
-    "inProgress": "提供服务中",
+    "pending": "等待技师确认",
+    "confirmed": "技师已确认",
+    "traveling": "在路上",
+    "inProgress": "服务中",
     "completed": "已完成",
     "cancelled": "已取消",
     "description": {
       "pending": "🔄 等待服务技师确认",
-      "confirmed": "服务技师已确认，正在准备出发。",
-      "traveling": "🚗 服务技师正在赶往您的位置",
+      "confirmed": "工作人员已接单，正在准备出发。",
+      "traveling": "🚗 技师正在前往您的位置",
       "inProgress": "💆‍♀️ 服务技师正在提供服务",
       "completed": "🎉 服务已完成"
     }
@@ -388,12 +388,12 @@
     "noTransaction": "未找到交易数据"
   },
   "creditNote": {
-    "noRefundData": "未找到退款数据"
+    "noRefundData": "未找到退款信息"
   },
   "tracking": {
-    "title": "跟踪服务技师行程",
-    "description": "服务技师正在赶来。您可以在下面的地图上跟踪他们的当前位置。",
-    "loading": "正在检查服务技师行程..."
+    "title": "追踪技师位置",
+    "description": "工作人员正在前往提供服务的途中，您可以在下方地图查看当前位置。",
+    "loading": "正在追踪技师位置..."
   },
   "paymentStatus": {
     "paid": "已支付",
@@ -403,7 +403,7 @@
   },
   "paymentAction": {
     "payNow": "立即支付",
-    "note": "支付成功后，该任务将被发送给服务技师"
+    "note": "支付完成后分配技师"
   },
   "downloadReceipt": {
     "label": "下载收据"
@@ -415,109 +415,109 @@
     "inProgressLabel": "服务进行中",
     "note": "如果您需要更多时间，可以延期服务",
     "times": "+{{count}} 次",
-    "totalExtensionPrice": "延期总计：฿{{amount}}"
+    "totalExtensionPrice": "延长费用：฿{{amount}}"
   },
   "status": {
     "pending": {
       "title": "等待确认",
-      "description": "我们正在验证您的订单",
+      "description": "我们正在核实您的预约",
       "billingStatus": "等待付款"
     },
     "confirmed": {
-      "title": "等待员工分配",
-      "description": "我们正在为您寻找合适的员工",
-      "billingStatus": "付款完成"
+      "title": "等待分配技师",
+      "description": "正在为您寻找合适技师",
+      "billingStatus": "已支付完成"
     },
     "assigned": {
-      "title": "员工已分配",
-      "description": "员工正在准备出发",
-      "billingStatus": "付款完成"
+      "title": "技师已接单",
+      "description": "技师正在准备出发",
+      "billingStatus": "已支付完成"
     },
     "ASSIGNED": {
-      "title": "员工已分配",
-      "description": "员工正在准备出发",
+      "title": "技师已接单",
+      "description": "技师正在准备出发",
       "billingStatus": "付款完成"
     },
     "STAFF_EN_ROUTE": {
-      "title": "员工在途中",
-      "description": "可在下方地图上跟踪行程",
-      "billingStatus": "付款完成 - 等待服务开始"
+      "title": "技师正在前往",
+      "description": "可在下方地图追踪",
+      "billingStatus": "已支付 - 等待开始服务"
     },
     "STAFF_ARRIVED": {
-      "title": "员工已到达",
-      "description": "员工已到达目的地，正在准备开始服务",
-      "billingStatus": "付款完成 - 等待服务开始"
+      "title": "技师已到达",
+      "description": "技师已到达，准备开始",
+      "billingStatus": "已支付 - 等待开始服务"
     },
     "SERVICE_IN_PROGRESS": {
-      "title": "服务进行中",
-      "description": "服务进行中。请放松享受",
+      "title": "服务中",
+      "description": "服务进行中，请放松",
       "billingStatus": "已开始计费"
     },
     "COMPLETED": {
       "title": "服务完成",
-      "description": "感谢您使用我们的服务。希望您满意",
+      "description": "感谢您使用我们的服务。希望您对本次服务感到满意。",
       "billingStatus": "计费完成"
     },
     "cancelled": {
-      "title": "订单已取消",
+      "title": "预约已取消",
       "description": "您的订单已被取消",
       "billingStatus": "无费用"
     },
-    "staffReady": "员工准备就绪",
-    "staffReadyMessage": "正在准备设备并开始服务。请稍候"
+    "staffReady": "服务人员已就绪",
+    "staffReadyMessage": "正在准备设备并开始服务，请稍候。"
   },
   "payment": {
-    "warningIncomplete": "请完成您的付款",
-    "incompleteHeading": "付款未完成",
-    "incompleteMessage": "订单已确认但付款待处理。如有任何问题，请联系支持",
-    "failed": "付款失败。请重试。",
+    "warningIncomplete": "⚠️请完成您的付款",
+    "incompleteHeading": "支付未完成",
+    "incompleteMessage": "预约已确认，但付款尚未完成。如有任何问题，请联系客服。",
+    "failed": "支付失败，请重试",
     "qrGenerationFailed": "无法生成 PromptPay 二维码。",
-    "errorGeneric": "付款出错。",
-    "pageTitle": "付款",
-    "creditCard": "用信用卡付款",
-    "promptpay": "用 PromptPay 付款",
+    "errorGeneric": "支付发生错误。",
+    "pageTitle": "支付",
+    "creditCard": "信用卡支付",
+    "promptpay": "使用 PromptPay 支付",
     "generateQRButton": "生成 PromptPay 二维码 (฿{{amount}})",
     "qrCodeAlt": "PromptPay 二维码",
-    "waitingForPayment": "扫描二维码付款 • 等待付款...",
-    "noChannelsAvailable": "目前没有可用的付款方式。",
+    "waitingForPayment": "扫码支付 • 等待付款...",
+    "noChannelsAvailable": "当前暂无可用的支付方式。",
     "validation": {
-      "fillAllFields": "请填写所有卡片信息",
+      "fillAllFields": "请填写完整卡信息",
       "invalidCardNumber": "卡号无效",
-      "invalidCvv": "CVV 无效"
+      "invalidCvv": "CVV错误"
     },
     "error": {
       "paymentFailed": "支付失败",
-      "paymentFailedRetry": "支付失败。请重试。",
-      "cardValidationFailed": "卡片验证失败。请检查您的卡片信息。"
+      "paymentFailedRetry": "支付失败，请重试",
+      "cardValidationFailed": "卡片验证失败，请检查您的银行卡信息。"
     },
     "securePayment": {
       "title": "安全支付",
-      "description": "您的卡片信息由 Omise 加密处理。我们不会保存您的完整卡片信息。"
+      "description": "卡信息由Omise加密处理，不保存完整卡号"
     },
     "form": {
       "cardholderName": "持卡人姓名",
-      "cardholderNamePlaceholder": "张三",
+      "cardholderNamePlaceholder": "JOHN DOE",
       "cardNumber": "卡号",
       "cardNumberPlaceholder": "1234 5678 9012 3456",
       "expiryMonth": "月份",
       "expiryMonthPlaceholder": "MM",
-      "expiryYear": "年份",
+      "expiryYear": "年",
       "expiryYearPlaceholder": "YYYY",
-      "cvv": "安全码",
+      "cvv": "CVV",
       "cvvPlaceholder": "123",
       "saveCardForFuture": "保存此卡以便下次支付",
-      "processing": "处理中...",
+      "processing": "正在处理...",
       "payButton": "支付"
     },
     "testMode": {
-      "title": "测试模式 - 使用测试卡:",
+      "title": "测试模式－使用测试卡：",
       "testCardNumber": "卡号: 4242 4242 4242 4242",
       "testCardDetails": "有效期: 任何未来日期 | 安全码: 任何 3 位数字"
     },
-    "secureCheckout": "安全结账",
+    "secureCheckout": "安全支付",
     "cardName": {
-      "required": "请输入卡上的名称",
-      "label": "持卡人名称",
+      "required": "请输入持卡人姓名",
+      "label": "持卡人姓名",
       "placeholder": "JOHN DOE"
     },
     "cardNumber": {
@@ -528,12 +528,12 @@
     "expiration": {
       "month": {
         "invalid": "月份无效",
-        "label": "月份",
+        "label": "月",
         "placeholder": "MM"
       },
       "year": {
         "invalid": "年份无效",
-        "label": "年份",
+        "label": "年",
         "placeholder": "YYYY"
       }
     },
@@ -543,70 +543,70 @@
       "placeholder": "123"
     },
     "security": {
-      "note": "您的卡信息是安全的。我们使用全球认证的支付处理服务Omise。"
+      "note": "您的银行卡信息受到安全保护。我们使用符合国际标准的 Omise 支付系统。"
     },
     "generatingQR": "正在生成二维码..."
   },
   "progress": {
     "step": {
-      "booking": "订单",
-      "findStaff": "寻找员工",
+      "booking": "预约",
+      "findStaff": "寻找技师",
       "travel": "出发",
       "service": "服务"
     }
   },
   "action": {
-    "call": "拨打"
+    "call": "电话"
   },
   "duration": {
-    "travelTime": "出发时间",
+    "travelTime": "移动时间",
     "notCountedAsServiceTime": "不计入服务时间",
     "serviceTime": "服务时间"
   },
   "booking": {
     "travelStartedAt": "出发时间：",
-    "serviceStartedAt": "服务开始时间："
+    "serviceStartedAt": "服务开始："
   },
   "billing": {
-    "inProgress": "计费进行中"
+    "inProgress": "正在结算中"
   },
   "bookingNotFound": {
     "title": "找不到预订",
-    "message": "找不到需要付款的预订。"
+    "message": "无法找到需要付款的预约"
   },
   "bookingSummary": {
-    "title": "预订摘要",
-    "bookingNumber": "预订号",
+    "title": "预约摘要",
+    "bookingNumber": "预约编号",
     "date": "日期",
-    "amount": "支付金额"
+    "amount": "应付金额"
   },
-  "goToBookings": "前往预订列表",
+  "goToBookings": "前往预约列表",
   "paymentConfirmation": {
-    "title": "付款成功！",
-    "subtitle": "您的预订已确认",
+    "title": "支付成功！",
+    "subtitle": "您的预约已确认",
     "downloadReceipt": "下载收据",
-    "emailSending": "正在发送...",
-    "emailSent": "邮件已发送",
+    "emailSending": "发送中...",
+    "emailSent": "已发送邮件",
     "sendReceipt": "通过电子邮件发送收据",
     "viewBookingDetails": "查看预订详情",
-    "nextSteps": "后续步骤",
-    "receiptEmailSent": "收据已发送到您的电子邮件",
-    "staffContactInfo": "我们的员工会在预约前1天与您联系",
-    "bookingManageInfo": "您可以在预订页面上查看或取消预订",
+    "nextSteps": "下一步",
+    "receiptEmailSent": "收据已发送至您的邮箱",
+    "staffContactInfo": "我们将在预约前一天联系您",
+    "bookingManageInfo": "您可以在预约页面查看或取消您的预订。",
     "emailError": "无法发送电子邮件",
-    "emailErrorGeneral": "发送电子邮件时出错"
+    "emailErrorGeneral": "发送邮件时出错"
   },
   "paymentDetails": {
-    "title": "付款详情",
+    "title": "支付详情",
     "service": "服务",
-    "amount": "金额",
-    "method": "付款方式",
+    "amount": "应付金额",
+    "method": "支付方式",
     "receiptNumber": "收据号码",
     "date": "日期"
   },
   "transactionHistory": {
     "title": "交易记录",
-    "subtitle": "查看您的所有交易记录和收据",
+    "subtitle": "查看所有支付记录和收据",
     "filterSuccessful": "成功",
     "filterRefunded": "已退款",
     "filterFailed": "失败",
@@ -616,7 +616,7 @@
     "statusPending": "待处理",
     "cardFallback": "卡",
     "paymentMethodPromptpay": "PromptPay",
-    "paymentMethodInternetBanking": "网上银行",
+    "paymentMethodInternetBanking": "银行转账",
     "paymentMethodCash": "现金",
     "noTransactions": "未找到交易记录",
     "noTransactionsMessage": "您还没有任何交易记录",
@@ -624,37 +624,37 @@
     "viewBooking": "查看预约",
     "refundedAlert": "此交易已退款至您的原始支付方式",
     "summaryHeading": "摘要",
-    "totalTransactions": "总交易数",
-    "totalSpent": "总花费",
+    "totalTransactions": "全部交易",
+    "totalSpent": "总消费金额",
     "successfulLabel": "成功",
     "refundedLabel": "已退款"
   },
   "transactionTypes": {
     "earn": "从预约获得",
-    "bonus": "奖励积分",
+    "bonus": "奖励",
     "redeem": "兑换折扣",
-    "refund": "积分退款",
-    "expire": "积分过期",
-    "adminAdjust": "由管理员调整"
+    "refund": "退还积分",
+    "expire": "已过期",
+    "adminAdjust": "管理员调整"
   },
   "pointsFilter": {
     "all": "全部",
-    "earned": "获得的",
-    "redeemed": "已使用",
+    "earned": "获得",
+    "redeemed": "使用积分",
     "expired": "已过期"
   },
   "pointsRedeem": {
-    "errorInvalidAmount": "请输入有效的积分数量",
+    "errorInvalidAmount": "请输入有效的积分数量。",
     "errorCannotRedeemPoints": "无法兑换积分",
-    "errorMinimumPointsRequired": "需要最少 {{count}} 积分",
-    "sectionTitle": "使用累积积分",
+    "errorMinimumPointsRequired": "至少需要 {{count}} 积分",
+    "sectionTitle": "使用积分",
     "yourPoints": "您的积分：",
     "pointsUnit": "积分",
-    "appliedPoints": "已使用 {{points}} 积分",
+    "appliedPoints": "使用 {{points}} 积分",
     "discountPrefix": "= 优惠 ฿",
     "placeholderMinimumPoints": "最少 {{count}} 积分",
-    "applyButton": "应用积分",
-    "useAllButton": "全部使用",
-    "maxDiscountHint": "（最多为价格的 {{percent}}%）"
+    "applyButton": "应用使用积分 分",
+    "useAllButton": "使用全部积分",
+    "maxDiscountHint": "（最高可抵扣商品价格的 {{percent}}%）"
   }
 }

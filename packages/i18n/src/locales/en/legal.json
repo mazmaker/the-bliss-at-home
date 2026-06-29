@@ -15,7 +15,7 @@
       "li1": "You must be at least 18 years of age.",
       "li2": "The information you provide must be accurate, complete, and current.",
       "li3": "You must keep your password and account information confidential.",
-      "li4": "You must not use a username that is inappropriate, offensive, or infringes upon the rights of others.",
+      "li4": "You may not use usernames that are inappropriate, offensive, or infringe upon the rights of others.",
       "h2": "2.2 User Responsibilities",
       "p2": "You are responsible for all activities that occur under your account. If you discover any unauthorized use of your account, please notify us immediately.",
       "h3": "2.3 Account Termination",
@@ -38,7 +38,7 @@
       "h3": "3.3 Prohibitions",
       "p3": "You agree not to:",
       "li10": "Use the services for any unlawful or inappropriate purpose",
-      "li11": "Disrupt or interfere with the operation of the system",
+      "li11": "Disrupt or interfere with system operation",
       "li12": "Attempt to access unauthorized data",
       "li13": "Copy, modify, or reproduce any of our content without authorization",
       "li14": "Use automated systems or bots to book services"
@@ -48,7 +48,7 @@
       "h1": "4.1 Service Pricing",
       "li1": "The prices displayed are starting prices and are subject to change.",
       "li2": "Prices do not include special travel surcharges for remote areas.",
-      "li3": "Prices are inclusive of VAT 7%.",
+      "li3": "Prices include 7% VAT",
       "li4": "We reserve the right to change prices without prior notice.",
       "h2": "4.2 Payment Methods",
       "li5": "Credit/debit card (Visa, MasterCard, JCB)",
@@ -59,21 +59,21 @@
       "p3": "Refunds will be processed within 7-14 business days in the following cases:",
       "li9": "The service does not match what was advertised",
       "li10": "The therapist fails to arrive at the appointed time without prior notice",
-      "li11": "The service quality is clearly below standard"
+      "li11": "Service quality is clearly below standard"
     },
     "s5": {
       "heading": "5. Cancellation and Booking Changes",
       "h1": "5.1 Cancellation by the Customer",
       "li1": {
-        "label": "Cancellation more than 24 hours in advance:",
+        "label": "Cancel >24h: 100% refund",
         "text": "100% refund"
       },
       "li2": {
-        "label": "Cancellation more than 12 hours in advance:",
+        "label": "Cancel >12h:",
         "text": "50% refund"
       },
       "li3": {
-        "label": "Cancellation less than 12 hours in advance:",
+        "label": "Cancel >12h:",
         "text": "No refund"
       },
       "li4": {
@@ -81,27 +81,27 @@
         "text": "No refund and may result in a temporary suspension of service"
       },
       "h2": "5.2 Cancellation by the Company",
-      "p2": "If we must cancel a booking due to force majeure (such as therapist illness or an accident), we will:",
+      "p2": "If we need to cancel a booking due to unforeseen circumstances (e.g. therapist illness or accident), we will:",
       "li5": "Notify you as soon as possible",
-      "li6": "Offer a new booking at an alternative time",
-      "li7": "Or provide a full refund within 7 business days"
+      "li6": "Offer a new booking at another time",
+      "li7": "Or a full refund will be issued within 7 business days"
     },
     "s6": {
       "heading": "6. Liability and Limitations",
       "h1": "6.1 Service Provision",
-      "p1": "We make every effort to provide quality service, but we cannot guarantee individual-specific results. The outcome of a service may vary depending on each individual's physical condition and health.",
+      "p1": "We strive to provide high-quality services, but we do not guarantee individual results. Outcomes may vary depending on each person’s physical condition and health.",
       "h2": "6.2 Limitation of Liability",
-      "p2": "We shall not be liable for:",
-      "li1": "Injuries arising from the concealment of health information",
+      "p2": "We are not responsible for:",
+      "li1": "Injuries resulting from the concealment of health information",
       "li2": "Damage to personal property",
       "li3": "Indirect, punitive, or special losses",
       "li4": "Errors caused by third parties",
       "h3": "6.3 Insurance",
-      "p3": "All of our therapists are covered by accident and personal liability insurance. If an accident occurs during service, we will process the insurance claim in accordance with the established procedure."
+      "p3": "All of our therapist are covered by accident and personal liability insurance. In the event of an accident during service, we will handle the insurance claim according to the standard process."
     },
     "s7": {
       "heading": "7. Intellectual Property",
-      "p1": "All content on this platform, including text, images, logos, icons, and software, is the property of The Bliss Massage at Home or its licensors and is protected under intellectual property law.",
+      "p1": "All content on this platform, including text, images, logos, icons, and software, is the property of The Bliss Massage at Home or its licensors and is protected by intellectual property laws.",
       "p2": "You may not copy, reproduce, distribute, or use it for commercial purposes without our prior written permission."
     },
     "s8": {
@@ -127,7 +127,7 @@
       "email": "Email: support@theblissathome.com",
       "phone": "Phone: 02-XXX-XXXX",
       "line": "LINE: @theblissathome",
-      "hours": "Business hours: Monday-Sunday 09:00-21:00"
+      "hours": "Business hours: Monday-Sunday 09:00 AM - 09:00 PM"
     },
     "footer": "Thank you for using The Bliss Massage at Home - relaxation and happiness are what we care about."
   },
@@ -142,7 +142,7 @@
     "toc": {
       "collect": "Information We Collect",
       "use": "How We Use Information",
-      "disclose": "Disclosure of Information",
+      "disclose": "Data Disclosure",
       "security": "Security",
       "rights": "Your Rights",
       "cookies": "Cookies and Technologies"
@@ -161,7 +161,7 @@
       },
       "li3": {
         "label": "Health information:",
-        "text": "Underlying medical conditions, allergy history, health limitations (for safety)"
+        "text": "Medical conditions, allergy history, and health restrictions (for safety purposes)"
       },
       "li4": {
         "label": "Payment information:",
@@ -169,7 +169,7 @@
       },
       "li5": {
         "label": "Profile picture:",
-        "text": "If you choose to upload one"
+        "text": "If you choose to upload"
       },
       "h2": "1.2 Information Collected Automatically",
       "p2": "When you use our platform, we may collect the following information automatically:",
@@ -178,11 +178,11 @@
         "text": "Device type, operating system, browser"
       },
       "li7": {
-        "label": "Usage information:",
+        "label": "Usage data:",
         "text": "Pages visited, time spent, clicks, search history"
       },
       "li8": {
-        "label": "Location information:",
+        "label": "Location data :",
         "text": "GPS location (when permitted), IP Address"
       },
       "li9": {
@@ -368,7 +368,7 @@
       "phone": "Phone: 02-XXX-XXXX ext. 123",
       "line": "LINE: @theblissathome",
       "hours": "Business hours: Monday-Friday 09:00-18:00",
-      "responseNote": "We will endeavor to respond to your request within 30 days. If more time is required, we will notify you."
+      "responseNote": "We will endeavor to respond to your request within 30 days. Should additional time be required, we will notify you accordingly."
     },
     "s11": {
       "heading": "11. Complaints",

@@ -18,22 +18,22 @@
     "notifications": {
       "title": "通知",
       "bookingUpdates": "预约状态更新",
-      "bookingUpdatesDesc": "当预约状态变更时收到通知",
+      "bookingUpdatesDesc": "当您的预约状态发生变化时接收通知",
       "promotions": "促销和特别优惠",
-      "promotionsDesc": "接收促销新闻和特别折扣",
-      "news": "新闻和活动",
-      "newsDesc": "来自 The Bliss Massage at Home 的一般新闻和活动"
+      "promotionsDesc": "接收促销和特别优惠相关信息",
+      "news": "新闻与活动",
+      "newsDesc": "接收 The Bliss Massage at Home 的新闻与活动信息"
     },
     "privacy": {
       "title": "隐私",
       "publicProfile": "显示公开资料",
-      "publicProfileDesc": "允许他人查看您的个人资料",
-      "marketingEmails": "允许营销邮件",
-      "marketingEmailsDesc": "接收促销邮件和特别优惠"
+      "publicProfileDesc": "允许其他人查看您的个人资料",
+      "marketingEmails": "允许接收营销邮件",
+      "marketingEmailsDesc": "接收促销邮件和优惠信息"
     },
     "language": {
       "title": "语言",
-      "thai": "ภาษาไทย",
+      "thai": "泰语",
       "english": "English",
       "chinese": "中文",
       "selected": "已选择"
@@ -50,7 +50,7 @@
     "edit": "编辑",
     "delete": "删除",
     "deleteTitle": "删除地址",
-    "deleteMessage": "您确定要删除此地址吗？此操作无法撤销。",
+    "deleteMessage": "确定要删除此地址吗？此操作无法撤销。",
     "labelHome": "家",
     "validation": {
       "recipientNameRequired": "请输入收件人姓名",
@@ -58,7 +58,7 @@
       "phoneInvalid": "电话号码无效（手机：06/08/09，固定电话：02/03/04/05/07，特殊号码：1xxx）",
       "addressRequired": "请输入地址",
       "provinceRequired": "请选择省份",
-      "zipcodeRequired": "请输入邮编",
+      "zipcodeRequired": "请输入邮政编码",
       "zipcodeFormat": "邮编必须是5位数字",
       "locationRequired": "请在地图上选择位置"
     },
@@ -66,17 +66,17 @@
     "editTitle": "编辑地址",
     "addNewTitle": "添加新地址",
     "label": "标签",
-    "labelWork": "办公室",
+    "labelWork": "工作地点",
     "labelOther": "其他",
     "setAsDefault": "设为默认",
     "recipientName": "收件人姓名",
     "recipientNamePlaceholder": "姓名",
     "phone": "电话号码",
     "address": "地址",
-    "addressPlaceholder": "门牌号、街道",
+    "addressPlaceholder": "门牌号、巷、街道",
     "mapLocation": "在地图上选择位置",
     "buttonCancel": "取消",
-    "buttonSaving": "保存中...",
+    "buttonSaving": "正在保存...",
     "buttonUpdate": "更新地址",
     "buttonAdd": "添加地址"
   },
@@ -88,38 +88,38 @@
     "default": "默认",
     "setDefault": "设为默认",
     "delete": "删除",
-    "expires": "到期",
+    "expires": "已过期",
     "deleteTitle": "删除支付方式",
-    "deleteMessage": "您确定要删除此支付方式吗？此操作无法撤销。",
+    "deleteMessage": "您确定要删除此支付方式吗？此操作不可恢复",
     "setAsDefault": "设为默认支付方式",
-    "cardDisabledMessage": "目前仅支持 PromptPay (QR) 支付 — 信用卡支付暂时禁用"
+    "cardDisabledMessage": "目前仅支持 PromptPay（二维码）支付——信用卡支付暂时关闭"
   },
   "tax": {
     "title": "税务发票信息",
-    "subtitle": "填写税务发票/收据信息",
+    "subtitle": "填写用于开具发票/收据的信息",
     "type": "类型",
     "individual": "个人",
     "individualEn": "Individual",
-    "company": "公司",
+    "company": "公司/法人",
     "companyEn": "Company",
     "nationalId": "身份证号码",
     "taxId": "税务登记号",
     "companyName": "公司名称",
     "companyPlaceholder": "ABC 有限公司",
-    "branch": "分公司",
+    "branch": "分支机构",
     "branchPlaceholder": "总部或 00001",
     "taxAddress": "税务发票地址",
-    "addressPlaceholder": "门牌号、小区、街道",
+    "addressPlaceholder": "地址（门牌号、村、巷、路）",
     "save": "保存信息",
     "note": "注意：",
     "noteItems": {
       "usage": "此信息将用于税务发票/收据",
-      "accuracy": "请填写准确完整的信息",
-      "editable": "您可以随时编辑此信息"
+      "accuracy": "请正确完整填写信息",
+      "editable": "可随时修改信息"
     }
   },
   "toast": {
-    "profileUpdated": "个人资料更新成功",
+    "profileUpdated": "资料更新成功",
     "profileUpdateFailed": "无法更新个人资料",
     "addressDeleted": "地址删除成功",
     "addressDeleteFailed": "无法删除地址",
@@ -151,17 +151,17 @@
     "title": "服务前的健康信息",
     "editButton": "编辑",
     "fillButton": "填写信息",
-    "notFilledYet": "尚未提供健康信息 — 预订前必填",
-    "noCondition": "无医疗病史或慢性病"
+    "notFilledYet": "尚未填写健康信息，预约前必须填写",
+    "noCondition": "无症状或既往病史"
   },
   "pointsHistory": {
     "backToProfile": "返回个人资料",
-    "title": "积分记录",
-    "subtitle": "查看您积累的积分和交易历史",
+    "title": "积分",
+    "subtitle": "查看积分余额和积分记录",
     "card": {
-      "remaining": "可用",
+      "remaining": "余额",
       "value": "价值",
-      "totalEarned": "总获得",
+      "totalEarned": "累计获得",
       "points": "积分",
       "redeemed": "已使用",
       "pointsLabel": "积分",
@@ -169,12 +169,12 @@
       "pointsLabelExpired": "积分"
     },
     "section": {
-      "title": "积分历史"
+      "title": "积分记录"
     },
     "loading": "加载中...",
     "empty": {
-      "title": "暂无积分历史",
-      "description": "完成预约后可获得积分，积分将在此显示"
+      "title": "暂无积分记录",
+      "description": "完成预约后，您将在这里获得积分"
     }
   }
 }

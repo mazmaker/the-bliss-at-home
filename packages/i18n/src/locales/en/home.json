@@ -1,10 +1,10 @@
 {
   "hero": {
-    "title1": "Relax.",
+    "title1": "Relax",
     "title2": "We Come to You",
     "subtitle1": "Massage and spa services",
     "subtitle2": "Delivered by curated professionals",
-    "searchPlaceholder": "Search services...",
+    "searchPlaceholder": "Search for services..",
     "searchButton": "Search"
   },
   "promotions": {
@@ -13,7 +13,7 @@
     "validUntil": "Valid until",
     "minOrder": "Min. order",
     "maxDiscount": "Max discount",
-    "useCode": "Use this code when booking",
+    "useCode": "Use this code when making your reservation",
     "bookNow": "Book Now",
     "close": "Close",
     "appliesTo": "Applies to",
@@ -72,7 +72,7 @@
     "title": "WHY CHOOSE US",
     "experts": "Experts",
     "expertsDesc": "Professional & trained team",
-    "atYourDoor": "At Your Door",
+    "atYourDoor": "At Your Doorstep",
     "atYourDoorDesc": "Convenient home service",
     "premiumQuality": "Premium Quality",
     "premiumQualityDesc": "Luxury products & service"
@@ -82,9 +82,9 @@
     "subtitle": "Real feedback from our valued customers"
   },
   "cta": {
-    "title": "Ready to Indulge?",
+    "title": "Ready to experience true relaxation?",
     "subtitle1": "Book your massage, spa or nail service today",
-    "subtitle2": "Experience luxury at your home"
+    "subtitle2": "Bringing comfort and relaxation to your doorstep."
   },
   "pointsWidget": {
     "title": "Points Collected",

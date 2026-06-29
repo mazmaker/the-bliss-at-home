@@ -1,6 +1,6 @@
 {
   "hero": {
-    "title1": "传递舒适",
+    "title1": "放松身心",
     "title2": "在您家中",
     "subtitle1": "按摩和水疗服务",
     "subtitle2": "由精选专业人员提供",
@@ -13,7 +13,7 @@
     "validUntil": "有效期至",
     "minOrder": "最低消费",
     "maxDiscount": "最高优惠",
-    "useCode": "预约时使用此代码",
+    "useCode": "预约时请输入此优惠码",
     "bookNow": "立即预约",
     "close": "关闭",
     "appliesTo": "适用于",
@@ -33,8 +33,8 @@
     "limitPerUser": "每人限 {{count}} 次",
     "termsTitle": "使用条款",
     "share": "分享促销",
-    "loading": "正在加载促销...",
-    "pageTitle": "所有促销",
+    "loading": "正在加载优惠信息...",
+    "pageTitle": "所有优惠活动",
     "pageSubtitle": "为您提供的特别优惠",
     "searchPlaceholder": "搜索促销...",
     "filterAll": "所有类型",
@@ -55,7 +55,7 @@
     "offText": "优惠"
   },
   "categories": {
-    "title": "服务项目",
+    "title": "服务",
     "massage": "按摩",
     "nail": "美甲",
     "spa": "水疗",
@@ -74,7 +74,7 @@
     "expertsDesc": "经过专业培训的团队",
     "atYourDoor": "上门服务",
     "atYourDoorDesc": "便捷的上门服务",
-    "premiumQuality": "优质品质",
+    "premiumQuality": "高品质服务",
     "premiumQualityDesc": "奢华产品与服务"
   },
   "reviews": {
@@ -84,7 +84,7 @@
   "cta": {
     "title": "准备好享受了吗？",
     "subtitle1": "立即预约按摩、水疗或美甲服务",
-    "subtitle2": "在家中体验奢华"
+    "subtitle2": "将舒适与放松送到您的家门口。"
   },
   "pointsWidget": {
     "title": "积累的积分",
@@ -106,7 +106,7 @@
     "discountLabel": "优惠",
     "daysLeftLabel": "剩余天数",
     "usedLabel": "已使用",
-    "usageProgressLabel": "使用进度",
+    "usageProgressLabel": "使用情况",
     "termsTitle": "条款和条件",
     "minimumOrderLabel": "最低订单额：",
     "maximumDiscountLabel": "最高优惠：",
