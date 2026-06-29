@@ -4,13 +4,16 @@ import { Search, Filter, Tag, Calendar, Percent, Gift, Star, Clock, ArrowLeft, C
 import { useActivePromotions } from '@bliss/supabase/hooks/usePromotions'
 import { useTranslation } from '@bliss/i18n'
 import { UniversalPromotionModal } from '../components/UniversalPromotionModal-Branded'
+import { pickLang } from '../utils/serviceUtils'
 
 interface Promotion {
   id: string
   name_th: string
   name_en: string
+  name_cn?: string | null
   description_th?: string | null
   description_en?: string | null
+  description_cn?: string | null
   code: string
   discount_type: string
   discount_value: number
@@ -36,8 +39,6 @@ const PromotionsPage = () => {
   const [filterType, setFilterType] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'discount' | 'expiring'>('newest')
 
-  const isEn = i18n.language === 'en' || i18n.language === 'cn'
-
   // Handle URL parameter - auto open modal if ID in URL
   useEffect(() => {
     if (id && promotions) {
@@ -62,8 +63,8 @@ const PromotionsPage = () => {
     if (!promotions) return []
 
     let filtered = promotions.filter((promo: Promotion) => {
-      const name = isEn ? promo.name_en : promo.name_th
-      const description = isEn ? (promo.description_en || promo.description_th) : (promo.description_th || promo.description_en)
+      const name = pickLang(promo, 'name', i18n.language)
+      const description = pickLang(promo, 'description', i18n.language)
 
       const matchesSearch = !searchTerm ||
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,7 +90,7 @@ const PromotionsPage = () => {
     })
 
     return filtered
-  }, [promotions, searchTerm, filterType, sortBy, isEn])
+  }, [promotions, searchTerm, filterType, sortBy, i18n.language])
 
   const getDiscountIcon = (type: string) => {
     switch (type) {
@@ -192,8 +193,8 @@ const PromotionsPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAndSortedPromotions.map((promo: Promotion) => {
-              const name = isEn ? promo.name_en : promo.name_th
-              const description = isEn ? (promo.description_en || promo.description_th) : (promo.description_th || promo.description_en)
+              const name = pickLang(promo, 'name', i18n.language)
+              const description = pickLang(promo, 'description', i18n.language)
               const daysLeft = getDaysLeft(promo.end_date)
 
               return (

@@ -11,9 +11,10 @@ import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { supabase } from '@bliss/supabase/auth'
 import PaymentForm from '../components/PaymentForm'
 import { useTranslation } from '@bliss/i18n'
+import { pickLang } from '../utils/serviceUtils'
 
 function CompletePayment() {
-  const { t } = useTranslation(['booking', 'common'])
+  const { t, i18n } = useTranslation(['booking', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -195,7 +196,7 @@ function CompletePayment() {
 
             <div className="flex justify-between">
               <span className="text-bliss-700">{t('services:service.label')}</span>
-              <span className="font-medium">{bookingData.service?.name_th}</span>
+              <span className="font-medium">{pickLang(bookingData.service, 'name', i18n.language)}</span>
             </div>
 
             <div className="flex justify-between">

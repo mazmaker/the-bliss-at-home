@@ -56,6 +56,14 @@ async function generateDocNumber(prefix: string): Promise<string> {
   return data as string
 }
 
+// Helper: pick localized service name (3-way: lang → en → th). In-scope DB content
+// (services) carries name_th/name_en/name_cn sibling columns. lang from ?lang= (default th).
+function pickServiceName(svc: any, lang?: string): string {
+  if (!svc) return ''
+  const l = lang === 'cn' || lang === 'en' ? lang : 'th'
+  return svc[`name_${l}`] || svc.name_en || svc.name_th || ''
+}
+
 // Helper: format date to Thai locale string
 function formatDate(dateStr: string): string {
   try {
@@ -99,6 +107,7 @@ async function getCustomerEmail(customerId: string): Promise<string | null> {
 router.get('/:transactionId', async (req, res) => {
   try {
     const { transactionId } = req.params
+    const lang = (req.query.lang as string) || 'th'
     const supabase = getSupabaseClient()
 
     // Fetch transaction with booking details
@@ -127,6 +136,7 @@ router.get('/:transactionId', async (req, res) => {
           services!bookings_service_id_fkey (
             name_th,
             name_en,
+            name_cn,
             base_price,
             duration
           ),
@@ -208,7 +218,7 @@ router.get('/:transactionId', async (req, res) => {
         booking_number: booking?.booking_number,
         booking_date: booking?.booking_date,
         booking_time: booking?.booking_time,
-        service_name: booking?.services?.name_th || booking?.services?.name_en || '',
+        service_name: pickServiceName(booking?.services, lang),
         service_name_en: booking?.services?.name_en || '',
         service_price: booking?.services?.base_price || booking?.base_price,
         final_price: booking?.final_price,
@@ -233,6 +243,7 @@ router.get('/:transactionId', async (req, res) => {
 router.get('/credit-note/:refundTransactionId', async (req, res) => {
   try {
     const { refundTransactionId } = req.params
+    const lang = (req.query.lang as string) || 'th'
     const supabase = getSupabaseClient()
 
     // Fetch refund transaction
@@ -251,7 +262,8 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
           admin_notes,
           services (
             name_th,
-            name_en
+            name_en,
+            name_cn
           ),
           customers (
             id,
@@ -338,7 +350,7 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
         booking_number: booking?.booking_number,
         booking_date: booking?.booking_date,
         booking_time: booking?.booking_time,
-        service_name: booking?.services?.name_th || booking?.services?.name_en || '',
+        service_name: pickServiceName(booking?.services, lang),
         original_amount: booking?.final_price || 0,
         payment_method: booking?.payment_method || '',
         customer_name: booking?.customers?.full_name || '',
@@ -361,6 +373,7 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
 router.post('/:transactionId/send-email', async (req, res) => {
   try {
     const { transactionId } = req.params
+    const lang = (req.query.lang as string) || 'th'
 
     // Fetch receipt data (reuse GET logic)
     const supabase = getSupabaseClient()
@@ -374,7 +387,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
           booking_time,
           final_price,
           payment_method,
-          services!bookings_service_id_fkey (name_th, name_en),
+          services!bookings_service_id_fkey (name_th, name_en, name_cn),
           booking_addons!booking_addons_booking_id_fkey (
             quantity,
             total_price,
@@ -418,7 +431,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
       customerName: booking?.customers?.full_name || '',
       receiptNumber,
       bookingNumber: booking?.booking_number || '',
-      serviceName: booking?.services?.name_th || booking?.services?.name_en || '',
+      serviceName: pickServiceName(booking?.services, lang),
       bookingDate: formatDate(booking?.booking_date),
       bookingTime: booking?.booking_time || '',
       amount: transaction.amount,
@@ -454,6 +467,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
 router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => {
   try {
     const { refundTransactionId } = req.params
+    const lang = (req.query.lang as string) || 'th'
     const supabase = getSupabaseClient()
 
     const { data: refundTxn } = await supabase
@@ -466,7 +480,7 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
           final_price,
           cancellation_reason,
           payment_method,
-          services (name_th, name_en),
+          services (name_th, name_en, name_cn),
           customers (id, full_name, profile_id)
         )
       `)
@@ -512,7 +526,7 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
       creditNoteNumber,
       originalReceiptNumber,
       bookingNumber: booking?.booking_number || '',
-      serviceName: booking?.services?.name_th || booking?.services?.name_en || '',
+      serviceName: pickServiceName(booking?.services, lang),
       bookingDate: formatDate(booking?.booking_date),
       originalAmount: booking?.final_price || 0,
       refundAmount: refundTxn.refund_amount,
@@ -547,6 +561,7 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
  */
 export async function sendReceiptEmailForTransaction(transactionId: string): Promise<void> {
   const supabase = getSupabaseClient()
+  const lang = 'th' // emailed receipts default to Thai (no per-recipient lang plumbing yet)
 
   const { data: transaction, error: txnError } = await supabase
     .from('transactions')
@@ -558,7 +573,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
         booking_time,
         final_price,
         payment_method,
-        services!bookings_service_id_fkey (name_th, name_en),
+        services!bookings_service_id_fkey (name_th, name_en, name_cn),
         booking_addons!booking_addons_booking_id_fkey (
           quantity,
           total_price,
@@ -603,7 +618,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
     customerName: booking?.customers?.full_name || '',
     receiptNumber,
     bookingNumber: booking?.booking_number || '',
-    serviceName: booking?.services?.name_th || booking?.services?.name_en || '',
+    serviceName: pickServiceName(booking?.services, lang),
     bookingDate: formatDate(booking?.booking_date),
     bookingTime: booking?.booking_time || '',
     amount: transaction.amount,
@@ -638,6 +653,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
  */
 export async function sendCreditNoteEmailForRefund(refundTransactionId: string): Promise<void> {
   const supabase = getSupabaseClient()
+  const lang = 'th' // emailed credit notes default to Thai (no per-recipient lang plumbing yet)
 
   const { data: refundTxn, error: refundError } = await supabase
     .from('refund_transactions')
@@ -649,7 +665,7 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
         final_price,
         cancellation_reason,
         payment_method,
-        services!bookings_service_id_fkey (name_th, name_en),
+        services!bookings_service_id_fkey (name_th, name_en, name_cn),
         customers!bookings_customer_id_fkey (id, full_name, profile_id)
       )
     `)
@@ -697,7 +713,7 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
     creditNoteNumber,
     originalReceiptNumber,
     bookingNumber: booking?.booking_number || '',
-    serviceName: booking?.services?.name_th || booking?.services?.name_en || '',
+    serviceName: pickServiceName(booking?.services, lang),
     bookingDate: formatDate(booking?.booking_date),
     originalAmount: booking?.final_price || 0,
     refundAmount: refundTxn.refund_amount,

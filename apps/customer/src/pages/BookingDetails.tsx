@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ChevronLeft, Calendar, Clock, MapPin, Map, Star, CreditCard, Sparkles, XCircle, Download, FileText, Users, Car } from 'lucide-react'
 import { useBookingByNumber } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation, getStoredLanguage } from '@bliss/i18n'
+import { pickLang } from '../utils/serviceUtils'
 import { CancelBookingModal } from '../components/CancelBookingModal'
 import { RescheduleModal } from '../components/RescheduleModal'
 import { ReviewModal } from '../components/ReviewModal'
@@ -19,7 +20,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https:/
 // ใช้ regular supabase client แทน service role เพื่อหลีกเลี่ยง multiple instances
 
 function BookingDetails() {
-  const { t } = useTranslation(['booking', 'common'])
+  const { t, i18n } = useTranslation(['booking', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -98,7 +99,7 @@ function BookingDetails() {
 
     return {
       id: bookingData.booking_number,
-      serviceName: bookingData.service?.name_en || bookingData.service?.name_th || 'Unknown Service',
+      serviceName: pickLang(bookingData.service, 'name', i18n.language) || 'Unknown Service',
       serviceSlug: bookingData.service?.slug || '',
       date: bookingData.booking_date,
       time: bookingData.booking_time || '00:00',
@@ -174,7 +175,7 @@ function BookingDetails() {
       image: getServiceImage(bookingData.service?.image_url, bookingData.service?.category || 'massage'),
       providerPreference: (bookingData as any).provider_preference || null,
     }
-  }, [bookingData])
+  }, [bookingData, i18n.language])
 
   // Fetch active journey for this booking
   useEffect(() => {
@@ -269,6 +270,7 @@ function BookingDetails() {
         id: bookingData.service?.id || '',
         name_th: bookingData.service?.name_th || '',
         name_en: bookingData.service?.name_en || '',
+        name_cn: bookingData.service?.name_cn || '',
         slug: bookingData.service?.slug || '',
         category: bookingData.service?.category || '',
         image_url: bookingData.service?.image_url
@@ -285,7 +287,8 @@ function BookingDetails() {
         created_at: bs.created_at,
         services: {
           name_th: bs.service?.name_th || bookingData.service?.name_th || '',
-          name_en: bs.service?.name_en || bookingData.service?.name_en || ''
+          name_en: bs.service?.name_en || bookingData.service?.name_en || '',
+          name_cn: (bs.service as any)?.name_cn || bookingData.service?.name_cn || ''
         }
       })) || []
     }

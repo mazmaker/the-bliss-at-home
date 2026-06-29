@@ -2262,6 +2262,7 @@ export type Database = {
           created_at: string | null
           description_en: string | null
           description_th: string | null
+          description_cn: string | null
           discount_type: string
           discount_value: number
           end_date: string
@@ -2272,6 +2273,7 @@ export type Database = {
           min_order_amount: number | null
           name_en: string
           name_th: string
+          name_cn: string | null
           start_date: string
           status: string | null
           target_categories: string[] | null
@@ -2290,6 +2292,7 @@ export type Database = {
           created_at?: string | null
           description_en?: string | null
           description_th?: string | null
+          description_cn?: string | null
           discount_type: string
           discount_value: number
           end_date: string
@@ -2300,6 +2303,7 @@ export type Database = {
           min_order_amount?: number | null
           name_en: string
           name_th: string
+          name_cn?: string | null
           start_date: string
           status?: string | null
           target_categories?: string[] | null
@@ -2318,6 +2322,7 @@ export type Database = {
           created_at?: string | null
           description_en?: string | null
           description_th?: string | null
+          description_cn?: string | null
           discount_type?: string
           discount_value?: number
           end_date?: string
@@ -2328,6 +2333,7 @@ export type Database = {
           min_order_amount?: number | null
           name_en?: string
           name_th?: string
+          name_cn?: string | null
           start_date?: string
           status?: string | null
           target_categories?: string[] | null
@@ -2795,6 +2801,7 @@ export type Database = {
           created_at: string | null
           description_en: string | null
           description_th: string | null
+          description_cn: string | null
           duration: number
           duration_options: Json | null
           hotel_price: number
@@ -2803,6 +2810,7 @@ export type Database = {
           is_active: boolean | null
           name_en: string
           name_th: string
+          name_cn: string | null
           price_120: number | null
           price_60: number | null
           price_90: number | null
@@ -2817,6 +2825,7 @@ export type Database = {
           created_at?: string | null
           description_en?: string | null
           description_th?: string | null
+          description_cn?: string | null
           duration: number
           duration_options?: Json | null
           hotel_price: number
@@ -2825,6 +2834,7 @@ export type Database = {
           is_active?: boolean | null
           name_en: string
           name_th: string
+          name_cn?: string | null
           price_120?: number | null
           price_60?: number | null
           price_90?: number | null
@@ -2839,6 +2849,7 @@ export type Database = {
           created_at?: string | null
           description_en?: string | null
           description_th?: string | null
+          description_cn?: string | null
           duration?: number
           duration_options?: Json | null
           hotel_price?: number
@@ -2847,6 +2858,7 @@ export type Database = {
           is_active?: boolean | null
           name_en?: string
           name_th?: string
+          name_cn?: string | null
           price_120?: number | null
           price_60?: number | null
           price_90?: number | null
@@ -2889,6 +2901,7 @@ export type Database = {
           id: string
           name_en: string
           name_th: string
+          name_cn: string | null
         }
         Insert: {
           category: Database["public"]["Enums"]["service_category"]
@@ -2897,6 +2910,7 @@ export type Database = {
           id?: string
           name_en: string
           name_th: string
+          name_cn?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["service_category"]
@@ -2905,6 +2919,7 @@ export type Database = {
           id?: string
           name_en?: string
           name_th?: string
+          name_cn?: string | null
         }
         Relationships: []
       }

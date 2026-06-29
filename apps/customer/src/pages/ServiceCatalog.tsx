@@ -6,12 +6,12 @@ import { useAllServiceReviewStats } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
-import { getMinimumPriceInfo } from '../utils/serviceUtils'
+import { getMinimumPriceInfo, pickLang } from '../utils/serviceUtils'
 import { getServiceImage } from '../utils/imageUtils'
 
 
 function ServiceCatalog() {
-  const { t } = useTranslation(['services', 'common'])
+  const { t, i18n } = useTranslation(['services', 'common'])
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('popular')
@@ -54,9 +54,10 @@ function ServiceCatalog() {
 
       return {
         id: service.id,
-        name: service.name_en || service.name_th,
+        name: pickLang(service, 'name', i18n.language),
         name_th: service.name_th || '',
         name_en: service.name_en || '',
+        name_cn: service.name_cn || '',
         price: minPriceInfo.price,
         minDuration: minPriceInfo.duration,
         category: service.category,
@@ -67,7 +68,7 @@ function ServiceCatalog() {
         image: getServiceImage(service.image_url, service.category),
       }
     }) || []
-  }, [services, serviceReviewStats])
+  }, [services, serviceReviewStats, i18n.language])
 
   // Filter and sort services
   const filteredServices = useMemo(() => {
@@ -76,7 +77,8 @@ function ServiceCatalog() {
       const q = searchQuery.toLowerCase()
       const matchesSearch = !q ||
         service.name_th.toLowerCase().includes(q) ||
-        service.name_en.toLowerCase().includes(q)
+        service.name_en.toLowerCase().includes(q) ||
+        service.name_cn.toLowerCase().includes(q)
       return matchesCategory && matchesSearch
     })
 

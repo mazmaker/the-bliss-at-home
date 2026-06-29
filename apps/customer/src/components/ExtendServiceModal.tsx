@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { X, Clock, CreditCard, AlertTriangle, CheckCircle, User, Calendar, Sparkles, Tag } from 'lucide-react'
 import { useTranslation } from '@bliss/i18n'
 import { useExtendBooking } from '../hooks/useExtendBooking'
+import { pickLang } from '../utils/serviceUtils'
 import { BookingWithExtensions, ExtensionOption } from '../types/extendService'
 import { VoucherCodeInput } from './VoucherCodeInput'
 import type { PromoValidationResult } from '../types/promotion'
@@ -24,7 +25,7 @@ export function ExtendServiceModal({
   onCancel
 }: ExtendServiceModalProps) {
   const navigate = useNavigate()
-  const { t } = useTranslation('extension')
+  const { t, i18n } = useTranslation('extension')
   const [selectedDuration, setSelectedDuration] = useState<number>()
   const [notes, setNotes] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
@@ -169,7 +170,7 @@ export function ExtendServiceModal({
                   <User className="w-4 h-4" />
                   {t('modal.service')}
                 </span>
-                <span className="font-medium">{booking.service.name_th}</span>
+                <span className="font-medium">{pickLang(booking.service, 'name', i18n.language)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-bliss-700">

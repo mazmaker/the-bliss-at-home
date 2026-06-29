@@ -14,13 +14,16 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { useTranslation } from '@bliss/i18n'
+import { pickLang } from '../utils/serviceUtils'
 
 interface Promotion {
   id: string
   name_th: string
   name_en: string
+  name_cn?: string | null
   description_th?: string | null
   description_en?: string | null
+  description_cn?: string | null
   code: string
   discount_type: string
   discount_value: number
@@ -48,12 +51,9 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
 
   if (!promotion) return null
 
-  const isEn = i18n.language === 'en' || i18n.language === 'cn'
-  const name = isEn ? promotion.name_en : promotion.name_th
-  const secondaryName = isEn ? promotion.name_th : promotion.name_en
-  const description = isEn
-    ? (promotion.description_en || promotion.description_th)
-    : (promotion.description_th || promotion.description_en)
+  const name = pickLang(promotion, 'name', i18n.language)
+  const secondaryName = i18n.language === 'th' ? promotion.name_en : promotion.name_th
+  const description = pickLang(promotion, 'description', i18n.language)
 
   const formatDiscount = () => {
     switch (promotion.discount_type) {

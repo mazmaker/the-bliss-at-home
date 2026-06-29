@@ -15,6 +15,7 @@ import ManualPaymentInstructions, { type ManualQrConfig } from '../components/Ma
 import { GoogleMapsPicker } from '../components/GoogleMapsPicker'
 import { CustomerTypeSelector } from '../components/CustomerTypeSelector'
 import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
+import { pickLang } from '../utils/serviceUtils'
 import { CoupleServiceConfig } from '../components/CoupleServiceConfig'
 import { VoucherCodeInput } from '../components/VoucherCodeInput'
 import { PointsRedeemSection } from '../components/PointsRedeemSection'
@@ -27,7 +28,7 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6
 type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference'
 
 function BookingWizard() {
-  const { t } = useTranslation('booking')
+  const { t, i18n } = useTranslation('booking')
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -109,17 +110,17 @@ function BookingWizard() {
     if (!serviceData) return null
     return {
       id: serviceData.id,
-      name: serviceData.name_en || serviceData.name_th,
+      name: pickLang(serviceData, 'name', i18n.language),
       price: Number(serviceData.base_price || 0),
       duration: (serviceData.duration || 60) / 60, // Convert to hours
       durationMinutes: serviceData.duration || 60,
       category: serviceData.category,
-      description: serviceData.description_th || serviceData.description_en || '',
+      description: pickLang(serviceData, 'description', i18n.language),
       image: getServiceImage(serviceData.image_url, serviceData.category),
       addons: serviceData.addons || [],
       raw: serviceData, // keep raw for duration/price helpers
     }
-  }, [serviceData])
+  }, [serviceData, i18n.language])
 
   // Person 2's service with addons (falls back to person1's service)
   const person2Service = useMemo(() => {
@@ -1211,14 +1212,14 @@ function BookingWizard() {
                         <div className="w-16 h-16 bg-bliss-100 rounded-xl overflow-hidden">
                           <img
                             src={getServiceImage(p2Svc.image_url, p2Svc.category)}
-                            alt={p2Svc.name_th || p2Svc.name_en}
+                            alt={pickLang(p2Svc, 'name', i18n.language)}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-bliss-900">
                             <span className="text-xs text-bliss-500 block">{t('wizard.step1.person2')}</span>
-                            {p2Svc.name_th || p2Svc.name_en}
+                            {pickLang(p2Svc, 'name', i18n.language)}
                           </h3>
                           <p className="text-sm text-bliss-700 flex items-center gap-1">
                             <Clock className="w-4 h-4" /> {t('wizard.step1.minutes', { count: person2Duration })}

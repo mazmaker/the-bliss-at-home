@@ -5,6 +5,7 @@ import { Database } from '@bliss/supabase'
 import { useServices } from '@bliss/supabase/hooks/useServices'
 import { useServiceById } from '@bliss/supabase/hooks/useServices'
 import { ServiceDurationPicker, getPriceForDuration, getAvailableDurations } from './ServiceDurationPicker'
+import { pickLang } from '../utils/serviceUtils'
 
 type Service = Database['public']['Tables']['services']['Row']
 type ServiceAddon = Database['public']['Tables']['service_addons']['Row']
@@ -36,7 +37,7 @@ function AddOnList({
   selectedIds: string[]
   onChange: (ids: string[]) => void
 }) {
-  const { t } = useTranslation('booking')
+  const { t, i18n } = useTranslation('booking')
 
   if (!addons || addons.length === 0) return null
 
@@ -62,7 +63,7 @@ function AddOnList({
                   : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-100'
               }`}
             >
-              <span className="text-bliss-700">{addon.name_th || addon.name_en}</span>
+              <span className="text-bliss-700">{pickLang(addon, 'name', i18n.language)}</span>
               <span className={`font-medium ${isSelected ? 'text-bliss-600' : 'text-bliss-500'}`}>
                 +฿{Number(addon.price).toLocaleString()}
               </span>
@@ -87,7 +88,7 @@ export function CoupleServiceConfig({
   onPerson2DurationChange,
   onPerson2AddOnsChange,
 }: CoupleServiceConfigProps) {
-  const { t } = useTranslation('booking')
+  const { t, i18n } = useTranslation('booking')
   const { data: allServices } = useServices()
   const [showServicePicker, setShowServicePicker] = useState(false)
 
@@ -129,7 +130,7 @@ export function CoupleServiceConfig({
         <div className="p-4 space-y-4">
           {/* Service name (fixed - main service) */}
           <div className="flex items-center justify-between">
-            <span className="font-medium text-bliss-900">{person1Service.name_th || person1Service.name_en}</span>
+            <span className="font-medium text-bliss-900">{pickLang(person1Service, 'name', i18n.language)}</span>
             <span className="font-bold text-bliss-600">฿{person1Price.toLocaleString()}</span>
           </div>
 
@@ -167,7 +168,7 @@ export function CoupleServiceConfig({
           {/* Service selector */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-bliss-900">{p2Svc.name_th || p2Svc.name_en}</span>
+              <span className="font-medium text-bliss-900">{pickLang(p2Svc, 'name', i18n.language)}</span>
               <span className="font-bold text-bliss-600">฿{person2Price.toLocaleString()}</span>
             </div>
             <button
@@ -198,7 +199,7 @@ export function CoupleServiceConfig({
                         : 'hover:bg-bliss-100'
                     }`}
                   >
-                    <span className="text-bliss-900">{svc.name_th || svc.name_en}</span>
+                    <span className="text-bliss-900">{pickLang(svc, 'name', i18n.language)}</span>
                     <span className="text-bliss-500">฿{Number(svc.base_price).toLocaleString()}</span>
                   </button>
                 ))}

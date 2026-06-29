@@ -9,12 +9,11 @@ import { PromotionDetailModal } from '../components/PromotionDetailModal'
 import { getPriceForDuration } from '../components/ServiceDurationPicker'
 import { DiscountPrice } from '../components/DiscountPrice'
 import EmergencyBookingBanner from '../components/EmergencyBookingBanner'
-import { getMinimumPriceInfo } from '../utils/serviceUtils'
+import { getMinimumPriceInfo, pickLang } from '../utils/serviceUtils'
 import { getServiceImage } from '../utils/imageUtils'
 
 function HomePage() {
   const { t, i18n } = useTranslation(['home', 'common', 'services'])
-  const isEn = i18n.language === 'en' || i18n.language === 'cn'
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -84,7 +83,7 @@ function HomePage() {
     .slice(0, 4)
     .map((service) => ({
       id: service.id,
-      name: service.name_en || service.name_th,
+      name: pickLang(service, 'name', i18n.language),
       price: service.displayPrice,
       minDuration: service.minDuration,
       category: service.category,
@@ -167,8 +166,8 @@ function HomePage() {
               style={{ transform: `translateX(-${promoIndex * 100}%)` }}
             >
               {promotions.map((promo, index) => {
-                const name = isEn ? promo.name_en : promo.name_th
-                const description = isEn ? (promo.description_en || promo.description_th) : (promo.description_th || promo.description_en)
+                const name = pickLang(promo, 'name', i18n.language)
+                const description = pickLang(promo, 'description', i18n.language)
                 return (
                   <div
                     key={promo.id}

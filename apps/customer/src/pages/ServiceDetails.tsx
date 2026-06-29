@@ -5,6 +5,7 @@ import { useServiceBySlug } from '@bliss/supabase/hooks/useServices'
 import { useServiceReviewStats, useServiceReviews } from '@bliss/supabase/hooks/useReviews'
 import { useTranslation } from '@bliss/i18n'
 import { getPriceForDuration, getAvailableDurations } from '../components/ServiceDurationPicker'
+import { pickLang } from '../utils/serviceUtils'
 import { LINE_CONTACT_URL } from '../config/contact'
 
 // Map category to icon
@@ -36,33 +37,24 @@ function ServiceDetails() {
 
     return {
       id: serviceData.id,
-      name: isThai
-        ? (serviceData.name_th || serviceData.name_en)
-        : (serviceData.name_en || serviceData.name_th),
-      name_sub: isThai
-        ? serviceData.name_en
-        : serviceData.name_th,
+      name: pickLang(serviceData, 'name', i18n.language),
+      name_sub: i18n.language === 'th' ? serviceData.name_en : serviceData.name_th,
       base_price: Number(serviceData.base_price || 0),
       category: serviceData.category,
       duration: serviceData.duration || 60,
       durations,
       image_url: serviceData.image_url,
-      description: isThai
-        ? (serviceData.description_th || serviceData.description_en || '')
-        : (serviceData.description_en || serviceData.description_th || ''),
+      description: pickLang(serviceData, 'description', i18n.language),
       addOns: serviceData.addons?.map(addon => ({
         id: addon.id,
-        name: isThai
-          ? (addon.name_th || addon.name_en)
-          : (addon.name_en || addon.name_th),
-        description: isThai
-          ? (addon.description_th || addon.description_en || '')
-          : (addon.description_en || addon.description_th || ''),
+        // add-on is out of scope for CN (no *_cn columns); pickLang falls back en→th
+        name: pickLang(addon, 'name', i18n.language),
+        description: pickLang(addon, 'description', i18n.language),
         price: Number(addon.price || 0),
       })) || [],
       raw: serviceData,
     }
-  }, [serviceData, isThai])
+  }, [serviceData, i18n.language])
 
   // Auto-select default duration
   useMemo(() => {

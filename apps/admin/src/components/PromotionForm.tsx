@@ -31,8 +31,10 @@ interface Service {
 interface PromotionFormData {
   name_th: string
   name_en: string
+  name_cn?: string
   description_th?: string
   description_en?: string
+  description_cn?: string
   code: string
   discount_type: 'percentage' | 'fixed_amount' | 'buy_x_get_y'
   discount_value: number
@@ -70,8 +72,10 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
   const [formData, setFormData] = useState<PromotionFormData>({
     name_th: '',
     name_en: '',
+    name_cn: '',
     description_th: '',
     description_en: '',
+    description_cn: '',
     code: '',
     discount_type: 'percentage',
     discount_value: 0,
@@ -107,8 +111,10 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
       setFormData({
         name_th: editData.name_th || '',
         name_en: editData.name_en || '',
+        name_cn: editData.name_cn || '',
         description_th: editData.description_th || '',
         description_en: editData.description_en || '',
+        description_cn: editData.description_cn || '',
         code: editData.code || '',
         discount_type: editData.discount_type || 'percentage',
         discount_value: editData.discount_value || 0,
@@ -134,8 +140,10 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
       setFormData({
         name_th: '',
         name_en: '',
+        name_cn: '',
         description_th: '',
         description_en: '',
+        description_cn: '',
         code: '',
         discount_type: 'percentage',
         discount_value: 0,
@@ -488,7 +496,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           )}
 
           {/* Basic Information */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-bliss-700 mb-2">
                 ชื่อโปรโมชัน (ไทย) *
@@ -514,6 +522,19 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 className="w-full px-4 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
                 placeholder="New Member Discount"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
+                ชื่อโปรโมชัน (中文)
+              </label>
+              <input
+                type="text"
+                value={formData.name_cn}
+                onChange={(e) => setFormData({ ...formData, name_cn: e.target.value })}
+                className="w-full px-4 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-transparent"
+                placeholder="新会员折扣"
               />
             </div>
           </div>
@@ -870,7 +891,7 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
           </div>
 
           {/* Descriptions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-bliss-700 mb-2">
                 รายละเอียด (ไทย)
@@ -894,6 +915,19 @@ export function PromotionForm({ isOpen, onClose, onSuccess, editData }: Promotio
                 className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
                 rows={3}
                 placeholder="Promotion details and conditions"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-bliss-700 mb-2">
+                รายละเอียด (中文)
+              </label>
+              <textarea
+                value={formData.description_cn}
+                onChange={(e) => setFormData({ ...formData, description_cn: e.target.value })}
+                className="w-full px-3 py-2 border border-bliss-200 rounded-lg focus:ring-2 focus:ring-bliss-500"
+                rows={3}
+                placeholder="促销详情与条款"
               />
             </div>
           </div>

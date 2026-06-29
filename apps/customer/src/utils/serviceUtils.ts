@@ -3,6 +3,21 @@ import { Database } from '@bliss/supabase'
 type Service = Database['public']['Tables']['services']['Row']
 
 /**
+ * Pick a localized field value (3-way: current language → English → Thai fallback).
+ * Used for DB content (services/promotions) that carries sibling columns
+ * `<field>_th` / `<field>_en` / `<field>_cn`. `lang` = i18n.language ('th'|'en'|'cn').
+ * Loose-typed so callers with local interfaces (without `_cn`) can pass rows directly.
+ */
+export function pickLang(
+  row: Record<string, any> | null | undefined,
+  field: string,
+  lang: string
+): string {
+  if (!row) return ''
+  return row[`${field}_${lang}`] || row[`${field}_en`] || row[`${field}_th`] || ''
+}
+
+/**
  * Get available durations for a service
  */
 export function getAvailableDurations(service: Service): number[] {

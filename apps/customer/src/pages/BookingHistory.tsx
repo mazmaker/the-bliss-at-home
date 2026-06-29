@@ -5,9 +5,10 @@ import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCustomerBookings } from '@bliss/supabase/hooks/useBookings'
 import { useTranslation } from '@bliss/i18n'
 import { getServiceImage } from '../utils/imageUtils'
+import { pickLang } from '../utils/serviceUtils'
 
 function BookingHistory() {
-  const { t } = useTranslation(['booking', 'common'])
+  const { t, i18n } = useTranslation(['booking', 'common'])
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status') || 'all'
 
@@ -32,10 +33,10 @@ function BookingHistory() {
   const serviceOptions = useMemo(() => {
     if (!bookingsData) return []
     const names = bookingsData.map(
-      (b) => b.service?.name_th || b.service?.name_en || 'Unknown Service'
+      (b) => pickLang(b.service, 'name', i18n.language) || 'Unknown Service'
     )
     return Array.from(new Set(names)).sort()
-  }, [bookingsData])
+  }, [bookingsData, i18n.language])
 
   // Transform and filter bookings
   const bookings = useMemo(() => {
@@ -44,7 +45,7 @@ function BookingHistory() {
     let filtered = bookingsData.map((booking) => ({
       id: booking.id,
       bookingNumber: booking.booking_number,
-      serviceName: booking.service?.name_en || booking.service?.name_th || 'Unknown Service',
+      serviceName: pickLang(booking.service, 'name', i18n.language) || 'Unknown Service',
       serviceNameTh: booking.service?.name_th || booking.service?.name_en || 'Unknown Service',
       date: booking.booking_date, // Already in YYYY-MM-DD format
       time: booking.booking_time || '00:00', // Already in HH:MM format
@@ -78,7 +79,7 @@ function BookingHistory() {
     }
 
     return filtered
-  }, [bookingsData, statusFilter, dateFrom, dateTo, serviceFilter])
+  }, [bookingsData, statusFilter, dateFrom, dateTo, serviceFilter, i18n.language])
 
   const getStatusColor = (status: string) => {
     switch (status) {
