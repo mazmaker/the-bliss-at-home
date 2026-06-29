@@ -41,13 +41,8 @@ export default function EmergencyBookingBanner({ onContactAdmin }: EmergencyBook
     <div className="relative rounded-xl my-3 shadow-sm overflow-hidden border border-bliss-500" style={{ backgroundColor: '#a7a87f' }}>
 
       <div className="relative p-6 text-center">
-        {/* Badge */}
-        <div className="inline-block bg-white px-4 py-2 rounded-full text-bliss-600 text-sm font-medium mb-4 shadow-sm">
-          {t('services:emergencyService.badge')}
-        </div>
-
         {/* Main heading */}
-        <h3 className="text-xl font-semibold text-bliss-900 mb-2">
+        <h3 className="text-4xl md:text-5xl font-bold mb-2" style={{ color: '#e3342f' }}>
           {t('services:emergencyService.heading')}
         </h3>
 
