@@ -727,10 +727,28 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <div className="flex-1">
                 <p className="text-sm text-bliss-500 mb-2">รายละเอียดราคา</p>
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-bliss-600">ราคาบริการ</span>
-                    <span className="text-bliss-900">฿{Number(booking.base_price).toLocaleString()}</span>
-                  </div>
+                  {booking.booking_services && booking.booking_services.length > 1 ? (
+                    // Couple/multi-recipient: each recipient can have a different service,
+                    // duration and price, so list per-recipient prices (these sum to final_price
+                    // before discount) instead of the single base_price (which is only person 1).
+                    booking.booking_services
+                      .slice()
+                      .sort((a, b) => a.recipient_index - b.recipient_index)
+                      .map((bs, i) => (
+                        <div key={bs.id} className="flex justify-between text-sm gap-3">
+                          <span className="text-bliss-600">
+                            คนที่ {i + 1} · {bs.service?.name_th || 'บริการ'}
+                            <span className="text-bliss-400"> ({bs.duration} นาที)</span>
+                          </span>
+                          <span className="text-bliss-900 whitespace-nowrap">฿{Number(bs.price).toLocaleString()}</span>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-bliss-600">ราคาบริการ</span>
+                      <span className="text-bliss-900">฿{Number(booking.base_price).toLocaleString()}</span>
+                    </div>
+                  )}
                   {booking.discount_amount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-red-600">ส่วนลด</span>
