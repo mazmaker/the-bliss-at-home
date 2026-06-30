@@ -96,6 +96,8 @@ function Settings() {
 
   // Refund Policy State
   const [refundPolicyContent, setRefundPolicyContent] = useState('')
+  const [refundPolicyContentEn, setRefundPolicyContentEn] = useState('')
+  const [refundPolicyContentCn, setRefundPolicyContentCn] = useState('')
   const [refundPolicyVersion, setRefundPolicyVersion] = useState('1.0')
   const [refundPolicySaving, setRefundPolicySaving] = useState(false)
 
@@ -345,8 +347,12 @@ function Settings() {
     const { data } = await supabase.from('settings').select('value').eq('key', 'refund_policy_content').single()
     if (data?.value) {
       const val = typeof data.value === 'object' && 'value' in data.value ? data.value.value : data.value
+      const valEn = typeof data.value === 'object' && 'value_en' in data.value ? data.value.value_en : ''
+      const valCn = typeof data.value === 'object' && 'value_cn' in data.value ? data.value.value_cn : ''
       const ver = typeof data.value === 'object' && 'version' in data.value ? data.value.version : '1.0'
       setRefundPolicyContent(typeof val === 'string' ? val : '')
+      setRefundPolicyContentEn(typeof valEn === 'string' ? valEn : '')
+      setRefundPolicyContentCn(typeof valCn === 'string' ? valCn : '')
       setRefundPolicyVersion(typeof ver === 'string' ? ver : '1.0')
     }
   }
@@ -356,7 +362,7 @@ function Settings() {
     try {
       const { error } = await supabase
         .from('settings')
-        .update({ value: { value: refundPolicyContent, version: refundPolicyVersion }, updated_at: new Date().toISOString() })
+        .update({ value: { value: refundPolicyContent, value_en: refundPolicyContentEn, value_cn: refundPolicyContentCn, version: refundPolicyVersion }, updated_at: new Date().toISOString() })
         .eq('key', 'refund_policy_content')
       if (error) throw error
       setMessage('บันทึกเงื่อนไขการคืนเงินเรียบร้อย')
@@ -1261,14 +1267,38 @@ function Settings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข</label>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข (ภาษาไทย)</label>
                   <textarea
                     value={refundPolicyContent}
                     onChange={(e) => setRefundPolicyContent(e.target.value)}
-                    rows={20}
+                    rows={14}
                     className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 text-sm"
                     placeholder="เขียนเงื่อนไขการคืนเงินที่นี่..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข (English)</label>
+                  <textarea
+                    value={refundPolicyContentEn}
+                    onChange={(e) => setRefundPolicyContentEn(e.target.value)}
+                    rows={14}
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 text-sm"
+                    placeholder="Write the refund policy in English here... (leave blank to fall back to Thai)"
+                  />
+                  <p className="text-xs text-bliss-400 mt-1">หากเว้นว่าง ลูกค้าที่ใช้ภาษาอังกฤษจะเห็นเนื้อหาภาษาไทยแทน</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข (中文)</label>
+                  <textarea
+                    value={refundPolicyContentCn}
+                    onChange={(e) => setRefundPolicyContentCn(e.target.value)}
+                    rows={14}
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 text-sm"
+                    placeholder="在此填写退款政策（中文）...（留空则显示泰语内容）"
+                  />
+                  <p className="text-xs text-bliss-400 mt-1">หากเว้นว่าง ลูกค้าที่ใช้ภาษาจีนจะเห็นเนื้อหาภาษาไทยแทน</p>
                 </div>
 
                 <div className="flex items-center gap-4">

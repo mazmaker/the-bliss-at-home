@@ -32,14 +32,22 @@ export function RefundPolicyConsent({
   onAcceptedChange,
   hideAcceptButton = false,
 }: RefundPolicyConsentProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [policyContent, setPolicyContent] = useState('')
+  const [policyContentEn, setPolicyContentEn] = useState('')
+  const [policyContentCn, setPolicyContentCn] = useState('')
   const [policyVersion, setPolicyVersion] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
   const [isAccepted, setIsAccepted] = useState(accepted ?? false)
   const [isSaving, setIsSaving] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Pick the policy content for the current language; fall back to Thai when a translation is blank
+  const displayContent =
+    i18n.language === 'cn' ? (policyContentCn || policyContent)
+    : i18n.language === 'en' ? (policyContentEn || policyContent)
+    : policyContent
 
   // Sync controlled state
   useEffect(() => {
@@ -61,8 +69,12 @@ export function RefundPolicyConsent({
 
       if (data?.value) {
         const val = typeof data.value === 'object' && 'value' in data.value ? data.value.value : data.value
+        const valEn = typeof data.value === 'object' && 'value_en' in data.value ? data.value.value_en : ''
+        const valCn = typeof data.value === 'object' && 'value_cn' in data.value ? data.value.value_cn : ''
         const ver = typeof data.value === 'object' && 'version' in data.value ? data.value.version : '1.0'
         setPolicyContent(typeof val === 'string' ? val : '')
+        setPolicyContentEn(typeof valEn === 'string' ? valEn : '')
+        setPolicyContentCn(typeof valCn === 'string' ? valCn : '')
         setPolicyVersion(typeof ver === 'string' ? ver : '1.0')
       }
     } catch (err) {
@@ -85,7 +97,7 @@ export function RefundPolicyConsent({
     if (el && el.scrollHeight <= el.clientHeight) {
       setHasScrolledToBottom(true)
     }
-  }, [policyContent])
+  }, [displayContent])
 
   const handleCheckboxChange = (checked: boolean) => {
     setIsAccepted(checked)
@@ -135,7 +147,7 @@ export function RefundPolicyConsent({
             onScroll={handleScroll}
             className="h-64 overflow-y-auto border border-bliss-300 rounded-lg p-4 bg-bliss-100 text-sm leading-relaxed whitespace-pre-wrap text-bliss-700"
           >
-            {policyContent}
+            {displayContent}
           </div>
 
           {!hasScrolledToBottom && (

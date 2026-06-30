@@ -21,6 +21,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https:/
 
 function BookingDetails() {
   const { t, i18n } = useTranslation(['booking', 'common'])
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -732,7 +733,7 @@ function BookingDetails() {
                             <p className="font-semibold text-bliss-900">+{ext.duration} นาที</p>
                             {ext.extended_at && (
                               <p className="text-xs text-bliss-500">
-                                {new Date(ext.extended_at).toLocaleDateString('th-TH', {
+                                {new Date(ext.extended_at).toLocaleDateString(dateLocale, {
                                   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                                 })}
                               </p>
@@ -785,7 +786,7 @@ function BookingDetails() {
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <p className="text-bliss-900 font-semibold">
-                    {new Date(booking.date).toLocaleDateString('th-TH', {
+                    {new Date(booking.date).toLocaleDateString(dateLocale, {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -1137,7 +1138,7 @@ function BookingDetails() {
             {/* Booking Info */}
             <div className="bg-bliss-100 rounded-xl p-4 text-sm">
               <p className="text-bliss-700">
-                {t('details.bookedOn', { date: new Date(booking.createdAt).toLocaleDateString('th-TH', {
+                {t('details.bookedOn', { date: new Date(booking.createdAt).toLocaleDateString(dateLocale, {
                   dateStyle: 'long',
                 }) })}
               </p>

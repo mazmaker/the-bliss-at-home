@@ -49,6 +49,7 @@
       "message": "Try changing your search term or filter"
     },
     "daysLeftBadge": "{{daysLeft}} days left",
+    "discountLabel": "Discount",
     "discountOverlay": "OFF",
     "expiryLabel": "Until {{date}}",
     "usageLabel": "Used {{used}}/{{limit}}",

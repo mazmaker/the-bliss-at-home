@@ -23,7 +23,8 @@ const FILTER_OPTIONS = [
 ]
 
 function PointsHistory() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const { data: customer } = useCurrentCustomer()
   const { data: points } = useCustomerPoints(customer?.id)
   const { data: settings } = useLoyaltySettings()
@@ -38,7 +39,7 @@ function PointsHistory() {
   const pointsValue = settings ? Math.floor(totalPoints / settings.points_to_baht) : 0
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

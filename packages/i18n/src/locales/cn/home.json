@@ -49,6 +49,7 @@
       "message": "尝试更改搜索词或筛选条件"
     },
     "daysLeftBadge": "剩余 {{daysLeft}} 天",
+    "discountLabel": "优惠",
     "discountOverlay": "优惠",
     "expiryLabel": "有效期至 {{date}}",
     "usageLabel": "已使用 {{used}}/{{limit}}",

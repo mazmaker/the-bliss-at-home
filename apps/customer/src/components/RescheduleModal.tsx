@@ -58,7 +58,8 @@ export function RescheduleModal({
   currentTime,
   duration,
 }: RescheduleModalProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const [step, setStep] = useState<'check' | 'select' | 'confirm' | 'result'>('check')
   const [eligibility, setEligibility] = useState<CancellationEligibility | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')
@@ -136,7 +137,7 @@ export function RescheduleModal({
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -276,7 +277,7 @@ export function RescheduleModal({
                     <ChevronLeft className="w-5 h-5 text-bliss-700" />
                   </button>
                   <span className="font-medium text-bliss-900">
-                    {currentMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
+                    {currentMonth.toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' })}
                   </span>
                   <button
                     onClick={() => navigateMonth('next')}

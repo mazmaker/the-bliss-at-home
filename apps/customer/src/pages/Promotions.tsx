@@ -92,6 +92,8 @@ const PromotionsPage = () => {
     return filtered
   }, [promotions, searchTerm, filterType, sortBy, i18n.language])
 
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+
   const getDiscountIcon = (type: string) => {
     switch (type) {
       case 'percentage': return <Percent className="w-5 h-5" />
@@ -247,7 +249,7 @@ const PromotionsPage = () => {
                         boxShadow: '0 6px 18px rgba(86,91,52,0.45)',
                       }}
                     >
-                      <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.35, letterSpacing: '0.02em' }}>ส่วนลด</span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.35, letterSpacing: '0.02em' }}>{t('home:promotions.discountLabel')}</span>
                       <span style={{ fontSize: '17px', fontWeight: 900, lineHeight: 1.15 }}>{formatDiscount(promo)}</span>
                     </div>
 
@@ -342,7 +344,7 @@ const PromotionsPage = () => {
                       {/* Expiry */}
                       <div className="flex items-center gap-2" style={{ color: '#BBBBBB', fontSize: '13px' }}>
                         <Calendar className="w-4 h-4" />
-                        <span>ถึง {new Date(promo.end_date).toLocaleDateString('th-TH')}</span>
+                        <span>{t('home:promotions.expiryLabel', { date: new Date(promo.end_date).toLocaleDateString(dateLocale) })}</span>
                       </div>
                     </div>
                   </div>

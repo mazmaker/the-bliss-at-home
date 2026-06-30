@@ -27,7 +27,8 @@ export function ExtendServiceButton({
   variant = 'primary',
   fullWidth = false
 }: ExtendServiceButtonProps) {
-  const { t } = useTranslation('extension')
+  const { t, i18n } = useTranslation('extension')
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const [showModal, setShowModal] = useState(false)
   const extensionStatus = useExtensionStatus(booking)
 
@@ -146,7 +147,7 @@ export function ExtendServiceButton({
               <div className="font-medium">{t('button.extendedTimes', { count: extensionStatus.extensionCount })}</div>
               {extensionStatus.lastExtendedAt && (
                 <div className="text-xs text-bliss-600">
-                  {t('button.lastExtended')}: {new Date(extensionStatus.lastExtendedAt).toLocaleDateString('th-TH', {
+                  {t('button.lastExtended')}: {new Date(extensionStatus.lastExtendedAt).toLocaleDateString(dateLocale, {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',

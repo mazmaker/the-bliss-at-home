@@ -29,6 +29,7 @@ type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' | 'prefe
 
 function BookingWizard() {
   const { t, i18n } = useTranslation('booking')
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -834,9 +835,9 @@ function BookingWizard() {
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {availableDates.map((date) => {
                     const dateObj = new Date(date)
-                    const dayName = dateObj.toLocaleDateString('th-TH', { weekday: 'short' })
+                    const dayName = dateObj.toLocaleDateString(dateLocale, { weekday: 'short' })
                     const dayNum = dateObj.getDate()
-                    const monthName = dateObj.toLocaleDateString('th-TH', { month: 'short' })
+                    const monthName = dateObj.toLocaleDateString(dateLocale, { month: 'short' })
 
                     return (
                       <button
@@ -916,7 +917,7 @@ function BookingWizard() {
               ) : (
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  {t('wizard.step2.selectedDateTime', { date: new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' }), time: selectedTime })}
+                  {t('wizard.step2.selectedDateTime', { date: new Date(selectedDate).toLocaleDateString(dateLocale, { dateStyle: 'long' }), time: selectedTime })}
                 </div>
               )}
             </div>
@@ -1246,7 +1247,7 @@ function BookingWizard() {
                 <div>
                   <h4 className="font-medium text-bliss-900 mb-2 flex items-center gap-2"><Calendar className="w-4 h-4" /> {t('wizard.step5.dateTime')}</h4>
                   <p className="text-bliss-700">
-                    {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' })}
+                    {new Date(selectedDate).toLocaleDateString(dateLocale, { dateStyle: 'long' })}
                   </p>
                   <p className="text-bliss-700 flex items-center gap-1"><Clock className="w-4 h-4" /> {selectedTime}</p>
                 </div>

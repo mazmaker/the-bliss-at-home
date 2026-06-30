@@ -15,6 +15,7 @@ import { pickLang } from '../utils/serviceUtils'
 
 function CompletePayment() {
   const { t, i18n } = useTranslation(['booking', 'common'])
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -202,7 +203,7 @@ function CompletePayment() {
             <div className="flex justify-between">
               <span className="text-bliss-700">{t('booking:bookingSummary.date')}</span>
               <span className="font-medium">
-                {new Date(bookingData.booking_date).toLocaleDateString('th-TH')} {bookingData.booking_time}
+                {new Date(bookingData.booking_date).toLocaleDateString(dateLocale)} {bookingData.booking_time}
               </span>
             </div>
 

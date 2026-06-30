@@ -8,7 +8,8 @@ interface PointsWidgetProps {
 }
 
 export function PointsWidget({ customerId }: PointsWidgetProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const { data: points } = useCustomerPoints(customerId)
   const { data: settings } = useLoyaltySettings()
   const { data: nearestExpiry } = useNearestExpiry(customerId)
@@ -46,7 +47,7 @@ export function PointsWidget({ customerId }: PointsWidgetProps) {
           <Clock className="w-3 h-3" />
           <span>
             {nearestExpiry.points} {t('home:pointsWidget.expiringLabel')}{' '}
-            {new Date(nearestExpiry.expires_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {new Date(nearestExpiry.expires_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
         </div>
       )}

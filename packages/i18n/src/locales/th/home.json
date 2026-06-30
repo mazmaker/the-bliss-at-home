@@ -49,6 +49,7 @@
       "message": "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
     },
     "daysLeftBadge": "{{daysLeft}} วันสุดท้าย",
+    "discountLabel": "ส่วนลด",
     "discountOverlay": "OFF",
     "expiryLabel": "ถึง {{date}}",
     "usageLabel": "ใช้แล้ว {{used}}/{{limit}}",

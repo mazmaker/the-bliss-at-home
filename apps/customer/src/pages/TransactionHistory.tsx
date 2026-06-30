@@ -9,7 +9,8 @@ import { getStoredLanguage, useTranslation } from '@bliss/i18n'
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
 
 function TransactionHistory() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   const [filter, setFilter] = useState<'all' | 'successful' | 'refunded' | 'failed' | 'pending'>('all')
 
   // Fetch customer and transactions from Supabase
@@ -231,7 +232,7 @@ function TransactionHistory() {
 
                     <div className="flex items-center justify-between text-sm">
                       <p className="text-bliss-500">
-                        {new Date(transaction.created_at!).toLocaleDateString('th-TH', {
+                        {new Date(transaction.created_at!).toLocaleDateString(dateLocale, {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',

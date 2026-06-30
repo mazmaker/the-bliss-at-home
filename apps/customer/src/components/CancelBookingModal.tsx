@@ -76,7 +76,8 @@ export function CancelBookingModal({
   paymentStatus,
   isManualQr = false,
 }: CancelBookingModalProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
   // Auto UI/UX review test - improved component structure
   const [step, setStep] = useState<'check' | 'reason' | 'confirm' | 'result'>('check')
   const [eligibility, setEligibility] = useState<CancellationEligibility | null>(null)
@@ -211,7 +212,7 @@ export function CancelBookingModal({
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

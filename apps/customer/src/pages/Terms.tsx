@@ -9,7 +9,8 @@ import { useTranslation } from '@bliss/i18n'
 
 export default function TermsPage() {
   const navigate = useNavigate()
-  const { t } = useTranslation(['legal', 'common'])
+  const { t, i18n } = useTranslation(['legal', 'common'])
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
 
   return (
     <div className="min-h-screen bg-bliss-100 py-12">
@@ -28,7 +29,7 @@ export default function TermsPage() {
           <h1 className="text-4xl font-bold text-bliss-900 mb-2">{t('legal:terms.title')}</h1>
           <p className="text-bliss-700">{t('legal:terms.subtitle')}</p>
           <p className="text-sm text-bliss-500 mt-4">
-            {t('legal:terms.lastUpdated', { date: new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) })}
+            {t('legal:terms.lastUpdated', { date: new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }) })}
           </p>
         </div>
 

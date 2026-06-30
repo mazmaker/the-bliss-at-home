@@ -9,7 +9,8 @@ import { useTranslation } from '@bliss/i18n'
 
 export default function PrivacyPage() {
   const navigate = useNavigate()
-  const { t } = useTranslation(['legal', 'common'])
+  const { t, i18n } = useTranslation(['legal', 'common'])
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
 
   return (
     <div className="min-h-screen bg-bliss-100 py-12">
@@ -33,7 +34,7 @@ export default function PrivacyPage() {
             </div>
           </div>
           <p className="text-sm text-bliss-500 mt-4">
-            {t('legal:privacy.lastUpdated', { date: new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) })}
+            {t('legal:privacy.lastUpdated', { date: new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }) })}
           </p>
           <div className="mt-6 p-4 bg-bliss-100 rounded-lg border border-bliss-300">
             <p className="text-sm text-bliss-800">
