@@ -27,6 +27,8 @@ interface BookingForRescheduleNotification {
   hotel_name?: string
   address?: string
   new_job_id?: string
+  /** false when the same staff was KEPT (locked) — no re-accept needed. Defaults to true (re-open). */
+  needs_reaccept?: boolean
 }
 
 interface NotificationResult {
@@ -119,6 +121,7 @@ async function sendStaffLineNotification(
       staffEarnings: booking.staff_earnings,
       durationMinutes: booking.duration_minutes,
       jobId: booking.new_job_id,
+      needsReaccept: booking.needs_reaccept !== false,
     }
   )
 
@@ -143,13 +146,16 @@ async function createStaffInAppNotification(
     profile_id: booking.staff_profile_id,
   })
 
+  const needsReaccept = booking.needs_reaccept !== false
   const { error } = await getSupabaseClient()
     .from('notifications')
     .insert({
       user_id: booking.staff_profile_id,
       type: 'job_rescheduled',
-      title: 'ลูกค้าเลื่อนนัด',
-      message: `งานของคุณถูกเลื่อนจาก ${formatDate(booking.old_date)} ${booking.old_time} เป็น ${formatDate(booking.new_date)} ${booking.new_time} กรุณากดรับงานใหม่`,
+      title: needsReaccept ? 'ลูกค้าเลื่อนนัด' : 'งานของคุณถูกเลื่อนเวลา',
+      message: needsReaccept
+        ? `งานของคุณถูกเลื่อนจาก ${formatDate(booking.old_date)} ${booking.old_time} เป็น ${formatDate(booking.new_date)} ${booking.new_time} กรุณากดรับงานใหม่`
+        : `งานของคุณถูกเลื่อนจาก ${formatDate(booking.old_date)} ${booking.old_time} เป็น ${formatDate(booking.new_date)} ${booking.new_time} — งานยังเป็นของคุณ ไม่ต้องกดรับใหม่`,
       data: {
         booking_id: booking.id,
         booking_number: booking.booking_number,

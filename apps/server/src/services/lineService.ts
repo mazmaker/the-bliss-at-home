@@ -599,11 +599,13 @@ interface BookingRescheduledStaffData {
   staffEarnings: number
   durationMinutes: number
   jobId?: string
+  /** false when the same staff was KEPT (locked) — no re-accept needed. Defaults to true. */
+  needsReaccept?: boolean
 }
 
 /**
- * Send booking rescheduled notification to assigned staff via LINE
- * Staff needs to re-accept the job after reschedule
+ * Send booking rescheduled notification to assigned staff via LINE.
+ * If needsReaccept is false the same staff was kept (locked) — the message reflects "still yours".
  */
 async function sendBookingRescheduledToStaff(lineUserIds: string[], data: BookingRescheduledStaffData): Promise<boolean> {
   if (lineUserIds.length === 0) return true
@@ -612,10 +614,18 @@ async function sendBookingRescheduledToStaff(lineUserIds: string[], data: Bookin
     ? `🏨 โรงแรม: ${data.hotelName}`
     : `📍 สถานที่: ${data.address}`
 
+  const needsReaccept = data.needsReaccept !== false
   const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
-  const linkText = staffLiffUrl && data.jobId
-    ? `\n👉 กดรับงานใหม่:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
-    : '\n\n⚠️ กรุณาเปิดแอปเพื่อรับงานใหม่อีกครั้ง'
+  const linkText = needsReaccept
+    ? (staffLiffUrl && data.jobId
+        ? `\n👉 กดรับงานใหม่:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
+        : '\n\n⚠️ กรุณาเปิดแอปเพื่อรับงานใหม่อีกครั้ง')
+    : (staffLiffUrl && data.jobId
+        ? `\n👉 ดูรายละเอียดงาน:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
+        : '')
+  const tailText = needsReaccept
+    ? '\n⚠️ งานถูกปล่อยให้รับใหม่แล้ว'
+    : '\n✅ งานยังเป็นของคุณ ไม่ต้องกดรับใหม่'
 
   const messageText =
     `📅 ลูกค้าเลื่อนนัด!\n\n` +
@@ -630,7 +640,7 @@ async function sendBookingRescheduledToStaff(lineUserIds: string[], data: Bookin
     `\n⏱️ ระยะเวลา: ${data.durationMinutes} นาที\n` +
     `${locationText}\n` +
     `💰 รายได้: ${data.staffEarnings.toLocaleString()} บาท\n` +
-    `\n⚠️ งานถูกปล่อยให้รับใหม่แล้ว` +
+    tailText +
     linkText
 
   const message: LineMessage = { type: 'text', text: messageText }

@@ -160,11 +160,65 @@ interface RescheduleBookingBody {
 }
 
 /**
+ * Compute the per-staff earning for ONE service session, honoring use_fixed_rate.
+ * Mirrors notificationService/secure-bookings so every notification path agrees.
+ * - fixed-rate  → the flat staff_earning_{60,90,120} for the session duration (NOT scaled by price)
+ * - commission  → round(price * staff_commission_rate)
+ */
+function computeStaffEarning(svc: any, durationMinutes: number, price: number): number {
+  if (svc?.use_fixed_rate) {
+    const fixed = durationMinutes === 60 ? svc.staff_earning_60
+      : durationMinutes === 120 ? svc.staff_earning_120
+      : svc.staff_earning_90
+    return Math.round(Number(fixed) || 0)
+  }
+  return Math.round(Number(price) * (Number(svc?.staff_commission_rate) || 0))
+}
+
+/** 'HH:MM[:SS]' → minutes since midnight */
+function _timeToMinutes(t: string): number {
+  const [h, m] = String(t || '0:0').split(':').map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+/**
+ * True if `staffProfileId` has NO other active job overlapping [time, time+duration) on `date`.
+ * Half-open interval (back-to-back does NOT count as a clash), matching jobService.jobsOverlap.
+ * Excludes the job being rescheduled. Used to decide whether the same staff can be KEPT on reschedule.
+ */
+async function isStaffFreeAt(
+  supabase: any,
+  staffProfileId: string,
+  excludeJobId: string,
+  date: string,
+  time: string,
+  durationMinutes: number,
+): Promise<boolean> {
+  const { data: others } = await supabase
+    .from('jobs')
+    .select('id, scheduled_time, duration_minutes, total_duration_minutes')
+    .eq('staff_id', staffProfileId)
+    .eq('scheduled_date', date)
+    .not('status', 'in', '(cancelled,completed)')
+    .neq('id', excludeJobId)
+  const start = _timeToMinutes(time)
+  const end = start + (durationMinutes || 60)
+  for (const o of others || []) {
+    const os = _timeToMinutes(o.scheduled_time)
+    const oe = os + (o.total_duration_minutes ?? o.duration_minutes ?? 60)
+    if (start < oe && os < end) return false // overlap
+  }
+  return true
+}
+
+/**
  * POST /api/bookings/:id/reschedule
  * Reschedule a booking to a new date/time
  * - Updates booking date/time
- * - Unassigns staff (they need to re-accept)
- * - Sends notifications to previously assigned staff
+ * - STAFF-LOCK: if EVERY assigned job's staff is still free at the new time, keeps them assigned
+ *   (no re-accept, no re-broadcast). Otherwise unassigns + re-opens the job to the board.
+ * - Sends notifications to previously assigned staff (re-accept wording only when re-opened)
+ * - Covers single (1 job) and couple (N jobs) identically
  */
 router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Response) => {
   try {
@@ -200,6 +254,7 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         payment_status,
         duration,
         final_price,
+        staff_earnings,
         staff_id,
         hotel_id,
         customer_id,
@@ -288,7 +343,7 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
     // jobs.staff_id FK → profiles.id (NOT staff.id), so we query staff separately
     const { data: assignedJobs } = await supabase
       .from('jobs')
-      .select('id, staff_id, status, service_name')
+      .select('id, staff_id, status, service_name, duration_minutes, total_duration_minutes')
       .eq('booking_id', id)
       .not('status', 'in', '(cancelled,completed)')
 
@@ -353,14 +408,36 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
       staffToNotify: staffToNotify.length,
     })
 
-    // 2. Update booking date/time and unassign staff
+    // 1b. STAFF-LOCK decision — keep the SAME staff instead of re-opening the job, IF:
+    //     (a) every non-terminal job already has an assigned staff (fully accepted), AND
+    //     (b) each of those staff is FREE at the new date/time (no clash with their other jobs).
+    //     Applies to single (1 job) and couple (N jobs, checked per-job). Any failure → re-open all.
+    let canKeepStaff = false
+    const nonTerminalJobs = assignedJobs || []
+    const allJobsHaveStaff = nonTerminalJobs.length > 0 && nonTerminalJobs.every(j => j.staff_id)
+    if (allJobsHaveStaff) {
+      canKeepStaff = true
+      for (const j of nonTerminalJobs) {
+        const jobDuration = (j as any).duration_minutes || booking.duration || 60
+        const free = await isStaffFreeAt(supabase, j.staff_id as string, j.id, body.new_date, body.new_time, jobDuration)
+        if (!free) {
+          canKeepStaff = false
+          console.log('[Reschedule] Staff busy at new time — will re-open:', { jobId: j.id, staffProfileId: j.staff_id })
+          break
+        }
+      }
+    }
+    const needsReaccept = !canKeepStaff
+    console.log('[Reschedule] Staff-lock decision:', { canKeepStaff, allJobsHaveStaff, jobs: nonTerminalJobs.length })
+
+    // 2. Update booking date/time — keep staff when locked, else unassign for re-accept
     const { error: updateError } = await supabase
       .from('bookings')
       .update({
         booking_date: body.new_date,
         booking_time: body.new_time,
-        staff_id: null,
-        status: 'pending',
+        // Staff-lock: only unassign + reset to pending when we could NOT keep the same staff
+        ...(canKeepStaff ? {} : { staff_id: null, status: 'pending' }),
         reschedule_count: ((booking as any).reschedule_count || 0) + 1,
         updated_at: new Date().toISOString(),
       })
@@ -375,7 +452,7 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
       })
     }
 
-    // 3. Update ALL jobs — reset to pending for re-acceptance
+    // 3. Update ALL jobs — move date/time; reset to pending for re-acceptance ONLY when re-opening
     let updatedJobIds: string[] = []
     if (assignedJobs && assignedJobs.length > 0) {
       const { error: jobUpdateError } = await supabase
@@ -383,9 +460,8 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         .update({
           scheduled_date: body.new_date,
           scheduled_time: body.new_time,
-          staff_id: null,
-          status: 'pending',
-          accepted_at: null,
+          // Staff-lock: keep staff_id/status/accepted_at when we could keep the same staff
+          ...(canKeepStaff ? {} : { staff_id: null, status: 'pending', accepted_at: null }),
           updated_at: new Date().toISOString(),
         })
         .eq('booking_id', id)
@@ -432,6 +508,7 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
           hotel_name: (booking.hotel as any)?.name_th || (booking.hotel as any)?.name_en,
           address: booking.address || '',
           new_job_id: staffInfo.job_id || updatedJobIds[0],
+          needs_reaccept: needsReaccept,
         }
 
         const result = await sendRescheduleNotifications(notificationData)
@@ -455,7 +532,11 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
     if (!bookingIsPaid) {
       console.log('[Reschedule] Booking not yet paid — skipping staff new_job notifications')
     }
-    if (bookingIsPaid) try {
+    if (canKeepStaff) {
+      console.log('[Reschedule] Staff kept (locked) — skipping re-open broadcast')
+    }
+    // Only re-broadcast to the open board when we actually re-opened the job (staff not kept)
+    if (bookingIsPaid && needsReaccept) try {
       const { data: allAvailableStaff } = await supabase
         .from('staff')
         .select('id, profile_id, gender')
@@ -534,21 +615,22 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
           if (isCouple) {
             const { data: bookingServices } = await supabase
               .from('booking_services')
-              .select('recipient_index, recipient_name, duration, price, service:services(name_th, staff_commission_rate)')
+              .select('recipient_index, recipient_name, duration, price, service:services(name_th, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
               .eq('booking_id', id)
               .order('recipient_index', { ascending: true })
 
             if (bookingServices && bookingServices.length > 0) {
               coupleServices = bookingServices.map(bs => {
-                const price = Number(bs.price) || 0
-                const rate = Number((bs.service as any)?.staff_commission_rate || (booking.service as any)?.staff_commission_rate) || 0
-                const earnings = Math.round(price * rate)
+                const duration = bs.duration || booking.duration || 90
+                // Honor use_fixed_rate per recipient (fall back to the booking-level service for fields)
+                const svc = (bs.service as any)?.use_fixed_rate !== undefined ? bs.service : (booking.service as any)
+                const earnings = computeStaffEarning(svc, duration, Number(bs.price) || 0)
                 totalStaffEarnings += earnings
                 return {
                   recipientIndex: bs.recipient_index || 0,
                   recipientName: bs.recipient_name,
                   serviceName: (bs.service as any)?.name_th || serviceName,
-                  durationMinutes: bs.duration || booking.duration || 60,
+                  durationMinutes: duration,
                   staffEarnings: earnings,
                 }
               })
@@ -556,9 +638,11 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
           }
 
           if (!isCouple) {
-            const singleAmount = Number(booking.final_price) || 0
-            const singleRate = Number((booking.service as any)?.staff_commission_rate) || 0
-            totalStaffEarnings = Math.round(singleAmount * singleRate)
+            // Prefer the stored, trigger-computed per-staff earning (correct for fixed-rate);
+            // else compute honoring use_fixed_rate (NOT a raw final_price*commission that ignores it).
+            totalStaffEarnings = (booking as any).staff_earnings
+              ? Math.round(Number((booking as any).staff_earnings))
+              : computeStaffEarning(booking.service as any, booking.duration || 90, Number(booking.final_price) || 0)
           }
 
           await lineService.sendNewJobToStaff(staffLineIds, {
@@ -632,13 +716,16 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         old_time: oldTime,
         new_date: body.new_date,
         new_time: body.new_time,
-        staff_unassigned: hasAssignedStaff,
+        staff_kept: canKeepStaff,
+        staff_unassigned: needsReaccept && hasAssignedStaff,
         jobs_reset: updatedJobIds.length,
         notifications_sent: { ...notificationResults, admins: adminsNotified, new_job_staff: newJobStaffNotified },
       },
-      message: hasAssignedStaff
-        ? 'Booking rescheduled. Staff has been notified and needs to re-accept.'
-        : 'Booking rescheduled successfully.',
+      message: canKeepStaff
+        ? 'Booking rescheduled. The same staff was kept (they were free at the new time) and notified.'
+        : hasAssignedStaff
+          ? 'Booking rescheduled. Staff has been notified and needs to re-accept.'
+          : 'Booking rescheduled successfully.',
     })
   } catch (error: any) {
     console.error('Reschedule booking error:', error)
