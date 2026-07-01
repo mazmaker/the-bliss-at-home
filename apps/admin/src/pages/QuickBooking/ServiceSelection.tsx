@@ -255,6 +255,52 @@ export default function ServiceSelection({
   const [postalCode, setPostalCode] = useState('')
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null)
 
+  // Auto-fill the address for a RETURNING customer so the admin doesn't retype it every time.
+  // Priority: the customer's default saved address (or the first saved one); if they have NO
+  // saved address book entry, fall back to prefilling from their most-recent booking address.
+  // Runs once per selected customer, and never overrides a manual pick/edit already in progress.
+  const [addressAutoAppliedFor, setAddressAutoAppliedFor] = useState<string | null>(null)
+  useEffect(() => {
+    if (!customer?.id || addressesLoading) return
+    if (addressAutoAppliedFor === customer.id) return
+    if (selectedAddressId || showManualAddressForm) return
+    setAddressAutoAppliedFor(customer.id) // mark immediately so the effect can't re-enter
+
+    if (addresses && addresses.length > 0) {
+      const addr = defaultAddress || addresses[0]
+      if (addr) handleSelectAddress(addr.id)
+      return
+    }
+
+    // No saved address → prefill from the customer's most-recent booking address
+    let active = true
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('bookings')
+          .select('address, latitude, longitude')
+          .eq('customer_id', customer.id)
+          .not('address', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (!active || !data?.address) return
+        setShowManualAddressForm(true)
+        setUserWantsNewAddress(true)
+        setContactName(customer.full_name || '')
+        setContactPhone(customer.phone || '')
+        setAddress(data.address)
+        if (data.latitude && data.longitude) {
+          setMapLocation({ lat: data.latitude, lng: data.longitude })
+        }
+      } catch (err) {
+        console.error('Address auto-fill (last booking) failed:', err)
+      }
+    })()
+    return () => { active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer?.id, addresses, addressesLoading, defaultAddress, selectedAddressId, showManualAddressForm, addressAutoAppliedFor])
+
   // Debug current address selection state
   console.log('📍 Address Selection State:', {
     customerId: customer?.id,
