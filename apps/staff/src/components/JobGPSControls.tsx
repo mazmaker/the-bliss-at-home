@@ -321,8 +321,11 @@ export default function JobGPSControls({
     }
   }
 
-  // Don't show GPS controls for completed/cancelled jobs
-  if (!['confirmed', 'assigned', 'traveling', 'in_progress'].includes(job.status)) {
+  // Don't show GPS controls for completed/cancelled jobs.
+  // 'arrived' MUST be here: once the arrival is persisted to jobs.status='arrived'
+  // (so a reload recovers to the "เริ่มงาน" step), this guard would otherwise render
+  // nothing and hide the start-work button.
+  if (!['confirmed', 'assigned', 'traveling', 'arrived', 'in_progress'].includes(job.status)) {
     return null
   }
 

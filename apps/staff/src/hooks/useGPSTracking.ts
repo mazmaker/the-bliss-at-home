@@ -215,25 +215,21 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       // 🎯 CRITICAL FIX: Update React state for new journey too
       setIsTracking(true)
 
-      // Update job status to 'traveling' when GPS starts
+      // Persist 'traveling' on the JOB (not the booking) when GPS starts.
+      // The staff-app card reads jobs.status, and a staff CAN write their OWN job via RLS
+      // (same as accept/start), whereas `bookings` is RLS-blocked for staff — so writing the
+      // booking here silently failed and the travel state was lost on reload. Writing the job
+      // is what lets a reload/back recover to the correct step (see useStaffBookings reads jobs.status).
       try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
         const { error: statusError } = await supabase
-          .from('bookings')
+          .from('jobs')
           .update({ status: 'traveling' })
-          .eq('id', bookingId)
-
+          .eq('booking_id', bookingId)
+          .eq('staff_id', authUser?.id || '')
+          .in('status', ['confirmed', 'assigned']) // don't clobber in_progress/completed/cancelled
         if (statusError) {
           console.error('Failed to update job status to traveling:', statusError)
-
-          // Try alternative status that might work
-          const { error: altError } = await supabase
-            .from('bookings')
-            .update({ status: 'assigned' })
-            .eq('id', bookingId)
-
-          if (altError) {
-            console.error('Alternative status update also failed:', altError)
-          }
         }
       } catch (err) {
         console.error('Error updating job status:', err)
@@ -432,16 +428,20 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         } else {
           console.log('✅ Journey updated to arrived status')
 
-          // Update booking status to 'arrived' so user can manually click "เริ่มงาน"
-          const { error: bookingError } = await supabase
-            .from('bookings')
+          // Persist 'arrived' on the JOB so the staff-app card (which reads jobs.status) shows
+          // the "เริ่มงาน" button after a reload/back — `bookings` is RLS-blocked for staff, so
+          // the old booking write silently failed and the arrival was lost on reload.
+          const { data: { user: authUser } } = await supabase.auth.getUser()
+          const { error: jobArriveError } = await supabase
+            .from('jobs')
             .update({ status: 'arrived' })
-            .eq('id', bookingId)
-
-          if (bookingError) {
-            console.error('Booking status update failed:', bookingError)
+            .eq('booking_id', bookingId)
+            .eq('staff_id', authUser?.id || '')
+            .in('status', ['confirmed', 'assigned', 'traveling']) // only advance a non-terminal own job
+          if (jobArriveError) {
+            console.error('Job arrival status update failed:', jobArriveError)
           } else {
-            console.log('✅ Booking status updated to arrived')
+            console.log('✅ Job status updated to arrived')
           }
         }
       } catch (err) {
