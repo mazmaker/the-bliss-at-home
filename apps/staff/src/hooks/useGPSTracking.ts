@@ -1,3 +1,4 @@
+// build-marker 2026-07-01: force staff prod rebuild (jobs.status GPS persistence fix)
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { supabase } from '@bliss/supabase'
 

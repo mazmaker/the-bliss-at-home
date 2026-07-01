@@ -1,3 +1,4 @@
+// build-marker 2026-07-01: force admin prod rebuild (Quick Booking address auto-fill)
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ArrowRight, Clock, MapPin, Calendar, Tag, AlertCircle, CheckCircle, X, User, ChevronRight, Check, Plus } from 'lucide-react'
