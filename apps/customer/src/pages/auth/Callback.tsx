@@ -4,6 +4,17 @@ import { useTranslation } from '@bliss/i18n'
 import { authService } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase/auth'
 
+// Time-box getSession so a hung auth call can't freeze the OAuth callback spinner forever.
+// On timeout it rejects → the existing catch redirects to /login (retryable) instead of hanging.
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ])
+}
+
 export function AuthCallback() {
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -36,7 +47,9 @@ export function AuthCallback() {
 
         if (cancelled) return
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await withTimeout(
+          supabase.auth.getSession(), 8000, 'getSession'
+        )
 
         if (sessionError) {
           console.error('Session error:', sessionError)

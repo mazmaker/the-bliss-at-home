@@ -87,7 +87,12 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
         if (!mounted) return
 
         if (!profile) {
-          const { data: { session } } = await supabase.auth.getSession()
+          // Diagnostic-only (value is never consumed beyond this warn). getSession() can hang,
+          // so time-box it — never let a diagnostic wedge the whole app's isLoading state.
+          const session = await Promise.race([
+            supabase.auth.getSession().then((r) => r.data.session),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+          ])
           if (session) {
             console.warn('⚠️ [AuthProvider] Session exists but no profile found')
           }

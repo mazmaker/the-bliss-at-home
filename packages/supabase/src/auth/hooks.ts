@@ -113,7 +113,11 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
         if (!mounted) return
 
         if (!profile) {
-          const { data: { session } } = await supabase.auth.getSession()
+          // Diagnostic-only — time-box getSession() so it can never wedge auth loading.
+          const session = await Promise.race([
+            supabase.auth.getSession().then((r) => r.data.session),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+          ])
           if (session) {
             console.warn('⚠️ Session exists but no profile found in database!')
           }

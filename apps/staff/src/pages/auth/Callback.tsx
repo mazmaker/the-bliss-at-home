@@ -11,6 +11,22 @@ import { AlertCircle, Loader2 } from 'lucide-react'
 // Get LIFF ID from environment
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 
+// Time-box an awaited step so a hung network/SDK call (liff.init / liff.getProfile /
+// loginWithLine / getSession) can NEVER freeze the callback on the "Signing you in..."
+// spinner forever. On timeout it rejects → the catch below shows the actionable
+// "Back to Login" error card instead of an eternal spinner.
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => {
+        console.error(`[Callback] Step timed out after ${ms}ms: ${label}`)
+        reject(new Error('การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง'))
+      }, ms)
+    ),
+  ])
+}
+
 export function StaffAuthCallback() {
   const navigate = useNavigate()
   const config = APP_CONFIGS.STAFF
@@ -31,8 +47,13 @@ export function StaffAuthCallback() {
 
         // Check if this is a LINE (LIFF) callback or Google OAuth callback
         const urlParams = new URLSearchParams(window.location.search)
-        const hasLiffParams = urlParams.has('liffClientId') && urlParams.has('liffRedirectUri')
-        const isLiffCallback = LIFF_ID && hasLiffParams
+        // [FIX] A real LINE/LIFF return always carries liffClientId; requiring liffRedirectUri
+        // TOO caused LINE callbacks that omit it to fall into the Google branch below (whose
+        // getSession() can hang → the reported "Signing you in..." freeze). Google's own
+        // callback never carries liffClientId, so keying on either LIFF param is a safe,
+        // precise LINE detector and can't mis-route a Google callback into the LIFF branch.
+        const hasLiffParams = urlParams.has('liffClientId') || urlParams.has('liffRedirectUri')
+        const isLiffCallback = !!LIFF_ID && hasLiffParams
 
         // Helper: check if a path is a valid deep link target (not login/auth pages)
         function isValidDeepLink(path: string | null): boolean {
@@ -118,7 +139,7 @@ export function StaffAuthCallback() {
             if (!LIFF_ID) {
               throw new Error('LIFF ID not configured')
             }
-            await liffService.initialize(LIFF_ID)
+            await withTimeout(liffService.initialize(LIFF_ID), 12000, 'liff.init()')
           }
 
           // Strategy 5: After liff.init(), SDK may have added liff.state to URL
@@ -137,7 +158,7 @@ export function StaffAuthCallback() {
           }
 
           // Get LINE profile
-          const profile = await liffService.getProfile()
+          const profile = await withTimeout(liffService.getProfile(), 10000, 'liff.getProfile()')
 
           // Check if this is link mode (user wants to link LINE to existing account)
           const isLinkMode = localStorage.getItem('line_link_mode') === 'true'
@@ -181,11 +202,11 @@ export function StaffAuthCallback() {
               console.log('[Callback] Found invite staff ID:', inviteStaffId)
             }
 
-            await authService.loginWithLine({
+            await withTimeout(authService.loginWithLine({
               lineUserId: profile.userId,
               displayName: profile.displayName,
               pictureUrl: profile.pictureUrl,
-            }, 'STAFF', inviteStaffId)
+            }, 'STAFF', inviteStaffId), 15000, 'loginWithLine()')
 
             // Clean up invite data from localStorage
             localStorage.removeItem('staff_invite_token')
@@ -208,7 +229,9 @@ export function StaffAuthCallback() {
           await new Promise(resolve => setTimeout(resolve, 1000))
 
           // Get current session
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+          const { data: { session }, error: sessionError } = await withTimeout(
+            supabase.auth.getSession(), 8000, 'supabase.auth.getSession()'
+          )
 
           if (sessionError || !session) {
             throw new Error('OAuth authentication failed')
@@ -299,7 +322,15 @@ export function StaffAuthCallback() {
       }
     }
 
-    handleCallback()
+    // Ultimate safety net: even if some await slips past the per-step timeouts above,
+    // never let the "Signing you in..." spinner run forever — surface the retry card after 20s.
+    const watchdog = setTimeout(() => {
+      setError((prev) => prev || 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง')
+    }, 20000)
+
+    handleCallback().finally(() => clearTimeout(watchdog))
+
+    return () => clearTimeout(watchdog)
   }, [navigate, config.defaultPath])
 
   if (error) {
