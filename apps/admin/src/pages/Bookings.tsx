@@ -12,6 +12,44 @@ import BookingCancellationModal from '../components/BookingCancellationModal'
 // mark-paid — G24/G27). Read from admin_notes only (never payment_status/payment_method).
 const isManualQrBooking = (b?: { admin_notes?: string | null }) => !!b?.admin_notes?.includes('[MANUAL_QR')
 
+// Staff job-progress badge (from jobs.status) — the staff's live progression
+// (รอรับงาน → รับงานแล้ว → กำลังเดินทาง → ถึงแล้ว → เริ่มงาน → เสร็จสิ้น), a SEPARATE axis from the
+// booking status badge. Module-scope so BOTH the list (Bookings) AND the detail modal
+// (BookingDetailModal) can use it — they are separate components in this file.
+const JOB_PROGRESS_ORDER = ['pending', 'confirmed', 'traveling', 'arrived', 'in_progress', 'completed']
+function getJobProgressBadge(status?: string) {
+  const cfg: Record<string, { label: string; className: string }> = {
+    pending: { label: 'รอรับงาน', className: 'bg-yellow-100 text-yellow-700' },
+    confirmed: { label: 'รับงานแล้ว', className: 'bg-blue-100 text-blue-700' },
+    traveling: { label: 'กำลังเดินทาง', className: 'bg-bliss-100 text-bliss-700' },
+    arrived: { label: 'ถึงแล้ว', className: 'bg-purple-100 text-purple-700' },
+    in_progress: { label: 'เริ่มงาน', className: 'bg-indigo-100 text-indigo-700' },
+    completed: { label: 'เสร็จสิ้น', className: 'bg-green-100 text-green-700' },
+    cancelled: { label: 'ยกเลิก', className: 'bg-red-100 text-red-700' },
+  }
+  const c = status ? cfg[status] : undefined
+  if (!c) return null
+  return (
+    <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium ${c.className}`}>
+      {c.label}
+    </span>
+  )
+}
+// For a COUPLE booking (multiple jobs) the list shows the LEAST-advanced non-cancelled job status
+// (the booking's overall staff progress); the detail modal shows each staff separately.
+function overallJobStatus(jobs?: Array<{ status: string }>): string | undefined {
+  if (!jobs || jobs.length === 0) return undefined
+  const active = jobs.filter(j => j.status !== 'cancelled')
+  if (active.length === 0) return 'cancelled'
+  let best = active[0].status
+  let bestIdx = JOB_PROGRESS_ORDER.indexOf(best)
+  for (const j of active) {
+    const idx = JOB_PROGRESS_ORDER.indexOf(j.status)
+    if (idx >= 0 && (bestIdx < 0 || idx < bestIdx)) { best = j.status; bestIdx = idx }
+  }
+  return best
+}
+
 function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialStatus = searchParams.get('status') as BookingStatus | null
@@ -163,44 +201,6 @@ function Bookings() {
         {labels[status as keyof typeof labels]}
       </span>
     )
-  }
-
-  // Staff job-progress badge (from jobs.status) — the staff's live progression:
-  // รอรับงาน → รับงานแล้ว → กำลังเดินทาง → ถึงแล้ว → เริ่มงาน → เสร็จสิ้น. This is a SEPARATE axis
-  // from the booking status badge above (which stays 'confirmed' while the staff travels/arrives).
-  const getJobProgressBadge = (status?: string) => {
-    const cfg: Record<string, { label: string; className: string }> = {
-      pending: { label: 'รอรับงาน', className: 'bg-yellow-100 text-yellow-700' },
-      confirmed: { label: 'รับงานแล้ว', className: 'bg-blue-100 text-blue-700' },
-      traveling: { label: 'กำลังเดินทาง', className: 'bg-bliss-100 text-bliss-700' },
-      arrived: { label: 'ถึงแล้ว', className: 'bg-purple-100 text-purple-700' },
-      in_progress: { label: 'เริ่มงาน', className: 'bg-indigo-100 text-indigo-700' },
-      completed: { label: 'เสร็จสิ้น', className: 'bg-green-100 text-green-700' },
-      cancelled: { label: 'ยกเลิก', className: 'bg-red-100 text-red-700' },
-    }
-    const c = status ? cfg[status] : undefined
-    if (!c) return null
-    return (
-      <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium ${c.className}`}>
-        {c.label}
-      </span>
-    )
-  }
-
-  // For a COUPLE booking (multiple jobs) the list shows the LEAST-advanced non-cancelled job
-  // status (the booking's overall staff progress); the detail modal shows each staff separately.
-  const JOB_PROGRESS_ORDER = ['pending', 'confirmed', 'traveling', 'arrived', 'in_progress', 'completed']
-  const overallJobStatus = (jobs?: Booking['jobs']): string | undefined => {
-    if (!jobs || jobs.length === 0) return undefined
-    const active = jobs.filter(j => j.status !== 'cancelled')
-    if (active.length === 0) return 'cancelled'
-    let best = active[0].status
-    let bestIdx = JOB_PROGRESS_ORDER.indexOf(best)
-    for (const j of active) {
-      const idx = JOB_PROGRESS_ORDER.indexOf(j.status)
-      if (idx >= 0 && (bestIdx < 0 || idx < bestIdx)) { best = j.status; bestIdx = idx }
-    }
-    return best
   }
 
   const getPaymentBadge = (status: string, booking?: Booking) => {
