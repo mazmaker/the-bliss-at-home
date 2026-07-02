@@ -4,6 +4,7 @@ import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
 import { playBackgroundMusic, stopBackgroundMusic, isBackgroundMusicPlaying, setMusicManuallyMuted } from '../utils/backgroundMusic'
+import { queryWithTimeout } from '../utils/withTimeout'
 
 interface JobGPSControlsProps {
   job: {
@@ -180,11 +181,16 @@ export default function JobGPSControls({
   const getStaffId = async () => {
     if (!staffId && user?.id) {
       try {
-        const { data: staff, error: staffError } = await supabase
-          .from('staff')
-          .select('id')
-          .eq('profile_id', user.id)
-          .single()
+        // [FIX] time-boxed: a stall here used to freeze the GPS button's processing state
+        const { data: staff, error: staffError } = await queryWithTimeout(
+          supabase
+            .from('staff')
+            .select('id')
+            .eq('profile_id', user.id)
+            .single(),
+          10000,
+          'staff id lookup (GPS)'
+        )
 
         if (staffError || !staff) {
           throw new Error('ไม่พบข้อมูลพนักงาน')

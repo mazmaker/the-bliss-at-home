@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@bliss/supabase'
 import { useAuth } from '@bliss/supabase/auth'
+import { queryWithTimeout } from '../utils/withTimeout'
 
 interface StaffBooking {
   id: string
@@ -38,46 +39,31 @@ export function useStaffBookings() {
   const [bookings, setBookings] = useState<StaffBooking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Cached staff.id — lets the realtime subscription filter to this staff only,
+  // and skips the extra staff lookup on refetches
+  const [staffId, setStaffId] = useState<string | null>(null)
 
-  const fetchBookings = async () => {
+  // silent=true (realtime refetch): update data in the background WITHOUT flipping
+  // isLoading — previously every fleet-wide jobs/journeys change blanked the whole
+  // list back to a full-screen spinner
+  const fetchBookings = async (silent = false) => {
     if (!user) {
       setIsLoading(false)
       return
     }
 
     try {
-      setIsLoading(true)
-      setError(null)
-
-      // Get staff ID from profile
-      const { data: staff, error: staffError } = await supabase
-        .from('staff')
-        .select('id')
-        .eq('profile_id', user.id)
-        .single()
-
-      if (staffError || !staff) {
-        throw new Error('ไม่พบข้อมูลพนักงาน')
+      if (!silent) {
+        setIsLoading(true)
+        setError(null)
       }
 
-      console.log('🔍 Fetching jobs for staff_id:', staff.id)
-      console.log('🔍 Staff ID type:', typeof staff.id, 'Length:', staff.id.length)
-
-      // First, let's see what jobs exist with any staff_id to debug the issue
-      const { data: debugJobs, error: debugError } = await supabase
-        .from('jobs')
-        .select('id, staff_id, customer_name, status')
-        .not('staff_id', 'is', null)
-        .limit(5)
-
-      console.log('🔍 DEBUG: Sample jobs with staff_id:', debugJobs)
-      if (debugJobs && debugJobs.length > 0) {
-        console.log('🔍 DEBUG: First job staff_id type:', typeof debugJobs[0].staff_id, 'Value:', debugJobs[0].staff_id, 'Length:', debugJobs[0].staff_id?.length)
-        console.log('🔍 DEBUG: Staff ID match:', debugJobs[0].staff_id === staff.id)
-      }
-
-      // Get jobs assigned to this staff (with broader filtering for debugging)
-      const { data: bookingsData, error: bookingsError } = await supabase
+      // Get jobs assigned to this staff
+      // [FIX] jobs.staff_id holds the PROFILE id (FK jobs_staff_id_fkey → profiles.id),
+      // NOT staff.id — querying with staff.id (as before) matched zero rows.
+      // [FIX] time-boxed: a stalled query used to leave the spinner up forever
+      const { data: bookingsData, error: bookingsError } = await queryWithTimeout(
+        supabase
         .from('jobs')
         .select(`
           id,
@@ -110,25 +96,19 @@ export function useStaffBookings() {
             current_longitude
           )
         `)
-        .eq('staff_id', staff.id)
+        .eq('staff_id', user.id)
         // Temporarily remove status and date filtering to see all jobs
         // .in('status', ['confirmed', 'assigned', 'traveling', 'in_progress'])
         // .gte('scheduled_date', new Date().toISOString().split('T')[0])
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(20),
+        15000,
+        'staff jobs fetch'
+      )
 
       if (bookingsError) {
         console.error('❌ Jobs fetch error:', bookingsError)
         throw new Error(bookingsError.message)
-      }
-
-      console.log('📋 Raw jobs data from DB:', bookingsData)
-      console.log('📊 Jobs count:', bookingsData?.length || 0)
-      console.log('🏠 Current user info:', { userId: user.id, staffId: staff.id })
-
-      if (bookingsData && bookingsData.length > 0) {
-        console.log('📝 Sample job data:', bookingsData[0])
-        console.log('📅 All job statuses:', bookingsData.map(j => ({ id: j.id, status: j.status, date: j.scheduled_date })))
       }
 
       // Transform data
@@ -163,50 +143,84 @@ export function useStaffBookings() {
         journey_current_lng: booking.staff_journeys?.[0]?.current_longitude
       }))
 
-      console.log('✅ Transformed bookings:', transformedBookings)
       setBookings(transformedBookings)
 
     } catch (err) {
       console.error('Failed to fetch bookings:', err)
-      setError(err instanceof Error ? err.message : 'ไม่สามารถโหลดรายการจองได้')
+      // Silent (realtime) refetch failures keep showing the last good data
+      if (!silent) {
+        setError(err instanceof Error ? err.message : 'ไม่สามารถโหลดรายการจองได้')
+      }
     } finally {
-      setIsLoading(false)
+      if (!silent) {
+        setIsLoading(false)
+      }
     }
   }
 
-  // Fetch bookings on mount and when user changes
+  // Fetch bookings on mount and when the signed-in user changes
   useEffect(() => {
     fetchBookings()
-  }, [user])
+  }, [user?.id])
 
-  // Set up real-time subscription for booking changes
+  // Resolve staff.id for the journeys realtime filter (staff_journeys.staff_id → staff.id,
+  // a DIFFERENT id space from jobs.staff_id which holds the profile id).
+  // [FIX] reset on user change — a cached id from a previous login must never leak
+  // into the next user's subscription.
   useEffect(() => {
-    if (!user) return
+    setStaffId(null)
+    if (!user?.id) return
+    let cancelled = false
+    queryWithTimeout(
+      supabase.from('staff').select('id').eq('profile_id', user.id).single(),
+      10000,
+      'staff id lookup'
+    )
+      .then(({ data }) => {
+        if (!cancelled && data) setStaffId(data.id)
+      })
+      .catch((err) => console.error('staff id lookup failed:', err))
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id])
+
+  // Set up real-time subscription for booking changes.
+  // [FIX] Filters BOTH tables to this staff only — previously this listened to
+  // fleet-wide changes and refetched (with a full spinner) every time ANY staff's
+  // job/GPS position changed. Note the id spaces: jobs.staff_id = profile id,
+  // staff_journeys.staff_id = staff.id.
+  useEffect(() => {
+    if (!user?.id || !staffId) return
+
+    // Coalesce event bursts (own GPS heartbeat updates every ~10s) into one refetch
+    let refetchTimer: ReturnType<typeof setTimeout> | null = null
+    const debouncedRefetch = () => {
+      if (refetchTimer) clearTimeout(refetchTimer)
+      refetchTimer = setTimeout(() => fetchBookings(true), 500)
+    }
 
     const channel = supabase
-      .channel('staff-jobs')
+      .channel(`staff-bookings-${staffId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'jobs'
-      }, () => {
-        // Refetch jobs when changes occur
-        fetchBookings()
-      })
+        table: 'jobs',
+        filter: `staff_id=eq.${user.id}`
+      }, debouncedRefetch)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'staff_journeys'
-      }, () => {
-        // Refetch when journeys change
-        fetchBookings()
-      })
+        table: 'staff_journeys',
+        filter: `staff_id=eq.${staffId}`
+      }, debouncedRefetch)
       .subscribe()
 
     return () => {
+      if (refetchTimer) clearTimeout(refetchTimer)
       supabase.removeChannel(channel)
     }
-  }, [user])
+  }, [user?.id, staffId])
 
   const refreshBookings = () => {
     fetchBookings()

@@ -1,6 +1,7 @@
 // build-marker 2026-07-01: force staff prod rebuild (jobs.status GPS persistence fix)
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { supabase } from '@bliss/supabase'
+import { withTimeout, queryWithTimeout } from '../utils/withTimeout'
 
 interface GPSPosition {
   latitude: number
@@ -45,13 +46,20 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   // ✅ Simple journey checker - just like before, don't over-complicate
   const checkExistingJourney = useCallback(async (bookingId: string) => {
     try {
-      const { data: existingJourneys, error: queryError } = await supabase
+      // [FIX] time-boxed: this runs inside the "เริ่มเดินทาง" button's processing state —
+      // an un-time-boxed stall here was the last remaining freeze point on that path.
+      // On timeout the catch below returns null and the normal create-journey flow proceeds.
+      const { data: existingJourneys, error: queryError } = await queryWithTimeout(
+        supabase
         .from('staff_journeys')
         .select('id, status, current_latitude, current_longitude, last_location_update')
         .eq('booking_id', bookingId)
         .in('status', ['traveling', 'arrived']) // Check for both traveling and arrived journeys
         .order('started_at', { ascending: false })
-        .limit(1)
+        .limit(1),
+        10000,
+        'existing journey check'
+      )
 
       if (queryError) {
         console.error('Failed to check existing journey:', queryError)
@@ -200,10 +208,15 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       })
 
       // Create journey in database
-      const { data: journeyId, error: journeyError } = await supabase.rpc('start_staff_journey', {
-        p_booking_id: bookingId,
-        p_staff_id: staffId
-      })
+      // [FIX] time-boxed: a stalled rpc used to freeze the "เริ่มเดินทาง" button forever
+      const { data: journeyId, error: journeyError } = await queryWithTimeout(
+        supabase.rpc('start_staff_journey', {
+          p_booking_id: bookingId,
+          p_staff_id: staffId
+        }),
+        12000,
+        'start_staff_journey rpc'
+      )
 
       if (journeyError) {
         console.error('Failed to start journey:', journeyError)
@@ -222,13 +235,18 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
       // booking here silently failed and the travel state was lost on reload. Writing the job
       // is what lets a reload/back recover to the correct step (see useStaffBookings reads jobs.status).
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        const { error: statusError } = await supabase
-          .from('jobs')
-          .update({ status: 'traveling' })
-          .eq('id', bookingId) // bookingId is the JOB id (parents pass job.id) — target the job row, NOT jobs.booking_id
-          .eq('staff_id', authUser?.id || '')
-          .in('status', ['confirmed', 'assigned']) // don't clobber in_progress/completed/cancelled
+        // [FIX] time-boxed: these run inside the "เริ่มเดินทาง" button's processing state
+        const { data: { user: authUser } } = await withTimeout(supabase.auth.getUser(), 8000, 'auth.getUser (start journey)')
+        const { error: statusError } = await queryWithTimeout(
+          supabase
+            .from('jobs')
+            .update({ status: 'traveling' })
+            .eq('id', bookingId) // bookingId is the JOB id (parents pass job.id) — target the job row, NOT jobs.booking_id
+            .eq('staff_id', authUser?.id || '')
+            .in('status', ['confirmed', 'assigned']), // don't clobber in_progress/completed/cancelled
+          10000,
+          'job status → traveling'
+        )
         if (statusError) {
           console.error('Failed to update job status to traveling:', statusError)
         }
@@ -245,8 +263,8 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         })
       })
 
-      // Update location immediately
-      await updateLocation(initialPos)
+      // Update location immediately ([FIX] time-boxed — still inside the button's processing state)
+      await withTimeout(updateLocation(initialPos), 10000, 'initial location update')
 
       // Start continuous GPS tracking
       const watchId = navigator.geolocation.watchPosition(
@@ -397,11 +415,17 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
           const finalLng = currentPosition?.longitude || 100.5018
 
         // ✅ Smart approach: Check for existing completed journeys first
-        const { data: journeyData, error: journeyFetchError } = await supabase
-          .from('staff_journeys')
-          .select('booking_id, status')
-          .eq('id', journeyId)
-          .single()
+        // [FIX] time-boxed: a stall here used to freeze the "มาถึงแล้ว" button on
+        // "กำลังยืนยัน..." forever, trapping the staff in `traveling`
+        const { data: journeyData, error: journeyFetchError } = await queryWithTimeout(
+          supabase
+            .from('staff_journeys')
+            .select('booking_id, status')
+            .eq('id', journeyId)
+            .single(),
+          10000,
+          'journey fetch (arrival)'
+        )
 
         if (journeyFetchError) {
           console.error('Failed to fetch journey data:', journeyFetchError)
@@ -412,7 +436,8 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         console.log('🏁 Completing journey:', { journeyId, bookingId, currentStatus: journeyData.status })
 
         // ✅ SIMPLIFIED: Just update journey to 'arrived' (not completed)
-        const { error: updateError } = await supabase
+        const { error: updateError } = await queryWithTimeout(
+          supabase
           .from('staff_journeys')
           .update({
             status: 'arrived',
@@ -421,7 +446,10 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
             current_longitude: finalLng,
             last_location_update: new Date().toISOString()
           })
-          .eq('id', journeyId)
+          .eq('id', journeyId),
+          10000,
+          'journey → arrived'
+        )
 
         if (updateError) {
           console.error('Journey arrival update failed:', updateError)
@@ -432,13 +460,17 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
           // Persist 'arrived' on the JOB so the staff-app card (which reads jobs.status) shows
           // the "เริ่มงาน" button after a reload/back — `bookings` is RLS-blocked for staff, so
           // the old booking write silently failed and the arrival was lost on reload.
-          const { data: { user: authUser } } = await supabase.auth.getUser()
-          const { error: jobArriveError } = await supabase
-            .from('jobs')
-            .update({ status: 'arrived' })
-            .eq('id', bookingId) // bookingId here = journeyData.booking_id = the JOB id — target the job row, NOT jobs.booking_id
-            .eq('staff_id', authUser?.id || '')
-            .in('status', ['confirmed', 'assigned', 'traveling']) // only advance a non-terminal own job
+          const { data: { user: authUser } } = await withTimeout(supabase.auth.getUser(), 8000, 'auth.getUser (arrival)')
+          const { error: jobArriveError } = await queryWithTimeout(
+            supabase
+              .from('jobs')
+              .update({ status: 'arrived' })
+              .eq('id', bookingId) // bookingId here = journeyData.booking_id = the JOB id — target the job row, NOT jobs.booking_id
+              .eq('staff_id', authUser?.id || '')
+              .in('status', ['confirmed', 'assigned', 'traveling']), // only advance a non-terminal own job
+            10000,
+            'job status → arrived'
+          )
           if (jobArriveError) {
             console.error('Job arrival status update failed:', jobArriveError)
           } else {

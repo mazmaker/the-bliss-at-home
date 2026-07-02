@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout, Button } from '@bliss/ui'
 import { APP_CONFIGS, authService, liffService, supabase } from '@bliss/supabase/auth'
 import { AlertCircle, UserCheck, Loader2 } from 'lucide-react'
+import { withTimeout, queryWithTimeout } from '../../utils/withTimeout'
 
 // Get LIFF ID from environment
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
@@ -83,6 +84,11 @@ export function StaffLoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [inviteProcessing, setInviteProcessing] = useState(false)
   const [inviteStaffName, setInviteStaffName] = useState<string | null>(null)
+  // [FIX] LIFF init failure used to leave a silently-dead login button
+  // (disabled with no explanation). Track failure + retry counter so the user
+  // gets an explicit "ลองใหม่" button that re-runs the init effect.
+  const [liffInitFailed, setLiffInitFailed] = useState(false)
+  const [liffInitAttempt, setLiffInitAttempt] = useState(0)
 
   // Process invite token from URL params (sent via LIFF invite link)
   useEffect(() => {
@@ -119,12 +125,18 @@ export function StaffLoginPage() {
 
       try {
         // Validate token against database
-        const { data, error: queryError } = await supabase
-          .from('staff')
-          .select('id, name_th, invite_token_expires_at')
-          .eq('invite_token', inviteToken)
-          .is('profile_id', null)
-          .single()
+        // [FIX] time-boxed: a stalled query used to leave the full-screen
+        // "กำลังตรวจสอบคำเชิญ..." spinner up forever (no timeout → catch never ran)
+        const { data, error: queryError } = await queryWithTimeout(
+          supabase
+            .from('staff')
+            .select('id, name_th, invite_token_expires_at')
+            .eq('invite_token', inviteToken)
+            .is('profile_id', null)
+            .single(),
+          10000,
+          'invite token validation'
+        )
 
         if (queryError || !data) {
           console.error('[Invite] Token validation failed:', queryError)
@@ -231,7 +243,10 @@ export function StaffLoginPage() {
       }
 
       try {
-        await liffService.initialize(LIFF_ID)
+        setLiffInitFailed(false)
+        // [FIX] time-boxed like Callback.tsx — a hung liff.init() used to leave the
+        // login button permanently disabled with no feedback
+        await withTimeout(liffService.initialize(LIFF_ID), 12000, 'liff.init() (login page)')
         setIsLiffReady(true)
 
         // Strategy 5: After liff.init(), check if SDK added liff.state to URL
@@ -262,13 +277,15 @@ export function StaffLoginPage() {
         }
       } catch (err) {
         console.error('LIFF init error:', err)
-        setError('Failed to initialize LINE Login')
+        setError('เชื่อมต่อ LINE ไม่สำเร็จ กรุณากดลองใหม่')
         setIsLiffReady(false)
+        setLiffInitFailed(true)
       }
     }
 
     initLiff()
-  }, [])
+    // liffInitAttempt in deps: pressing "ลองใหม่" bumps it to re-run the whole init
+  }, [liffInitAttempt])
 
   // Handle auto-login when LIFF is already logged in
   async function handleLiffAutoLogin() {
@@ -284,18 +301,20 @@ export function StaffLoginPage() {
 
     try {
       console.log('[Auto-login] Getting LIFF profile...')
-      const profile = await liffService.getProfile()
+      // [FIX] time-boxed (same values as Callback.tsx) — a stalled getProfile/loginWithLine
+      // used to freeze the "กำลังเชื่อมต่อ..." button forever on the returning-staff path
+      const profile = await withTimeout(liffService.getProfile(), 10000, 'liff.getProfile() (auto-login)')
       console.log('[Auto-login] LIFF profile:', profile)
 
       // Check for invite data from admin invitation flow
       const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
 
       console.log('[Auto-login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
-      const result = await authService.loginWithLine({
+      const result = await withTimeout(authService.loginWithLine({
         lineUserId: profile.userId,
         displayName: profile.displayName,
         pictureUrl: profile.pictureUrl,
-      }, 'STAFF', inviteStaffId)
+      }, 'STAFF', inviteStaffId), 15000, 'loginWithLine() (auto-login)')
       console.log('[Auto-login] Login successful:', result)
 
       // Clean up invite data from localStorage
@@ -342,7 +361,8 @@ export function StaffLoginPage() {
       if (liffService.isLoggedIn()) {
         console.log('[LINE Login] Already logged in, getting profile...')
         // Already logged in, get profile and authenticate
-        const profile = await liffService.getProfile()
+        // [FIX] time-boxed — stall here used to freeze the login button spinner forever
+        const profile = await withTimeout(liffService.getProfile(), 10000, 'liff.getProfile() (manual login)')
         console.log('[LINE Login] LIFF profile:', profile)
 
         // Check for invite data from admin invitation flow
@@ -353,11 +373,11 @@ export function StaffLoginPage() {
         const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
 
         console.log('[LINE Login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
-        const result = await authService.loginWithLine({
+        const result = await withTimeout(authService.loginWithLine({
           lineUserId: profile.userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
-        }, 'STAFF', inviteStaffId)
+        }, 'STAFF', inviteStaffId), 15000, 'loginWithLine() (manual login)')
         console.log('[LINE Login] Login successful:', result)
 
         // Clean up invite data from localStorage
@@ -478,6 +498,21 @@ export function StaffLoginPage() {
           </span>
         )}
       </Button>
+
+      {/* [FIX] explicit retry for a failed LIFF init — previously the button just stayed
+          disabled with no way to recover other than manually reloading the page */}
+      {liffInitFailed && (
+        <Button
+          onClick={() => {
+            setError(null) // clear the stale red alert before re-attempting
+            setLiffInitAttempt((n) => n + 1)
+          }}
+          className="w-full mt-3"
+          variant="outline"
+        >
+          ลองเชื่อมต่อใหม่
+        </Button>
+      )}
 
       <p className="text-xs text-bliss-500 text-center mt-3">
         {isLiffReady ? 'ยังไม่มีบัญชี? ระบบจะสร้างบัญชีให้อัตโนมัติเมื่อคุณเข้าสู่ระบบครั้งแรก' : 'LINE Login not available'}

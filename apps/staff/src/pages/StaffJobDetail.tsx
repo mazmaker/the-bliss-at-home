@@ -20,6 +20,7 @@ import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic, setMusicManuallyMuted } from '../utils/backgroundMusic'
 import { normalizeCommissionRate, calculateExtensionEarnings } from '../utils/commissionUtils'
 import { useGPSTracking } from '../hooks/useGPSTracking'
+import { withTimeout } from '../utils/withTimeout'
 
 function StaffJobDetail() {
   const { id } = useParams<{ id: string }>()
@@ -212,8 +213,10 @@ function StaffJobDetail() {
     setIsProcessing(true)
     setActionError(null)
     try {
-      await acceptJob(job.id)
-      await refetch()
+      // [FIX] time-boxed: a stalled mutation used to leave the button disabled+spinning
+      // forever, trapping the staff mid-job-lifecycle
+      await withTimeout(acceptJob(job.id), 15000, 'acceptJob')
+      await withTimeout(refetch(), 10000, 'refetch after accept')
       if (isSoundEnabled()) NotificationSounds.jobAccepted()
       // Notify hotel if this is a hotel booking (non-blocking)
       try {
@@ -226,6 +229,8 @@ function StaffJobDetail() {
       } catch {}
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถรับงานได้')
+      // A timed-out mutation may still have succeeded server-side — re-sync silently
+      refetch().catch(() => {})
     } finally {
       setIsProcessing(false)
     }
@@ -236,14 +241,15 @@ function StaffJobDetail() {
     setIsProcessing(true)
     setActionError(null)
     try {
-      await startJob(job.id)
-      await refetch()
+      await withTimeout(startJob(job.id), 15000, 'startJob')
+      await withTimeout(refetch(), 10000, 'refetch after start')
       if (isSoundEnabled()) NotificationSounds.jobStarted()
       // Fresh start clears any prior manual mute, then plays the service music.
       setMusicManuallyMuted(false)
       await playBackgroundMusic()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเริ่มงานได้')
+      refetch().catch(() => {})
     } finally {
       setIsProcessing(false)
     }
@@ -254,12 +260,13 @@ function StaffJobDetail() {
     setIsProcessing(true)
     setActionError(null)
     try {
-      await completeJob(job.id)
-      await refetch()
+      await withTimeout(completeJob(job.id), 15000, 'completeJob')
+      await withTimeout(refetch(), 10000, 'refetch after complete')
       stopBackgroundMusic()
       if (isSoundEnabled()) NotificationSounds.jobCompleted()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเสร็จสิ้นงานได้')
+      refetch().catch(() => {})
     } finally {
       setIsProcessing(false)
     }

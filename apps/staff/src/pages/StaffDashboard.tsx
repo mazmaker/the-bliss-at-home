@@ -12,6 +12,7 @@ import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic, setMusicManuallyMuted } from '../utils/backgroundMusic'
+import { withTimeout } from '../utils/withTimeout'
 
 function StaffDashboard() {
   const { user } = useAuth()
@@ -81,7 +82,8 @@ function StaffDashboard() {
     setIsProcessing(jobId)
     setActionError(null)
     try {
-      await acceptJob(jobId)
+      // [FIX] time-boxed: a stalled mutation used to leave the button disabled+spinning forever
+      await withTimeout(acceptJob(jobId), 15000, 'acceptJob (dashboard)')
       if (isSoundEnabled()) {
         NotificationSounds.jobAccepted()
       }
@@ -96,6 +98,10 @@ function StaffDashboard() {
       } catch {}
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถรับงานได้')
+      // NOTE: deliberately NOT calling refresh() here — it flips isLoading=true
+      // (full-screen spinner) and is itself un-time-boxed, so on a hung network it
+      // would wedge the dashboard and hide this error. The filtered realtime
+      // subscription re-syncs the true state instead.
     } finally {
       setIsProcessing(null)
     }
@@ -105,7 +111,7 @@ function StaffDashboard() {
     setIsProcessing(jobId)
     setActionError(null)
     try {
-      await startJob(jobId)
+      await withTimeout(startJob(jobId), 15000, 'startJob (dashboard)')
       if (isSoundEnabled()) {
         NotificationSounds.jobStarted()
       }
@@ -114,6 +120,7 @@ function StaffDashboard() {
       await playBackgroundMusic()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเริ่มงานได้')
+      // No refresh() here — see handleAcceptJob note (would wedge the dashboard on a hung network)
     } finally {
       setIsProcessing(null)
     }
@@ -124,7 +131,7 @@ function StaffDashboard() {
     setIsProcessing(currentJob.id)
     setActionError(null)
     try {
-      await completeJob(currentJob.id)
+      await withTimeout(completeJob(currentJob.id), 15000, 'completeJob (dashboard)')
       // Stop background music when job is completed
       stopBackgroundMusic()
       if (isSoundEnabled()) {
@@ -133,6 +140,7 @@ function StaffDashboard() {
       setCurrentJob(null)
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเสร็จสิ้นงานได้')
+      // No refresh() here — see handleAcceptJob note (would wedge the dashboard on a hung network)
     } finally {
       setIsProcessing(null)
     }
