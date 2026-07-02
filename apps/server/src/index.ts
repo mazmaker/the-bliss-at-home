@@ -209,11 +209,13 @@ async function sendTelegramAlert(text: string): Promise<boolean> {
     return false
   }
   try {
-    const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    // NOTE: typed explicitly — the express `Response` type imported at the top of this
+    // file shadows fetch's global Response type in Vercel's type-check environment
+    const resp = (await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
-    })
+    })) as unknown as { ok: boolean; text(): Promise<string> }
     if (!resp.ok) console.error('[HealthMonitor] Telegram send failed:', await resp.text())
     return resp.ok
   } catch (err) {
