@@ -54,7 +54,9 @@ interface CancellationPolicy {
 // API Functions
 // ============================================
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+// Normalize: prod sets VITE_API_URL WITH a trailing /api, but the fetch calls below already
+// append /api/... — strip a trailing /api so the URL isn't doubled to /api/api (→ 404 "Not Found").
+const API_BASE_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')).replace(/\/api\/?$/, '')
 
 async function getRefundPreview(bookingId: string): Promise<{
   success: boolean
