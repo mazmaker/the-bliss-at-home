@@ -187,6 +187,122 @@ app.post('/api/cron/daily-payout', async (req: Request, res: Response) => {
 // Migration routes (temporary for payout cycles)
 // app.use('/api/migrate', migratePayoutCyclesRoutes) // Temporarily disabled
 
+// ============ SYSTEM HEALTH MONITOR (Telegram alerts, Vercel cron every 5 min) ============
+// Reads DB metrics via get_system_health() rpc, compares against thresholds, and
+// pushes a Telegram message when something crosses (with a 30-min per-issue cooldown
+// stored in the settings table so a persistent problem doesn't spam). Sends a "back to
+// normal" message when an issue clears.
+const HEALTH_LIMITS = {
+  connCriticalPct: 80,   // of max_connections (60 on Micro) → ~48
+  connWarnPct: 67,       // early warning → ~40 (the old pre-fix peak zone)
+  realtimeSubsWarn: 400, // Pro plan realtime ceiling is 500
+  longRunningQueries: 1, // any query active > 30s is worth knowing about
+}
+const HEALTH_ALERT_COOLDOWN_MS = 30 * 60 * 1000
+const HEALTH_STATE_KEY = 'system_health_alert_state'
+
+async function sendTelegramAlert(text: string): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  const chatId = process.env.TELEGRAM_CHAT_ID
+  if (!token || !chatId) {
+    console.warn('[HealthMonitor] TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping send')
+    return false
+  }
+  try {
+    const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    })
+    if (!resp.ok) console.error('[HealthMonitor] Telegram send failed:', await resp.text())
+    return resp.ok
+  } catch (err) {
+    console.error('[HealthMonitor] Telegram send error:', err)
+    return false
+  }
+}
+
+const systemHealthHandler = async (_req: Request, res: Response) => {
+  try {
+    const { getSupabaseClient } = await import('./lib/supabase')
+    const supabase = getSupabaseClient()
+
+    const { data: health, error: healthError } = await supabase.rpc('get_system_health')
+    if (healthError || !health) {
+      // Can't even read health → that IS an incident. Alert directly (no cooldown state available).
+      await sendTelegramAlert(
+        `🔴 <b>[Bliss Monitor]</b> อ่านสถานะ database ไม่ได้!\n${healthError?.message || 'no data'}\n${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`
+      )
+      return res.status(500).json({ success: false, error: healthError?.message })
+    }
+
+    const connPct = Math.round((100 * health.connections_total) / health.connections_max)
+    const now = Date.now()
+
+    // Evaluate current issues
+    const issues: Record<string, string> = {}
+    if (connPct >= HEALTH_LIMITS.connCriticalPct) {
+      issues.conn_critical = `🔴 Connections วิกฤต: <b>${health.connections_total}/${health.connections_max}</b> (${connPct}%)`
+    } else if (connPct >= HEALTH_LIMITS.connWarnPct) {
+      issues.conn_warn = `🟡 Connections สูง: <b>${health.connections_total}/${health.connections_max}</b> (${connPct}%)`
+    }
+    if (health.realtime_subscriptions >= HEALTH_LIMITS.realtimeSubsWarn) {
+      issues.realtime = `🟡 Realtime subscriptions สูง: <b>${health.realtime_subscriptions}</b> (เพดาน 500)`
+    }
+    if (health.long_running_queries >= HEALTH_LIMITS.longRunningQueries) {
+      issues.long_query = `🟡 มี query ค้างนาน: <b>${health.long_running_queries}</b> ตัว (นานสุด ${health.oldest_active_query_seconds}s)`
+    }
+
+    // Load cooldown state from settings (key/value jsonb — reusing existing table; NOTE: prod has `settings`, not `app_settings`)
+    const { data: stateRow } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', HEALTH_STATE_KEY)
+      .maybeSingle()
+    const active: Record<string, number> = (stateRow?.value as any)?.active || {}
+
+    const toSend: string[] = []
+    const nextActive: Record<string, number> = {}
+
+    // New or still-firing issues (respect cooldown)
+    for (const [key, msg] of Object.entries(issues)) {
+      const lastSent = active[key] || 0
+      if (now - lastSent >= HEALTH_ALERT_COOLDOWN_MS) {
+        toSend.push(msg)
+        nextActive[key] = now
+      } else {
+        nextActive[key] = lastSent
+      }
+    }
+    // Resolved issues → recovery note
+    const resolved = Object.keys(active).filter((k) => !(k in issues))
+    if (resolved.length > 0 && Object.keys(issues).length === 0) {
+      toSend.push(`🟢 กลับสู่ปกติแล้ว — connections ${health.connections_total}/${health.connections_max} (${connPct}%)`)
+    }
+
+    if (toSend.length > 0) {
+      const ts = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', hour12: false })
+      await sendTelegramAlert(`<b>[Bliss Monitor ${ts}]</b>\n${toSend.join('\n')}`)
+    }
+
+    // Persist state (upsert on key)
+    await supabase
+      .from('settings')
+      .upsert(
+        { key: HEALTH_STATE_KEY, value: { active: nextActive }, description: 'System health monitor alert cooldown state (auto-managed)', updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+
+    return res.json({ success: true, health, issues: Object.keys(issues), alerted: toSend.length > 0 })
+  } catch (error) {
+    console.error('[HealthMonitor] Error:', error)
+    return res.status(500).json({ success: false, error: String(error) })
+  }
+}
+// Vercel cron sends GET; keep POST for manual triggering
+app.get('/api/cron/system-health', systemHealthHandler)
+app.post('/api/cron/system-health', systemHealthHandler)
+
 
 // Dev-only endpoint to trigger credit reminders manually
 if (process.env.NODE_ENV !== 'production') {
