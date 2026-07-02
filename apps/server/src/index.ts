@@ -305,6 +305,149 @@ const systemHealthHandler = async (_req: Request, res: Response) => {
 app.get('/api/cron/system-health', systemHealthHandler)
 app.post('/api/cron/system-health', systemHealthHandler)
 
+// ---------- shared summary builders (used by /status, /bookings, /staff, daily digest) ----------
+function bangkokToday(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }) // YYYY-MM-DD
+}
+function bangkokNow(): string {
+  return new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', hour12: false })
+}
+
+async function buildHealthText(): Promise<string> {
+  const { getSupabaseClient } = await import('./lib/supabase')
+  const { data: health, error } = await getSupabaseClient().rpc('get_system_health')
+  if (error || !health) return `🔴 อ่านสถานะระบบไม่ได้: ${error?.message || 'no data'}`
+  const connPct = Math.round((100 * health.connections_total) / health.connections_max)
+  const light = connPct >= 80 ? '🔴' : connPct >= 67 ? '🟡' : '🟢'
+  return (
+    `${light} DB connections: <b>${health.connections_total}/${health.connections_max}</b> (${connPct}%)\n` +
+    `📡 Realtime subscriptions: <b>${health.realtime_subscriptions}</b> (เพดาน 500)\n` +
+    `⏱ Query ค้าง >30วิ: <b>${health.long_running_queries}</b> ตัว` +
+    (health.long_running_queries > 0 ? ` (นานสุด ${health.oldest_active_query_seconds}s)` : '')
+  )
+}
+
+const JOB_STATUS_LABELS: Record<string, string> = {
+  pending: 'รอรับ', confirmed: 'ยืนยันแล้ว', assigned: 'มอบหมายแล้ว',
+  traveling: 'กำลังเดินทาง', arrived: 'ถึงแล้ว', in_progress: 'กำลังบริการ',
+  completed: 'เสร็จสิ้น', cancelled: 'ยกเลิก',
+}
+
+async function buildBookingsText(): Promise<string> {
+  const { getSupabaseClient } = await import('./lib/supabase')
+  const today = bangkokToday()
+  const { data: jobs, error } = await getSupabaseClient()
+    .from('jobs')
+    .select('status')
+    .eq('scheduled_date', today)
+  if (error) return `🔴 อ่านข้อมูลงานไม่ได้: ${error.message}`
+  if (!jobs || jobs.length === 0) return `วันนี้ (${today}) ยังไม่มีงานในระบบ`
+  const byStatus: Record<string, number> = {}
+  for (const j of jobs) byStatus[j.status] = (byStatus[j.status] || 0) + 1
+  const lines = Object.entries(byStatus)
+    .sort((a, b) => b[1] - a[1])
+    .map(([s, n]) => `• ${JOB_STATUS_LABELS[s] || s}: <b>${n}</b>`)
+  return `📋 งานวันนี้ (${today}) รวม <b>${jobs.length}</b> งาน\n${lines.join('\n')}`
+}
+
+async function buildStaffText(): Promise<string> {
+  const { getSupabaseClient } = await import('./lib/supabase')
+  const { data: jobs, error } = await getSupabaseClient()
+    .from('jobs')
+    .select('staff_id, status')
+    .in('status', ['traveling', 'arrived', 'in_progress'])
+    .eq('scheduled_date', bangkokToday())
+  if (error) return `🔴 อ่านข้อมูลพนักงานไม่ได้: ${error.message}`
+  const working = new Set((jobs || []).map((j) => j.staff_id).filter(Boolean))
+  const byStatus: Record<string, number> = {}
+  for (const j of jobs || []) byStatus[j.status] = (byStatus[j.status] || 0) + 1
+  return (
+    `👷 พนักงานกำลังปฏิบัติงาน: <b>${working.size}</b> คน\n` +
+    (jobs && jobs.length
+      ? Object.entries(byStatus).map(([s, n]) => `• ${JOB_STATUS_LABELS[s] || s}: <b>${n}</b> งาน`).join('\n')
+      : 'ไม่มีงาน active ตอนนี้')
+  )
+}
+
+// ============ TELEGRAM BOT WEBHOOK (/status /bookings /staff on demand) ============
+// Lets the owner ask the bot for live snapshots anytime. Secured by (1) Telegram's
+// secret_token header set via setWebhook and (2) responding only to TELEGRAM_CHAT_ID.
+app.post('/api/telegram/webhook', async (req: Request, res: Response) => {
+  // Always 200 quickly — Telegram retries non-200s aggressively
+  res.status(200).json({ ok: true })
+  try {
+    const secret = process.env.TELEGRAM_WEBHOOK_SECRET
+    if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+      console.warn('[TelegramBot] webhook secret mismatch — ignoring')
+      return
+    }
+    const msg = req.body?.message
+    const chatId = String(msg?.chat?.id || '')
+    const text: string = msg?.text || ''
+    if (!chatId || chatId !== String(process.env.TELEGRAM_CHAT_ID || '')) return
+
+    if (/^\/status/.test(text)) {
+      await sendTelegramAlert(
+        `<b>[Bliss Monitor ${bangkokNow()}]</b>\n${await buildHealthText()}\n\n📊 กราฟเต็ม: https://supabase.com/dashboard/project/rbdvlfriqjnwpxmmgisf/reports/database`
+      )
+    } else if (/^\/bookings/.test(text)) {
+      await sendTelegramAlert(`<b>[Bliss Monitor ${bangkokNow()}]</b>\n${await buildBookingsText()}`)
+    } else if (/^\/staff/.test(text)) {
+      await sendTelegramAlert(`<b>[Bliss Monitor ${bangkokNow()}]</b>\n${await buildStaffText()}`)
+    } else if (/^\/(start|help)/.test(text)) {
+      await sendTelegramAlert(
+        '<b>[Bliss Monitor]</b> คำสั่งที่ใช้ได้:\n' +
+        '/status — สถานะระบบสด (connections / realtime / query ค้าง)\n' +
+        '/bookings — สรุปงานวันนี้แยกตามสถานะ\n' +
+        '/staff — พนักงานที่กำลังปฏิบัติงานตอนนี้\n\n' +
+        'ระบบเฝ้าอัตโนมัติทุก 5 นาที + สรุปเช้า 08:00 ทุกวัน — มีเหตุจะแจ้งเอง'
+      )
+    }
+  } catch (err) {
+    console.error('[TelegramBot] webhook error:', err)
+  }
+})
+
+// ============ DAILY DIGEST (Vercel cron 08:00 Bangkok = 01:00 UTC) ============
+const dailyDigestHandler = async (_req: Request, res: Response) => {
+  try {
+    const [healthText, bookingsText, staffText] = await Promise.all([
+      buildHealthText(), buildBookingsText(), buildStaffText(),
+    ])
+    const sent = await sendTelegramAlert(
+      `☀️ <b>[Bliss สรุปเช้า ${bangkokNow()}]</b>\n\n${bookingsText}\n\n${staffText}\n\n<b>สุขภาพระบบ</b>\n${healthText}`
+    )
+    return res.json({ success: true, sent })
+  } catch (error) {
+    console.error('[DailyDigest] Error:', error)
+    return res.status(500).json({ success: false, error: String(error) })
+  }
+}
+app.get('/api/cron/daily-digest', dailyDigestHandler)
+app.post('/api/cron/daily-digest', dailyDigestHandler)
+
+// ============ LINE HEALTH CHECK (cron existed in vercel.json but the endpoint was
+// missing — every 30-min invocation 404'd. Minimal implementation: verify the LINE
+// channel token is configured and the LINE API accepts it.) ============
+const lineHealthHandler = async (_req: Request, res: Response) => {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
+  if (!token) return res.json({ success: false, configured: false, message: 'LINE_CHANNEL_ACCESS_TOKEN not set' })
+  try {
+    const resp = (await fetch('https://api.line.me/v2/bot/info', {
+      headers: { Authorization: `Bearer ${token}` },
+    })) as unknown as { ok: boolean; status: number }
+    if (!resp.ok) {
+      // Token rejected → LINE notifications are silently broken; tell the owner
+      await sendTelegramAlert(`🔴 <b>[Bliss Monitor]</b> LINE channel token ใช้ไม่ได้ (HTTP ${resp.status}) — แจ้งเตือน LINE ของระบบอาจไม่ถูกส่ง!`)
+    }
+    return res.json({ success: resp.ok, configured: true, status: resp.status })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: String(err) })
+  }
+}
+app.get('/api/cron/line-health-check', lineHealthHandler)
+app.post('/api/cron/line-health-check', lineHealthHandler)
+
 
 // Dev-only endpoint to trigger credit reminders manually
 if (process.env.NODE_ENV !== 'production') {
