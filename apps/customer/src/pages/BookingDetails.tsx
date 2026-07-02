@@ -33,6 +33,7 @@ function BookingDetails() {
 
   // Journey tracking state
   const [activeJourneyId, setActiveJourneyId] = useState<string | null>(null)
+  const [activeJourneyStatus, setActiveJourneyStatus] = useState<string | null>(null)
   const [isTrackingLoading, setIsTrackingLoading] = useState(false)
 
   // Extension payment polling (for banking redirect return)
@@ -213,15 +214,19 @@ function BookingDetails() {
         if (error) {
           console.log('❌ Journey query error:', error.message)
           setActiveJourneyId(null)
+          setActiveJourneyStatus(null)
         } else if (journeys && journeys.length > 0) {
           console.log('✅ Found active journey:', journeys[0])
           setActiveJourneyId(journeys[0].id)
+          setActiveJourneyStatus((journeys[0] as any).status ?? null)
         } else {
           console.log('⚠️ No active journeys found for this booking')
           setActiveJourneyId(null)
+          setActiveJourneyStatus(null)
         }
       } catch (err) {
         setActiveJourneyId(null)
+        setActiveJourneyStatus(null)
       } finally {
         setIsTrackingLoading(false)
       }
@@ -350,10 +355,11 @@ function BookingDetails() {
     )
   }
 
-  const getStatusColor = (status: string, hasActiveJourney: boolean = false) => {
-    // If there's an active journey, show traveling status
-    if (hasActiveJourney && status === 'confirmed') {
-      return 'bg-bliss-200 text-bliss-600'
+  const getStatusColor = (status: string, journeyStatus: string | null = null) => {
+    // If there's an active journey on a confirmed booking, reflect its live sub-state
+    // (arrived → purple; travelling → bliss). bookings.status itself stays 'confirmed'.
+    if (journeyStatus && status === 'confirmed') {
+      return journeyStatus === 'arrived' ? 'bg-purple-100 text-purple-700' : 'bg-bliss-200 text-bliss-600'
     }
 
     switch (status) {
@@ -376,10 +382,11 @@ function BookingDetails() {
     }
   }
 
-  const getStatusText = (status: string, hasActiveJourney: boolean = false) => {
-    // If there's an active journey, show traveling status
-    if (hasActiveJourney && status === 'confirmed') {
-      return t('common:status.traveling')
+  const getStatusText = (status: string, journeyStatus: string | null = null) => {
+    // If there's an active journey on a confirmed booking, show its live sub-state label
+    // (มาถึงแล้ว / กำลังเดินทาง). bookings.status itself stays 'confirmed'.
+    if (journeyStatus && status === 'confirmed') {
+      return journeyStatus === 'arrived' ? t('common:status.arrived') : t('common:status.traveling')
     }
 
     switch (status) {
@@ -429,6 +436,8 @@ function BookingDetails() {
         return t('booking:jobStatus.confirmed')
       case 'traveling':
         return t('booking:jobStatus.traveling')
+      case 'arrived':
+        return t('booking:jobStatus.arrived')
       case 'in_progress':
         return t('booking:jobStatus.inProgress')
       case 'completed':
@@ -658,8 +667,8 @@ function BookingDetails() {
               <p className="text-sm text-bliss-700 mb-1">{t('details.bookingNumber')}</p>
               <p className="font-bold text-bliss-900">{booking.id}</p>
             </div>
-            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status ?? '', !!activeJourneyId)}`}>
-              {getStatusText(booking.status ?? '', !!activeJourneyId)}
+            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(booking.status ?? '', activeJourneyId ? activeJourneyStatus : null)}`}>
+              {getStatusText(booking.status ?? '', activeJourneyId ? activeJourneyStatus : null)}
             </span>
           </div>
         </div>
@@ -851,6 +860,7 @@ function BookingDetails() {
               booking={booking}
               bookingData={bookingData}
               activeJourneyId={activeJourneyId}
+              activeJourneyStatus={activeJourneyStatus}
             />
 
             {/* Staff Assignment Info - Show when staff is assigned */}
@@ -914,6 +924,7 @@ function BookingDetails() {
                       {booking.provider.jobStatus === 'pending' && t('booking:jobStatus.description.pending')}
                       {booking.provider.jobStatus === 'confirmed' && t('booking:jobStatus.description.confirmed')}
                       {booking.provider.jobStatus === 'traveling' && t('booking:jobStatus.description.traveling')}
+                      {booking.provider.jobStatus === 'arrived' && t('booking:jobStatus.description.arrived')}
                       {booking.provider.jobStatus === 'in_progress' && t('booking:jobStatus.description.inProgress')}
                       {booking.provider.jobStatus === 'completed' && t('booking:jobStatus.description.completed')}
                     </p>

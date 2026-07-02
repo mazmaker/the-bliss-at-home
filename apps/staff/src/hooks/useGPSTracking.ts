@@ -226,7 +226,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         const { error: statusError } = await supabase
           .from('jobs')
           .update({ status: 'traveling' })
-          .eq('booking_id', bookingId)
+          .eq('id', bookingId) // bookingId is the JOB id (parents pass job.id) — target the job row, NOT jobs.booking_id
           .eq('staff_id', authUser?.id || '')
           .in('status', ['confirmed', 'assigned']) // don't clobber in_progress/completed/cancelled
         if (statusError) {
@@ -436,7 +436,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
           const { error: jobArriveError } = await supabase
             .from('jobs')
             .update({ status: 'arrived' })
-            .eq('booking_id', bookingId)
+            .eq('id', bookingId) // bookingId here = journeyData.booking_id = the JOB id — target the job row, NOT jobs.booking_id
             .eq('staff_id', authUser?.id || '')
             .in('status', ['confirmed', 'assigned', 'traveling']) // only advance a non-terminal own job
           if (jobArriveError) {

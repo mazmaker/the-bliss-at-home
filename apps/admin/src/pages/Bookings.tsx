@@ -165,6 +165,44 @@ function Bookings() {
     )
   }
 
+  // Staff job-progress badge (from jobs.status) — the staff's live progression:
+  // รอรับงาน → รับงานแล้ว → กำลังเดินทาง → ถึงแล้ว → เริ่มงาน → เสร็จสิ้น. This is a SEPARATE axis
+  // from the booking status badge above (which stays 'confirmed' while the staff travels/arrives).
+  const getJobProgressBadge = (status?: string) => {
+    const cfg: Record<string, { label: string; className: string }> = {
+      pending: { label: 'รอรับงาน', className: 'bg-yellow-100 text-yellow-700' },
+      confirmed: { label: 'รับงานแล้ว', className: 'bg-blue-100 text-blue-700' },
+      traveling: { label: 'กำลังเดินทาง', className: 'bg-bliss-100 text-bliss-700' },
+      arrived: { label: 'ถึงแล้ว', className: 'bg-purple-100 text-purple-700' },
+      in_progress: { label: 'เริ่มงาน', className: 'bg-indigo-100 text-indigo-700' },
+      completed: { label: 'เสร็จสิ้น', className: 'bg-green-100 text-green-700' },
+      cancelled: { label: 'ยกเลิก', className: 'bg-red-100 text-red-700' },
+    }
+    const c = status ? cfg[status] : undefined
+    if (!c) return null
+    return (
+      <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium ${c.className}`}>
+        {c.label}
+      </span>
+    )
+  }
+
+  // For a COUPLE booking (multiple jobs) the list shows the LEAST-advanced non-cancelled job
+  // status (the booking's overall staff progress); the detail modal shows each staff separately.
+  const JOB_PROGRESS_ORDER = ['pending', 'confirmed', 'traveling', 'arrived', 'in_progress', 'completed']
+  const overallJobStatus = (jobs?: Booking['jobs']): string | undefined => {
+    if (!jobs || jobs.length === 0) return undefined
+    const active = jobs.filter(j => j.status !== 'cancelled')
+    if (active.length === 0) return 'cancelled'
+    let best = active[0].status
+    let bestIdx = JOB_PROGRESS_ORDER.indexOf(best)
+    for (const j of active) {
+      const idx = JOB_PROGRESS_ORDER.indexOf(j.status)
+      if (idx >= 0 && (bestIdx < 0 || idx < bestIdx)) { best = j.status; bestIdx = idx }
+    }
+    return best
+  }
+
   const getPaymentBadge = (status: string, booking?: Booking) => {
     // Check if this is an admin booking (created by admin)
     const isAdminBooking = booking?.created_by_admin_id ||
@@ -380,6 +418,9 @@ function Bookings() {
                         `${booking.jobs.length} คน`
                       ) : (
                         booking.staff?.name_th || 'รอมอบหมาย'
+                      )}
+                      {overallJobStatus(booking.jobs) && (
+                        <div className="mt-0.5">{getJobProgressBadge(overallJobStatus(booking.jobs))}</div>
                       )}
                     </td>
                     <td className="py-2 px-2 text-xs text-bliss-600">
@@ -707,12 +748,20 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                             <span className="text-xs text-bliss-600 font-medium">คนที่ {job.job_index}</span>
                             <p className="font-medium text-bliss-900">{job.staff_name || 'รอมอบหมาย'}</p>
                           </div>
-                          <span className="text-xs text-bliss-500">{job.service_name}</span>
+                          <div className="text-right">
+                            {getJobProgressBadge(job.status)}
+                            <span className="block text-xs text-bliss-500 mt-1">{job.service_name}</span>
+                          </div>
                         </div>
                       ))}
                   </div>
                 ) : (
-                  <p className="font-medium text-bliss-900">{booking.staff?.name_th || 'รอมอบหมาย'}</p>
+                  <div>
+                    <p className="font-medium text-bliss-900">{booking.staff?.name_th || 'รอมอบหมาย'}</p>
+                    {booking.jobs?.[0]?.status && (
+                      <div className="mt-1">{getJobProgressBadge(booking.jobs[0].status)}</div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -1061,6 +1110,15 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                 {isChangingStatus ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
               </button>
             </div>
+            {selectedStatus === booking.status && (
+              <p className="text-xs text-bliss-500 mt-2">
+                {booking.status === 'cancelled'
+                  ? 'การจองนี้ถูกยกเลิกแล้ว จึงเปลี่ยนสถานะไม่ได้'
+                  : booking.status === 'completed'
+                  ? 'การจองนี้เสร็จสิ้นแล้ว จึงเปลี่ยนสถานะไม่ได้'
+                  : 'เลือกสถานะใหม่ในช่องด้านซ้ายก่อน ปุ่ม "บันทึกการเปลี่ยนแปลง" จึงจะกดได้ (หากต้องการยกเลิกการจอง ให้เลือก "ยกเลิก")'}
+              </p>
+            )}
           </div>
         </div>
 

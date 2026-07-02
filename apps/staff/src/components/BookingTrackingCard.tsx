@@ -98,6 +98,8 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
         return 'bg-bliss-100 text-bliss-700'
       case 'traveling':
         return 'bg-green-100 text-green-700'
+      case 'arrived':
+        return 'bg-purple-100 text-purple-700'
       case 'in_progress':
         return 'bg-yellow-100 text-yellow-700'
       default:
@@ -112,6 +114,8 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
         return 'พร้อมเริ่มงาน'
       case 'traveling':
         return 'กำลังเดินทาง'
+      case 'arrived':
+        return 'มาถึงแล้ว'
       case 'in_progress':
         return 'กำลังดำเนินการ'
       default:

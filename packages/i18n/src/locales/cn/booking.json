@@ -373,6 +373,7 @@
     "pending": "等待技师确认",
     "confirmed": "技师已确认",
     "traveling": "在路上",
+    "arrived": "已到达",
     "inProgress": "服务中",
     "completed": "已完成",
     "cancelled": "已取消",
@@ -380,6 +381,7 @@
       "pending": "🔄 等待服务技师确认",
       "confirmed": "工作人员已接单，正在准备出发。",
       "traveling": "🚗 技师正在前往您的位置",
+      "arrived": "📍 技师已到达您的位置",
       "inProgress": "💆‍♀️ 服务技师正在提供服务",
       "completed": "🎉 服务已完成"
     }

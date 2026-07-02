@@ -6,6 +6,7 @@ import { useJobs, useStaffStats, useStaffEligibility, type Job, type JobStatus, 
 import { SOSButton, ServiceTimer, ExtensionAcceptanceCard, JobStatusBadge } from '../components'
 import JobGPSControls from '../components/JobGPSControls'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
+import { useCompleteGate } from '../hooks/useCompleteGate'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -42,6 +43,13 @@ function StaffDashboard() {
     const inProgressJob = jobs.find(j => j.status === 'in_progress' || j.status === 'traveling' || j.status === 'arrived')
     setCurrentJob(inProgressJob || null)
   }, [jobs])
+
+  // Gate the "เสร็จสิ้นงาน" button: only within the last 10 min of service (overtime allowed).
+  // Extension-aware via total_duration_minutes; disabled until the service actually starts.
+  const completeGate = useCompleteGate(
+    currentJob,
+    currentJob?.total_duration_minutes || currentJob?.duration_minutes
+  )
 
   // Handle extend session notifications
   useEffect(() => {
@@ -340,11 +348,11 @@ function StaffDashboard() {
             />
           </div>
 
-          <div className="flex gap-2 p-4 pt-0">
+          <div className="flex flex-col gap-2 p-4 pt-0">
             <button
               onClick={handleCompleteJob}
-              disabled={isProcessing === currentJob.id}
-              className="flex-1 py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={isProcessing === currentJob.id || !completeGate.canComplete}
+              className="w-full py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isProcessing === currentJob.id ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -353,6 +361,13 @@ function StaffDashboard() {
               )}
               เสร็จสิ้นงาน
             </button>
+            {!completeGate.canComplete && (
+              <p className="text-xs text-center text-bliss-500">
+                {!completeGate.inProgress || !completeGate.hasStarted
+                  ? 'เริ่มงานก่อนจึงจะกดเสร็จสิ้นได้'
+                  : `กดเสร็จสิ้นได้เมื่อใกล้ครบเวลาบริการ (อีก ${completeGate.minsUntilEligible} นาที)`}
+              </p>
+            )}
           </div>
         </div>
       )}

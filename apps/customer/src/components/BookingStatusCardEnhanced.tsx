@@ -32,9 +32,10 @@ interface BookingStatusCardEnhancedProps {
   bookingData?: any
   onRefresh?: () => void
   activeJourneyId?: string | null
+  activeJourneyStatus?: string | null
 }
 
-const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJourneyId }: BookingStatusCardEnhancedProps) => {
+const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJourneyId, activeJourneyStatus }: BookingStatusCardEnhancedProps) => {
   const { t } = useTranslation()
   const [currentTime, setCurrentTime] = useState(new Date())
 
@@ -53,9 +54,11 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
   // Use status_v2 if available, fallback to legacy status
   let currentStatus = booking.status_v2 || booking.status?.toUpperCase() || 'PENDING'
 
-  // ✅ Override status when there's an active GPS journey
+  // ✅ Override status when there's an active GPS journey.
+  // The journey enum (staff_journeys.status / jobs.status) is the live source of the
+  // travel/arrival sub-state: 'arrived' → STAFF_ARRIVED (มาถึงแล้ว), otherwise en-route.
   if (activeJourneyId && (currentStatus.toUpperCase() === 'CONFIRMED' || currentStatus.toUpperCase() === 'ASSIGNED')) {
-    currentStatus = 'STAFF_EN_ROUTE'
+    currentStatus = activeJourneyStatus === 'arrived' ? 'STAFF_ARRIVED' : 'STAFF_EN_ROUTE'
   }
 
   const getStatusConfig = (status: BookingStatus) => {
@@ -363,8 +366,8 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
 }
 
 // Helper function to add to BookingDetails.tsx imports
-const BookingStatusCardEnhancedWrapper = ({ booking, bookingData, onRefresh, activeJourneyId }: BookingStatusCardEnhancedProps) => {
-  return <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} onRefresh={onRefresh} activeJourneyId={activeJourneyId} />
+const BookingStatusCardEnhancedWrapper = ({ booking, bookingData, onRefresh, activeJourneyId, activeJourneyStatus }: BookingStatusCardEnhancedProps) => {
+  return <BookingStatusCardEnhanced booking={booking} bookingData={bookingData} onRefresh={onRefresh} activeJourneyId={activeJourneyId} activeJourneyStatus={activeJourneyStatus} />
 }
 
 export default BookingStatusCardEnhancedWrapper

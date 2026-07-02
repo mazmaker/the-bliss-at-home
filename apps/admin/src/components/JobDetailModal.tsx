@@ -12,6 +12,8 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
     const badges: Record<string, { bg: string; text: string; label: string; icon: any }> = {
       pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'รอยืนยัน', icon: Clock },
       confirmed: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'ยืนยันแล้ว', icon: CheckCircle },
+      traveling: { bg: 'bg-bliss-100', text: 'text-bliss-700', label: 'กำลังเดินทาง', icon: Clock },
+      arrived: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'มาถึงแล้ว', icon: MapPin },
       in_progress: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'กำลังดำเนินการ', icon: Clock },
       completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'เสร็จสิ้น', icon: CheckCircle },
       cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'ยกเลิก', icon: XCircle },

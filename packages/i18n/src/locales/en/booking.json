@@ -373,6 +373,7 @@
     "pending": "Waiting staff confirmation",
     "confirmed": "Staff Confirmed",
     "traveling": "En Route",
+    "arrived": "Arrived",
     "inProgress": "In service",
     "completed": "Completed",
     "cancelled": "Cancelled",
@@ -380,6 +381,7 @@
       "pending": "🔄 Waiting for staff confirmation",
       "confirmed": "The staff has accepted the job and is preparing to depart.",
       "traveling": "🚗 Staff is on the way to your location",
+      "arrived": "📍 Staff has arrived at your location",
       "inProgress": "💆‍♀️ Staff is providing service",
       "completed": "🎉 Service completed"
     }

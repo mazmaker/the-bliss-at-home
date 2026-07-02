@@ -122,6 +122,13 @@ export default function JobGPSControls({
           // 🎯 CRITICAL FIX: Update React state when existing journey is found in useEffect
           console.log('GPS tracking resumed for existing journey - updating React state')
 
+          // Recover the "arrived" step on reload from the JOURNEY (the GPS source of truth): an
+          // existing journey already at 'arrived' means the staff pressed มาถึงแล้ว → show "เริ่มงาน"
+          // (not "เริ่มเดินทาง"), even if the jobs.status write lagged/failed. Unblocks the loop.
+          if ((existingJourney as any).status === 'arrived') {
+            setHasArrived(true)
+          }
+
           // Force state update - this might be after GPS start completed
           if (!isTracking || !journeyId) {
             console.log('🔄 GPS state needs update:', { isTracking, journeyId, existingJourneyId: existingJourney.id })
@@ -331,9 +338,13 @@ export default function JobGPSControls({
 
   const isTrackingThis = isTracking && journeyId
   const canStartGPS = job.status === 'confirmed' || job.status === 'assigned'
-  const shouldShowTracking = job.status === 'traveling' || isTrackingThis
   const jobHasArrived = job.status === 'arrived'
   const jobInProgress = job.status === 'in_progress'
+  // Once arrival is reached — local `hasArrived` OR persisted jobs.status==='arrived' — stop showing
+  // the GPS/"มาถึงแล้ว" panel and fall through to the "เริ่มงาน" button, even if the local job.status
+  // prop is a stale 'traveling' (before realtime/refetch) or the jobs.status write lagged. Prevents
+  // the "arrived → no เริ่มงาน → กลับไปเริ่มเดินทางใหม่" loop.
+  const shouldShowTracking = (job.status === 'traveling' || isTrackingThis) && !hasArrived && !jobHasArrived
 
   // ✅ DEBUG: เช็คสถานะปุ่มที่แสดง
   console.log('🎯 GPS Button Logic Debug:', {

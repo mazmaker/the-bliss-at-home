@@ -12,6 +12,7 @@ import { ServiceTimer, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocati
 import JobGPSControls from '../components/JobGPSControls'
 import JobStatusBadge from '../components/JobStatusBadge'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
+import { useCompleteGate } from '../hooks/useCompleteGate'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
@@ -146,6 +147,10 @@ function StaffJobDetail() {
   // Use job's staff earnings (fixed amount) for original price
   const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
+
+  // Gate the "เสร็จสิ้นงาน" button: only within the last 10 min of service (overtime allowed).
+  // totalDuration already includes extension services; started_at gates before service start.
+  const completeGate = useCompleteGate(job, totalDuration)
 
   // Get earnings config from service query
   const svcData = serviceData as any
@@ -615,14 +620,21 @@ function StaffJobDetail() {
           )}
 
           {isInProgress && (
-            <button
-              onClick={handleComplete}
-              disabled={isProcessing}
-              className="w-full py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-              เสร็จสิ้นงาน
-            </button>
+            <div className="w-full">
+              <button
+                onClick={handleComplete}
+                disabled={isProcessing || !completeGate.canComplete}
+                className="w-full py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                เสร็จสิ้นงาน
+              </button>
+              {!completeGate.canComplete && (
+                <p className="text-xs text-center text-bliss-500 mt-2">
+                  กดเสร็จสิ้นได้เมื่อใกล้ครบเวลาบริการ (อีก {completeGate.minsUntilEligible} นาที)
+                </p>
+              )}
+            </div>
           )}
 
           {isMyJob && !isPending && (
