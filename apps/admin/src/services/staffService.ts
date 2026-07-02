@@ -367,7 +367,8 @@ export const staffService = {
         name_th: staffData.name_th,
         name_en: staffData.name_en,
         phone: staffData.phone,
-        id_card: staffData.id_card,
+        // Blank id_card must be NULL, not '' — see updateStaff note (staff_id_card_key UNIQUE).
+        id_card: staffData.id_card?.trim() || null,
         address: staffData.address,
         gender: staffData.gender || null,
         bio_th: staffData.bio_th,
@@ -444,11 +445,18 @@ export const staffService = {
     // Extract skills from updates (skills should be handled separately)
     const { skills, ...staffUpdates } = updates
 
+    // id_card has a UNIQUE constraint (staff_id_card_key): Postgres allows many NULLs but
+    // only a single ''. The edit form sends '' for staff without an ID card, so a blank
+    // collides once any staff already holds ''. Coerce blank → null to allow saving.
+    const staffUpdatesNormalized = 'id_card' in staffUpdates
+      ? { ...staffUpdates, id_card: staffUpdates.id_card?.trim() || null }
+      : staffUpdates
+
     // Update basic staff information (excluding skills)
     const { data, error } = await supabase
       .from('staff')
       .update({
-        ...staffUpdates,
+        ...staffUpdatesNormalized,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
