@@ -24,7 +24,7 @@ interface WorkflowResponse {
 
 export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
   const {
-    updateInterval = 5 * 60 * 1000, // 5 minutes (ประหยัดเครดิต)
+    updateInterval = 20000, // C1: min gap between DB location writes (20s). Was 5min but unused — writes fired on every GPS fix.
     highAccuracy = true,
     timeout = 15000,
     maximumAge = 60000 // Allow 1 minute old location
@@ -38,6 +38,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
   const watchIdRef = useRef<number | null>(null)
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null)
+  const lastWriteRef = useRef(0) // C1: timestamp of last DB location write (throttle)
 
   // Check if geolocation is supported
   const isSupported = 'geolocation' in navigator
@@ -94,9 +95,14 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     setCurrentPosition(gpsPosition)
     setError(null)
 
-    // Update location in database if journey is active
+    // Update location in database if journey is active.
+    // C1: throttle DB writes to `updateInterval` — previously this wrote on EVERY GPS fix
+    // (every few seconds), which under many concurrent staff saturated DB/Realtime. The local
+    // UI position above still updates on every fix; only the persisted write is throttled.
     const currentJourneyId = journeyId || localStorage.getItem('current_journey_id')
-    if (currentJourneyId) {
+    const now = Date.now()
+    if (currentJourneyId && now - lastWriteRef.current >= updateInterval) {
+      lastWriteRef.current = now
       try {
         const { error: updateError } = await supabase.rpc('update_journey_location', {
           p_journey_id: currentJourneyId,
@@ -129,7 +135,7 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
         setError('Location update failed')
       }
     }
-  }, [journeyId])
+  }, [journeyId, updateInterval])
 
   const handleError = useCallback((error: GeolocationPositionError) => {
     console.error('GPS Error:', error)

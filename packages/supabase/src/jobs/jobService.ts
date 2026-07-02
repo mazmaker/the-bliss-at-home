@@ -181,7 +181,10 @@ export async function getPendingJobs(staffGender?: string | null): Promise<Job[]
 
 // Get a single job by ID with hotel information
 export async function getJob(jobId: string): Promise<Job | null> {
-  const { data, error } = await supabase
+  // C3: cap the query so the job-detail page never spins forever when the DB is
+  // contended (e.g. peak load). On timeout this throws → the page shows its error
+  // state (retry) instead of an infinite spinner.
+  const query = supabase
     .from('jobs')
     .select(`
       *,
@@ -203,6 +206,13 @@ export async function getJob(jobId: string): Promise<Job | null> {
     `)
     .eq('id', jobId)
     .single()
+
+  const { data, error } = await Promise.race([
+    query,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('หมดเวลาโหลดข้อมูลงาน กรุณาลองใหม่')), 8000)
+    ),
+  ])
 
   if (error) {
     if (error.code === 'PGRST116') {

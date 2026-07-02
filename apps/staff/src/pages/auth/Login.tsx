@@ -42,6 +42,16 @@ function clearSkipAutoLogin() {
   localStorage.removeItem('staff_skip_auto_login_until')
 }
 
+// D1: reject if login doesn't settle within `ms`. Supabase Auth (GoTrue) can be
+// slow/rate-limited under concurrent login bursts; without this the button spins
+// forever. On timeout the caller's catch shows the manual login button / error.
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+  ])
+}
+
 // Validate that a saved redirect path is a valid deep link (not login page, not external URL)
 function isValidDeepLink(path: string | null): path is string {
   if (!path) return false
@@ -291,11 +301,15 @@ export function StaffLoginPage() {
       const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
 
       console.log('[Auto-login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
-      const result = await authService.loginWithLine({
-        lineUserId: profile.userId,
-        displayName: profile.displayName,
-        pictureUrl: profile.pictureUrl,
-      }, 'STAFF', inviteStaffId)
+      const result = await withTimeout(
+        authService.loginWithLine({
+          lineUserId: profile.userId,
+          displayName: profile.displayName,
+          pictureUrl: profile.pictureUrl,
+        }, 'STAFF', inviteStaffId),
+        15000,
+        'เชื่อมต่อช้า กรุณาลองใหม่อีกครั้ง'
+      )
       console.log('[Auto-login] Login successful:', result)
 
       // Clean up invite data from localStorage
@@ -353,11 +367,15 @@ export function StaffLoginPage() {
         const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
 
         console.log('[LINE Login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
-        const result = await authService.loginWithLine({
-          lineUserId: profile.userId,
-          displayName: profile.displayName,
-          pictureUrl: profile.pictureUrl,
-        }, 'STAFF', inviteStaffId)
+        const result = await withTimeout(
+          authService.loginWithLine({
+            lineUserId: profile.userId,
+            displayName: profile.displayName,
+            pictureUrl: profile.pictureUrl,
+          }, 'STAFF', inviteStaffId),
+          15000,
+          'เชื่อมต่อช้า กรุณาลองใหม่อีกครั้ง'
+        )
         console.log('[LINE Login] Login successful:', result)
 
         // Clean up invite data from localStorage
