@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Check, User, Calendar, Users, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { createCustomerAddress } from '../../lib/customerQueries'
 
 interface BookingData {
   customer?: any
@@ -224,6 +225,43 @@ export default function BookingConfirmation({
       } catch (dispatchError) {
         // Non-blocking: a dispatch failure must not break the booking creation result.
         console.error('⚠️ Failed to dispatch quick booking to staff:', dispatchError)
+      }
+
+      // Save the admin-typed address as the customer's DEFAULT — ONLY for a home booking whose
+      // address was TYPED (not picked from a saved card) AND when the customer has ZERO saved
+      // addresses yet, so a returning customer's real default is never demoted. Non-blocking:
+      // a save failure must not break the booking result (mirrors the dispatch block). (PART42 #2)
+      try {
+        const ad = bookingData.addressDetails
+        if (
+          !bookingData.isHotelBooking &&
+          ad &&
+          !ad.isFromSavedAddress &&
+          ad.address && ad.contactName && ad.contactPhone && ad.province && ad.postalCode
+        ) {
+          const { count } = await supabase
+            .from('addresses')
+            .select('id', { count: 'exact', head: true })
+            .eq('customer_id', bookingData.customer.id)
+          if ((count ?? 0) === 0) {
+            await createCustomerAddress(bookingData.customer.id, {
+              label: 'Home',
+              recipient_name: ad.contactName,
+              phone: ad.contactPhone,
+              address_line: ad.address,
+              subdistrict: ad.subdistrict || null,
+              district: ad.district || null,
+              province: ad.province,
+              zipcode: ad.postalCode,
+              latitude: ad.mapLocation?.lat ?? null,
+              longitude: ad.mapLocation?.lng ?? null,
+              is_default: true,
+            })
+            console.log('📍 Saved admin-entered address as the customer default')
+          }
+        }
+      } catch (addrErr) {
+        console.error('⚠️ Failed to save customer default address (non-blocking):', addrErr)
       }
 
       setCreatedBooking({

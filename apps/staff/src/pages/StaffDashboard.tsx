@@ -7,9 +7,11 @@ import { SOSButton, ServiceTimer, ExtensionAcceptanceCard, JobStatusBadge } from
 import JobGPSControls from '../components/JobGPSControls'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
+import { useStartGate } from '../hooks/useStartGate'
+import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
-import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
+import { playBackgroundMusic, stopBackgroundMusic, setMusicManuallyMuted } from '../utils/backgroundMusic'
 
 function StaffDashboard() {
   const { user } = useAuth()
@@ -50,6 +52,14 @@ function StaffDashboard() {
     currentJob,
     currentJob?.total_duration_minutes || currentJob?.duration_minutes
   )
+
+  // Gate the "เริ่มงาน" button: only startable once the scheduled service time has arrived
+  // (no early start). ANDed with the KYC eligibility gate below; fail-open if the schedule is odd.
+  const startGate = useStartGate(currentJob)
+
+  // Resume the spa music after a refresh/navigation onto an in-progress job (audio-only, never
+  // rewrites started_at). See #6.
+  useResumeBackgroundMusic(currentJob)
 
   // Handle extend session notifications
   useEffect(() => {
@@ -99,7 +109,8 @@ function StaffDashboard() {
       if (isSoundEnabled()) {
         NotificationSounds.jobStarted()
       }
-      // Start background music for relaxing atmosphere during service
+      // Fresh start clears any prior manual mute, then plays the relaxing service music.
+      setMusicManuallyMuted(false)
       await playBackgroundMusic()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเริ่มงานได้')
@@ -344,8 +355,13 @@ function StaffDashboard() {
               onStartJob={handleStartJob}
               compact={false}
               isProcessing={isProcessing === currentJob.id}
-              canStartWork={!!eligibility?.canWork}
+              canStartWork={!!eligibility?.canWork && startGate.canStart}
             />
+            {currentJob.status === 'arrived' && !startGate.canStart && (
+              <p className="mt-2 text-xs text-center text-bliss-500">
+                เริ่มงานได้เมื่อถึงเวลานัด {currentJob.scheduled_time?.slice(0, 5)} น. (อีก {startGate.minsUntilStart} นาที)
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 p-4 pt-0">
@@ -372,88 +388,10 @@ function StaffDashboard() {
         </div>
       )}
 
-      {/* My Upcoming Jobs */}
-      {myJobs.length > 0 && !currentJob && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-bliss-900">งานของฉัน</h3>
-            <Link
-              to="/staff/tracking"
-              className="text-green-600 hover:text-green-700 text-sm flex items-center gap-1"
-            >
-              <Navigation className="w-4 h-4" />
-              ดู GPS แยก
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {myJobs.map((job) => (
-              <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-bliss-100">
-                <Link to={`/staff/jobs/${job.id}`} className="block mb-3">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-semibold text-bliss-900">{job.service_name}</h4>
-                      <p className="text-sm text-bliss-500">
-                        {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
-                      </p>
-                    </div>
-                    <SmartJobStatusBadge job={job} />
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-bliss-600">
-                      <User className="w-4 h-4" />
-                      <span>{job.customer_name}</span>
-                    </div>
-                    {job.hotel_name ? (
-                      <div className="flex items-center gap-2 text-bliss-600">
-                        <MapPin className="w-4 h-4" />
-                        <span>{job.hotel_name} {job.room_number ? `ห้อง ${job.room_number}` : ''}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-2 text-bliss-600">
-                        <MapPin className="w-4 h-4 mt-0.5" />
-                        <span className="flex-1">{job.address}</span>
-                      </div>
-                    )}
-                    {job.distance_km && (
-                      <div className="flex items-center gap-2 text-bliss-600">
-                        <Navigation className="w-4 h-4" />
-                        <span>{job.distance_km} กม.</span>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-
-                {/* GPS Tracking Controls */}
-                <JobGPSControls
-                  job={{
-                    id: job.id,
-                    status: job.status,
-                    customer_name: job.customer_name,
-                    customer_address: job.address,
-                    customer_phone: job.customer_phone,
-                    booking_id: job.id
-                  }}
-                  onRefresh={refresh}
-                  onStartJob={handleStartJob}
-                  compact={false}
-                  isProcessing={isProcessing === job.id}
-                  canStartWork={!!eligibility?.canWork}
-                />
-
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-bliss-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Available Jobs (pending) */}
+      {/* Available Jobs (pending) — NEW / not yet accepted, shown FIRST so งานใหม่ ไม่ปนกับงานที่รับแล้ว */}
       {pendingJobs.length > 0 && (
         <div>
-          <h3 className="font-semibold text-bliss-900 mb-3">งานที่รอมอบหมาย</h3>
+          <h3 className="font-semibold text-bliss-900 mb-3">งานใหม่ที่รอรับ</h3>
           <div className="space-y-3">
             {pendingJobs.map((job) => (
               <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-bliss-100">
@@ -527,6 +465,84 @@ function StaffDashboard() {
                       รับงาน
                     </button>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* My Upcoming Jobs — ACCEPTED (รับแล้ว), shown BELOW the new/pending section */}
+      {myJobs.length > 0 && !currentJob && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-bliss-900">งานที่รับแล้ว</h3>
+            <Link
+              to="/staff/tracking"
+              className="text-green-600 hover:text-green-700 text-sm flex items-center gap-1"
+            >
+              <Navigation className="w-4 h-4" />
+              ดู GPS แยก
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {myJobs.map((job) => (
+              <div key={job.id} className="bg-white rounded-xl shadow p-4 border border-bliss-100">
+                <Link to={`/staff/jobs/${job.id}`} className="block mb-3">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-semibold text-bliss-900">{job.service_name}</h4>
+                      <p className="text-sm text-bliss-500">
+                        {job.scheduled_time} • {job.total_duration_minutes || job.duration_minutes} นาที
+                      </p>
+                    </div>
+                    <SmartJobStatusBadge job={job} />
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-bliss-600">
+                      <User className="w-4 h-4" />
+                      <span>{job.customer_name}</span>
+                    </div>
+                    {job.hotel_name ? (
+                      <div className="flex items-center gap-2 text-bliss-600">
+                        <MapPin className="w-4 h-4" />
+                        <span>{job.hotel_name} {job.room_number ? `ห้อง ${job.room_number}` : ''}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-2 text-bliss-600">
+                        <MapPin className="w-4 h-4 mt-0.5" />
+                        <span className="flex-1">{job.address}</span>
+                      </div>
+                    )}
+                    {job.distance_km && (
+                      <div className="flex items-center gap-2 text-bliss-600">
+                        <Navigation className="w-4 h-4" />
+                        <span>{job.distance_km} กม.</span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+
+                {/* GPS Tracking Controls */}
+                <JobGPSControls
+                  job={{
+                    id: job.id,
+                    status: job.status,
+                    customer_name: job.customer_name,
+                    customer_address: job.address,
+                    customer_phone: job.customer_phone,
+                    booking_id: job.id
+                  }}
+                  onRefresh={refresh}
+                  onStartJob={handleStartJob}
+                  compact={false}
+                  isProcessing={isProcessing === job.id}
+                  canStartWork={!!eligibility?.canWork}
+                />
+
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-bold text-bliss-700">฿{job.total_staff_earnings || job.staff_earnings}</p>
                 </div>
               </div>
             ))}

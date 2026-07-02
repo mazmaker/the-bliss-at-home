@@ -7,6 +7,10 @@ export function useBookings(filters?: BookingFilters) {
     queryKey: ['bookings', filters],
     queryFn: () => bookingService.getAllBookings(filters),
     placeholderData: keepPreviousData,
+    // Live-refresh for emergency oversight (#4): the list must reflect a staff's
+    // traveling/arrived transition and the "ใกล้เวลา · ยังไม่เดินทาง" at-risk flag without a
+    // manual reload. 30s is a light poll on top of keepPreviousData (no flicker).
+    refetchInterval: 30_000,
   })
 }
 

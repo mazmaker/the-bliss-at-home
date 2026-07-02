@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, MapPin, AlertTriangle, CheckCircle, Loader2, Play, Phone, Car, Share2, Copy } from 'lucide-react'
+import { Navigation, MapPin, AlertTriangle, CheckCircle, Loader2, Play, Phone, Car, Share2, Copy, Music, VolumeX } from 'lucide-react'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
+import { playBackgroundMusic, stopBackgroundMusic, isBackgroundMusicPlaying, setMusicManuallyMuted } from '../utils/backgroundMusic'
 
 interface JobGPSControlsProps {
   job: {
@@ -32,6 +33,36 @@ export default function JobGPSControls({
   const [staffId, setStaffId] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [hasArrived, setHasArrived] = useState(false) // ติดตามสถานะการมาถึง
+  // Reactive mirror of the (module-level) background-music state so the toggle label re-renders.
+  const [musicOn, setMusicOn] = useState(() => isBackgroundMusicPlaying())
+  useEffect(() => {
+    // Keep the label in sync when the mount-time auto-resume (or another card) starts/stops music.
+    const t = setInterval(() => setMusicOn(isBackgroundMusicPlaying()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  // Music-only toggle: NEVER calls startJob/updateJobStatus, so jobs.started_at (ServiceTimer /
+  // complete-gate basis) is untouched. Resumes/stops the spa track and remembers a manual mute.
+  const toggleMusic = () => {
+    if (isBackgroundMusicPlaying()) {
+      stopBackgroundMusic()
+      setMusicManuallyMuted(true)
+      setMusicOn(false)
+    } else {
+      setMusicManuallyMuted(false)
+      void playBackgroundMusic().then(() => setMusicOn(isBackgroundMusicPlaying()))
+      setMusicOn(true)
+    }
+  }
+  const musicToggleButton = (
+    <button
+      type="button"
+      onClick={toggleMusic}
+      className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs text-bliss-600 bg-bliss-50 hover:bg-bliss-100 rounded-lg py-2"
+    >
+      {musicOn ? <VolumeX className="w-4 h-4" /> : <Music className="w-4 h-4" />}
+      {musicOn ? 'ปิดเพลง' : 'เปิดเพลง'}
+    </button>
+  )
   const [isStoppingGPS, setIsStoppingGPS] = useState(false) // ป้องกัน double-click
   const journeyCheckedRef = useRef<Set<string>>(new Set()) // Track which jobs we've checked
   const syncedJobsRef = useRef<Set<string>>(new Set()) // Track which jobs we've already synced
@@ -397,9 +428,12 @@ export default function JobGPSControls({
 
     if (jobInProgress) {
       return (
-        <div className="text-green-700 text-sm flex items-center gap-1">
-          <CheckCircle className="w-4 h-4" />
-          งานกำลังดำเนินการ
+        <div>
+          <div className="text-green-700 text-sm flex items-center gap-1">
+            <CheckCircle className="w-4 h-4" />
+            งานกำลังดำเนินการ
+          </div>
+          {musicToggleButton}
         </div>
       )
     }
@@ -521,10 +555,13 @@ export default function JobGPSControls({
           เริ่มเดินทาง (ติดตาม GPS)
         </button>
       ) : jobInProgress ? (
-        // Job in progress - show status instead of button
-        <div className="w-full bg-green-50 border border-green-200 py-3 rounded-lg flex items-center justify-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-600" />
-          <span className="text-green-700 font-medium">งานกำลังดำเนินการ</span>
+        // Job in progress - show status + music-only toggle (never resets started_at)
+        <div>
+          <div className="w-full bg-green-50 border border-green-200 py-3 rounded-lg flex items-center justify-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="text-green-700 font-medium">งานกำลังดำเนินการ</span>
+          </div>
+          {musicToggleButton}
         </div>
       ) : null}
     </div>

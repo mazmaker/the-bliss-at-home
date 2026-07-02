@@ -112,6 +112,37 @@ export function isBackgroundMusicPlaying(): boolean {
 }
 
 /**
+ * Play the background music only if it is NOT already playing (idempotent).
+ * Used by the mount-time auto-resume so repeated calls (e.g. on every realtime job update)
+ * don't restart an already-looping track. Never resets jobs.started_at — audio only.
+ */
+export async function ensureBackgroundMusicPlaying(): Promise<void> {
+  if (isBackgroundMusicPlaying()) return
+  await playBackgroundMusic()
+}
+
+// --- Manual mute state (persisted so a refresh respects an intentional "ปิดเพลง") ---
+// The auto-resume must NOT fight a staff who deliberately turned the music off.
+const MUTE_KEY = 'bliss-staff-music-muted'
+
+export function isMusicManuallyMuted(): boolean {
+  try {
+    return sessionStorage.getItem(MUTE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setMusicManuallyMuted(muted: boolean): void {
+  try {
+    if (muted) sessionStorage.setItem(MUTE_KEY, '1')
+    else sessionStorage.removeItem(MUTE_KEY)
+  } catch {
+    // sessionStorage unavailable (rare) — mute simply won't persist across refresh.
+  }
+}
+
+/**
  * Set the volume of background music (0.0 to 1.0)
  */
 export function setBackgroundMusicVolume(volume: number): void {

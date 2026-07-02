@@ -13,9 +13,11 @@ import JobGPSControls from '../components/JobGPSControls'
 import JobStatusBadge from '../components/JobStatusBadge'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
+import { useStartGate } from '../hooks/useStartGate'
+import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
-import { playBackgroundMusic, stopBackgroundMusic } from '../utils/backgroundMusic'
+import { playBackgroundMusic, stopBackgroundMusic, setMusicManuallyMuted } from '../utils/backgroundMusic'
 import { normalizeCommissionRate, calculateExtensionEarnings } from '../utils/commissionUtils'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 
@@ -165,6 +167,13 @@ function StaffJobDetail() {
   // totalDuration already includes extension services; started_at gates before service start.
   const completeGate = useCompleteGate(job, totalDuration)
 
+  // Gate the "เริ่มงาน" button: only startable once the scheduled service time has arrived
+  // (no early start). ANDed with the KYC eligibility gate at the JobGPSControls call site.
+  const startGate = useStartGate(job)
+
+  // Resume the spa music after a refresh/navigation onto an in-progress job (audio-only). See #6.
+  useResumeBackgroundMusic(job)
+
   // Get earnings config from service query
   const svcData = serviceData as any
   const useFixedRate = svcData?.use_fixed_rate || false
@@ -230,6 +239,8 @@ function StaffJobDetail() {
       await startJob(job.id)
       await refetch()
       if (isSoundEnabled()) NotificationSounds.jobStarted()
+      // Fresh start clears any prior manual mute, then plays the service music.
+      setMusicManuallyMuted(false)
       await playBackgroundMusic()
     } catch (err: any) {
       setActionError(err.message || 'ไม่สามารถเริ่มงานได้')
@@ -596,8 +607,13 @@ function StaffJobDetail() {
           onRefresh={refetch}
           onStartJob={handleStart}
           isProcessing={isProcessing}
-          canStartWork={eligibility?.canWork}
+          canStartWork={!!eligibility?.canWork && startGate.canStart}
         />
+      )}
+      {isMyJob && !isFinished && job.status === 'arrived' && !startGate.canStart && (
+        <p className="text-xs text-center text-bliss-500">
+          เริ่มงานได้เมื่อถึงเวลานัด {job.scheduled_time?.slice(0, 5)} น. (อีก {startGate.minsUntilStart} นาที)
+        </p>
       )}
 
       {/* Action Buttons */}

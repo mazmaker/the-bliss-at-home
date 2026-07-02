@@ -50,6 +50,25 @@ function overallJobStatus(jobs?: Array<{ status: string }>): string | undefined 
   return best
 }
 
+// Emergency-oversight "at-risk" flag (#4): the appointment is within AT_RISK_WINDOW_MIN minutes
+// (or up to 2h past-due) but the staff has NOT departed — overall job progress is still anything
+// NOT already traveling/arrived/in_progress/completed (DENYLIST form, so an un-accepted
+// 'assigned'/'pending' near-time job is caught too), and the booking itself is still active.
+const AT_RISK_WINDOW_MIN = 30
+const DEPARTED_OR_LATER = new Set(['traveling', 'arrived', 'in_progress', 'completed'])
+function isBookingAtRisk(booking: { booking_date?: string | null; booking_time?: string | null; status?: string; jobs?: Array<{ status: string }> }): boolean {
+  if (!booking.booking_date || !booking.booking_time) return false
+  if (booking.status === 'completed' || booking.status === 'cancelled') return false
+  const prog = overallJobStatus(booking.jobs)
+  if (prog && DEPARTED_OR_LATER.has(prog)) return false
+  // Parse as device-local time (admin runs in Asia/Bangkok) — no `Z`, so not shifted to UTC.
+  const t = (booking.booking_time || '00:00:00').slice(0, 8)
+  const start = new Date(`${booking.booking_date}T${t}`).getTime()
+  if (Number.isNaN(start)) return false
+  const minsUntil = (start - Date.now()) / 60_000
+  return minsUntil <= AT_RISK_WINDOW_MIN && minsUntil >= -120 // near appointment .. up to 2h overdue
+}
+
 function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialStatus = searchParams.get('status') as BookingStatus | null
@@ -421,6 +440,13 @@ function Bookings() {
                       )}
                       {overallJobStatus(booking.jobs) && (
                         <div className="mt-0.5">{getJobProgressBadge(overallJobStatus(booking.jobs))}</div>
+                      )}
+                      {isBookingAtRisk(booking) && (
+                        <div className="mt-0.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 animate-pulse">
+                            ⚠️ ใกล้เวลา · ยังไม่เดินทาง
+                          </span>
+                        </div>
                       )}
                     </td>
                     <td className="py-2 px-2 text-xs text-bliss-600">

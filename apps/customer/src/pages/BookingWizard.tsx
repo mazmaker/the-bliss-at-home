@@ -6,7 +6,7 @@ import { getAvailableHoursForDate, getAvailableMinutesForDateHour } from '../uti
 import { useServiceBySlug, useServiceById } from '@bliss/supabase/hooks/useServices'
 import { useCurrentCustomer } from '@bliss/supabase/hooks/useCustomer'
 import { useCreateBookingWithServices } from '@bliss/supabase/hooks/useBookings'
-import { useAddresses } from '@bliss/supabase/hooks/useAddresses'
+import { useAddresses, useCreateAddress } from '@bliss/supabase/hooks/useAddresses'
 import { usePaymentMethods } from '@bliss/supabase/hooks/usePaymentMethods'
 import { Database, PromoValidationResult, isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { supabase } from '@bliss/supabase/auth'
@@ -44,6 +44,7 @@ function BookingWizard() {
   const { data: addresses, isLoading: addressesLoading } = useAddresses(customer?.id)
   const { data: paymentMethods } = usePaymentMethods(customer?.id)
   const createBookingWithServices = useCreateBookingWithServices()
+  const createAddress = useCreateAddress()
 
   const [currentStep, setCurrentStep] = useState<Step>(1)
   // New state for customer type, duration, couple config
@@ -623,6 +624,39 @@ function BookingWizard() {
 
       // Store booking ID
       setCreatedBookingId(bookingId)
+
+      // Save the just-typed address as the customer's DEFAULT — ONLY when the manual form was used
+      // AND the customer has NO existing default yet (use !some(is_default), NOT length===0, so a
+      // customer who deleted their default still gets one). Skip if a NOT-NULL field is blank
+      // (Step-4 does not hard-require zipcode). Non-blocking: mirror the points-redeem block so a
+      // save failure never breaks the booking result. (PART42 item #9)
+      if (
+        showManualAddressForm &&
+        !addressesLoading &&
+        addresses &&
+        !addresses.some((a: any) => a.is_default) &&
+        address.name && address.phone && address.address && address.province && address.zipcode
+      ) {
+        try {
+          await createAddress.mutateAsync({
+            customer_id: customer.id,
+            label: 'Home',
+            recipient_name: address.name,
+            phone: address.phone,
+            address_line: address.address,
+            subdistrict: address.subdistrict || null,
+            district: address.district || null,
+            province: address.province,
+            zipcode: address.zipcode,
+            latitude: manualAddressLocation.latitude,
+            longitude: manualAddressLocation.longitude,
+            is_default: true,
+          } as any)
+          console.log('📍 Saved typed address as the customer default')
+        } catch (err) {
+          console.error('⚠️ Failed to save default address (non-blocking):', err)
+        }
+      }
       // [manual-QR] fetch the trigger-generated booking_number to show on the manual-QR payment screen
       try {
         const { getBrowserClient } = await import('@bliss/supabase')

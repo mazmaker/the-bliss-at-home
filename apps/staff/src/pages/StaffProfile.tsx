@@ -483,7 +483,7 @@ function StaffProfile() {
               <p className="text-xs text-bliss-500">งานที่ทำ</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-green-600">฿{((stats?.total_earnings || 0) / 1000).toFixed(0)}k</p>
+              <p className="text-xl font-bold text-green-600">฿{(stats?.total_earnings || 0).toLocaleString()}</p>
               <p className="text-xs text-bliss-500">รายได้รวม</p>
             </div>
             <div className="text-center">
