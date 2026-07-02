@@ -1442,7 +1442,15 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
     // 4. Check 15-minute deadline
     const now = new Date()
     const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
-    const currentTotalDuration = booking.booking_services.reduce((sum: number, service: any) => sum + service.duration, 0)
+    // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT run IN PARALLEL, so the
+    // session wall-clock (and thus the 15-min extension deadline) is a SINGLE recipient's duration.
+    // Summing across recipients would double it (e.g. 120+120=240) and push the deadline ~120 min too
+    // late, letting a customer extend past the real cutoff. Scope to the recipient being extended
+    // (booking_services[0].recipient_index — the same recipient the extension row is inserted for below).
+    const extendRecipientIndex = booking.booking_services?.[0]?.recipient_index ?? 0
+    const currentTotalDuration = booking.booking_services
+      .filter((service: any) => (service.recipient_index ?? 0) === extendRecipientIndex)
+      .reduce((sum: number, service: any) => sum + service.duration, 0)
     const currentEndTime = new Date(bookingDateTime.getTime() + (currentTotalDuration * 60 * 1000))
     const deadlineTime = new Date(currentEndTime.getTime() - (15 * 60 * 1000))
 
@@ -1937,12 +1945,12 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       const [{ data: bookingJobs }, { data: allExtensions }, { data: svc }] = await Promise.all([
         supabase
           .from('jobs')
-          .select('id, staff_earnings, duration_minutes')
+          .select('id, staff_earnings, duration_minutes, job_index')
           .eq('booking_id', bookingId)
           .not('status', 'eq', 'cancelled'),
         supabase
           .from('booking_services')
-          .select('duration, price')
+          .select('duration, price, recipient_index')
           .eq('booking_id', bookingId)
           .eq('is_extension', true),
         supabase
@@ -1953,34 +1961,37 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       ])
 
       if (bookingJobs && bookingJobs.length > 0 && svc) {
-        let totalExtEarnings = 0
-        let totalExtDuration = 0
+        const extEarningFor = (dur: number, price: number) => svc.use_fixed_rate
+          ? Math.round(Number(dur === 60 ? svc.staff_earning_60 : dur === 120 ? svc.staff_earning_120 : svc.staff_earning_90) || 0)
+          : Math.round((price || 0) * (Number(svc.staff_commission_rate) || 0))
 
-        for (const ext of (allExtensions || [])) {
-          const dur = ext.duration || 0
-          totalExtDuration += dur
-          if (svc.use_fixed_rate) {
-            const fixed = dur === 60 ? svc.staff_earning_60
-              : dur === 120 ? svc.staff_earning_120
-              : svc.staff_earning_90
-            totalExtEarnings += Math.round(Number(fixed) || 0)
-          } else {
-            totalExtEarnings += Math.round((ext.price || 0) * (Number(svc.staff_commission_rate) || 0))
-          }
-        }
-
+        // COUPLE bookings have one job PER RECIPIENT and each extension row carries the recipient it
+        // belongs to (recipient_index). An extension must ONLY bump the job whose recipient it is
+        // (job.job_index-1 === recipient_index) — applying the whole-booking total to EVERY job would
+        // inflate the un-extended recipient's total_duration_minutes (blocking their complete-gate)
+        // and OVERPAY their total_staff_earnings. Single bookings (1 job) take all extensions.
+        const isCouple = bookingJobs.length > 1
         for (const job of bookingJobs) {
+          const recipientIndex = (job.job_index ?? 1) - 1
+          const jobExts = (allExtensions || []).filter((ext: any) =>
+            !isCouple || (ext.recipient_index ?? 0) === recipientIndex)
+          let jobExtDuration = 0
+          let jobExtEarnings = 0
+          for (const ext of jobExts) {
+            jobExtDuration += ext.duration || 0
+            jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
+          }
           const originalEarnings = Number(job.staff_earnings ?? 0)
           const originalDuration = Number(job.duration_minutes ?? 0)
           await supabase
             .from('jobs')
             .update({
-              total_staff_earnings: originalEarnings + totalExtEarnings,
-              total_duration_minutes: originalDuration + totalExtDuration,
+              total_staff_earnings: originalEarnings + jobExtEarnings,
+              total_duration_minutes: originalDuration + jobExtDuration,
             })
             .eq('id', job.id)
         }
-        console.log(`[ExtendBooking] Jobs recalculated from scratch: ฿${(bookingJobs[0]?.staff_earnings||0)+totalExtEarnings} total, +${totalExtDuration}min total ext`)
+        console.log(`[ExtendBooking] Jobs recalculated per-recipient for booking ${bookingId} (${bookingJobs.length} job(s))`)
       }
     } catch (jobErr) {
       console.error('[ExtendBooking] Failed to update job earnings (non-blocking):', jobErr)

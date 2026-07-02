@@ -153,7 +153,14 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
   const hotelDiscountAmount = hotel?.discount_amount || 0;
   const hotelDiscountRate = hotel?.discount_rate || 0; // backward compatibility
 
+  // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT run IN PARALLEL, so the
+  // current session length is a SINGLE recipient's duration. Summing across recipients would double
+  // it (e.g. 120+120=240), inflating totalNewDuration and wrongly tripping the MAX_SESSION_DURATION
+  // availability gate → valid extension options get hidden. Scope to one recipient (base row's
+  // recipient_index; falls back to 0 for legacy single-booking rows).
+  const targetRecipient = booking.booking_services.find((bs: any) => !bs.is_extension)?.recipient_index ?? 0;
   const currentTotalDuration = booking.booking_services
+    .filter((bs: any) => (bs.recipient_index ?? 0) === targetRecipient)
     .reduce((sum, bs) => sum + bs.duration, 0);
 
   // Generate extension options from service duration_options

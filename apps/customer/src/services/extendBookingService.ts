@@ -189,9 +189,17 @@ export async function getCustomerExtensionOptions(bookingId: string): Promise<Ex
     )
   }
 
-  // Calculate current duration from booking_services if available, otherwise use booking.duration
+  // Calculate current duration from booking_services if available, otherwise use booking.duration.
+  // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT served IN PARALLEL,
+  // so the session length is a SINGLE recipient's duration. Summing across recipients would double
+  // it (e.g. 120+120=240), pushing the 15-min extension deadline and the MAX_TOTAL_DURATION cap out
+  // by a whole recipient. Scope to one recipient (the base row's recipient_index; falls back to 0
+  // for legacy single-booking rows). Extensions are applied to that same recipient server-side.
+  const targetRecipient = booking.booking_services?.find(s => !s.is_extension)?.recipient_index ?? 0
   const currentDuration = booking.booking_services && booking.booking_services.length > 0
-    ? booking.booking_services.reduce((sum, service) => sum + service.duration, 0)
+    ? booking.booking_services
+        .filter(service => (service.recipient_index ?? 0) === targetRecipient)
+        .reduce((sum, service) => sum + service.duration, 0)
     : booking.duration || 0
 
   // Use service's duration_options or fallback to default

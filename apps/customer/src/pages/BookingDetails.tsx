@@ -759,21 +759,17 @@ function BookingDetails() {
                   <div>
                     <p className="text-sm text-bliss-500">เวลารวมทั้งหมด</p>
                     <p className="font-semibold text-bliss-900">
-                      {Math.floor(
-                        (extendableBooking.duration +
-                          extendableBooking.booking_services
-                            .filter(bs => bs.is_extension)
-                            .reduce((sum, bs) => sum + bs.duration, 0)) / 60
-                      )} ชม.{' '}
-                      {(extendableBooking.duration +
-                        extendableBooking.booking_services
-                          .filter(bs => bs.is_extension)
-                          .reduce((sum, bs) => sum + bs.duration, 0)) % 60 > 0 &&
-                        `${(extendableBooking.duration +
-                          extendableBooking.booking_services
-                            .filter(bs => bs.is_extension)
-                            .reduce((sum, bs) => sum + bs.duration, 0)) % 60} นาที`
-                      }
+                      {(() => {
+                        // Per-recipient timeline: base (per-recipient) + THIS recipient's extensions.
+                        // A couple's recipients run IN PARALLEL, so summing extensions across both
+                        // would double the shown time (e.g. 120 base + 60+60 = 240 vs correct 180).
+                        const extMin = extendableBooking.booking_services
+                          .filter(bs => bs.is_extension && (bs.recipient_index ?? 0) === 0)
+                          .reduce((sum, bs) => sum + bs.duration, 0)
+                        const total = extendableBooking.duration + extMin
+                        const mins = total % 60
+                        return `${Math.floor(total / 60)} ชม.${mins > 0 ? ` ${mins} นาที` : ''}`
+                      })()}
                     </p>
                   </div>
                   <div className="text-right">

@@ -89,18 +89,29 @@ function StaffJobDetail() {
     enabled: !!job?.booking_id,
   })
 
-  // Query booking services for extension info (with fallback for missing columns)
+  // Query booking services for extension info (with fallback for missing columns).
+  // COUPLE/simultaneous bookings have ONE booking_services row PER RECIPIENT (recipient_index
+  // 0,1) served IN PARALLEL by separate staff. This job serves ONLY its own recipient
+  // (recipient_index = job.job_index - 1), so scope the rows to that recipient — otherwise the
+  // durations/prices/extensions get summed across both recipients (e.g. 120+120=240 min), which
+  // wrongly doubles the ServiceTimer, the complete-gate window, and the earnings breakdown.
+  // Single bookings (total_jobs=1) are left unfiltered so legacy rows with a null recipient_index
+  // still resolve.
   const { data: bookingServices } = useQuery({
     queryKey: ['booking-services', job?.id],
     queryFn: async () => {
       if (!job?.id) return []
+      const isCouple = (job.total_jobs ?? 1) > 1
+      const recipientIndex = (job.job_index ?? 1) - 1
       try {
         // Try with extension columns first
-        const { data, error } = await supabase
+        let query = supabase
           .from('booking_services')
-          .select('id, duration, price, is_extension, extended_at, sort_order')
+          .select('id, duration, price, is_extension, extended_at, sort_order, recipient_index')
           .eq('booking_id', job.booking_id)
-          .order('sort_order')
+        if (isCouple) query = query.eq('recipient_index', recipientIndex)
+
+        const { data, error } = await query.order('sort_order')
 
         if (error) throw error
         return data || []
@@ -108,11 +119,13 @@ function StaffJobDetail() {
         console.warn('Extension columns not available, using basic booking_services data:', error)
         // Fallback to basic columns only
         try {
-          const { data, error: fallbackError } = await supabase
+          let fbQuery = supabase
             .from('booking_services')
-            .select('id, duration, price, sort_order')
+            .select('id, duration, price, sort_order, recipient_index')
             .eq('booking_id', job.booking_id)
-            .order('sort_order')
+          if (isCouple) fbQuery = fbQuery.eq('recipient_index', recipientIndex)
+
+          const { data, error: fallbackError } = await fbQuery.order('sort_order')
 
           if (fallbackError) throw fallbackError
           // Add default extension fields

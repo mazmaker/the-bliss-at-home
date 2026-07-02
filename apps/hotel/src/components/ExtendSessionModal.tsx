@@ -40,7 +40,12 @@ export function ExtendSessionModal({
 
   // Calculate current totals
   const currentTotals = useMemo(() => {
+    // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT run IN PARALLEL, so
+    // the current session length shown is a SINGLE recipient's duration — summing across recipients
+    // would double it (e.g. 240 instead of 120). Scope to one recipient (base row's recipient_index).
+    const targetRecipient = booking.booking_services.find((s: any) => !s.is_extension)?.recipient_index ?? 0;
     const totalDuration = booking.booking_services
+      .filter((s: any) => (s.recipient_index ?? 0) === targetRecipient)
       .reduce((sum, service) => sum + service.duration, 0);
 
     return {

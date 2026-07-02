@@ -318,7 +318,7 @@ function BookingHistory() {
 
       const { data, error } = await supabase
         .from('booking_services')
-        .select('id, duration, price, is_extension, extended_at, sort_order')
+        .select('id, duration, price, is_extension, extended_at, sort_order, recipient_index')
         .eq('booking_id', selectedBooking.id)
         .order('sort_order')
 
@@ -327,13 +327,20 @@ function BookingHistory() {
         return null
       }
 
-      const originalServices = data?.filter(s => !s.is_extension) || []
-      const extensionServices = data?.filter(s => s.is_extension) || []
+      // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT run IN PARALLEL, so
+      // the "บริการเดิม / รวมทั้งสิ้น" card must reflect a SINGLE recipient's session — summing across
+      // recipients would double both the duration and the price (e.g. 240 นาที / ฿2x). Scope to one
+      // recipient (base row's recipient_index; falls back to 0 for legacy null recipient_index).
+      const targetRecipient = (data as any[])?.find(s => !s.is_extension)?.recipient_index ?? 0
+      const scoped = (data as any[] || []).filter(s => (s.recipient_index ?? 0) === targetRecipient)
+
+      const originalServices = scoped.filter(s => !s.is_extension)
+      const extensionServices = scoped.filter(s => s.is_extension)
 
       const originalDuration = originalServices.reduce((sum, s) => sum + s.duration, 0)
       const originalPrice = originalServices.reduce((sum, s) => sum + s.price, 0)
-      const totalDuration = data?.reduce((sum, s) => sum + s.duration, 0) || 0
-      const totalPrice = data?.reduce((sum, s) => sum + s.price, 0) || 0
+      const totalDuration = scoped.reduce((sum, s) => sum + s.duration, 0) || 0
+      const totalPrice = scoped.reduce((sum, s) => sum + s.price, 0) || 0
 
       return {
         originalServices,
