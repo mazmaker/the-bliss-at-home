@@ -21,10 +21,15 @@ interface CancellationEligibility {
   reason?: string
 }
 
+interface RescheduleOutcome {
+  staff_kept?: boolean
+  staff_unassigned?: boolean
+}
+
 interface RescheduleModalProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: (newDate: string, newTime: string) => Promise<void>
+  onConfirm: (newDate: string, newTime: string) => Promise<RescheduleOutcome | void>
   bookingId: string
   bookingNumber: string
   serviceName: string
@@ -67,6 +72,7 @@ export function RescheduleModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [rescheduleResult, setRescheduleResult] = useState<RescheduleOutcome | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   // Check eligibility when modal opens
@@ -84,6 +90,7 @@ export function RescheduleModal({
       setSelectedTime('')
       setError('')
       setSuccess(false)
+      setRescheduleResult(null)
       setCurrentMonth(new Date())
     }
   }, [isOpen])
@@ -126,7 +133,8 @@ export function RescheduleModal({
     setError('')
 
     try {
-      await onConfirm(selectedDate, selectedTime)
+      const outcome = await onConfirm(selectedDate, selectedTime)
+      setRescheduleResult(outcome || null)
       setSuccess(true)
       setStep('result')
     } catch (err: any) {
@@ -459,6 +467,20 @@ export function RescheduleModal({
                 </div>
               </div>
             </div>
+
+            {/* Staff-lock outcome: same therapist kept vs re-acceptance pending */}
+            {rescheduleResult?.staff_kept && (
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4 text-left mb-6 flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-bliss-700">{t('booking:reschedule.staffKept')}</p>
+              </div>
+            )}
+            {rescheduleResult?.staff_unassigned && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6 flex items-start gap-2">
+                <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-700">{t('booking:reschedule.staffReaccept')}</p>
+              </div>
+            )}
 
             <button
               onClick={onClose}

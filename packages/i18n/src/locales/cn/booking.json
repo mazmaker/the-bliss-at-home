@@ -320,7 +320,9 @@
     "successTitle": "改期成功",
     "successMessage": "预约编号 {{number}} 已更改为新的日期和时间。",
     "newAppointment": "新预约",
-    "unableTitle": "无法改期"
+    "unableTitle": "无法改期",
+    "staffKept": "原按摩师将继续为您服务，无需等待重新接单。",
+    "staffReaccept": "正在为新的时间安排按摩师，请等待按摩师接单。"
   },
   "review": {
     "ratingRequired": "请给出总体评分",

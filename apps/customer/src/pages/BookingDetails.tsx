@@ -484,8 +484,8 @@ function BookingDetails() {
 
   // Handle reschedule booking - calls server API which:
   // 1. Updates booking date/time
-  // 2. Unassigns staff (they need to re-accept based on availability)
-  // 3. Sends LINE + In-App notifications to previously assigned staff
+  // 2. Keeps the same staff if they are free at the new time, else re-opens the job for re-acceptance
+  // 3. Sends LINE + In-App notifications (previously assigned staff + admins)
   const handleRescheduleBooking = async (newDate: string, newTime: string) => {
     if (!bookingData) throw new Error('Booking data not available')
 
@@ -512,6 +512,10 @@ function BookingDetails() {
 
     // Refetch booking data to update UI
     await refetch()
+
+    // Return the staff-lock outcome so the modal can tell the customer whether the same
+    // therapist was kept or they must wait for a therapist to re-accept the new time.
+    return result.data as { staff_kept?: boolean; staff_unassigned?: boolean }
   }
 
   // Handle receipt download

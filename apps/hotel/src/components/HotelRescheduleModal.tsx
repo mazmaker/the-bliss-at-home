@@ -69,6 +69,7 @@ export function HotelRescheduleModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [rescheduleResult, setRescheduleResult] = useState<{ staff_kept?: boolean; staff_unassigned?: boolean } | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   useEffect(() => {
@@ -84,6 +85,7 @@ export function HotelRescheduleModal({
       setSelectedTime('')
       setError('')
       setSuccess(false)
+      setRescheduleResult(null)
       setCurrentMonth(new Date())
       setEligibility(null)
     }
@@ -145,6 +147,8 @@ export function HotelRescheduleModal({
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการเลื่อนนัด')
       }
 
+      const result = await response.json()
+      setRescheduleResult(result.data || null)
       setSuccess(true)
       setStep('result')
     } catch (err: any) {
@@ -482,6 +486,20 @@ export function HotelRescheduleModal({
                 </div>
               </div>
             </div>
+
+            {/* Staff-lock outcome: same therapist kept vs re-acceptance pending */}
+            {rescheduleResult?.staff_kept && (
+              <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4 text-left mb-6 flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-bliss-700">พนักงานคนเดิมยังดูแลลูกค้า ไม่ต้องรอรับงานใหม่</p>
+              </div>
+            )}
+            {rescheduleResult?.staff_unassigned && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6 flex items-start gap-2">
+                <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-700">กำลังหาพนักงานสำหรับเวลาใหม่ รอพนักงานรับงานอีกครั้ง</p>
+              </div>
+            )}
 
             <button
               onClick={handleClose}

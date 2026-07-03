@@ -399,26 +399,40 @@ export async function updateJobStatus(
     try {
       const { data: job } = await supabase
         .from('jobs')
-        .select('staff_earnings, booking_id')
+        .select('staff_earnings, booking_id, duration_minutes')
         .eq('id', jobId)
         .single()
 
       if (job && (!job.staff_earnings || Number(job.staff_earnings) === 0) && job.booking_id) {
         const { data: booking } = await supabase
           .from('bookings')
-          .select('final_price, service_id')
+          .select('final_price, service_id, recipient_count, duration')
           .eq('id', job.booking_id)
           .single()
 
-        if (booking?.final_price && booking?.service_id) {
+        if (booking?.service_id) {
           const { data: service } = await supabase
             .from('services')
-            .select('staff_commission_rate')
+            .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
             .eq('id', booking.service_id)
             .single()
 
-          const commissionRate = Number(service?.staff_commission_rate) || 0.30
-          const earnings = Math.round(Number(booking.final_price) * commissionRate)
+          // Honor use_fixed_rate (mirror the sync_booking_to_job trigger + server computeStaffEarning):
+          // fixed-rate = flat per-session amount by THIS recipient's duration (NOT ÷ recipient_count —
+          // each staff serves a full session); commission = whole-booking final_price × rate split per
+          // recipient (final_price is already ×N for couples). Per-recipient duration = the job's own.
+          const jobDuration = Number((job as any).duration_minutes) || Number((booking as any).duration) || 90
+          const recipientCount = Number((booking as any).recipient_count) || 1
+          let earnings = 0
+          if ((service as any)?.use_fixed_rate) {
+            const fixed = jobDuration === 60 ? (service as any).staff_earning_60
+              : jobDuration === 120 ? (service as any).staff_earning_120
+              : (service as any).staff_earning_90
+            earnings = Math.round(Number(fixed) || 0)
+          } else if (booking.final_price) {
+            const commissionRate = Number((service as any)?.staff_commission_rate) || 0.30
+            earnings = Math.round((Number(booking.final_price) * commissionRate) / recipientCount)
+          }
           if (earnings > 0) {
             updateData.staff_earnings = earnings
             updateData.total_staff_earnings = earnings

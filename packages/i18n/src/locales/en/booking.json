@@ -320,7 +320,9 @@
     "successTitle": "Rescheduled successfully",
     "successMessage": "Booking number {{number}} has been rescheduled to a new date and time.",
     "newAppointment": "New appointment",
-    "unableTitle": "Unable to Reschedule"
+    "unableTitle": "Unable to Reschedule",
+    "staffKept": "Your original therapist will continue with you — no need to wait for re-acceptance.",
+    "staffReaccept": "We're arranging a therapist for the new time — please wait for a therapist to accept."
   },
   "review": {
     "ratingRequired": "Please give an overall rating",
