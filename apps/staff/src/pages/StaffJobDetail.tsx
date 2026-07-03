@@ -146,6 +146,26 @@ function StaffJobDetail() {
     enabled: !!job?.id
   })
 
+  // #7 Couple: fetch the PARTNER staff's contact (name + phone). RLS blocks a client read of the
+  // sibling job, so the SECURITY DEFINER RPC get_couple_partner_contact returns it (IDOR-safe: it
+  // only answers for a job the caller owns). Couple bookings only; returns [] for single bookings.
+  const { data: couplePartners } = useQuery({
+    queryKey: ['couple-partner-contact', job?.id],
+    enabled: !!job?.id && (job?.total_jobs ?? 1) > 1,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_couple_partner_contact', { p_job_id: job!.id })
+      if (error) {
+        console.error('get_couple_partner_contact error:', error)
+        return []
+      }
+      return (data ?? []) as Array<{ partner_name: string | null; partner_phone: string | null; job_index: number; status: string }>
+    },
+    // Poll while the partner hasn't accepted yet (RPC returns 0 rows); stop once we have their contact,
+    // so the card appears live if the partner accepts after this page is already open.
+    refetchInterval: (q: any) => (q?.state?.data?.length ? false : 20000),
+    refetchOnWindowFocus: true,
+  })
+
   // Process extension data with safety checks
   const originalServices = bookingServices?.filter(s => s && !s.is_extension) || []
   const extensionServices = bookingServices?.filter(s => s && s.is_extension) || []
@@ -400,6 +420,27 @@ function StaffJobDetail() {
               </a>
             )}
           </div>
+
+          {/* #7 Couple partner(s) — shows only for couple bookings once the partner has accepted */}
+          {couplePartners && couplePartners.map((partner, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                <User className="w-5 h-5 text-purple-700" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-bliss-500">พนักงานที่รับงานคู่เดียวกัน</p>
+                <p className="font-medium text-bliss-900">{partner.partner_name || 'พนักงาน'}</p>
+              </div>
+              {partner.partner_phone && (
+                <a
+                  href={`tel:${partner.partner_phone}`}
+                  className="p-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition"
+                >
+                  <Phone className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+          ))}
 
           {/* Location */}
           <div className="flex items-start gap-3">
