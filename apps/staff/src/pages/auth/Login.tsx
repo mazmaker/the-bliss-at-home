@@ -245,8 +245,18 @@ export function StaffLoginPage() {
       try {
         setLiffInitFailed(false)
         // [FIX] time-boxed like Callback.tsx — a hung liff.init() used to leave the
-        // login button permanently disabled with no feedback
-        await withTimeout(liffService.initialize(LIFF_ID), 12000, 'liff.init() (login page)')
+        // login button permanently disabled with no feedback.
+        // 60s (was 12s): field data 2026-07-03 morning showed LINE's API can take >12s
+        // and still succeed — the tight ceiling produced false "connection failed" cards.
+        const initPromise = liffService.initialize(LIFF_ID)
+        // Late-success auto-recovery: if init completes AFTER our timeout already showed
+        // the error card, clear it and enable the button — no manual retry needed.
+        initPromise.then(() => {
+          setIsLiffReady(true)
+          setLiffInitFailed(false)
+          setError((prev) => (prev === 'เชื่อมต่อ LINE ไม่สำเร็จ กรุณากดลองใหม่' ? null : prev))
+        }).catch(() => { /* handled by the awaited path below */ })
+        await withTimeout(initPromise, 60000, 'liff.init() (login page)')
         setIsLiffReady(true)
 
         // Strategy 5: After liff.init(), check if SDK added liff.state to URL
@@ -303,18 +313,20 @@ export function StaffLoginPage() {
       console.log('[Auto-login] Getting LIFF profile...')
       // [FIX] time-boxed (same values as Callback.tsx) — a stalled getProfile/loginWithLine
       // used to freeze the "กำลังเชื่อมต่อ..." button forever on the returning-staff path
-      const profile = await withTimeout(liffService.getProfile(), 10000, 'liff.getProfile() (auto-login)')
+      const profile = await withTimeout(liffService.getProfile(), 20000, 'liff.getProfile() (auto-login)')
       console.log('[Auto-login] LIFF profile:', profile)
 
       // Check for invite data from admin invitation flow
       const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
 
       console.log('[Auto-login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
+      // 60s (was 15s): the chain is many sequential round-trips — mobile RTT spikes
+      // pushed legitimate logins past 15s on 2026-07-03 morning
       const result = await withTimeout(authService.loginWithLine({
         lineUserId: profile.userId,
         displayName: profile.displayName,
         pictureUrl: profile.pictureUrl,
-      }, 'STAFF', inviteStaffId), 15000, 'loginWithLine() (auto-login)')
+      }, 'STAFF', inviteStaffId), 60000, 'loginWithLine() (auto-login)')
       console.log('[Auto-login] Login successful:', result)
 
       // Clean up invite data from localStorage
@@ -335,6 +347,20 @@ export function StaffLoginPage() {
     } catch (err: any) {
       // If auto-login fails (e.g., expired token), silently fail and show login button
       console.error('[Auto-login] Error:', err)
+
+      // [FIX] A timed-out loginWithLine may have SUCCEEDED server-side (field data
+      // 2026-07-03: slow-but-successful auth). Re-check the session once before
+      // giving up — if we're actually authenticated, proceed instead of failing.
+      try {
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 5000, 'session re-check (auto-login)')
+        if (session) {
+          console.log('[Auto-login] Timed out but session exists — proceeding')
+          localStorage.setItem('staff_logged_in_via_liff', 'true')
+          window.location.href = targetPath
+          return
+        }
+      } catch { /* fall through to manual login */ }
+
       console.log('[Auto-login] Falling back to manual login')
       // Prevent retry loop: mark auto-login as failed (persists across page reloads)
       markSkipAutoLogin()
@@ -362,7 +388,7 @@ export function StaffLoginPage() {
         console.log('[LINE Login] Already logged in, getting profile...')
         // Already logged in, get profile and authenticate
         // [FIX] time-boxed — stall here used to freeze the login button spinner forever
-        const profile = await withTimeout(liffService.getProfile(), 10000, 'liff.getProfile() (manual login)')
+        const profile = await withTimeout(liffService.getProfile(), 20000, 'liff.getProfile() (manual login)')
         console.log('[LINE Login] LIFF profile:', profile)
 
         // Check for invite data from admin invitation flow
@@ -377,7 +403,7 @@ export function StaffLoginPage() {
           lineUserId: profile.userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
-        }, 'STAFF', inviteStaffId), 15000, 'loginWithLine() (manual login)')
+        }, 'STAFF', inviteStaffId), 60000, 'loginWithLine() (manual login)')
         console.log('[LINE Login] Login successful:', result)
 
         // Clean up invite data from localStorage
@@ -408,6 +434,19 @@ export function StaffLoginPage() {
       }
     } catch (err: any) {
       console.error('[LINE Login] Error:', err)
+
+      // [FIX] Same late-success guard as auto-login: a timed-out loginWithLine may
+      // have succeeded server-side — re-check the session before showing a failure.
+      try {
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 5000, 'session re-check (manual login)')
+        if (session) {
+          console.log('[LINE Login] Timed out but session exists — proceeding')
+          localStorage.setItem('staff_logged_in_via_liff', 'true')
+          window.location.href = localStorage.getItem('staff_redirect_after_login') || redirectPath
+          return
+        }
+      } catch { /* fall through to error display */ }
+
       setError(err.message || 'LINE login failed')
       setIsLoading(false)
     }

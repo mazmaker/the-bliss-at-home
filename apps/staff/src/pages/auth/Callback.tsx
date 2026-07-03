@@ -139,7 +139,8 @@ export function StaffAuthCallback() {
             if (!LIFF_ID) {
               throw new Error('LIFF ID not configured')
             }
-            await withTimeout(liffService.initialize(LIFF_ID), 12000, 'liff.init()')
+            // 60s (was 12s): field data 2026-07-03 — LINE's API can exceed 12s and still succeed
+            await withTimeout(liffService.initialize(LIFF_ID), 60000, 'liff.init()')
           }
 
           // Strategy 5: After liff.init(), SDK may have added liff.state to URL
@@ -158,7 +159,7 @@ export function StaffAuthCallback() {
           }
 
           // Get LINE profile
-          const profile = await withTimeout(liffService.getProfile(), 10000, 'liff.getProfile()')
+          const profile = await withTimeout(liffService.getProfile(), 20000, 'liff.getProfile()')
 
           // Check if this is link mode (user wants to link LINE to existing account)
           const isLinkMode = localStorage.getItem('line_link_mode') === 'true'
@@ -206,7 +207,7 @@ export function StaffAuthCallback() {
               lineUserId: profile.userId,
               displayName: profile.displayName,
               pictureUrl: profile.pictureUrl,
-            }, 'STAFF', inviteStaffId), 15000, 'loginWithLine()')
+            }, 'STAFF', inviteStaffId), 60000, 'loginWithLine()') // 60s: sequential chain × mobile RTT spikes
 
             // Clean up invite data from localStorage
             localStorage.removeItem('staff_invite_token')
@@ -318,15 +319,30 @@ export function StaffAuthCallback() {
         }
       } catch (err: any) {
         console.error('[Callback] Error:', err)
+
+        // [FIX 2026-07-03] A timed-out step may have SUCCEEDED late (field data:
+        // loginWithLine/liff.init slow-but-successful). Re-check the session once —
+        // if we're actually authenticated, finish the login instead of showing failure.
+        try {
+          const { data: { session } } = await withTimeout(supabase.auth.getSession(), 5000, 'session re-check (callback)')
+          if (session) {
+            console.log('[Callback] Step timed out but session exists — proceeding')
+            const targetPath = localStorage.getItem('staff_redirect_after_login') || config.defaultPath
+            window.location.href = targetPath
+            return
+          }
+        } catch { /* fall through to error card */ }
+
         setError(err.message || 'Authentication failed')
       }
     }
 
     // Ultimate safety net: even if some await slips past the per-step timeouts above,
-    // never let the "Signing you in..." spinner run forever — surface the retry card after 20s.
+    // never let the "Signing you in..." spinner run forever — surface the retry card after 75s.
+    // (75s, was 20s — must sit above the longest per-step ceiling of 60s)
     const watchdog = setTimeout(() => {
       setError((prev) => prev || 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง')
-    }, 20000)
+    }, 75000)
 
     handleCallback().finally(() => clearTimeout(watchdog))
 
