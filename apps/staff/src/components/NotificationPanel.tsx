@@ -1,9 +1,9 @@
-import { X, Bell, CheckCircle, AlertCircle, Info, Wallet, UserX, UserCheck, Star } from 'lucide-react'
+import { X, Bell, CheckCircle, AlertCircle, Info, Wallet, UserX, UserCheck, Star, Clock, AlertTriangle } from 'lucide-react'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 
 export interface Notification {
   id: string
-  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff' | 'booking_cancelled' | 'job_accepted' | 'new_review'
+  type: 'new_job' | 'job_cancelled' | 'job_updated' | 'payment_received' | 'job_no_staff' | 'booking_cancelled' | 'job_accepted' | 'new_review' | 'job_reminder' | 'job_overdue'
   title: string
   message: string
   read: boolean
@@ -48,6 +48,10 @@ export function NotificationPanel({
         return <UserCheck className="w-5 h-5 text-bliss-600" />
       case 'new_review':
         return <Star className="w-5 h-5 text-yellow-500" />
+      case 'job_reminder':
+        return <Clock className="w-5 h-5 text-bliss-600" />
+      case 'job_overdue':
+        return <AlertTriangle className="w-5 h-5 text-red-600" />
       default:
         return <Bell className="w-5 h-5 text-bliss-600" />
     }

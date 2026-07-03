@@ -287,7 +287,7 @@ function StaffSettings() {
               <p className="text-xs text-bliss-500">Job Reminders</p>
             </div>
           </div>
-          <p className="text-sm text-bliss-600">ระบบจะแจ้งเตือนผ่าน LINE ก่อนเริ่มงานตามเวลาที่เลือก</p>
+          <p className="text-sm text-bliss-600">ระบบจะแจ้งเตือนผ่าน In-App และ LINE ก่อนเริ่มงานตามเวลาที่เลือก</p>
 
           {isLoadingReminder ? (
             <div className="mt-4 flex items-center justify-center py-6">

@@ -1257,10 +1257,18 @@ export async function processJobCancelled(
   return result
 }
 
+/** Human Thai label for a reminder lead-time (minutes before the job). 30→"30 นาที", 60→"1 ชั่วโมง", 1440→"1 วัน". */
+function reminderLeadLabel(minutes: number): string {
+  if (minutes > 0 && minutes % 1440 === 0) return `${minutes / 1440} วัน`
+  if (minutes > 0 && minutes % 60 === 0) return `${minutes / 60} ชั่วโมง`
+  return `${minutes} นาที`
+}
+
 /**
  * Process job reminders (called by cron every minute)
  * Queries upcoming jobs with assigned staff, checks reminder preferences,
- * sends LINE push notifications for due reminders, tracks sent records.
+ * sends BOTH an in-app notification and a LINE push for due reminders (the in-app row
+ * fires even when the staff has no LINE id), tracks sent records. (PART46 decision R1-A)
  */
 export async function processJobReminders(): Promise<number> {
   const supabase = getSupabaseClient()
@@ -1274,7 +1282,7 @@ export async function processJobReminders(): Promise<number> {
 
   const { data: upcomingJobs, error: jobsError } = await supabase
     .from('jobs')
-    .select('id, staff_id, service_name, scheduled_date, scheduled_time, duration_minutes, staff_earnings, address, hotel_name, room_number, customer_name, status')
+    .select('id, booking_id, staff_id, service_name, scheduled_date, scheduled_time, duration_minutes, staff_earnings, address, hotel_name, room_number, customer_name, status')
     .not('staff_id', 'is', null)
     .in('status', ['confirmed', 'assigned', 'traveling', 'arrived'])
     .gte('scheduled_date', todayStr)
@@ -1313,9 +1321,9 @@ export async function processJobReminders(): Promise<number> {
     .in('id', enabledProfileIds)
     .not('line_user_id', 'is', null)
 
-  if (!profiles || profiles.length === 0) return 0
-
-  const lineIdMap = new Map(profiles.map(p => [p.id, p.line_user_id as string]))
+  // NOTE: LINE is optional now — the in-app reminder fires even for staff without a LINE id,
+  // so do NOT early-return when zero profiles have a line_user_id (PART46 decision R1-A).
+  const lineIdMap = new Map((profiles || []).map(p => [p.id, p.line_user_id as string]))
 
   // 4. Get already-sent reminders for these jobs
   const jobIds = upcomingJobs.map(j => j.id)
@@ -1331,8 +1339,8 @@ export async function processJobReminders(): Promise<number> {
     const reminderMinutes = staffPrefsMap.get(job.staff_id)
     if (!reminderMinutes || reminderMinutes.length === 0) continue
 
+    // LINE id is OPTIONAL — the in-app reminder still fires. (undefined → LINE step skipped.)
     const lineUserId = lineIdMap.get(job.staff_id)
-    if (!lineUserId) continue
 
     // Parse job datetime in Thailand timezone (UTC+7)
     const rawTime = (job.scheduled_time || '00:00:00').split('.')[0] // Remove microseconds
@@ -1347,28 +1355,56 @@ export async function processJobReminders(): Promise<number> {
 
       // Send if remind_at has passed and not yet sent
       if (remindAt <= now && !sentSet.has(sentKey)) {
-        const success = await lineService.sendJobReminderToStaff(lineUserId, {
-          serviceName: job.service_name,
-          scheduledDate: job.scheduled_date,
-          scheduledTime: rawTime.substring(0, 5),
-          address: job.address || '',
-          hotelName: job.hotel_name,
-          roomNumber: job.room_number,
-          staffEarnings: Number(job.staff_earnings) || 0,
-          durationMinutes: job.duration_minutes,
-          customerName: job.customer_name,
-          jobId: job.id,
-          minutesBefore,
-        })
+        const timeLabel = reminderLeadLabel(minutesBefore)
+        const scheduledTimeShort = rawTime.substring(0, 5)
 
-        if (success) {
-          // Mark as sent
+        // (a) In-app notification — ALWAYS for reminders-enabled staff, even without a LINE
+        // id (jobs.staff_id === profiles.id === notifications.user_id). Decision R1-A/7.
+        const { error: inAppError } = await supabase.from('notifications').insert({
+          user_id: job.staff_id,
+          type: 'job_reminder',
+          title: '⏰ เตือนงานใกล้ถึงเวลา',
+          message: `${job.service_name}${job.customer_name ? ` — ${job.customer_name}` : ''} เวลา ${scheduledTimeShort} น. (อีก ${timeLabel})`,
+          data: {
+            job_id: job.id,
+            booking_id: job.booking_id,
+            minutes_before: minutesBefore,
+            scheduled_date: job.scheduled_date,
+            scheduled_time: scheduledTimeShort,
+          },
+          is_read: false,
+        })
+        if (inAppError) {
+          console.error(`[Reminder] in-app insert failed job=${job.id}:`, inAppError.message)
+        }
+
+        // (b) LINE push — only when the staff has a LINE id.
+        let lineSuccess = false
+        if (lineUserId) {
+          lineSuccess = await lineService.sendJobReminderToStaff(lineUserId, {
+            serviceName: job.service_name,
+            scheduledDate: job.scheduled_date,
+            scheduledTime: scheduledTimeShort,
+            address: job.address || '',
+            hotelName: job.hotel_name,
+            roomNumber: job.room_number,
+            staffEarnings: Number(job.staff_earnings) || 0,
+            durationMinutes: job.duration_minutes,
+            customerName: job.customer_name,
+            jobId: job.id,
+            minutesBefore,
+          })
+        }
+
+        // Mark as sent when at least one channel delivered (in-app is the baseline). One
+        // dedup key (job_id, minutes_before) covers both channels.
+        if (!inAppError || lineSuccess) {
           await supabase
             .from('sent_job_reminders')
             .insert({ job_id: job.id, minutes_before: minutesBefore })
 
           sentCount++
-          console.log(`⏰ Reminder sent: job=${job.id}, ${minutesBefore}min before, staff=${job.staff_id}`)
+          console.log(`⏰ Reminder sent (in-app${lineSuccess ? '+LINE' : ''}): job=${job.id}, ${minutesBefore}min before, staff=${job.staff_id}`)
         }
       }
     }
@@ -1554,6 +1590,139 @@ export async function processJobEscalations(): Promise<number> {
   return sentCount
 }
 
+/** Grace window (minutes) after the scheduled time before an overdue-not-started alert fires. */
+const OVERDUE_GRACE_MINUTES = 10
+
+/**
+ * Process overdue-not-started jobs (called by cron every 5 minutes) — PART46 R2.
+ * Detects jobs a staff ACCEPTED but never started: staff_id set, status still one of
+ * assigned/confirmed/traveling/arrived (NOT in_progress/completed/cancelled), started_at
+ * NULL, and the scheduled time is more than OVERDUE_GRACE_MINUTES in the PAST.
+ * Notifies the STAFF (in-app + LINE) and ADMINS (in-app only). SINGLE alert per job
+ * (alert_level = 1), deduped via sent_job_overdue_alerts. NOT gated by reminders_enabled —
+ * overdue is an accountability alert (decision R2, always-on).
+ */
+export async function processOverdueJobs(): Promise<number> {
+  const supabase = getSupabaseClient()
+  const now = new Date()
+  let sentCount = 0
+
+  // 1. Candidate jobs: accepted-but-not-started, scheduled within the last ~2 days.
+  const todayStr = now.toLocaleDateString('en-CA')
+  const twoDaysAgoStr = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA')
+
+  const { data: candidateJobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, booking_id, staff_id, service_name, scheduled_date, scheduled_time, duration_minutes, staff_earnings, address, hotel_name, room_number, customer_name, status, started_at')
+    .not('staff_id', 'is', null)
+    .is('started_at', null)
+    .in('status', ['assigned', 'confirmed', 'traveling', 'arrived'])
+    .gte('scheduled_date', twoDaysAgoStr)
+    .lte('scheduled_date', todayStr)
+
+  if (jobsError) {
+    console.error('[Overdue] Query error:', jobsError)
+    return 0
+  }
+  if (!candidateJobs || candidateJobs.length === 0) return 0
+
+  // 2. Already-sent overdue alerts (dedup by job_id + alert_level)
+  const jobIds = candidateJobs.map(j => j.id)
+  const { data: sentAlerts } = await supabase
+    .from('sent_job_overdue_alerts')
+    .select('job_id, alert_level')
+    .in('job_id', jobIds)
+  const sentSet = new Set(sentAlerts?.map(r => `${r.job_id}-${r.alert_level}`) || [])
+
+  // 3. Resolve staff LINE ids (jobs.staff_id === profiles.id)
+  const staffIds = [...new Set(candidateJobs.map(j => j.staff_id).filter(Boolean))] as string[]
+  const { data: staffProfiles } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .in('id', staffIds)
+    .not('line_user_id', 'is', null)
+  const lineIdMap = new Map((staffProfiles || []).map(p => [p.id, p.line_user_id as string]))
+
+  // 4. Admin profiles (in-app only — decision R2)
+  const { data: adminProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'ADMIN')
+
+  // 5. Booking numbers for messages
+  const bookingIds = [...new Set(candidateJobs.map(j => j.booking_id).filter(Boolean))] as string[]
+  const bookingNumberMap = new Map<string, string>()
+  if (bookingIds.length > 0) {
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('id, booking_number')
+      .in('id', bookingIds)
+    bookings?.forEach(b => bookingNumberMap.set(b.id, b.booking_number))
+  }
+
+  // 6. Process each candidate
+  for (const job of candidateJobs) {
+    const rawTime = (job.scheduled_time || '00:00:00').split('.')[0]
+    const jobDateTime = new Date(`${job.scheduled_date}T${rawTime}+07:00`)
+    const minutesOverdue = Math.floor((now.getTime() - jobDateTime.getTime()) / 60000)
+
+    // Only once the scheduled time has passed by more than the grace window.
+    if (minutesOverdue <= OVERDUE_GRACE_MINUTES) continue
+    // Single alert per job (level 1) — skip if already sent.
+    if (sentSet.has(`${job.id}-1`)) continue
+
+    const scheduledTimeShort = rawTime.substring(0, 5)
+    const bookingNumber = job.booking_id ? bookingNumberMap.get(job.booking_id) || null : null
+
+    // (a) Staff in-app — ALWAYS (not gated by reminders_enabled). user_id = jobs.staff_id.
+    const { error: staffInAppError } = await supabase.from('notifications').insert({
+      user_id: job.staff_id,
+      type: 'job_overdue',
+      title: '🔴 เลยเวลานัดแล้ว ยังไม่เริ่มงาน',
+      message: `${job.service_name}${job.customer_name ? ` — ${job.customer_name}` : ''} นัด ${scheduledTimeShort} น. เลยมาแล้ว ${minutesOverdue} นาที กรุณากดเริ่มงาน`,
+      data: { job_id: job.id, booking_id: job.booking_id, alert_level: 1, minutes_overdue: minutesOverdue, scheduled_date: job.scheduled_date, scheduled_time: scheduledTimeShort },
+      is_read: false,
+    })
+    if (staffInAppError) console.error(`[Overdue] staff in-app insert failed job=${job.id}:`, staffInAppError.message)
+
+    // (b) Staff LINE — only when the staff has a LINE id.
+    const lineUserId = lineIdMap.get(job.staff_id)
+    if (lineUserId) {
+      await lineService.sendJobOverdueToStaff(lineUserId, {
+        serviceName: job.service_name,
+        scheduledDate: job.scheduled_date,
+        scheduledTime: scheduledTimeShort,
+        address: job.address || '',
+        hotelName: job.hotel_name,
+        roomNumber: job.room_number,
+        customerName: job.customer_name,
+        jobId: job.id,
+        minutesOverdue,
+      })
+    }
+
+    // (c) Admin in-app only — 1 row per admin.
+    if (adminProfiles && adminProfiles.length > 0) {
+      const adminRows = adminProfiles.map(admin => ({
+        user_id: admin.id,
+        type: 'job_overdue_not_started',
+        title: '🔴 งานเลยเวลา — staff ยังไม่เริ่ม',
+        message: `${job.service_name} (${job.customer_name}) นัด ${scheduledTimeShort} น. เลยมาแล้ว ${minutesOverdue} นาที staff ยังไม่กดเริ่ม${bookingNumber ? ` (${bookingNumber})` : ''}`,
+        data: { job_id: job.id, booking_id: job.booking_id, booking_number: bookingNumber, alert_level: 1, minutes_overdue: minutesOverdue },
+        is_read: false,
+      }))
+      await supabase.from('notifications').insert(adminRows)
+    }
+
+    // Dedup marker (single alert per job).
+    await supabase.from('sent_job_overdue_alerts').insert({ job_id: job.id, alert_level: 1 })
+    sentCount++
+    console.log(`🔴 Overdue alert: job=${job.id}, overdue ${minutesOverdue}min, staff+admin notified`)
+  }
+
+  return sentCount
+}
+
 /**
  * Cleanup old sent records (older than 3 days)
  * Called by daily cron job
@@ -1577,10 +1746,16 @@ export async function cleanupOldReminders(): Promise<void> {
     .delete()
     .lt('sent_at', threeDaysAgo)
 
+  const { error: err4 } = await supabase
+    .from('sent_job_overdue_alerts')
+    .delete()
+    .lt('sent_at', threeDaysAgo)
+
   if (err1) console.error('❌ Failed to cleanup sent_job_reminders:', err1)
   if (err2) console.error('❌ Failed to cleanup sent_customer_email_reminders:', err2)
   if (err3) console.error('❌ Failed to cleanup sent_job_escalations:', err3)
-  if (!err1 && !err2 && !err3) console.log('🧹 Old reminder/escalation records cleaned up')
+  if (err4) console.error('❌ Failed to cleanup sent_job_overdue_alerts:', err4)
+  if (!err1 && !err2 && !err3 && !err4) console.log('🧹 Old reminder/escalation/overdue records cleaned up')
 }
 
 /**

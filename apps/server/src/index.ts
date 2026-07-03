@@ -29,7 +29,7 @@ import invoicesRoutes from './routes/invoices'
 import adminRoutes from './routes/admin'
 import sosRoutes from './routes/sos'
 // import migratePayoutCyclesRoutes from './routes/migrate-payout-cycles' // Temporarily disabled
-import { processJobReminders, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService'
+import { processJobReminders, processOverdueJobs, cleanupOldReminders, processCustomerEmailReminders, processJobEscalations, processCreditDueReminders } from './services/notificationService'
 import { reminderService } from './services/reminderService'
 import { processPayoutCutoff } from './services/payoutService'
 import { processEnhancedPayoutCron } from './services/enhancedPayoutService'
@@ -452,6 +452,54 @@ const lineHealthHandler = async (_req: Request, res: Response) => {
 }
 app.get('/api/cron/line-health-check', lineHealthHandler)
 app.post('/api/cron/line-health-check', lineHealthHandler)
+
+// ============ PART46 cron auth guard (NEW routes only) ============
+// The older cron routes above stay OPEN (unchanged). The new job-reminders + overdue-jobs
+// routes push LINE / insert notifications, so gate them: allow Vercel Cron (it injects the
+// `x-vercel-cron` header) OR a manual `Authorization: Bearer $CRON_SECRET`. In non-production,
+// allow unauthenticated so local curl/Playwright tests can trigger the code path.
+function isAuthorizedCron(req: Request): boolean {
+  if (req.headers['x-vercel-cron']) return true
+  const secret = process.env.CRON_SECRET
+  if (secret && req.headers['authorization'] === `Bearer ${secret}`) return true
+  if (process.env.NODE_ENV !== 'production') return true
+  return false
+}
+
+// ============ JOB REMINDERS (Vercel cron every minute) — in-app + LINE to staff ============
+// Configurable per-staff reminder using staff.reminder_minutes lead-times chosen on
+// /staff/settings. Sends an in-app notification (always) + a LINE push (if the staff has a
+// LINE id). Replaces the dormant reminderService fixed-time path (PART46 decision R1-A).
+const jobRemindersHandler = async (req: Request, res: Response) => {
+  if (!isAuthorizedCron(req)) return res.status(401).json({ success: false, error: 'unauthorized' })
+  try {
+    const processed = await processJobReminders()
+    return res.json({ success: true, processed, timestamp: new Date().toISOString() })
+  } catch (error) {
+    console.error('[Cron] job-reminders error:', error)
+    return res.status(500).json({ success: false, error: String(error) })
+  }
+}
+app.get('/api/cron/job-reminders', jobRemindersHandler)
+app.post('/api/cron/job-reminders', jobRemindersHandler)
+
+// ============ OVERDUE-NOT-STARTED (Vercel cron every 5 min) — staff in-app+LINE, admin in-app ============
+// Detects jobs a staff accepted but never started (scheduled time passed + grace window).
+// Also runs cleanupOldReminders() here (every 5 min) so the dedup tables don't grow unbounded
+// — those cleanups were never wired before (node-cron disabled). (PART46 R2)
+const overdueJobsHandler = async (req: Request, res: Response) => {
+  if (!isAuthorizedCron(req)) return res.status(401).json({ success: false, error: 'unauthorized' })
+  try {
+    const processed = await processOverdueJobs()
+    await cleanupOldReminders()
+    return res.json({ success: true, processed, timestamp: new Date().toISOString() })
+  } catch (error) {
+    console.error('[Cron] overdue-jobs error:', error)
+    return res.status(500).json({ success: false, error: String(error) })
+  }
+}
+app.get('/api/cron/overdue-jobs', overdueJobsHandler)
+app.post('/api/cron/overdue-jobs', overdueJobsHandler)
 
 
 // Dev-only endpoint to trigger credit reminders manually

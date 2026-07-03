@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { SOSWidget } from '../components/SOSWidget'
 import { JobEscalationWidget } from '../components/JobEscalationWidget'
+import { OverdueJobsWidget } from '../components/OverdueJobsWidget'
 import {
   useDashboardOverview,
   useRecentBookings,
@@ -164,13 +165,16 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Priority Widgets - SOS (left) + Unassigned Jobs (right) */}
+      {/* Priority Widgets - SOS + Unassigned Jobs + Overdue-not-started (each auto-hides when empty) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* SOS Emergency Widget - Highest Priority */}
         <SOSWidget />
 
         {/* Job Escalation Widget - Unassigned Jobs */}
         <JobEscalationWidget />
+
+        {/* Overdue Not-Started Widget (PART46 R2) */}
+        <OverdueJobsWidget />
       </div>
 
       {/* Stats Grid - Row 1: 4 cards */}

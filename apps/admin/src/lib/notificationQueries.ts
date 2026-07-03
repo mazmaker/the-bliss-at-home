@@ -5,6 +5,12 @@
 
 import { supabase } from './supabase'
 
+// Job-alert notification types that have their OWN admin surfaces (escalation widget/bell,
+// overdue widget/bell) — EXCLUDE them from the generic "การจองใหม่" booking bell so they don't
+// pollute its unread count / dropdown. (PART46: overdue types added here.)
+const JOB_ALERT_TYPES = ['job_no_staff_warning', 'job_no_staff_urgent', 'job_overdue_not_started']
+const JOB_ALERT_TYPES_PG = `(${JOB_ALERT_TYPES.join(',')})`
+
 export interface AdminNotification {
   id: string
   user_id: string
@@ -26,6 +32,7 @@ export async function getUnreadNotifications(userId: string): Promise<AdminNotif
     .select('*')
     .eq('user_id', userId)
     .eq('is_read', false)
+    .not('type', 'in', JOB_ALERT_TYPES_PG)
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -45,6 +52,7 @@ export async function getRecentNotifications(userId: string, limit = 10): Promis
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
+    .not('type', 'in', JOB_ALERT_TYPES_PG)
     .order('created_at', { ascending: false })
     .limit(limit)
 

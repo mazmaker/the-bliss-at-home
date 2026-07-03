@@ -537,6 +537,44 @@ async function sendJobReminderToStaff(lineUserId: string, data: JobReminderData)
   return pushMessage(lineUserId, [message])
 }
 
+interface JobOverdueStaffData {
+  serviceName: string
+  scheduledDate: string
+  scheduledTime: string
+  address: string
+  hotelName?: string | null
+  roomNumber?: string | null
+  customerName: string
+  jobId: string
+  minutesOverdue: number
+}
+
+/**
+ * Alert a staff member (via LINE) that a job they accepted is OVERDUE — the scheduled time
+ * has passed and they still haven't started it. (PART46 R2)
+ */
+async function sendJobOverdueToStaff(lineUserId: string, data: JobOverdueStaffData): Promise<boolean> {
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
+  const linkText = `\n👉 กดเริ่มงาน:\n${staffLiffUrl}/staff/jobs/${data.jobId}`
+
+  const locationText = data.hotelName
+    ? `🏨 โรงแรม: ${data.hotelName}${data.roomNumber ? ` ห้อง ${data.roomNumber}` : ''}`
+    : `📍 สถานที่: ${data.address}`
+
+  const messageText =
+    `🔴 เลยเวลานัดแล้ว ยังไม่เริ่มงาน!\n` +
+    `งานนัด ${data.scheduledTime} น. เลยมาแล้ว ${data.minutesOverdue} นาที\n\n` +
+    `💆 บริการ: ${data.serviceName}\n` +
+    `👤 ลูกค้า: ${data.customerName}\n` +
+    `📅 วันที่: ${data.scheduledDate}\n` +
+    `${locationText}\n` +
+    `⚠️ กรุณากดเริ่มงานโดยเร็ว` +
+    linkText
+
+  const message: LineMessage = { type: 'text', text: messageText }
+  return pushMessage(lineUserId, [message])
+}
+
 interface JobEscalationStaffData {
   serviceName: string
   scheduledDate: string
@@ -774,10 +812,11 @@ export const lineService = {
   sendBookingCancelledToAdmin,
   sendBookingRescheduledToStaff,
   sendJobReminderToStaff,
+  sendJobOverdueToStaff,
   sendJobEscalationToStaff,
   sendPayoutCompletedToStaff,
   sendBookingExtendedToAdmin,
   sendBookingExtendedToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingCancelledAdminData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData, BookingExtendedData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingCancelledAdminData, BookingRescheduledStaffData, JobReminderData, JobOverdueStaffData, JobEscalationStaffData, PayoutCompletedData, BookingExtendedData }
