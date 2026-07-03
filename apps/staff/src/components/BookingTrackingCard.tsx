@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { MapPin, Phone, Clock, User, Navigation, AlertTriangle, CheckCircle, Car } from 'lucide-react'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
+import { supabase } from '@bliss/supabase'
+import { queryWithTimeout } from '../utils/withTimeout'
 
 interface BookingTrackingCardProps {
   booking: {
@@ -47,14 +49,22 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
     highAccuracy: true
   })
 
-  // Get staff ID (you may need to implement this based on your auth system)
-  const getStaffId = async () => {
-    if (!staffId && user) {
-      // This should be implemented based on how you get staff ID from auth
-      // For now, using a placeholder
-      setStaffId('staff-id-placeholder')
-    }
-    return staffId
+  // Resolve the real staff.id (staff_journeys.staff_id / bookings.staff_id → staff.id).
+  // [FIX] Previously this set a literal 'staff-id-placeholder' string → the
+  // start_staff_journey rpc rejected it with "invalid input syntax for type uuid".
+  // Mirrors JobGPSControls.getStaffId; returns the resolved value directly (setState
+  // is async and would return stale null on the same call).
+  const getStaffId = async (): Promise<string | null> => {
+    if (staffId) return staffId
+    if (!user?.id) return null
+    const { data: staff, error } = await queryWithTimeout(
+      supabase.from('staff').select('id').eq('profile_id', user.id).single(),
+      10000,
+      'staff id lookup (tracking card)'
+    )
+    if (error || !staff) return null
+    setStaffId(staff.id)
+    return staff.id
   }
 
   const handleStartJourney = async () => {
@@ -63,10 +73,14 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
       alert('ไม่พบข้อมูลพนักงาน')
       return
     }
-
-    const newJourneyId = await startTracking(booking.id, currentStaffId)
-    if (newJourneyId) {
+    // [FIX] start_staff_journey expects a BOOKING id (checks bookings.id + inserts
+    // staff_journeys.booking_id). booking.id here is the JOB id — use booking_id.
+    const bookingId = booking.booking_id || booking.id
+    const result = await startTracking(bookingId, currentStaffId)
+    if (result?.success) {
       onRefresh?.()
+    } else if (result && !result.success) {
+      alert(`ไม่สามารถเริ่มเดินทางได้\n\n${result.message || 'เกิดข้อผิดพลาด'}`)
     }
   }
 

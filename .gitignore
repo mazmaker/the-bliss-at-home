@@ -114,3 +114,4 @@ REPORTS-TASK-PROMPT.md
 #.claude/skills/
 # SQL scripts temp files (development only)
 scripts/sql/temp/
+.vercel
