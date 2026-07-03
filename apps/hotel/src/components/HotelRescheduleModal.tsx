@@ -4,8 +4,11 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Modal } from '@bliss/ui'
+import { Modal, isRescheduleDateSelectable, isRescheduleTimeAvailable, isSameBookingSlot } from '@bliss/ui'
 import { supabase } from '@bliss/supabase/auth'
+
+// Same-day reschedule lead time — kept in lock-step with the customer flow (3h ahead).
+const RESCHEDULE_MIN_LEAD_MINUTES = 180
 import { AlertTriangle, Clock, Ban, CheckCircle, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app/api' : 'http://localhost:3000/api')
@@ -186,21 +189,9 @@ export function HotelRescheduleModal({
     return days
   }
 
-  const isDateSelectable = (date: Date) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const maxDate = new Date()
-    maxDate.setDate(maxDate.getDate() + 30)
-
-    const currentBookingDate = new Date(currentDate)
-    currentBookingDate.setHours(0, 0, 0, 0)
-
-    const dateToCheck = new Date(date)
-    dateToCheck.setHours(0, 0, 0, 0)
-
-    return dateToCheck >= today && dateToCheck <= maxDate && dateToCheck.getTime() !== currentBookingDate.getTime()
-  }
+  // Same-day reschedule is allowed now; past/no-op slots are filtered at the time-picker
+  // level via the shared @bliss/ui helpers (same rules as the customer modal).
+  const isDateSelectable = (date: Date) => isRescheduleDateSelectable(date)
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth((prev) => {
@@ -335,7 +326,12 @@ export function HotelRescheduleModal({
                     return (
                       <button
                         key={dateStr}
-                        onClick={() => isSelectable && setSelectedDate(dateStr)}
+                        onClick={() => {
+                          if (isSelectable) {
+                            setSelectedDate(dateStr)
+                            setSelectedTime('')
+                          }
+                        }}
                         disabled={!isSelectable}
                         className={`p-2 text-sm rounded-lg transition ${
                           isSelected
@@ -356,20 +352,29 @@ export function HotelRescheduleModal({
             {/* Time Selection */}
             {selectedDate && (
               <div>
-                <label className="block text-sm font-medium text-bliss-700 mb-3">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   เลือกเวลาใหม่
                 </label>
+                <p className="text-xs text-bliss-500 mb-3">เลือกได้เฉพาะเวลาที่ยังมาไม่ถึง (ล่วงหน้าอย่างน้อย 3 ชั่วโมง)</p>
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
                   {TIME_SLOTS.map((time) => {
                     const isSelected = selectedTime === time
+                    // Same-day only: block slots already past / inside the lead-time window,
+                    // and the booking's own current slot (no-op reschedule).
+                    const isPast = !isRescheduleTimeAvailable(selectedDate, time, { minLeadMinutes: RESCHEDULE_MIN_LEAD_MINUTES })
+                    const isNoOp = isSameBookingSlot(selectedDate, time, currentDate, currentTime)
+                    const isDisabled = isPast || isNoOp
 
                     return (
                       <button
                         key={time}
-                        onClick={() => setSelectedTime(time)}
+                        onClick={() => !isDisabled && setSelectedTime(time)}
+                        disabled={isDisabled}
                         className={`px-3 py-2 text-sm rounded-lg border-2 transition ${
                           isSelected
                             ? 'border-bliss-500 bg-bliss-50 text-bliss-700 font-medium'
+                            : isDisabled
+                            ? 'border-bliss-100 text-bliss-300 cursor-not-allowed'
                             : 'border-bliss-200 hover:border-bliss-300 text-bliss-700'
                         }`}
                       >

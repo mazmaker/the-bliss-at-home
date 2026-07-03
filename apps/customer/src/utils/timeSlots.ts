@@ -29,7 +29,10 @@ export function getMinuteIntervals(): string[] {
  */
 export function isTimeSlotAvailable(date: string, hour: string, minute: string): boolean {
   const now = new Date()
-  const todayStr = now.toISOString().split('T')[0]
+  // Use the LOCAL date, not toISOString() (which is UTC). During Thai early-morning hours
+  // the UTC date is still the previous day, so a UTC todayStr would wrongly treat "today"
+  // as "not today" and skip the 3-hour advance rule. Matches how the calendar builds dateStr.
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   // If not today, all slots are available
   if (date !== todayStr) return true

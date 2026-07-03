@@ -334,6 +334,19 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
       })
     }
 
+    // Reject a NEW date/time that is already in the past (defense-in-depth behind the
+    // customer + hotel modal pickers). Booking times are Asia/Bangkok wall-clock, but the
+    // server runs on Vercel in UTC — pin the +07:00 offset (Thailand has no DST) so the
+    // slot compares as the correct absolute instant against now.
+    const newSlotInstant = new Date(`${body.new_date}T${String(body.new_time).slice(0, 5)}:00+07:00`)
+    if (!Number.isNaN(newSlotInstant.getTime()) && newSlotInstant.getTime() < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถเลื่อนไปยังวันเวลาที่ผ่านมาแล้วได้',
+        code: 'RESCHEDULE_PAST_TIME',
+      })
+    }
+
     // Store old date/time for notification
     const oldDate = booking.booking_date
     const oldTime = booking.booking_time

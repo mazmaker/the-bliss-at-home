@@ -212,6 +212,35 @@ describe('bookings routes', () => {
       expect(res.status).toBe(400)
       expect(res.body.error).toContain('new_time')
     })
+
+    it('should return 400 when the new date/time is in the past', async () => {
+      // Reschedulable booking; eligibility is mocked to canReschedule=true, so the request
+      // reaches the past-time guard, which must reject a clearly-past new date/time.
+      const mockBooking = {
+        id: 'b1',
+        booking_number: 'BK-001',
+        booking_date: '2026-03-15',
+        booking_time: '10:00',
+        status: 'confirmed',
+        payment_status: 'paid',
+        duration: 120,
+        staff: null,
+        hotel: null,
+        service: null,
+      }
+
+      mockFrom.mockImplementation(() =>
+        createChainMock({ data: mockBooking, error: null })
+      )
+
+      const app = createApp()
+      const res = await request(app)
+        .post('/api/bookings/b1/reschedule')
+        .send({ new_date: '2020-01-01', new_time: '10:00' })
+
+      expect(res.status).toBe(400)
+      expect(res.body.code).toBe('RESCHEDULE_PAST_TIME')
+    })
   })
 
   describe('POST /api/bookings/:id/assign-staff', () => {

@@ -310,6 +310,7 @@
     "currentBooking": "当前预约",
     "selectNewDate": "选择新日期",
     "selectNewTime": "选择新时间",
+    "timeHint": "只能选择尚未到来的时间（至少提前3小时）",
     "continue": "继续",
     "confirmTitle": "确认改期",
     "confirmMessage": "请在确认前检查改期详情。",

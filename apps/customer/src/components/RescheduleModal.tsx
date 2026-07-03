@@ -4,8 +4,11 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Modal } from '@bliss/ui'
+import { Modal, isRescheduleDateSelectable, isRescheduleTimeAvailable, isSameBookingSlot } from '@bliss/ui'
 import { useTranslation } from '@bliss/i18n'
+
+// Same-day reschedule lead time — matches the customer new-booking flow (isTimeSlotAvailable = 3h).
+const RESCHEDULE_MIN_LEAD_MINUTES = 180
 import { AlertTriangle, Clock, Ban, CheckCircle, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface CancellationEligibility {
@@ -174,28 +177,10 @@ export function RescheduleModal({
     return days
   }
 
-  const isDateSelectable = (date: Date) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    // Must be at least 3 hours from now
-    const minDate = new Date()
-    minDate.setHours(minDate.getHours() + 3)
-
-    // Can't book more than 30 days ahead
-    const maxDate = new Date()
-    maxDate.setDate(maxDate.getDate() + 30)
-
-    // Can't select the current booking date
-    const currentBookingDate = new Date(currentDate)
-    currentBookingDate.setHours(0, 0, 0, 0)
-
-    // Create a copy to avoid mutating the original date
-    const dateToCheck = new Date(date)
-    dateToCheck.setHours(0, 0, 0, 0)
-
-    return dateToCheck >= today && dateToCheck <= maxDate && dateToCheck.getTime() !== currentBookingDate.getTime()
-  }
+  // Same-day reschedule is allowed now (the old `!== currentBookingDate` block is gone).
+  // Past/no-op slots are filtered at the time-picker level via the shared @bliss/ui helpers,
+  // so customer + hotel stay in sync.
+  const isDateSelectable = (date: Date) => isRescheduleDateSelectable(date)
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth((prev) => {
@@ -323,7 +308,12 @@ export function RescheduleModal({
                     return (
                       <button
                         key={dateStr}
-                        onClick={() => isSelectable && setSelectedDate(dateStr)}
+                        onClick={() => {
+                          if (isSelectable) {
+                            setSelectedDate(dateStr)
+                            setSelectedTime('')
+                          }
+                        }}
                         disabled={!isSelectable}
                         className={`p-2 text-sm rounded-lg transition ${
                           isSelected
@@ -344,20 +334,29 @@ export function RescheduleModal({
             {/* Time Selection */}
             {selectedDate && (
               <div>
-                <label className="block text-sm font-medium text-bliss-700 mb-3">
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
                   {t('booking:reschedule.selectNewTime')}
                 </label>
+                <p className="text-xs text-bliss-500 mb-3">{t('booking:reschedule.timeHint')}</p>
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
                   {TIME_SLOTS.map((time) => {
                     const isSelected = selectedTime === time
+                    // Same-day only: block slots already past / inside the lead-time window,
+                    // and the booking's own current slot (no-op reschedule).
+                    const isPast = !isRescheduleTimeAvailable(selectedDate, time, { minLeadMinutes: RESCHEDULE_MIN_LEAD_MINUTES })
+                    const isNoOp = isSameBookingSlot(selectedDate, time, currentDate, currentTime)
+                    const isDisabled = isPast || isNoOp
 
                     return (
                       <button
                         key={time}
-                        onClick={() => setSelectedTime(time)}
+                        onClick={() => !isDisabled && setSelectedTime(time)}
+                        disabled={isDisabled}
                         className={`px-3 py-2 text-sm rounded-lg border-2 transition ${
                           isSelected
                             ? 'border-bliss-600 bg-bliss-100 text-bliss-600 font-medium'
+                            : isDisabled
+                            ? 'border-bliss-100 text-bliss-300 cursor-not-allowed'
                             : 'border-bliss-200 hover:border-bliss-400 text-bliss-700'
                         }`}
                       >

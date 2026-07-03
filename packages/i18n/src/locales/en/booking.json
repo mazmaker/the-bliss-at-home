@@ -310,6 +310,7 @@
     "currentBooking": "Current booking",
     "selectNewDate": "Select new date",
     "selectNewTime": "Select new time",
+    "timeHint": "Only upcoming times can be picked (at least 3 hours ahead)",
     "continue": "Continue",
     "confirmTitle": "Confirm reschedule",
     "confirmMessage": "Please check the appointment rescheduling details before confirming.",
