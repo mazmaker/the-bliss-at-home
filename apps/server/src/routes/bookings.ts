@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
-import { paymentAuthGuard } from '../middleware/auth.js'
+import { paymentAuthGuard, type AuthenticatedRequest } from '../middleware/auth.js'
 import { getEnabledPaymentChannels, getPaymentMode } from '../lib/paymentChannels.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
@@ -872,6 +872,28 @@ router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response)
         success: false,
         error: 'Cannot cancel a completed booking',
       })
+    }
+
+    // Once ANY job of this booking is 'completed' (the staff has earned money), only an
+    // admin may cancel. Customers/hotels/staff are blocked. Determine admin from the
+    // authenticated JWT role when REQUIRE_PAYMENT_AUTH is on (req.user set, non-spoofable);
+    // fall back to body.admin_id (existing convention) when auth is off. Layer B (a DB
+    // trigger) additionally backstops the hotel direct-client UPDATE path.
+    const authReq = req as AuthenticatedRequest
+    const isAdminCaller = authReq.user ? authReq.user.role === 'ADMIN' : !!body.admin_id
+    if (!isAdminCaller) {
+      const { data: completedJobs } = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('booking_id', id)
+        .eq('status', 'completed')
+        .limit(1)
+      if (completedJobs && completedJobs.length > 0) {
+        return res.status(403).json({
+          success: false,
+          error: 'ไม่สามารถยกเลิกได้: มีงานที่ทำเสร็จแล้ว กรุณาติดต่อผู้ดูแลระบบ',
+        })
+      }
     }
 
     // Check if booking is in_progress - only admin can cancel mid-service bookings
