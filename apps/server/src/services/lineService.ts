@@ -699,6 +699,70 @@ async function sendPayoutCompletedToStaff(lineUserId: string, data: PayoutComple
   return pushMessage(lineUserId, [message])
 }
 
+interface BookingExtendedData {
+  bookingNumber: string
+  customerName: string
+  serviceName: string
+  extensionMinutes: number
+  newEndTime?: string
+  finalPrice?: number
+  hotelName?: string | null
+  isHotelBooking?: boolean
+}
+
+/**
+ * Notify admins via LINE that a booking's service time was extended (customer- or hotel-initiated).
+ * Mirrors sendNewBookingToAdmin (per-admin pushMessage).
+ */
+async function sendBookingExtendedToAdmin(lineUserIds: string[], data: BookingExtendedData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const sourceText = data.isHotelBooking
+    ? `🏨 ขยายผ่านโรงแรม: ${data.hotelName || '-'}`
+    : `👤 ลูกค้าขยายเวลาเอง`
+
+  const message: LineMessage = {
+    type: 'text',
+    text:
+      `⏱️ มีการขยายเวลาบริการ!\n\n` +
+      `🔢 เลขที่จอง: ${data.bookingNumber}\n` +
+      `👤 ลูกค้า: ${data.customerName}\n` +
+      `💆 บริการ: ${data.serviceName}\n` +
+      `➕ เพิ่มเวลา: ${data.extensionMinutes} นาที\n` +
+      (data.newEndTime ? `🏁 เวลาสิ้นสุดใหม่: ${data.newEndTime}\n` : '') +
+      (typeof data.finalPrice === 'number' ? `💰 ราคารวมใหม่: ${data.finalPrice.toLocaleString()} บาท\n` : '') +
+      `${sourceText}\n\n` +
+      `ตรวจสอบรายละเอียดในระบบ Admin`,
+  }
+
+  let allSuccess = true
+  for (const lineUserId of lineUserIds) {
+    const success = await pushMessage(lineUserId, [message])
+    if (!success) allSuccess = false
+  }
+  return allSuccess
+}
+
+/**
+ * Notify the assigned staff via LINE that their job's service time was extended.
+ * Mirrors sendNewJobToStaff (multicast). In-app staff notif is inserted at the apply site.
+ */
+async function sendBookingExtendedToStaff(lineUserIds: string[], data: BookingExtendedData): Promise<boolean> {
+  if (lineUserIds.length === 0) return true
+
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
+  const message: LineMessage = {
+    type: 'text',
+    text:
+      `⏱️ งานของคุณถูกขยายเวลา!\n\n` +
+      `💆 บริการ: ${data.serviceName}\n` +
+      `➕ เพิ่มเวลา: ${data.extensionMinutes} นาที\n` +
+      (data.newEndTime ? `🏁 เวลาสิ้นสุดใหม่: ${data.newEndTime}\n` : '') +
+      `\n👉 เปิดแอปเพื่อดูรายละเอียด:\n${staffLiffUrl}/staff/jobs`,
+  }
+  return multicast(lineUserIds, [message])
+}
+
 export const lineService = {
   pushMessage,
   multicast,
@@ -712,6 +776,8 @@ export const lineService = {
   sendJobReminderToStaff,
   sendJobEscalationToStaff,
   sendPayoutCompletedToStaff,
+  sendBookingExtendedToAdmin,
+  sendBookingExtendedToStaff,
 }
 
-export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingCancelledAdminData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData }
+export type { LineMessage, JobNotificationData, BookingNotificationData, JobReAvailableData, JobCancelledAdminData, BookingCancelledStaffData, BookingCancelledAdminData, BookingRescheduledStaffData, JobReminderData, JobEscalationStaffData, PayoutCompletedData, BookingExtendedData }

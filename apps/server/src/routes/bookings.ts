@@ -13,6 +13,7 @@ import { sendRescheduleNotifications } from '../services/rescheduleNotificationS
 import { sendCreditNoteEmailForRefund } from './receipts.js'
 import { applyExtensionAfterPayment } from './payment.js'
 import { lineService } from '../services/lineService.js'
+import { sendExtensionNotifications } from '../services/notificationService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
 import type {
   BookingCancellationRequest,
@@ -414,6 +415,10 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
     //     Applies to single (1 job) and couple (N jobs, checked per-job). Any failure → re-open all.
     let canKeepStaff = false
     const nonTerminalJobs = assignedJobs || []
+    // Keep-staff works for single AND couple: the LIVE booking→job trigger sync_booking_update_to_job()
+    // (rewritten 2026-07-01, migration 20260701094500) cascades only date/time + cancelled/completed and
+    // does NOT touch jobs.staff_id — so a date/time-only reschedule never clobbers a couple's per-job staff.
+    // (Verified via pg_get_functiondef on prod 2026-07-03; the PART42 plan's "clobber" was a stale-file read.)
     const allJobsHaveStaff = nonTerminalJobs.length > 0 && nonTerminalJobs.every(j => j.staff_id)
     if (allJobsHaveStaff) {
       canKeepStaff = true
@@ -1937,6 +1942,19 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
           is_read: false
         })
       customerNotified = !customerNotifError
+    }
+
+    // Notify admins (in-app + LINE) and LINE-push the assigned staff about the extension
+    // (hotel/free apply path — mirrors the paid path in applyExtensionAfterPayment). Non-blocking.
+    try {
+      await sendExtensionNotifications(bookingId, {
+        staffProfileIds: staffProfilesForWebhook.map(s => s.profile_id),
+        extensionMinutes: body.additional_duration,
+        newEndTime: estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        extensionCount: newExtensionCount,
+      })
+    } catch (notifyErr) {
+      console.error('[ExtendBooking] Admin/staff extension notify failed (non-blocking):', notifyErr)
     }
 
     // Recalculate total_staff_earnings from scratch using ALL extensions

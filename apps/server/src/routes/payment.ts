@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { omiseService } from '../services/omiseService.js'
-import { processBookingConfirmed } from '../services/notificationService.js'
+import { processBookingConfirmed, sendExtensionNotifications } from '../services/notificationService.js'
 import { sendReceiptEmailForTransaction, sendCreditNoteEmailForRefund } from './receipts.js'
 import { paymentAuthGuard } from '../middleware/auth.js'
 import { getEnabledPaymentChannels, getPaymentMode, getManualQrConfig, sourceTypeToChannel, DEFAULT_ENABLED_CHANNELS, type PaymentChannel } from '../lib/paymentChannels.js'
@@ -242,6 +242,24 @@ export async function applyExtensionAfterPayment(transactionId: string): Promise
       },
       is_read: false
     })
+
+    // Notify admins (in-app + LINE) and LINE-push the assigned staff about the extension.
+    // Non-blocking + inside the applied path (past the alreadyApplied guard above), so it
+    // inherits the extension apply's own idempotency: a serialized webhook+poll double-call
+    // won't double-notify (a truly concurrent double-apply is a pre-existing race that would
+    // also double-write booking_services/earnings — out of scope here).
+    try {
+      await sendExtensionNotifications(transaction.booking_id, {
+        staffProfileIds: Array.isArray(meta.staff_profiles)
+          ? meta.staff_profiles.map((s: { profile_id: string }) => s.profile_id)
+          : [],
+        extensionMinutes: meta.extension_duration || 0,
+        newEndTime: estimatedEndTimeStr || undefined,
+        extensionCount: newExtensionCount,
+      })
+    } catch (notifyErr) {
+      console.error('[applyExtension] Admin/staff extension notify failed (non-blocking):', notifyErr)
+    }
 
     try {
       await sendReceiptEmailForTransaction(transaction.id)

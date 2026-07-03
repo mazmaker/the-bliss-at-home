@@ -545,6 +545,139 @@ export async function sendBookingConfirmedNotifications(
 }
 
 /**
+ * Notify admins (in-app + LINE) and the assigned staff (LINE) that a booking's service
+ * time was extended. The in-app STAFF + CUSTOMER notifications are already inserted at the
+ * apply site (payment.ts applyExtensionAfterPayment / bookings.ts hotel-free branch); this
+ * ADDS the admin channel (in-app + LINE) plus a LINE push to the assigned staff.
+ *
+ * Non-blocking by contract — callers wrap in try/catch so a LINE/insert failure never aborts
+ * the (already-committed) extension. Call it only from the APPLIED path (past the
+ * alreadyApplied idempotency guard) so a webhook+poll double-apply never double-notifies.
+ */
+export async function sendExtensionNotifications(
+  bookingId: string,
+  ctx: {
+    staffProfileIds?: string[]
+    extensionMinutes: number
+    newEndTime?: string
+    extensionCount?: number
+  }
+): Promise<{ adminsNotified: number; staffLineSent: number }> {
+  const supabase = getSupabaseClient()
+  const result = { adminsNotified: 0, staffLineSent: 0 }
+
+  const { data: booking, error: bookingError } = await supabase
+    .from('bookings')
+    .select('*, service:services(*)')
+    .eq('id', bookingId)
+    .single()
+
+  if (bookingError || !booking) {
+    console.error('❌ Booking not found for extension notification:', bookingId)
+    return result
+  }
+
+  // Resolve customer / hotel-guest name (mirror sendBookingConfirmedNotifications so a hotel
+  // guest never renders as "undefined")
+  let customerName = 'ลูกค้า'
+  if (booking.customer_id) {
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('full_name')
+      .eq('id', booking.customer_id)
+      .single()
+    if (customer) customerName = customer.full_name || 'ลูกค้า'
+  } else if (booking.is_hotel_booking && booking.customer_notes) {
+    const guestMatch = booking.customer_notes.match(/Guest:\s*([^,]+)/)
+    if (guestMatch) customerName = guestMatch[1].trim()
+  }
+
+  // Resolve hotel name
+  let hotelName: string | null = null
+  if (booking.hotel_id) {
+    const { data: hotel } = await supabase
+      .from('hotels')
+      .select('name_th, name_en')
+      .eq('id', booking.hotel_id)
+      .single()
+    if (hotel) hotelName = hotel.name_th || hotel.name_en
+  }
+
+  const serviceName = booking.service?.name_th || 'บริการ'
+
+  // === 1. Notify admins (LINE + in-app) ===
+  const { data: adminProfiles } = await supabase
+    .from('profiles')
+    .select('id, line_user_id')
+    .eq('role', 'ADMIN')
+
+  if (adminProfiles && adminProfiles.length > 0) {
+    const adminLineIds = adminProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
+    if (adminLineIds.length > 0) {
+      await lineService.sendBookingExtendedToAdmin(adminLineIds, {
+        bookingNumber: booking.booking_number,
+        customerName,
+        serviceName,
+        extensionMinutes: ctx.extensionMinutes,
+        newEndTime: ctx.newEndTime,
+        finalPrice: booking.final_price || 0,
+        hotelName,
+        isHotelBooking: booking.is_hotel_booking || false,
+      })
+    }
+
+    const notificationRows = adminProfiles.map(admin => ({
+      user_id: admin.id,
+      type: 'booking_extended_admin',
+      title: 'มีการขยายเวลาบริการ',
+      message: `${customerName} ขยายเวลาบริการ ${serviceName} เพิ่ม ${ctx.extensionMinutes} นาที${ctx.newEndTime ? ` (สิ้นสุดใหม่ ${ctx.newEndTime})` : ''}`,
+      data: {
+        booking_id: bookingId,
+        booking_number: booking.booking_number,
+        additional_duration: ctx.extensionMinutes,
+        extension_count: ctx.extensionCount ?? null,
+      },
+      is_read: false,
+    }))
+
+    const { error: notifError } = await supabase.from('notifications').insert(notificationRows)
+    if (notifError) {
+      console.error('❌ Failed to insert admin extension notifications:', notifError)
+    } else {
+      result.adminsNotified = adminProfiles.length
+      console.log(`🔔 Extension in-app notification sent to ${adminProfiles.length} admins`)
+    }
+  }
+
+  // === 2. LINE push to the assigned (original) staff (in-app already inserted at apply site) ===
+  const profileIds = (ctx.staffProfileIds || []).filter(Boolean)
+  if (profileIds.length > 0) {
+    const { data: staffProfiles } = await supabase
+      .from('profiles')
+      .select('id, line_user_id')
+      .in('id', profileIds)
+      .not('line_user_id', 'is', null)
+
+    const staffLineIds = staffProfiles?.map(p => p.line_user_id).filter(Boolean) as string[] || []
+    if (staffLineIds.length > 0) {
+      const ok = await lineService.sendBookingExtendedToStaff(staffLineIds, {
+        bookingNumber: booking.booking_number,
+        customerName,
+        serviceName,
+        extensionMinutes: ctx.extensionMinutes,
+        newEndTime: ctx.newEndTime,
+      })
+      if (ok) {
+        result.staffLineSent = staffLineIds.length
+        console.log(`📱 Extension LINE sent to ${staffLineIds.length} staff`)
+      }
+    }
+  }
+
+  return result
+}
+
+/**
  * Combined: Create job(s) + send notifications
  * Used by payment webhook and manual admin dispatch
  */
