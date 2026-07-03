@@ -73,10 +73,13 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
       alert('ไม่พบข้อมูลพนักงาน')
       return
     }
-    // [FIX] start_staff_journey expects a BOOKING id (checks bookings.id + inserts
-    // staff_journeys.booking_id). booking.id here is the JOB id — use booking_id.
-    const bookingId = booking.booking_id || booking.id
-    const result = await startTracking(bookingId, currentStaffId)
+    // [FIX] Despite the name, staff_journeys.booking_id FK → jobs.id (verified: every
+    // existing journey row's booking_id matches a jobs.id, never a bookings.id).
+    // useStaffBookings maps `id` from the jobs table, so booking.id IS the jobs.id we
+    // must pass. Passing booking.booking_id (= bookings.id) violated the FK.
+    // startTracking→startJourneyOnly also resolves an existing journey for this id first,
+    // so re-pressing on an already-started job returns success instead of duplicating.
+    const result = await startTracking(booking.id, currentStaffId)
     if (result?.success) {
       onRefresh?.()
     } else if (result && !result.success) {
