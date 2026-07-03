@@ -373,18 +373,22 @@ async function buildStaffText(): Promise<string> {
 // Lets the owner ask the bot for live snapshots anytime. Secured by (1) Telegram's
 // secret_token header set via setWebhook and (2) responding only to TELEGRAM_CHAT_ID.
 app.post('/api/telegram/webhook', async (req: Request, res: Response) => {
-  // Always 200 quickly — Telegram retries non-200s aggressively
-  res.status(200).json({ ok: true })
+  // [FIX] Do ALL async work (Supabase reads + Telegram send) BEFORE responding.
+  // On Vercel serverless the function is frozen once the response is flushed, so
+  // work started after res.json() failed with "TypeError: fetch failed". The health
+  // check is ~1-2s, well under Telegram's webhook timeout.
   try {
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET
     if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
       console.warn('[TelegramBot] webhook secret mismatch — ignoring')
-      return
+      return res.status(200).json({ ok: true })
     }
     const msg = req.body?.message
     const chatId = String(msg?.chat?.id || '')
     const text: string = msg?.text || ''
-    if (!chatId || chatId !== String(process.env.TELEGRAM_CHAT_ID || '')) return
+    if (!chatId || chatId !== String(process.env.TELEGRAM_CHAT_ID || '')) {
+      return res.status(200).json({ ok: true })
+    }
 
     if (/^\/status/.test(text)) {
       await sendTelegramAlert(
@@ -406,6 +410,7 @@ app.post('/api/telegram/webhook', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[TelegramBot] webhook error:', err)
   }
+  return res.status(200).json({ ok: true })
 })
 
 // ============ DAILY DIGEST (Vercel cron 08:00 Bangkok = 01:00 UTC) ============
