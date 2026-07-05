@@ -8,6 +8,7 @@ import {
   type ThaiDistrict,
   type ThaiSubdistrict,
 } from '@bliss/supabase/hooks/useThaiGeography'
+import { pickLang } from '../utils/serviceUtils'
 
 interface ThaiAddressFieldsProps {
   province: string
@@ -33,7 +34,7 @@ function ThaiAddressFields({
   disabled = false,
   errors = {},
 }: ThaiAddressFieldsProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [provinceId, setProvinceId] = useState<number | null>(null)
   const [districtId, setDistrictId] = useState<number | null>(null)
 
@@ -145,7 +146,7 @@ function ThaiAddressFields({
             </option>
             {provinces.map((p: ThaiProvince) => (
               <option key={p.id} value={p.id}>
-                {p.name_th}
+                {pickLang(p, 'name', i18n.language)}
               </option>
             ))}
           </select>
@@ -173,7 +174,7 @@ function ThaiAddressFields({
             </option>
             {districts.map((d: ThaiDistrict) => (
               <option key={d.id} value={d.id}>
-                {d.name_th}
+                {pickLang(d, 'name', i18n.language)}
               </option>
             ))}
           </select>
@@ -204,7 +205,7 @@ function ThaiAddressFields({
             </option>
             {subdistricts.map((s: ThaiSubdistrict) => (
               <option key={s.id} value={s.id}>
-                {s.name_th}
+                {pickLang(s, 'name', i18n.language)}
               </option>
             ))}
           </select>
