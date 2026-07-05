@@ -131,6 +131,7 @@ export interface Booking {
     price: number
     recipient_index: number
     recipient_name: string | null
+    is_extension?: boolean
     service?: {
       id: string
       name_th: string
@@ -208,7 +209,7 @@ class BookingService {
     try {
       const { data, error } = await supabase
         .from('booking_services')
-        .select('id, booking_id, service_id, duration, price, recipient_index, recipient_name, service:services(id, name_th, name_en, category)')
+        .select('id, booking_id, service_id, duration, price, recipient_index, recipient_name, is_extension, service:services(id, name_th, name_en, category)')
         .in('booking_id', bookingIds)
         .order('recipient_index', { ascending: true })
 

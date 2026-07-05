@@ -69,6 +69,12 @@ function ExtensionPayment() {
   // [manual-QR] admin payment mode + config (from the same enabled-channels fetch). Default omise.
   const [paymentMode, setPaymentMode]         = useState<'omise' | 'manual_qr'>('omise')
   const [manualQrConfig, setManualQrConfig]   = useState<ManualQrConfig | null>(null)
+  // [manual-QR] PART47 P3: no-payment submit state — manual_qr paid extend registers a PENDING
+  // (admin confirms after the slip); a FREE (amount=0) extend applies immediately.
+  const [channelsResolved, setChannelsResolved] = useState(false)
+  const [pendingState, setPendingState]       = useState<'idle' | 'submitting' | 'awaiting_admin' | 'error'>('idle')
+  const [pendingInfo, setPendingInfo]         = useState<{ bookingNumber?: string; amount?: number } | null>(null)
+  const submittedRef = useRef(false)
 
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -84,6 +90,7 @@ function ExtensionPayment() {
         }
       })
       .catch(() => {})
+      .finally(() => setChannelsResolved(true))
   }, [])
 
   useEffect(() => {
@@ -164,6 +171,57 @@ function ExtensionPayment() {
     })
     return res.json()
   }
+
+  // [manual-QR] PART47 P3: register the extension WITHOUT an Omise payment method. The server branches:
+  // paid + manual_qr → PENDING (status 'requires_admin_confirmation', admin confirms after the slip);
+  // free (amount=0) → applies immediately (hotel/free branch).
+  const submitExtensionNoPayment = async () => {
+    const token = await getAccessToken()
+    const body: Record<string, any> = { additional_duration: duration, requested_by: 'customer' }
+    if (promotionId)         body.promotion_id    = promotionId
+    if (discountAmt != null) body.discount_amount = discountAmt
+    if (notes)               body.notes           = notes
+    const res = await fetch(`${API_URL}/api/bookings/${bookingId}/extend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(body),
+    })
+    return res.json()
+  }
+
+  // Fire the no-payment submit exactly once — for a FREE extend (apply now) or a manual_qr paid extend
+  // (register pending). Omise-paid (amount>0, omise mode) keeps the normal channel-selector flow.
+  useEffect(() => {
+    if (submittedRef.current) return
+    if (!bookingId || duration <= 0) return
+    const isFree = amount === 0
+    const isManual = paymentMode === 'manual_qr'
+    if (!isFree && !isManual) return           // omise paid → channel selector below
+    if (!isFree && !channelsResolved) return   // wait until the mode is known for a paid extend
+    submittedRef.current = true
+    setPendingState('submitting')
+    submitExtensionNoPayment()
+      .then((result) => {
+        if (result?.status === 'requires_admin_confirmation') {
+          setPendingInfo({
+            bookingNumber: result?.booking?.booking_number || bookingNumber,
+            amount: result?.extension?.final_price ?? amount,
+          })
+          setPendingState('awaiting_admin')
+        } else if (result?.success) {
+          setPaymentSuccess(true) // free extension applied immediately
+          setTimeout(() => navigate(`/bookings/${bookingNumber || bookingId}?payment=success&type=extension`), 2000)
+        } else {
+          setError(result?.message || t('pending.errSubmitRetry'))
+          setPendingState('error')
+        }
+      })
+      .catch((e) => {
+        setError(e?.message || t('pending.errSubmitGeneric'))
+        setPendingState('error')
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentMode, channelsResolved, amount, bookingId, duration])
 
   const handlePromptPay = async () => {
     setIsLoading(true)
@@ -283,8 +341,9 @@ function ExtensionPayment() {
     )
   }
 
-  // [manual-QR] Manual mode → static QR + LINE slip; skip the Omise channel selector / card form / poll entirely.
-  if (paymentMode === 'manual_qr') {
+  // [manual-QR] PART47 P3: manual mode (paid → pending admin confirm) OR a free extend (applied now).
+  // Register via submitExtensionNoPayment (fired in the effect above); skip the Omise channel selector.
+  if (amount === 0 || paymentMode === 'manual_qr') {
     return (
       <div className="min-h-screen bg-bliss-100">
         <div className="bg-bliss-50 border-b border-bliss-200 sticky top-0 z-10">
@@ -307,11 +366,44 @@ function ExtensionPayment() {
               </div>
             </div>
           )}
-          <ManualPaymentInstructions
-            bookingNumber={bookingNumber || null}
-            amount={amount}
-            config={manualQrConfig}
-          />
+
+          {(pendingState === 'submitting' || pendingState === 'idle') && (
+            <div className="bg-bliss-50 rounded-xl p-8 border border-bliss-200 text-center">
+              <div className="inline-block w-8 h-8 border-3 border-bliss-300 border-t-bliss-600 rounded-full animate-spin mb-3" />
+              <p className="text-bliss-700">{t('pending.submitting')}</p>
+            </div>
+          )}
+
+          {pendingState === 'error' && (
+            <div className="bg-red-50 rounded-xl p-6 border border-red-200 text-center space-y-3">
+              <AlertTriangle className="w-8 h-8 text-red-500 mx-auto" />
+              <p className="text-red-700">{error || t('pending.errSubmitFailed')}</p>
+              <button onClick={() => navigate(-1)} className="px-5 py-2 bg-bliss-600 text-white rounded-lg font-medium">
+                {t('pending.back')}
+              </button>
+            </div>
+          )}
+
+          {pendingState === 'awaiting_admin' && (
+            <>
+              <div className="bg-amber-50 rounded-xl p-5 border border-amber-200 space-y-2">
+                <div className="flex items-center gap-2 text-amber-800 font-semibold">
+                  <Clock className="w-5 h-5" />
+                  {t('pending.awaitingTitle')}
+                </div>
+                <p className="text-sm text-amber-700">
+                  {pendingInfo?.bookingNumber
+                    ? t('pending.awaitingBodyWithRef', { amount: (pendingInfo?.amount ?? amount).toLocaleString(), bookingNumber: pendingInfo.bookingNumber })
+                    : t('pending.awaitingBody', { amount: (pendingInfo?.amount ?? amount).toLocaleString() })}
+                </p>
+              </div>
+              <ManualPaymentInstructions
+                bookingNumber={pendingInfo?.bookingNumber || bookingNumber || null}
+                amount={pendingInfo?.amount ?? amount}
+                config={manualQrConfig}
+              />
+            </>
+          )}
         </div>
       </div>
     )

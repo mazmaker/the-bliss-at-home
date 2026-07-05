@@ -84,5 +84,15 @@
     "errBankFailed": "无法连接银行，请重试",
     "errSystemNotReady": "支付系统暂时不可用，请稍后再试",
     "errInvalidCard": "卡信息无效"
+  },
+  "pending": {
+    "submitting": "正在提交延长请求...",
+    "errSubmitFailed": "无法提交延长请求",
+    "errSubmitRetry": "无法提交延长请求，请重试。",
+    "errSubmitGeneric": "提交请求时发生错误",
+    "back": "返回",
+    "awaitingTitle": "等待管理员确认延长",
+    "awaitingBody": "请通过下方二维码付款（฿{{amount}}），然后通过 LINE OA 将付款凭证发送给管理员。管理员确认后将为您增加时间，让工作人员继续服务。",
+    "awaitingBodyWithRef": "请通过下方二维码付款（฿{{amount}}），然后通过 LINE OA 将付款凭证发送给管理员 — 预订参考号 {{bookingNumber}}。管理员确认后将为您增加时间，让工作人员继续服务。"
   }
 }

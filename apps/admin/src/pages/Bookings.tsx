@@ -2,10 +2,15 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users, TrendingUp } from 'lucide-react'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
-import { useBookings, useBookingStats, useUpdateBookingStatus, type Booking, type BookingStatus } from '../hooks/useBookings'
+import { useBookings, useBookingStats, useUpdateBookingStatus, usePendingExtensions, type Booking, type BookingStatus } from '../hooks/useBookings'
 import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
+import { supabase } from '../lib/supabase'
+import toast from 'react-hot-toast'
+
+// Server API base — strip a trailing /api (prod VITE_API_URL includes it) to avoid /api/api → 404.
+const EXT_API_BASE_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')).replace(/\/api\/?$/, '')
 
 // [manual-QR] single source of truth for "is this a manual-QR booking" — marker prefix-match
 // (matches BOTH '[MANUAL_QR]' stamped at create AND '[MANUAL_QR PAID] …' appended after admin
@@ -98,6 +103,11 @@ function Bookings() {
 
   // Fetch stats
   const { data: stats } = useBookingStats()
+
+  // PART47 P3: bookings with a pending (manual_qr) extension awaiting admin confirmation
+  // → per-row badge + a header count so admin doesn't rely only on the notification bell.
+  const { data: pendingExtBookingIds = [] } = usePendingExtensions()
+  const pendingExtSet = useMemo(() => new Set(pendingExtBookingIds), [pendingExtBookingIds])
 
   // Status update mutation
   const updateStatus = useUpdateBookingStatus()
@@ -274,6 +284,19 @@ function Bookings() {
           ส่งออกรายงาน
         </button>
       </div>
+
+      {/* PART47 P3: prominent alert that manual_qr extensions are awaiting admin confirmation
+          (more visible than the notification bell). Open each flagged row to confirm. */}
+      {pendingExtBookingIds.length > 0 && (
+        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+          <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <p className="text-sm font-medium text-amber-800">
+            มีคำขอต่อเวลา {pendingExtBookingIds.length} รายการรอยืนยัน — เปิดการจองที่มีป้าย
+            <span className="inline-flex items-center px-1.5 py-0.5 mx-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">⏳ รอยืนยันต่อเวลา</span>
+            เพื่อกดยืนยัน
+          </p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
@@ -454,7 +477,16 @@ function Bookings() {
                       <div className="whitespace-nowrap text-bliss-500">{booking.booking_time}</div>
                     </td>
                     <td className="py-2 px-2 text-xs font-medium text-bliss-900 whitespace-nowrap">฿{Number(booking.final_price).toLocaleString()}</td>
-                    <td className="py-2 px-2">{getStatusBadge(booking.status)}</td>
+                    <td className="py-2 px-2">
+                      {getStatusBadge(booking.status)}
+                      {pendingExtSet.has(booking.id) && (
+                        <div className="mt-0.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 animate-pulse">
+                            ⏳ รอยืนยันต่อเวลา
+                          </span>
+                        </div>
+                      )}
+                    </td>
                     <td className="py-2 px-2">{getPaymentBadge(booking.payment_status, booking)}</td>
                     <td className="py-2 px-2 text-center">
                       <button
@@ -509,6 +541,52 @@ interface BookingDetailModalProps {
 function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation }: BookingDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState(booking.status)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
+
+  // PART47 P3: pending (manual_qr) extensions awaiting admin confirmation for THIS booking.
+  const queryClient = useQueryClient()
+  const [pendingExtensions, setPendingExtensions] = useState<any[]>([])
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null)
+
+  const loadPendingExtensions = async () => {
+    const { data } = await supabase
+      .from('pending_extensions')
+      .select('*')
+      .eq('booking_id', booking.id)
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: true })
+    setPendingExtensions(data || [])
+  }
+
+  useEffect(() => {
+    if (!isOpen) return
+    loadPendingExtensions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, booking.id])
+
+  const postPendingAction = async (pendingId: string, action: 'confirm' | 'cancel') => {
+    setPendingActionId(pendingId)
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token
+      const res = await fetch(`${EXT_API_BASE_URL}/api/bookings/${booking.id}/extend/${pendingId}/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      })
+      const result = await res.json()
+      if (result.success) {
+        toast.success(action === 'confirm' ? 'ยืนยันการต่อเวลาแล้ว — ส่งงานให้พนักงานทำต่อ' : 'ยกเลิกคำขอต่อเวลาแล้ว')
+        await loadPendingExtensions()
+        // Both confirm & cancel remove the pending row → refresh the list's pending-extension badge/count.
+        queryClient.invalidateQueries({ queryKey: ['pending-extensions'] })
+        if (action === 'confirm') queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      } else {
+        toast.error(result.message || (action === 'confirm' ? 'ยืนยันไม่สำเร็จ' : 'ยกเลิกไม่สำเร็จ'))
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'เกิดข้อผิดพลาด')
+    } finally {
+      setPendingActionId(null)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -658,13 +736,18 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                 {booking.booking_services && booking.booking_services.length > 1 ? (
                   <div className="space-y-2 mt-1">
                     {booking.booking_services
-                      .sort((a, b) => a.recipient_index - b.recipient_index)
-                      .map((bs, i) => (
+                      .slice()
+                      // recipient_index first, base row before its is_extension row(s) — so an
+                      // extension (same recipient_index) never renders as a phantom extra person.
+                      .sort((a, b) => (a.recipient_index - b.recipient_index) || ((a.is_extension ? 1 : 0) - (b.is_extension ? 1 : 0)))
+                      .map((bs) => (
                         <div key={bs.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-bliss-200">
                           <div>
-                            <span className="text-xs text-bliss-600 font-medium">คนที่ {i + 1}</span>
+                            <span className="text-xs text-bliss-600 font-medium">
+                              {bs.is_extension ? `เพิ่มเวลา · คนที่ ${bs.recipient_index + 1}` : `คนที่ ${bs.recipient_index + 1}`}
+                            </span>
                             <p className="font-medium text-bliss-900">{bs.service?.name_th || 'ไม่ระบุ'}</p>
-                            <p className="text-xs text-bliss-500">{bs.duration} นาที • {getCategoryLabel(bs.service?.category as string)}</p>
+                            <p className="text-xs text-bliss-500">{bs.is_extension ? '+' : ''}{bs.duration} นาที • {getCategoryLabel(bs.service?.category as string)}</p>
                           </div>
                           <span className="text-sm font-semibold text-bliss-700">฿{Number(bs.price).toLocaleString()}</span>
                         </div>
@@ -808,12 +891,16 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                     // before discount) instead of the single base_price (which is only person 1).
                     booking.booking_services
                       .slice()
-                      .sort((a, b) => a.recipient_index - b.recipient_index)
-                      .map((bs, i) => (
+                      // recipient_index first, base before its is_extension row — an extension is
+                      // labelled "เพิ่มเวลา (คนที่ N)" for its recipient, never a phantom คนที่ 3.
+                      .sort((a, b) => (a.recipient_index - b.recipient_index) || ((a.is_extension ? 1 : 0) - (b.is_extension ? 1 : 0)))
+                      .map((bs) => (
                         <div key={bs.id} className="flex justify-between text-sm gap-3">
                           <span className="text-bliss-600">
-                            คนที่ {i + 1} · {bs.service?.name_th || 'บริการ'}
-                            <span className="text-bliss-400"> ({bs.duration} นาที)</span>
+                            {bs.is_extension
+                              ? `เพิ่มเวลา (คนที่ ${bs.recipient_index + 1})`
+                              : `คนที่ ${bs.recipient_index + 1} · ${bs.service?.name_th || 'บริการ'}`}
+                            <span className="text-bliss-400"> ({bs.is_extension ? '+' : ''}{bs.duration} นาที)</span>
                           </span>
                           <span className="text-bliss-900 whitespace-nowrap">฿{Number(bs.price).toLocaleString()}</span>
                         </div>
@@ -1106,6 +1193,49 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Pending extension confirmation (manual_qr) — PART47 P3 */}
+          {pendingExtensions.length > 0 && (
+            <div className="border-t border-bliss-200 pt-6">
+              <h3 className="font-semibold text-bliss-900 mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600" />
+                คำขอต่อเวลาที่รอยืนยัน ({pendingExtensions.length})
+              </h3>
+              <div className="space-y-3">
+                {pendingExtensions.map((pe) => (
+                  <div key={pe.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-medium text-bliss-900">+{pe.additional_duration} นาที</p>
+                        <p className="text-sm text-bliss-600">
+                          ยอดชำระ ฿{Number(pe.final_extension_price).toLocaleString()}
+                          {pe.customer_name ? ` · ${pe.customer_name}` : ''}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full whitespace-nowrap">รอยืนยัน</span>
+                    </div>
+                    <p className="text-xs text-bliss-500 mb-3">ยืนยันเมื่อได้รับสลิปการชำระเงินจากลูกค้า — ระบบจะเพิ่มเวลาและแจ้งพนักงานคนเดิมให้ทำต่อ</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => postPendingAction(pe.id, 'confirm')}
+                        disabled={pendingActionId === pe.id}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition"
+                      >
+                        {pendingActionId === pe.id ? 'กำลังยืนยัน...' : 'ยืนยันการต่อเวลา'}
+                      </button>
+                      <button
+                        onClick={() => postPendingAction(pe.id, 'cancel')}
+                        disabled={pendingActionId === pe.id}
+                        className="px-4 py-2 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 disabled:opacity-50 transition"
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

@@ -84,5 +84,15 @@
     "errBankFailed": "Unable to connect to the bank. Please try again",
     "errSystemNotReady": "Payment system is temporarily unavailable. Please wait a moment.",
     "errInvalidCard": "Invalid card details"
+  },
+  "pending": {
+    "submitting": "Submitting extension request...",
+    "errSubmitFailed": "Unable to submit the extension request",
+    "errSubmitRetry": "Unable to submit the extension request. Please try again.",
+    "errSubmitGeneric": "An error occurred while submitting the request",
+    "back": "Back",
+    "awaitingTitle": "Waiting for admin to confirm the extension",
+    "awaitingBody": "Pay via the QR code below (฿{{amount}}), then send the payment slip to the admin via LINE OA. The admin will confirm to add the time so the staff can continue.",
+    "awaitingBodyWithRef": "Pay via the QR code below (฿{{amount}}), then send the payment slip to the admin via LINE OA — booking reference {{bookingNumber}}. The admin will confirm to add the time so the staff can continue."
   }
 }

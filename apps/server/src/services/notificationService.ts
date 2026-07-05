@@ -561,6 +561,12 @@ export async function sendExtensionNotifications(
     extensionMinutes: number
     newEndTime?: string
     extensionCount?: number
+    // PART47 P3: a manual_qr extension AWAITING admin confirmation — in-app admin bell only
+    // (no LINE push: the customer sends the slip to admin via LINE OA manually; staff must NOT
+    // be notified until the admin confirms). The apply-time (confirmed) call omits these.
+    pending?: boolean
+    pendingId?: string
+    amount?: number
   }
 ): Promise<{ adminsNotified: number; staffLineSent: number }> {
   const supabase = getSupabaseClient()
@@ -612,7 +618,8 @@ export async function sendExtensionNotifications(
     .eq('role', 'ADMIN')
 
   if (adminProfiles && adminProfiles.length > 0) {
-    const adminLineIds = adminProfiles.map(p => p.line_user_id).filter(Boolean) as string[]
+    // Skip the admin LINE push for a PENDING request (admin already gets the QR slip via LINE OA).
+    const adminLineIds = ctx.pending ? [] : (adminProfiles.map(p => p.line_user_id).filter(Boolean) as string[])
     if (adminLineIds.length > 0) {
       await lineService.sendBookingExtendedToAdmin(adminLineIds, {
         bookingNumber: booking.booking_number,
@@ -629,13 +636,18 @@ export async function sendExtensionNotifications(
     const notificationRows = adminProfiles.map(admin => ({
       user_id: admin.id,
       type: 'booking_extended_admin',
-      title: 'มีการขยายเวลาบริการ',
-      message: `${customerName} ขยายเวลาบริการ ${serviceName} เพิ่ม ${ctx.extensionMinutes} นาที${ctx.newEndTime ? ` (สิ้นสุดใหม่ ${ctx.newEndTime})` : ''}`,
+      title: ctx.pending ? 'รอยืนยันการต่อเวลาบริการ' : 'มีการขยายเวลาบริการ',
+      message: ctx.pending
+        ? `${customerName} ขอต่อเวลาบริการ ${serviceName} เพิ่ม ${ctx.extensionMinutes} นาที (฿${(ctx.amount || 0).toLocaleString()}) — กดยืนยันเมื่อได้รับสลิป`
+        : `${customerName} ขยายเวลาบริการ ${serviceName} เพิ่ม ${ctx.extensionMinutes} นาที${ctx.newEndTime ? ` (สิ้นสุดใหม่ ${ctx.newEndTime})` : ''}`,
       data: {
         booking_id: bookingId,
         booking_number: booking.booking_number,
         additional_duration: ctx.extensionMinutes,
         extension_count: ctx.extensionCount ?? null,
+        pending: ctx.pending || false,
+        pending_extension_id: ctx.pendingId ?? null,
+        amount: ctx.amount ?? null,
       },
       is_read: false,
     }))
@@ -650,7 +662,8 @@ export async function sendExtensionNotifications(
   }
 
   // === 2. LINE push to the assigned (original) staff (in-app already inserted at apply site) ===
-  const profileIds = (ctx.staffProfileIds || []).filter(Boolean)
+  // Skip entirely for a PENDING request — staff must not be told until the admin confirms.
+  const profileIds = ctx.pending ? [] : (ctx.staffProfileIds || []).filter(Boolean)
   if (profileIds.length > 0) {
     const { data: staffProfiles } = await supabase
       .from('profiles')

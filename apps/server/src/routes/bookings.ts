@@ -6,12 +6,13 @@
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
-import { paymentAuthGuard, type AuthenticatedRequest } from '../middleware/auth.js'
+import { paymentAuthGuard, authenticateSupabaseUser, type AuthenticatedRequest } from '../middleware/auth.js'
 import { getEnabledPaymentChannels, getPaymentMode } from '../lib/paymentChannels.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
 import { sendCreditNoteEmailForRefund } from './receipts.js'
 import { applyExtensionAfterPayment } from './payment.js'
+import { applyExtensionToBooking } from '../services/extensionApplyService.js'
 import { lineService } from '../services/lineService.js'
 import { sendExtensionNotifications } from '../services/notificationService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
@@ -1566,10 +1567,71 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       // charge here — placed INSIDE the !is_hotel_booking block so hotel extend-session (monthly bill) and
       // free (price=0) extensions never hit this gate (VA6).
       if (await getPaymentMode() === 'manual_qr') {
-        return res.status(410).json({
-          success: false,
-          error: 'Extension is settled via manual QR off-platform (send the slip to admin via LINE OA); Omise extension charges are disabled',
-          code: 'PAYMENT_MODE_MANUAL_QR'
+        // [manual-QR] PART47 P3: instead of rejecting, register a PENDING extension that the admin
+        // CONFIRMS after the customer pays via the static QR + sends the slip to admin on LINE OA.
+        // 🔴 Do NOT insert a booking_services is_extension row here — its AFTER-INSERT triggers would
+        // apply the extension before it's paid. Store the intent in pending_extensions; it becomes a
+        // booking_services INSERT only at admin-confirm (POST /:bookingId/extend/:pendingId/confirm).
+        const { data: pending, error: pendingError } = await supabase
+          .from('pending_extensions')
+          .insert({
+            booking_id: bookingId,
+            service_id: serviceId,
+            additional_duration: body.additional_duration,
+            extension_price: extensionPrice,
+            discount_amount: discountAmount,
+            final_extension_price: finalExtensionPrice,
+            promotion_id: body.promotion_id || null,
+            recipient_index: hasBookingServices ? booking.booking_services[0].recipient_index : 0,
+            recipient_name: hasBookingServices ? booking.booking_services[0].recipient_name : null,
+            customer_name: booking.customers?.full_name || booking.customers?.phone || '',
+            booking_number: booking.booking_number,
+            status: 'pending',
+            requested_by: 'customer',
+          })
+          .select('id')
+          .single()
+
+        if (pendingError || !pending) {
+          console.error('[ExtendBooking] Failed to create pending extension:', pendingError)
+          return res.status(500).json({
+            success: false,
+            error: 'database_error',
+            message: 'ไม่สามารถบันทึกคำขอต่อเวลาได้ กรุณาลองใหม่อีกครั้ง'
+          })
+        }
+
+        // Notify admins (in-app bell only) that a pending extension awaits confirmation. Non-blocking.
+        try {
+          await sendExtensionNotifications(bookingId, {
+            extensionMinutes: body.additional_duration,
+            extensionCount: newExtensionCount,
+            pending: true,
+            pendingId: pending.id,
+            amount: finalExtensionPrice,
+          })
+        } catch (notifyErr) {
+          console.error('[ExtendBooking] Pending-extension admin notify failed (non-blocking):', notifyErr)
+        }
+
+        // Customer shows the static QR + "waiting for admin to confirm" with booking_number + amount.
+        return res.status(200).json({
+          success: true,
+          status: 'requires_admin_confirmation',
+          pending_extension_id: pending.id,
+          extension: {
+            additional_duration: body.additional_duration,
+            extension_price: finalExtensionPrice,
+            discount_amount: discountAmount,
+            final_price: finalExtensionPrice
+          },
+          booking: {
+            booking_number: booking.booking_number,
+            new_total_price: newTotalPrice,
+            estimated_end_time: estimatedEndTime.toISOString(),
+            extension_count: newExtensionCount
+          },
+          message: 'บันทึกคำขอต่อเวลาแล้ว รอแอดมินยืนยันหลังได้รับสลิปการชำระเงิน'
         })
       }
       try {
@@ -1878,26 +1940,21 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       }
     }
 
-    // Hotel bookings or free extensions (finalExtensionPrice === 0): apply immediately, no payment needed
-    const { data: extensionService, error: extensionError } = await supabase
-      .from('booking_services')
-      .insert({
-        booking_id: bookingId,
-        service_id: serviceId,
-        duration: body.additional_duration,
-        price: finalExtensionPrice,
-        recipient_index: hasBookingServices ? booking.booking_services[0].recipient_index : 0,
-        recipient_name: hasBookingServices ? booking.booking_services[0].recipient_name : null,
-        sort_order: hasBookingServices ? booking.booking_services.length + 1 : 1,
-        is_extension: true,
-        extended_at: new Date().toISOString(),
-        original_booking_service_id: hasBookingServices ? booking.booking_services[0].id : null
+    // Hotel bookings or free extensions (finalExtensionPrice === 0): apply immediately, no payment
+    // needed — via the shared helper (the SAME apply site the admin-confirm of a manual_qr pending
+    // extension uses). Inserts the linchpin booking_services is_extension row + absolute-SETs booking
+    // totals + notifies + per-recipient earnings recalc.
+    let applyResult
+    try {
+      applyResult = await applyExtensionToBooking({
+        booking,
+        additionalDuration: body.additional_duration,
+        finalExtensionPrice,
+        discountAmount,
+        promotionId: body.promotion_id || null,
       })
-      .select('id')
-      .single()
-
-    if (extensionError || !extensionService) {
-      console.error('[ExtendBooking] Failed to create extension service:', extensionError)
+    } catch (applyErr: any) {
+      console.error('[ExtendBooking] Failed to apply extension inline:', applyErr)
       return res.status(500).json({
         success: false,
         error: 'database_error',
@@ -1905,176 +1962,31 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       })
     }
 
-    const { error: updateError } = await supabase
-      .from('bookings')
-      .update({
-        final_price: newTotalPrice,
-        extension_count: newExtensionCount,
-        last_extended_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', bookingId)
-
-    if (updateError) {
-      console.error('[ExtendBooking] Failed to update booking:', updateError)
-      return res.status(500).json({
-        success: false,
-        error: 'database_error',
-        message: 'เกิดข้อผิดพลาดในการอัพเดทการจอง'
-      })
-    }
-
-    if (body.promotion_id && discountAmount > 0) {
-      await supabase
-        .from('booking_promotions')
-        .insert({
-          booking_id: bookingId,
-          promotion_id: body.promotion_id,
-          discount_amount: discountAmount,
-          applied_at: new Date().toISOString(),
-          applied_by: 'customer',
-          booking_type: 'extension'
-        })
-    }
-
-    let staffNotifiedCount = 0
-    if (staffProfilesForWebhook.length > 0) {
-      const staffNotifications = staffProfilesForWebhook.map(staff => ({
-        user_id: staff.profile_id,
-        type: 'booking_extended',
-        title: 'การจองขยายเวลา',
-        message: `ลูกค้า ${booking.customers?.full_name || booking.customers?.phone} ขยายเวลาบริการเพิ่ม ${body.additional_duration} นาที เวลาสิ้นสุดใหม่: ${estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
-        data: {
-          booking_id: bookingId,
-          additional_duration: body.additional_duration,
-          new_end_time: estimatedEndTime.toISOString(),
-          extension_count: newExtensionCount
-        },
-        is_read: false
-      }))
-      const { error: notifError } = await supabase.from('notifications').insert(staffNotifications)
-      if (!notifError) {
-        staffNotifiedCount = staffNotifications.length
-        console.log(`[ExtendBooking] Notifications sent to ${staffNotifiedCount} staff members`)
-      }
-    }
-
-    let customerNotified = false
-    if (booking.customers?.profile_id) {
-      const { error: customerNotifError } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: booking.customers.profile_id,
-          type: 'booking_extended_confirmation',
-          title: 'ยืนยันการขยายเวลาบริการ',
-          message: `การขยายเวลาบริการ ${body.additional_duration} นาทีเสร็จสมบูรณ์ ราคาเพิ่มเติม ฿${finalExtensionPrice.toLocaleString()} เวลาสิ้นสุดใหม่: ${estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
-          data: {
-            booking_id: bookingId,
-            extension_price: finalExtensionPrice,
-            new_end_time: estimatedEndTime.toISOString(),
-            extension_count: newExtensionCount
-          },
-          is_read: false
-        })
-      customerNotified = !customerNotifError
-    }
-
-    // Notify admins (in-app + LINE) and LINE-push the assigned staff about the extension
-    // (hotel/free apply path — mirrors the paid path in applyExtensionAfterPayment). Non-blocking.
-    try {
-      await sendExtensionNotifications(bookingId, {
-        staffProfileIds: staffProfilesForWebhook.map(s => s.profile_id),
-        extensionMinutes: body.additional_duration,
-        newEndTime: estimatedEndTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-        extensionCount: newExtensionCount,
-      })
-    } catch (notifyErr) {
-      console.error('[ExtendBooking] Admin/staff extension notify failed (non-blocking):', notifyErr)
-    }
-
-    // Recalculate total_staff_earnings from scratch using ALL extensions
-    // (not additive — avoids compounding errors from stale DB values)
-    try {
-      const [{ data: bookingJobs }, { data: allExtensions }, { data: svc }] = await Promise.all([
-        supabase
-          .from('jobs')
-          .select('id, staff_earnings, duration_minutes, job_index')
-          .eq('booking_id', bookingId)
-          .not('status', 'eq', 'cancelled'),
-        supabase
-          .from('booking_services')
-          .select('duration, price, recipient_index')
-          .eq('booking_id', bookingId)
-          .eq('is_extension', true),
-        supabase
-          .from('services')
-          .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
-          .eq('id', serviceId)
-          .single()
-      ])
-
-      if (bookingJobs && bookingJobs.length > 0 && svc) {
-        const extEarningFor = (dur: number, price: number) => svc.use_fixed_rate
-          ? Math.round(Number(dur === 60 ? svc.staff_earning_60 : dur === 120 ? svc.staff_earning_120 : svc.staff_earning_90) || 0)
-          : Math.round((price || 0) * (Number(svc.staff_commission_rate) || 0))
-
-        // COUPLE bookings have one job PER RECIPIENT and each extension row carries the recipient it
-        // belongs to (recipient_index). An extension must ONLY bump the job whose recipient it is
-        // (job.job_index-1 === recipient_index) — applying the whole-booking total to EVERY job would
-        // inflate the un-extended recipient's total_duration_minutes (blocking their complete-gate)
-        // and OVERPAY their total_staff_earnings. Single bookings (1 job) take all extensions.
-        const isCouple = bookingJobs.length > 1
-        for (const job of bookingJobs) {
-          const recipientIndex = (job.job_index ?? 1) - 1
-          const jobExts = (allExtensions || []).filter((ext: any) =>
-            !isCouple || (ext.recipient_index ?? 0) === recipientIndex)
-          let jobExtDuration = 0
-          let jobExtEarnings = 0
-          for (const ext of jobExts) {
-            jobExtDuration += ext.duration || 0
-            jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
-          }
-          const originalEarnings = Number(job.staff_earnings ?? 0)
-          const originalDuration = Number(job.duration_minutes ?? 0)
-          await supabase
-            .from('jobs')
-            .update({
-              total_staff_earnings: originalEarnings + jobExtEarnings,
-              total_duration_minutes: originalDuration + jobExtDuration,
-            })
-            .eq('id', job.id)
-        }
-        console.log(`[ExtendBooking] Jobs recalculated per-recipient for booking ${bookingId} (${bookingJobs.length} job(s))`)
-      }
-    } catch (jobErr) {
-      console.error('[ExtendBooking] Failed to update job earnings (non-blocking):', jobErr)
-    }
-
     console.log(`[ExtendBooking] Extension applied immediately for booking ${bookingId}:`, {
       additional_duration: body.additional_duration,
       extension_price: finalExtensionPrice,
-      new_total_duration: newTotalDuration
+      new_total_duration: applyResult.newTotalDuration
     })
 
     return res.json({
       success: true,
       extension: {
-        id: extensionService.id,
+        id: applyResult.extensionServiceId,
         additional_duration: body.additional_duration,
         extension_price: finalExtensionPrice,
         discount_amount: discountAmount,
         final_price: finalExtensionPrice
       },
       booking: {
-        new_total_duration: newTotalDuration,
-        new_total_price: newTotalPrice,
-        estimated_end_time: estimatedEndTime.toISOString(),
-        extension_count: newExtensionCount
+        new_total_duration: applyResult.newTotalDuration,
+        new_total_price: applyResult.newTotalPrice,
+        estimated_end_time: applyResult.estimatedEndTime.toISOString(),
+        extension_count: applyResult.newExtensionCount
       },
       payment: undefined,
       notifications: {
-        staff_notified: staffNotifiedCount,
-        customer_notified: customerNotified
+        staff_notified: applyResult.staffNotified,
+        customer_notified: applyResult.customerNotified
       }
     } as ExtendBookingResponse)
 
@@ -2085,6 +1997,130 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       error: 'server_error',
       message: error.message || 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์'
     })
+  }
+})
+
+// ============================================================================
+// PART47 P3 — Admin confirm / cancel a manual_qr PENDING extension
+// (authenticateSupabaseUser verifies the admin JWT + role; NOT the flag-gated paymentAuthGuard —
+//  applying a paid extension is money, so it must always require a real admin.)
+// ============================================================================
+
+router.post('/:bookingId/extend/:pendingId/confirm', authenticateSupabaseUser, async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest
+  if (authReq.user?.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, error: 'forbidden', message: 'ต้องเป็นแอดมินเท่านั้น' })
+  }
+  const { bookingId, pendingId } = req.params
+  try {
+    const supabase = getSupabaseClient()
+
+    // 1. Load the pending row (must belong to this booking). Idempotency: already-confirmed = no-op.
+    const { data: pending, error: pendingError } = await supabase
+      .from('pending_extensions')
+      .select('*')
+      .eq('id', pendingId)
+      .eq('booking_id', bookingId)
+      .single()
+    if (pendingError || !pending) {
+      return res.status(404).json({ success: false, error: 'pending_not_found', message: 'ไม่พบคำขอต่อเวลา' })
+    }
+    if (pending.status === 'confirmed' || pending.applied_booking_service_id) {
+      return res.status(200).json({ success: true, already_applied: true, message: 'ยืนยันการต่อเวลานี้ไปแล้ว' })
+    }
+    if (pending.status === 'cancelled') {
+      return res.status(400).json({ success: false, error: 'pending_cancelled', message: 'คำขอต่อเวลานี้ถูกยกเลิกแล้ว' })
+    }
+
+    // 2. Re-read the booking FRESH (with services/jobs/customers) so totals compute off current state.
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        booking_services (id, service_id, duration, price, recipient_name, recipient_index),
+        jobs (id, staff_id, status),
+        customers (profile_id, full_name, phone)
+      `)
+      .eq('id', bookingId)
+      .single()
+    if (bookingError || !booking) {
+      return res.status(404).json({ success: false, error: 'booking_not_found', message: 'ไม่พบการจอง' })
+    }
+
+    // 3. Apply via the SAME shared helper as the hotel/free path (linchpin booking_services INSERT →
+    //    triggers + staff surface + absolute-SET totals + per-recipient earnings recalc).
+    const applyResult = await applyExtensionToBooking({
+      booking,
+      additionalDuration: pending.additional_duration,
+      finalExtensionPrice: Number(pending.final_extension_price),
+      discountAmount: Number(pending.discount_amount),
+      promotionId: pending.promotion_id,
+    })
+
+    // 4. Latch the pending row confirmed (idempotency: applied_booking_service_id set).
+    await supabase
+      .from('pending_extensions')
+      .update({
+        status: 'confirmed',
+        confirmed_at: new Date().toISOString(),
+        confirmed_by: authReq.user!.id,
+        applied_booking_service_id: applyResult.extensionServiceId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', pendingId)
+
+    return res.json({
+      success: true,
+      extension: {
+        id: applyResult.extensionServiceId,
+        additional_duration: pending.additional_duration,
+        final_price: Number(pending.final_extension_price),
+      },
+      booking: {
+        new_total_duration: applyResult.newTotalDuration,
+        new_total_price: applyResult.newTotalPrice,
+        estimated_end_time: applyResult.estimatedEndTime.toISOString(),
+        extension_count: applyResult.newExtensionCount,
+      },
+      notifications: {
+        staff_notified: applyResult.staffNotified,
+        customer_notified: applyResult.customerNotified,
+      },
+    })
+  } catch (error: any) {
+    console.error('[ConfirmExtension] Error:', error)
+    return res.status(500).json({ success: false, error: 'server_error', message: error.message || 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' })
+  }
+})
+
+router.post('/:bookingId/extend/:pendingId/cancel', authenticateSupabaseUser, async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest
+  if (authReq.user?.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, error: 'forbidden', message: 'ต้องเป็นแอดมินเท่านั้น' })
+  }
+  const { bookingId, pendingId } = req.params
+  try {
+    const supabase = getSupabaseClient()
+    const { data: pending, error } = await supabase
+      .from('pending_extensions')
+      .select('id, status')
+      .eq('id', pendingId)
+      .eq('booking_id', bookingId)
+      .single()
+    if (error || !pending) {
+      return res.status(404).json({ success: false, error: 'pending_not_found', message: 'ไม่พบคำขอต่อเวลา' })
+    }
+    if (pending.status === 'confirmed') {
+      return res.status(400).json({ success: false, error: 'already_confirmed', message: 'ยืนยันไปแล้ว ยกเลิกไม่ได้' })
+    }
+    await supabase
+      .from('pending_extensions')
+      .update({ status: 'cancelled', cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', pendingId)
+    return res.json({ success: true, message: 'ยกเลิกคำขอต่อเวลาแล้ว' })
+  } catch (error: any) {
+    console.error('[CancelExtension] Error:', error)
+    return res.status(500).json({ success: false, error: 'server_error', message: error.message || 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' })
   }
 })
 
