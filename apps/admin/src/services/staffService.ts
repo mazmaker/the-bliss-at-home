@@ -366,12 +366,14 @@ export const staffService = {
       .insert({
         name_th: staffData.name_th,
         name_en: staffData.name_en,
-        phone: staffData.phone,
-        id_card: staffData.id_card,
-        address: staffData.address,
+        // Coerce empty strings to null so a blank id_card doesn't collide with the
+        // UNIQUE(id_card) index (mirror packages updateStaffData — see staff self-edit).
+        phone: staffData.phone || null,
+        id_card: staffData.id_card || null,
+        address: staffData.address || null,
         gender: staffData.gender || null,
-        bio_th: staffData.bio_th,
-        bio_en: staffData.bio_en,
+        bio_th: staffData.bio_th || null,
+        bio_en: staffData.bio_en || null,
         status: 'pending'
       })
       .select()
@@ -444,11 +446,21 @@ export const staffService = {
     // Extract skills from updates (skills should be handled separately)
     const { skills, ...staffUpdates } = updates
 
+    // Coerce empty strings to null so a blank id_card doesn't collide with the UNIQUE(id_card)
+    // index (mirror packages updateStaffData). Only transform keys actually present so a partial
+    // update never wipes a field the caller didn't send.
+    const nullIfEmpty = <T extends string | null | undefined>(v: T) => (v === '' ? null : v)
+
     // Update basic staff information (excluding skills)
     const { data, error } = await supabase
       .from('staff')
       .update({
         ...staffUpdates,
+        ...(staffUpdates.phone !== undefined && { phone: nullIfEmpty(staffUpdates.phone) }),
+        ...(staffUpdates.id_card !== undefined && { id_card: nullIfEmpty(staffUpdates.id_card) }),
+        ...(staffUpdates.address !== undefined && { address: nullIfEmpty(staffUpdates.address) }),
+        ...(staffUpdates.bio_th !== undefined && { bio_th: nullIfEmpty(staffUpdates.bio_th) }),
+        ...(staffUpdates.bio_en !== undefined && { bio_en: nullIfEmpty(staffUpdates.bio_en) }),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
