@@ -650,7 +650,9 @@ function StaffJobDetail() {
             customer_name: job.customer_name,
             customer_address: job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address,
             customer_phone: job.customer_phone,
-            booking_id: job.id // Use the same field as in dashboard
+            booking_id: job.id, // Use the same field as in dashboard
+            scheduled_date: job.scheduled_date,
+            scheduled_time: job.scheduled_time
           }}
           onRefresh={refetch}
           onStartJob={handleStart}

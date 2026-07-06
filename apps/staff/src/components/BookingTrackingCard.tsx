@@ -4,6 +4,7 @@ import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
 import { queryWithTimeout } from '../utils/withTimeout'
+import { useTravelGate } from '../hooks/useTravelGate'
 
 interface BookingTrackingCardProps {
   booking: {
@@ -48,6 +49,9 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
     updateInterval: 10000, // Update every 10 seconds
     highAccuracy: true
   })
+
+  // P9: gate "เริ่มเดินทาง" to within 90 min before the appointment (client-clock, ticks live).
+  const travelGate = useTravelGate(booking)
 
   // Resolve the real staff.id (staff_journeys.staff_id / bookings.staff_id → staff.id).
   // [FIX] Previously this set a literal 'staff-id-placeholder' string → the
@@ -274,10 +278,11 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
             </button>
           </div>
         ) : (
-          /* Start Journey Button */
+          /* Start Journey Button — P9-gated to within 90 min before the appointment */
           <button
             onClick={handleStartJourney}
-            disabled={booking.status !== 'confirmed' && booking.status !== 'assigned'}
+            disabled={(booking.status !== 'confirmed' && booking.status !== 'assigned') || !travelGate.canStartTravel}
+            title={!travelGate.canStartTravel ? 'ยังไม่ถึงเวลาเริ่มเดินทาง' : undefined}
             className="w-full bg-green-500 hover:bg-green-600 disabled:bg-bliss-300 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
           >
             <Navigation className="w-5 h-5" />
@@ -286,10 +291,16 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
         )}
 
         {/* Additional Info */}
-        {booking.status === 'confirmed' || booking.status === 'assigned' ? (
-          <p className="text-xs text-bliss-500 text-center mt-2">
-            กดเริ่มเดินทางเพื่อให้ลูกค้าติดตามตำแหน่งของคุณ
-          </p>
+        {(booking.status === 'confirmed' || booking.status === 'assigned') ? (
+          !travelGate.canStartTravel ? (
+            <p className="text-xs text-bliss-500 text-center mt-2">
+              เริ่มเดินทางได้เมื่อใกล้ถึงเวลานัด — เริ่มได้ก่อนเวลานัด 90 นาที (อีก {travelGate.minsUntilWindow} นาที)
+            </p>
+          ) : (
+            <p className="text-xs text-bliss-500 text-center mt-2">
+              กดเริ่มเดินทางเพื่อให้ลูกค้าติดตามตำแหน่งของคุณ
+            </p>
+          )
         ) : null}
       </div>
     </div>

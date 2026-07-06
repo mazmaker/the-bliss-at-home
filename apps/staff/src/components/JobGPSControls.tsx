@@ -5,6 +5,7 @@ import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
 import { playBackgroundMusic, stopBackgroundMusic, isBackgroundMusicPlaying, setMusicManuallyMuted } from '../utils/backgroundMusic'
 import { queryWithTimeout } from '../utils/withTimeout'
+import { useTravelGate } from '../hooks/useTravelGate'
 
 interface JobGPSControlsProps {
   job: {
@@ -14,6 +15,9 @@ interface JobGPSControlsProps {
     customer_address?: string
     customer_phone?: string
     booking_id?: string
+    // P9: needed to gate "เริ่มเดินทาง" to within 90 min of the appointment (fail-open if absent)
+    scheduled_date?: string | null
+    scheduled_time?: string | null
   }
   onRefresh?: () => void
   onStartJob?: (jobId: string) => void // เพิ่ม callback สำหรับเริ่มงาน
@@ -83,6 +87,10 @@ export default function JobGPSControls({
     updateInterval: 5 * 60 * 1000, // 5 minutes
     highAccuracy: true
   })
+
+  // P9: gate "เริ่มเดินทาง" to within 90 min before the appointment (client-clock, ticks live).
+  // Called unconditionally here (before the early returns below) to satisfy rules-of-hooks.
+  const travelGate = useTravelGate(job)
 
   // Expose debug functions globally for debugging
   useEffect(() => {
@@ -417,18 +425,24 @@ export default function JobGPSControls({
         </button>
       )
     } else if (canStartGPS) {
-      // แสดงปุ่มเริ่มติดตาม GPS
+      // แสดงปุ่มเริ่มติดตาม GPS — P9-gated to within 90 min before the appointment
       return (
-        <button
-          onClick={handleStartGPS}
-          disabled={isProcessing}
-          className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm disabled:opacity-50"
-        >
-          {isProcessing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : null}
-          เริ่มเดินทาง
-        </button>
+        <div>
+          <button
+            onClick={handleStartGPS}
+            disabled={isProcessing || !travelGate.canStartTravel}
+            title={!travelGate.canStartTravel ? `เริ่มเดินทางได้เมื่อใกล้ถึงเวลานัด (อีก ${travelGate.minsUntilWindow} นาที)` : undefined}
+            className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : null}
+            เริ่มเดินทาง
+          </button>
+          {!travelGate.canStartTravel && (
+            <p className="text-xs text-bliss-500 mt-1">เริ่มได้ก่อนเวลานัด 90 นาที (อีก {travelGate.minsUntilWindow} นาที)</p>
+          )}
+        </div>
       )
     }
 
@@ -549,17 +563,25 @@ export default function JobGPSControls({
           เริ่มงาน
         </button>
       ) : canStartGPS ? (
-        // Start GPS Button
-        <button
-          onClick={handleStartGPS}
-          disabled={isProcessing}
-          className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          {isProcessing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : null}
-          เริ่มเดินทาง (ติดตาม GPS)
-        </button>
+        // Start GPS Button — P9-gated to within 90 min before the appointment
+        <div>
+          <button
+            onClick={handleStartGPS}
+            disabled={isProcessing || !travelGate.canStartTravel}
+            title={!travelGate.canStartTravel ? 'ยังไม่ถึงเวลาเริ่มเดินทาง' : undefined}
+            className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : null}
+            เริ่มเดินทาง (ติดตาม GPS)
+          </button>
+          {!travelGate.canStartTravel && (
+            <p className="text-xs text-bliss-500 text-center mt-2">
+              เริ่มเดินทางได้เมื่อใกล้ถึงเวลานัด — เริ่มได้ก่อนเวลานัด 90 นาที (อีก {travelGate.minsUntilWindow} นาที)
+            </p>
+          )}
+        </div>
       ) : jobInProgress ? (
         // Job in progress - show status + music-only toggle (never resets started_at)
         <div>

@@ -357,7 +357,9 @@ function StaffDashboard() {
                 customer_name: currentJob.customer_name,
                 customer_address: currentJob.address,
                 customer_phone: currentJob.customer_phone,
-                booking_id: currentJob.id
+                booking_id: currentJob.id,
+                scheduled_date: currentJob.scheduled_date,
+                scheduled_time: currentJob.scheduled_time
               }}
               onRefresh={refresh}
               onStartJob={handleStartJob}
@@ -540,7 +542,9 @@ function StaffDashboard() {
                     customer_name: job.customer_name,
                     customer_address: job.address,
                     customer_phone: job.customer_phone,
-                    booking_id: job.id
+                    booking_id: job.id,
+                    scheduled_date: job.scheduled_date,
+                    scheduled_time: job.scheduled_time
                   }}
                   onRefresh={refresh}
                   onStartJob={handleStartJob}
