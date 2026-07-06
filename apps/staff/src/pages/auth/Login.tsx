@@ -89,6 +89,10 @@ export function StaffLoginPage() {
   // gets an explicit "ลองใหม่" button that re-runs the init effect.
   const [liffInitFailed, setLiffInitFailed] = useState(false)
   const [liffInitAttempt, setLiffInitAttempt] = useState(0)
+  // [P11 2026-07-06] LINE access-token-expired dead-end. When the loop guard trips
+  // (a fresh relogin was already tried very recently), show an explicit
+  // "เข้าสู่ระบบด้วย LINE ใหม่" button instead of auto-redirecting again.
+  const [tokenExpiredStuck, setTokenExpiredStuck] = useState(false)
 
   // Process invite token from URL params (sent via LIFF invite link)
   useEffect(() => {
@@ -342,6 +346,7 @@ export function StaffLoginPage() {
       // Redirect immediately — no need to wait for React state update since
       // window.location.href triggers a full page reload which re-initializes auth
       console.log('[Auto-login] Redirecting to:', targetPath, '(saved:', savedPath, 'redirect:', redirectPath, ')')
+      liffService.clearReloginMark() // login succeeded → reset the expired-token loop guard
       window.location.href = targetPath
     } catch (err: any) {
       // If auto-login fails (e.g., expired token), silently fail and show login button
@@ -359,6 +364,20 @@ export function StaffLoginPage() {
           return
         }
       } catch { /* fall through to manual login */ }
+
+      // [P11 2026-07-06] An EXPIRED LINE access token is durable — withRetry can't heal it
+      // (getProfile 401s with the same stale token every attempt). Trigger a FRESH LINE
+      // re-auth (logout → login) so the deep link resumes automatically, instead of silently
+      // dropping to the button. Loop-guarded inside reloginFresh().
+      if (liffService.isTokenExpiredError(err)) {
+        console.log('[Auto-login] Access token expired → fresh LINE re-authorization')
+        if (liffService.reloginFresh()) return // redirected to LINE; page is unloading
+        // loop guard tripped → let the user re-auth explicitly
+        setTokenExpiredStuck(true)
+        setError('เซสชัน LINE หมดอายุ กรุณาเข้าสู่ระบบใหม่')
+        setIsLoading(false)
+        return
+      }
 
       console.log('[Auto-login] Falling back to manual login')
       // Prevent retry loop: mark auto-login as failed (persists across page reloads)
@@ -429,6 +448,7 @@ export function StaffLoginPage() {
 
         // Use window.location to force a full page reload with updated auth state
         console.log('[LINE Login] Redirecting to:', targetPath)
+        liffService.clearReloginMark() // login succeeded → reset the expired-token loop guard
         window.location.href = targetPath
       } else {
         console.log('[LINE Login] Not logged in, redirecting to LINE authorization...')
@@ -450,6 +470,20 @@ export function StaffLoginPage() {
           return
         }
       } catch { /* fall through to error display */ }
+
+      // [P11 2026-07-06] Expired LINE token → the raw "The access token expired" used to be
+      // painted as a dead red banner with no way out (tapping login again re-enters here,
+      // isLoggedIn() is still true, getProfile 401s again). Instead trigger a fresh LINE
+      // re-auth (logout → login). Loop-guarded so a persistently-failing re-auth surfaces a
+      // manual button rather than ping-ponging through LINE.
+      if (liffService.isTokenExpiredError(err)) {
+        console.log('[LINE Login] Access token expired → fresh LINE re-authorization')
+        if (liffService.reloginFresh()) return // redirected to LINE; page is unloading
+        setTokenExpiredStuck(true)
+        setError('เซสชัน LINE หมดอายุ กรุณาเข้าสู่ระบบใหม่')
+        setIsLoading(false)
+        return
+      }
 
       setError(err.message || 'LINE login failed')
       setIsLoading(false)
@@ -554,6 +588,23 @@ export function StaffLoginPage() {
           variant="outline"
         >
           ลองเชื่อมต่อใหม่
+        </Button>
+      )}
+
+      {/* [P11 2026-07-06] Expired-token loop-guard fallback: an explicit one-tap fresh
+          LINE re-auth (logout → login) when auto re-auth was throttled. */}
+      {tokenExpiredStuck && (
+        <Button
+          onClick={() => {
+            setError(null)
+            setTokenExpiredStuck(false)
+            liffService.clearReloginMark() // explicit user action → bypass the loop guard
+            liffService.reloginFresh()
+          }}
+          className="w-full mt-3"
+          variant="outline"
+        >
+          เข้าสู่ระบบด้วย LINE ใหม่
         </Button>
       )}
 

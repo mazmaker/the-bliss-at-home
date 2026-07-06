@@ -222,6 +222,7 @@ export function StaffAuthCallback() {
             const targetPath = savedPath || config.defaultPath
             // Don't remove here — StaffLayout will clean up after landing
             console.log('[Callback] Redirecting to:', targetPath)
+            liffService.clearReloginMark() // login succeeded → reset the expired-token loop guard
             window.location.href = targetPath
           }
         } else {
@@ -335,6 +336,17 @@ export function StaffAuthCallback() {
             return
           }
         } catch { /* fall through to error card */ }
+
+        // [P11 2026-07-06] Expired LINE token reaching the callback route → fresh re-auth
+        // (logout → login) instead of a dead "Authentication Failed" card. Skip in link mode
+        // (a reauth would drop the line_link_* flags mid-link). Loop-guarded inside reloginFresh.
+        const isLinkMode = localStorage.getItem('line_link_mode') === 'true'
+        if (liffService.isTokenExpiredError(err) && !isLinkMode) {
+          console.log('[Callback] Access token expired → fresh LINE re-authorization')
+          if (liffService.reloginFresh()) return // redirected to LINE; page unloads
+          setError('เซสชัน LINE หมดอายุ กรุณาแตะ "ลองอีกครั้ง" เพื่อเข้าสู่ระบบใหม่')
+          return
+        }
 
         setError(err.message || 'Authentication failed')
       }
