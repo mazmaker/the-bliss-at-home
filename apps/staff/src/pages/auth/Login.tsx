@@ -12,7 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout, Button } from '@bliss/ui'
 import { APP_CONFIGS, authService, liffService, supabase } from '@bliss/supabase/auth'
 import { AlertCircle, UserCheck, Loader2 } from 'lucide-react'
-import { withTimeout, queryWithTimeout } from '../../utils/withTimeout'
+import { withTimeout, queryWithTimeout, withRetry } from '../../utils/withTimeout'
 
 // Get LIFF ID from environment
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
@@ -244,19 +244,15 @@ export function StaffLoginPage() {
 
       try {
         setLiffInitFailed(false)
-        // [FIX] time-boxed like Callback.tsx — a hung liff.init() used to leave the
-        // login button permanently disabled with no feedback.
-        // 60s (was 12s): field data 2026-07-03 morning showed LINE's API can take >12s
-        // and still succeed — the tight ceiling produced false "connection failed" cards.
-        const initPromise = liffService.initialize(LIFF_ID)
-        // Late-success auto-recovery: if init completes AFTER our timeout already showed
-        // the error card, clear it and enable the button — no manual retry needed.
-        initPromise.then(() => {
-          setIsLiffReady(true)
-          setLiffInitFailed(false)
-          setError((prev) => (prev === 'เชื่อมต่อ LINE ไม่สำเร็จ กรุณากดลองใหม่' ? null : prev))
-        }).catch(() => { /* handled by the awaited path below */ })
-        await withTimeout(initPromise, 60000, 'liff.init() (login page)')
+        // [P10 2026-07-06] Auto-retry (2×15s) instead of one 60s wait — transient mobile
+        // slowness is the CONFIRMED cause of the first-login stall (device data: the flow
+        // errored then succeeded on manual retry). A short attempt that fails fast + retries
+        // lands more often than one long freeze that produced a dead, silently-disabled button.
+        // liff.init short-circuits once initialized, so retrying is safe/cheap.
+        await withRetry(() => liffService.initialize(LIFF_ID), {
+          tries: 2, ms: 15000, backoffMs: 1000, label: 'liff.init() (login page)',
+          onAttempt: (n) => { if (n > 1) setError((prev) => (prev === 'เชื่อมต่อ LINE ไม่สำเร็จ กรุณากดลองใหม่' ? null : prev)) },
+        })
         setIsLiffReady(true)
 
         // Strategy 5: After liff.init(), check if SDK added liff.state to URL
@@ -311,22 +307,25 @@ export function StaffLoginPage() {
 
     try {
       console.log('[Auto-login] Getting LIFF profile...')
-      // [FIX] time-boxed (same values as Callback.tsx) — a stalled getProfile/loginWithLine
-      // used to freeze the "กำลังเชื่อมต่อ..." button forever on the returning-staff path
-      const profile = await withTimeout(liffService.getProfile(), 20000, 'liff.getProfile() (auto-login)')
+      // [P10 2026-07-06] Auto-retry (getProfile 2×10s, loginWithLine 2×20s) — same confirmed
+      // transient-slowness fix as Callback.tsx. loginWithLine self-heals on retry (sign-in-first
+      // returns the account a timed-out signUp already created).
+      const profile = await withRetry(() => liffService.getProfile(), {
+        tries: 2, ms: 10000, backoffMs: 1000, label: 'liff.getProfile() (auto-login)',
+      })
       console.log('[Auto-login] LIFF profile:', profile)
 
       // Check for invite data from admin invitation flow
       const inviteStaffId = localStorage.getItem('staff_invite_staff_id') || undefined
 
       console.log('[Auto-login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
-      // 60s (was 15s): the chain is many sequential round-trips — mobile RTT spikes
-      // pushed legitimate logins past 15s on 2026-07-03 morning
-      const result = await withTimeout(authService.loginWithLine({
+      const result = await withRetry(() => authService.loginWithLine({
         lineUserId: profile.userId,
         displayName: profile.displayName,
         pictureUrl: profile.pictureUrl,
-      }, 'STAFF', inviteStaffId), 60000, 'loginWithLine() (auto-login)')
+      }, 'STAFF', inviteStaffId), {
+        tries: 2, ms: 20000, backoffMs: 1500, label: 'loginWithLine() (auto-login)',
+      })
       console.log('[Auto-login] Login successful:', result)
 
       // Clean up invite data from localStorage
@@ -387,8 +386,11 @@ export function StaffLoginPage() {
       if (liffService.isLoggedIn()) {
         console.log('[LINE Login] Already logged in, getting profile...')
         // Already logged in, get profile and authenticate
-        // [FIX] time-boxed — stall here used to freeze the login button spinner forever
-        const profile = await withTimeout(liffService.getProfile(), 20000, 'liff.getProfile() (manual login)')
+        // [P10 2026-07-06] Auto-retry (getProfile 2×10s, loginWithLine 2×20s) — same confirmed
+        // transient-slowness fix as the callback + auto-login paths.
+        const profile = await withRetry(() => liffService.getProfile(), {
+          tries: 2, ms: 10000, backoffMs: 1000, label: 'liff.getProfile() (manual login)',
+        })
         console.log('[LINE Login] LIFF profile:', profile)
 
         // Check for invite data from admin invitation flow
@@ -399,11 +401,13 @@ export function StaffLoginPage() {
         const targetPath = localStorage.getItem('staff_redirect_after_login') || redirectPath
 
         console.log('[LINE Login] Calling loginWithLine...', inviteStaffId ? `(invite: ${inviteStaffId})` : '')
-        const result = await withTimeout(authService.loginWithLine({
+        const result = await withRetry(() => authService.loginWithLine({
           lineUserId: profile.userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
-        }, 'STAFF', inviteStaffId), 60000, 'loginWithLine() (manual login)')
+        }, 'STAFF', inviteStaffId), {
+          tries: 2, ms: 20000, backoffMs: 1500, label: 'loginWithLine() (manual login)',
+        })
         console.log('[LINE Login] Login successful:', result)
 
         // Clean up invite data from localStorage

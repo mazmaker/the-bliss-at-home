@@ -7,30 +7,19 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { APP_CONFIGS, authService, liffService, supabase } from '@bliss/supabase/auth'
 import { AlertCircle, Loader2 } from 'lucide-react'
+import { withTimeout, withRetry } from '../../utils/withTimeout'
 
 // Get LIFF ID from environment
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
-
-// Time-box an awaited step so a hung network/SDK call (liff.init / liff.getProfile /
-// loginWithLine / getSession) can NEVER freeze the callback on the "Signing you in..."
-// spinner forever. On timeout it rejects → the catch below shows the actionable
-// "Back to Login" error card instead of an eternal spinner.
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => {
-        console.error(`[Callback] Step timed out after ${ms}ms: ${label}`)
-        reject(new Error('การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง'))
-      }, ms)
-    ),
-  ])
-}
 
 export function StaffAuthCallback() {
   const navigate = useNavigate()
   const config = APP_CONFIGS.STAFF
   const [error, setError] = useState<string | null>(null)
+  // Live progress under the spinner. The confirmed root cause is transient mobile slowness,
+  // so we now AUTO-RETRY each step and SHOW the attempt — a slow first-login reads as
+  // "กำลังลองใหม่…" progress instead of a dead freeze that makes staff give up. (P10, 2026-07-06)
+  const [progress, setProgress] = useState<string | null>(null)
   const hasRun = useRef(false)
 
   useEffect(() => {
@@ -139,8 +128,13 @@ export function StaffAuthCallback() {
             if (!LIFF_ID) {
               throw new Error('LIFF ID not configured')
             }
-            // 60s (was 12s): field data 2026-07-03 — LINE's API can exceed 12s and still succeed
-            await withTimeout(liffService.initialize(LIFF_ID), 60000, 'liff.init()')
+            // Auto-retry (2×15s) instead of one 60s wait: transient mobile slowness is the
+            // confirmed cause (2026-07-06), so a short attempt that fails fast + retries lands
+            // more often than a single long freeze — and the user sees progress, not a dead spinner.
+            await withRetry(() => liffService.initialize(LIFF_ID), {
+              tries: 2, ms: 15000, backoffMs: 1000, label: 'liff.init()',
+              onAttempt: (n, m) => setProgress(n > 1 ? `เชื่อมต่อ LINE ช้า กำลังลองใหม่… (${n}/${m})` : null),
+            })
           }
 
           // Strategy 5: After liff.init(), SDK may have added liff.state to URL
@@ -158,8 +152,11 @@ export function StaffAuthCallback() {
             throw new Error('LINE authentication failed')
           }
 
-          // Get LINE profile
-          const profile = await withTimeout(liffService.getProfile(), 20000, 'liff.getProfile()')
+          // Get LINE profile (auto-retry 2×10s — pure read, safe to retry)
+          const profile = await withRetry(() => liffService.getProfile(), {
+            tries: 2, ms: 10000, backoffMs: 1000, label: 'liff.getProfile()',
+            onAttempt: (n, m) => setProgress(n > 1 ? `กำลังโหลดโปรไฟล์… (${n}/${m})` : null),
+          })
 
           // Check if this is link mode (user wants to link LINE to existing account)
           const isLinkMode = localStorage.getItem('line_link_mode') === 'true'
@@ -203,11 +200,17 @@ export function StaffAuthCallback() {
               console.log('[Callback] Found invite staff ID:', inviteStaffId)
             }
 
-            await withTimeout(authService.loginWithLine({
+            // Auto-retry 2×20s. loginWithLine self-heals on retry: a signUp that timed out
+            // still created the account, so the next attempt's sign-in-first branch just returns it.
+            setProgress('กำลังเข้าสู่ระบบ…')
+            await withRetry(() => authService.loginWithLine({
               lineUserId: profile.userId,
               displayName: profile.displayName,
               pictureUrl: profile.pictureUrl,
-            }, 'STAFF', inviteStaffId), 60000, 'loginWithLine()') // 60s: sequential chain × mobile RTT spikes
+            }, 'STAFF', inviteStaffId), {
+              tries: 2, ms: 20000, backoffMs: 1500, label: 'loginWithLine()',
+              onAttempt: (n, m) => setProgress(n > 1 ? `เข้าสู่ระบบช้า กำลังลองใหม่… (${n}/${m})` : 'กำลังเข้าสู่ระบบ…'),
+            })
 
             // Clean up invite data from localStorage
             localStorage.removeItem('staff_invite_token')
@@ -337,12 +340,14 @@ export function StaffAuthCallback() {
       }
     }
 
-    // Ultimate safety net: even if some await slips past the per-step timeouts above,
-    // never let the "Signing you in..." spinner run forever — surface the retry card after 75s.
-    // (75s, was 20s — must sit above the longest per-step ceiling of 60s)
+    // Ultimate safety net for any await that slips past the per-step timeouts (e.g. the
+    // Google-branch DB calls / link-mode). Must sit ABOVE the worst-case auto-retry budget
+    // (liff.init 2×15 + getProfile 2×10 + loginWithLine 2×20 + backoffs ≈ 93s) so it never
+    // aborts a legit retry sequence — the per-step timeouts (device-confirmed to fire) are the
+    // real control, this is just the last-resort backstop. (P10, 2026-07-06: was 75s.)
     const watchdog = setTimeout(() => {
-      setError((prev) => prev || 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง')
-    }, 75000)
+      setError((prev) => prev || 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาแตะ "ลองอีกครั้ง"')
+    }, 100000)
 
     handleCallback().finally(() => clearTimeout(watchdog))
 
@@ -361,11 +366,21 @@ export function StaffAuthCallback() {
               Authentication Failed
             </h2>
             <p className="text-bliss-600 mb-6">{error}</p>
+            {/* [P10] Primary action = retry the whole callback (reload keeps the LIFF params
+                in the URL → handleCallback re-runs its full auto-retry sequence). This turns the
+                dead-end "Back to Login" (which re-loops LIFF) into a one-tap re-attempt — matching
+                the confirmed workaround (manual retries eventually succeed). */}
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-semibold mb-3"
+            >
+              ลองอีกครั้ง
+            </button>
             <button
               onClick={() => navigate('/staff/login', { replace: true })}
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+              className="text-sm text-bliss-500 hover:text-bliss-700 transition"
             >
-              Back to Login
+              กลับไปหน้าเข้าสู่ระบบ
             </button>
           </div>
         </div>
@@ -384,6 +399,11 @@ export function StaffAuthCallback() {
           <p className="text-bliss-600">
             Please wait while we complete your authentication.
           </p>
+          {/* [P10] Live progress so a slow-but-working first-login reads as active retrying,
+              not a frozen spinner that makes staff give up. */}
+          {progress && (
+            <p className="text-sm text-emerald-700 mt-3 font-medium">{progress}</p>
+          )}
         </div>
       </div>
     </div>
