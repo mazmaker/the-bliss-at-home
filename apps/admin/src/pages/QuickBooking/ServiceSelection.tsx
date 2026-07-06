@@ -300,6 +300,16 @@ export default function ServiceSelection({
   const [currentServiceSelection, setCurrentServiceSelection] = useState<ServiceSelection | null>(selectedService || null)
   const [currentPricing, setCurrentPricing] = useState<PricingDetails | null>(basePricing || null)
 
+  // Couple / simultaneous booking (P8). Recipient 0 uses the service→duration flow above;
+  // recipient 1 is picked via a compact inline selector shown in the details step. Home/office
+  // scope only this increment (D-P8-3): hotel-type couple is out of scope.
+  const [serviceFormat, setServiceFormat] = useState<'single' | 'couple'>('single')
+  const [recipient2ServiceId, setRecipient2ServiceId] = useState<string | null>(null)
+  const [recipient2Duration, setRecipient2Duration] = useState<number | null>(null)
+  const isCouple = serviceFormat === 'couple'
+  const recipient2Service = services.find(s => s.id === recipient2ServiceId) || null
+  const recipient2Complete = !isCouple || !!(recipient2Service && recipient2Duration)
+
 
   // Load services on mount
   useEffect(() => {
@@ -369,7 +379,7 @@ export default function ServiceSelection({
     if (currentServiceSelection) {
       calculatePricing(currentServiceSelection)
     }
-  }, [currentServiceSelection, isHotelBooking, appliedPromotion, customer?.id])
+  }, [currentServiceSelection, isHotelBooking, appliedPromotion, customer?.id, serviceFormat, recipient2ServiceId, recipient2Duration])
 
   // Set default date and time
   useEffect(() => {
@@ -478,15 +488,21 @@ export default function ServiceSelection({
     if (!serviceSelection || !serviceSelection.service) return
 
     try {
-      const basePrice = calculateServicePrice(serviceSelection.service, serviceSelection.duration)
+      const recipient0Price = calculateServicePrice(serviceSelection.service, serviceSelection.duration)
+      // Couple: add recipient 2's service price to the subtotal. base_price stays recipient-0 only;
+      // final_price = whole-booking total (Σ − discount) — the canonical customer convention (D-P8-1).
+      const recipient1Price = (serviceFormat === 'couple' && recipient2ServiceId && recipient2Duration)
+        ? calculateServicePrice(services.find(s => s.id === recipient2ServiceId), recipient2Duration)
+        : 0
+      const subtotal = recipient0Price + recipient1Price
       let discountAmount = 0
       let codeDiscount = 0
 
 
-      // Apply promotion discount
+      // Apply promotion discount (on the whole-booking subtotal)
       if (appliedPromotion) {
         if (appliedPromotion.discount_type === 'percentage') {
-          const promoDiscount = basePrice * (appliedPromotion.discount_value / 100)
+          const promoDiscount = subtotal * (appliedPromotion.discount_value / 100)
           codeDiscount = appliedPromotion.max_discount
             ? Math.min(promoDiscount, appliedPromotion.max_discount)
             : promoDiscount
@@ -497,9 +513,9 @@ export default function ServiceSelection({
       }
 
       setCurrentPricing({
-        base_price: basePrice,
+        base_price: recipient0Price,
         discount_amount: discountAmount,
-        final_price: Math.max(0, basePrice - discountAmount),
+        final_price: Math.max(0, subtotal - discountAmount),
         customer_discount: 0,
         code_discount: codeDiscount
       })
@@ -796,6 +812,14 @@ export default function ServiceSelection({
         return
       }
 
+      // Couple: recipient 2 must have a service + duration chosen
+      if (isCouple && !(recipient2Service && recipient2Duration)) {
+        setError('กรุณาเลือกบริการและระยะเวลาสำหรับผู้รับบริการคนที่ 2')
+        processingRef.current = false
+        setIsProcessing(false)
+        return
+      }
+
       // Validate address fields for home/office booking
       if (!validateAddressFields()) {
         processingRef.current = false
@@ -826,6 +850,34 @@ export default function ServiceSelection({
         savedAddressIsDefault: selectedAddress?.is_default
       } : undefined
 
+      // Per-recipient rows (canonical model). Recipient 0 always; recipient 1 only for couple.
+      // recipient_name left null so the server labels jobs "คนที่ 1 / คนที่ 2".
+      const recipients: Array<{
+        service_id: string; service: Service; duration: number; price: number
+        recipient_index: number; recipient_name: string | null; sort_order: number
+      }> = [
+        {
+          service_id: currentServiceSelection.service.id,
+          service: currentServiceSelection.service,
+          duration: currentServiceSelection.duration,
+          price: calculateServicePrice(currentServiceSelection.service, currentServiceSelection.duration),
+          recipient_index: 0,
+          recipient_name: null,
+          sort_order: 0,
+        },
+      ]
+      if (isCouple && recipient2Service && recipient2Duration) {
+        recipients.push({
+          service_id: recipient2Service.id,
+          service: recipient2Service,
+          duration: recipient2Duration,
+          price: calculateServicePrice(recipient2Service, recipient2Duration),
+          recipient_index: 1,
+          recipient_name: null,
+          sort_order: 1,
+        })
+      }
+
       const details = {
         bookingDate,
         bookingTime,
@@ -835,7 +887,10 @@ export default function ServiceSelection({
         discountCode: appliedPromotion?.code,
         appliedDiscount: appliedPromotion,
         selectedDuration: currentServiceSelection?.duration,
-        providerPreference
+        providerPreference,
+        serviceFormat: isCouple ? 'simultaneous' : 'single',
+        recipientCount: isCouple ? 2 : 1,
+        recipients
       }
 
       console.log('✅ Validation passed, updating booking data')
@@ -1278,6 +1333,79 @@ export default function ServiceSelection({
 
           </div>
 
+                {/* 1.5 Booking Format (single / couple) — P8 */}
+                <div className="bg-white border border-bliss-200 rounded-lg p-5">
+                  <h3 className="font-medium text-bliss-900 mb-4 flex items-center gap-2">
+                    <User className="w-5 h-5 text-bliss-700" />
+                    รูปแบบการจอง
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setServiceFormat('single')}
+                      className={`p-3 rounded-lg border-2 text-left transition ${
+                        !isCouple ? 'border-bliss-700 bg-bliss-50 shadow-sm' : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-50'
+                      }`}
+                    >
+                      <div className="font-medium text-bliss-900 text-sm">เดี่ยว</div>
+                      <p className="text-xs text-bliss-500 mt-0.5">ผู้รับบริการ 1 ท่าน</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setServiceFormat('couple')}
+                      className={`p-3 rounded-lg border-2 text-left transition ${
+                        isCouple ? 'border-bliss-700 bg-bliss-50 shadow-sm' : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-50'
+                      }`}
+                    >
+                      <div className="font-medium text-bliss-900 text-sm">คู่ (พร้อมกัน)</div>
+                      <p className="text-xs text-bliss-500 mt-0.5">ผู้รับบริการ 2 ท่าน · ผู้ให้บริการ 2 คน</p>
+                    </button>
+                  </div>
+
+                  {isCouple && (
+                    <div className="mt-4 space-y-3 border-t border-bliss-200 pt-4">
+                      <div className="text-sm font-medium text-bliss-800">ผู้รับบริการคนที่ 2</div>
+                      <div>
+                        <label className="block text-xs text-bliss-600 mb-1">บริการ</label>
+                        <select
+                          value={recipient2ServiceId || ''}
+                          onChange={(e) => { setRecipient2ServiceId(e.target.value || null); setRecipient2Duration(null) }}
+                          className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-[#565b34] focus:border-[#565b34]"
+                        >
+                          <option value="">เลือกบริการ</option>
+                          {services.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name_th}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {recipient2Service && (
+                        <div>
+                          <label className="block text-xs text-bliss-600 mb-1">ระยะเวลา</label>
+                          <div className="flex flex-wrap gap-2">
+                            {getDurationOptions(recipient2Service).map((opt) => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setRecipient2Duration(opt.value)}
+                                className={`px-3 py-2 rounded-lg border text-sm transition ${
+                                  recipient2Duration === opt.value
+                                    ? 'border-bliss-700 bg-bliss-50 text-bliss-900'
+                                    : 'border-bliss-200 hover:border-bliss-300'
+                                }`}
+                              >
+                                {opt.label} · {formatCurrency(calculateServicePrice(recipient2Service, opt.value))}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {!recipient2Complete && (
+                        <p className="text-xs text-orange-600">กรุณาเลือกบริการและระยะเวลาสำหรับผู้รับบริการคนที่ 2</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* 2. Date and Time Selection */}
                 <div className="bg-white border border-bliss-200 rounded-lg p-5">
             <h3 className="font-medium text-bliss-900 mb-4 flex items-center gap-2">
@@ -1631,10 +1759,23 @@ export default function ServiceSelection({
               <div className="bg-bliss-50 border border-bliss-200 rounded-lg p-4">
                 <h3 className="font-medium text-bliss-900 mb-3">สรุปราคา</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-bliss-600">ค่าบริการ:</span>
-                    <span>{formatCurrency(currentPricing.base_price)}</span>
-                  </div>
+                  {isCouple && recipient2Complete && recipient2Service && recipient2Duration ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-bliss-600">ผู้รับบริการ 1 ({formatDuration(currentServiceSelection?.duration || 0)}):</span>
+                        <span>{formatCurrency(currentPricing.base_price)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-bliss-600">ผู้รับบริการ 2 ({formatDuration(recipient2Duration)}):</span>
+                        <span>{formatCurrency(calculateServicePrice(recipient2Service, recipient2Duration))}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-bliss-600">ค่าบริการ:</span>
+                      <span>{formatCurrency(currentPricing.base_price)}</span>
+                    </div>
+                  )}
 
 
                   {currentPricing.code_discount && currentPricing.code_discount > 0 && (
@@ -1702,7 +1843,7 @@ export default function ServiceSelection({
               e.preventDefault()
               handleProceedToNext()
             }}
-            disabled={!currentServiceSelection || !currentPricing || !bookingDate || !selectedHour || !selectedMinute || isProcessing}
+            disabled={!currentServiceSelection || !currentPricing || !bookingDate || !selectedHour || !selectedMinute || isProcessing || (isCouple && !recipient2Complete)}
             className="flex items-center gap-2 bg-[#565b34] text-white px-6 py-3 rounded-lg hover:bg-[#464a28] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isProcessing ? (

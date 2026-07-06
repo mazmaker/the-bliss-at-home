@@ -37,6 +37,18 @@ interface BookingData {
   adminNotes?: string
   discountCode?: string
   providerPreference?: string
+  // Couple / simultaneous booking (P8)
+  recipientCount?: number
+  serviceFormat?: string
+  recipients?: Array<{
+    service_id: string
+    service?: any
+    duration: number
+    price: number
+    recipient_index: number
+    recipient_name?: string | null
+    sort_order: number
+  }>
 }
 
 interface Props {
@@ -125,19 +137,32 @@ export default function BookingConfirmation({
       if (!bookingData.bookingTime) throw new Error('Booking time missing')
       if (!bookingData.basePricing) throw new Error('Pricing information missing')
 
-      // Calculate staff earnings
+      // Calculate staff earnings (per-recipient for couples, mirroring the server job fan-out:
+      // fixed-rate = FULL rate per person NOT divided by N; commission = per-recipient price × rate)
       const finalPrice = bookingData.basePricing?.final_price || 0
       const svc = bookingData.service as any
+      const recips = bookingData.recipients || []
+      const isCouple = (bookingData.recipientCount || 1) > 1 && recips.length > 1
+
+      const earningFor = (s: any, dur: number, commissionBase: number): number => {
+        if (s?.use_fixed_rate) {
+          const d = dur || s?.duration || 90
+          const fixed = d === 60 ? s.staff_earning_60
+            : d === 120 ? s.staff_earning_120
+            : s.staff_earning_90
+          return Math.round(Number(fixed) || 0)
+        }
+        const rate = Number(s?.staff_commission_rate) || 0
+        return Math.round((Number(commissionBase) || 0) * rate)
+      }
+
       let staffEarnings: number
-      if (svc?.use_fixed_rate) {
-        const dur = svc.duration || 90
-        const fixed = dur === 60 ? svc.staff_earning_60
-          : dur === 120 ? svc.staff_earning_120
-          : svc.staff_earning_90
-        staffEarnings = Math.round(Number(fixed) || 0)
+      if (isCouple) {
+        // Sum each recipient's earning (commission uses that recipient's own price).
+        staffEarnings = recips.reduce((sum, r) => sum + earningFor(r.service || svc, r.duration, r.price), 0)
       } else {
-        const commissionRate = Number(svc?.staff_commission_rate) || 0
-        staffEarnings = Math.round(finalPrice * commissionRate)
+        // Single — unchanged behavior: fixed-rate by service duration, else commission × final_price.
+        staffEarnings = earningFor(svc, svc?.duration, finalPrice)
       }
 
       // Create booking directly in database
@@ -151,11 +176,13 @@ export default function BookingConfirmation({
       const bookingData_ = {
         // Required NOT NULL fields
         customer_id: bookingData.customer.id,
-        service_id: bookingData.service.id,
+        service_id: bookingData.service.id, // recipient-0 service (couple: person 1)
         booking_date: bookingData.bookingDate,
         booking_time: bookingData.bookingTime,
-        duration: bookingData.service.duration || 60, // Required NOT NULL
-        base_price: bookingData.basePricing?.base_price || bookingData.basePricing?.final_price || 0,
+        // Couple: use recipient-0's selected duration/price. base_price is recipient-0 per-person
+        // (canonical, D-P8-1); final_price is the whole-booking total (Σ − discount).
+        duration: isCouple ? (recips[0]?.duration || bookingData.service.duration || 60) : (bookingData.service.duration || 60), // Required NOT NULL
+        base_price: isCouple ? (recips[0]?.price ?? 0) : (bookingData.basePricing?.base_price || bookingData.basePricing?.final_price || 0),
         final_price: bookingData.basePricing?.final_price || 0,
 
         // Status fields
@@ -165,6 +192,12 @@ export default function BookingConfirmation({
         // Pricing fields
         discount_amount: bookingData.basePricing?.discount_amount || 0,
         staff_earnings: staffEarnings, // Calculated from service commission rate
+
+        // Couple / simultaneous booking (P8): recipient_count>1 => server createJobsFromBooking
+        // reads the booking_services rows (inserted below) and fans out one job per recipient.
+        recipient_count: isCouple ? 2 : 1,
+        service_format: isCouple ? 'simultaneous' : 'single',
+        is_multi_service: isCouple,
 
         // Note: Customer contact info is stored in customers table via customer_id
         // No need for separate customer_name/customer_phone fields
@@ -203,6 +236,28 @@ export default function BookingConfirmation({
       }
 
       console.log('✅ Booking created:', booking)
+
+      // Couple: persist one booking_services row PER RECIPIENT BEFORE dispatch, so the server's
+      // couple-aware createJobsFromBooking reads them and creates one job per recipient with the
+      // correct per-person service/duration/price/earnings. Single bookings keep the legacy path
+      // (no booking_services row — the server single branch uses booking.final_price directly).
+      if (isCouple) {
+        const bsRows = recips.map((r) => ({
+          booking_id: booking.id,
+          service_id: r.service_id,
+          duration: r.duration,
+          price: r.price,
+          recipient_index: r.recipient_index,
+          recipient_name: r.recipient_name || null,
+          sort_order: r.sort_order ?? r.recipient_index,
+        }))
+        const { error: bsError } = await supabase.from('booking_services').insert(bsRows)
+        if (bsError) {
+          console.error('❌ booking_services error:', bsError)
+          throw new Error(`Database error (booking_services): ${bsError.message}`)
+        }
+        console.log(`✅ Inserted ${bsRows.length} booking_services rows (couple)`)
+      }
 
       // Dispatch to staff: create job(s) + send LINE/in-app notifications.
       // Admin quick-booking inserts the booking directly (no payment webhook), so it must
@@ -360,8 +415,21 @@ export default function BookingConfirmation({
             <h3 className="font-medium text-bliss-900">ข้อมูลบริการ</h3>
           </div>
           <div className="space-y-1 text-sm">
-            <p><span className="text-bliss-500">บริการ:</span> {bookingData.service?.name_th}</p>
-            <p><span className="text-bliss-500">ระยะเวลา:</span> {bookingData.service?.duration} นาที</p>
+            {(bookingData.recipientCount || 1) > 1 && bookingData.recipients ? (
+              <>
+                <p className="font-medium text-bliss-700">การจองแบบคู่ (2 ท่าน · พร้อมกัน)</p>
+                {bookingData.recipients.map((r, i) => (
+                  <p key={i} className="ml-2">
+                    <span className="text-bliss-500">คนที่ {i + 1}:</span> {r.service?.name_th} • {r.duration} นาที • {formatCurrency(r.price)}
+                  </p>
+                ))}
+              </>
+            ) : (
+              <>
+                <p><span className="text-bliss-500">บริการ:</span> {bookingData.service?.name_th}</p>
+                <p><span className="text-bliss-500">ระยะเวลา:</span> {bookingData.service?.duration} นาที</p>
+              </>
+            )}
             {bookingData.bookingDate && (
               <p><span className="text-bliss-500">วันที่:</span> {formatDate(bookingData.bookingDate)}</p>
             )}

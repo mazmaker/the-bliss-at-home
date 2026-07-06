@@ -72,6 +72,20 @@ interface BookingData {
   adminNotes?: string
   overrideRestrictions?: boolean
   providerPreference?: string
+  addressDetails?: any
+  // Couple / simultaneous booking (P8). recipient_count>1 => server createJobsFromBooking
+  // fans out 1 job per recipient from the booking_services rows written on confirm.
+  serviceFormat?: 'single' | 'simultaneous'
+  recipientCount?: number
+  recipients?: Array<{
+    service_id: string
+    service?: Service
+    duration: number
+    price: number
+    recipient_index: number
+    recipient_name?: string | null
+    sort_order: number
+  }>
 }
 
 const steps = [
@@ -187,7 +201,10 @@ export default function QuickBooking() {
                 addressDetails: details.addressDetails,
                 discountCode: details.discountCode,
                 appliedDiscount: details.appliedDiscount,
-                providerPreference: details.providerPreference
+                providerPreference: details.providerPreference,
+                serviceFormat: details.serviceFormat,
+                recipientCount: details.recipientCount,
+                recipients: details.recipients
               })
             }
             onNext={undefined}
