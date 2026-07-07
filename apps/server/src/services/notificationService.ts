@@ -49,6 +49,37 @@ function filterStaffByProviderPreference<T extends { gender?: string | null }>(
 }
 
 /**
+ * P13: Return the set of staff profile_ids who are CURRENTLY SERVING a job — i.e. en route
+ * or mid-service — so new-job dispatch can skip them (a busy staff must not be pushed a new
+ * job / re-offered a re-opened one).
+ *
+ * - Serving = jobs.status IN ('traveling','arrived','in_progress') (D-P13 D1). 'confirmed'
+ *   (accepted but not yet started travelling) is intentionally NOT counted as serving.
+ * - id-space: jobs.staff_id === profiles.id === staff.profile_id (verified 19/19), so the
+ *   returned ids compare directly against staff.profile_id — no mapping needed.
+ * - Computed LIVE on every dispatch, so a staff auto-returns to the pool the instant their
+ *   job completes; there is no reset flag and is_available is never touched.
+ * - Fail-open: on a query error return an EMPTY set (gate no one) — better to over-notify
+ *   than to silently suppress the whole pool.
+ */
+export async function getServingStaffProfileIds(
+  supabase: ReturnType<typeof getSupabaseClient>
+): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('staff_id')
+    .not('staff_id', 'is', null)
+    .in('status', ['traveling', 'arrived', 'in_progress'])
+
+  if (error) {
+    console.error('[P13] getServingStaffProfileIds query error (fail-open, gating no one):', error)
+    return new Set<string>()
+  }
+
+  return new Set((data || []).map(j => j.staff_id).filter(Boolean) as string[])
+}
+
+/**
  * Create job(s) from a confirmed booking (idempotent)
  * - Single booking: 1 job
  * - Couple booking (simultaneous): 1 job per recipient (each needs a separate staff)
@@ -422,8 +453,11 @@ export async function sendBookingConfirmedNotifications(
     .eq('is_available', true)
     .eq('status', 'active')
 
-  const availableStaff = filterStaffByProviderPreference(allAvailableStaff || [], booking.provider_preference)
-  console.log(`👥 Staff filter: preference=${booking.provider_preference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, filtered=${availableStaff.length}`)
+  const preferenceFilteredStaff = filterStaffByProviderPreference(allAvailableStaff || [], booking.provider_preference)
+  // P13: exclude staff currently serving another job (traveling/arrived/in_progress) — don't push a new job to a busy staff.
+  const servingStaffIds = await getServingStaffProfileIds(supabase)
+  const availableStaff = preferenceFilteredStaff.filter(s => !servingStaffIds.has(s.profile_id))
+  console.log(`👥 Staff filter: preference=${booking.provider_preference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, afterPreference=${preferenceFilteredStaff.length}, serving=${servingStaffIds.size}, dispatched=${availableStaff.length}`)
 
   if (availableStaff.length > 0) {
     // Get LINE user IDs from profiles
@@ -1115,8 +1149,11 @@ export async function processJobCancelled(
       .eq('is_available', true)
       .eq('status', 'active')
 
-    const availableStaff = filterStaffByProviderPreference(allAvailableStaff || [], providerPreference)
-    console.log(`👥 Staff filter (cancelled): preference=${providerPreference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, filtered=${availableStaff.length}`)
+    const preferenceFilteredStaff = filterStaffByProviderPreference(allAvailableStaff || [], providerPreference)
+    // P13: exclude staff currently serving another job — a re-opened job must not be re-offered to a busy staff.
+    const servingStaffIds = await getServingStaffProfileIds(supabase)
+    const availableStaff = preferenceFilteredStaff.filter(s => !servingStaffIds.has(s.profile_id))
+    console.log(`👥 Staff filter (cancelled): preference=${providerPreference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, afterPreference=${preferenceFilteredStaff.length}, serving=${servingStaffIds.size}, dispatched=${availableStaff.length}`)
 
     if (availableStaff.length > 0 && newJob) {
       const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
@@ -1465,11 +1502,17 @@ export async function processJobEscalations(): Promise<number> {
   const sentSet = new Set(sentEscalations?.map(r => `${r.job_id}-${r.escalation_level}`) || [])
 
   // 3. Get available staff (with gender for provider preference filtering)
-  const { data: availableStaff } = await supabase
+  const { data: availableStaffRaw } = await supabase
     .from('staff')
     .select('id, profile_id, gender')
     .eq('is_available', true)
     .eq('status', 'active')
+
+  // P13 (D-P13 D2): gate the escalation cron too — exclude staff currently serving another job
+  // so a busy staff isn't re-reminded about an unaccepted pending job they can't take right now.
+  const escalationServingIds = await getServingStaffProfileIds(supabase)
+  const availableStaff = (availableStaffRaw || []).filter(s => !escalationServingIds.has(s.profile_id))
+  console.log(`👥 Escalation staff pool: total=${availableStaffRaw?.length || 0}, serving=${escalationServingIds.size}, dispatched=${availableStaff.length}`)
 
   let staffProfiles: Array<{ id: string; line_user_id: string | null }> | null = null
   if (availableStaff && availableStaff.length > 0) {

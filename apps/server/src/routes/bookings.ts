@@ -14,7 +14,7 @@ import { sendCreditNoteEmailForRefund } from './receipts.js'
 import { applyExtensionAfterPayment } from './payment.js'
 import { applyExtensionToBooking } from '../services/extensionApplyService.js'
 import { lineService } from '../services/lineService.js'
-import { sendExtensionNotifications } from '../services/notificationService.js'
+import { sendExtensionNotifications, getServingStaffProfileIds } from '../services/notificationService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
 import type {
   BookingCancellationRequest,
@@ -577,6 +577,11 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         if (preferred.length > 0) eligibleStaff = preferred
       }
 
+      // P13: exclude staff currently serving another job (traveling/arrived/in_progress) from the
+      // reschedule re-broadcast — a busy staff shouldn't be pushed the re-opened rescheduled job.
+      const reschedServingIds = await getServingStaffProfileIds(supabase)
+      eligibleStaff = eligibleStaff.filter(s => !reschedServingIds.has(s.profile_id))
+
       if (eligibleStaff.length > 0) {
         const serviceName = (booking.service as any)?.name_th || (booking.service as any)?.name_en || 'Unknown Service'
         const hotelName = (booking.hotel as any)?.name_th || (booking.hotel as any)?.name_en || ''
@@ -1087,10 +1092,15 @@ router.post('/:id/cancel', paymentAuthGuard, async (req: Request, res: Response)
           .eq('status', 'active')
 
         if (availableStaff && availableStaff.length > 0) {
+          // P13 (D-P13 D4): exclude staff currently serving another job — don't disturb a busy
+          // staff mid-service with a "งานถูกยกเลิก" notice for a board job they never took.
+          const cancelServingIds = await getServingStaffProfileIds(supabase)
           // Get LINE user IDs from profiles
           const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
             // Exclude staff already notified in Block 1 (assigned staff)
             .filter(pid => !notifiedStaffProfileIds.has(pid))
+            // P13: exclude staff currently serving another job
+            .filter(pid => !cancelServingIds.has(pid))
           const { data: staffProfiles } = await supabase
             .from('profiles')
             .select('id, line_user_id')
