@@ -6,6 +6,7 @@ import { useBookings, useBookingStats, useUpdateBookingStatus, usePendingExtensi
 import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
+import AdminRescheduleModal from '../components/AdminRescheduleModal'
 import DeleteBookingConfirmModal from '../components/DeleteBookingConfirmModal'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
@@ -86,6 +87,7 @@ function Bookings() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false)
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false) // PART47-P6: admin-only reschedule
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -136,6 +138,22 @@ function Bookings() {
 
   const handleCancellationComplete = () => {
     // Refresh bookings data
+    queryClient.invalidateQueries({ queryKey: ['bookings'] })
+  }
+
+  // PART47-P6 — admin-only reschedule. Mirrors the cancellation flow: the detail modal's
+  // "เลื่อนนัด" button closes detail then opens AdminRescheduleModal (keeps selectedBooking).
+  const handleOpenReschedule = () => {
+    setIsDetailModalOpen(false)
+    setIsRescheduleModalOpen(true)
+  }
+
+  const handleCloseReschedule = () => {
+    setIsRescheduleModalOpen(false)
+    setSelectedBooking(null)
+  }
+
+  const handleRescheduleComplete = () => {
     queryClient.invalidateQueries({ queryKey: ['bookings'] })
   }
 
@@ -541,6 +559,7 @@ function Bookings() {
           onClose={handleCloseDetail}
           onStatusChange={handleStatusChange}
           onOpenCancellation={handleOpenCancellation}
+          onOpenReschedule={handleOpenReschedule}
           onDelete={handleOpenDeleteFromDetail}
         />
       )}
@@ -552,6 +571,16 @@ function Bookings() {
           isOpen={isCancellationModalOpen}
           onClose={handleCloseCancellation}
           onCancelled={handleCancellationComplete}
+        />
+      )}
+
+      {/* Booking Reschedule Modal (PART47-P6 — admin-only reschedule) */}
+      {isRescheduleModalOpen && selectedBooking && (
+        <AdminRescheduleModal
+          booking={selectedBooking}
+          isOpen={isRescheduleModalOpen}
+          onClose={handleCloseReschedule}
+          onRescheduled={handleRescheduleComplete}
         />
       )}
 
@@ -575,10 +604,11 @@ interface BookingDetailModalProps {
   onClose: () => void
   onStatusChange: (bookingId: string, newStatus: BookingStatus, autoMarkPaid?: boolean) => void
   onOpenCancellation: () => void
+  onOpenReschedule: () => void
   onDelete: () => void
 }
 
-function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation, onDelete }: BookingDetailModalProps) {
+function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation, onOpenReschedule, onDelete }: BookingDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState(booking.status)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
 
@@ -1327,12 +1357,25 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
             <Trash2 className="w-4 h-4" />
             ลบการจอง
           </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-2 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-white transition"
-          >
-            ปิด
-          </button>
+          <div className="flex gap-3">
+            {/* PART47-P6: admin-only reschedule — only for a reschedulable booking
+                (not cancelled/completed/in_progress, matching the server status guard). */}
+            {(booking.status === 'pending' || booking.status === 'confirmed') && (
+              <button
+                onClick={onOpenReschedule}
+                className="px-6 py-2 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4" />
+                เลื่อนนัด
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="px-6 py-2 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-white transition"
+            >
+              ปิด
+            </button>
+          </div>
         </div>
       </div>
     </div>

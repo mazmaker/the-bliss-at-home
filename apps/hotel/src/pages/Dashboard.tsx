@@ -1109,16 +1109,12 @@ function Dashboard() {
                       {getStatusBadge(booking.status)}
                       <p className="text-lg font-bold text-bliss-700">฿{booking.total_amount}</p>
 
-                      {/* Cancel/Reschedule buttons - only show for pending/confirmed bookings */}
+                      {/* Cancel button - only show for pending/confirmed bookings.
+                          P6: reschedule is admin-only — the hotel "เปลี่ยนเวลา" button was removed;
+                          hotels contact the admin to reschedule. (CalendarClock import is kept — it is
+                          also used by the credit-cycle widget elsewhere in this file.) */}
                       {(booking.status === 'pending' || booking.status === 'confirmed') && (
                         <div className="flex items-center gap-2 ml-2">
-                          <button
-                            onClick={() => setRescheduleModal({ isOpen: true, booking })}
-                            className="p-2 bg-bliss-100 hover:bg-bliss-200 text-bliss-600 rounded-lg transition-colors"
-                            title="เปลี่ยนเวลา"
-                          >
-                            <CalendarClock className="w-4 h-4" />
-                          </button>
                           <button
                             onClick={() => setCancelModal({ isOpen: true, booking })}
                             className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"

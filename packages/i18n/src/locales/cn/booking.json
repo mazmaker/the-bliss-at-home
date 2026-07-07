@@ -210,6 +210,7 @@
     "reviews": "评价",
     "chat": "聊天",
     "reschedule": "改期",
+    "rescheduleViaAdmin": "需要改期？请联系管理员",
     "priceSummary": "价格汇总",
     "mainService": "主服务",
     "serviceFee": "服务费用",

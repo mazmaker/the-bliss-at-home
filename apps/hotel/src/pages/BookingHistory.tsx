@@ -4,7 +4,7 @@ import {
   Search, Calendar, Download, Eye, Loader2, AlertCircle, RefreshCw,
   Filter, MapPin, Clock, User, CheckCircle, XCircle, List, Grid3X3, X,
   Phone, FileText, Edit, Image, History, Save,
-  Briefcase, Wallet, CreditCard, CalendarClock
+  Briefcase, Wallet, CreditCard
 } from 'lucide-react'
 import { HotelCancelBookingModal } from '../components/HotelCancelBookingModal'
 import { HotelRescheduleModal } from '../components/HotelRescheduleModal'
@@ -1354,13 +1354,8 @@ function BookingHistory() {
 
                   {(selectedBooking.status === 'pending' || selectedBooking.status === 'confirmed') && (
                     <>
-                      <button
-                        onClick={() => setRescheduleModal({ isOpen: true, booking: selectedBooking })}
-                        className="flex items-center gap-2 px-4 py-2 bg-bliss-50 hover:bg-bliss-100 text-bliss-700 rounded-lg transition text-sm"
-                      >
-                        <CalendarClock className="w-4 h-4" />
-                        เลื่อนนัด
-                      </button>
+                      {/* P6: reschedule is admin-only — the hotel self-reschedule button was removed;
+                          hotels contact the admin to reschedule. Cancel is unchanged. */}
                       <button
                         onClick={() => setCancelModal({ isOpen: true, booking: selectedBooking })}
                         className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition text-sm"
@@ -1368,6 +1363,9 @@ function BookingHistory() {
                         <X className="w-4 h-4" />
                         ยกเลิก
                       </button>
+                      <span className="flex items-center px-2 text-xs text-gray-400">
+                        ต้องการเลื่อนนัด? ติดต่อผู้ดูแลระบบ
+                      </span>
                     </>
                   )}
                 </div>

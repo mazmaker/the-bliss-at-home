@@ -77,3 +77,39 @@ export function requireRole(...roles: string[]) {
     next()
   }
 }
+
+/**
+ * [P6-D5] ALWAYS-ON admin gate — NOT gated by REQUIRE_PAYMENT_AUTH (unlike requireRole).
+ * Verifies the Supabase JWT and requires profiles.role === 'ADMIN', attaching req.user.
+ * Use for routes that must be admin-only regardless of the payment-auth rollout flag
+ * (e.g. the reschedule route once reschedule becomes admin-only). Rejects missing/invalid
+ * token (401) and any non-admin caller (403), so a stale customer/hotel JWT cannot reach it.
+ */
+export async function requireAdmin(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'No token provided', code: 'AUTH_REQUIRED' })
+    }
+    const { data: { user }, error } = await userClientFor(token).auth.getUser()
+    if (error || !user) {
+      return res.status(401).json({ success: false, error: 'Invalid token', code: 'AUTH_INVALID' })
+    }
+    const { data: profile } = await getSupabaseClient()
+      .from('profiles')
+      .select('id, role, email, hotel_id')
+      .eq('id', user.id)
+      .single()
+    if (!profile || profile.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, error: 'Forbidden: this action is restricted to admins', code: 'ADMIN_ONLY' })
+    }
+    req.user = profile
+    next()
+  } catch (e: any) {
+    return res.status(401).json({ success: false, error: 'Authentication failed', details: e.message })
+  }
+}

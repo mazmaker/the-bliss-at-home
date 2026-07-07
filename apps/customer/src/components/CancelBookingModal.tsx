@@ -262,11 +262,8 @@ export function CancelBookingModal({
               </div>
             )}
 
-            {eligibility.canReschedule && (
-              <p className="text-sm text-bliss-500 mb-4">
-                {t('booking:cancelBooking.rescheduleOption')}
-              </p>
-            )}
+            {/* P6: reschedule is admin-only — the "you can reschedule instead" hint was removed
+                (customers can no longer self-reschedule; they contact the admin via LINE). */}
 
             <button
               onClick={onClose}

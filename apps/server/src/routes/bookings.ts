@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { refundService } from '../services/refundService.js'
-import { paymentAuthGuard, authenticateSupabaseUser, type AuthenticatedRequest } from '../middleware/auth.js'
+import { paymentAuthGuard, authenticateSupabaseUser, requireAdmin, type AuthenticatedRequest } from '../middleware/auth.js'
 import { getEnabledPaymentChannels, getPaymentMode } from '../lib/paymentChannels.js'
 import { sendCancellationNotifications } from '../services/cancellationNotificationService.js'
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
@@ -222,7 +222,12 @@ async function isStaffFreeAt(
  * - Sends notifications to previously assigned staff (re-accept wording only when re-opened)
  * - Covers single (1 job) and couple (N jobs) identically
  */
-router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Response) => {
+// [P6-D5] Reschedule is ADMIN-ONLY. `requireAdmin` is an ALWAYS-ON gate (not the flag-gated
+// paymentAuthGuard) that verifies the Supabase JWT + requires profiles.role==='ADMIN', so a
+// stale customer/hotel token cannot reach this route even though the customer/hotel reschedule
+// UIs are also being removed. Because only admins reach the handler, [P6-G3] admins may OVERRIDE
+// the reschedule-eligibility policy (see below).
+router.post('/:id/reschedule', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const body = req.body as RescheduleBookingBody
@@ -325,14 +330,14 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
       })
     }
 
-    // Check reschedule eligibility from cancellation policy
+    // [P6-G3] ADMIN OVERRIDE: reschedule is admin-only (requireAdmin), and an admin may override
+    // the reschedule-eligibility policy (≤3h lead time + max-reschedules ceiling). We still COMPUTE
+    // eligibility for logging/telemetry, but we do NOT block — so an admin can help a customer who
+    // calls in late or has already hit the reschedule limit. (The past-time sanity guard below is
+    // kept: scheduling into the past is invalid data, not a policy to override.)
     const eligibility = await checkCancellationEligibility(id)
     if (!eligibility.canReschedule) {
-      return res.status(400).json({
-        success: false,
-        error: eligibility.reason || 'ไม่สามารถเลื่อนนัดได้ตามนโยบาย',
-        code: 'RESCHEDULE_NOT_ALLOWED',
-      })
+      console.log(`[Reschedule] Admin override — booking ${id} is normally not reschedulable (${eligibility.reason || 'policy'}); proceeding because caller is ADMIN.`)
     }
 
     // Reject a NEW date/time that is already in the past (defense-in-depth behind the
@@ -732,6 +737,75 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
       console.error('[Reschedule] Admin notification error (non-blocking):', adminNotifError)
     }
 
+    // 6. [P6-D3] Notify the CUSTOMER (regular booking) or the HOTEL (hotel booking) that their
+    //    appointment was rescheduled. Before P6 the route notified only staff + admins, so a customer
+    //    rescheduled by an admin would never know — this closes that gap now that reschedule is
+    //    admin-only. In-app is the reliable channel (many customers sign in with Google and have no
+    //    linked LINE); a customer-facing LINE push is a planned follow-up (the staff reschedule
+    //    template is job-worded and must not be reused for customers). Own try/catch — non-blocking.
+    let customerNotified = false
+    let hotelNotified = false
+    try {
+      const serviceNameTh = (booking.service as any)?.name_th || 'บริการ'
+      const rescheduleMsg = `การจอง #${booking.booking_number} บริการ "${serviceNameTh}" ถูกเลื่อนจากวันที่ ${oldDate} เวลา ${oldTime} เป็นวันที่ ${body.new_date} เวลา ${body.new_time}`
+      const notifData = {
+        booking_id: id,
+        booking_number: booking.booking_number,
+        old_date: oldDate,
+        old_time: oldTime,
+        new_date: body.new_date,
+        new_time: body.new_time,
+      }
+      const isHotelBooking = !booking.customer_id && !!booking.hotel_id
+      if (isHotelBooking) {
+        // Hotel booking (no customer_id) → notify the HOTEL's users (profiles role=HOTEL for this hotel)
+        const { data: hotelProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('hotel_id', booking.hotel_id)
+          .eq('role', 'HOTEL')
+        if (hotelProfiles && hotelProfiles.length > 0) {
+          const { error: hotelNotifErr } = await supabase.from('notifications').insert(
+            hotelProfiles.map(p => ({
+              user_id: p.id,
+              type: 'booking_rescheduled',
+              title: 'การจองถูกเลื่อน',
+              message: rescheduleMsg,
+              data: notifData,
+              is_read: false,
+            }))
+          )
+          if (!hotelNotifErr) {
+            hotelNotified = true
+            console.log(`[Reschedule] Hotel in-app notification sent to ${hotelProfiles.length} hotel user(s)`)
+          }
+        }
+      } else if (booking.customer_id) {
+        // Regular booking → notify the CUSTOMER in-app (user_id = customer's profile_id)
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('profile_id')
+          .eq('id', booking.customer_id)
+          .single()
+        if (customer?.profile_id) {
+          const { error: custNotifErr } = await supabase.from('notifications').insert({
+            user_id: customer.profile_id,
+            type: 'booking_rescheduled',
+            title: 'การจองของคุณถูกเลื่อน',
+            message: rescheduleMsg,
+            data: notifData,
+            is_read: false,
+          })
+          if (!custNotifErr) {
+            customerNotified = true
+            console.log(`[Reschedule] Customer in-app notification sent (profile ${customer.profile_id})`)
+          }
+        }
+      }
+    } catch (custHotelNotifyError) {
+      console.error('[Reschedule] Customer/hotel notification error (non-blocking):', custHotelNotifyError)
+    }
+
     return res.json({
       success: true,
       data: {
@@ -743,7 +817,7 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         staff_kept: canKeepStaff,
         staff_unassigned: needsReaccept && hasAssignedStaff,
         jobs_reset: updatedJobIds.length,
-        notifications_sent: { ...notificationResults, admins: adminsNotified, new_job_staff: newJobStaffNotified },
+        notifications_sent: { ...notificationResults, admins: adminsNotified, new_job_staff: newJobStaffNotified, customer: customerNotified, hotel: hotelNotified },
       },
       message: canKeepStaff
         ? 'Booking rescheduled. The same staff was kept (they were free at the new time) and notified.'
