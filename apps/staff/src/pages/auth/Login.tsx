@@ -344,6 +344,7 @@ export function StaffLoginPage() {
       // window.location.href triggers a full page reload which re-initializes auth
       console.log('[Auto-login] Redirecting to:', targetPath, '(saved:', savedPath, 'redirect:', redirectPath, ')')
       liffService.clearReloginMark() // login succeeded → reset the expired-token loop guard
+      try { sessionStorage.removeItem('staff_liff_autorecover_ts') } catch { /* ignore */ } // [2026-07-07] clear first-login auto-recover guard
       window.location.href = targetPath
     } catch (err: any) {
       // If auto-login fails (e.g., expired token), silently fail and show login button

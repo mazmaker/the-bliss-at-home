@@ -158,7 +158,11 @@ export function StaffAuthCallback() {
             }
             setProgress('กำลังเชื่อมต่อ LINE…')
             rec('liff.init() start (single attempt — code-exchange is single-use)')
-            await withTimeout(liffService.initialize(LIFF_ID), 30000, 'liff.init()')
+            // Device evidence (2026-07-07): liff.init() reliably HANGS while exchanging the FIRST
+            // code (the diagnostic showed "liff.init() start" → timeout, never past it). So fail
+            // FAST (12s, not 30s) and let the catch's auto-recover redirect to a CLEAN re-init
+            // that picks up the LINE session liff.login already established (proven to log in).
+            await withTimeout(liffService.initialize(LIFF_ID), 12000, 'liff.init()')
             rec(`liff.init() ok. loggedIn=${liffService.isLoggedIn()}`)
           } else {
             rec('liff already initialized')
@@ -394,6 +398,28 @@ export function StaffAuthCallback() {
           setError('เซสชัน LINE หมดอายุ กรุณาแตะ "ลองอีกครั้ง" เพื่อเข้าสู่ระบบใหม่')
           return
         }
+
+        // 🔴 [FIRST-LOGIN AUTO-RECOVER 2026-07-07] Device evidence: liff.init() reliably HANGS
+        // exchanging the FIRST code, but a CLEAN re-init (no code) at /staff/login picks up the
+        // LINE session liff.login() already established and auto-logs-in (the staff's manual
+        // "ลองอีกครั้ง" proved this exact path lands on /staff/jobs). So do it AUTOMATICALLY once —
+        // strip the spent code + go to a clean /staff/login — instead of dead-ending on the error
+        // card. One-shot 60s guard (sessionStorage) so a persistently-failing case can't loop.
+        // Gate on !isLoggedIn (the liff.init-hang case); skip link-mode.
+        try {
+          const RECOVER_KEY = 'staff_liff_autorecover_ts'
+          const last = Number(sessionStorage.getItem(RECOVER_KEY) || '0')
+          const recentlyRecovered = last > 0 && Date.now() < last + 60_000
+          if (!isLinkMode && !recentlyRecovered && !liffService.isLoggedIn()) {
+            sessionStorage.setItem(RECOVER_KEY, String(Date.now()))
+            rec('AUTO-RECOVER → clean /staff/login (liff session should already exist)')
+            const u = new URL(window.location.href)
+            ;['code', 'state', 'liffClientId', 'liffRedirectUri', 'liffIsEscapedFromApp'].forEach((p) => u.searchParams.delete(p))
+            window.history.replaceState({}, '', u.toString())
+            window.location.href = '/staff/login'
+            return
+          }
+        } catch { /* fall through to the error card */ }
 
         setDiagText(diagRef.current.join('\n'))
         setError(err.message || 'Authentication failed')
