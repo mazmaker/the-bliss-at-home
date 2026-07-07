@@ -81,6 +81,7 @@
       "notesPlaceholder": "E.g., building access code, meeting point, or other important information",
       "arrivalNote": "Our team will arrive at your location on time",
       "default": "Default",
+      "usingDefaultHint": "Using your default address",
       "loadingAddresses": "Loading addresses...",
       "markerTitle": "Location Pin",
       "searchPlaceholder": "Search location...",

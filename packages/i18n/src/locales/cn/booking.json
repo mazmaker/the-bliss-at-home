@@ -81,6 +81,7 @@
       "notesPlaceholder": "如：门禁密码、接待地点或其他重要信息",
       "arrivalNote": "我们的团队将准时到达您的位置",
       "default": "默认",
+      "usingDefaultHint": "已使用默认地址",
       "loadingAddresses": "正在加载地址...",
       "markerTitle": "位置标记",
       "searchPlaceholder": "搜索地点...",

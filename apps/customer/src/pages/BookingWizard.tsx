@@ -1050,6 +1050,12 @@ function BookingWizard() {
                               {addr.district && `, ${addr.district}`}
                               {`, ${addr.province} ${addr.zipcode || ''}`}
                             </p>
+                            {addr.is_default && selectedAddressId === addr.id && (
+                              <p className="flex items-center gap-1 text-xs text-bliss-600 mt-2 font-medium">
+                                <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                                {t('wizard.step4.usingDefaultHint')}
+                              </p>
+                            )}
                           </div>
                           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
                             selectedAddressId === addr.id
@@ -1803,7 +1809,7 @@ function BookingWizard() {
                 disabled={
                   (currentStep === 2 && (!selectedDate || !selectedTime)) ||
                   (currentStep === 4 && (!address.name || !address.phone || !address.address || !address.province ||
-                    (showManualAddressForm && (!manualAddressLocation.latitude || !manualAddressLocation.longitude))))
+                    (showManualAddressForm && (!address.zipcode || !manualAddressLocation.latitude || !manualAddressLocation.longitude))))
                 }
                 className="px-6 py-3 bg-bliss-600 text-white rounded-xl font-medium hover:bg-bliss-700 transition disabled:bg-bliss-300 disabled:cursor-not-allowed"
               >
