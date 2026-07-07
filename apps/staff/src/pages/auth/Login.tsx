@@ -248,15 +248,12 @@ export function StaffLoginPage() {
 
       try {
         setLiffInitFailed(false)
-        // [P10 2026-07-06] Auto-retry (2×15s) instead of one 60s wait — transient mobile
-        // slowness is the CONFIRMED cause of the first-login stall (device data: the flow
-        // errored then succeeded on manual retry). A short attempt that fails fast + retries
-        // lands more often than one long freeze that produced a dead, silently-disabled button.
-        // liff.init short-circuits once initialized, so retrying is safe/cheap.
-        await withRetry(() => liffService.initialize(LIFF_ID), {
-          tries: 2, ms: 15000, backoffMs: 1000, label: 'liff.init() (login page)',
-          onAttempt: (n) => { if (n > 1) setError((prev) => (prev === 'เชื่อมต่อ LINE ไม่สำเร็จ กรุณากดลองใหม่' ? null : prev)) },
-        })
+        // 🔴 [FIRST-LOGIN-LOOP FIX 2026-07-07] liff.init() EXCHANGES the single-use LINE
+        // authorization `code`. An OAuth code is single-use, so init is NOT idempotent — the old
+        // withRetry(2×15s) re-ran liff.init() with an already-consumed code on attempt 2, which
+        // can never succeed and was a root cause of the first-login loop. ONE attempt, generous
+        // ceiling; a code-bearing URL is routed to the Callback (which owns the exchange) anyway.
+        await withTimeout(liffService.initialize(LIFF_ID), 30000, 'liff.init() (login page)')
         setIsLiffReady(true)
 
         // Strategy 5: After liff.init(), check if SDK added liff.state to URL

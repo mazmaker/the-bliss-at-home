@@ -20,7 +20,28 @@ export function StaffAuthCallback() {
   // so we now AUTO-RETRY each step and SHOW the attempt — a slow first-login reads as
   // "กำลังลองใหม่…" progress instead of a dead freeze that makes staff give up. (P10, 2026-07-06)
   const [progress, setProgress] = useState<string | null>(null)
+  // [FIRST-LOGIN-LOOP FIX 2026-07-07] On-screen diagnostics. We CANNOT reproduce the LINE
+  // in-app-browser first-login via Playwright, so record the exact step + URL params that
+  // failed and show them under the error card → the staff screenshots it → we see the real
+  // fail path instead of guessing (this is how P10/P11 shipped fixes that didn't fully land).
+  const [diagText, setDiagText] = useState<string | null>(null)
   const hasRun = useRef(false)
+  const diagRef = useRef<string[]>([])
+  const rec = (m: string) => { try { diagRef.current.push(`${diagRef.current.length + 1}. ${m}`) } catch { /* ignore */ } }
+
+  // [FIRST-LOGIN-LOOP FIX 2026-07-07] Retry = mint a BRAND-NEW authorization code, never reload
+  // the current URL (its ?code= is single-use and already spent → re-exchanging it loops forever).
+  const handleRetryFresh = () => {
+    liffService.clearReloginMark() // explicit user action → bypass the loop guard
+    try {
+      const u = new URL(window.location.href)
+      ;['code', 'state', 'liffClientId', 'liffRedirectUri', 'liffIsEscapedFromApp'].forEach((p) => u.searchParams.delete(p))
+      window.history.replaceState({}, '', u.toString())
+      if (liffService.isInitialized()) { liffService.reloginFresh(); return } // logout()+login() = fresh code
+    } catch { /* ignore */ }
+    // Fallback: a full load of the CLEAN login page resets module state + carries no dead code.
+    window.location.href = '/staff/login'
+  }
 
   useEffect(() => {
     async function handleCallback() {
@@ -122,20 +143,39 @@ export function StaffAuthCallback() {
         if (isLiffCallback) {
           // Handle LINE (LIFF) callback
           console.log('[Callback] Detected LINE LIFF callback')
+          rec(`LIFF cb. code=${urlParams.has('code')} cid=${urlParams.has('liffClientId')} rUri=${urlParams.has('liffRedirectUri')} init=${liffService.isInitialized()}`)
 
-          // Initialize LIFF if not already
+          // Initialize LIFF if not already.
+          // 🔴 [FIRST-LOGIN-LOOP FIX 2026-07-07] liff.init() EXCHANGES the single-use LINE
+          // authorization `code` with the LINE Platform. An OAuth code is single-use, so init is
+          // NOT idempotent — the old withRetry(2×15s) re-ran liff.init() with an already-consumed
+          // code on attempt 2, which can NEVER succeed → the reported first-login loop ("เชื่อมต่อ
+          // LINE ช้า 2/2" → Authentication Failed, escaped only by closing the app for a fresh code).
+          // Use ONE attempt with a generous ceiling; the outer 100s watchdog is the real backstop.
           if (!liffService.isInitialized()) {
             if (!LIFF_ID) {
               throw new Error('LIFF ID not configured')
             }
-            // Auto-retry (2×15s) instead of one 60s wait: transient mobile slowness is the
-            // confirmed cause (2026-07-06), so a short attempt that fails fast + retries lands
-            // more often than a single long freeze — and the user sees progress, not a dead spinner.
-            await withRetry(() => liffService.initialize(LIFF_ID), {
-              tries: 2, ms: 15000, backoffMs: 1000, label: 'liff.init()',
-              onAttempt: (n, m) => setProgress(n > 1 ? `เชื่อมต่อ LINE ช้า กำลังลองใหม่… (${n}/${m})` : null),
-            })
+            setProgress('กำลังเชื่อมต่อ LINE…')
+            rec('liff.init() start (single attempt — code-exchange is single-use)')
+            await withTimeout(liffService.initialize(LIFF_ID), 30000, 'liff.init()')
+            rec(`liff.init() ok. loggedIn=${liffService.isLoggedIn()}`)
+          } else {
+            rec('liff already initialized')
           }
+
+          // 🔴 [FIRST-LOGIN-LOOP FIX 2026-07-07] Strip the now-consumed LINE OAuth params from the
+          // URL right after liff.init() resolves (LIFF docs: only change the URL AFTER init
+          // resolves). So a reload / back-nav can never re-exchange the DEAD code and re-loop.
+          // Keep `liff.state` (the deep-link path) — only the code-exchange params are cleared.
+          try {
+            const u = new URL(window.location.href)
+            let changed = false
+            ;['code', 'state', 'liffClientId', 'liffRedirectUri', 'liffIsEscapedFromApp'].forEach((p) => {
+              if (u.searchParams.has(p)) { u.searchParams.delete(p); changed = true }
+            })
+            if (changed) window.history.replaceState({}, '', u.toString())
+          } catch { /* ignore */ }
 
           // Strategy 5: After liff.init(), SDK may have added liff.state to URL
           if (!deepLinkPath || !deepLinkPath.startsWith('/')) {
@@ -149,14 +189,17 @@ export function StaffAuthCallback() {
 
           // Check if user is logged in
           if (!liffService.isLoggedIn()) {
+            rec('NOT logged in after init → throw')
             throw new Error('LINE authentication failed')
           }
 
           // Get LINE profile (auto-retry 2×10s — pure read, safe to retry)
+          setProgress(null)
           const profile = await withRetry(() => liffService.getProfile(), {
             tries: 2, ms: 10000, backoffMs: 1000, label: 'liff.getProfile()',
             onAttempt: (n, m) => setProgress(n > 1 ? `กำลังโหลดโปรไฟล์… (${n}/${m})` : null),
           })
+          rec('getProfile ok')
 
           // Check if this is link mode (user wants to link LINE to existing account)
           const isLinkMode = localStorage.getItem('line_link_mode') === 'true'
@@ -203,6 +246,7 @@ export function StaffAuthCallback() {
             // Auto-retry 2×20s. loginWithLine self-heals on retry: a signUp that timed out
             // still created the account, so the next attempt's sign-in-first branch just returns it.
             setProgress('กำลังเข้าสู่ระบบ…')
+            rec('loginWithLine start')
             await withRetry(() => authService.loginWithLine({
               lineUserId: profile.userId,
               displayName: profile.displayName,
@@ -211,6 +255,7 @@ export function StaffAuthCallback() {
               tries: 2, ms: 20000, backoffMs: 1500, label: 'loginWithLine()',
               onAttempt: (n, m) => setProgress(n > 1 ? `เข้าสู่ระบบช้า กำลังลองใหม่… (${n}/${m})` : 'กำลังเข้าสู่ระบบ…'),
             })
+            rec('loginWithLine ok → redirect')
 
             // Clean up invite data from localStorage
             localStorage.removeItem('staff_invite_token')
@@ -323,6 +368,7 @@ export function StaffAuthCallback() {
         }
       } catch (err: any) {
         console.error('[Callback] Error:', err)
+        rec(`ERROR: ${err?.message || String(err)}`)
 
         // [FIX 2026-07-03] A timed-out step may have SUCCEEDED late (field data:
         // loginWithLine/liff.init slow-but-successful). Re-check the session once —
@@ -344,10 +390,12 @@ export function StaffAuthCallback() {
         if (liffService.isTokenExpiredError(err) && !isLinkMode) {
           console.log('[Callback] Access token expired → fresh LINE re-authorization')
           if (liffService.reloginFresh()) return // redirected to LINE; page unloads
+          setDiagText(diagRef.current.join('\n'))
           setError('เซสชัน LINE หมดอายุ กรุณาแตะ "ลองอีกครั้ง" เพื่อเข้าสู่ระบบใหม่')
           return
         }
 
+        setDiagText(diagRef.current.join('\n'))
         setError(err.message || 'Authentication failed')
       }
     }
@@ -358,6 +406,8 @@ export function StaffAuthCallback() {
     // aborts a legit retry sequence — the per-step timeouts (device-confirmed to fire) are the
     // real control, this is just the last-resort backstop. (P10, 2026-07-06: was 75s.)
     const watchdog = setTimeout(() => {
+      rec('WATCHDOG 100s fired')
+      setDiagText(diagRef.current.join('\n'))
       setError((prev) => prev || 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาแตะ "ลองอีกครั้ง"')
     }, 100000)
 
@@ -378,16 +428,24 @@ export function StaffAuthCallback() {
               Authentication Failed
             </h2>
             <p className="text-bliss-600 mb-6">{error}</p>
-            {/* [P10] Primary action = retry the whole callback (reload keeps the LIFF params
-                in the URL → handleCallback re-runs its full auto-retry sequence). This turns the
-                dead-end "Back to Login" (which re-loops LIFF) into a one-tap re-attempt — matching
-                the confirmed workaround (manual retries eventually succeed). */}
+            {/* 🔴 [FIRST-LOGIN-LOOP FIX 2026-07-07] Retry = mint a FRESH authorization code
+                (handleRetryFresh: strip the spent ?code= + liff.logout()→login()), NOT
+                window.location.reload() — reloading re-exchanges the already-consumed single-use
+                code, which is exactly what looped the first-login forever. */}
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleRetryFresh}
               className="w-full px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-semibold mb-3"
             >
               ลองอีกครั้ง
             </button>
+            {/* [FIRST-LOGIN-LOOP FIX 2026-07-07] Dev diagnostics — the staff screenshots this so
+                we can see the exact fail path from a LINE in-app browser we can't reproduce. */}
+            {diagText && (
+              <details className="w-full mb-3 text-left">
+                <summary className="text-xs text-bliss-400 cursor-pointer">รายละเอียด (สำหรับทีมพัฒนา)</summary>
+                <pre className="text-[10px] leading-snug text-bliss-500 whitespace-pre-wrap break-all bg-bliss-50 rounded p-2 mt-1">{diagText}</pre>
+              </details>
+            )}
             <button
               onClick={() => navigate('/staff/login', { replace: true })}
               className="text-sm text-bliss-500 hover:text-bliss-700 transition"
