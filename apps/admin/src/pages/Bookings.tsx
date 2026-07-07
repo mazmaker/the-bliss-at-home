@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users, TrendingUp } from 'lucide-react'
+import { Search, Eye, Download, Calendar, Clock, X, User, Phone, MapPin, Briefcase, CreditCard, FileText, DollarSign, Ban, RefreshCw, Users, TrendingUp, Trash2 } from 'lucide-react'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
 import { useBookings, useBookingStats, useUpdateBookingStatus, usePendingExtensions, type Booking, type BookingStatus } from '../hooks/useBookings'
 import { useQueryClient } from '@tanstack/react-query'
 import type { ServiceCategory } from '../services/bookingService'
 import BookingCancellationModal from '../components/BookingCancellationModal'
+import DeleteBookingConfirmModal from '../components/DeleteBookingConfirmModal'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -85,6 +86,7 @@ function Bookings() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
   // Sync statusFilter with URL search params (e.g. when navigating from different links)
@@ -135,6 +137,23 @@ function Bookings() {
   const handleCancellationComplete = () => {
     // Refresh bookings data
     queryClient.invalidateQueries({ queryKey: ['bookings'] })
+  }
+
+  // PART47-P7 — delete flow. From the list a Trash icon opens the confirm directly; from the
+  // detail modal the red "ลบการจอง" button closes detail then opens the confirm (keeps selectedBooking).
+  const handleOpenDeleteFromList = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleOpenDeleteFromDetail = () => {
+    setIsDetailModalOpen(false)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleCloseDelete = () => {
+    setIsDeleteModalOpen(false)
+    setSelectedBooking(null)
   }
 
   const handleStatusChange = async (bookingId: string, newStatus: BookingStatus, autoMarkPaid?: boolean) => {
@@ -489,13 +508,22 @@ function Bookings() {
                     </td>
                     <td className="py-2 px-2">{getPaymentBadge(booking.payment_status, booking)}</td>
                     <td className="py-2 px-2 text-center">
-                      <button
-                        onClick={() => handleOpenDetail(booking)}
-                        className="p-1 hover:bg-bliss-100 rounded transition"
-                        title="ดูรายละเอียด"
-                      >
-                        <Eye className="w-3 h-3 text-bliss-600" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => handleOpenDetail(booking)}
+                          className="p-1 hover:bg-bliss-100 rounded transition"
+                          title="ดูรายละเอียด"
+                        >
+                          <Eye className="w-3 h-3 text-bliss-600" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleOpenDeleteFromList(booking) }}
+                          className="p-1 hover:bg-red-50 rounded transition"
+                          title="ลบการจอง"
+                        >
+                          <Trash2 className="w-3 h-3 text-red-500" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -513,6 +541,7 @@ function Bookings() {
           onClose={handleCloseDetail}
           onStatusChange={handleStatusChange}
           onOpenCancellation={handleOpenCancellation}
+          onDelete={handleOpenDeleteFromDetail}
         />
       )}
 
@@ -523,6 +552,16 @@ function Bookings() {
           isOpen={isCancellationModalOpen}
           onClose={handleCloseCancellation}
           onCancelled={handleCancellationComplete}
+        />
+      )}
+
+      {/* Booking Delete Confirm Modal (PART47-P7) */}
+      {isDeleteModalOpen && selectedBooking && (
+        <DeleteBookingConfirmModal
+          booking={selectedBooking}
+          isOpen={isDeleteModalOpen}
+          onClose={handleCloseDelete}
+          onDeleted={handleCloseDelete}
         />
       )}
     </div>
@@ -536,9 +575,10 @@ interface BookingDetailModalProps {
   onClose: () => void
   onStatusChange: (bookingId: string, newStatus: BookingStatus, autoMarkPaid?: boolean) => void
   onOpenCancellation: () => void
+  onDelete: () => void
 }
 
-function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation }: BookingDetailModalProps) {
+function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation, onDelete }: BookingDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState(booking.status)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
 
@@ -1279,7 +1319,14 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-bliss-50 border-t border-bliss-200 px-6 py-4 flex justify-end gap-3">
+        <div className="sticky bottom-0 bg-bliss-50 border-t border-bliss-200 px-6 py-4 flex justify-between gap-3">
+          <button
+            onClick={onDelete}
+            className="px-6 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            ลบการจอง
+          </button>
           <button
             onClick={onClose}
             className="px-6 py-2 border border-bliss-300 text-bliss-700 rounded-xl font-medium hover:bg-white transition"

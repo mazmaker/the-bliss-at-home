@@ -632,6 +632,29 @@ class BookingService {
       }
     }
   }
+
+  /**
+   * PART47-P7 — hard-delete ONE booking + every related row atomically via the
+   * admin_delete_booking RPC (SECURITY DEFINER). The RPC enforces admin-only
+   * (auth.uid role='ADMIN'), blocks in_progress, cascades all children and
+   * recomputes staff/payout/promotion counters server-side. Throws on any error
+   * (FORBIDDEN / NOT_FOUND / BLOCKED_IN_PROGRESS / db) so the caller can surface it.
+   */
+  async deleteBooking(id: string): Promise<{
+    deleted_booking: string
+    deleted_jobs: number
+    deleted_notifs: number
+    recomputed_staff: number
+    recomputed_payouts: number
+    recomputed_promos: number
+  }> {
+    const { data, error } = await supabase.rpc('admin_delete_booking', { p_booking_id: id })
+    if (error) {
+      console.error('Error deleting booking:', error)
+      throw new Error(error.message || 'ลบการจองไม่สำเร็จ')
+    }
+    return data as any
+  }
 }
 
 export const bookingService = new BookingService()

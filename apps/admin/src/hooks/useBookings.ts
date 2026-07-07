@@ -110,6 +110,24 @@ export function useAssignStaff() {
   })
 }
 
+// PART47-P7 — hard-delete a booking + all related rows via the admin_delete_booking RPC.
+// Invalidate every query whose data the delete + recompute can change so the whole admin
+// UI stays consistent (bookings list/stats, staff aggregates, payouts).
+export function useDeleteBooking() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => bookingService.deleteBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'], refetchType: 'all' })
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'stats'] })
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
+      queryClient.invalidateQueries({ queryKey: ['payouts'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
 export function useSearchBookings(query: string) {
   return useQuery({
     queryKey: ['bookings', 'search', query],
