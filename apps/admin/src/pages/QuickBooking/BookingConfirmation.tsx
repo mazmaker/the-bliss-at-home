@@ -6,6 +6,7 @@ import { createCustomerAddress } from '../../lib/customerQueries'
 interface BookingData {
   customer?: any
   service?: any
+  selectedDuration?: number // admin-picked duration; service.duration is only the DB default (P15)
   staff?: any
   bookingDate?: string
   bookingTime?: string
@@ -67,6 +68,18 @@ export default function BookingConfirmation({
   const [isCreating, setIsCreating] = useState(false)
   const [createdBooking, setCreatedBooking] = useState<any>(null)
   const [error, setError] = useState('')
+
+  // The admin picks a duration (60/90/120) in ServiceSelection, but bookingData.service is the raw
+  // Service row whose .duration is only the DB default. The chosen duration lives in selectedDuration
+  // (threaded from ServiceSelection) with recipients[0] as a fallback. Use it for the single-booking
+  // DISPLAY, the DB `duration` write, and the staff-earnings calc so all three agree — otherwise a
+  // non-default pick shows/charges/pays for the default duration (P15). Couple has its own
+  // per-recipient recipients[] and is unaffected.
+  const singleDuration =
+    bookingData.selectedDuration ??
+    bookingData.recipients?.[0]?.duration ??
+    bookingData.service?.duration ??
+    60
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('th-TH', {
@@ -161,8 +174,9 @@ export default function BookingConfirmation({
         // Sum each recipient's earning (commission uses that recipient's own price).
         staffEarnings = recips.reduce((sum, r) => sum + earningFor(r.service || svc, r.duration, r.price), 0)
       } else {
-        // Single — unchanged behavior: fixed-rate by service duration, else commission × final_price.
-        staffEarnings = earningFor(svc, svc?.duration, finalPrice)
+        // Single — fixed-rate by the ADMIN-PICKED duration (not the service's DB default), else
+        // commission × final_price. singleDuration falls back to service.duration when unset (P15).
+        staffEarnings = earningFor(svc, singleDuration, finalPrice)
       }
 
       // Create booking directly in database
@@ -181,7 +195,7 @@ export default function BookingConfirmation({
         booking_time: bookingData.bookingTime,
         // Couple: use recipient-0's selected duration/price. base_price is recipient-0 per-person
         // (canonical, D-P8-1); final_price is the whole-booking total (Σ − discount).
-        duration: isCouple ? (recips[0]?.duration || bookingData.service.duration || 60) : (bookingData.service.duration || 60), // Required NOT NULL
+        duration: isCouple ? (recips[0]?.duration || bookingData.service.duration || 60) : singleDuration, // Required NOT NULL (single: admin-picked duration, P15)
         base_price: isCouple ? (recips[0]?.price ?? 0) : (bookingData.basePricing?.base_price || bookingData.basePricing?.final_price || 0),
         final_price: bookingData.basePricing?.final_price || 0,
 
@@ -427,7 +441,7 @@ export default function BookingConfirmation({
             ) : (
               <>
                 <p><span className="text-bliss-500">บริการ:</span> {bookingData.service?.name_th}</p>
-                <p><span className="text-bliss-500">ระยะเวลา:</span> {bookingData.service?.duration} นาที</p>
+                <p><span className="text-bliss-500">ระยะเวลา:</span> {singleDuration} นาที</p>
               </>
             )}
             {bookingData.bookingDate && (

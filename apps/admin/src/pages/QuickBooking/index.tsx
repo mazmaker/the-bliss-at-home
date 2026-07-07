@@ -51,6 +51,10 @@ interface Service {
 interface BookingData {
   customer?: Customer
   service?: Service
+  // The admin-picked duration. `service` is the raw Service row whose `.duration` is only the
+  // DB default, so the chosen 60/90/120 must be threaded separately (P15). Primary source for
+  // the single-booking duration/earnings/display in BookingConfirmation.
+  selectedDuration?: number
   addOns?: Service[]
   bookingDate?: string
   bookingTime?: string
@@ -191,6 +195,7 @@ export default function QuickBooking() {
             onServiceSelect={(service, addOns, pricing, details) =>
               updateBookingData({
                 service,
+                selectedDuration: details.selectedDuration,
                 addOns,
                 basePricing: pricing,
                 bookingDate: details.bookingDate,
