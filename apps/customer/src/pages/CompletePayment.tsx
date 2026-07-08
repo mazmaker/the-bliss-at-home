@@ -40,6 +40,12 @@ function CompletePayment() {
   const cardEnabled = enabledChannels.includes('credit_card')
   const promptpayEnabled = enabledChannels.includes('promptpay')
 
+  // Exit to an EXPLICIT safe route — never navigate(-1). This is a ProtectedRoute, so a deep link
+  // enters via /login, which then redirects back here (state.from) → an inescapable loop (esp. for a
+  // deleted booking). Go to the booking detail (renders its own "back to history" link if missing) or
+  // the history list. Mirrors ExtensionPayment's goBack.
+  const goBack = () => navigate(id ? `/bookings/${id}` : '/bookings')
+
   const pollPromptPayStatus = (chargeId: string) => {
     const pollInterval = setInterval(async () => {
       try {
@@ -174,7 +180,7 @@ function CompletePayment() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={goBack}
               className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition"
             >
               <ChevronLeft className="w-5 h-5" />

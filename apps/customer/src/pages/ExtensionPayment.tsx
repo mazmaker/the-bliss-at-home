@@ -327,6 +327,14 @@ function ExtensionPayment() {
     setError(null)
   }
 
+  // Exit to an EXPLICIT safe route — never navigate(-1). This page is a ProtectedRoute, so a deep
+  // link (e.g. from LINE) enters via /login, leaving /login as the previous history entry; navigate(-1)
+  // returns there and Login redirects back here (state.from) → an inescapable loop (worst for a booking
+  // that admin already deleted). Go to the booking detail (which renders its own "back to history" link
+  // when the booking is missing) or, absent a ref, the history list.
+  const goBack = () =>
+    navigate(bookingNumber || bookingId ? `/bookings/${bookingNumber || bookingId}` : '/bookings')
+
   if (paymentSuccess) {
     return (
       <div className="min-h-screen bg-bliss-100 flex items-center justify-center p-4">
@@ -349,7 +357,7 @@ function ExtensionPayment() {
         <div className="bg-bliss-50 border-b border-bliss-200 sticky top-0 z-10">
           <div className="max-w-md mx-auto px-4 py-4">
             <div className="flex items-center gap-3">
-              <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition">
+              <button onClick={goBack} className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition">
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <h1 className="text-lg font-semibold text-bliss-900">{t('payment.title')}</h1>
@@ -378,7 +386,7 @@ function ExtensionPayment() {
             <div className="bg-red-50 rounded-xl p-6 border border-red-200 text-center space-y-3">
               <AlertTriangle className="w-8 h-8 text-red-500 mx-auto" />
               <p className="text-red-700">{error || t('pending.errSubmitFailed')}</p>
-              <button onClick={() => navigate(-1)} className="px-5 py-2 bg-bliss-600 text-white rounded-lg font-medium">
+              <button onClick={goBack} className="px-5 py-2 bg-bliss-600 text-white rounded-lg font-medium">
                 {t('pending.back')}
               </button>
             </div>
@@ -418,7 +426,7 @@ function ExtensionPayment() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => selectedChannel ? resetChannel() : navigate(-1)}
+              onClick={() => selectedChannel ? resetChannel() : goBack()}
               className="p-2 -ml-2 text-bliss-700 hover:text-bliss-900 transition"
             >
               <ChevronLeft className="w-5 h-5" />
