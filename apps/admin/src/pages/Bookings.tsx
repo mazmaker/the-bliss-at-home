@@ -725,7 +725,10 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <User className="w-5 h-5 text-bliss-400 mt-0.5" />
               <div>
                 <p className="text-sm text-bliss-500">ชื่อลูกค้า</p>
-                <p className="font-medium text-bliss-900">{booking.customers?.full_name || 'ไม่ระบุ'}</p>
+                {/* Regular bookings → customers-table name; HOTEL bookings (customer_id null) →
+                    parsed guest name from customer_notes (booking.customer). See skill
+                    bliss-admin-booking-customer-name-field. */}
+                <p className="font-medium text-bliss-900">{booking.customers?.full_name || booking.customer?.full_name || 'ไม่ระบุ'}</p>
               </div>
             </div>
 
@@ -733,7 +736,7 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <Phone className="w-5 h-5 text-bliss-400 mt-0.5" />
               <div>
                 <p className="text-sm text-bliss-500">เบอร์ติดต่อ</p>
-                <p className="font-medium text-bliss-900">{booking.customers?.phone || 'ไม่ระบุ'}</p>
+                <p className="font-medium text-bliss-900">{booking.customers?.phone || booking.customer?.phone || 'ไม่ระบุ'}</p>
               </div>
             </div>
 

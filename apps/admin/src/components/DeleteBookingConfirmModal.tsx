@@ -82,7 +82,10 @@ export default function DeleteBookingConfirmModal({
               <User className="w-4 h-4 text-bliss-400 mt-0.5" />
               <div>
                 <p className="text-bliss-500">ลูกค้า</p>
-                <p className="font-medium text-bliss-900">{booking.customer?.full_name || 'ไม่ระบุ'}</p>
+                {/* Prefer the real customers-table name (regular bookings), fall back to the parsed
+                    guest name from customer_notes (hotel bookings) — else "ไม่ระบุ". Using only
+                    `booking.customer` (singular, parsed) showed "ไม่ระบุ" for every regular booking. */}
+                <p className="font-medium text-bliss-900">{booking.customers?.full_name || booking.customer?.full_name || 'ไม่ระบุ'}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">

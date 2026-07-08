@@ -90,10 +90,20 @@ export interface Booking {
   refund_percentage?: number | null
 
   // Relations
+  // `customer` = guest parsed from customer_notes (HOTEL bookings, where customer_id is null).
   customer?: {
     id: string
     full_name: string
     phone: string
+  } | null
+  // `customers` = the real customers-table row from the `customers(...)` join (REGULAR bookings,
+  // customer_id set); null for hotel bookings. Display name should prefer this, then fall back to
+  // `customer` (the parsed guest) so BOTH booking types render a name (not "ไม่ระบุ").
+  customers?: {
+    id: string
+    full_name: string
+    phone: string
+    created_at?: string
   } | null
   hotel?: {
     id: string
