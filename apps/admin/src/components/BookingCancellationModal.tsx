@@ -271,7 +271,7 @@ export default function BookingCancellationModal({
                 <div>
                   <p className="text-bliss-500">ลูกค้า</p>
                   <p className="font-medium text-bliss-900">
-                    {booking.customer?.full_name || 'ไม่ระบุ'}
+                    {booking.customers?.full_name || booking.customer?.full_name || 'ไม่ระบุ'}
                   </p>
                 </div>
               </div>
