@@ -56,6 +56,12 @@ function ExtensionPayment() {
     ? Number(searchParams.get('discount_amount'))
     : undefined
   const notes         = searchParams.get('notes')          || undefined
+  // COUPLE: which recipient(s) to extend, e.g. "0" / "1" / "0,1". Threaded to the extend API so the
+  // server extends the chosen recipient(s), not booking_services[0].
+  const recipientIndices = (searchParams.get('recipient_indices') || '')
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n))
 
   const [enabledChannels, setEnabledChannels] = useState<string[]>([])
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null)
@@ -160,6 +166,7 @@ function ExtensionPayment() {
     if (notes)                body.notes           = notes
     if (omiseToken)           body.omise_token     = omiseToken
     if (bankCode)             body.bank_code       = bankCode
+    if (recipientIndices.length > 0) body.recipient_indices = recipientIndices
 
     const res = await fetch(`${API_URL}/api/bookings/${bookingId}/extend`, {
       method: 'POST',
@@ -181,6 +188,7 @@ function ExtensionPayment() {
     if (promotionId)         body.promotion_id    = promotionId
     if (discountAmt != null) body.discount_amount = discountAmt
     if (notes)               body.notes           = notes
+    if (recipientIndices.length > 0) body.recipient_indices = recipientIndices
     const res = await fetch(`${API_URL}/api/bookings/${bookingId}/extend`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },

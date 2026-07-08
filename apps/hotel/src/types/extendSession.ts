@@ -8,6 +8,24 @@ export interface ExtendSessionRequest {
   additionalDuration: number; // 60, 90, 120 minutes
   notes?: string;
   requestedBy?: 'hotel_staff' | 'customer';
+  // COUPLE: which recipient(s) to extend ([0]=คนที่1, [1]=คนที่2, [0,1]=ทั้งคู่). Omitted ⇒ base recipient.
+  recipientIndices?: number[];
+}
+
+export interface ExtensionRecipientInfo {
+  recipientIndex: number;
+  serviceId: string;
+  serviceNameTh: string;
+  serviceNameEn: string;
+  currentDuration: number;
+  prices: Record<number, number>; // duration(min) -> hotel-rate extension price for THIS recipient
+}
+
+export interface HotelExtensionInfo {
+  isCouple: boolean;
+  recipients: ExtensionRecipientInfo[];
+  availableDurations: number[];
+  extensionCount: number;
 }
 
 export interface ExtensionOption {

@@ -12,7 +12,7 @@ import { sendCancellationNotifications } from '../services/cancellationNotificat
 import { sendRescheduleNotifications } from '../services/rescheduleNotificationService.js'
 import { sendCreditNoteEmailForRefund } from './receipts.js'
 import { applyExtensionAfterPayment } from './payment.js'
-import { applyExtensionToBooking } from '../services/extensionApplyService.js'
+import { applyExtensionToBooking, type ExtensionTarget } from '../services/extensionApplyService.js'
 import { lineService } from '../services/lineService.js'
 import { sendExtensionNotifications, getServingStaffProfileIds } from '../services/notificationService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
@@ -1376,6 +1376,38 @@ interface ExtendBookingRequest {
   payment_method?: string     // 'promptpay' | 'credit_card' | 'internet_banking' | 'mobile_banking'
   omise_token?: string        // credit card token from Omise.js frontend
   bank_code?: string          // e.g. 'scb', 'kbank', 'bbl', 'ktb', 'bay', 'ttb'
+  // COUPLE/simultaneous: which recipient(s) to extend. [0]=คนที่1, [1]=คนที่2, [0,1]=ทั้งคู่.
+  // Omitted/empty ⇒ the base recipient (backwards-compatible single-recipient extend).
+  recipient_indices?: number[]
+}
+
+/** Extension price for a service at a given duration (mirrors the customer/hotel client helpers). */
+function computeExtensionPrice(service: any, duration: number): number {
+  let price: number
+  switch (duration) {
+    case 60: price = service.price_60 || (service.base_price * 0.5); break
+    case 90: price = service.price_90 || (service.base_price * 0.75); break
+    case 120: price = service.price_120 || service.base_price; break
+    default: price = (service.base_price / service.duration) * duration
+  }
+  return Math.round(price)
+}
+
+/** A pending_extensions row → an apply TARGET (honors the row's own recipient_index/service_id — the
+ *  whole point of storing them per-row, so admin-confirm applies to the right recipient, never [0]). */
+function pendingToTarget(pending: any, booking: any): ExtensionTarget {
+  const idx = pending.recipient_index ?? 0
+  const baseRow = (booking.booking_services || []).find((s: any) => !s.is_extension && (s.recipient_index ?? 0) === idx)
+  return {
+    recipientIndex: idx,
+    serviceId: pending.service_id || baseRow?.service_id || booking.service_id,
+    additionalDuration: pending.additional_duration,
+    finalExtensionPrice: Number(pending.final_extension_price),
+    discountAmount: Number(pending.discount_amount) || 0,
+    promotionId: pending.promotion_id,
+    recipientName: pending.recipient_name ?? baseRow?.recipient_name ?? null,
+    baseBookingServiceId: baseRow?.id ?? null,
+  }
 }
 
 interface ExtendBookingResponse {
@@ -1434,13 +1466,13 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       .select(`
         *,
         booking_services (
-          id, service_id, duration, price, recipient_name, recipient_index,
+          id, service_id, duration, price, recipient_name, recipient_index, is_extension,
           services (name_th, name_en, base_price, price_60, price_90, price_120, duration)
         ),
         service:services (
           name_th, name_en, base_price, price_60, price_90, price_120, duration
         ),
-        jobs (id, staff_id, status),
+        jobs (id, staff_id, status, job_index),
         customers (profile_id, full_name, phone),
         hotels (id, name_th, name_en)
       `)
@@ -1490,21 +1522,55 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       })
     }
 
-    // 4. Check 15-minute deadline
+    // 4. Resolve which recipient(s) to extend, deterministically.
+    // COUPLE/simultaneous bookings have ONE booking_services base row PER RECIPIENT (recipient_index
+    // 0,1) served IN PARALLEL by separate staff. NEVER derive the target from booking_services[0]
+    // (nondeterministic — the query has no ORDER BY). Sort base rows by recipient_index and honor the
+    // client's explicit choice (recipient_indices: [0]=คนที่1 / [1]=คนที่2 / [0,1]=ทั้งคู่).
     const now = new Date()
     const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
-    // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT run IN PARALLEL, so the
-    // session wall-clock (and thus the 15-min extension deadline) is a SINGLE recipient's duration.
-    // Summing across recipients would double it (e.g. 120+120=240) and push the deadline ~120 min too
-    // late, letting a customer extend past the real cutoff. Scope to the recipient being extended
-    // (booking_services[0].recipient_index — the same recipient the extension row is inserted for below).
-    const extendRecipientIndex = booking.booking_services?.[0]?.recipient_index ?? 0
-    const currentTotalDuration = booking.booking_services
-      .filter((service: any) => (service.recipient_index ?? 0) === extendRecipientIndex)
-      .reduce((sum: number, service: any) => sum + service.duration, 0)
-    const currentEndTime = new Date(bookingDateTime.getTime() + (currentTotalDuration * 60 * 1000))
-    const deadlineTime = new Date(currentEndTime.getTime() - (15 * 60 * 1000))
+    const baseRows: any[] = (booking.booking_services || [])
+      .filter((s: any) => !s.is_extension)
+      .sort((a: any, b: any) => (a.recipient_index ?? 0) - (b.recipient_index ?? 0))
+    const hasBookingServices = baseRows.length > 0
+    const availableRecipientIndices = hasBookingServices
+      ? Array.from(new Set(baseRows.map((r: any) => r.recipient_index ?? 0))).sort((a, b) => a - b)
+      : [0]
 
+    // Requested indices ∩ available; default = the first (lowest) recipient for a single/legacy extend.
+    let requestedIndices = Array.isArray(body.recipient_indices) && body.recipient_indices.length > 0
+      ? Array.from(new Set(body.recipient_indices)).filter((i) => availableRecipientIndices.includes(i))
+      : [availableRecipientIndices[0]]
+    if (requestedIndices.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'invalid_recipient',
+        message: 'ไม่พบผู้รับบริการที่ระบุสำหรับการเพิ่มเวลา'
+      })
+    }
+    requestedIndices = requestedIndices.sort((a, b) => a - b)
+
+    // Each selected recipient is one added is_extension row → guard the max-3 cap against the BATCH
+    // size ("ต่อทั้งคู่" adds 2), not just the current count (which the initial gate already checked).
+    if (currentExtensionCount + requestedIndices.length > maxExtensions) {
+      return res.status(400).json({
+        success: false,
+        error: 'max_extensions_reached',
+        message: `เพิ่มเวลาได้สูงสุด ${maxExtensions} ครั้งต่อการจอง`
+      })
+    }
+
+    // Per-recipient CURRENT duration = base + already-applied extensions for that recipient (all rows,
+    // not just the base row) so the deadline/end-time reflect the true remaining time. Deadline gates on
+    // the EARLIEST-ending SELECTED recipient (min) so we never extend past any selected recipient's cutoff.
+    const allRows: any[] = booking.booking_services || []
+    const recipientCurrentDuration = (idx: number): number =>
+      hasBookingServices
+        ? allRows.filter((s: any) => (s.recipient_index ?? 0) === idx).reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
+        : (booking.duration || 0)
+    const minCurrentDuration = Math.min(...requestedIndices.map((i) => recipientCurrentDuration(i)))
+    const currentEndTime = new Date(bookingDateTime.getTime() + (minCurrentDuration * 60 * 1000))
+    const deadlineTime = new Date(currentEndTime.getTime() - (15 * 60 * 1000))
     if (now > deadlineTime) {
       return res.status(400).json({
         success: false,
@@ -1513,48 +1579,47 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
       })
     }
 
-    // 5. Calculate extension price using service pricing structure
-    // Handle both old structure (direct service_id) and new structure (booking_services)
-    const originalService = booking.booking_services?.[0]?.services || booking.service
-    if (!originalService) {
-      return res.status(400).json({
-        success: false,
-        error: 'service_not_found',
-        message: 'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+    // 5. Build one extension TARGET per selected recipient (each priced by ITS OWN service).
+    const discountAmount = body.discount_amount || 0
+    const targets: ExtensionTarget[] = []
+    for (let ti = 0; ti < requestedIndices.length; ti++) {
+      const idx = requestedIndices[ti]
+      const baseRow = baseRows.find((s: any) => (s.recipient_index ?? 0) === idx)
+      const svc = baseRow?.services || booking.service
+      if (!svc) {
+        return res.status(400).json({
+          success: false,
+          error: 'service_not_found',
+          message: 'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+        })
+      }
+      const grossPrice = computeExtensionPrice(svc, body.additional_duration)
+      // Apply the whole discount to the first target only (avoids over-discounting when extending both).
+      const targetDiscount = ti === 0 ? discountAmount : 0
+      targets.push({
+        recipientIndex: idx,
+        serviceId: baseRow?.service_id || booking.service_id,
+        additionalDuration: body.additional_duration,
+        finalExtensionPrice: Math.max(0, grossPrice - targetDiscount),
+        discountAmount: targetDiscount,
+        promotionId: ti === 0 ? (body.promotion_id || null) : null,
+        recipientName: baseRow?.recipient_name ?? null,
+        baseBookingServiceId: baseRow?.id ?? null,
       })
     }
 
-    let extensionPrice: number
-    switch(body.additional_duration) {
-      case 60:
-        extensionPrice = originalService.price_60 || (originalService.base_price * 0.5)
-        break
-      case 90:
-        extensionPrice = originalService.price_90 || (originalService.base_price * 0.75)
-        break
-      case 120:
-        extensionPrice = originalService.price_120 || originalService.base_price
-        break
-      default:
-        // Calculate proportional price for any duration (including 150, 180, etc.)
-        extensionPrice = (originalService.base_price / originalService.duration) * body.additional_duration
-    }
-
-    extensionPrice = Math.round(extensionPrice)
-
-    // 6. Apply promotion discount if provided
-    const discountAmount = body.discount_amount || 0
-    const finalExtensionPrice = Math.max(0, extensionPrice - discountAmount)
-
-    // 7. Gather context needed for both payment path and hotel/free path
-    const serviceId = booking.booking_services?.[0]?.service_id || booking.service_id
-    const hasBookingServices = booking.booking_services && booking.booking_services.length > 0
-    const newTotalDuration = currentTotalDuration + body.additional_duration
+    // 6. Aggregate figures (couple: sum prices across recipients; session end = max recipient end).
+    const extensionPrice = targets.reduce((sum, t) => sum + (t.finalExtensionPrice + (t.discountAmount || 0)), 0)
+    const finalExtensionPrice = targets.reduce((sum, t) => sum + t.finalExtensionPrice, 0)
+    const newTotalDuration = Math.max(...requestedIndices.map((i) => recipientCurrentDuration(i) + body.additional_duration))
     const newTotalPrice = booking.final_price + finalExtensionPrice
-    const newExtensionCount = currentExtensionCount + 1
+    const newExtensionCount = currentExtensionCount + targets.length
     const estimatedEndTime = new Date(bookingDateTime.getTime() + (newTotalDuration * 60 * 1000))
 
-    // Collect staff profiles for post-payment notifications (used in both paths)
+    // 7. Context kept for the (prod-inactive) Omise metadata path — single-recipient (first target).
+    const serviceId = targets[0].serviceId
+    // Collect staff profiles for the Omise webhook metadata (legacy path only). jobs.staff_id IS the
+    // staff PROFILE id; keep this lookup shape for the metadata consumer (payment.ts).
     let staffProfilesForWebhook: Array<{ profile_id: string; full_name: string }> = []
     if (booking.jobs && booking.jobs.length > 0) {
       const staffIds = booking.jobs.map((job: any) => job.staff_id).filter(Boolean)
@@ -1582,34 +1647,47 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
         // 🔴 Do NOT insert a booking_services is_extension row here — its AFTER-INSERT triggers would
         // apply the extension before it's paid. Store the intent in pending_extensions; it becomes a
         // booking_services INSERT only at admin-confirm (POST /:bookingId/extend/:pendingId/confirm).
-        const { data: pending, error: pendingError } = await supabase
+        // Supersede any still-pending request for the SAME recipient(s) first (a re-submit / retry / change
+        // of mind), so a recipient never accumulates duplicate pending rows that would double-apply. A
+        // pending row for a DIFFERENT recipient (an independent request) is left untouched.
+        await supabase
           .from('pending_extensions')
-          .insert({
-            booking_id: bookingId,
-            service_id: serviceId,
-            additional_duration: body.additional_duration,
-            extension_price: extensionPrice,
-            discount_amount: discountAmount,
-            final_extension_price: finalExtensionPrice,
-            promotion_id: body.promotion_id || null,
-            recipient_index: hasBookingServices ? booking.booking_services[0].recipient_index : 0,
-            recipient_name: hasBookingServices ? booking.booking_services[0].recipient_name : null,
-            customer_name: booking.customers?.full_name || booking.customers?.phone || '',
-            booking_number: booking.booking_number,
-            status: 'pending',
-            requested_by: 'customer',
-          })
+          .update({ status: 'cancelled', cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq('booking_id', bookingId)
+          .eq('status', 'pending')
+          .in('recipient_index', requestedIndices)
+        // One pending_extensions row PER selected recipient (couple "ต่อทั้งคู่" ⇒ 2 rows). Each row
+        // carries its OWN recipient_index/service_id/price so admin-confirm applies it to the right
+        // recipient's job.
+        const pendingRows = targets.map((t) => ({
+          booking_id: bookingId,
+          service_id: t.serviceId,
+          additional_duration: t.additionalDuration,
+          extension_price: t.finalExtensionPrice + (t.discountAmount || 0),
+          discount_amount: t.discountAmount || 0,
+          final_extension_price: t.finalExtensionPrice,
+          promotion_id: t.promotionId || null,
+          recipient_index: t.recipientIndex,
+          recipient_name: t.recipientName,
+          customer_name: booking.customers?.full_name || booking.customers?.phone || '',
+          booking_number: booking.booking_number,
+          status: 'pending',
+          requested_by: 'customer',
+        }))
+        const { data: pendingInserted, error: pendingError } = await supabase
+          .from('pending_extensions')
+          .insert(pendingRows)
           .select('id')
-          .single()
 
-        if (pendingError || !pending) {
-          console.error('[ExtendBooking] Failed to create pending extension:', pendingError)
+        if (pendingError || !pendingInserted || pendingInserted.length === 0) {
+          console.error('[ExtendBooking] Failed to create pending extension(s):', pendingError)
           return res.status(500).json({
             success: false,
             error: 'database_error',
             message: 'ไม่สามารถบันทึกคำขอต่อเวลาได้ กรุณาลองใหม่อีกครั้ง'
           })
         }
+        const pendingIds = pendingInserted.map((p: any) => p.id)
 
         // Notify admins (in-app bell only) that a pending extension awaits confirmation. Non-blocking.
         try {
@@ -1617,7 +1695,7 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
             extensionMinutes: body.additional_duration,
             extensionCount: newExtensionCount,
             pending: true,
-            pendingId: pending.id,
+            pendingId: pendingIds[0],
             amount: finalExtensionPrice,
           })
         } catch (notifyErr) {
@@ -1628,7 +1706,8 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
         return res.status(200).json({
           success: true,
           status: 'requires_admin_confirmation',
-          pending_extension_id: pending.id,
+          pending_extension_id: pendingIds[0],
+          pending_extension_ids: pendingIds,
           extension: {
             additional_duration: body.additional_duration,
             extension_price: finalExtensionPrice,
@@ -1664,15 +1743,16 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
           extension_price: finalExtensionPrice,
           discount_amount: discountAmount,
           promotion_id: body.promotion_id || null,
-          // Fields for booking_services record creation in webhook
+          // Fields for booking_services record creation in webhook (Omise single-recipient path only —
+          // dead on prod manual_qr; couple "ต่อทั้งคู่" is not supported via a single Omise charge).
           service_id: serviceId,
           has_booking_services: hasBookingServices,
-          recipient_index: hasBookingServices ? booking.booking_services[0].recipient_index : 0,
-          recipient_name: hasBookingServices ? booking.booking_services[0].recipient_name : null,
+          recipient_index: targets[0].recipientIndex,
+          recipient_name: targets[0].recipientName,
           sort_order: hasBookingServices ? booking.booking_services.length + 1 : 1,
-          original_booking_service_id: hasBookingServices ? booking.booking_services[0].id : null,
+          original_booking_service_id: targets[0].baseBookingServiceId,
           // Fields for booking totals update in webhook
-          current_total_duration: currentTotalDuration,
+          current_total_duration: recipientCurrentDuration(targets[0].recipientIndex),
           current_extension_count: currentExtensionCount,
           current_total_price: booking.final_price,
           // Fields for notifications in webhook
@@ -1956,13 +2036,7 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
     // totals + notifies + per-recipient earnings recalc.
     let applyResult
     try {
-      applyResult = await applyExtensionToBooking({
-        booking,
-        additionalDuration: body.additional_duration,
-        finalExtensionPrice,
-        discountAmount,
-        promotionId: body.promotion_id || null,
-      })
+      applyResult = await applyExtensionToBooking({ booking, targets })
     } catch (applyErr: any) {
       console.error('[ExtendBooking] Failed to apply extension inline:', applyErr)
       return res.status(500).json({
@@ -1981,7 +2055,7 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
     return res.json({
       success: true,
       extension: {
-        id: applyResult.extensionServiceId,
+        id: applyResult.extensionServiceIds[0],
         additional_duration: body.additional_duration,
         extension_price: finalExtensionPrice,
         discount_amount: discountAmount,
@@ -2016,6 +2090,9 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
 //  applying a paid extension is money, so it must always require a real admin.)
 // ============================================================================
 
+// Admin confirms/cancels ONE pending request at a time (per-slip). A couple "ต่อทั้งคู่" produces 2
+// pending rows the admin confirms individually — confirming one never auto-applies another whose payment
+// slip wasn't verified. Each confirm applies ONLY that pending row's own recipient (pendingToTarget).
 router.post('/:bookingId/extend/:pendingId/confirm', authenticateSupabaseUser, async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest
   if (authReq.user?.role !== 'ADMIN') {
@@ -2047,8 +2124,8 @@ router.post('/:bookingId/extend/:pendingId/confirm', authenticateSupabaseUser, a
       .from('bookings')
       .select(`
         *,
-        booking_services (id, service_id, duration, price, recipient_name, recipient_index),
-        jobs (id, staff_id, status),
+        booking_services (id, service_id, duration, price, recipient_name, recipient_index, is_extension),
+        jobs (id, staff_id, status, job_index),
         customers (profile_id, full_name, phone)
       `)
       .eq('id', bookingId)
@@ -2057,15 +2134,8 @@ router.post('/:bookingId/extend/:pendingId/confirm', authenticateSupabaseUser, a
       return res.status(404).json({ success: false, error: 'booking_not_found', message: 'ไม่พบการจอง' })
     }
 
-    // 3. Apply via the SAME shared helper as the hotel/free path (linchpin booking_services INSERT →
-    //    triggers + staff surface + absolute-SET totals + per-recipient earnings recalc).
-    const applyResult = await applyExtensionToBooking({
-      booking,
-      additionalDuration: pending.additional_duration,
-      finalExtensionPrice: Number(pending.final_extension_price),
-      discountAmount: Number(pending.discount_amount),
-      promotionId: pending.promotion_id,
-    })
+    // 3. Apply via the SAME shared helper, targeting the recipient the PENDING row recorded (not [0]).
+    const applyResult = await applyExtensionToBooking({ booking, targets: [pendingToTarget(pending, booking)] })
 
     // 4. Latch the pending row confirmed (idempotency: applied_booking_service_id set).
     await supabase
@@ -2074,7 +2144,7 @@ router.post('/:bookingId/extend/:pendingId/confirm', authenticateSupabaseUser, a
         status: 'confirmed',
         confirmed_at: new Date().toISOString(),
         confirmed_by: authReq.user!.id,
-        applied_booking_service_id: applyResult.extensionServiceId,
+        applied_booking_service_id: applyResult.extensionServiceIds[0],
         updated_at: new Date().toISOString(),
       })
       .eq('id', pendingId)
@@ -2082,7 +2152,7 @@ router.post('/:bookingId/extend/:pendingId/confirm', authenticateSupabaseUser, a
     return res.json({
       success: true,
       extension: {
-        id: applyResult.extensionServiceId,
+        id: applyResult.extensionServiceIds[0],
         additional_duration: pending.additional_duration,
         final_price: Number(pending.final_extension_price),
       },

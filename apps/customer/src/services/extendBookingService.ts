@@ -263,6 +263,102 @@ export async function getCustomerExtensionOptions(bookingId: string): Promise<Ex
   return options.filter(option => option.isAvailable)
 }
 
+/** One recipient of a booking, with its own service pricing (couple recipients differ). */
+export interface ExtensionRecipientInfo {
+  recipientIndex: number
+  serviceId: string
+  serviceNameTh: string
+  serviceNameEn: string
+  currentDuration: number          // base + already-applied extensions for THIS recipient
+  withinDeadline: boolean          // is THIS recipient still >15min from its own end
+  prices: Record<number, number>   // duration(min) -> extension price for THIS recipient's service
+}
+
+export interface BookingExtensionInfo {
+  isCouple: boolean
+  recipients: ExtensionRecipientInfo[]
+  availableDurations: number[]
+  withinDeadline: boolean          // aggregate (earliest-ending recipient) — prefer the per-recipient flag
+  extensionCount: number
+}
+
+/**
+ * Per-recipient extension info for the modal's recipient selector (คนที่1 / คนที่2 / ทั้งคู่).
+ * COUPLE/simultaneous bookings have one booking_services base row PER RECIPIENT — each can be a
+ * DIFFERENT service at a DIFFERENT price. The modal renders a selector and sums prices for the chosen
+ * recipient(s); the server re-derives the authoritative price per recipient, so this drives UX only.
+ */
+export async function getBookingExtensionInfo(bookingId: string): Promise<BookingExtensionInfo> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      id, final_price, duration, booking_date, booking_time, extension_count,
+      service:services ( id, name_th, name_en, price_60, price_90, price_120, base_price, duration, duration_options ),
+      booking_services (
+        id, service_id, duration, recipient_index, recipient_name, is_extension,
+        services ( name_th, name_en, price_60, price_90, price_120, base_price, duration, duration_options )
+      )
+    `)
+    .eq('id', bookingId)
+    .single()
+
+  if (error || !data) {
+    throw new ExtensionError(ExtensionErrorCode.BOOKING_NOT_FOUND, EXTENSION_ERROR_MESSAGES.BOOKING_NOT_FOUND)
+  }
+
+  const booking: any = data
+  const allRows: any[] = booking.booking_services || []
+  const baseRows: any[] = allRows
+    .filter((s: any) => !s.is_extension)
+    .sort((a: any, b: any) => (a.recipient_index ?? 0) - (b.recipient_index ?? 0))
+
+  // Distinct recipients (couple ⇒ 2). Fall back to the top-level service for legacy single bookings.
+  const indices = baseRows.length > 0
+    ? Array.from(new Set(baseRows.map((r: any) => r.recipient_index ?? 0))).sort((a, b) => a - b)
+    : [0]
+
+  const durationsFrom = (svc: any): number[] => (svc?.duration_options && svc.duration_options.length > 0)
+    ? svc.duration_options
+    : [60, 90, 120]
+
+  const now = new Date()
+  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+
+  const recipients: ExtensionRecipientInfo[] = indices.map((idx) => {
+    const row = baseRows.find((r: any) => (r.recipient_index ?? 0) === idx)
+    const svc = row?.services || booking.service
+    // CURRENT duration = base + already-applied extensions for THIS recipient (sum ALL its rows).
+    const currentDuration = allRows.length > 0
+      ? allRows.filter((r: any) => (r.recipient_index ?? 0) === idx).reduce((sum: number, r: any) => sum + (r.duration || 0), 0)
+      : (booking.duration || 0)
+    // This recipient's own 15-min deadline (parallel recipients each end at their own time).
+    const withinDeadline = now <= new Date(bookingDateTime.getTime() + (currentDuration * 60 * 1000) - (15 * 60 * 1000))
+    const prices: Record<number, number> = {}
+    for (const d of durationsFrom(svc)) {
+      if (d > 0) prices[d] = calculateServiceExtensionPrice(svc, d)
+    }
+    return {
+      recipientIndex: idx,
+      serviceId: row?.service_id ?? booking.service?.id,
+      serviceNameTh: svc?.name_th ?? '',
+      serviceNameEn: svc?.name_en ?? '',
+      currentDuration,
+      withinDeadline,
+      prices,
+    }
+  })
+
+  const availableDurations = durationsFrom(baseRows[0]?.services || booking.service)
+
+  return {
+    isCouple: recipients.length > 1,
+    recipients,
+    availableDurations,
+    withinDeadline: recipients.every((r) => r.withinDeadline),
+    extensionCount: booking.extension_count || 0,
+  }
+}
+
 /**
  * Validate customer extension request
  */

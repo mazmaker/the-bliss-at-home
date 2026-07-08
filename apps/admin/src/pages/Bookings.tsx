@@ -111,6 +111,17 @@ function Bookings() {
   const { data: pendingExtBookingIds = [] } = usePendingExtensions()
   const pendingExtSet = useMemo(() => new Set(pendingExtBookingIds), [pendingExtBookingIds])
 
+  // Keep the OPEN detail modal in sync with the (re)fetched list. `selectedBooking` is a snapshot
+  // captured at open; confirming an extension invalidates + refetches ['bookings'], but without this
+  // the modal keeps the stale snapshot — so a just-applied extension (esp. a couple "ต่อทั้งคู่" that
+  // adds rows for BOTH recipients) wouldn't appear in the price/earnings/service breakdowns until the
+  // modal is closed and reopened. Re-sync to the fresh row (same list query → carries booking_services + jobs).
+  useEffect(() => {
+    if (!selectedBooking) return
+    const fresh = bookingsData.find((b) => b.id === selectedBooking.id)
+    if (fresh && fresh !== selectedBooking) setSelectedBooking(fresh)
+  }, [bookingsData])
+
   // Status update mutation
   const updateStatus = useUpdateBookingStatus()
 
@@ -607,6 +618,9 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
     setPendingActionId(pendingId)
     try {
       const token = (await supabase.auth.getSession()).data.session?.access_token
+      // Confirm/cancel PER pending request — each row is a separate paid slip the admin verifies
+      // individually (couple "ต่อทั้งคู่" = 2 rows the admin confirms one at a time; confirming one must
+      // NOT auto-apply another whose slip wasn't seen). The server applies only this pending's recipient.
       const res = await fetch(`${EXT_API_BASE_URL}/api/bookings/${booking.id}/extend/${pendingId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -827,14 +841,33 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
               <Clock className="w-5 h-5 text-bliss-600 mt-0.5" />
               <div>
                 <p className="text-sm text-bliss-500">ระยะเวลา</p>
-                <p className="font-medium text-bliss-900">
-                  {booking.duration} นาที
-                  {booking.duration >= 60 && (
-                    <span className="text-bliss-500 text-sm ml-1">
-                      ({Math.floor(booking.duration / 60)}{booking.duration % 60 > 0 ? `.${booking.duration % 60}` : ''} ชั่วโมง)
-                    </span>
-                  )}
-                </p>
+                {(() => {
+                  // COUPLE: recipients run in parallel and can have DIFFERENT durations (each may extend
+                  // independently), so show per-recipient totals (base + that recipient's extensions),
+                  // not the single booking.duration (person 1 only).
+                  const bs = (booking.booking_services || []) as any[]
+                  const indices = Array.from(new Set(bs.map((s) => s.recipient_index ?? 0))).sort((a, b) => a - b)
+                  if ((booking.recipient_count || 1) > 1 && indices.length > 1) {
+                    return (
+                      <div className="font-medium text-bliss-900 space-y-0.5">
+                        {indices.map((idx) => {
+                          const total = bs.filter((s) => (s.recipient_index ?? 0) === idx).reduce((sum, s) => sum + (s.duration || 0), 0)
+                          return <p key={idx}>คนที่ {idx + 1}: {total} นาที</p>
+                        })}
+                      </div>
+                    )
+                  }
+                  return (
+                    <p className="font-medium text-bliss-900">
+                      {booking.duration} นาที
+                      {booking.duration >= 60 && (
+                        <span className="text-bliss-500 text-sm ml-1">
+                          ({Math.floor(booking.duration / 60)}{booking.duration % 60 > 0 ? `.${booking.duration % 60}` : ''} ชั่วโมง)
+                        </span>
+                      )}
+                    </p>
+                  )
+                })()}
               </div>
             </div>
 
@@ -902,7 +935,17 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                           </div>
                           <div className="text-right">
                             {getJobProgressBadge(job.status)}
-                            <span className="block text-xs text-bliss-500 mt-1">{job.service_name}</span>
+                            <span className="block text-xs text-bliss-500 mt-1">
+                              {/* Prefer the per-recipient service from booking_services (job.job_index-1 ===
+                                  recipient_index) — the stored jobs.service_name can be mis-mapped for
+                                  couple recipient 2 (a known job-creation bug); the booking_services join is
+                                  authoritative per recipient. */}
+                              {(() => {
+                                const idx = (job.job_index ?? 1) - 1
+                                const baseRow = (booking.booking_services || []).find((s: any) => !s.is_extension && (s.recipient_index ?? 0) === idx)
+                                return baseRow?.service?.name_th || job.service_name
+                              })()}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -1251,7 +1294,12 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                   <div key={pe.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="font-medium text-bliss-900">+{pe.additional_duration} นาที</p>
+                        <p className="font-medium text-bliss-900">
+                          +{pe.additional_duration} นาที
+                          {(booking.recipient_count || 1) > 1 && (
+                            <span className="text-sm text-bliss-600"> · {pe.recipient_name || `คนที่ ${(pe.recipient_index ?? 0) + 1}`}</span>
+                          )}
+                        </p>
                         <p className="text-sm text-bliss-600">
                           ยอดชำระ ฿{Number(pe.final_extension_price).toLocaleString()}
                           {pe.customer_name ? ` · ${pe.customer_name}` : ''}
@@ -1263,14 +1311,14 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                     <div className="flex gap-2">
                       <button
                         onClick={() => postPendingAction(pe.id, 'confirm')}
-                        disabled={pendingActionId === pe.id}
+                        disabled={pendingActionId !== null}
                         className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition"
                       >
                         {pendingActionId === pe.id ? 'กำลังยืนยัน...' : 'ยืนยันการต่อเวลา'}
                       </button>
                       <button
                         onClick={() => postPendingAction(pe.id, 'cancel')}
-                        disabled={pendingActionId === pe.id}
+                        disabled={pendingActionId !== null}
                         className="px-4 py-2 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 disabled:opacity-50 transition"
                       >
                         ยกเลิก
