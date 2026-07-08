@@ -118,6 +118,28 @@ export async function extendBookingSession(
 }
 
 /**
+ * Resolve the base service id used to price/compute an extension.
+ * Hotel bookings normally carry a booking_services base row (the hotel booking flow always sends a
+ * `services[]` array, so secure-bookings-v2 inserts ≥1 row for single AND couple). But mirror the
+ * SERVER extend route's defensive fallback (bookings.ts ~L1550 `booking_services?.[0]?.service_id ||
+ * booking.service_id`) so a booking that somehow lacks a booking_services row can't crash the extend
+ * flow on `booking.booking_services[0].service_id` (the "Cannot read ... 'service_id'" class of bug
+ * fixed on the customer side 2026-07-08). Prefer the non-extension base row; the fetch selects `*`
+ * so the top-level `bookings.service_id` is available as the fallback.
+ */
+function resolveBaseServiceId(booking: any): string {
+  const baseBs = booking.booking_services?.find((bs: any) => !bs.is_extension) ?? booking.booking_services?.[0]
+  const id = baseBs?.service_id ?? booking.service_id
+  if (!id) {
+    throw new ExtensionError(
+      ExtensionErrorCode.DATABASE_ERROR,
+      'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+    )
+  }
+  return id
+}
+
+/**
  * Get available extension options for a booking
  */
 export async function getExtensionOptions(bookingId: string): Promise<ExtensionOption[]> {
@@ -133,7 +155,7 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
   const { data: service } = await supabase
     .from('services')
     .select('*')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolveBaseServiceId(booking))
     .single();
 
   if (!service) {
@@ -258,7 +280,7 @@ async function calculateExtensionPrice(
   const { data: service } = await supabase
     .from('services')
     .select('*')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolveBaseServiceId(booking))
     .single();
 
   if (!service) {
@@ -324,7 +346,7 @@ async function calculateStaffExtensionEarnings(
   const { data: service } = await supabase
     .from('services')
     .select('staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, price_60, price_90, price_120, base_price, duration')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolveBaseServiceId(booking))
     .single();
 
   if (!service) {

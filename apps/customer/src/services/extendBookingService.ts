@@ -55,11 +55,22 @@ export async function extendCustomerBooking(
       )
     }
 
-    // 3. Get service data for pricing calculation
+    // 3. Get service data for pricing calculation.
+    // Single admin-QuickBooking bookings intentionally have NO booking_services row (legacy/single
+    // path — the server extend route falls back to booking.service_id). Mirror that fallback here so
+    // the customer extend flow doesn't crash on booking_services[0] ("Cannot read ... 'service_id'").
+    const baseService = booking.booking_services?.find(bs => !bs.is_extension) ?? booking.booking_services?.[0]
+    const resolvedServiceId = baseService?.service_id ?? booking.service?.id
+    if (!resolvedServiceId) {
+      throw new ExtensionError(
+        ExtensionErrorCode.DATABASE_ERROR,
+        'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+      )
+    }
     const { data: service, error: serviceError } = await supabase
       .from('services')
       .select('*')
-      .eq('id', booking.booking_services[0].service_id)
+      .eq('id', resolvedServiceId)
       .single()
 
     if (serviceError || !service) {
@@ -113,15 +124,15 @@ export async function extendCustomerBooking(
       newBookingService: {
         id: result.extension.id,
         booking_id: request.bookingId,
-        service_id: booking.booking_services[0].service_id,
+        service_id: resolvedServiceId,
         duration: request.additionalDuration,
         price: result.extension.final_price,
-        recipient_index: booking.booking_services[0].recipient_index,
-        recipient_name: booking.booking_services[0].recipient_name,
-        sort_order: booking.booking_services.length + 1,
+        recipient_index: baseService?.recipient_index ?? 0,
+        recipient_name: baseService?.recipient_name ?? '',
+        sort_order: (booking.booking_services?.length ?? 0) + 1,
         is_extension: true,
         extended_at: new Date().toISOString(),
-        original_booking_service_id: booking.booking_services[0].id,
+        original_booking_service_id: baseService?.id ?? null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -175,11 +186,21 @@ export async function getCustomerExtensionOptions(bookingId: string): Promise<Ex
     )
   }
 
-  // Get the original service to determine available durations and pricing
+  // Get the original service to determine available durations and pricing.
+  // Single admin-QuickBooking bookings have NO booking_services row → fall back to the joined
+  // top-level service (booking.service.id) instead of crashing on booking_services[0].service_id.
+  const baseService = booking.booking_services?.find(bs => !bs.is_extension) ?? booking.booking_services?.[0]
+  const resolvedServiceId = baseService?.service_id ?? booking.service?.id
+  if (!resolvedServiceId) {
+    throw new ExtensionError(
+      ExtensionErrorCode.BOOKING_NOT_FOUND,
+      'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+    )
+  }
   const { data: service, error: serviceError } = await supabase
     .from('services')
     .select('*')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolvedServiceId)
     .single()
 
   if (serviceError || !service) {
