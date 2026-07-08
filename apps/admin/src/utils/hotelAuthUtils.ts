@@ -99,6 +99,43 @@ export async function createHotelAccount({
 }
 
 /**
+ * ตรวจสอบว่าอีเมลนี้ยัง "ว่าง" (ยังไม่มีบัญชีเข้าใช้งานในระบบ) ก่อนสร้างโรงแรมใหม่
+ * ป้องกันไม่ให้เกิด "โรงแรมค้างไม่มีบัญชี" — เรียกก่อน insert แถวโรงแรมในหน้าเพิ่มโรงแรม
+ * fail-closed: ถ้าตรวจสอบไม่สำเร็จ (server ล่ม/เชื่อมต่อไม่ได้) คืน available=false + error ภาษาไทย
+ * เพื่อให้ผู้เรียกบล็อกการบันทึกไว้ก่อน (ถ้าปล่อยผ่าน createHotelAccount ก็จะล้มเหลว → เกิดโรงแรมค้างอยู่ดี)
+ */
+export async function checkHotelEmailAvailable(
+  email: string
+): Promise<{ available: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/check-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_TOKEN}`
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const result = await response.json()
+
+    if (response.ok) {
+      return { available: !!result.available }
+    }
+    return {
+      available: false,
+      error: toThaiHotelAuthError(result.message || result.error, 'ไม่สามารถตรวจสอบอีเมลได้ กรุณาลองใหม่อีกครั้ง'),
+    }
+  } catch (error: any) {
+    console.error('Error checking hotel email availability:', error)
+    return {
+      available: false,
+      error: 'ไม่สามารถตรวจสอบอีเมลได้ กรุณาลองใหม่อีกครั้ง (เชื่อมต่อเซิร์ฟเวอร์ไม่ได้)',
+    }
+  }
+}
+
+/**
  * ส่งอีเมลเชิญใช้งานไปยังโรงแรม
  */
 export async function sendHotelInvitation(hotelId: string): Promise<APIResponse> {
@@ -348,6 +385,7 @@ export const HELP_MESSAGES = {
 
 export default {
   createHotelAccount,
+  checkHotelEmailAvailable,
   sendHotelInvitation,
   resetHotelPassword,
   toggleHotelLoginAccess,

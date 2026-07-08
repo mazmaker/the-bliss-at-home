@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { GoogleMapsPicker } from './GoogleMapsPicker'
 import {
   createHotelAccount,
+  checkHotelEmailAvailable,
   sendHotelInvitation,
   resetHotelPassword,
   toggleHotelLoginAccess,
@@ -237,6 +238,8 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
     register,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     watch,
     formState: { errors },
     reset,
@@ -391,6 +394,19 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
         if (error) throw error
       } else {
+        // 🔎 Email PRE-CHECK before inserting the hotel row. A reused login email makes
+        // createHotelAccount (below) fail AFTER the row is already inserted, leaving an orphaned
+        // account-less hotel. Block here so no hotel row is created for an unusable email.
+        // fail-closed: a failed check also blocks (createHotelAccount would fail too → orphan).
+        clearErrors('email')
+        const emailCheck = await checkHotelEmailAvailable(data.email)
+        if (!emailCheck.available) {
+          const msg = emailCheck.error || 'อีเมลนี้ถูกใช้เป็นบัญชีเข้าใช้งานแล้ว กรุณาใช้อีเมลอื่น'
+          setError('email', { type: 'manual', message: msg })
+          setSubmitError(msg)
+          return
+        }
+
         // Create new hotel
         const { data: newHotel, error } = await supabase.from('hotels').insert([
           {

@@ -1,5 +1,6 @@
 // Load environment variables FIRST before any other imports (only for local development)
 // [touch] R1 payment-channel allowlist (enabled_payment_channels) + extend gate wired 2026-06-17
+// [touch] hotel check-email pre-check route added 2026-07-08 (profiles-based)
 import dotenv from 'dotenv'
 import { join } from 'path'
 

@@ -150,6 +150,40 @@ class HotelAuthService {
   }
 
   /**
+   * Check whether a login email is still AVAILABLE (not already used by any existing account).
+   * Powers the admin "add hotel" PRE-CHECK so a reused email is caught BEFORE the hotel row is
+   * inserted — otherwise createHotelAccount fails AFTER the insert, leaving an orphaned
+   * account-less hotel.
+   *
+   * We query public.profiles (a verified 1:1 mirror of auth.users by id AND email) rather than
+   * auth.admin.listUsers(): on this project GoTrue throws "Database error finding users" for
+   * perPage >= 100 OR page >= 2, so listUsers cannot enumerate all 100+ auth users (which is why
+   * createHotelAccount's own listUsers pre-check silently sees an empty page and relies on
+   * createUser's duplicate error as the real guard). profiles is in the public schema (service-role
+   * reads bypass RLS) and is not subject to that GoTrue pagination bug, so it scales to any size.
+   *
+   * Match case-insensitively (most stored emails are mixed-case) and treat the address as a LITERAL
+   * — escape ILIKE wildcards (%, _) because many synthetic (LINE) emails legitimately contain '_'.
+   */
+  async isEmailAvailable(email: string): Promise<boolean> {
+    const normalized = (email || '').trim().toLowerCase()
+    if (!normalized) return false
+
+    const pattern = normalized.replace(/[\\%_]/g, '\\$&')
+    const { data, error } = await getSupabaseClient()
+      .from('profiles')
+      .select('id')
+      .ilike('email', pattern)
+      .limit(1)
+
+    if (error) {
+      throw new Error(`Failed to check email: ${error.message}`)
+    }
+
+    return !data || data.length === 0
+  }
+
+  /**
    * Send hotel invitation email
    */
   async sendHotelInvitation(hotelId: string, adminName?: string): Promise<void> {

@@ -60,6 +60,38 @@ router.post('/create-account', requireAdmin, async (req: Request, res: Response)
 })
 
 /**
+ * Check whether a login email is available (not already used by an auth user)
+ * POST /api/hotels/check-email
+ * Used by the admin "add hotel" form to PRE-CHECK before inserting the hotel row, so a reused
+ * email is rejected up front instead of producing an orphaned account-less hotel.
+ */
+router.post('/check-email', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'email is required'
+      })
+    }
+
+    const available = await hotelAuthService.isEmailAvailable(email)
+
+    res.json({
+      success: true,
+      available
+    })
+  } catch (error) {
+    console.error('Check email error:', error)
+    res.status(500).json({
+      error: 'Failed to check email',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    })
+  }
+})
+
+/**
  * Send hotel invitation email
  * POST /api/hotels/send-invitation
  */
