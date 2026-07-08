@@ -36,6 +36,27 @@ const API_BASE_URL = `${import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD
 const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_API_TOKEN || 'admin-secret-token-2026'
 
 /**
+ * แปลง error ภาษาอังกฤษ/ภาษา dev จากเซิร์ฟเวอร์ให้เป็นข้อความภาษาไทยที่ผู้ใช้เข้าใจง่าย
+ * (ถ้าเซิร์ฟเวอร์ส่งข้อความไทยมาแล้วให้คงไว้ตามเดิม)
+ */
+function toThaiHotelAuthError(serverError?: string, fallback = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'): string {
+  const e = (serverError || '').toLowerCase()
+  if (e.includes('already in use') || e.includes('already been registered') || e.includes('already registered'))
+    return 'อีเมลนี้ถูกใช้เป็นบัญชีเข้าใช้งานแล้ว กรุณาใช้อีเมลอื่น'
+  if (e.includes('hotel already has an account')) return 'โรงแรมนี้มีบัญชีเข้าใช้งานอยู่แล้ว'
+  if (e.includes('does not have an account') || e.includes('not set up')) return 'โรงแรมนี้ยังไม่มีบัญชีเข้าใช้งาน กรุณาสร้างบัญชีก่อน'
+  if (e.includes('hotel not found')) return 'ไม่พบข้อมูลโรงแรม'
+  if (e.includes('login is disabled')) return 'บัญชีเข้าใช้งานของโรงแรมนี้ถูกปิดอยู่'
+  if (e.includes('failed to create') || e.includes('failed to create auth user')) return 'ไม่สามารถสร้างบัญชีเข้าใช้งานให้โรงแรมได้ กรุณาลองใหม่อีกครั้ง'
+  if (e.includes('failed to reset') || e.includes('failed to update password')) return 'ไม่สามารถรีเซ็ตรหัสผ่านได้ กรุณาลองใหม่อีกครั้ง'
+  if (e.includes('failed to send') || e.includes('email')) return 'ไม่สามารถส่งอีเมลได้ กรุณาลองใหม่อีกครั้ง'
+  if (e.includes('unauthorized') || e.includes('admin access')) return 'ไม่มีสิทธิ์ดำเนินการ (โปรดตรวจสอบการตั้งค่าเซิร์ฟเวอร์)'
+  // เซิร์ฟเวอร์ส่งข้อความไทยมาแล้ว → คงไว้; อื่น ๆ → ข้อความ fallback ภาษาไทย
+  if (/[฀-๿]/.test(serverError || '')) return serverError as string
+  return fallback
+}
+
+/**
  * สร้างบัญชีผู้ใช้สำหรับโรงแรม
  */
 export async function createHotelAccount({
@@ -65,7 +86,7 @@ export async function createHotelAccount({
     } else {
       return {
         success: false,
-        error: result.error || 'ไม่สามารถสร้างบัญชีได้',
+        error: toThaiHotelAuthError(result.message || result.error, 'ไม่สามารถสร้างบัญชีได้'),
       }
     }
   } catch (error: any) {
@@ -98,7 +119,7 @@ export async function sendHotelInvitation(hotelId: string): Promise<APIResponse>
     } else {
       return {
         success: false,
-        error: result.error || 'ไม่สามารถส่งอีเมลได้',
+        error: toThaiHotelAuthError(result.message || result.error, 'ไม่สามารถส่งอีเมลได้'),
       }
     }
   } catch (error: any) {
@@ -134,7 +155,7 @@ export async function resetHotelPassword(hotelId: string): Promise<APIResponse<{
     } else {
       return {
         success: false,
-        error: result.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้',
+        error: toThaiHotelAuthError(result.message || result.error, 'ไม่สามารถรีเซ็ตรหัสผ่านได้'),
       }
     }
   } catch (error: any) {
@@ -167,7 +188,7 @@ export async function toggleHotelLoginAccess(hotelId: string, enabled: boolean):
     } else {
       return {
         success: false,
-        error: result.error || 'ไม่สามารถเปลี่ยนสถานะได้',
+        error: toThaiHotelAuthError(result.message || result.error, 'ไม่สามารถเปลี่ยนสถานะได้'),
       }
     }
   } catch (error: any) {
