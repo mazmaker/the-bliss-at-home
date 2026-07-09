@@ -144,15 +144,16 @@ router.post('/job-accepted', async (req: Request, res: Response) => {
       if (staffProfile) staffName = staffProfile.name_th || 'พนักงาน'
     }
 
-    // Find hotel user profiles
-    const { data: hotelProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('hotel_id', job.hotel_id)
-      .eq('role', 'HOTEL')
+    // Hotel users link via hotels.auth_user_id (NOT profiles.hotel_id, which is NULL for hotel users)
+    const { data: hotelRow } = await supabase
+      .from('hotels')
+      .select('auth_user_id')
+      .eq('id', job.hotel_id)
+      .single()
+    const hotelProfiles = hotelRow?.auth_user_id ? [{ id: hotelRow.auth_user_id }] : []
 
     if (!hotelProfiles || hotelProfiles.length === 0) {
-      return res.json({ success: true, message: 'No hotel profiles found' })
+      return res.json({ success: true, message: 'No hotel auth_user_id found' })
     }
 
     // Get booking number

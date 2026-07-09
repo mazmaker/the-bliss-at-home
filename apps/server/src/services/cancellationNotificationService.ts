@@ -537,15 +537,16 @@ async function createHotelInAppNotification(
     hotel_id: booking.hotel_id,
   })
 
-  // Find hotel user profiles (profiles with hotel_id matching this hotel)
-  const { data: hotelProfiles } = await getSupabaseClient()
-    .from('profiles')
-    .select('id')
-    .eq('hotel_id', booking.hotel_id)
-    .eq('role', 'HOTEL')
+  // Hotel users link via hotels.auth_user_id (NOT profiles.hotel_id, which is NULL for hotel users)
+  const { data: hotelRow } = await getSupabaseClient()
+    .from('hotels')
+    .select('auth_user_id')
+    .eq('id', booking.hotel_id)
+    .single()
+  const hotelProfiles = hotelRow?.auth_user_id ? [{ id: hotelRow.auth_user_id }] : []
 
   if (!hotelProfiles || hotelProfiles.length === 0) {
-    console.log('[In-App] No hotel user profiles found for hotel:', booking.hotel_id)
+    console.log('[In-App] No hotel auth_user_id found for hotel:', booking.hotel_id)
     return
   }
 

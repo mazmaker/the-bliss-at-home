@@ -14,7 +14,7 @@ import { sendCreditNoteEmailForRefund } from './receipts.js'
 import { applyExtensionAfterPayment } from './payment.js'
 import { applyExtensionToBooking, type ExtensionTarget } from '../services/extensionApplyService.js'
 import { lineService } from '../services/lineService.js'
-import { sendExtensionNotifications, getServingStaffProfileIds } from '../services/notificationService.js'
+import { sendExtensionNotifications, getServingStaffProfileIds, notifyHotelInApp } from '../services/notificationService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
 import type {
   BookingCancellationRequest,
@@ -730,6 +730,22 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
       }
     } catch (adminNotifError) {
       console.error('[Reschedule] Admin notification error (non-blocking):', adminNotifError)
+    }
+
+    // 6. Notify hotel (in-app) for hotel bookings — hotel users link via hotels.auth_user_id
+    if (booking.hotel_id) {
+      const serviceName = (booking.service as any)?.name_th || 'บริการ'
+      await notifyHotelInApp(booking as any, {
+        type: 'booking_rescheduled',
+        title: 'การจองถูกเลื่อน',
+        message: `การจอง ${booking.booking_number} บริการ "${serviceName}" เลื่อนจาก ${oldDate} ${oldTime} เป็น ${body.new_date} ${body.new_time}`,
+        data: {
+          old_date: oldDate,
+          old_time: oldTime,
+          new_date: body.new_date,
+          new_time: body.new_time,
+        },
+      })
     }
 
     return res.json({

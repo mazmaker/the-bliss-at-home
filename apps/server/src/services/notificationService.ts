@@ -588,6 +588,62 @@ export async function sendBookingConfirmedNotifications(
  * the (already-committed) extension. Call it only from the APPLIED path (past the
  * alreadyApplied idempotency guard) so a webhook+poll double-apply never double-notifies.
  */
+/**
+ * Insert an in-app notification for the HOTEL user tied to a booking.
+ *
+ * Hotel users are linked via `hotels.auth_user_id` (= profiles.id), NOT
+ * `profiles.hotel_id` (which is NULL for hotel users) — see RESUME 2026-07-09 §1.1.
+ * Non-blocking: logs and returns false on any failure, never throws.
+ */
+export async function notifyHotelInApp(
+  booking: {
+    id: string
+    booking_number?: string | null
+    hotel_id?: string | null
+    is_hotel_booking?: boolean | null
+  },
+  payload: { type: string; title: string; message: string; data?: Record<string, unknown> }
+): Promise<boolean> {
+  try {
+    if (!booking?.hotel_id) return false
+    const supabase = getSupabaseClient()
+    const { data: hotel } = await supabase
+      .from('hotels')
+      .select('auth_user_id')
+      .eq('id', booking.hotel_id)
+      .single()
+
+    const hotelUserId = hotel?.auth_user_id
+    if (!hotelUserId) {
+      console.warn(`[Hotel] no auth_user_id for hotel ${booking.hotel_id} — skip in-app notify`)
+      return false
+    }
+
+    const { error } = await supabase.from('notifications').insert({
+      user_id: hotelUserId,
+      type: payload.type,
+      title: payload.title,
+      message: payload.message,
+      data: {
+        ...(payload.data || {}),
+        booking_id: booking.id,
+        booking_number: booking.booking_number ?? null,
+        hotel_id: booking.hotel_id,
+      },
+      is_read: false,
+    })
+    if (error) {
+      console.error('[Hotel] in-app notification insert failed (non-blocking):', error)
+      return false
+    }
+    console.log(`🏨 Hotel in-app notification sent (${payload.type}) for booking ${booking.booking_number}`)
+    return true
+  } catch (err) {
+    console.error('[Hotel] notifyHotelInApp error (non-blocking):', err)
+    return false
+  }
+}
+
 export async function sendExtensionNotifications(
   bookingId: string,
   ctx: {
@@ -693,6 +749,21 @@ export async function sendExtensionNotifications(
       result.adminsNotified = adminProfiles.length
       console.log(`🔔 Extension in-app notification sent to ${adminProfiles.length} admins`)
     }
+  }
+
+  // === Hotel in-app notification (hotel bookings only; skip a PENDING request) ===
+  // Hotels are billed monthly (no manual_qr), so hotel extensions apply immediately;
+  // the customer/admin already gets its own notification above.
+  if (!ctx.pending && booking.is_hotel_booking && booking.hotel_id) {
+    await notifyHotelInApp(booking, {
+      type: 'booking_extended',
+      title: 'มีการขยายเวลาบริการ',
+      message: `ขยายเวลาบริการ ${serviceName} เพิ่ม ${ctx.extensionMinutes} นาที${ctx.newEndTime ? ` (สิ้นสุดใหม่ ${ctx.newEndTime})` : ''}`,
+      data: {
+        additional_duration: ctx.extensionMinutes,
+        extension_count: ctx.extensionCount ?? null,
+      },
+    })
   }
 
   // === 2. LINE push to the assigned (original) staff (in-app already inserted at apply site) ===
@@ -1021,11 +1092,15 @@ export async function processJobCancelled(
     // 7b. Notify hotel (urgent)
     if (job.hotel_id) {
       try {
-        const { data: hotelProfiles } = await supabase
-          .from('profiles')
-          .select('id, line_user_id')
-          .eq('hotel_id', job.hotel_id)
-          .eq('role', 'HOTEL')
+        // Hotel users link via hotels.auth_user_id (NOT profiles.hotel_id, which is NULL for hotel users)
+        const { data: hotelRow } = await supabase
+          .from('hotels')
+          .select('auth_user_id')
+          .eq('id', job.hotel_id)
+          .single()
+        const { data: hotelProfiles } = hotelRow?.auth_user_id
+          ? await supabase.from('profiles').select('id, line_user_id').eq('id', hotelRow.auth_user_id)
+          : { data: [] as { id: string; line_user_id: string | null }[] }
 
         if (hotelProfiles && hotelProfiles.length > 0) {
           // LINE to hotel
@@ -1270,11 +1345,13 @@ export async function processJobCancelled(
     // 8. Notify hotel users if this is a hotel booking
     if (job.hotel_id) {
       try {
-        const { data: hotelProfiles } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('hotel_id', job.hotel_id)
-          .eq('role', 'HOTEL')
+        // Hotel users link via hotels.auth_user_id (NOT profiles.hotel_id, which is NULL for hotel users)
+        const { data: hotelRow } = await supabase
+          .from('hotels')
+          .select('auth_user_id')
+          .eq('id', job.hotel_id)
+          .single()
+        const hotelProfiles = hotelRow?.auth_user_id ? [{ id: hotelRow.auth_user_id }] : []
 
         if (hotelProfiles && hotelProfiles.length > 0) {
           const hotelNotifRows = hotelProfiles.map(profile => ({
