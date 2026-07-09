@@ -24,60 +24,87 @@ async function getCurrentProfile(): Promise<Profile | null> {
     return profileCache.profile
   }
 
-  try {
-    // WORKAROUND: Read session from localStorage directly instead of using getSession()
-    // because getSession() hangs with OAuth sessions
-    console.log('📍 getCurrentProfile: Reading session from localStorage directly...')
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
 
-    const sessionData = localStorage.getItem('bliss-customer-auth')
-    if (!sessionData) {
-      console.log('📍 getCurrentProfile: No session found in localStorage')
+  try {
+    // Get a VALID session. supabase-js getSession() auto-refreshes an expired access token via the
+    // refresh token and keeps localStorage in sync (verified 2026-07-09: returns in <200ms, does NOT
+    // hang — the old "getSession hangs" note is stale). Time-box it as a safety net so it can never
+    // wedge auth loading. CRITICAL: we must NEVER delete the session just because the ACCESS token
+    // expired — the refresh token is usually still valid, and deleting it forced a re-login on every
+    // page refresh after the ~1h access-token TTL.
+    let accessToken: string | undefined
+    let userId: string | undefined
+
+    const sdkSession = await Promise.race([
+      supabase.auth.getSession().then((r) => r.data.session),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+    ])
+
+    if (sdkSession?.access_token && sdkSession.user) {
+      accessToken = sdkSession.access_token
+      userId = sdkSession.user.id
+    } else {
+      // Fallback: getSession() returned nothing or was slow. Read the persisted session directly
+      // and, if the access token is stale, refresh it via a raw REST call (no delete on failure).
+      console.log('📍 getCurrentProfile: getSession empty/slow — using stored session fallback')
+      const sessionData = localStorage.getItem('bliss-customer-auth')
+      if (!sessionData) {
+        profileCache = { profile: null, timestamp: Date.now() }
+        return null
+      }
+      const stored = JSON.parse(sessionData)
+      const storedUser = stored.user || stored.currentSession?.user
+      let storedToken = stored.access_token || stored.currentSession?.access_token
+      const refreshToken = stored.refresh_token || stored.currentSession?.refresh_token
+      const expiresAt = stored.expires_at || stored.currentSession?.expires_at
+
+      if (!storedUser || !storedToken) {
+        return null
+      }
+
+      // Access token expired/near-expiry → refresh via REST using the refresh token. Do NOT delete
+      // the session if refresh fails (could be a transient network error); let the next attempt retry.
+      if (expiresAt && expiresAt < Date.now() / 1000 + 60 && refreshToken) {
+        console.log('📍 getCurrentProfile: Access token stale — refreshing via refresh token')
+        try {
+          const refreshRes = await Promise.race([
+            fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+              method: 'POST',
+              headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh_token: refreshToken }),
+            }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+          ])
+          if (refreshRes && (refreshRes as Response).ok) {
+            const refreshed = await (refreshRes as Response).json()
+            if (refreshed?.access_token) {
+              storedToken = refreshed.access_token
+              // Persist in the supabase-js session shape so the SDK client stays in sync
+              localStorage.setItem('bliss-customer-auth', JSON.stringify(refreshed))
+            }
+          }
+        } catch (e) {
+          console.warn('📍 getCurrentProfile: REST refresh failed (session preserved):', e)
+        }
+      }
+
+      accessToken = storedToken
+      userId = storedUser.id
+    }
+
+    if (!accessToken || !userId) {
       profileCache = { profile: null, timestamp: Date.now() }
       return null
     }
 
-    const session = JSON.parse(sessionData)
+    console.log('📍 getCurrentProfile: Session valid, fetching profile for user:', userId)
 
-    // Log full structure to debug
-    console.log('📍 getCurrentProfile: Full session structure:', {
-      keys: Object.keys(session),
-      hasUser: !!session.user,
-      hasCurrentSession: !!session.currentSession,
-      userId_direct: session.user?.id,
-      userId_nested: session.currentSession?.user?.id,
-    })
-
-    // Try different possible structures based on actual session format
-    const user = session.user || session.currentSession?.user || session.user_metadata
-    const accessToken = session.access_token || session.currentSession?.access_token
-    const refreshToken = session.refresh_token || session.currentSession?.refresh_token
-
-    if (!user) {
-      console.log('📍 getCurrentProfile: No valid user found in session')
-      return null
-    }
-
-    // Check if session is expired
-    const expiresAt = session.expires_at || session.currentSession?.expires_at
-    if (expiresAt && expiresAt < Date.now() / 1000) {
-      console.log('📍 getCurrentProfile: Session expired')
-      localStorage.removeItem('bliss-customer-auth')
-      return null
-    }
-
-    console.log('📍 getCurrentProfile: Session valid, fetching profile for user:', user.id)
-
-    // IMPORTANT: Use direct REST API call with access token to avoid setSession() hanging
-    if (!accessToken) {
-      console.log('📍 getCurrentProfile: No access token found')
-      return null
-    }
-
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rbdvlfriqjnwpxmmgisf.supabase.co'
-    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc',
+        'apikey': anonKey,
         'Content-Type': 'application/json',
       },
     })
@@ -85,6 +112,7 @@ async function getCurrentProfile(): Promise<Profile | null> {
     if (!response.ok) {
       const errorText = await response.text()
       console.log('📍 getCurrentProfile: API error:', response.status, errorText)
+      // Transient/auth error — return null WITHOUT deleting the session so a refresh can recover.
       return null
     }
 
@@ -108,8 +136,7 @@ async function getCurrentProfile(): Promise<Profile | null> {
     // Cache null result to prevent repeated failed attempts
     profileCache = { profile: null, timestamp: Date.now() }
 
-    // If there's an error parsing session or fetching profile, return null
-    // This allows the user to login again
+    // Do NOT delete the persisted session here — a parse/network error should not force a re-login.
     return null
   }
 }
