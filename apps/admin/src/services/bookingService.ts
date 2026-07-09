@@ -334,9 +334,15 @@ class BookingService {
         }))
       }
 
-      // Customer data is now properly joined from the database
-      // No need for parseCustomerFromNotes - use the actual customers table data
-      const processedData = filteredData
+      // Regular bookings get the customer name from the customers-table join, but HOTEL bookings
+      // have customer_id = null and the guest name/phone live in customer_notes ("Guest: …, Phone: …").
+      // getBookingById parses this into `booking.customer`; getAllBookings must do the same or the
+      // detail/cancel/delete surfaces (which read the LIST booking, then fall back to booking.customer)
+      // show "ไม่ระบุ" for every hotel booking. See skill bliss-admin-booking-customer-name-field.
+      const processedData = filteredData.map(b => ({
+        ...b,
+        customer: parseCustomerFromNotes(b.customer_notes),
+      }))
 
       return processedData
     } catch (error) {
