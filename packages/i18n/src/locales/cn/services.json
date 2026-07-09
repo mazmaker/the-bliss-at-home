@@ -66,7 +66,7 @@
   },
   "emergencyService": {
     "badge": "紧急服务",
-    "heading": "想在30分钟内享受按摩服务？",
+    "heading": "想在1小时内享受按摩服务？",
     "subtitle": "无需提前3小时预约，会员可享即时预约服务。"
   },
   "durationLabel": "{{duration}} 分钟起",
