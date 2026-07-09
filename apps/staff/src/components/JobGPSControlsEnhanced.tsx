@@ -4,6 +4,7 @@ import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useBookingStateMachine, type BookingStatus, getStateDisplayName, getStateColor } from '../hooks/useBookingStateMachine'
 import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
+import { canStaffSeeCustomerPhone } from '../utils/customerContact'
 
 interface JobGPSControlsEnhancedProps {
   job: {
@@ -399,7 +400,7 @@ export default function JobGPSControlsEnhanced({
       </div>
 
       {/* Contact Customer */}
-      {job.customer_phone && (
+      {canStaffSeeCustomerPhone(job.status) && job.customer_phone && (
         <div className="flex gap-2">
           <a
             href={`tel:${job.customer_phone}`}

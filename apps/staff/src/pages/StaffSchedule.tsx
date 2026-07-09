@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isSpecificPreference, getProviderPreferenceLabel, getProviderPreferenceBadgeStyle } from '@bliss/supabase'
+import { canStaffSeeCustomerPhone, maskCustomerNotesPhone } from '../utils/customerContact'
 import {
   Calendar,
   ChevronLeft,
@@ -728,7 +729,7 @@ function StaffSchedule() {
                   )}
                   <div>
                     <p className="font-medium text-bliss-900 text-sm">{selectedJob.customer_name}</p>
-                    {selectedJob.customer_phone && (
+                    {canStaffSeeCustomerPhone(selectedJob.status) && selectedJob.customer_phone && (
                       <a
                         href={`tel:${selectedJob.customer_phone}`}
                         className="text-xs text-bliss-700 flex items-center gap-1"
@@ -803,7 +804,7 @@ function StaffSchedule() {
                 <div className="space-y-1">
                   <h5 className="font-medium text-bliss-900 text-sm">หมายเหตุจากลูกค้า</h5>
                   <p className="text-xs text-bliss-600 bg-bliss-50 p-2 rounded-lg">
-                    {selectedJob.customer_notes}
+                    {maskCustomerNotesPhone(selectedJob.customer_notes, selectedJob.status)}
                   </p>
                 </div>
               )}

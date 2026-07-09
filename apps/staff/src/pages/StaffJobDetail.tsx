@@ -14,6 +14,7 @@ import JobStatusBadge from '../components/JobStatusBadge'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
 import { useStartGate } from '../hooks/useStartGate'
+import { canStaffSeeCustomerPhone, maskCustomerNotesPhone } from '../utils/customerContact'
 import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useStaffEligibility } from '@bliss/supabase'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
@@ -411,7 +412,7 @@ function StaffJobDetail() {
               <p className="text-xs text-bliss-500">ลูกค้า</p>
               <p className="font-medium text-bliss-900">{job.customer_name}</p>
             </div>
-            {job.customer_phone && (
+            {canStaffSeeCustomerPhone(job.status) && job.customer_phone && (
               <a
                 href={`tel:${job.customer_phone}`}
                 className="p-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition"
@@ -526,7 +527,7 @@ function StaffJobDetail() {
               </div>
               <div>
                 <p className="text-xs text-bliss-500">หมายเหตุจากลูกค้า</p>
-                <p className="text-sm text-bliss-700 mt-1">{job.customer_notes}</p>
+                <p className="text-sm text-bliss-700 mt-1">{maskCustomerNotesPhone(job.customer_notes, job.status)}</p>
               </div>
             </div>
           )}
@@ -576,7 +577,7 @@ function StaffJobDetail() {
           destinationLat={job.latitude}
           destinationLng={job.longitude}
           destinationName={job.hotel_name ? `${job.hotel_name}${job.room_number ? ` ห้อง ${job.room_number}` : ''}` : job.address}
-          customerPhone={job.customer_phone}
+          customerPhone={canStaffSeeCustomerPhone(job.status) ? job.customer_phone ?? undefined : undefined}
           showMap={jobGPSStatus.isTracking}
           currentLat={currentPosition?.latitude}
           currentLng={currentPosition?.longitude}
@@ -662,7 +663,7 @@ function StaffJobDetail() {
       )}
       {isMyJob && !isFinished && job.status === 'arrived' && !startGate.canStart && (
         <p className="text-xs text-center text-bliss-500">
-          เริ่มงานได้เมื่อถึงเวลานัด {job.scheduled_time?.slice(0, 5)} น. (อีก {startGate.minsUntilStart} นาที)
+          เริ่มงานได้ก่อนเวลานัด {job.scheduled_time?.slice(0, 5)} น. 15 นาที (อีก {startGate.minsUntilStart} นาที)
         </p>
       )}
 

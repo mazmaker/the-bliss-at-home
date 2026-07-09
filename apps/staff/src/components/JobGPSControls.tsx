@@ -6,6 +6,7 @@ import { supabase } from '@bliss/supabase'
 import { playBackgroundMusic, stopBackgroundMusic, isBackgroundMusicPlaying, setMusicManuallyMuted } from '../utils/backgroundMusic'
 import { queryWithTimeout } from '../utils/withTimeout'
 import { useTravelGate } from '../hooks/useTravelGate'
+import { canStaffSeeCustomerPhone } from '../utils/customerContact'
 
 interface JobGPSControlsProps {
   job: {
@@ -526,7 +527,7 @@ export default function JobGPSControls({
               {(gpsProcessing || isStoppingGPS) ? 'กำลังยืนยัน...' : 'มาถึงแล้ว'}
             </button>
 
-            {job.customer_phone && (
+            {canStaffSeeCustomerPhone(job.status) && job.customer_phone && (
               <a
                 href={`tel:${job.customer_phone}`}
                 className="bg-bliss-100 hover:bg-bliss-200 text-bliss-700 py-2 px-3 rounded-lg text-sm flex items-center gap-1"
