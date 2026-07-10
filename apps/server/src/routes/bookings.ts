@@ -469,6 +469,16 @@ router.post('/:id/reschedule', requireAdmin, async (req: Request, res: Response)
 
     if (updateError) {
       console.error('[Reschedule] Failed to update booking:', updateError)
+      // Friendly error when the NEW slot collides with the SAME customer's existing booking
+      // (unique constraint uq_bookings_customer_slot on customer_id + date + time). Return a
+      // clear 409 instead of a bare 500 that leaks the raw Postgres constraint name to the admin.
+      if ((updateError as any).code === '23505') {
+        return res.status(409).json({
+          success: false,
+          error: 'ลูกค้ามีการจองอื่นในวันและเวลานี้อยู่แล้ว ไม่สามารถเลื่อนมาช่วงเวลานี้ได้',
+          code: 'RESCHEDULE_SLOT_TAKEN',
+        })
+      }
       return res.status(500).json({
         success: false,
         error: 'Failed to update booking',

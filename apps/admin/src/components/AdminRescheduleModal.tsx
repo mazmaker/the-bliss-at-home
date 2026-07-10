@@ -236,7 +236,7 @@ export default function AdminRescheduleModal({
                     <p className="font-medium text-bliss-900">
                       {isHotelBooking
                         ? (booking.hotel?.name_th || 'โรงแรม')
-                        : (booking.customer?.full_name || 'ไม่ระบุ')}
+                        : (booking.customers?.full_name || booking.customer?.full_name || 'ไม่ระบุ')}
                     </p>
                     {isHotelBooking && booking.hotel_room_number && (
                       <p className="text-xs text-bliss-600">🏠 ห้อง: {booking.hotel_room_number}</p>
