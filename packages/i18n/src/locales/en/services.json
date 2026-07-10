@@ -66,7 +66,7 @@
   },
   "emergencyService": {
     "badge": "Emergency Service",
-    "heading": "Need a massage within the next hour?",
+    "heading": "Need a massage within the next 90 minutes?",
     "subtitle": "Couldn't book 3 hours in advance? Our special team is ready to help"
   },
   "durationLabel": "From {{duration}} min",
