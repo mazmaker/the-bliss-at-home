@@ -4,9 +4,10 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Clock, User, MapPin, CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Clock, User, Users, MapPin, CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useExtendSession, useExtensionValidation } from '../hooks/useExtendSession';
-import { BookingWithExtensions, ExtensionOption } from '../types/extendSession';
+import { getHotelExtensionInfo } from '../services/extendSessionService';
+import { BookingWithExtensions, ExtensionOption, HotelExtensionInfo, EXTENSION_BUSINESS_RULES } from '../types/extendSession';
 
 interface ExtendSessionModalProps {
   booking: BookingWithExtensions;
@@ -21,6 +22,9 @@ export function ExtendSessionModal({
 }: ExtendSessionModalProps) {
   const [selectedDuration, setSelectedDuration] = useState<number>();
   const [notes, setNotes] = useState('');
+  // COUPLE support: per-recipient info + which recipient(s) to extend.
+  const [coupleInfo, setCoupleInfo] = useState<HotelExtensionInfo | null>(null);
+  const [selectedRecipients, setSelectedRecipients] = useState<number[]>([]);
 
   const {
     loading,
@@ -38,11 +42,70 @@ export function ExtendSessionModal({
     loadExtensionOptions(booking.id);
   }, [booking.id, loadExtensionOptions]);
 
+  // Load per-recipient info (drives the couple selector). Default to the first recipient.
+  useEffect(() => {
+    let active = true;
+    getHotelExtensionInfo(booking.id)
+      .then((info) => {
+        if (!active) return;
+        setCoupleInfo(info);
+        setSelectedRecipients(info.recipients.length > 0 ? [info.recipients[0].recipientIndex] : []);
+      })
+      .catch(() => { if (active) setCoupleInfo(null); });
+    return () => { active = false; };
+  }, [booking.id]);
+
+  const isCouple = !!coupleInfo?.isCouple;
+
+  // Couple: recompute options for the SELECTED recipient(s), each priced by its own service ("ทั้งคู่"
+  // sums both). Single keeps the server-computed extensionOptions.
+  const coupleOptions = useMemo<ExtensionOption[]>(() => {
+    if (!coupleInfo || !isCouple || selectedRecipients.length === 0) return [];
+    const chosen = coupleInfo.recipients.filter(r => selectedRecipients.includes(r.recipientIndex));
+    if (chosen.length === 0) return [];
+    const maxCurrent = Math.max(...chosen.map(r => r.currentDuration));
+    // Offer a duration only if EVERY chosen recipient's service supports it (avoids a phantom ฿0 option
+    // when the two couple services have different duration_options).
+    return coupleInfo.availableDurations
+      .filter(d => d > 0 && chosen.every(r => r.prices[d] !== undefined))
+      .map(d => {
+        const price = chosen.reduce((sum, r) => sum + (r.prices[d] ?? 0), 0);
+        const totalNewDuration = maxCurrent + d;
+        const isAvailable = totalNewDuration <= EXTENSION_BUSINESS_RULES.MAX_SESSION_DURATION
+          && coupleInfo.extensionCount < EXTENSION_BUSINESS_RULES.MAX_EXTENSIONS;
+        return {
+          duration: d,
+          price,
+          totalNewDuration,
+          totalNewPrice: booking.final_price + price,
+          isAvailable,
+          label: `ขยายเป็น ${totalNewDuration} นาที (+${d} นาที)`,
+        };
+      })
+      .filter(o => o.isAvailable);
+  }, [coupleInfo, isCouple, selectedRecipients, booking.final_price]);
+
+  const displayOptions = isCouple ? coupleOptions : extensionOptions;
+
+  // Reset the chosen duration if it's no longer offered after a recipient change.
+  useEffect(() => {
+    if (selectedDuration && !displayOptions.some(o => o.duration === selectedDuration)) {
+      setSelectedDuration(undefined);
+    }
+  }, [displayOptions, selectedDuration]);
+
   // Calculate current totals
   const currentTotals = useMemo(() => {
-    // COUPLE/simultaneous bookings have one booking_services row PER RECIPIENT run IN PARALLEL, so
-    // the current session length shown is a SINGLE recipient's duration — summing across recipients
-    // would double it (e.g. 240 instead of 120). Scope to one recipient (base row's recipient_index).
+    // Couple: current duration of the selected recipient(s) (max).
+    if (isCouple && coupleInfo && selectedRecipients.length > 0) {
+      const chosen = coupleInfo.recipients.filter(r => selectedRecipients.includes(r.recipientIndex));
+      return {
+        duration: chosen.length > 0 ? Math.max(...chosen.map(r => r.currentDuration)) : 0,
+        price: booking.final_price,
+        extensionCount: coupleInfo.extensionCount,
+      };
+    }
+    // Single: scope to the base recipient.
     const targetRecipient = booking.booking_services.find((s: any) => !s.is_extension)?.recipient_index ?? 0;
     const totalDuration = booking.booking_services
       .filter((s: any) => (s.recipient_index ?? 0) === targetRecipient)
@@ -53,12 +116,12 @@ export function ExtendSessionModal({
       price: booking.final_price,
       extensionCount: booking.extension_count || 0
     };
-  }, [booking]);
+  }, [booking, isCouple, coupleInfo, selectedRecipients]);
 
   // Get selected option details
   const selectedOption = useMemo(() => {
-    return extensionOptions.find(option => option.duration === selectedDuration);
-  }, [extensionOptions, selectedDuration]);
+    return displayOptions.find(option => option.duration === selectedDuration);
+  }, [displayOptions, selectedDuration]);
 
   const handleConfirm = async () => {
     if (!selectedDuration) {
@@ -71,7 +134,9 @@ export function ExtendSessionModal({
         bookingId: booking.id,
         additionalDuration: selectedDuration,
         notes: notes.trim() || undefined,
-        requestedBy: 'hotel_staff'
+        requestedBy: 'hotel_staff',
+        // COUPLE: extend the chosen recipient(s), not booking_services[0].
+        ...(isCouple && selectedRecipients.length > 0 ? { recipientIndices: selectedRecipients } : {}),
       });
 
       if (result) {
@@ -162,11 +227,58 @@ export function ExtendSessionModal({
             </div>
           )}
 
+          {/* Recipient selector (COUPLE only) — คนที่1 / คนที่2 / ทั้งคู่ */}
+          {isCouple && coupleInfo && (
+            <div className="space-y-3">
+              <h4 className="flex items-center gap-2 font-medium text-bliss-700">
+                <Users className="w-4 h-4" />
+                เพิ่มเวลาให้
+              </h4>
+              <div className="grid gap-2">
+                {[
+                  ...coupleInfo.recipients.map((r) => ({
+                    key: `r${r.recipientIndex}`,
+                    indices: [r.recipientIndex],
+                    label: `คนที่ ${r.recipientIndex + 1}`,
+                    sub: r.serviceNameTh || '',
+                  })),
+                  {
+                    key: 'both',
+                    indices: coupleInfo.recipients.map((r) => r.recipientIndex),
+                    label: 'ทั้งคู่',
+                    sub: '',
+                  },
+                ].map((choice) => {
+                  const active = selectedRecipients.length === choice.indices.length &&
+                    choice.indices.every((i) => selectedRecipients.includes(i));
+                  return (
+                    <label
+                      key={choice.key}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${active ? 'border-bliss-500 bg-bliss-50 ring-2 ring-bliss-200' : 'border-bliss-200 hover:bg-bliss-50'}`}
+                    >
+                      <input
+                        type="radio"
+                        name="recipient"
+                        checked={active}
+                        onChange={() => setSelectedRecipients(choice.indices)}
+                        className="w-4 h-4 text-bliss-600 focus:ring-bliss-500"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-bliss-900">{choice.label}</div>
+                        {choice.sub && <div className="text-sm text-bliss-600">{choice.sub}</div>}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Extension options */}
           <div className="space-y-4">
             <h4 className="font-medium text-bliss-700">เลือกเวลาเพิ่มเติม:</h4>
 
-            {extensionOptions.length === 0 ? (
+            {displayOptions.length === 0 ? (
               <div className="text-center py-8 text-bliss-500">
                 <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-orange-500" />
                 <p>ไม่มีตัวเลือกเวลาที่สามารถเพิ่มได้</p>
@@ -176,7 +288,7 @@ export function ExtendSessionModal({
               </div>
             ) : (
               <div className="space-y-3">
-                {extensionOptions.map((option) => (
+                {displayOptions.map((option) => (
                   <label
                     key={option.duration}
                     className={`
@@ -253,10 +365,10 @@ export function ExtendSessionModal({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!selectedDuration || loading || extensionOptions.length === 0}
+            disabled={!selectedDuration || loading || displayOptions.length === 0}
             className={`
               flex-1 px-4 py-2 rounded-lg font-medium transition-colors
-              ${!selectedDuration || loading || extensionOptions.length === 0
+              ${!selectedDuration || loading || displayOptions.length === 0
                 ? 'bg-bliss-300 text-bliss-500 cursor-not-allowed'
                 : 'bg-bliss-600 hover:bg-bliss-700 text-white'
               }

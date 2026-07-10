@@ -5,6 +5,7 @@ import { useAuth } from '@bliss/supabase/auth'
 import { supabase } from '@bliss/supabase'
 import { queryWithTimeout } from '../utils/withTimeout'
 import { useTravelGate } from '../hooks/useTravelGate'
+import { canStaffSeeCustomerPhone, maskCustomerNotesPhone } from '../utils/customerContact'
 
 interface BookingTrackingCardProps {
   booking: {
@@ -182,12 +183,14 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
             <span className="font-medium text-bliss-900">{booking.customer_name}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-bliss-500" />
-            <a href={`tel:${booking.customer_phone}`} className="text-bliss-600 underline">
-              {booking.customer_phone}
-            </a>
-          </div>
+          {canStaffSeeCustomerPhone(booking.status) && booking.customer_phone && (
+            <div className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-bliss-500" />
+              <a href={`tel:${booking.customer_phone}`} className="text-bliss-600 underline">
+                {booking.customer_phone}
+              </a>
+            </div>
+          )}
 
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 text-bliss-500 mt-0.5" />
@@ -215,7 +218,7 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
           {booking.customer_notes && (
             <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                <strong>หมายเหตุ:</strong> {booking.customer_notes}
+                <strong>หมายเหตุ:</strong> {maskCustomerNotesPhone(booking.customer_notes, booking.status)}
               </p>
             </div>
           )}

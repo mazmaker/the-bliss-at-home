@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { GoogleMapsPicker } from './GoogleMapsPicker'
 import {
   createHotelAccount,
+  checkHotelEmailAvailable,
   sendHotelInvitation,
   resetHotelPassword,
   toggleHotelLoginAccess,
@@ -52,6 +53,20 @@ const generateHotelSlug = (englishName: string): string => {
 }
 
 // Validation schema
+// Map a Supabase/Postgres save error to a friendly Thai message — never surface raw dev text like
+// `duplicate key value violates unique constraint "hotels_hotel_slug_key"` to the admin user.
+function friendlyHotelSaveError(error: any): string {
+  const code = error?.code
+  const text = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+  if (code === '23505' || text.includes('duplicate key') || text.includes('already exists')) {
+    if (text.includes('slug')) return 'URL สำหรับโรงแรม (Slug) นี้ถูกใช้ไปแล้ว กรุณาเปลี่ยนเป็นค่าอื่น'
+    if (text.includes('email')) return 'อีเมลนี้ถูกใช้กับโรงแรมอื่นแล้ว กรุณาใช้อีเมลอื่น'
+    if (text.includes('tax')) return 'เลขประจำตัวผู้เสียภาษีนี้ถูกใช้ไปแล้ว'
+    return 'ข้อมูลบางส่วนซ้ำกับที่มีอยู่ในระบบแล้ว กรุณาตรวจสอบและลองใหม่'
+  }
+  return error?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
+}
+
 const hotelFormSchema = z.object({
   name_th: z.string().min(3, 'ชื่อภาษาไทยต้องมีอย่างน้อย 3 ตัวอักษร'),
   name_en: z.string().min(3, 'English name must be at least 3 characters'),
@@ -223,6 +238,8 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
     register,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     watch,
     formState: { errors },
     reset,
@@ -377,6 +394,19 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
 
         if (error) throw error
       } else {
+        // 🔎 Email PRE-CHECK before inserting the hotel row. A reused login email makes
+        // createHotelAccount (below) fail AFTER the row is already inserted, leaving an orphaned
+        // account-less hotel. Block here so no hotel row is created for an unusable email.
+        // fail-closed: a failed check also blocks (createHotelAccount would fail too → orphan).
+        clearErrors('email')
+        const emailCheck = await checkHotelEmailAvailable(data.email)
+        if (!emailCheck.available) {
+          const msg = emailCheck.error || 'อีเมลนี้ถูกใช้เป็นบัญชีเข้าใช้งานแล้ว กรุณาใช้อีเมลอื่น'
+          setError('email', { type: 'manual', message: msg })
+          setSubmitError(msg)
+          return
+        }
+
         // Create new hotel
         const { data: newHotel, error } = await supabase.from('hotels').insert([
           {
@@ -429,8 +459,8 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
             })
           } else {
             console.warn('Failed to create hotel auth account:', authResult.error)
-            toast.error(`โรงแรมสร้างสำเร็จ แต่ไม่สามารถสร้างบัญชีผู้ใช้ได้: ${authResult.error}`, {
-              duration: 6000,
+            toast.error(`บันทึกข้อมูลโรงแรมสำเร็จ แต่ยังสร้างบัญชีเข้าใช้งานไม่ได้: ${authResult.error} — สามารถกด "สร้างบัญชี" อีกครั้งได้ในหน้าแก้ไขโรงแรม`, {
+              duration: 7000,
             })
           }
         } catch (authError: any) {
@@ -448,7 +478,7 @@ export function HotelForm({ isOpen, onClose, onSuccess, editData }: HotelFormPro
       }, 1500)
     } catch (error: any) {
       console.error('Error submitting hotel:', error)
-      setSubmitError(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
+      setSubmitError(friendlyHotelSaveError(error))
     } finally {
       setIsSubmitting(false)
     }

@@ -8,6 +8,7 @@ import JobGPSControls from '../components/JobGPSControls'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
 import { useStartGate } from '../hooks/useStartGate'
+import { canStaffSeeCustomerPhone } from '../utils/customerContact'
 import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
@@ -338,7 +339,7 @@ function StaffDashboard() {
                 </a>
               </div>
             )}
-            {currentJob.customer_phone && (
+            {canStaffSeeCustomerPhone(currentJob.status) && currentJob.customer_phone && (
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-bliss-400" />
                 <a href={`tel:${currentJob.customer_phone}`} className="font-medium text-bliss-700">
@@ -369,7 +370,7 @@ function StaffDashboard() {
             />
             {currentJob.status === 'arrived' && !startGate.canStart && (
               <p className="mt-2 text-xs text-center text-bliss-500">
-                เริ่มงานได้เมื่อถึงเวลานัด {currentJob.scheduled_time?.slice(0, 5)} น. (อีก {startGate.minsUntilStart} นาที)
+                เริ่มงานได้ก่อนเวลานัด {currentJob.scheduled_time?.slice(0, 5)} น. 15 นาที (อีก {startGate.minsUntilStart} นาที)
               </p>
             )}
           </div>

@@ -1,22 +1,27 @@
 import { useState, useEffect } from 'react'
 
-// Staff "เริ่มงาน" (start work) is only allowed once the scheduled SERVICE TIME has arrived —
-// a staff who arrives early must NOT be able to start before the appointment time.
-// (Requirement 2026-07-02, PART42 item #8.) Sibling of useCompleteGate.
+// Staff "เริ่มงาน" (start work) is allowed from 15 minutes BEFORE the scheduled SERVICE TIME
+// onward — a staff who arrives early may start up to 15 min ahead of the appointment, but not
+// earlier than that. (Requirement 2026-07-02, PART42 item #8; early-start window added 2026-07-09.)
+// Sibling of useCompleteGate.
+
+// Staff may start this many ms before the scheduled service time.
+const EARLY_START_MS = 15 * 60_000
 
 export interface StartGate {
   canStart: boolean
-  minsUntilStart: number // minutes until the scheduled start; 0 once reached
+  minsUntilStart: number // minutes until the start window opens (scheduled − 15 min); 0 once open
   scheduledStartMs: number | null // parsed scheduled start (epoch ms), null if unparseable
 }
 
 /**
  * Gate the staff start-work button by the job's scheduled service time.
- * - `canStart` is true once `now >= scheduled_date+scheduled_time`. Stays true afterwards
- *   (a late staff can still start).
+ * - `canStart` is true once `now >= (scheduled_date+scheduled_time) − 15min` (the early-start
+ *   window). Stays true afterwards (a late staff can still start).
  * - Parses `scheduled_date`+`scheduled_time` WITHOUT a `Z` suffix, so it is device-local time
  *   (= Asia/Bangkok on staff phones) — the SAME parse as jobService.buildJobWindow, keeping the
  *   gate consistent with the overlap/schedule math. `scheduled_time` may be 'HH:MM' or 'HH:MM:SS'.
+ * - `minsUntilStart` counts down to the WINDOW OPENING (scheduled − 15 min), not to the appointment.
  * - FAIL-OPEN: if the scheduled date/time is missing or unparseable, returns canStart=true so a
  *   legacy/odd job is never permanently un-startable.
  * - Client-clock based; ticks every 20s so the button flips disabled→enabled live without a refetch.
@@ -45,10 +50,12 @@ export function useStartGate(
     return { canStart: true, minsUntilStart: 0, scheduledStartMs: null }
   }
 
-  const canStart = now >= scheduledStartMs
+  // The button opens 15 minutes before the appointment.
+  const startWindowOpensMs = scheduledStartMs - EARLY_START_MS
+  const canStart = now >= startWindowOpensMs
   return {
     canStart,
-    minsUntilStart: canStart ? 0 : Math.ceil((scheduledStartMs - now) / 60_000),
+    minsUntilStart: canStart ? 0 : Math.ceil((startWindowOpensMs - now) / 60_000),
     scheduledStartMs,
   }
 }

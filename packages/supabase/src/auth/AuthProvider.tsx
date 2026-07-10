@@ -139,7 +139,11 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         const now = Date.now()
-        if (now - lastProfileFetchTime < PROFILE_FETCH_DEBOUNCE) {
+        // NEVER debounce SIGNED_IN — it's the explicit post-login event and MUST update the shared
+        // auth state immediately. If it's skipped, navigating to a protected route right after login
+        // bounces back to /login (the "have to log in 2-3 times" symptom). Only the repeatable
+        // INITIAL_SESSION / TOKEN_REFRESHED events are debounced.
+        if (event !== 'SIGNED_IN' && now - lastProfileFetchTime < PROFILE_FETCH_DEBOUNCE) {
           console.log('⏭️ [AuthProvider] Skipping profile fetch (debounced)', event)
           return
         }

@@ -50,9 +50,15 @@ class HotelAuthService {
         throw new Error('Hotel already has an account')
       }
 
-      // Check if login email is already in use
-      const { data: existingUser } = await getSupabaseClient().auth.admin.listUsers()
-      const emailInUse = existingUser.users.some((user: any) => user.email === loginEmail)
+      // Check if login email is already in use.
+      // NOTE: auth.admin.listUsers() defaults to 50 users/page — on a project with more auth users
+      // than that (prod has 100+) it SILENTLY sees only page 1, so a reused email slips past this
+      // pre-check and createUser() below then fails with a raw "already registered" error. Page through
+      // a large perPage AND still treat createUser's own duplicate error (below) as the source of truth.
+      const { data: existingUser } = await getSupabaseClient().auth.admin.listUsers({ perPage: 1000 })
+      const emailInUse = existingUser.users.some(
+        (user: any) => user.email?.toLowerCase() === loginEmail.toLowerCase()
+      )
 
       if (emailInUse) {
         throw new Error('Email address is already in use')
@@ -76,7 +82,15 @@ class HotelAuthService {
 
       if (authError || !authData.user) {
         console.error('Supabase auth error:', authError)
-        throw new Error(`Failed to create auth user: ${authError?.message}`)
+        // GoTrue returns a 422 "...already been registered" when the email exists (the listUsers
+        // pre-check can miss it on a large project). Surface a clear, actionable reason.
+        const msg = authError?.message || ''
+        // GoTrue signals a duplicate email as "…already been registered" (422) OR, on some versions,
+        // "Database error checking email" — both mean the email is taken.
+        if (/already.*(registered|exists)|email.*(exists|in use)|database error checking email/i.test(msg) || (authError as any)?.status === 422) {
+          throw new Error('Email address is already in use')
+        }
+        throw new Error(`Failed to create auth user: ${msg}`)
       }
 
       // Create profile in profiles table (or update if exists)
@@ -133,6 +147,40 @@ class HotelAuthService {
       console.error('Create hotel account error:', error)
       throw error
     }
+  }
+
+  /**
+   * Check whether a login email is still AVAILABLE (not already used by any existing account).
+   * Powers the admin "add hotel" PRE-CHECK so a reused email is caught BEFORE the hotel row is
+   * inserted — otherwise createHotelAccount fails AFTER the insert, leaving an orphaned
+   * account-less hotel.
+   *
+   * We query public.profiles (a verified 1:1 mirror of auth.users by id AND email) rather than
+   * auth.admin.listUsers(): on this project GoTrue throws "Database error finding users" for
+   * perPage >= 100 OR page >= 2, so listUsers cannot enumerate all 100+ auth users (which is why
+   * createHotelAccount's own listUsers pre-check silently sees an empty page and relies on
+   * createUser's duplicate error as the real guard). profiles is in the public schema (service-role
+   * reads bypass RLS) and is not subject to that GoTrue pagination bug, so it scales to any size.
+   *
+   * Match case-insensitively (most stored emails are mixed-case) and treat the address as a LITERAL
+   * — escape ILIKE wildcards (%, _) because many synthetic (LINE) emails legitimately contain '_'.
+   */
+  async isEmailAvailable(email: string): Promise<boolean> {
+    const normalized = (email || '').trim().toLowerCase()
+    if (!normalized) return false
+
+    const pattern = normalized.replace(/[\\%_]/g, '\\$&')
+    const { data, error } = await getSupabaseClient()
+      .from('profiles')
+      .select('id')
+      .ilike('email', pattern)
+      .limit(1)
+
+    if (error) {
+      throw new Error(`Failed to check email: ${error.message}`)
+    }
+
+    return !data || data.length === 0
   }
 
   /**
@@ -233,14 +281,20 @@ class HotelAuthService {
         throw new Error(`Failed to update hotel: ${updateError.message}`)
       }
 
-      // Send password reset email with new credentials
-      await emailService.sendPasswordReset(hotel.login_email, {
-        hotelName: hotel.name_th,
-        loginEmail: hotel.login_email,
-        temporaryPassword,
-        loginUrl: this.getHotelLoginUrl(),
-        expiresIn: '24 ชั่วโมง'
-      })
+      // Send password reset email with new credentials.
+      // The auth password + hotel row are ALREADY updated above, so a mail failure must NOT fail the
+      // whole reset — the admin still gets the new temporary password back to relay manually. Log & go.
+      try {
+        await emailService.sendPasswordReset(hotel.login_email, {
+          hotelName: hotel.name_th,
+          loginEmail: hotel.login_email,
+          temporaryPassword,
+          loginUrl: this.getHotelLoginUrl(),
+          expiresIn: '24 ชั่วโมง'
+        })
+      } catch (mailError) {
+        console.error('Password reset email failed (password WAS reset successfully):', mailError)
+      }
 
       return {
         temporaryPassword,

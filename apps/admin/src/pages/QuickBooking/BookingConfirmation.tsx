@@ -534,10 +534,22 @@ export default function BookingConfirmation({
               <h3 className="font-medium text-bliss-900">สรุปราคา</h3>
             </div>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-bliss-500">ราคาฐาน:</span>
-                <span>{formatCurrency(bookingData.basePricing.base_price)}</span>
-              </div>
+              {(bookingData.recipientCount || 1) > 1 && bookingData.recipients && bookingData.recipients.length > 1 ? (
+                // Couple: base_price only holds recipient-0's per-person value (canonical D-P8-1),
+                // so show a per-recipient base-price breakdown that reconciles to the total instead
+                // of a single misleading "ราคาฐาน" line. Mirrors the per-recipient "ข้อมูลบริการ" block above.
+                bookingData.recipients.map((r, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="text-bliss-500">ราคาฐาน (คนที่ {i + 1}):</span>
+                    <span>{formatCurrency(r.price)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-bliss-500">ราคาฐาน:</span>
+                  <span>{formatCurrency(bookingData.basePricing.base_price)}</span>
+                </div>
+              )}
               {bookingData.basePricing.discount_amount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>ส่วนลด:</span>

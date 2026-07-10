@@ -7,7 +7,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { CheckCircle, FileText, Loader2 } from 'lucide-react'
-import { supabase } from '@bliss/supabase/auth'
+import { supabase, useAuth } from '@bliss/supabase/auth'
 import { useTranslation } from '@bliss/i18n'
 
 interface RefundPolicyConsentProps {
@@ -33,6 +33,7 @@ export function RefundPolicyConsent({
   hideAcceptButton = false,
 }: RefundPolicyConsentProps) {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
   const [policyContent, setPolicyContent] = useState('')
   const [policyContentEn, setPolicyContentEn] = useState('')
   const [policyContentCn, setPolicyContentCn] = useState('')
@@ -108,9 +109,10 @@ export function RefundPolicyConsent({
     if (!isAccepted) return
     setIsSaving(true)
     try {
-      // Save consent timestamp to profile
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
+      // Save consent to profile. Use the AuthProvider user (localStorage session) rather than a
+      // supabase.auth.getUser() NETWORK call — in flaky in-app browsers getUser() could return null
+      // and silently SKIP the save, so the acceptance never persisted and the modal kept re-showing.
+      if (user?.id) {
         await supabase
           .from('profiles')
           .update({
@@ -203,34 +205,43 @@ export function RefundPolicyConsent({
  * Hook to check if current user has accepted refund policy
  */
 export function useRefundPolicyConsent() {
+  // Derive the user from the app's AuthProvider (localStorage-backed session) instead of a
+  // supabase.auth.getUser() NETWORK call. In flaky in-app browsers (e.g. LINE) getUser() could
+  // return null / error, and the old `!user`/`catch` branches BOTH set hasAccepted=false → the
+  // global ConsentModalGuard nagged an ALREADY-ACCEPTED user on every page. Now: uncertainty →
+  // `null` (don't nag), and the check re-runs when the session (user.id) resolves.
+  const { user } = useAuth()
   const [hasAccepted, setHasAccepted] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    checkConsent()
-  }, [])
-
-  const checkConsent = async () => {
+  const checkConsent = useCallback(async () => {
+    // No confirmed user yet → UNKNOWN (null), not "not-accepted". Re-runs when user.id resolves.
+    if (!user?.id) {
+      setHasAccepted(null)
+      setIsLoading(false)
+      return
+    }
+    setIsLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setHasAccepted(false)
-        return
-      }
-
-      // Get user's consent version
-      const { data: profile } = await supabase
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('refund_policy_accepted_at, refund_policy_version')
         .eq('id', user.id)
         .single()
 
+      // A transient read error must NOT nag an accepted user → leave UNKNOWN (null), not false.
+      if (profileErr) {
+        setHasAccepted(null)
+        return
+      }
+
+      // Genuinely not accepted → show the modal (correct).
       if (!profile?.refund_policy_accepted_at) {
         setHasAccepted(false)
         return
       }
 
-      // Check if consent matches current policy version
+      // Accepted → only re-show when admin bumped the policy version.
       const { data: settings } = await supabase
         .from('settings')
         .select('value')
@@ -244,11 +255,15 @@ export function useRefundPolicyConsent() {
       setHasAccepted(profile.refund_policy_version === currentVersion)
     } catch (err) {
       console.error('Failed to check consent:', err)
-      setHasAccepted(false)
+      setHasAccepted(null) // uncertain → don't nag
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user?.id])
+
+  useEffect(() => {
+    checkConsent()
+  }, [checkConsent])
 
   return { hasAccepted, isLoading, recheckConsent: checkConsent }
 }

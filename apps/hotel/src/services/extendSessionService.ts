@@ -15,7 +15,9 @@ import {
   EXTENSION_BUSINESS_RULES,
   EXTENSION_ERROR_MESSAGES,
   BookingWithExtensions,
-  BookingServiceExtended
+  BookingServiceExtended,
+  HotelExtensionInfo,
+  ExtensionRecipientInfo
 } from '../types/extendSession';
 
 /**
@@ -58,7 +60,14 @@ export async function extendBookingSession(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({ additional_duration: request.additionalDuration })
+      body: JSON.stringify({
+        additional_duration: request.additionalDuration,
+        requested_by: request.requestedBy || 'hotel_staff',
+        // COUPLE: extend the chosen recipient(s) (server extends booking_services[0] otherwise).
+        ...(request.recipientIndices && request.recipientIndices.length > 0
+          ? { recipient_indices: request.recipientIndices }
+          : {}),
+      })
     });
 
     const data = await response.json();
@@ -118,6 +127,28 @@ export async function extendBookingSession(
 }
 
 /**
+ * Resolve the base service id used to price/compute an extension.
+ * Hotel bookings normally carry a booking_services base row (the hotel booking flow always sends a
+ * `services[]` array, so secure-bookings-v2 inserts ≥1 row for single AND couple). But mirror the
+ * SERVER extend route's defensive fallback (bookings.ts ~L1550 `booking_services?.[0]?.service_id ||
+ * booking.service_id`) so a booking that somehow lacks a booking_services row can't crash the extend
+ * flow on `booking.booking_services[0].service_id` (the "Cannot read ... 'service_id'" class of bug
+ * fixed on the customer side 2026-07-08). Prefer the non-extension base row; the fetch selects `*`
+ * so the top-level `bookings.service_id` is available as the fallback.
+ */
+function resolveBaseServiceId(booking: any): string {
+  const baseBs = booking.booking_services?.find((bs: any) => !bs.is_extension) ?? booking.booking_services?.[0]
+  const id = baseBs?.service_id ?? booking.service_id
+  if (!id) {
+    throw new ExtensionError(
+      ExtensionErrorCode.DATABASE_ERROR,
+      'ไม่พบข้อมูลบริการสำหรับการคำนวณราคา'
+    )
+  }
+  return id
+}
+
+/**
  * Get available extension options for a booking
  */
 export async function getExtensionOptions(bookingId: string): Promise<ExtensionOption[]> {
@@ -133,7 +164,7 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
   const { data: service } = await supabase
     .from('services')
     .select('*')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolveBaseServiceId(booking))
     .single();
 
   if (!service) {
@@ -180,6 +211,82 @@ export async function getExtensionOptions(bookingId: string): Promise<ExtensionO
       };
     })
     .filter(option => option.isAvailable);
+}
+
+/**
+ * Per-recipient extension info for the hotel modal's recipient selector (คนที่1 / คนที่2 / ทั้งคู่).
+ * Mirrors the customer getBookingExtensionInfo but prices with the hotel discount. UX-only — the server
+ * re-derives the authoritative per-recipient price.
+ */
+export async function getHotelExtensionInfo(bookingId: string): Promise<HotelExtensionInfo> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      id, final_price, duration, booking_date, booking_time, extension_count, hotel_id,
+      service:services ( id, name_th, name_en, price_60, price_90, price_120, hotel_price, duration, duration_options ),
+      booking_services (
+        id, service_id, duration, recipient_index, recipient_name, is_extension,
+        services ( name_th, name_en, price_60, price_90, price_120, hotel_price, duration, duration_options )
+      )
+    `)
+    .eq('id', bookingId)
+    .single();
+
+  if (error || !data) {
+    throw new ExtensionError(ExtensionErrorCode.BOOKING_NOT_FOUND, EXTENSION_ERROR_MESSAGES.BOOKING_NOT_FOUND);
+  }
+
+  const booking: any = data;
+
+  // Hotel discount (fixed baht) applied to every extension price.
+  const { data: hotel } = await supabase
+    .from('hotels')
+    .select('discount_amount, discount_rate')
+    .eq('id', booking.hotel_id)
+    .single();
+  const hotelDiscountAmount = hotel?.discount_amount || 0;
+
+  const allRows: any[] = booking.booking_services || [];
+  const baseRows: any[] = allRows
+    .filter((s: any) => !s.is_extension)
+    .sort((a: any, b: any) => (a.recipient_index ?? 0) - (b.recipient_index ?? 0));
+
+  const indices = baseRows.length > 0
+    ? Array.from(new Set(baseRows.map((r: any) => r.recipient_index ?? 0))).sort((a, b) => a - b)
+    : [0];
+
+  const durationsFrom = (svc: any): number[] => (svc?.duration_options && svc.duration_options.length > 0)
+    ? svc.duration_options
+    : [60, 90, 120];
+
+  const recipients: ExtensionRecipientInfo[] = indices.map((idx) => {
+    const row = baseRows.find((r: any) => (r.recipient_index ?? 0) === idx);
+    const svc = row?.services || booking.service;
+    // CURRENT duration = base + already-applied extensions for THIS recipient (sum ALL its rows), so the
+    // display and the MAX_SESSION_DURATION gate reflect the real session length after prior extensions.
+    const currentDuration = allRows.length > 0
+      ? allRows.filter((r: any) => (r.recipient_index ?? 0) === idx).reduce((sum: number, r: any) => sum + (r.duration || 0), 0)
+      : (booking.duration || 0);
+    const prices: Record<number, number> = {};
+    for (const d of durationsFrom(svc)) {
+      if (d > 0) prices[d] = calculateServicePriceWithDiscount(svc, d, hotelDiscountAmount, 0);
+    }
+    return {
+      recipientIndex: idx,
+      serviceId: row?.service_id ?? booking.service?.id,
+      serviceNameTh: svc?.name_th ?? '',
+      serviceNameEn: svc?.name_en ?? '',
+      currentDuration,
+      prices,
+    };
+  });
+
+  return {
+    isCouple: recipients.length > 1,
+    recipients,
+    availableDurations: durationsFrom(baseRows[0]?.services || booking.service),
+    extensionCount: booking.extension_count || 0,
+  };
 }
 
 /**
@@ -258,7 +365,7 @@ async function calculateExtensionPrice(
   const { data: service } = await supabase
     .from('services')
     .select('*')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolveBaseServiceId(booking))
     .single();
 
   if (!service) {
@@ -324,7 +431,7 @@ async function calculateStaffExtensionEarnings(
   const { data: service } = await supabase
     .from('services')
     .select('staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, price_60, price_90, price_120, base_price, duration')
-    .eq('id', booking.booking_services[0].service_id)
+    .eq('id', resolveBaseServiceId(booking))
     .single();
 
   if (!service) {
