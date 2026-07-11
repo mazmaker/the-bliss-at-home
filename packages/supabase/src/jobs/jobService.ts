@@ -431,7 +431,20 @@ export async function updateJobStatus(
             earnings = Math.round(Number(fixed) || 0)
           } else if (booking.final_price) {
             const commissionRate = Number((service as any)?.staff_commission_rate) || 0.30
-            earnings = Math.round((Number(booking.final_price) * commissionRate) / recipientCount)
+            // P5 Phase B: add-on sales must NOT be paid as staff commission. Add-on price is
+            // folded into booking.final_price, so subtract the booking's add-on total from the
+            // commission base (mirror the sync_booking_to_job trigger, floored at 0). Fixed-rate
+            // branch above is untouched — it never reads final_price.
+            const { data: addonRows } = await supabase
+              .from('booking_addons')
+              .select('total_price')
+              .eq('booking_id', job.booking_id)
+            const addonTotal = (addonRows || []).reduce(
+              (s, r) => s + (Number((r as any).total_price) || 0),
+              0
+            )
+            const commissionBase = Math.max(0, Number(booking.final_price) - addonTotal)
+            earnings = Math.round((commissionBase * commissionRate) / recipientCount)
           }
           if (earnings > 0) {
             updateData.staff_earnings = earnings
