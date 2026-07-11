@@ -5,6 +5,7 @@ import { SessionDebugger } from './components/SessionDebugger'
 import AdminLayout from './layouts/AdminLayout'
 import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
+import AddOns from './pages/AddOns'
 import Staff from './pages/Staff'
 import StaffDetail from './pages/StaffDetail'
 import Customers from './pages/Customers'
@@ -125,6 +126,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="services" element={<Services />} />
+        <Route path="add-ons" element={<AddOns />} />
         <Route path="staff" element={<Staff />} />
         <Route path="staff/:id" element={<StaffDetail />} />
         <Route path="customers" element={<Customers />} />

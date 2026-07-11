@@ -47,10 +47,11 @@ function ServiceDetails() {
       description: pickLang(serviceData, 'description', i18n.language),
       addOns: serviceData.addons?.map(addon => ({
         id: addon.id,
-        // add-on is out of scope for CN (no *_cn columns); pickLang falls back en→th
+        // P5: add-ons now carry *_cn + image_url; pickLang resolves name_cn→en→th
         name: pickLang(addon, 'name', i18n.language),
         description: pickLang(addon, 'description', i18n.language),
         price: Number(addon.price || 0),
+        image_url: addon.image_url || null,
       })) || [],
       raw: serviceData,
     }
@@ -264,11 +265,20 @@ function ServiceDetails() {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-bliss-900">{addOn.name}</h4>
-                          {addOn.description && (
-                            <p className="text-sm text-bliss-500 font-light mt-0.5">{addOn.description}</p>
+                        <div className="flex items-center gap-3">
+                          {addOn.image_url && (
+                            <img
+                              src={addOn.image_url}
+                              alt={addOn.name}
+                              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                            />
                           )}
+                          <div>
+                            <h4 className="font-medium text-bliss-900">{addOn.name}</h4>
+                            {addOn.description && (
+                              <p className="text-sm text-bliss-500 font-light mt-0.5">{addOn.description}</p>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-bliss-600">+฿{addOn.price.toLocaleString()}</span>

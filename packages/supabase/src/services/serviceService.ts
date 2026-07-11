@@ -61,8 +61,8 @@ export async function getServiceById(
   const { data: addons, error: addonsError } = await client
     .from('service_addons')
     .select('*')
-    .eq('service_id', id)
     .eq('is_active', true)
+    .or(`applies_to_all.eq.true,service_ids.cs.{${id}}`)
     .order('sort_order', { ascending: true });
 
   if (addonsError) throw addonsError;
@@ -96,8 +96,8 @@ export async function getServiceBySlug(
   const { data: addons, error: addonsError } = await client
     .from('service_addons')
     .select('*')
-    .eq('service_id', service.id)
     .eq('is_active', true)
+    .or(`applies_to_all.eq.true,service_ids.cs.{${service.id}}`)
     .order('sort_order', { ascending: true });
 
   if (addonsError) throw addonsError;

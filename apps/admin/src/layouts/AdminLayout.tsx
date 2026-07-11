@@ -33,11 +33,13 @@ import {
   UserX,
   Wallet,
   Plus,
+  PackagePlus,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'ภาพรวม', nameEn: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'จัดการบริการ', nameEn: 'Services', href: '/admin/services', icon: Package },
+  { name: 'บริการเสริม', nameEn: 'Add-ons', href: '/admin/add-ons', icon: PackagePlus },
   { name: 'พนักงาน', nameEn: 'Staff', href: '/admin/staff', icon: Users },
   { name: 'รอบจ่ายเงิน', nameEn: 'Payout', href: '/admin/payout', icon: Wallet },
   { name: 'ลูกค้า', nameEn: 'Customers', href: '/admin/customers', icon: Users },

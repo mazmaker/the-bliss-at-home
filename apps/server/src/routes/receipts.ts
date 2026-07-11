@@ -146,6 +146,7 @@ router.get('/:transactionId', async (req, res) => {
             service_addons!booking_addons_addon_id_fkey (
               name_th,
               name_en,
+              name_cn,
               price
             )
           ),
@@ -198,7 +199,7 @@ router.get('/:transactionId', async (req, res) => {
     }
 
     const addons = (booking?.booking_addons || []).map((ba: any) => ({
-      name: ba.service_addons?.name_th || ba.service_addons?.name_en || '',
+      name: pickServiceName(ba.service_addons, lang),
       price: ba.total_price || 0,
     }))
 
@@ -391,7 +392,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
           booking_addons!booking_addons_booking_id_fkey (
             quantity,
             total_price,
-            service_addons!booking_addons_addon_id_fkey (name_th, name_en)
+            service_addons!booking_addons_addon_id_fkey (name_th, name_en, name_cn)
           ),
           customers!bookings_customer_id_fkey (id, full_name, phone, profile_id)
         )
@@ -423,7 +424,7 @@ router.post('/:transactionId/send-email', async (req, res) => {
 
     const company = await getCompanySettings()
     const addons = (booking?.booking_addons || []).map((ba: any) => ({
-      name: ba.service_addons?.name_th || ba.service_addons?.name_en || '',
+      name: pickServiceName(ba.service_addons, lang),
       price: ba.total_price || 0,
     }))
 
@@ -577,7 +578,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
         booking_addons!booking_addons_booking_id_fkey (
           quantity,
           total_price,
-          service_addons!booking_addons_addon_id_fkey (name_th, name_en)
+          service_addons!booking_addons_addon_id_fkey (name_th, name_en, name_cn)
         ),
         customers!bookings_customer_id_fkey (id, full_name, phone, profile_id)
       )
@@ -610,7 +611,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
 
   const company = await getCompanySettings()
   const addons = (booking?.booking_addons || []).map((ba: any) => ({
-    name: ba.service_addons?.name_th || ba.service_addons?.name_en || '',
+    name: pickServiceName(ba.service_addons, lang),
     price: ba.total_price || 0,
   }))
 
