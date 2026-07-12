@@ -580,24 +580,29 @@ function BookingWizard() {
         })
       }
 
-      // Prepare add-ons data (combine person1 + person2 add-ons)
-      const allAddOnIds = customerType === 'couple'
-        ? [...person1AddOns, ...person2AddOns]
-        : addOnsParam
+      // Prepare add-ons data PER RECIPIENT — recipient_index maps each add-on to the person it
+      // belongs to (person1 = 0, person2 = 1) so couple earnings/display are attributed correctly.
+      // NOTE: price_per_unit/total_price/name are re-snapped from the catalog by the booking_addons
+      // BEFORE-INSERT trigger (server-authoritative anti-tamper); the values sent here are for the
+      // pre-payment display total only and are overridden on insert.
+      const buildAddons = (ids: string[], lookup: any[], recipientIndex: number) =>
+        ids.map((addonId) => {
+          const addon = lookup.find((a: any) => a.id === addonId)
+          return {
+            addon_id: addonId,
+            quantity: 1,
+            recipient_index: recipientIndex,
+            price_per_unit: addon ? Number(addon.price) : 0,
+            total_price: addon ? Number(addon.price) : 0,
+          }
+        })
 
-      const allAddonsForLookup = customerType === 'couple'
-        ? [...(service.addons || []), ...((p2Svc as any)?.addons || [])]
-        : service.addons || []
-
-      const addonsData = allAddOnIds.map((addonId) => {
-        const addon = allAddonsForLookup.find((a: any) => a.id === addonId)
-        return {
-          addon_id: addonId,
-          quantity: 1,
-          price_per_unit: addon ? Number(addon.price) : 0,
-          total_price: addon ? Number(addon.price) : 0,
-        }
-      })
+      const addonsData = customerType === 'couple'
+        ? [
+            ...buildAddons(person1AddOns, service.addons || [], 0),
+            ...buildAddons(person2AddOns, (p2Svc as any)?.addons || [], 1),
+          ]
+        : buildAddons(addOnsParam, service.addons || [], 0)
 
       const bookingId = await createBookingWithServices.mutateAsync({
         bookingData: {
@@ -670,17 +675,10 @@ function BookingWizard() {
         setCreatedBookingNumber(null)
       }
 
-      // Redeem loyalty points if used
-      if (pointsRedeemed > 0 && pointsDiscount > 0 && customer) {
-        try {
-          const { redeemPoints } = await import('@bliss/supabase/services')
-          const { getBrowserClient } = await import('@bliss/supabase')
-          await redeemPoints(getBrowserClient() as any, customer.id, bookingId, pointsRedeemed, pointsDiscount)
-          console.log(`⭐ Points redeemed: ${pointsRedeemed} points = ฿${pointsDiscount} discount`)
-        } catch (err) {
-          console.error('⚠️ Failed to redeem points:', err)
-        }
-      }
+      // Loyalty points are now redeemed ATOMICALLY inside create_booking_with_addons (the RPC
+      // behind createBookingWithServices), in the same transaction as the booking — pointsRedeemed
+      // / pointsDiscount are passed via bookingData above. The old separate, error-swallowed
+      // redeemPoints() call is removed: it could deduct points even if the booking failed (leak).
 
       // Go to Payment step
       setCurrentStep(6)

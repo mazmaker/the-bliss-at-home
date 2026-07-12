@@ -86,7 +86,7 @@ describe('getBookingById', () => {
     const client: any = {
       from: vi.fn().mockImplementation((table: string) => {
         const builder: any = {}
-        const methods = ['select', 'eq', 'single']
+        const methods = ['select', 'eq', 'order', 'single']
         methods.forEach(m => { builder[m] = vi.fn().mockReturnValue(builder) })
         if (table === 'bookings') {
           builder.then = (resolve: any) => Promise.resolve({ data: mockBooking, error: null }).then(resolve)
@@ -132,7 +132,7 @@ describe('getBookingByNumber', () => {
     const client: any = {
       from: vi.fn().mockImplementation((table: string) => {
         const builder: any = {}
-        const methods = ['select', 'eq', 'single']
+        const methods = ['select', 'eq', 'order', 'single']
         methods.forEach(m => { builder[m] = vi.fn().mockReturnValue(builder) })
         if (table === 'bookings') {
           builder.then = (resolve: any) => Promise.resolve({ data: mockBooking, error: null }).then(resolve)
@@ -265,105 +265,93 @@ describe('createBookingWithServices', () => {
     { service_id: 's1', duration: 60, price: 2000, recipient_index: 0 },
   ]
 
-  it('creates booking with single service', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'new-booking' }, error: null },
-      { data: null, error: null },
-    ])
+  // The function now delegates the entire create (booking + services + add-ons + points +
+  // promotion) to the atomic create_booking_with_addons RPC. Mock client.rpc, not per-table .from().
+  function createRpcClient(response: any) {
+    return { rpc: vi.fn().mockResolvedValue(response) } as any
+  }
+
+  it('creates a booking via the create_booking_with_addons RPC', async () => {
+    const client = createRpcClient({ data: { id: 'new-booking', booking_number: 'BK-1' }, error: null })
 
     const result = await createBookingWithServices(client, baseBookingData, baseServices)
+
     expect(result).toBe('new-booking')
-    expect(client.from).toHaveBeenCalledTimes(2)
+    expect(client.rpc).toHaveBeenCalledTimes(1)
+    const [fnName, args] = client.rpc.mock.calls[0]
+    expect(fnName).toBe('create_booking_with_addons')
+    expect(args.p_booking_data).toMatchObject({ customer_id: 'c1', final_price: 2000 })
+    expect(args.p_services).toEqual(baseServices)
+    expect(args.p_addons).toEqual([])
+    expect(args.p_points).toBeNull()
   })
 
-  it('creates booking with services and addons', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'new-booking' }, error: null },
-      { data: null, error: null },
-      { data: null, error: null },
-    ])
+  it('forwards add-ons to the RPC', async () => {
+    const client = createRpcClient({ data: { id: 'b-addon' }, error: null })
+    const addons = [{ addon_id: 'sa1', quantity: 1, recipient_index: 0 }] as any
 
-    const addons = [{ service_addon_id: 'sa1', quantity: 1, price_per_unit: 100, total_price: 100 }] as any
     const result = await createBookingWithServices(client, baseBookingData, baseServices, addons)
-    expect(result).toBe('new-booking')
-    expect(client.from).toHaveBeenCalledTimes(3)
+
+    expect(result).toBe('b-addon')
+    expect(client.rpc.mock.calls[0][1].p_addons).toEqual(addons)
   })
 
-  it('creates booking with promotion usage', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'promo-booking' }, error: null },
-      { data: null, error: null },
-      { data: null, error: null },
-    ])
-
-    const bookingData = {
-      ...baseBookingData,
-      promotion_id: 'promo-1',
-      discount_amount: 200,
-    }
+  it('forwards promotion_id in p_booking_data', async () => {
+    const client = createRpcClient({ data: { id: 'promo-booking' }, error: null })
+    const bookingData = { ...baseBookingData, promotion_id: 'promo-1', discount_amount: 200 }
 
     const result = await createBookingWithServices(client, bookingData, baseServices)
+
     expect(result).toBe('promo-booking')
+    expect(client.rpc.mock.calls[0][1].p_booking_data).toMatchObject({ promotion_id: 'promo-1', discount_amount: 200 })
   })
 
-  it('handles couple services', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'couple-booking' }, error: null },
-      { data: null, error: null },
-    ])
-
-    const bookingData = {
-      ...baseBookingData,
-      service_format: 'simultaneous' as const,
-      recipient_count: 2,
-      final_price: 4000,
-    }
-
+  it('forwards couple services as p_services', async () => {
+    const client = createRpcClient({ data: { id: 'couple-booking' }, error: null })
+    const bookingData = { ...baseBookingData, service_format: 'simultaneous' as const, recipient_count: 2, final_price: 4000 }
     const services = [
       { service_id: 's1', duration: 60, price: 2000, recipient_index: 0, recipient_name: 'A' },
       { service_id: 's2', duration: 60, price: 2000, recipient_index: 1, recipient_name: 'B' },
     ]
 
     const result = await createBookingWithServices(client, bookingData, services)
+
     expect(result).toBe('couple-booking')
+    expect(client.rpc.mock.calls[0][1].p_services).toHaveLength(2)
   })
 
-  it('uses first service as primary when no index 0', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'fallback' }, error: null },
-      { data: null, error: null },
-    ])
+  it('builds p_points when loyalty points are redeemed', async () => {
+    const client = createRpcClient({ data: { id: 'pts' }, error: null })
+    const bookingData = { ...baseBookingData, points_redeemed: 100, points_discount: 100 }
 
-    const services = [
-      { service_id: 's1', duration: 60, price: 2000, recipient_index: 1 },
-    ]
+    await createBookingWithServices(client, bookingData, baseServices)
 
-    const result = await createBookingWithServices(client, baseBookingData, services)
-    expect(result).toBe('fallback')
+    expect(client.rpc.mock.calls[0][1].p_points).toEqual({ points_redeemed: 100, points_discount: 100 })
   })
 
-  it('throws on booking insert error', async () => {
-    const builder = createChainableBuilder({ data: null, error: { message: 'insert error' } })
-    const client = { from: vi.fn().mockReturnValue(builder), auth: { getUser: vi.fn() } } as any
+  it('sends p_points = null when nothing is redeemed', async () => {
+    const client = createRpcClient({ data: { id: 'no-pts' }, error: null })
+
+    await createBookingWithServices(client, baseBookingData, baseServices)
+
+    expect(client.rpc.mock.calls[0][1].p_points).toBeNull()
+  })
+
+  it('translates a DUPLICATE_BOOKING error to the friendly Thai message', async () => {
+    const client = createRpcClient({ data: null, error: { message: 'DUPLICATE_BOOKING:BK-001' } })
+
+    await expect(createBookingWithServices(client, baseBookingData, baseServices)).rejects.toThrow(/BK-001/)
+  })
+
+  it('throws on a generic RPC error', async () => {
+    const client = createRpcClient({ data: null, error: { message: 'boom' } })
+
     await expect(createBookingWithServices(client, baseBookingData, baseServices)).rejects.toBeDefined()
   })
 
-  it('throws on booking_services insert error', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'b1' }, error: null },
-      { data: null, error: { message: 'services error' } },
-    ])
+  it('throws when the RPC returns no booking id', async () => {
+    const client = createRpcClient({ data: {}, error: null })
+
     await expect(createBookingWithServices(client, baseBookingData, baseServices)).rejects.toBeDefined()
-  })
-
-  it('throws on addon insert error', async () => {
-    const client = createMultiCallClient([
-      { data: { id: 'b1' }, error: null },
-      { data: null, error: null },
-      { data: null, error: { message: 'addon error' } },
-    ])
-
-    const addons = [{ service_addon_id: 'sa1', quantity: 1, price_per_unit: 100, total_price: 100 }] as any
-    await expect(createBookingWithServices(client, baseBookingData, baseServices, addons)).rejects.toBeDefined()
   })
 })

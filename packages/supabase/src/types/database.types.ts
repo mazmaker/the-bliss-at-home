@@ -323,8 +323,12 @@ export type Database = {
           booking_id: string
           created_at: string | null
           id: string
+          name_cn: string | null
+          name_en: string | null
+          name_th: string | null
           price_per_unit: number
           quantity: number | null
+          recipient_index: number
           total_price: number
         }
         Insert: {
@@ -332,8 +336,12 @@ export type Database = {
           booking_id: string
           created_at?: string | null
           id?: string
+          name_cn?: string | null
+          name_en?: string | null
+          name_th?: string | null
           price_per_unit: number
           quantity?: number | null
+          recipient_index?: number
           total_price: number
         }
         Update: {
@@ -341,8 +349,12 @@ export type Database = {
           booking_id?: string
           created_at?: string | null
           id?: string
+          name_cn?: string | null
+          name_en?: string | null
+          name_th?: string | null
           price_per_unit?: number
           quantity?: number | null
+          recipient_index?: number
           total_price?: number
         }
         Relationships: [

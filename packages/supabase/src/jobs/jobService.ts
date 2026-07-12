@@ -399,7 +399,7 @@ export async function updateJobStatus(
     try {
       const { data: job } = await supabase
         .from('jobs')
-        .select('staff_earnings, booking_id, duration_minutes')
+        .select('staff_earnings, booking_id, duration_minutes, job_index')
         .eq('id', jobId)
         .single()
 
@@ -431,20 +431,38 @@ export async function updateJobStatus(
             earnings = Math.round(Number(fixed) || 0)
           } else if (booking.final_price) {
             const commissionRate = Number((service as any)?.staff_commission_rate) || 0.30
-            // P5 Phase B: add-on sales must NOT be paid as staff commission. Add-on price is
-            // folded into booking.final_price, so subtract the booking's add-on total from the
-            // commission base (mirror the sync_booking_to_job trigger, floored at 0). Fixed-rate
-            // branch above is untouched — it never reads final_price.
-            const { data: addonRows } = await supabase
-              .from('booking_addons')
-              .select('total_price')
+            // P5 Stage 1: PER-RECIPIENT commission = THIS recipient's FULL (pre-discount) SERVICE
+            // price × rate (mirror the sync_booking_to_job trigger). Two platform rules:
+            //   (1) add-ons are NOT commissionable — booking_services.price is service-only, so
+            //       add-ons are excluded automatically (never in the base).
+            //   (2) the customer discount is NOT deducted from staff pay — the platform absorbs any
+            //       promo/points discount; staff earn on the FULL service price (we use
+            //       booking_services.price, which is pre-discount, NOT final_price).
+            // recipient_index = job_index − 1.
+            const recipientIndex = (Number((job as any).job_index) || 1) - 1
+            const { data: svcRows } = await supabase
+              .from('booking_services')
+              .select('price, recipient_index')
               .eq('booking_id', job.booking_id)
-            const addonTotal = (addonRows || []).reduce(
-              (s, r) => s + (Number((r as any).total_price) || 0),
-              0
-            )
-            const commissionBase = Math.max(0, Number(booking.final_price) - addonTotal)
-            earnings = Math.round((commissionBase * commissionRate) / recipientCount)
+            const svcI = (svcRows || [])
+              .filter((r) => Number((r as any).recipient_index) === recipientIndex)
+              .reduce((s, r) => s + (Number((r as any).price) || 0), 0)
+            if (svcI > 0) {
+              earnings = Math.round(svcI * commissionRate)
+            } else {
+              // Fallback (legacy booking without booking_services rows — rare; new bookings always
+              // have them): booking-level service portion (final_price minus add-ons), even split.
+              const { data: addonRows } = await supabase
+                .from('booking_addons')
+                .select('total_price')
+                .eq('booking_id', job.booking_id)
+              const addonTotal = (addonRows || []).reduce(
+                (s, r) => s + (Number((r as any).total_price) || 0),
+                0
+              )
+              const commissionBase = Math.max(0, Number(booking.final_price) - addonTotal)
+              earnings = Math.round((commissionBase * commissionRate) / recipientCount)
+            }
           }
           if (earnings > 0) {
             updateData.staff_earnings = earnings

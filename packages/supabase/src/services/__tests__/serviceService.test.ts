@@ -57,7 +57,7 @@ describe('serviceService', () => {
       const client: any = {
         from: vi.fn().mockImplementation((table: string) => {
           const builder: any = {}
-          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'order', 'limit', 'single', 'insert', 'update', 'delete']
+          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'or', 'order', 'limit', 'single', 'insert', 'update', 'delete']
           methods.forEach(m => { builder[m] = vi.fn().mockReturnValue(builder) })
 
           if (table === 'services') {
@@ -79,7 +79,7 @@ describe('serviceService', () => {
       const client: any = {
         from: vi.fn().mockImplementation(() => {
           const builder: any = {}
-          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'order', 'limit', 'single', 'insert', 'update', 'delete']
+          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'or', 'order', 'limit', 'single', 'insert', 'update', 'delete']
           methods.forEach(m => { builder[m] = vi.fn().mockReturnValue(builder) })
           builder.then = (resolve: any) => Promise.resolve({ data: null, error: null }).then(resolve)
           return builder
@@ -94,7 +94,7 @@ describe('serviceService', () => {
       const client: any = {
         from: vi.fn().mockImplementation((table: string) => {
           const builder: any = {}
-          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'order', 'limit', 'single', 'insert', 'update', 'delete']
+          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'or', 'order', 'limit', 'single', 'insert', 'update', 'delete']
           methods.forEach(m => { builder[m] = vi.fn().mockReturnValue(builder) })
 
           if (table === 'services') {
@@ -118,7 +118,7 @@ describe('serviceService', () => {
       const client: any = {
         from: vi.fn().mockImplementation((table: string) => {
           const builder: any = {}
-          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'order', 'limit', 'single', 'insert', 'update', 'delete']
+          const methods = ['select', 'eq', 'neq', 'in', 'gte', 'or', 'order', 'limit', 'single', 'insert', 'update', 'delete']
           methods.forEach(m => { builder[m] = vi.fn().mockReturnValue(builder) })
 
           if (table === 'services') {
