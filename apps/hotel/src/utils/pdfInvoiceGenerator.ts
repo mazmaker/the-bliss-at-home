@@ -41,6 +41,8 @@ export interface SingleBookingReceiptData {
   duration: number
   recipient_count: number
   final_price: number
+  // P5 STEP C: add-on line items (part of final_price, 0% commission pass-through)
+  addons?: Array<{ name_th: string | null; quantity: number; total_price: number }>
   payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
   status: string
   customer_notes: string | null
@@ -631,16 +633,36 @@ export class PDFInvoiceGenerator {
     this.doc.setFont('Sarabun', 'normal')
     this.doc.setFontSize(9)
 
+    // P5 STEP C: split the service line from add-ons so the service row stays service-only and
+    // add-ons show as their own numbered rows (the summary total below is still final_price).
+    const addonTotal = (data.addons || []).reduce((s, a) => s + Number(a.total_price || 0), 0)
+    const serviceTotal = data.final_price - addonTotal
     const serviceName = `${data.service_name || 'บริการ'} (${data.duration} นาที)`
     const qty = data.recipient_count
-    const pricePerUnit = qty > 0 ? Math.round(data.final_price / qty) : data.final_price
+    const pricePerUnit = qty > 0 ? Math.round(serviceTotal / qty) : serviceTotal
 
     this.doc.text('1', col.num, this.currentY + 5)
     this.doc.text(serviceName.slice(0, 45), col.desc, this.currentY + 5)
     this.doc.text(`${qty} คน`, col.qty, this.currentY + 5)
     this.doc.text(pricePerUnit.toLocaleString(), col.price, this.currentY + 5)
-    this.doc.text(data.final_price.toLocaleString(), col.total, this.currentY + 5)
+    this.doc.text(serviceTotal.toLocaleString(), col.total, this.currentY + 5)
     this.currentY += 10
+
+    // Add-on rows (numbered after the service row)
+    ;(data.addons || []).forEach((addon, i) => {
+      this.doc.setFillColor(252, 252, 252)
+      this.doc.rect(this.margin, this.currentY - 1, this.contentWidth, 8, 'F')
+      this.doc.setFont('Sarabun', 'normal')
+      this.doc.setFontSize(9)
+      const qtyA = addon.quantity || 1
+      const unitA = qtyA > 0 ? Math.round(Number(addon.total_price) / qtyA) : Number(addon.total_price)
+      this.doc.text(`${i + 2}`, col.num, this.currentY + 5)
+      this.doc.text(`บริการเสริม: ${(addon.name_th || 'บริการเสริม').slice(0, 33)}`, col.desc, this.currentY + 5)
+      this.doc.text(`${qtyA}`, col.qty, this.currentY + 5)
+      this.doc.text(unitA.toLocaleString(), col.price, this.currentY + 5)
+      this.doc.text(Number(addon.total_price).toLocaleString(), col.total, this.currentY + 5)
+      this.currentY += 10
+    })
 
     if (data.staff_name) {
       this.doc.setFontSize(8)

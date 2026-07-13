@@ -149,6 +149,18 @@ export interface Booking {
       category: string
     }
   }>
+  // P5 STEP C: add-on line items (booking_addons). price/name are server-snapshotted; add-on
+  // money is part of final_price but NEVER part of staff earnings (0% commission pass-through).
+  booking_addons?: Array<{
+    id: string
+    addon_id: string
+    recipient_index: number
+    quantity: number
+    price_per_unit: number
+    total_price: number
+    name_th: string | null
+    name_en: string | null
+  }>
   jobs?: Array<{
     id: string
     staff_id: string
@@ -229,6 +241,34 @@ class BookingService {
       }
 
       const map: Record<string, Booking['booking_services']> = {}
+      for (const row of data || []) {
+        const bid = (row as any).booking_id
+        if (!map[bid]) map[bid] = []
+        map[bid]!.push(row as any)
+      }
+      return map
+    } catch {
+      return {}
+    }
+  }
+
+  // P5 STEP C: fetch booking_addons (per recipient) for the price-breakdown display. Uses the
+  // server-snapshotted name/price columns directly, so no service_addons join is needed.
+  private async fetchBookingAddons(bookingIds: string[]): Promise<Record<string, Booking['booking_addons']>> {
+    if (bookingIds.length === 0) return {}
+    try {
+      const { data, error } = await supabase
+        .from('booking_addons')
+        .select('id, booking_id, addon_id, recipient_index, quantity, price_per_unit, total_price, name_th, name_en')
+        .in('booking_id', bookingIds)
+        .order('recipient_index', { ascending: true })
+
+      if (error) {
+        console.warn('booking_addons not available:', error.message)
+        return {}
+      }
+
+      const map: Record<string, Booking['booking_addons']> = {}
       for (const row of data || []) {
         const bid = (row as any).booking_id
         if (!map[bid]) map[bid] = []
@@ -324,6 +364,17 @@ class BookingService {
         }))
       }
 
+      // P5 STEP C: fetch add-ons for ALL bookings (single OR couple) so the list detail modal's
+      // price breakdown renders them — this list feeds the modal, NOT getBookingById.
+      const addonBookingIds = filteredData.map(b => b.id)
+      if (addonBookingIds.length > 0) {
+        const baMap = await this.fetchBookingAddons(addonBookingIds)
+        filteredData = filteredData.map(b => ({
+          ...b,
+          booking_addons: baMap[b.id] || undefined,
+        }))
+      }
+
       // Fetch jobs for all bookings (staff_earnings is stored in jobs table)
       const allBookingIds = filteredData.map(b => b.id)
       if (allBookingIds.length > 0) {
@@ -377,6 +428,10 @@ class BookingService {
         const bsMap = await this.fetchBookingServices([booking.id])
         booking.booking_services = bsMap[booking.id] || undefined
       }
+
+      // P5 STEP C: always fetch add-ons (single OR couple can have them) for the price breakdown
+      const baMap = await this.fetchBookingAddons([booking.id])
+      booking.booking_addons = baMap[booking.id] || undefined
 
       // Always fetch jobs (staff_earnings is stored in jobs table)
       const jobsMap = await this.fetchJobsForBookings([booking.id])

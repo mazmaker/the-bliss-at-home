@@ -19,6 +19,7 @@ interface MonthlyBooking {
   staff_name?: string
   base_price: number
   discount_amount: number
+  addon_total: number // P5 STEP C: add-on money (full retail pass-through, part of final_price)
   final_price: number
   payment_status: string
   status: string
@@ -37,6 +38,7 @@ interface MonthlyBillData {
   totalRevenue: number
   totalBasePrice: number // Total original price before discount
   totalDiscountAmount: number // Total discount amount
+  totalAddonAmount: number // P5 STEP C: total add-on money across the month's bookings
   platformFee: number
   hotelRevenue: number
   pendingPayments: number
@@ -157,6 +159,23 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     return guestMatch?.[1]?.trim() || 'ไม่ระบุชื่อ'
   }
 
+  // P5 STEP C: fetch add-on totals per booking. Add-ons are billed at full retail on the hotel
+  // bill (part of final_price) and are 0% commission (never in staff earnings). We keep them in a
+  // SEPARATE line so the base_price / discount / hotel-revenue columns stay service-only and never
+  // show a phantom-negative discount.
+  const billBookingIds = (data || []).map((b: any) => b.id)
+  const addonTotals: Record<string, number> = {}
+  if (billBookingIds.length > 0) {
+    const { data: addonRows } = await supabase
+      .from('booking_addons')
+      .select('booking_id, total_price')
+      .in('booking_id', billBookingIds)
+    for (const row of addonRows || []) {
+      const bid = (row as any).booking_id
+      addonTotals[bid] = (addonTotals[bid] || 0) + Number((row as any).total_price || 0)
+    }
+  }
+
   // Get hotel discount information (prefer discount_amount)
   const hotelDiscountAmount = hotelData?.discount_amount || 0
   // Legacy discount_rate(%)/commission_rate fallback removed (C1): the per-booking discount on
@@ -189,8 +208,11 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
       console.log(`📊 Booking ${booking.id}: ฿${booking.base_price} × ${hotelDiscountRate}% = ฿${calculatedDiscountAmount}`)
     }
 
-    // Additional check: Calculate actual discount from final_price
-    const actualDiscountFromFinalPrice = booking.base_price - booking.final_price
+    // Additional check: Calculate actual discount from final_price. P5 STEP C — exclude the
+    // add-on total so a booking with add-ons (final_price = service + add-on) does NOT read as a
+    // negative discount; the discount is on the SERVICE portion only (final − add-on).
+    const bookingAddonTotal = addonTotals[booking.id] || 0
+    const actualDiscountFromFinalPrice = booking.base_price - (booking.final_price - bookingAddonTotal)
     const actualDiscountRate = booking.base_price > 0 ? (actualDiscountFromFinalPrice / booking.base_price) * 100 : 0
 
     if (Math.abs(actualDiscountFromFinalPrice - calculatedDiscountAmount) > 1) {
@@ -215,6 +237,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
       staff_name: booking.staff?.name_th || 'ยังไม่มีการมอบหมาย',
       base_price: booking.base_price || 0,
       discount_amount: calculatedDiscountAmount,
+      addon_total: bookingAddonTotal,
       final_price: booking.final_price || 0,
       payment_status: booking.payment_status || 'pending',
       status: booking.status || 'completed',
@@ -245,6 +268,10 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
   }, 0)
 
   const calculatedHotelRevenue = totalBasePrice - totalDiscountAmount
+
+  // P5 STEP C: total add-on money for the month (full retail pass-through). The bill total
+  // reconciles as: totalRevenue (Σ final_price) = hotelRevenue (Σ base − discount) + totalAddonAmount.
+  const totalAddonAmount = Object.values(addonTotals).reduce((sum, v) => sum + v, 0)
 
   // Debug: Check discount amounts
   console.log('🔍 Discount Debug (Fixed):', {
@@ -317,6 +344,7 @@ const fetchMonthlyBill = async (hotelId: string, selectedMonth: string): Promise
     totalRevenue,
     totalBasePrice,
     totalDiscountAmount,
+    totalAddonAmount,
     platformFee,
     hotelRevenue,
     pendingPayments,
@@ -891,6 +919,9 @@ function MonthlyBill() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-lg font-bold text-bliss-700">฿{booking.final_price.toLocaleString()}</div>
+                      {booking.addon_total > 0 && (
+                        <div className="text-xs text-bliss-500">รวมบริการเสริม +฿{booking.addon_total.toLocaleString()}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -1136,6 +1167,12 @@ function MonthlyBill() {
                       <span className="text-bliss-600">รายได้โรงแรม</span>
                       <span className="font-medium text-green-600">฿{(selectedBookingForDetail.base_price - selectedBookingForDetail.discount_amount).toLocaleString()}</span>
                     </div>
+                    {selectedBookingForDetail.addon_total > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-bliss-600">บริการเสริม</span>
+                        <span className="font-medium">+฿{selectedBookingForDetail.addon_total.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="border-t border-bliss-200 pt-2 flex justify-between">
                       <span className="font-semibold text-bliss-900">ราคาสุดท้าย</span>
                       <span className="font-bold text-bliss-600">฿{selectedBookingForDetail.final_price.toLocaleString()}</span>

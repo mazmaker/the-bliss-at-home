@@ -8,11 +8,12 @@ import { supabase } from '@bliss/supabase/auth'
 import { secureBookingService } from '../services/secureBookingService'
 import { useBookingStore } from '../hooks/useBookingStore'
 import { useHotelContext } from '../hooks/useHotelContext'
-import { Service, ProviderPreference } from '../types/booking'
+import { Service, ProviderPreference, ServiceAddon } from '../types/booking'
 import { createLoadingToast, notifications, showErrorByType } from '../utils/notifications'
 import ServiceModeSelector from './ServiceModeSelector'
 import CoupleFormatSelector from './CoupleFormatSelector'
 import ServiceSelector from './ServiceSelector'
+import AddOnSelector from './AddOnSelector'
 import PricingSummary from './PricingSummary'
 import ProviderPreferenceSelector from './ProviderPreferenceSelector'
 import { getAvailableHoursForDate, getAvailableMinutesForDateHour } from '../utils/timeSlots'
@@ -36,12 +37,28 @@ const fetchServices = async (): Promise<Service[]> => {
     throw new Error(`Failed to fetch services: ${error.message}`)
   }
 
+  // P5 STEP C: fetch the active add-on catalog once, then attach each add-on to every
+  // eligible service (applies_to_all, or service_ids contains the service id) — same
+  // eligibility rule as serviceService.getServiceById so the hotel picker matches customer.
+  const { data: addonRows } = await supabase
+    .from('service_addons')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  const allAddons = (addonRows || []) as unknown as ServiceAddon[]
+
   // Transform the data to match our Service type
   const transformedData = (data || []).map(service => ({
     ...service,
     duration_options: Array.isArray(service.duration_options)
       ? service.duration_options
-      : null
+      : null,
+    addons: allAddons.filter(
+      (a) =>
+        a.applies_to_all === true ||
+        (Array.isArray(a.service_ids) && a.service_ids.includes(service.id))
+    )
   })) as Service[]
 
   return transformedData
@@ -72,6 +89,9 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
     setCoupleFormat,
     addServiceSelection,
     clearServiceSelections,
+    setSelectionAddOns,
+    getAddOnTotal,
+    getFinalPrice,
     setGuestName,
     setRoomNumber,
     setPhoneNumber,
@@ -222,6 +242,20 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
       console.log('🔍 [BOOKING DEBUG] First Service:', bookingData.serviceConfiguration.selections[0])
       console.log('🔍 [BOOKING DEBUG] Service ID to send:', bookingData.serviceConfiguration.selections[0]?.service?.id)
 
+      // P5 STEP C: per-recipient add-ons. Send only {addon_id, recipient_index, quantity};
+      // the server's trg_snap_booking_addon re-snaps price/name from the catalog (anti-tamper).
+      // base_price stays SERVICE-ONLY; add-on money rides on final_price (D3) and NEVER on staff
+      // earnings (the server derives earnings from the retail service price, add-on-independent).
+      const addonsPayload = bookingData.serviceConfiguration.selections.flatMap(selection =>
+        (selection.addOns || []).map(addon => ({
+          addon_id: addon.addon_id,
+          recipient_index: selection.recipientIndex,
+          quantity: 1
+        }))
+      )
+      const serviceSubtotal = bookingData.serviceConfiguration.totalPrice
+      const finalPriceWithAddons = getFinalPrice()
+
       // Prepare booking data for secure API
       const secureBookingData = {
         // Hotel context from URL
@@ -235,9 +269,9 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
         // Staff assignment data
         provider_preference: bookingData.providerPreference || 'no-preference',
         recipient_count: bookingData.serviceConfiguration.recipientCount,
-        // Required pricing data
-        base_price: bookingData.serviceConfiguration.totalPrice,
-        final_price: bookingData.serviceConfiguration.totalPrice,
+        // Required pricing data — base_price = service-only, final_price includes add-ons (D3)
+        base_price: serviceSubtotal,
+        final_price: finalPriceWithAddons,
         // Customer information
         customer_notes: `Guest: ${bookingData.guestName}, Phone: ${bookingData.phoneNumber}, Provider: ${getProviderPreferenceLabel(bookingData.providerPreference)}${bookingData.notes ? ', Notes: ' + bookingData.notes : ''}`,
         // Booking status — start as 'pending' until a staff accepts the job.
@@ -252,7 +286,9 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
           price: selection.price,
           recipient_index: selection.recipientIndex,
           sort_order: selection.sortOrder
-        }))
+        })),
+        // P5 STEP C: booking_addons rows (per recipient) — empty array if none picked
+        addons: addonsPayload
       }
 
       console.log('🏨 Submitting booking via secure API...')
@@ -314,6 +350,31 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
   const handleClose = () => {
     resetAll()
     onClose()
+  }
+
+  // P5 STEP C: render the per-recipient add-on picker under a recipient's ServiceSelector.
+  // Add-ons ride on the recipient's selected service (service.addons, attached in fetchServices);
+  // picking them updates that selection's addOns in the store (0% commission pass-through).
+  const renderAddOnSelector = (recipientIndex: number) => {
+    const sel = serviceConfiguration.selections.find(s => s.recipientIndex === recipientIndex)
+    const eligible = sel?.service.addons || []
+    if (!sel || eligible.length === 0) return null
+    const selectedIds = (sel.addOns || []).map(a => a.addon_id)
+    return (
+      <AddOnSelector
+        addons={eligible}
+        selectedIds={selectedIds}
+        disabled={servicesLoading}
+        onChange={(ids) =>
+          setSelectionAddOns(
+            recipientIndex,
+            eligible
+              .filter(a => ids.includes(a.id))
+              .map(a => ({ addon_id: a.id, name_th: a.name_th, price: Number(a.price) }))
+          )
+        }
+      />
+    )
   }
 
   if (!isOpen) return null
@@ -428,36 +489,45 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                     </div>
 
                     {serviceConfiguration.mode === 'single' && (
-                      <ServiceSelector
-                        services={services}
-                        recipientIndex={0}
-                        recipientName="ผู้รับบริการ"
-                        selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === 0)}
-                        onServiceSelect={addServiceSelection}
-                        onClearSelection={() => clearServiceSelections()}
-                        disabled={servicesLoading}
-                        initialServiceId={initialService?.id}
-                      />
+                      <div>
+                        <ServiceSelector
+                          services={services}
+                          recipientIndex={0}
+                          recipientName="ผู้รับบริการ"
+                          selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === 0)}
+                          onServiceSelect={addServiceSelection}
+                          onClearSelection={() => clearServiceSelections()}
+                          disabled={servicesLoading}
+                          initialServiceId={initialService?.id}
+                        />
+                        {renderAddOnSelector(0)}
+                      </div>
                     )}
 
                     {serviceConfiguration.mode === 'couple' && (
                       <div className="space-y-6">
-                        <ServiceSelector
-                          services={services}
-                          recipientIndex={0}
-                          recipientName="ผู้รับบริการ 1"
-                          selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === 0)}
-                          onServiceSelect={addServiceSelection}
-                          disabled={servicesLoading}
-                        />
-                        <ServiceSelector
-                          services={services}
-                          recipientIndex={1}
-                          recipientName="ผู้รับบริการ 2"
-                          selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === 1)}
-                          onServiceSelect={addServiceSelection}
-                          disabled={servicesLoading}
-                        />
+                        <div>
+                          <ServiceSelector
+                            services={services}
+                            recipientIndex={0}
+                            recipientName="ผู้รับบริการ 1"
+                            selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === 0)}
+                            onServiceSelect={addServiceSelection}
+                            disabled={servicesLoading}
+                          />
+                          {renderAddOnSelector(0)}
+                        </div>
+                        <div>
+                          <ServiceSelector
+                            services={services}
+                            recipientIndex={1}
+                            recipientName="ผู้รับบริการ 2"
+                            selectedService={serviceConfiguration.selections.find(s => s.recipientIndex === 1)}
+                            onServiceSelect={addServiceSelection}
+                            disabled={servicesLoading}
+                          />
+                          {renderAddOnSelector(1)}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -516,6 +586,16 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                                     <span>฿{selection.price.toLocaleString()}</span>
                                   </div>
                                 </div>
+                                {(selection.addOns || []).length > 0 && (
+                                  <div className="pt-1 space-y-0.5">
+                                    {(selection.addOns || []).map((addon) => (
+                                      <div key={addon.addon_id} className="flex items-center justify-between text-xs text-bliss-600">
+                                        <span>+ {addon.name_th}</span>
+                                        <span>฿{Number(addon.price).toLocaleString()}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -523,16 +603,29 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                       ))}
 
                       {/* Total Summary */}
-                      <div className="bg-bliss-100 rounded-xl p-4 border-2 border-bliss-200">
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-bliss-600">
-                            <span>รวมทั้งหมด: {serviceConfiguration.selections.length} บริการ</span>
-                            <span className="mx-2">•</span>
-                            <span>{serviceConfiguration.totalDuration} นาที</span>
+                      <div className="bg-bliss-100 rounded-xl p-4 border-2 border-bliss-200 space-y-2">
+                        <div className="text-sm text-bliss-600">
+                          <span>รวมทั้งหมด: {serviceConfiguration.selections.length} บริการ</span>
+                          <span className="mx-2">•</span>
+                          <span>{serviceConfiguration.totalDuration} นาที</span>
+                        </div>
+                        {getAddOnTotal() > 0 && (
+                          <div className="space-y-1 pt-1">
+                            <div className="flex justify-between items-center text-sm text-bliss-700">
+                              <span>ค่าบริการ</span>
+                              <span>฿{serviceConfiguration.totalPrice.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm text-bliss-700">
+                              <span>บริการเสริม</span>
+                              <span>+฿{getAddOnTotal().toLocaleString()}</span>
+                            </div>
                           </div>
-                          <div className="text-lg font-bold text-bliss-700">
-                            ฿{serviceConfiguration.totalPrice.toLocaleString()}
-                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2 border-t border-bliss-200">
+                          <span className="text-sm font-medium text-bliss-700">ยอดรวม</span>
+                          <span className="text-lg font-bold text-bliss-700">
+                            ฿{getFinalPrice().toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -726,6 +819,16 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                                     <span>฿{selection.price.toLocaleString()}</span>
                                   </div>
                                 </div>
+                                {(selection.addOns || []).length > 0 && (
+                                  <div className="pt-1 space-y-0.5">
+                                    {(selection.addOns || []).map((addon) => (
+                                      <div key={addon.addon_id} className="flex items-center justify-between text-xs text-bliss-600">
+                                        <span>+ {addon.name_th}</span>
+                                        <span>฿{Number(addon.price).toLocaleString()}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -733,16 +836,29 @@ function BookingModalNew({ isOpen, onClose, onSuccess, initialService }: Booking
                       ))}
 
                       {/* Total Summary */}
-                      <div className="bg-bliss-100 rounded-xl p-4 border-2 border-bliss-200">
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-bliss-600">
-                            <span>รวมทั้งหมด: {serviceConfiguration.selections.length} บริการ</span>
-                            <span className="mx-2">•</span>
-                            <span>{serviceConfiguration.totalDuration} นาที</span>
+                      <div className="bg-bliss-100 rounded-xl p-4 border-2 border-bliss-200 space-y-2">
+                        <div className="text-sm text-bliss-600">
+                          <span>รวมทั้งหมด: {serviceConfiguration.selections.length} บริการ</span>
+                          <span className="mx-2">•</span>
+                          <span>{serviceConfiguration.totalDuration} นาที</span>
+                        </div>
+                        {getAddOnTotal() > 0 && (
+                          <div className="space-y-1 pt-1">
+                            <div className="flex justify-between items-center text-sm text-bliss-700">
+                              <span>ค่าบริการ</span>
+                              <span>฿{serviceConfiguration.totalPrice.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm text-bliss-700">
+                              <span>บริการเสริม</span>
+                              <span>+฿{getAddOnTotal().toLocaleString()}</span>
+                            </div>
                           </div>
-                          <div className="text-lg font-bold text-bliss-700">
-                            ฿{serviceConfiguration.totalPrice.toLocaleString()}
-                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2 border-t border-bliss-200">
+                          <span className="text-sm font-medium text-bliss-700">ยอดรวม</span>
+                          <span className="text-lg font-bold text-bliss-700">
+                            ฿{getFinalPrice().toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     </div>

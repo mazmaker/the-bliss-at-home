@@ -23,6 +23,34 @@ export interface Service {
   // Enhanced properties for hotel-specific discounts
   discount_rate?: number // Hotel discount rate percentage
   original_price?: number // Original price before discount
+  // P5 STEP C: eligible add-ons for this service (attached client-side, not a DB column)
+  addons?: ServiceAddon[]
+}
+
+// P5 STEP C — add-on catalog row (service_addons). Add-ons are a flat retail
+// pass-through: 0% commission (never in staff earnings) and NOT hotel-discounted.
+export interface ServiceAddon {
+  id: string
+  name_th: string
+  name_en: string
+  name_cn?: string | null
+  description_th?: string | null
+  description_en?: string | null
+  price: number
+  image_url?: string | null
+  icon?: string | null
+  is_active: boolean | null
+  sort_order?: number | null
+  applies_to_all?: boolean | null
+  service_ids?: string[] | null
+}
+
+// P5 STEP C — a single add-on the guest picked for one recipient. price/name are
+// display-only; the server re-snaps them from the catalog (trg_snap_booking_addon).
+export interface SelectedAddon {
+  addon_id: string
+  name_th: string
+  price: number
 }
 
 export interface ServiceSelection {
@@ -31,8 +59,10 @@ export interface ServiceSelection {
   duration: number // selected duration for this service
   recipientIndex: number // 0 = person 1, 1 = person 2, etc.
   recipientName?: string // optional name for recipient
-  price: number // calculated price for this selection
+  price: number // calculated per-recipient SERVICE price (post hotel discount) — add-ons NOT included here
   sortOrder: number // order in the booking
+  // P5 STEP C: add-ons picked for THIS recipient (0% commission, full retail pass-through)
+  addOns?: SelectedAddon[]
 }
 
 export type BookingMode = 'single' | 'couple'

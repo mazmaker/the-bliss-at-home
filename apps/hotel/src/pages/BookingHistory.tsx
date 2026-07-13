@@ -30,6 +30,8 @@ interface SimpleBooking {
   base_price: number // เพิ่ม base_price
   discount_amount: number // เพิ่ม discount_amount
   final_price: number
+  // P5 STEP C: add-on line items (0% commission pass-through, part of final_price)
+  addons?: Array<{ id: string; recipient_index: number; quantity: number; total_price: number; name_th: string | null }>
   customer_notes: string | null
   staff_name: string | null
   service_name: string | null
@@ -121,7 +123,8 @@ const fetchSimpleBookings = async (hotelId: string): Promise<SimpleBooking[]> =>
       created_at,
       hotels:hotel_id(id, name_th, address, phone, email, rating),
       staff:staff_id(name_th),
-      services:service_id(name_th)
+      services:service_id(name_th),
+      booking_addons(id, recipient_index, quantity, total_price, name_th, name_en)
     `)
     .eq('hotel_id', hotelId)
     .order('created_at', { ascending: false })
@@ -146,6 +149,7 @@ const fetchSimpleBookings = async (hotelId: string): Promise<SimpleBooking[]> =>
     base_price: booking.base_price || booking.final_price, // fallback
     discount_amount: booking.discount_amount || 0,
     final_price: booking.final_price,
+    addons: booking.booking_addons || [],
     customer_notes: booking.customer_notes,
     staff_name: booking.staff?.name_th || null,
     service_name: booking.services?.name_th || 'ไม่ระบุบริการ',
@@ -272,6 +276,7 @@ function BookingHistory() {
         duration: booking.duration,
         recipient_count: booking.recipient_count,
         final_price: booking.final_price,
+        addons: (booking.addons || []).map(a => ({ name_th: a.name_th, quantity: a.quantity, total_price: a.total_price })),
         payment_status: booking.payment_status,
         status: booking.status,
         customer_notes: booking.customer_notes,
@@ -1153,6 +1158,12 @@ function BookingHistory() {
                             ส่วนลด: -฿{selectedBooking.discount_amount.toLocaleString()}
                           </div>
                         </>
+                      )}
+                      {selectedBooking.addons && selectedBooking.addons.length > 0 && (
+                        <div className="text-sm text-bliss-500">
+                          บริการเสริม ({selectedBooking.addons.map(a => a.name_th).filter(Boolean).join(', ')}):
+                          {' '}+฿{selectedBooking.addons.reduce((s, a) => s + Number(a.total_price || 0), 0).toLocaleString()}
+                        </div>
                       )}
                       <p className="text-2xl font-bold text-bliss-600">
                         ฿{selectedBooking.final_price.toLocaleString()}
