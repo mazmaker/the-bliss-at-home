@@ -431,9 +431,9 @@ export async function createBookingWithServices(
       ? { points_redeemed: pointsToUse, points_discount: pointsDiscount }
       : null;
 
-  // rpc name is not in the generated types yet (function added in migration
-  // p5_stage1_create_booking_with_addons) — cast until database.types.ts is regenerated.
-  const { data, error } = await (client.rpc as any)('create_booking_with_addons', {
+  // Atomic RPC (added in migration p5_stage1_create_booking_with_addons; now present in the
+  // generated Database types). jsonb params are typed as Json.
+  const { data, error } = await client.rpc('create_booking_with_addons', {
     p_booking_data: bookingData,
     p_services: services,
     p_addons: addons ?? [],

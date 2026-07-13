@@ -2684,6 +2684,15 @@ export type Database = {
         Args: { p_month: number; p_staff_id: string; p_year: number }
         Returns: undefined
       }
+      create_booking_with_addons: {
+        Args: {
+          p_addons?: Json
+          p_booking_data: Json
+          p_points?: Json
+          p_services: Json
+        }
+        Returns: Json
+      }
       create_coupon_codes_for_promotion: {
         Args: { count?: number; promotion_id_param: string }
         Returns: {
