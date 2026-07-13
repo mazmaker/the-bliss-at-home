@@ -31,9 +31,12 @@ export function jobDurationMinutes(j: JobWindowInput): number {
 }
 
 export function jobWindowMs(j: JobWindowInput): { start: number; end: number } {
-  // scheduled_time may be 'HH:MM' or 'HH:MM:SS'
+  // scheduled_time may be 'HH:MM' or 'HH:MM:SS'. Parse as Asia/Bangkok (+07:00), NOT device-local:
+  // scheduled times are Bangkok wall-clock. Overlap is a window-vs-window (relative) comparison so the
+  // offset cancels, but pinning +07:00 keeps this identical on any device AND safe if a start/end is
+  // ever compared against Date.now(). Matches useStartGate/useTravelGate + the server. TH = fixed UTC+7.
   const time = (j.scheduled_time || '00:00:00').slice(0, 8)
-  const start = new Date(`${j.scheduled_date}T${time}`).getTime()
+  const start = new Date(`${j.scheduled_date}T${time}+07:00`).getTime()
   return { start, end: start + jobDurationMinutes(j) * 60_000 }
 }
 
