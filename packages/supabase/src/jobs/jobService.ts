@@ -413,56 +413,40 @@ export async function updateJobStatus(
         if (booking?.service_id) {
           const { data: service } = await supabase
             .from('services')
-            .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
+            .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate, price_60, price_90, price_120, base_price')
             .eq('id', booking.service_id)
             .single()
 
-          // Honor use_fixed_rate (mirror the sync_booking_to_job trigger + server computeStaffEarning):
+          // §1 (mirror the sync_booking_to_job trigger + server computeStaffEarning):
           // fixed-rate = flat per-session amount by THIS recipient's duration (NOT ÷ recipient_count —
-          // each staff serves a full session); commission = whole-booking final_price × rate split per
-          // recipient (final_price is already ×N for couples). Per-recipient duration = the job's own.
+          // each staff serves a full session); commission = the recipient's FULL PRE-DISCOUNT RETAIL
+          // service price by duration × rate. Per-recipient duration = the job's own.
           const jobDuration = Number((job as any).duration_minutes) || Number((booking as any).duration) || 90
-          const recipientCount = Number((booking as any).recipient_count) || 1
           let earnings = 0
           if ((service as any)?.use_fixed_rate) {
             const fixed = jobDuration === 60 ? (service as any).staff_earning_60
               : jobDuration === 120 ? (service as any).staff_earning_120
               : (service as any).staff_earning_90
             earnings = Math.round(Number(fixed) || 0)
-          } else if (booking.final_price) {
-            const commissionRate = Number((service as any)?.staff_commission_rate) || 0.30
-            // P5 Stage 1: PER-RECIPIENT commission = THIS recipient's FULL (pre-discount) SERVICE
-            // price × rate (mirror the sync_booking_to_job trigger). Two platform rules:
-            //   (1) add-ons are NOT commissionable — booking_services.price is service-only, so
-            //       add-ons are excluded automatically (never in the base).
-            //   (2) the customer discount is NOT deducted from staff pay — the platform absorbs any
-            //       promo/points discount; staff earn on the FULL service price (we use
-            //       booking_services.price, which is pre-discount, NOT final_price).
-            // recipient_index = job_index − 1.
+          } else {
+            // §1: commission on the recipient's PRE-DISCOUNT RETAIL service price by duration
+            // (services.price_60/90/120) × rate — NOT booking_services.price (which is POST-discount
+            // for HOTEL bookings) and NOT final_price. Add-ons are excluded (retail is service-only)
+            // and the platform absorbs any discount. recipient_index = job_index − 1.
             const recipientIndex = (Number((job as any).job_index) || 1) - 1
             const { data: svcRows } = await supabase
               .from('booking_services')
-              .select('price, recipient_index')
+              .select('duration, recipient_index, service:services(price_60, price_90, price_120, base_price, duration, staff_commission_rate)')
               .eq('booking_id', job.booking_id)
-            const svcI = (svcRows || [])
-              .filter((r) => Number((r as any).recipient_index) === recipientIndex)
-              .reduce((s, r) => s + (Number((r as any).price) || 0), 0)
-            if (svcI > 0) {
-              earnings = Math.round(svcI * commissionRate)
-            } else {
-              // Fallback (legacy booking without booking_services rows — rare; new bookings always
-              // have them): booking-level service portion (final_price minus add-ons), even split.
-              const { data: addonRows } = await supabase
-                .from('booking_addons')
-                .select('total_price')
-                .eq('booking_id', job.booking_id)
-              const addonTotal = (addonRows || []).reduce(
-                (s, r) => s + (Number((r as any).total_price) || 0),
-                0
-              )
-              const commissionBase = Math.max(0, Number(booking.final_price) - addonTotal)
-              earnings = Math.round((commissionBase * commissionRate) / recipientCount)
-            }
+            const row = (svcRows || []).find((r) => Number((r as any).recipient_index) === recipientIndex)
+            const rSvc = (row as any)?.service || (service as any)
+            const rDur = Number((row as any)?.duration) || jobDuration
+            const rRate = Number(rSvc?.staff_commission_rate ?? (service as any)?.staff_commission_rate) || 0
+            const retail = rDur === 60 && rSvc?.price_60 != null ? Number(rSvc.price_60)
+              : rDur === 120 && rSvc?.price_120 != null ? Number(rSvc.price_120)
+              : rSvc?.price_90 != null ? Number(rSvc.price_90)
+              : (Number(rSvc?.base_price) || 0)
+            earnings = Math.round(retail * rRate)
           }
           if (earnings > 0) {
             updateData.staff_earnings = earnings

@@ -4,6 +4,7 @@
  */
 
 import { getSupabaseClient } from '../lib/supabase.js'
+import { computeStaffEarning } from '../lib/earnings.js'
 import { lineService } from './lineService.js'
 import { emailService, creditDueReminderEmailTemplate } from './emailService.js'
 import { googleCalendarService } from './googleCalendarService.js'
@@ -189,7 +190,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
     // Couple booking: fetch booking_services for per-recipient details
     const { data: bookingServices } = await supabase
       .from('booking_services')
-      .select('recipient_index, recipient_name, duration, price, service:services(name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120)')
+      .select('recipient_index, recipient_name, duration, price, service:services(name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, price_60, price_90, price_120, base_price, duration)')
       .eq('booking_id', bookingId)
       .order('recipient_index', { ascending: true })
 
@@ -200,16 +201,9 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
         const recipientLabel = bs.recipient_name || `คนที่ ${(bs.recipient_index || 0) + 1}`
         const price = Number(bs.price) || 0
         const duration = bs.duration || booking.duration || 90
-        let earnings: number
-        if (svc?.use_fixed_rate) {
-          const fixed = duration === 60 ? svc.staff_earning_60
-            : duration === 120 ? svc.staff_earning_120
-            : svc.staff_earning_90
-          earnings = Math.round(Number(fixed) || 0)
-        } else {
-          const commissionRate = Number(svc?.staff_commission_rate || booking.service?.staff_commission_rate) || 0
-          earnings = Math.round(price * commissionRate)
-        }
+        // §1: commission on the pre-discount RETAIL service price by duration (server-derived),
+        // NOT the discounted booking_services.price; fixed-rate = flat. Add-ons excluded.
+        const earnings = computeStaffEarning(svc, duration)
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -241,16 +235,8 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
       const fallbackDuration = booking.duration || 90
       for (let i = 0; i < recipientCount; i++) {
         const fallbackAmount = Math.round((booking.final_price || 0) / recipientCount)
-        let fallbackEarnings: number
-        if (fallbackSvc?.use_fixed_rate) {
-          const fixed = fallbackDuration === 60 ? fallbackSvc.staff_earning_60
-            : fallbackDuration === 120 ? fallbackSvc.staff_earning_120
-            : fallbackSvc.staff_earning_90
-          fallbackEarnings = Math.round(Number(fixed) || 0)
-        } else {
-          const fallbackCommissionRate = Number(fallbackSvc?.staff_commission_rate) || 0
-          fallbackEarnings = Math.round(fallbackAmount * fallbackCommissionRate)
-        }
+        // §1: commission on the pre-discount RETAIL service price (server-derived), not final_price/N.
+        const fallbackEarnings = computeStaffEarning(fallbackSvc, fallbackDuration)
         const jobData = {
           ...baseJobData,
           staff_id: null,
@@ -282,18 +268,11 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
     const singleAmount = Number(booking.final_price) || 0
     const singleSvc = booking.service as any
     const singleDuration = booking.duration || 90
-    let singleEarnings: number
-    if (booking.staff_earnings) {
-      singleEarnings = Number(booking.staff_earnings)
-    } else if (singleSvc?.use_fixed_rate) {
-      const fixed = singleDuration === 60 ? singleSvc.staff_earning_60
-        : singleDuration === 120 ? singleSvc.staff_earning_120
-        : singleSvc.staff_earning_90
-      singleEarnings = Math.round(Number(fixed) || 0)
-    } else {
-      const singleCommissionRate = Number(singleSvc?.staff_commission_rate) || 0
-      singleEarnings = Math.round(singleAmount * singleCommissionRate)
-    }
+    // §1: re-derive commission SERVER-SIDE from the retail (pre-discount) service price × rate
+    // (fixed-rate = flat). Do NOT trust booking.staff_earnings — admin quick-booking sets it from
+    // final_price. The customer path never reaches here (its trigger already created the jobs →
+    // idempotent early-return above), so re-deriving is safe and §1-correct for admin/non-trigger.
+    const singleEarnings = computeStaffEarning(singleSvc, singleDuration)
     const jobData = {
       ...baseJobData,
       staff_id: booking.staff_id || null,

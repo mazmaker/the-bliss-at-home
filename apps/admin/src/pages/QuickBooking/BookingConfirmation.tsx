@@ -169,14 +169,19 @@ export default function BookingConfirmation({
         return Math.round((Number(commissionBase) || 0) * rate)
       }
 
+      // §1: commission is computed on the PRE-DISCOUNT service price (base_price), never final_price
+      // (which already nets the discount). The platform absorbs the discount; staff earn on retail.
+      const singleServiceBasePrice = bookingData.basePricing?.base_price || 0
       let staffEarnings: number
       if (isCouple) {
-        // Sum each recipient's earning (commission uses that recipient's own price).
+        // Sum each recipient's earning (commission uses that recipient's own pre-discount price).
         staffEarnings = recips.reduce((sum, r) => sum + earningFor(r.service || svc, r.duration, r.price), 0)
       } else {
         // Single — fixed-rate by the ADMIN-PICKED duration (not the service's DB default), else
-        // commission × final_price. singleDuration falls back to service.duration when unset (P15).
-        staffEarnings = earningFor(svc, singleDuration, finalPrice)
+        // §1 commission on base_price (pre-discount), NOT final_price. singleDuration falls back to
+        // service.duration when unset (P15). The server's createJobsFromBooking re-derives the
+        // authoritative per-job earning from the retail price, so this is the booking-level mirror.
+        staffEarnings = earningFor(svc, singleDuration, singleServiceBasePrice)
       }
 
       // Create booking directly in database

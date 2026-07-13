@@ -10,6 +10,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { staffAssignmentService } from '../services/staffAssignmentService'
 import { sendBookingConfirmedNotifications } from '../services/notificationService'
+import { computeStaffEarning } from '../lib/earnings'
 import { validateBookingDate } from './bookings'
 
 // Extend Request interface to include user property
@@ -285,21 +286,15 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
         // Get service name and commission rate for each job
         const { data: svcDetail } = await serviceSupabase
           .from('services')
-          .select('name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120')
+          .select('name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, price_60, price_90, price_120, base_price, duration')
           .eq('id', svc.service_id)
           .single()
 
-        let earnings: number
-        if (svcDetail?.use_fixed_rate) {
-          const duration = svc.duration || 90
-          const fixed = duration === 60 ? svcDetail.staff_earning_60
-            : duration === 120 ? svcDetail.staff_earning_120
-            : svcDetail.staff_earning_90
-          earnings = Math.round(Number(fixed) || 0)
-        } else {
-          const commissionRate = Number(svcDetail?.staff_commission_rate) || 0.3
-          earnings = Math.round(Number(svc.price) * commissionRate)
-        }
+        // §1: staff commission on the FULL pre-discount RETAIL service price by duration
+        // (services.price_60/90/120), NOT the discounted booking_services.price the hotel client
+        // sends. Fixed-rate = flat per session. Add-ons excluded (retail price is service-only).
+        const duration = svc.duration || 90
+        const earnings = computeStaffEarning(svcDetail, duration)
 
         return {
           booking_id: booking.id,
