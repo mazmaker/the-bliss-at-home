@@ -34,9 +34,10 @@ export function isTimeSlotAvailable(date: string, hour: string, minute: string):
   // If not today, all slots are available
   if (date !== todayStr) return true
 
-  // For today, check 3-hour advance rule
-  const slotTime = new Date()
-  slotTime.setHours(parseInt(hour), parseInt(minute), 0, 0)
+  // For today, check 3-hour advance rule.
+  // Anchor the slot to Asia/Bangkok (+07:00): slot labels are Bangkok wall-clock, so a device-local
+  // setHours mis-gates the rule on a non-Bangkok device. minTime is an absolute instant. TH = fixed UTC+7.
+  const slotTime = new Date(`${date}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00+07:00`)
 
   const minTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)) // 3 hours from now
 

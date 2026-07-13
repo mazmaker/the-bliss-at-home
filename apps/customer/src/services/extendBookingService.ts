@@ -228,7 +228,9 @@ export async function getCustomerExtensionOptions(bookingId: string): Promise<Ex
 
   // Check 15-minute deadline before service ends
   const now = new Date()
-  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+  // +07:00: booking_date+booking_time is Bangkok wall-clock. Parsing device-local mis-computes the
+  // 15-min-before-end deadline on any non-Bangkok device. now is an absolute instant. TH = fixed UTC+7.
+  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}+07:00`)
   const currentEndTime = new Date(bookingDateTime.getTime() + (currentDuration * 60 * 1000))
   const deadlineTime = new Date(currentEndTime.getTime() - (15 * 60 * 1000)) // 15 minutes before end
   const withinDeadline = now <= deadlineTime
@@ -322,7 +324,9 @@ export async function getBookingExtensionInfo(bookingId: string): Promise<Bookin
     : [60, 90, 120]
 
   const now = new Date()
-  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+  // +07:00: Bangkok wall-clock (see note above) — device-local parse mis-gates the per-recipient
+  // extend deadline on a non-Bangkok device.
+  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}+07:00`)
 
   const recipients: ExtensionRecipientInfo[] = indices.map((idx) => {
     const row = baseRows.find((r: any) => (r.recipient_index ?? 0) === idx)
