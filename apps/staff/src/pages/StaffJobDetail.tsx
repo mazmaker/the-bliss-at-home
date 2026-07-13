@@ -658,7 +658,7 @@ function StaffJobDetail() {
           onRefresh={refetch}
           onStartJob={handleStart}
           isProcessing={isProcessing}
-          canStartWork={!!eligibility?.canWork && startGate.canStart}
+          canStartWork={eligibility?.canWork !== false && startGate.canStart}
         />
       )}
       {isMyJob && !isFinished && job.status === 'arrived' && !startGate.canStart && (
@@ -679,7 +679,7 @@ function StaffJobDetail() {
           {isPending && (
             <button
               onClick={handleAccept}
-              disabled={isProcessing || !eligibility?.canWork || !!(job && getScheduleConflict(job))}
+              disabled={isProcessing || eligibility?.canWork === false || !!(job && getScheduleConflict(job))}
               className="w-full py-3 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               title={job && getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : undefined}
             >
@@ -691,7 +691,7 @@ function StaffJobDetail() {
           {canStart && (
             <button
               onClick={handleStart}
-              disabled={isProcessing || !eligibility?.canWork}
+              disabled={isProcessing || eligibility?.canWork === false}
               className="w-full py-3 bg-gradient-to-r from-bliss-600 to-bliss-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}

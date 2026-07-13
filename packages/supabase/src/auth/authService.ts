@@ -6,21 +6,40 @@
 import { supabase } from './supabaseClient'
 import type { Profile, LoginCredentials, RegisterCredentials, UserRole, AuthResponse, LineLoginCredentials } from './types'
 import { AuthError } from './types'
+import { ensureLiveSession, markIntentionalLogout, clearIntentionalLogout } from './ensureLiveSession'
 
-// Cache to prevent excessive API calls
-let profileCache: { profile: Profile | null; timestamp: number } | null = null
-const CACHE_DURATION = 30000 // เพิ่มเป็น 30 วินาที เพื่อลด API calls
+// Cache to prevent excessive API calls.
+// 🔴 v5 §2.3 null-cache fix: cache POSITIVE results only. A transient failure must NOT poison the
+// cache with `{profile:null}` (that masked recovery for 30s); on failure we return the last-known-good
+// profile instead of caching a null.
+let profileCache: { profile: Profile; timestamp: number } | null = null
+const CACHE_DURATION = 30000 // 30s to reduce API calls
 
 /**
  * Get current user profile from profiles table
  * Auto-creates profile if it doesn't exist (for OAuth users)
  */
-async function getCurrentProfile(): Promise<Profile | null> {
-  console.log('📍 getCurrentProfile: Starting...')
-
-  // Check cache first
+/**
+ * Get the current user's profile.
+ *
+ * 🔴 v5 §2.3 (G1) — deadlock-safe: `providedSession` MUST be passed from the two onAuthStateChange
+ * callbacks (AuthProvider.tsx + hooks.ts). `_callRefreshToken` emits TOKEN_REFRESHED WHILE holding the
+ * auth lock; if this function called getSession()/ensureLiveSession() on that path it would enter the
+ * reentrant `await last` (the in-flight refresh the emission is gated on) = circular self-await
+ * deadlock → auth-lock wedged → autoRefresh freeze → the exact anon-downgrade false-reset. When
+ * `providedSession` is supplied we use it DIRECTLY and acquire NO lock.
+ *
+ * 🔴 v5 §2.3 (G2) — cold-mount safe: when called with NO session (AuthProvider/hooks loadUser on a
+ * fresh WebView reload) we mint a fresh token via the ensureLiveSession() single-flight (which
+ * getSession-refreshes within the margin), NEVER by reading a possibly-expired localStorage token
+ * (that would 401 → null profile → false logout to /staff/login) and NEVER via the old out-of-lock
+ * raw-REST rotate (that stampeded → "Already Used").
+ */
+async function getCurrentProfile(
+  providedSession?: { access_token?: string; user?: { id?: string } | null } | null
+): Promise<Profile | null> {
+  // Cache check (positive results only — see profileCache doc).
   if (profileCache && Date.now() - profileCache.timestamp < CACHE_DURATION) {
-    console.log('📍 getCurrentProfile: Returning cached result')
     return profileCache.profile
   }
 
@@ -28,78 +47,28 @@ async function getCurrentProfile(): Promise<Profile | null> {
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHZsZnJpcWpud3B4bW1naXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjU4NDksImV4cCI6MjA4Mzk0MTg0OX0.kJby5jz8N5pysiSNft_Z16ParaXP5A5ARiNecENANLc'
 
   try {
-    // Get a VALID session. supabase-js getSession() auto-refreshes an expired access token via the
-    // refresh token and keeps localStorage in sync (verified 2026-07-09: returns in <200ms, does NOT
-    // hang — the old "getSession hangs" note is stale). Time-box it as a safety net so it can never
-    // wedge auth loading. CRITICAL: we must NEVER delete the session just because the ACCESS token
-    // expired — the refresh token is usually still valid, and deleting it forced a re-login on every
-    // page refresh after the ~1h access-token TTL.
     let accessToken: string | undefined
     let userId: string | undefined
 
-    const sdkSession = await Promise.race([
-      supabase.auth.getSession().then((r) => r.data.session),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
-    ])
-
-    if (sdkSession?.access_token && sdkSession.user) {
-      accessToken = sdkSession.access_token
-      userId = sdkSession.user.id
+    if (providedSession?.access_token && providedSession.user?.id) {
+      // onAuthStateChange path — use the session the SDK already delivered to the callback. NO lock.
+      accessToken = providedSession.access_token
+      userId = providedSession.user.id
     } else {
-      // Fallback: getSession() returned nothing or was slow. Read the persisted session directly
-      // and, if the access token is stale, refresh it via a raw REST call (no delete on failure).
-      console.log('📍 getCurrentProfile: getSession empty/slow — using stored session fallback')
-      const sessionData = localStorage.getItem('bliss-customer-auth')
-      if (!sessionData) {
-        profileCache = { profile: null, timestamp: Date.now() }
-        return null
+      // Cold-mount path — get a live token via the single-flight (refreshes within margin, no rotate).
+      const live = await ensureLiveSession()
+      if (live.token && live.userId) {
+        accessToken = live.token
+        userId = live.userId
+      } else {
+        // unknown/anon with no usable token → keep last-known-good (do NOT poison to null).
+        return profileCache?.profile ?? null
       }
-      const stored = JSON.parse(sessionData)
-      const storedUser = stored.user || stored.currentSession?.user
-      let storedToken = stored.access_token || stored.currentSession?.access_token
-      const refreshToken = stored.refresh_token || stored.currentSession?.refresh_token
-      const expiresAt = stored.expires_at || stored.currentSession?.expires_at
-
-      if (!storedUser || !storedToken) {
-        return null
-      }
-
-      // Access token expired/near-expiry → refresh via REST using the refresh token. Do NOT delete
-      // the session if refresh fails (could be a transient network error); let the next attempt retry.
-      if (expiresAt && expiresAt < Date.now() / 1000 + 60 && refreshToken) {
-        console.log('📍 getCurrentProfile: Access token stale — refreshing via refresh token')
-        try {
-          const refreshRes = await Promise.race([
-            fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-              method: 'POST',
-              headers: { apikey: anonKey, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refresh_token: refreshToken }),
-            }),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
-          ])
-          if (refreshRes && (refreshRes as Response).ok) {
-            const refreshed = await (refreshRes as Response).json()
-            if (refreshed?.access_token) {
-              storedToken = refreshed.access_token
-              // Persist in the supabase-js session shape so the SDK client stays in sync
-              localStorage.setItem('bliss-customer-auth', JSON.stringify(refreshed))
-            }
-          }
-        } catch (e) {
-          console.warn('📍 getCurrentProfile: REST refresh failed (session preserved):', e)
-        }
-      }
-
-      accessToken = storedToken
-      userId = storedUser.id
     }
 
     if (!accessToken || !userId) {
-      profileCache = { profile: null, timestamp: Date.now() }
-      return null
+      return profileCache?.profile ?? null
     }
-
-    console.log('📍 getCurrentProfile: Session valid, fetching profile for user:', userId)
 
     const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`, {
       headers: {
@@ -110,34 +79,28 @@ async function getCurrentProfile(): Promise<Profile | null> {
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      console.log('📍 getCurrentProfile: API error:', response.status, errorText)
-      // Transient/auth error — return null WITHOUT deleting the session so a refresh can recover.
-      return null
+      // Transient/auth error — return last-known-good WITHOUT deleting the session or caching null,
+      // so a refresh can recover.
+      console.log('📍 getCurrentProfile: API error:', response.status)
+      return profileCache?.profile ?? null
     }
 
     const profiles = await response.json()
     const profile = profiles[0]
 
     if (!profile) {
-      console.log('📍 getCurrentProfile: No profile found')
-      return null
+      // No row. Could be a genuinely-new profile OR a lapsed session that slipped through — either way
+      // do NOT cache null; return last-known-good so a transient miss can't strand the user for 30s.
+      return profileCache?.profile ?? null
     }
 
-    console.log('📍 getCurrentProfile: Profile found!')
     const result = profile as Profile
-
-    // Cache the result
     profileCache = { profile: result, timestamp: Date.now() }
     return result
   } catch (error) {
-    console.error('❌ getCurrentProfile: Error caught:', error)
-
-    // Cache null result to prevent repeated failed attempts
-    profileCache = { profile: null, timestamp: Date.now() }
-
-    // Do NOT delete the persisted session here — a parse/network error should not force a re-login.
-    return null
+    console.error('❌ getCurrentProfile: Error caught (session preserved):', error)
+    // Do NOT poison the cache with null and do NOT delete the session — return last-known-good.
+    return profileCache?.profile ?? null
   }
 }
 
@@ -149,6 +112,7 @@ async function login(
   expectedRole?: UserRole
 ): Promise<AuthResponse> {
   const { email, password, rememberMe } = credentials
+  clearIntentionalLogout() // a fresh sign-in cancels a prior intentional-logout state
 
   // Sign in with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -214,6 +178,7 @@ async function login(
  */
 async function register(credentials: RegisterCredentials): Promise<AuthResponse> {
   const { email, password, fullName, phone, role } = credentials
+  clearIntentionalLogout()
 
   // Sign up with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -296,6 +261,9 @@ async function register(credentials: RegisterCredentials): Promise<AuthResponse>
  * Logout current user
  */
 async function logout(): Promise<void> {
+  // 🔴 v5 §2.1 — mark this as an INTENTIONAL logout so ensureLiveSession resolves 'anon' (not 'unknown')
+  // for the real sign-out, while a transient/probe-triggered SIGNED_OUT still resolves 'unknown'.
+  markIntentionalLogout()
   try {
     // Use local scope to avoid 403 Forbidden error with global scope
     const { error } = await supabase.auth.signOut({ scope: 'local' })
@@ -404,6 +372,7 @@ async function loginWithLine(
   inviteStaffId?: string
 ): Promise<AuthResponse> {
   const { lineUserId, displayName, pictureUrl } = credentials
+  clearIntentionalLogout()
 
   // Generate synthetic email from LINE userId
   const syntheticEmail = `line_${lineUserId}@line.local`

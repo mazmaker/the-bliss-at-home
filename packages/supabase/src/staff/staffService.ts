@@ -4,7 +4,28 @@
  */
 
 import { supabase } from '../auth/supabaseClient'
+import { ensureLiveSession, SessionNotLiveError } from '../auth/ensureLiveSession'
 import type { StaffDocument, ServiceArea, StaffSkill, DocumentType, StaffGender, StaffEligibility } from './types'
+
+/**
+ * 🔴 v5 §3A — the typed UNKNOWN eligibility. Returned when the session is not confirmed live (anon
+ * downgrade / transient), so a 200-0-rows read is NEVER collapsed into the false KYC checklist.
+ * canWork:null → the eligibility hook keeps last-known-good; render gates show neither checklist nor OFF.
+ */
+const UNKNOWN_ELIGIBILITY: StaffEligibility = {
+  canWork: null,
+  reasons: [],
+  status: 'unknown',
+  gender: null,
+  documents: {
+    id_card: { uploaded: false, verified: false },
+    house_registration: { uploaded: false, verified: false },
+    bank_statement: { uploaded: false, verified: false },
+    license: { uploaded: false, verified: false },
+    criminal_record: { uploaded: false, verified: false },
+  },
+  emergencyContact: { name: null, phone: null, relationship: null, filled: false },
+}
 
 // ============================================
 // Profile Operations
@@ -511,6 +532,17 @@ export async function deleteSkill(
  * Requires: staff.status='active' + id_card verified + bank_statement verified
  */
 export async function canStaffStartWork(profileId: string): Promise<StaffEligibility> {
+  // 🔴 v5 §3A — SERVICE-LAYER gate (the single choke point both useStaffEligibility AND
+  // jobService.acceptJob read through). Under a lapsed WebView session the request silently runs with
+  // the anon key → the staff own-record RLS returns a RESOLVED empty-200 that is INDISTINGUISHABLE from
+  // a real ineligible/new staff. So gate on "is the session confirmed live?", not on "did the read
+  // error" — and return typed UNKNOWN when it isn't, so we never render the false KYC checklist.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') {
+    console.log('[Eligibility] Session not live — returning UNKNOWN (keep last-known-good)')
+    return UNKNOWN_ELIGIBILITY
+  }
+
   console.log('[Eligibility] Checking for profileId:', profileId)
 
   // Get staff record
@@ -522,8 +554,15 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
 
   console.log('[Eligibility] Staff query result:', { staffData, staffError: staffError?.message })
 
-  if (staffError || !staffData) {
-    console.warn('[Eligibility] Staff not found! profileId:', profileId, 'error:', staffError?.message)
+  if (staffError) {
+    // Live session but the read errored (transient). Do NOT collapse to the checklist → UNKNOWN.
+    console.warn('[Eligibility] Staff read error under live session (UNKNOWN):', staffError.message)
+    return UNKNOWN_ELIGIBILITY
+  }
+
+  if (!staffData) {
+    // Live session, no error, genuinely no staff row → a REAL "no record" negative (confirmed-known).
+    console.warn('[Eligibility] Staff not found under live session! profileId:', profileId)
     return {
       canWork: false,
       reasons: ['ไม่พบข้อมูลพนักงาน'],
@@ -564,6 +603,12 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
     .eq('staff_id', staffData.id)
 
   console.log('[Eligibility] Documents query:', { docs: documents, docsError: docsError?.message, staffId: staffData.id })
+
+  if (docsError) {
+    // Live session but the documents read errored (transient) → UNKNOWN, don't render "no documents".
+    console.warn('[Eligibility] Documents read error under live session (UNKNOWN):', docsError.message)
+    return UNKNOWN_ELIGIBILITY
+  }
 
   const docs = documents || []
 
@@ -753,14 +798,21 @@ export async function updateEmergencyContact(
  * Returns false when unset/not found — consistent with the dispatch gates,
  * which only treat is_available === true as available.
  */
-export async function getAvailability(profileId: string): Promise<boolean> {
+export async function getAvailability(profileId: string): Promise<boolean | null> {
+  // 🔴 v5 §3C — tri-state. Return null (UNKNOWN) when the session isn't confirmed live or the read
+  // errors, so the header toggle keeps last-known-good / shows a neutral pill instead of flipping
+  // itself OFF on an anon-downgrade collapse (a 0-rows-200 read is not a real "unavailable").
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') return null
+
   const { data, error } = await supabase
     .from('staff')
     .select('is_available')
     .eq('profile_id', profileId)
     .single()
 
-  if (error || !data) return false
+  if (error) return null // transient error under a live session → unknown, NOT OFF
+  if (!data) return false // live + no error + no row → genuinely no record
   return data.is_available ?? false
 }
 
@@ -776,6 +828,13 @@ export async function updateAvailability(
   profileId: string,
   isAvailable: boolean
 ): Promise<boolean> {
+  // 🔴 v5 §3E — do NOT issue an UPDATE under a lapsed session: it would 0-row-no-op (auth.uid() null →
+  // RLS matches nothing) and surface the misleading "ไม่สามารถเปลี่ยนสถานะได้" toast on every re-tap.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') {
+    throw new SessionNotLiveError()
+  }
+
   const { data, error } = await supabase
     .from('staff')
     .update({
@@ -787,7 +846,9 @@ export async function updateAvailability(
     .single()
 
   if (error) throw error
-  if (!data) throw new Error('Staff record not found or update blocked by policy')
+  // 0 rows under a confirmed-live session = an RLS/transient hiccup, not a real "no record" — surface
+  // it as a re-auth-style transient rather than a scary generic failure.
+  if (!data) throw new SessionNotLiveError('การเชื่อมต่อขัดข้อง กรุณาลองใหม่อีกครั้ง')
   return data.is_available ?? isAvailable
 }
 

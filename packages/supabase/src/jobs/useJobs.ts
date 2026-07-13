@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../auth/hooks'
 import { supabase } from '../auth/supabaseClient'
+import { ensureLiveSession } from '../auth/ensureLiveSession'
 import type { Job, JobFilter, StaffStats } from './types'
 import { isJobMatchingStaffGender } from '../utils/providerPreference'
 import {
@@ -55,6 +56,8 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
 
   // Track job IDs currently being accepted to prevent realtime race condition
   const acceptingJobIds = useRef(new Set<string>())
+  // Only the FIRST load shows the full-screen spinner; background refetches keep last-known-good.
+  const hasLoadedRef = useRef(false)
 
   const refresh = useCallback(async () => {
     if (!staffId) {
@@ -62,8 +65,16 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
       return
     }
 
-    setIsLoading(true)
-    setError(null)
+    if (!hasLoadedRef.current) setIsLoading(true)
+
+    // 🔴 v5 §3D — never issue the gated reads on a lapsed session: under the anon downgrade they return
+    // a RESOLVED empty-200 that would blank the list. If the session isn't confirmed live, keep
+    // last-known-good and let the resume nudge / backstop retry — do NOT setError, do NOT clear jobs.
+    const live = await ensureLiveSession()
+    if (live.status !== 'live') {
+      setIsLoading(false)
+      return
+    }
 
     try {
       const [staffJobs, available] = await Promise.all([
@@ -72,9 +83,19 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
       ])
       setJobs(staffJobs)
       setPendingJobs(available)
+      setError(null)
+      hasLoadedRef.current = true
     } catch (err) {
-      setError(err as Error)
-      console.error('Error fetching jobs:', err)
+      // 🔴 v5 §3D — a benign browser/network fetch abort (WebView backgrounded) must NOT show the red
+      // "AbortError: signal is aborted without reason" banner or blank the list. Keep last-known-good;
+      // only surface a genuine hard error.
+      const e = err as Error
+      if (e?.name === 'AbortError' || /aborted|signal is aborted/i.test(e?.message || '')) {
+        console.warn('[useJobs] benign fetch abort — keeping last-known-good (no banner)')
+      } else {
+        setError(e)
+        console.error('Error fetching jobs:', err)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -146,6 +167,25 @@ export function useJobs(options: UseJobsOptions = {}): UseJobsReturn {
     )
     return unsubscribe
   }, [staffId, options.realtime, options.onNewJob, options.staffGender])
+
+  // 🔴 v5 §2.4/§3D (G3) — event-independent backstop. The LINE WebView may fire NO resume DOM event,
+  // so on a timer we (1) re-prime realtime with a no-arg setAuth() (exits the manual-token mode
+  // supabase-js forces on every SIGNED_IN/TOKEN_REFRESHED, restoring the hardened accessToken callback)
+  // and (2) run a SILENT full refresh() — getStaffJobs AND getPendingJobs — so both missed "งานใหม่"
+  // INSERTs and admin UPDATEs to already-held jobs self-correct. refresh() is service-layer-gated by
+  // ensureLiveSession, so a naive tick can never re-anon-downgrade.
+  useEffect(() => {
+    if (!staffId || !options.realtime) return
+    const id = setInterval(() => {
+      try {
+        ;(supabase.realtime as any).setAuth()
+      } catch {
+        /* best-effort */
+      }
+      void refresh()
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [staffId, options.realtime, refresh])
 
   const handleAcceptJob = useCallback(
     async (jobId: string) => {
