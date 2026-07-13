@@ -375,6 +375,10 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
 
 // Decline a job (just removes staff assignment)
 export async function declineJob(jobId: string, staffId: string): Promise<void> {
+  // 🔴 v5 §3E — don't issue the write under a lapsed session (0-row no-op under anon looks like success).
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
   const { error } = await supabase
     .from('jobs')
     .update({
@@ -398,6 +402,11 @@ export async function updateJobStatus(
   status: JobStatus,
   additionalData?: Partial<Job>
 ): Promise<Job> {
+  // 🔴 v5 §3E — a start/complete write under a lapsed session 0-row-no-ops (PGRST116 on the
+  // .select().single()) and would surface a misleading failure. Confirm live first → prompt re-auth.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
   const updateData: any = {
     status,
     updated_at: new Date().toISOString(),
@@ -483,6 +492,10 @@ export async function cancelJob(
   reason: string,
   notes?: string
 ): Promise<Job> {
+  // 🔴 v5 §3E — don't issue the cancel under a lapsed session (silent 0-row no-op). Prompt re-auth.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
   const { data, error } = await supabase
     .from('jobs')
     .update({
@@ -508,6 +521,11 @@ export async function cancelJob(
 
 // Get staff statistics
 export async function getStaffStats(staffId: string): Promise<StaffStats> {
+  // 🔴 v5 §3A — throw on a lapsed session so useStaffStats keeps last-known-good instead of collapsing
+  // to the false "0 งานวันนี้ / ฿0 / 0 เสร็จสิ้น" that the anon-empty reads below would produce.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const today = new Date().toISOString().split('T')[0]
 
   // Get today's jobs

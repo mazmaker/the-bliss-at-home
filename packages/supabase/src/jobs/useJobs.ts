@@ -313,8 +313,12 @@ export function useStaffStats() {
     try {
       const data = await getStaffStats(staffId)
       setStats(data)
+      setError(null) // 🔴 v5 §4 — clear any stale error latch on a successful read
     } catch (err) {
-      setError(err as Error)
+      // 🔴 v5 §3A/§4 — a lapsed-session throw (SessionNotLiveError) is not a real failure: keep
+      // last-known-good stats and don't surface a scary error.
+      const e = err as Error
+      if (e?.name !== 'SessionNotLiveError') setError(e)
     } finally {
       setIsLoading(false)
     }

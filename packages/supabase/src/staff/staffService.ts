@@ -852,6 +852,28 @@ export async function updateAvailability(
   return data.is_available ?? isAvailable
 }
 
+// ============================================
+// Staff id resolver (single gated choke point)
+// ============================================
+
+/**
+ * 🔴 v5 §3E — resolve staff.id from a profile_id through ONE gated helper (replaces the 3 duplicate
+ * inline `.from('staff').select('id').eq('profile_id')` lookups in BookingTrackingCard / JobGPSControls
+ * / useStaffBookings). Returns null on a lapsed session or transient failure instead of an
+ * anon-collapsed empty that would starve GPS/journey writes (staff_id=null → 0-row) and realtime filters.
+ */
+export async function getStaffId(profileId: string): Promise<string | null> {
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') return null
+  const { data, error } = await supabase
+    .from('staff')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single()
+  if (error || !data) return null
+  return data.id
+}
+
 // Export service
 export const staffService = {
   updateProfile,
