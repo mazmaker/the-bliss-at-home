@@ -186,8 +186,12 @@ export async function checkCancellationEligibility(
     }
   }
 
-  // Calculate hours until booking
-  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+  // Calculate hours until booking.
+  // +07:00: booking_date+booking_time is Bangkok wall-clock. The SERVER runs on Vercel in UTC, so a
+  // device-local parse read "14:00" as 14:00 UTC = 7h later than reality → hoursUntilBooking inflated
+  // by 7h → wrong cancellation/refund TIER (more-generous than it should be) and a broken past-time
+  // guard. Pin to +07:00 (TH = fixed UTC+7). Matches the server's notificationService.
+  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}+07:00`)
   const now = new Date()
   const hoursUntilBooking = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
 
