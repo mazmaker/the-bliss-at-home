@@ -36,15 +36,19 @@ function StaffSettings() {
   useEffect(() => {
     if (!user?.id) return
     setIsLoadingPayout(true)
-    Promise.all([
+    // Settle independently: one call failing (e.g. a lapsed-session throw from the other)
+    // must NOT blank the card that DID load. Each result updates its own state or keeps its
+    // last-known-good / default.
+    Promise.allSettled([
       getPayoutSchedule(user.id),
       getNextPayoutInfo(user.id),
     ])
-      .then(([schedule, info]) => {
-        setPayoutSchedule(schedule)
-        setNextPayoutInfo(info)
+      .then(([scheduleRes, infoRes]) => {
+        if (scheduleRes.status === 'fulfilled') setPayoutSchedule(scheduleRes.value)
+        else console.error('Failed to load payout schedule:', scheduleRes.reason)
+        if (infoRes.status === 'fulfilled') setNextPayoutInfo(infoRes.value)
+        else console.error('Failed to load next payout info:', infoRes.reason)
       })
-      .catch(console.error)
       .finally(() => setIsLoadingPayout(false))
   }, [user?.id])
 

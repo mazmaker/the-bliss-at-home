@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../auth/supabaseClient'
+import { ensureLiveSession, SessionNotLiveError } from '../auth/ensureLiveSession'
 import type {
   Payout,
   BankAccount,
@@ -20,6 +21,12 @@ import type {
  * Get earnings summary for a staff member
  */
 export async function getEarningsSummary(staffId: string): Promise<EarningsSummary> {
+  // 🔴 v5 — gated read. A lapsed WebView session runs anon, collapsing every .eq('staff_id') read to a
+  // resolved 0-rows-200 that silently zeroes the earnings card. THROW so the react-query hook keeps
+  // last-known-good instead of rendering a false ฿0.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
 
@@ -120,6 +127,11 @@ export async function getDailyEarnings(
   startDate: string,
   endDate: string
 ): Promise<DailyEarning[]> {
+  // 🔴 v5 — anon downgrade collapses this to an all-zeros daily series; THROW so the hook keeps
+  // last-known-good rather than flattening the chart to zero.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const { data: jobs, error } = await supabase
     .from('jobs')
     .select('staff_earnings, duration_minutes, total_staff_earnings, total_duration_minutes, scheduled_date')
@@ -173,6 +185,10 @@ export async function getServiceEarnings(
   startDate: string,
   endDate: string
 ): Promise<ServiceEarning[]> {
+  // 🔴 v5 — anon downgrade collapses this to an empty breakdown; THROW so the hook keeps last-known-good.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const { data: jobs, error } = await supabase
     .from('jobs')
     .select('service_name, service_name_en, staff_earnings, total_staff_earnings')
@@ -398,6 +414,11 @@ export async function getPayoutSettings(): Promise<PayoutSettings> {
  * Get staff payout schedule (bi_monthly or monthly)
  */
 export async function getPayoutSchedule(profileId: string): Promise<PayoutSchedule> {
+  // 🔴 v5 — do NOT let an anon-collapsed 0-rows read fall through to the 'monthly' default: that would
+  // silently flip the displayed schedule. THROW so the caller keeps last-known-good.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const { data, error } = await supabase
     .from('staff')
     .select('payout_schedule')
@@ -434,6 +455,11 @@ export async function updatePayoutSchedule(
  * Calculate next payout info for staff
  */
 export async function getNextPayoutInfo(profileId: string): Promise<NextPayoutInfo> {
+  // 🔴 v5 — fail fast on a lapsed session before any gated read (getPayoutSchedule + the accumulated-
+  // earnings jobs/payout_jobs sums all anon-collapse). THROW so the hook keeps last-known-good payout info.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const schedule = await getPayoutSchedule(profileId)
   const settings = await getPayoutSettings()
 

@@ -187,11 +187,12 @@ async function generateAutoPayout(staff: StaffPayoutInfo): Promise<void> {
     }, 0)
 
     const totalJobs = jobs.length
-    const totalHours = jobs.reduce((sum, job) => {
-      return sum + ((job.total_duration_minutes || job.duration_minutes || 0) / 60)
-    }, 0)
 
-    // Create payout record
+    // Create payout record.
+    // NOTE: the `payouts` table has NO `total_hours` column — inserting it made
+    // PostgREST reject the whole insert (PGRST204), so EVERY automated payout
+    // silently failed (0 automated payouts ever created). Keep the insert to the
+    // real columns only.
     const { data: payout, error: payoutError } = await supabase
       .from('payouts')
       .insert({
@@ -202,7 +203,6 @@ async function generateAutoPayout(staff: StaffPayoutInfo): Promise<void> {
         platform_fee: 0, // No platform fee
         net_amount: grossEarnings,
         total_jobs: totalJobs,
-        total_hours: totalHours,
         status: 'pending',
         payout_round: null,
         is_automated: true, // Mark as automated

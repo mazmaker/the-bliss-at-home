@@ -18,9 +18,11 @@ export interface StartGate {
  * Gate the staff start-work button by the job's scheduled service time.
  * - `canStart` is true once `now >= (scheduled_date+scheduled_time) − 15min` (the early-start
  *   window). Stays true afterwards (a late staff can still start).
- * - Parses `scheduled_date`+`scheduled_time` WITHOUT a `Z` suffix, so it is device-local time
- *   (= Asia/Bangkok on staff phones) — the SAME parse as jobService.buildJobWindow, keeping the
- *   gate consistent with the overlap/schedule math. `scheduled_time` may be 'HH:MM' or 'HH:MM:SS'.
+ * - Parses `scheduled_date`+`scheduled_time` as **Asia/Bangkok (+07:00)**, NOT device-local: the
+ *   scheduled time is always Bangkok wall-clock, so a device whose clock/TZ is not Bangkok (a
+ *   desktop browser, an emulator, a mis-set phone) must NOT reinterpret "10:00" in its own zone or
+ *   the gate blocks the start at the real appointment time. Matches the server's `+07:00` parse in
+ *   notificationService. Thailand is a fixed UTC+7 with no DST. `scheduled_time` may be 'HH:MM'/'HH:MM:SS'.
  * - `minsUntilStart` counts down to the WINDOW OPENING (scheduled − 15 min), not to the appointment.
  * - FAIL-OPEN: if the scheduled date/time is missing or unparseable, returns canStart=true so a
  *   legacy/odd job is never permanently un-startable.
@@ -44,7 +46,7 @@ export function useStartGate(
     return { canStart: true, minsUntilStart: 0, scheduledStartMs: null }
   }
 
-  const scheduledStartMs = new Date(`${date}T${time}`).getTime()
+  const scheduledStartMs = new Date(`${date}T${time}+07:00`).getTime()
   if (Number.isNaN(scheduledStartMs)) {
     // Unparseable schedule → fail-open (don't strand the job).
     return { canStart: true, minsUntilStart: 0, scheduledStartMs: null }

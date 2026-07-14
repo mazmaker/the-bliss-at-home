@@ -399,7 +399,11 @@ export function useStaffEligibility() {
     try {
       setIsLoading(true)
       const data = await staffService.canStaffStartWork(user.id)
-      setEligibility(data)
+      // 🔴 v5 §3A — keep last-known-good on an UNKNOWN (transient/anon) result. Never overwrite a
+      // CONFIRMED eligibility (canWork true/false) with canWork:null, or the checklist/toggle would
+      // flicker on every backgrounded-WebView resume.
+      setEligibility((prev) => (data.canWork === null && prev && prev.canWork !== null ? prev : data))
+      setError(null)
     } catch (err: any) {
       setError(err.message)
     } finally {

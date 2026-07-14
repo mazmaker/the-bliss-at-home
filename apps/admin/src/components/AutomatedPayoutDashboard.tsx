@@ -17,12 +17,15 @@ import { getPayoutScheduleLabel, PayoutSchedule } from '../types/staff'
 
 interface StaffPayoutRow {
   id: string
+  profile_id: string
   name_th: string
   payout_schedule: string
   custom_payout_interval: number | null
   next_payout_date: string
   last_payout_processed_at: string | null
   days: number
+  unpaid_jobs: number      // completed jobs in the current period not yet linked to any payout
+  unpaid_amount: number    // sum of staff earnings for those unpaid jobs
 }
 
 interface RecentPayout {
@@ -60,6 +63,39 @@ function scheduleLabel(row: StaffPayoutRow) {
   return getPayoutScheduleLabel(row.payout_schedule as PayoutSchedule, row.custom_payout_interval ?? undefined)
 }
 
+// Mirrors the server's payout period logic (packages/supabase/src/earnings/automatedPayout.ts
+// calculatePayoutPeriod): period_start = day after last payout, or payout_start_date for the
+// first payout, else one interval ago. Kept in sync so the dashboard shows a staff iff the
+// automated run would actually create a payout for them (unpaid completed jobs in this period).
+function payoutIntervalDays(schedule: string | undefined, custom: number | null | undefined): number {
+  switch (schedule) {
+    case 'weekly': return 7
+    case 'bi_monthly': return 15
+    case 'monthly': return 30
+    case 'custom_days': return custom || 30
+    default: return 30
+  }
+}
+
+function payoutPeriodStart(
+  staff: { last_payout_processed_at: string | null; payout_start_date?: string | null; payout_schedule: string; custom_payout_interval: number | null },
+  todayStr: string,
+): string {
+  if (staff.last_payout_processed_at) {
+    const d = new Date(staff.last_payout_processed_at.split('T')[0])
+    d.setDate(d.getDate() + 1)
+    return d.toISOString().split('T')[0]
+  }
+  if (staff.payout_start_date) return staff.payout_start_date.split('T')[0]
+  const d = new Date(todayStr)
+  d.setDate(d.getDate() - payoutIntervalDays(staff.payout_schedule, staff.custom_payout_interval))
+  return d.toISOString().split('T')[0]
+}
+
+function formatBaht(amount: number): string {
+  return `฿${amount.toLocaleString('th-TH')}`
+}
+
 function StaffRow({ row, showDate = true }: { row: StaffPayoutRow; showDate?: boolean }) {
   const navigate = useNavigate()
   const days = row.days
@@ -87,6 +123,10 @@ function StaffRow({ row, showDate = true }: { row: StaffPayoutRow; showDate?: bo
         </div>
       </div>
       <div className="flex-shrink-0 ml-3 flex items-center gap-2">
+        <div className="text-right">
+          <p className="font-semibold text-bliss-900 text-sm">{formatBaht(row.unpaid_amount)}</p>
+          <p className="text-[11px] text-bliss-400">{row.unpaid_jobs} งานค้างจ่าย</p>
+        </div>
         {isOverdue ? (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
             เลย {Math.abs(days)} วัน
@@ -140,20 +180,73 @@ export function AutomatedPayoutDashboard() {
     const todayStr = new Date().toISOString().split('T')[0]
     const today = new Date(todayStr)
 
-    // All active staff — no date ceiling, show everyone
+    // All active staff with a payout schedule/date
     const { data: staffRows, error: staffError } = await supabase
       .from('staff')
-      .select('id, name_th, payout_schedule, custom_payout_interval, next_payout_date, last_payout_processed_at')
+      .select('id, profile_id, name_th, payout_schedule, custom_payout_interval, next_payout_date, last_payout_processed_at, payout_start_date')
       .eq('status', 'active')
       .not('next_payout_date', 'is', null)
+      .not('profile_id', 'is', null)
       .order('next_payout_date', { ascending: true })
 
     if (staffError) throw staffError
 
-    const rows: StaffPayoutRow[] = (staffRows || []).map(s => ({
+    // Per-staff current payout period start (mirrors the server) — the window we look for unpaid jobs in
+    const staffWithPeriod = (staffRows || []).map(s => ({
       ...s,
-      days: Math.round((new Date(s.next_payout_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
+      period_start: payoutPeriodStart(s as any, todayStr),
     }))
+
+    // ── Only show staff who actually have work to pay ──
+    // A staff has unpaid earnings iff they have completed jobs in their period that are NOT yet
+    // linked to any payout (payout_jobs) — the SAME definition the automated run (getCompletedJobs)
+    // uses, so the list matches what "ประมวลผลทั้งหมด" would create. Staff with 0 unpaid jobs are
+    // hidden to avoid confusion when confirming payments.
+    const profileIds = staffWithPeriod.map(s => s.profile_id).filter(Boolean) as string[]
+    const unpaidByProfile = new Map<string, { count: number; amount: number }>()
+
+    if (profileIds.length > 0) {
+      const floor = staffWithPeriod.reduce((min, s) => (s.period_start < min ? s.period_start : min), todayStr)
+      const { data: completedJobs } = await supabase
+        .from('jobs')
+        .select('id, staff_id, scheduled_date, staff_earnings, total_staff_earnings')
+        .eq('status', 'completed')
+        .in('staff_id', profileIds)
+        .gte('scheduled_date', floor)
+
+      const jobIds = (completedJobs || []).map(j => j.id)
+      const paidSet = new Set<string>()
+      if (jobIds.length > 0) {
+        const { data: paidJobs } = await supabase
+          .from('payout_jobs')
+          .select('job_id')
+          .in('job_id', jobIds)
+        ;(paidJobs || []).forEach(pj => paidSet.add(pj.job_id))
+      }
+
+      const periodStartByProfile = new Map(staffWithPeriod.map(s => [s.profile_id, s.period_start]))
+      for (const j of completedJobs || []) {
+        if (paidSet.has(j.id)) continue
+        const ps = periodStartByProfile.get(j.staff_id)
+        if (!ps || j.scheduled_date < ps) continue
+        const cur = unpaidByProfile.get(j.staff_id) || { count: 0, amount: 0 }
+        cur.count += 1
+        cur.amount += Number(j.total_staff_earnings ?? j.staff_earnings ?? 0)
+        unpaidByProfile.set(j.staff_id, cur)
+      }
+    }
+
+    const rows: StaffPayoutRow[] = staffWithPeriod
+      .map(s => {
+        const u = unpaidByProfile.get(s.profile_id) || { count: 0, amount: 0 }
+        return {
+          ...s,
+          days: Math.round((new Date(s.next_payout_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
+          unpaid_jobs: u.count,
+          unpaid_amount: u.amount,
+        }
+      })
+      .filter(r => r.unpaid_jobs > 0)
 
     const overdue    = rows.filter(r => r.days < 0)
     const todayDue   = rows.filter(r => r.days === 0)
@@ -192,12 +285,13 @@ export function AutomatedPayoutDashboard() {
       total_jobs: p.total_jobs || 0,
     }))
 
-    // Count active staff by their payout schedule (7d / 15d / 30d / custom)
+    // Count ALL active staff by their payout schedule (7d / 15d / 30d / custom) — this is a
+    // roster-distribution overview, so it uses the full active set, NOT the payable-only list.
     const schedule_counts = {
-      weekly: rows.filter(r => r.payout_schedule === 'weekly').length,
-      bi_monthly: rows.filter(r => r.payout_schedule === 'bi_monthly').length,
-      monthly: rows.filter(r => r.payout_schedule === 'monthly').length,
-      custom_days: rows.filter(r => r.payout_schedule === 'custom_days').length,
+      weekly: staffWithPeriod.filter(r => r.payout_schedule === 'weekly').length,
+      bi_monthly: staffWithPeriod.filter(r => r.payout_schedule === 'bi_monthly').length,
+      monthly: staffWithPeriod.filter(r => r.payout_schedule === 'monthly').length,
+      custom_days: staffWithPeriod.filter(r => r.payout_schedule === 'custom_days').length,
     }
 
     return { overdue, today: todayDue, this_week, this_month, later, recent_payouts, schedule_counts }
@@ -211,11 +305,19 @@ export function AutomatedPayoutDashboard() {
         headers: { 'Content-Type': 'application/json' },
       })
       const result = await response.json()
-      if (result.success) {
-        toast.success(`ดำเนินการสำเร็จ ${result.processed} คน`)
+      const errCount = result.errors?.length || 0
+      // Previously this only checked result.success and showed a green toast even when
+      // errors[] was populated — hiding real failures. Surface partial/total failures.
+      if (result.success && errCount === 0) {
+        toast.success(
+          result.processed > 0
+            ? `สร้างรายการรอจ่ายให้ ${result.processed} คนแล้ว`
+            : 'ตรวจสอบแล้ว — ยังไม่มีพนักงานที่ถึงรอบและมีงานค้างจ่าย'
+        )
         queryClient.invalidateQueries({ queryKey: ['payout-dashboard-v2'] })
       } else {
-        toast.error(`เกิดข้อผิดพลาด: ${result.errors?.[0] || 'Unknown error'}`)
+        toast.error(`ทำรายการไม่สำเร็จ${errCount ? ` (${errCount} รายการ)` : ''}: ${result.errors?.[0] || 'Unknown error'}`)
+        if (result.processed > 0) queryClient.invalidateQueries({ queryKey: ['payout-dashboard-v2'] })
       }
     } catch {
       toast.error('ไม่สามารถเชื่อมต่อระบบอัตโนมัติได้')

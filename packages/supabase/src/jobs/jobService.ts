@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../auth/supabaseClient'
+import { ensureLiveSession, SessionNotLiveError } from '../auth/ensureLiveSession'
 import type { Job, JobStatus, JobFilter, StaffStats, JobPaymentStatus } from './types'
 import { isJobMatchingStaffGender } from '../utils/providerPreference'
 import { canStaffStartWork } from '../staff/staffService'
@@ -31,9 +32,12 @@ export function jobDurationMinutes(j: JobWindowInput): number {
 }
 
 export function jobWindowMs(j: JobWindowInput): { start: number; end: number } {
-  // scheduled_time may be 'HH:MM' or 'HH:MM:SS'
+  // scheduled_time may be 'HH:MM' or 'HH:MM:SS'. Parse as Asia/Bangkok (+07:00), NOT device-local:
+  // scheduled times are Bangkok wall-clock. Overlap is a window-vs-window (relative) comparison so the
+  // offset cancels, but pinning +07:00 keeps this identical on any device AND safe if a start/end is
+  // ever compared against Date.now(). Matches useStartGate/useTravelGate + the server. TH = fixed UTC+7.
   const time = (j.scheduled_time || '00:00:00').slice(0, 8)
-  const start = new Date(`${j.scheduled_date}T${time}`).getTime()
+  const start = new Date(`${j.scheduled_date}T${time}+07:00`).getTime()
   return { start, end: start + jobDurationMinutes(j) * 60_000 }
 }
 
@@ -218,6 +222,14 @@ export async function getJob(jobId: string): Promise<Job | null> {
 
 // Accept a job
 export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
+  // 🔴 v5 §3E/§4.3 — ORDER-GUARD: confirm a live session BEFORE any gated read/write. Under a lapsed
+  // WebView session the job read + eligibility read run with the anon key (0-rows-200) and would throw
+  // a misleading "ไม่พบงาน / ถูกรับไปแล้ว / ยังรับงานไม่ได้". Prompt re-auth instead.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') {
+    throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วกดรับงานอีกครั้ง')
+  }
+
   // First, check current job status and booking info
   const { data: currentJob, error: checkError } = await supabase
     .from('jobs')
@@ -243,7 +255,10 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
   // ALL admin-verified before they can accept a job. staffId here is the profile_id.
   // Mirrors the staff-app UI gate and the server dispatch filter so all paths agree.
   const eligibility = await canStaffStartWork(staffId)
-  if (!eligibility.canWork) {
+  // 🔴 v5 §4.3 — block ONLY on a CONFIRMED-known negative. We already confirmed the session is live
+  // above, so canStaffStartWork returns a real true/false here (never the typed-unknown null); guarding
+  // on === false keeps a transient collapse from ever stranding an eligible staff at the customer.
+  if (eligibility.canWork === false) {
     const detail = eligibility.reasons[0] || 'ข้อมูล/เอกสารยังไม่ครบหรือยังไม่ได้รับการอนุมัติ'
     throw new Error(`ยังรับงานไม่ได้: ${detail} (ตรวจสอบที่หน้าโปรไฟล์)`)
   }
@@ -360,6 +375,10 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
 
 // Decline a job (just removes staff assignment)
 export async function declineJob(jobId: string, staffId: string): Promise<void> {
+  // 🔴 v5 §3E — don't issue the write under a lapsed session (0-row no-op under anon looks like success).
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
   const { error } = await supabase
     .from('jobs')
     .update({
@@ -383,6 +402,11 @@ export async function updateJobStatus(
   status: JobStatus,
   additionalData?: Partial<Job>
 ): Promise<Job> {
+  // 🔴 v5 §3E — a start/complete write under a lapsed session 0-row-no-ops (PGRST116 on the
+  // .select().single()) and would surface a misleading failure. Confirm live first → prompt re-auth.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
   const updateData: any = {
     status,
     updated_at: new Date().toISOString(),
@@ -483,6 +507,10 @@ export async function cancelJob(
   reason: string,
   notes?: string
 ): Promise<Job> {
+  // 🔴 v5 §3E — don't issue the cancel under a lapsed session (silent 0-row no-op). Prompt re-auth.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
   const { data, error } = await supabase
     .from('jobs')
     .update({
@@ -508,6 +536,11 @@ export async function cancelJob(
 
 // Get staff statistics
 export async function getStaffStats(staffId: string): Promise<StaffStats> {
+  // 🔴 v5 §3A — throw on a lapsed session so useStaffStats keeps last-known-good instead of collapsing
+  // to the false "0 งานวันนี้ / ฿0 / 0 เสร็จสิ้น" that the anon-empty reads below would produce.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const today = new Date().toISOString().split('T')[0]
 
   // Get today's jobs
@@ -641,18 +674,33 @@ export async function reportSOS(
   location: { latitude: number; longitude: number } | null,
   message?: string
 ): Promise<string | null> {
+  // 🚨 v5 §3E SAFETY-CRITICAL — never insert an orphan sos_alerts.staff_id=null under a lapsed session.
+  // Under the anon downgrade the staff lookup 0-rows → an untraceable SOS in a real emergency. Confirm
+  // a live session AND a resolved staff id FIRST; fail loudly (the caller retries) rather than write an
+  // orphan.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') {
+    throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วกด SOS อีกครั้ง')
+  }
+
   // sos_alerts.staff_id FK references staff(id), not profiles(id)
-  const { data: staffRecord } = await supabase
+  const { data: staffRecord, error: staffErr } = await supabase
     .from('staff')
     .select('id')
     .eq('profile_id', profileId)
     .single()
 
+  if (staffErr || !staffRecord?.id) {
+    // Do NOT insert an orphan alert. Surface the failure so the caller can retry / fall back.
+    console.error('Error resolving staff for SOS (NOT inserting orphan):', staffErr?.message)
+    throw new Error('ไม่สามารถส่ง SOS ได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง')
+  }
+
   // .select('id').single() so the caller can POST /api/sos/notify with the new id
   const { data, error } = await supabase
     .from('sos_alerts')
     .insert({
-      staff_id: staffRecord?.id || null,
+      staff_id: staffRecord.id,
       booking_id: jobId,
       latitude: location?.latitude || null,
       longitude: location?.longitude || null,

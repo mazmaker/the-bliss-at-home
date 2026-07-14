@@ -492,8 +492,11 @@ function StaffProfile() {
             </div>
           </div>
 
-          {/* Eligibility Status Dashboard */}
-          {!isEligibilityLoading && eligibility && (
+          {/* Eligibility Status Dashboard — 🔴 v5 §3B: render ONLY when eligibility is CONFIRMED-known
+              (canWork !== null). canWork === null = UNKNOWN (transient/anon) → render nothing, so the
+              second KYC checklist never flashes on a backgrounded-WebView resume (and the green
+              "พร้อมรับงาน" positive card isn't wrongly hidden either). */}
+          {!isEligibilityLoading && eligibility && eligibility.canWork !== null && (
             <div className={`p-4 rounded-xl border-2 ${
               eligibility.canWork
                 ? 'bg-green-50 border-green-200'
@@ -608,8 +611,9 @@ function StaffProfile() {
             </div>
           )}
 
-          {/* Gender Warning Banner */}
-          {!profile.gender && (
+          {/* Gender Warning Banner — 🔴 v5 §3B: only when eligibility is CONFIRMED-known, so an
+              anon-collapsed staff read (gender='') doesn't flash a false "กรุณาระบุเพศ". */}
+          {!profile.gender && eligibility?.canWork !== null && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">

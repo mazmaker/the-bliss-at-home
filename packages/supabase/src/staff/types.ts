@@ -155,9 +155,12 @@ export type ProviderPreference = 'female-only' | 'male-only' | 'prefer-female' |
 
 // Staff Eligibility (for checking if staff can start working)
 export interface StaffEligibility {
-  canWork: boolean
+  // 🔴 v5 §3A tri-state: `null` = UNKNOWN (session not confirmed live / transient read failure) →
+  // consumers keep last-known-good and must NOT render the KYC checklist or flip the toggle OFF.
+  // `false` = a CONFIRMED-known negative (real ineligible/suspended/rejected-doc under a live session).
+  canWork: boolean | null
   reasons: string[]
-  status: 'active' | 'inactive' | 'pending'
+  status: 'active' | 'inactive' | 'pending' | 'unknown'
   gender: StaffGender | null
   documents: {
     id_card: { uploaded: boolean; verified: boolean; status?: string }

@@ -71,8 +71,10 @@ export function isRescheduleTimeAvailable(
   if (dateStr !== toLocalDateStr(now)) return true
 
   const [hour, minute] = time.split(':').map((n) => parseInt(n, 10))
-  const slot = new Date()
-  slot.setHours(hour, minute, 0, 0)
+  // Anchor the slot to Asia/Bangkok (+07:00): the slot label is Bangkok wall-clock; minTime is an
+  // absolute instant, so building the slot device-local (setHours) mis-gates the lead rule on a
+  // non-Bangkok device. TH = fixed UTC+7.
+  const slot = new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+07:00`)
 
   const minTime = new Date(now.getTime() + minLeadMinutes * 60 * 1000)
   return slot >= minTime

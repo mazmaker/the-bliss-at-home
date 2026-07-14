@@ -16,9 +16,10 @@ export interface TravelGate {
  * Gate the staff "เริ่มเดินทาง" button by the job's scheduled service time.
  * - `canStartTravel` is true once `now >= scheduled_start − 90min`. Stays true afterwards through and
  *   PAST the appointment (D-P9-1: no upper bound — a late staff can still start travelling).
- * - Parses `scheduled_date`+`scheduled_time` WITHOUT a `Z` suffix, so it is device-local time
- *   (= Asia/Bangkok on staff phones) — the SAME parse as useStartGate / jobService.buildJobWindow.
- *   `scheduled_time` may be 'HH:MM' or 'HH:MM:SS'.
+ * - Parses `scheduled_date`+`scheduled_time` as **Asia/Bangkok (+07:00)**, NOT device-local (same as
+ *   useStartGate / jobService): the scheduled time is Bangkok wall-clock, so a non-Bangkok device must
+ *   not reinterpret it in its own zone or the travel window is off by the TZ offset. Thailand is a fixed
+ *   UTC+7 (no DST). `scheduled_time` may be 'HH:MM' or 'HH:MM:SS'.
  * - FAIL-OPEN: if the scheduled date/time is missing or unparseable, returns canStartTravel=true so a
  *   legacy/odd job is never permanently un-startable.
  * - Client-clock based; ticks every 20s so the button flips disabled→enabled live without a refetch.
@@ -41,7 +42,7 @@ export function useTravelGate(
     return { canStartTravel: true, minsUntilWindow: 0, scheduledStartMs: null }
   }
 
-  const scheduledStartMs = new Date(`${date}T${time}`).getTime()
+  const scheduledStartMs = new Date(`${date}T${time}+07:00`).getTime()
   if (Number.isNaN(scheduledStartMs)) {
     // Unparseable schedule → fail-open (don't strand the job).
     return { canStartTravel: true, minsUntilWindow: 0, scheduledStartMs: null }

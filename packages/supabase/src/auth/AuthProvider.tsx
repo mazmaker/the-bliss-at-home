@@ -150,7 +150,12 @@ export function AuthProvider({ children, expectedRole }: AuthProviderProps) {
         lastProfileFetchTime = now
 
         try {
-          const profile = await authService.getCurrentProfile()
+          // 🔴 v5 §2.3 (G1): consume the `session` the SDK already delivered to this callback.
+          // getCurrentProfile() must NOT call getSession() on the onAuthStateChange path —
+          // _callRefreshToken emits TOKEN_REFRESHED while holding the auth lock, so re-entering
+          // getSession here is a circular self-await deadlock. No session on the event → not authed
+          // (without acquiring the lock).
+          const profile = session?.access_token ? await authService.getCurrentProfile(session) : null
           if (mounted) {
             // Validate role
             if (expectedRole && profile && profile.role !== expectedRole) {
