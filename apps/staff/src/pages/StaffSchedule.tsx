@@ -110,8 +110,10 @@ function StaffSchedule() {
   // Sort jobs by time
   const sortedJobs = useMemo(() => {
     return [...filteredJobs].sort((a, b) => {
-      const dateA = new Date(`${a.scheduled_date}T${a.scheduled_time || '00:00'}`)
-      const dateB = new Date(`${b.scheduled_date}T${b.scheduled_time || '00:00'}`)
+      // +07:00: scheduled times are Asia/Bangkok wall-clock (not device-local). Sort is relative so
+      // the offset cancels, but keep the convention identical to the gates + server. TH = fixed UTC+7.
+      const dateA = new Date(`${a.scheduled_date}T${a.scheduled_time || '00:00'}+07:00`)
+      const dateB = new Date(`${b.scheduled_date}T${b.scheduled_time || '00:00'}+07:00`)
       return dateA.getTime() - dateB.getTime()
     })
   }, [filteredJobs])
@@ -447,7 +449,9 @@ function StaffSchedule() {
   const renderUpcomingList = () => {
     const now = new Date()
     const upcoming = sortedJobs.filter((job) => {
-      const jobDate = new Date(`${job.scheduled_date}T${job.scheduled_time || '00:00'}`)
+      // +07:00: parse the Bangkok wall-clock instant so "upcoming" (jobDate > now) is correct on a
+      // non-Bangkok device too (same convention as the gates + server). TH = fixed UTC+7.
+      const jobDate = new Date(`${job.scheduled_date}T${job.scheduled_time || '00:00'}+07:00`)
       return jobDate > now && !['completed', 'cancelled'].includes(job.status)
     })
 

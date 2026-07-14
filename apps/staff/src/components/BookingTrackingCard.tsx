@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { MapPin, Phone, Clock, User, Navigation, AlertTriangle, CheckCircle, Car } from 'lucide-react'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
-import { supabase } from '@bliss/supabase'
-import { queryWithTimeout } from '../utils/withTimeout'
+import { getStaffId as resolveStaffId } from '@bliss/supabase'
 import { useTravelGate } from '../hooks/useTravelGate'
 import { canStaffSeeCustomerPhone, maskCustomerNotesPhone } from '../utils/customerContact'
 
@@ -62,14 +61,10 @@ export default function BookingTrackingCard({ booking, onRefresh }: BookingTrack
   const getStaffId = async (): Promise<string | null> => {
     if (staffId) return staffId
     if (!user?.id) return null
-    const { data: staff, error } = await queryWithTimeout(
-      supabase.from('staff').select('id').eq('profile_id', user.id).single(),
-      10000,
-      'staff id lookup (tracking card)'
-    )
-    if (error || !staff) return null
-    setStaffId(staff.id)
-    return staff.id
+    const id = await resolveStaffId(user.id)
+    if (!id) return null
+    setStaffId(id)
+    return id
   }
 
   const handleStartJourney = async () => {

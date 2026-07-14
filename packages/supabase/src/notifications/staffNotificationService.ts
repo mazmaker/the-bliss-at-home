@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../auth/supabaseClient'
+import { ensureLiveSession, SessionNotLiveError } from '../auth/ensureLiveSession'
 
 export interface StaffNotification {
   id: string
@@ -33,15 +34,30 @@ export async function getStaffNotifications(
 }
 
 export async function markNotificationAsRead(id: string): Promise<void> {
-  const { error } = await supabase
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') {
+    throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+  }
+  const { data, error } = await supabase
     .from('notifications')
     .update({ is_read: true, read_at: new Date().toISOString() })
     .eq('id', id)
+    .select('id')
 
   if (error) throw error
+  // Detect an anon 0-row-no-op hiding behind a resolved-200 (RLS matched nothing under the anon
+  // key). The id always comes from the user's OWN fetched list, so 0 rows here means the write
+  // did NOT land → treat as a lapsed session, not a silent success that would drop the unread.
+  if (!data || data.length === 0) {
+    throw new SessionNotLiveError('ทำเครื่องหมายว่าอ่านแล้วไม่สำเร็จ กรุณาลองใหม่')
+  }
 }
 
 export async function markAllNotificationsAsRead(userId: string): Promise<void> {
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') {
+    throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+  }
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true, read_at: new Date().toISOString() })

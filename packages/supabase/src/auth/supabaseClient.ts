@@ -6,11 +6,13 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database.types'
+import { ensureLiveSession } from './ensureLiveSession'
 
 // Declare global window type for singleton
 declare global {
   interface Window {
     __supabaseClient?: SupabaseClient<Database>
+    __blissRealtimeWired?: boolean
   }
 }
 
@@ -95,6 +97,62 @@ function createSingletonClient(): SupabaseClient<Database> {
 
 // Export singleton instance
 export const supabase = createSingletonClient()
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v5 §2.4 + §2.2 — WebView realtime + resume session-resilience
+// Harden the realtime auth source so a lapsed token NEVER silently downgrades the socket to the anon
+// key (which keeps channels SUBSCRIBED-green but delivers 0 RLS rows / no "งานใหม่"). `accessToken` is
+// a reassignable field read fresh on every heartbeat/join in realtime-js `_performAuth`; the callback
+// returns the live/last-known-good token and never the anon key WHEN A SESSION EXISTS (an expired token
+// errors the channel loudly and reconnects — better than a silent anon SUBSCRIBED-empty). On resume we
+// call setAuth() with NO argument, which resets realtime-js out of the manual-token mode that
+// supabase-js `_handleTokenChanged` forces on every SIGNED_IN/TOKEN_REFRESHED (in manual mode the 25s
+// heartbeat SKIPS the callback). The resume nudge also re-primes REST via ensureLiveSession's
+// single-flight. Fired on several triggers because the LINE WebView does not reliably fire
+// visibilitychange.
+// ─────────────────────────────────────────────────────────────────────────────
+if (typeof window !== 'undefined') {
+  wireRealtimeResilience(supabase)
+}
+
+function wireRealtimeResilience(client: SupabaseClient<Database>) {
+  // Idempotent across HMR reloads (the window singleton survives; don't stack listeners/overrides).
+  if (window.__blissRealtimeWired) return
+  window.__blissRealtimeWired = true
+
+  try {
+    ;(client.realtime as any).accessToken = async (): Promise<string> => {
+      try {
+        const r = await ensureLiveSession()
+        // live / unknown → real or last-known-good token; anon (no session) → the anon key is legit.
+        return r.token ?? supabaseAnonKey
+      } catch {
+        return supabaseAnonKey
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [supabase] realtime.accessToken override failed', e)
+  }
+
+  const onResume = () => {
+    void (async () => {
+      try {
+        await ensureLiveSession()
+        // no-arg setAuth() → exit manual-token mode → heartbeat pulls the hardened callback again.
+        await (client.realtime as any).setAuth()
+      } catch {
+        /* best-effort; the at-call-site ensureLiveSession is the real guarantee for REST reads */
+      }
+    })()
+  }
+
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') onResume()
+  })
+  window.addEventListener('focus', onResume)
+  window.addEventListener('online', onResume)
+  window.addEventListener('pageshow', onResume)
+}
 
 // For server-side operations (service role)
 export const createServiceClient = (serviceRoleKey?: string) => {

@@ -1,6 +1,7 @@
 // build-marker 2026-07-01: force staff prod rebuild (jobs.status GPS persistence fix)
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { supabase } from '@bliss/supabase'
+import { ensureLiveSession, SessionNotLiveError } from '@bliss/supabase/auth'
 import { withTimeout, queryWithTimeout } from '../utils/withTimeout'
 
 interface GPSPosition {
@@ -106,6 +107,16 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     const currentJourneyId = journeyId || localStorage.getItem('current_journey_id')
     if (currentJourneyId) {
       try {
+        // WRITE guard (non-throwing): this fires on every GPS tick from watchPosition — under a
+        // lapsed session the rpc + the fallback direct update both 0-row-no-op silently. Detect the
+        // lapse and skip the write (the local currentPosition set just above is preserved). We do NOT
+        // throw here: this runs inside an async geolocation callback, so a throw becomes an unhandled
+        // rejection that never reaches a caller — surface a re-auth message via setError instead.
+        const live = await ensureLiveSession()
+        if (live.status !== 'live') {
+          setError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่เพื่ออัปเดตตำแหน่ง')
+          return
+        }
         const { error: updateError } = await supabase.rpc('update_journey_location', {
           p_journey_id: currentJourneyId,
           p_latitude: gpsPosition.latitude,
@@ -167,6 +178,13 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
     try {
       setError(null)
+
+      // WRITE guard: gate the whole journey-start path (start_staff_journey rpc AND the jobs→traveling
+      // write further down) under the staff's own session. On a lapse we throw SessionNotLiveError; the
+      // catch at the bottom of this function turns it into { success:false, message:<Thai re-auth prompt> }
+      // and setError — a gentle re-auth message, not a scary generic failure.
+      const live = await ensureLiveSession()
+      if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
 
       // Check for existing journey first - if messy state, don't try to create new journey
       const existingJourney = await checkExistingJourney(bookingId)
@@ -353,6 +371,12 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
     try {
       setError(null)
 
+      // WRITE guard: update_job_status (→ in_progress) 0-row-no-ops under a lapsed session, so billing
+      // would silently never start. Throw on lapse; the catch returns { success:false } with the Thai
+      // re-auth prompt (no scary error).
+      const live = await ensureLiveSession()
+      if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง')
+
       console.log('💰 Starting service billing:', { bookingId })
       // ใช้ update_job_status แทน start_service_billing ที่ไม่มี
       const { data: billingInfo, error: billingError } = await supabase.rpc('update_job_status', {
@@ -410,6 +434,13 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
       // Complete journey
       if (journeyId) {
+        // WRITE guard: the arrival writes (staff_journeys→arrived + jobs→arrived) 0-row-no-op under a
+        // lapsed session, so the staff would appear to arrive but the state is lost on reload. Throw
+        // BEFORE the inner try so it reaches the OUTER catch (the inner catch only logs and swallows).
+        // The GPS watch/interval are already cleared above; we intentionally do NOT reach the state-
+        // clearing block, keeping journeyId so a retry after re-auth still works.
+        const live = await ensureLiveSession()
+        if (live.status !== 'live') throw new SessionNotLiveError('เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่แล้วยืนยันการมาถึงอีกครั้ง')
         try {
           const finalLat = currentPosition?.latitude || 13.7563 // fallback Bangkok
           const finalLng = currentPosition?.longitude || 100.5018
@@ -491,7 +522,13 @@ export function useGPSTracking(options: UseGPSTrackingOptions = {}) {
 
     } catch (outerError) {
       console.error('CRITICAL ERROR in stopTracking:', outerError)
-      alert(`เกิดข้อผิดพลาดร้ายแรง: ${outerError.message}`)
+      // A lapsed-session throw is NOT a real failure — show a gentle re-auth prompt instead of the
+      // scary alert. Keep the raw alert as a fallback for genuine unexpected errors.
+      if (outerError instanceof Error && outerError.name === 'SessionNotLiveError') {
+        setError(outerError.message)
+      } else {
+        alert(`เกิดข้อผิดพลาดร้ายแรง: ${outerError instanceof Error ? outerError.message : String(outerError)}`)
+      }
       throw outerError
     } finally {
       console.log('🔓 stopTracking: Releasing lock')

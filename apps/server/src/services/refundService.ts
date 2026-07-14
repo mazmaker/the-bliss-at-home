@@ -143,8 +143,11 @@ async function calculateRefundLegacy(bookingId: string): Promise<RefundCalculati
     }
   }
 
-  // Calculate hours until booking
-  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+  // Calculate hours until booking.
+  // +07:00: booking_date+booking_time is Bangkok wall-clock; the SERVER runs on Vercel in UTC, so a
+  // device-local parse over-estimates hoursUntilBooking by 7h → selects a too-generous refund band
+  // (24h/12h → 100/50/0%). Pin to +07:00 (TH = fixed UTC+7). Matches the server's notificationService.
+  const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}+07:00`)
   const now = new Date()
   const hoursUntilBooking = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
 

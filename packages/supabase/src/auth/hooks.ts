@@ -173,7 +173,11 @@ function useAuthStandalone(expectedRole?: UserRole, options?: { skipInitialCheck
         lastProfileFetchTime = now
 
         try {
-          const profile = await authService.getCurrentProfile()
+          // 🔴 v5 §2.3 (G1): consume the `session` the SDK delivered — do NOT call getSession() on the
+          // onAuthStateChange path (circular self-await deadlock while the lock is held). This
+          // useAuthStandalone listener registers ~11× across the staff app, so a lock-acquiring call
+          // here fans out to ~11 deadlocked awaits → autoRefresh freeze → the anon-downgrade false-reset.
+          const profile = session?.access_token ? await authService.getCurrentProfile(session) : null
           if (mounted) {
             setState({
               user: profile,

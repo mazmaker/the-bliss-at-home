@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast'
 import { useAuth } from '@bliss/supabase/auth'
 import { liffService } from '@bliss/supabase/auth'
 import { useStaffNotifications } from '@bliss/supabase/notifications'
-import { getAvailability, updateAvailability } from '@bliss/supabase'
+import { getAvailability, updateAvailability, SessionNotLiveError } from '@bliss/supabase'
 import { NotificationPanel, ConfirmDialog, type Notification } from '../components'
 
 const navigation = [
@@ -33,7 +33,9 @@ function StaffLayout() {
   const { logout, user } = useAuth()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [isAvailable, setIsAvailable] = useState(true)
+  // 🔴 v5 §3C — tri-state: null = UNKNOWN (session not live / read failed). Start UNKNOWN (not true), so
+  // a lapsed WebView session never shows a confident-but-wrong pill; getAvailability resolves it.
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [showAvailabilityConfirm, setShowAvailabilityConfirm] = useState(false)
   const [availabilitySaving, setAvailabilitySaving] = useState(false)
 
@@ -94,7 +96,13 @@ function StaffLayout() {
       )
     } catch (error) {
       console.error('[Availability] toggle failed:', error)
-      toast.error('ไม่สามารถเปลี่ยนสถานะได้ กรุณาลองใหม่')
+      // 🔴 v5 §3E — a lapsed session throws SessionNotLiveError → tell the staff to re-open/re-login,
+      // not the misleading generic "เปลี่ยนสถานะไม่ได้" that made them re-tap (the ×3 toast).
+      if (error instanceof SessionNotLiveError) {
+        toast.error(error.message)
+      } else {
+        toast.error('ไม่สามารถเปลี่ยนสถานะได้ กรุณาลองใหม่')
+      }
     } finally {
       setAvailabilitySaving(false)
     }
@@ -195,19 +203,24 @@ function StaffLayout() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowAvailabilityConfirm(true)}
+              disabled={isAvailable === null}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
-                isAvailable
+                isAvailable === true
                   ? 'bg-green-500/90 text-white hover:bg-green-500'
-                  : 'bg-white/15 text-bliss-100 hover:bg-white/25'
+                  : isAvailable === false
+                    ? 'bg-white/15 text-bliss-100 hover:bg-white/25'
+                    : 'bg-white/10 text-bliss-200 cursor-wait' // null = UNKNOWN → neutral, not a false OFF
               }`}
               title={
-                isAvailable
+                isAvailable === true
                   ? 'กำลังพร้อมรับงาน — แตะเพื่อหยุดรับงาน'
-                  : 'กำลังหยุดรับงาน — แตะเพื่อกลับมาพร้อมรับงาน'
+                  : isAvailable === false
+                    ? 'กำลังหยุดรับงาน — แตะเพื่อกลับมาพร้อมรับงาน'
+                    : 'กำลังตรวจสอบสถานะ…'
               }
             >
-              <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-white' : 'bg-bliss-300'}`} />
-              {isAvailable ? 'พร้อมรับงาน' : 'หยุดรับงาน'}
+              <span className={`w-2 h-2 rounded-full ${isAvailable === true ? 'bg-white' : isAvailable === false ? 'bg-bliss-300' : 'bg-yellow-300 animate-pulse'}`} />
+              {isAvailable === true ? 'พร้อมรับงาน' : isAvailable === false ? 'หยุดรับงาน' : '…'}
             </button>
             <button
               onClick={() => setShowNotifications(true)}

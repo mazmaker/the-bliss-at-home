@@ -1598,7 +1598,11 @@ router.post('/:bookingId/extend', paymentAuthGuard, async (req: Request, res: Re
     // (nondeterministic — the query has no ORDER BY). Sort base rows by recipient_index and honor the
     // client's explicit choice (recipient_indices: [0]=คนที่1 / [1]=คนที่2 / [0,1]=ทั้งคู่).
     const now = new Date()
-    const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}`)
+    // +07:00: booking_date+booking_time is Bangkok wall-clock; the SERVER runs on Vercel in UTC, so a
+    // device-local parse pushes the 15-min-before-end extend cutoff (deadlineTime, below) ~7h late →
+    // customers could buy a paid time-extension well past the real cutoff. This is the authoritative
+    // server-side gate. Pin to +07:00 (TH = fixed UTC+7). Matches the server's notificationService.
+    const bookingDateTime = new Date(`${booking.booking_date}T${booking.booking_time}+07:00`)
     const baseRows: any[] = (booking.booking_services || [])
       .filter((s: any) => !s.is_extension)
       .sort((a: any, b: any) => (a.recipient_index ?? 0) - (b.recipient_index ?? 0))

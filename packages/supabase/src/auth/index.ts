@@ -4,6 +4,7 @@
  */
 
 export * from './types'
+export * from './ensureLiveSession'
 export * from './supabaseClient'
 export * from './authService'
 export * from './AuthProvider'

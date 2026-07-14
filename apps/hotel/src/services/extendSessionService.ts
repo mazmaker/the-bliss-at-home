@@ -331,8 +331,11 @@ async function validateExtensionRequest(bookingId: string): Promise<ExtensionVal
   }
 
   // Time constraints (simplified for now)
+  // +07:00: booking_date+booking_time is Bangkok wall-clock (device-local parse vs now = wrong off
+  // Bangkok). NOTE this validateExtensionRequest is currently dead code — the live path re-validates
+  // server-side — fixed for correctness/future revival. TH = fixed UTC+7.
   const now = new Date();
-  const scheduledTime = new Date(`${booking.booking_date}T${booking.booking_time}`);
+  const scheduledTime = new Date(`${booking.booking_date}T${booking.booking_time}+07:00`);
   const minutesUntilEnd = Math.max(0, Math.floor((scheduledTime.getTime() - now.getTime()) / (1000 * 60)));
   const isWithinDeadline = minutesUntilEnd >= EXTENSION_BUSINESS_RULES.EXTENSION_DEADLINE;
 

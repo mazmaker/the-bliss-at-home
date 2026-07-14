@@ -205,8 +205,10 @@ function StaffDashboard() {
         </div>
       </div>
 
-      {/* Eligibility Warning Banner */}
-      {!isEligibilityLoading && eligibility && !eligibility.canWork && (
+      {/* Eligibility Warning Banner — 🔴 v5 §3B: render ONLY on a CONFIRMED-known negative
+          (canWork === false). canWork === null = UNKNOWN (transient/anon) → keep quiet, never flash
+          the false KYC checklist on a backgrounded-WebView resume. */}
+      {!isEligibilityLoading && eligibility && eligibility.canWork === false && (
         <div className="bg-bliss-50 border border-bliss-200 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-bliss-600 flex-shrink-0 mt-0.5" />
@@ -366,7 +368,7 @@ function StaffDashboard() {
               onStartJob={handleStartJob}
               compact={false}
               isProcessing={isProcessing === currentJob.id}
-              canStartWork={!!eligibility?.canWork && startGate.canStart}
+              canStartWork={eligibility?.canWork !== false && startGate.canStart}
             />
             {currentJob.status === 'arrived' && !startGate.canStart && (
               <p className="mt-2 text-xs text-center text-bliss-500">
@@ -466,9 +468,9 @@ function StaffDashboard() {
                     </Link>
                     <button
                       onClick={() => handleAcceptJob(job.id)}
-                      disabled={isProcessing === job.id || !eligibility?.canWork || !!getScheduleConflict(job)}
+                      disabled={isProcessing === job.id || eligibility?.canWork === false || !!getScheduleConflict(job)}
                       className="px-4 py-2 bg-gradient-to-r from-bliss-700 to-bliss-800 text-white rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-1"
-                      title={getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : !eligibility?.canWork ? 'คุณยังไม่สามารถรับงานได้ในขณะนี้' : undefined}
+                      title={getScheduleConflict(job) ? 'เวลาทับซ้อนกับงานที่คุณรับไว้แล้ว' : eligibility?.canWork === false ? 'คุณยังไม่สามารถรับงานได้ในขณะนี้' : undefined}
                     >
                       {isProcessing === job.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -551,7 +553,7 @@ function StaffDashboard() {
                   onStartJob={handleStartJob}
                   compact={false}
                   isProcessing={isProcessing === job.id}
-                  canStartWork={!!eligibility?.canWork}
+                  canStartWork={eligibility?.canWork !== false}
                 />
 
                 <div className="flex items-center justify-between">

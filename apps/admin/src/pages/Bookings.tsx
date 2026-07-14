@@ -68,9 +68,10 @@ function isBookingAtRisk(booking: { booking_date?: string | null; booking_time?:
   if (booking.status === 'completed' || booking.status === 'cancelled') return false
   const prog = overallJobStatus(booking.jobs)
   if (prog && DEPARTED_OR_LATER.has(prog)) return false
-  // Parse as device-local time (admin runs in Asia/Bangkok) — no `Z`, so not shifted to UTC.
+  // +07:00: booking_date+booking_time is Bangkok wall-clock; parsing device-local mis-computes
+  // minsUntil (below, vs Date.now()) on any admin device not set to Asia/Bangkok. TH = fixed UTC+7.
   const t = (booking.booking_time || '00:00:00').slice(0, 8)
-  const start = new Date(`${booking.booking_date}T${t}`).getTime()
+  const start = new Date(`${booking.booking_date}T${t}+07:00`).getTime()
   if (Number.isNaN(start)) return false
   const minsUntil = (start - Date.now()) / 60_000
   return minsUntil <= AT_RISK_WINDOW_MIN && minsUntil >= -120 // near appointment .. up to 2h overdue
