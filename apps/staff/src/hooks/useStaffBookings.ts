@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@bliss/supabase'
+import { supabase, getStaffId } from '@bliss/supabase'
 import { useAuth } from '@bliss/supabase/auth'
 import { queryWithTimeout } from '../utils/withTimeout'
 
@@ -171,13 +171,9 @@ export function useStaffBookings() {
     setStaffId(null)
     if (!user?.id) return
     let cancelled = false
-    queryWithTimeout(
-      supabase.from('staff').select('id').eq('profile_id', user.id).single(),
-      10000,
-      'staff id lookup'
-    )
-      .then(({ data }) => {
-        if (!cancelled && data) setStaffId(data.id)
+    getStaffId(user.id)
+      .then((id) => {
+        if (!cancelled && id) setStaffId(id)
       })
       .catch((err) => console.error('staff id lookup failed:', err))
     return () => {

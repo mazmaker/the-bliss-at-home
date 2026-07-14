@@ -164,6 +164,12 @@ export async function uploadAvatar(staffId: string, file: File): Promise<string>
  * Get staff documents
  */
 export async function getDocuments(profileId: string): Promise<StaffDocument[]> {
+  // 🔴 v5 §3 — gated read. Under a lapsed WebView session the anon key returns a resolved empty set,
+  // which would render the false "no documents" state (and feed the KYC checklist). Return type has no
+  // null slot, so THROW SessionNotLiveError — the react-query hook then keeps its previous data.
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   // Convert profile_id to staff_id first
   const { data: staffData, error: staffError } = await supabase
     .from('staff')
@@ -759,6 +765,12 @@ export async function canStaffStartWork(profileId: string): Promise<StaffEligibi
 // ============================================
 
 export async function getEmergencyContact(profileId: string) {
+  // 🔴 v5 §3 — gated read. An anon-downgraded session collapses this to null (looks like "no emergency
+  // contact on file") and would wipe an already-filled form. THROW so the caller keeps last-known-good;
+  // the null return stays reserved for a genuinely-live "no row".
+  const live = await ensureLiveSession()
+  if (live.status !== 'live') throw new SessionNotLiveError()
+
   const { data, error } = await supabase
     .from('staff')
     .select('emergency_contact_name, emergency_contact_phone, emergency_contact_relationship')

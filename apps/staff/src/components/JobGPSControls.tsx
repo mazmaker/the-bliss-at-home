@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Navigation, MapPin, AlertTriangle, CheckCircle, Loader2, Play, Phone, Car, Share2, Copy, Music, VolumeX } from 'lucide-react'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 import { useAuth } from '@bliss/supabase/auth'
-import { supabase } from '@bliss/supabase'
+import { supabase, getStaffId as resolveStaffId } from '@bliss/supabase'
 import { playBackgroundMusic, stopBackgroundMusic, isBackgroundMusicPlaying, setMusicManuallyMuted } from '../utils/backgroundMusic'
-import { queryWithTimeout } from '../utils/withTimeout'
 import { useTravelGate } from '../hooks/useTravelGate'
 import { canStaffSeeCustomerPhone } from '../utils/customerContact'
 
@@ -190,23 +189,12 @@ export default function JobGPSControls({
   const getStaffId = async () => {
     if (!staffId && user?.id) {
       try {
-        // [FIX] time-boxed: a stall here used to freeze the GPS button's processing state
-        const { data: staff, error: staffError } = await queryWithTimeout(
-          supabase
-            .from('staff')
-            .select('id')
-            .eq('profile_id', user.id)
-            .single(),
-          10000,
-          'staff id lookup (GPS)'
-        )
-
-        if (staffError || !staff) {
+        const id = await resolveStaffId(user.id)
+        if (!id) {
           throw new Error('ไม่พบข้อมูลพนักงาน')
         }
-
-        setStaffId(staff.id)
-        return staff.id
+        setStaffId(id)
+        return id
       } catch (error) {
         console.error('Error getting staff ID:', error)
         throw error

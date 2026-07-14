@@ -47,7 +47,11 @@ export function useEarningsSummary() {
       // jobs.staff_id references profiles.id, so use profileId directly
       const data = await getEarningsSummary(profileId)
       setSummary(data)
+      setError(null) // clear any stale error after a successful read (stale-error latch)
     } catch (err) {
+      // A lapsed-session throw (SessionNotLiveError) is NOT a real failure: `summary` is left
+      // untouched (last-known-good) because we never reached setSummary. Surface via error so
+      // the caller can classify (name === 'SessionNotLiveError') and prompt re-auth.
       setError(err as Error)
     } finally {
       setIsLoading(false)
@@ -85,6 +89,7 @@ export function useDailyEarnings(startDate: string, endDate: string) {
       // jobs.staff_id references profiles.id, so use profileId directly
       const data = await getDailyEarnings(profileId, startDate, endDate)
       setEarnings(data)
+      setError(null) // clear any stale error after a successful read (stale-error latch)
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -123,6 +128,7 @@ export function useServiceEarnings(startDate: string, endDate: string) {
       // jobs.staff_id references profiles.id, so use profileId directly
       const data = await getServiceEarnings(profileId, startDate, endDate)
       setServices(data)
+      setError(null) // clear any stale error after a successful read (stale-error latch)
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -173,6 +179,7 @@ export function usePayouts(realtime = false) {
       // payouts.staff_id stores profile_id, not staff.id
       const data = await getPayoutHistory(profileId)
       setPayouts(data)
+      setError(null) // clear any stale error after a successful read (stale-error latch)
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -249,6 +256,7 @@ export function useBankAccounts() {
       const data = await getBankAccounts(staffData.id)
       console.log('[useBankAccounts] Bank accounts:', data)
       setAccounts(data)
+      setError(null) // clear any stale error after a successful read (stale-error latch)
     } catch (err) {
       console.error('[useBankAccounts] Error:', err)
       setError(err as Error)
