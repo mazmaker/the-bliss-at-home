@@ -7,6 +7,13 @@ import { AuthProvider } from '@bliss/supabase/auth'
 import { Toaster } from 'react-hot-toast'
 import App from './App'
 import './index.css'
+import { startVersionGate } from './utils/versionGate'
+
+// Auto cache-bust: detect a newer deployed bundle (on cold-load + tab re-focus) and reload to it, so
+// admins stop running a stale cached build after a deploy — the class behind the recurring Quick
+// Booking "picked 120 min shows as 60 on confirm" (a fixed lazy-chunk that never reached the browser).
+// Inert in dev. See utils/versionGate.ts.
+startVersionGate()
 
 // Create TanStack Query client - Enhanced for payout features
 const queryClient = new QueryClient({
