@@ -7,7 +7,6 @@ import { SOSButton, ServiceTimer, ExtensionAcceptanceCard, JobStatusBadge } from
 import JobGPSControls from '../components/JobGPSControls'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
-import { useStartGate } from '../hooks/useStartGate'
 import { canStaffSeeCustomerPhone } from '../utils/customerContact'
 import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifications'
@@ -55,9 +54,9 @@ function StaffDashboard() {
     currentJob?.total_duration_minutes || currentJob?.duration_minutes
   )
 
-  // Gate the "เริ่มงาน" button: only startable once the scheduled service time has arrived
-  // (no early start). ANDed with the KYC eligibility gate below; fail-open if the schedule is odd.
-  const startGate = useStartGate(currentJob)
+  // The "เริ่มงาน" start-time gate now lives INSIDE JobGPSControls (moved 2026-07-15, like useTravelGate),
+  // so it gates every instance — currentJob, each myJobs row, and StaffJobDetail — not just currentJob.
+  // The parent only passes the KYC eligibility (canStartWork); JobGPSControls ANDs in the time window.
 
   // Resume the spa music after a refresh/navigation onto an in-progress job (audio-only, never
   // rewrites started_at). See #6.
@@ -368,13 +367,8 @@ function StaffDashboard() {
               onStartJob={handleStartJob}
               compact={false}
               isProcessing={isProcessing === currentJob.id}
-              canStartWork={eligibility?.canWork !== false && startGate.canStart}
+              canStartWork={eligibility?.canWork !== false}
             />
-            {currentJob.status === 'arrived' && !startGate.canStart && (
-              <p className="mt-2 text-xs text-center text-bliss-500">
-                เริ่มงานได้ก่อนเวลานัด {currentJob.scheduled_time?.slice(0, 5)} น. 15 นาที (อีก {startGate.minsUntilStart} นาที)
-              </p>
-            )}
           </div>
 
           <div className="flex flex-col gap-2 p-4 pt-0">
