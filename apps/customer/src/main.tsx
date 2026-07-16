@@ -7,6 +7,11 @@ import { AuthProvider, initSessionManager } from '@bliss/supabase/auth'
 import { I18nProvider } from '@bliss/i18n'
 import App from './App'
 import './index.css'
+import { startVersionGate } from './utils/versionGate'
+
+// Auto cache-bust: detect a newer deployed bundle (on cold-load + resume) and reload to it, so users
+// stop running a stale cached build after a deploy. Inert in dev. See utils/versionGate.ts.
+startVersionGate()
 
 // Initialize session manager for "Remember Me" functionality
 initSessionManager()
