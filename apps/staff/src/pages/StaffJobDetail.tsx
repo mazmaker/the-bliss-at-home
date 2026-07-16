@@ -13,7 +13,6 @@ import JobGPSControls from '../components/JobGPSControls'
 import JobStatusBadge from '../components/JobStatusBadge'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
-import { useStartGate } from '../hooks/useStartGate'
 import { canStaffSeeCustomerPhone, maskCustomerNotesPhone } from '../utils/customerContact'
 import { useResumeBackgroundMusic } from '../hooks/useResumeBackgroundMusic'
 import { useStaffEligibility } from '@bliss/supabase'
@@ -189,9 +188,8 @@ function StaffJobDetail() {
   // totalDuration already includes extension services; started_at gates before service start.
   const completeGate = useCompleteGate(job, totalDuration)
 
-  // Gate the "เริ่มงาน" button: only startable once the scheduled service time has arrived
-  // (no early start). ANDed with the KYC eligibility gate at the JobGPSControls call site.
-  const startGate = useStartGate(job)
+  // The "เริ่มงาน" start-time gate now lives INSIDE JobGPSControls (moved 2026-07-15), so it applies to
+  // every render site; the parent only passes KYC eligibility (canStartWork) and JobGPSControls ANDs the time.
 
   // Resume the spa music after a refresh/navigation onto an in-progress job (audio-only). See #6.
   useResumeBackgroundMusic(job)
@@ -658,13 +656,8 @@ function StaffJobDetail() {
           onRefresh={refetch}
           onStartJob={handleStart}
           isProcessing={isProcessing}
-          canStartWork={eligibility?.canWork !== false && startGate.canStart}
+          canStartWork={eligibility?.canWork !== false}
         />
-      )}
-      {isMyJob && !isFinished && job.status === 'arrived' && !startGate.canStart && (
-        <p className="text-xs text-center text-bliss-500">
-          เริ่มงานได้ก่อนเวลานัด {job.scheduled_time?.slice(0, 5)} น. 15 นาที (อีก {startGate.minsUntilStart} นาที)
-        </p>
       )}
 
       {/* Action Buttons */}

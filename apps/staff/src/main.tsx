@@ -54,6 +54,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@bliss/supabase/auth'
 import App from './App'
 import './index.css'
+import { startVersionGate } from './utils/versionGate'
+
+// Auto cache-bust for the LINE-LIFF WebView: detect a newer deployed bundle (on cold-load + on
+// resume) and reload to it, so staff stop running a stale cached build after a deploy (the
+// "restart LINE and it's fixed" class). Inert in dev. See utils/versionGate.ts.
+startVersionGate()
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -5,6 +5,7 @@ import { useAuth } from '@bliss/supabase/auth'
 import { supabase, getStaffId as resolveStaffId } from '@bliss/supabase'
 import { playBackgroundMusic, stopBackgroundMusic, isBackgroundMusicPlaying, setMusicManuallyMuted } from '../utils/backgroundMusic'
 import { useTravelGate } from '../hooks/useTravelGate'
+import { useStartGate } from '../hooks/useStartGate'
 import { canStaffSeeCustomerPhone } from '../utils/customerContact'
 
 interface JobGPSControlsProps {
@@ -91,6 +92,11 @@ export default function JobGPSControls({
   // P9: gate "เริ่มเดินทาง" to within 90 min before the appointment (client-clock, ticks live).
   // Called unconditionally here (before the early returns below) to satisfy rules-of-hooks.
   const travelGate = useTravelGate(job)
+  // DECOUPLE (2026-07-15): gate "เริ่มงาน" by the scheduled START time here, INSIDE JobGPSControls (like
+  // useTravelGate). Placing the hook here — not in the parent — means every instance (currentJob, each
+  // myJobs row, StaffJobDetail) is gated, so the button no longer depends on the fragile GPS travel/arrival
+  // chain. Called unconditionally (before the early returns) to satisfy rules-of-hooks.
+  const startGate = useStartGate(job)
 
   // Expose debug functions globally for debugging
   useEffect(() => {
@@ -374,11 +380,19 @@ export default function JobGPSControls({
   const canStartGPS = job.status === 'confirmed' || job.status === 'assigned'
   const jobHasArrived = job.status === 'arrived'
   const jobInProgress = job.status === 'in_progress'
-  // Once arrival is reached — local `hasArrived` OR persisted jobs.status==='arrived' — stop showing
-  // the GPS/"มาถึงแล้ว" panel and fall through to the "เริ่มงาน" button, even if the local job.status
-  // prop is a stale 'traveling' (before realtime/refetch) or the jobs.status write lagged. Prevents
-  // the "arrived → no เริ่มงาน → กลับไปเริ่มเดินทางใหม่" loop.
-  const shouldShowTracking = (job.status === 'traveling' || isTrackingThis) && !hasArrived && !jobHasArrived
+  // DECOUPLE (2026-07-15): the start window being open is an INDEPENDENT trigger to show "เริ่มงาน" — the
+  // staff no longer has to reach GPS 'arrived' first. `startGate` fail-opens on a missing/odd schedule.
+  const startTimeReached = startGate.canStart
+  // Show "เริ่มงาน" once GPS arrival is reached OR the scheduled start window is open (and not in progress).
+  const showStartButton = (hasArrived || jobHasArrived || startTimeReached) && !jobInProgress
+  // Enabled only when eligible (KYC, via canStartWork) AND the start window is open; otherwise it renders
+  // disabled with the early-start hint (the arrived-early case) — same behaviour as before the decouple.
+  const canStartNow = canStartWork && startTimeReached
+  // Once arrival is reached — local `hasArrived` OR persisted jobs.status==='arrived' — OR the start window
+  // is open, stop showing the GPS/"มาถึงแล้ว" panel and fall through to "เริ่มงาน", even if the local
+  // job.status prop is a stale 'traveling' (before realtime/refetch) or the jobs.status write lagged.
+  // Prevents the "arrived → no เริ่มงาน → กลับไปเริ่มเดินทางใหม่" loop AND the "stuck at traveling" block.
+  const shouldShowTracking = (job.status === 'traveling' || isTrackingThis) && !hasArrived && !jobHasArrived && !startTimeReached
 
   // ✅ DEBUG: เช็คสถานะปุ่มที่แสดง
   console.log('🎯 GPS Button Logic Debug:', {
@@ -391,18 +405,18 @@ export default function JobGPSControls({
     '🔍 Hook State': { isTracking, journeyId, isTrackingThis },
     'will show':
       jobInProgress ? 'งานกำลังดำเนินการ' :
-      (hasArrived || jobHasArrived) ? 'เริ่มงาน' :
+      showStartButton ? 'เริ่มงาน' :
       canStartGPS ? 'เริ่มเดินทาง' :
       shouldShowTracking ? 'มาถึงแล้ว' : 'none'
   })
 
   if (compact && !shouldShowTracking) {
     // Compact mode
-    if ((hasArrived || jobHasArrived) && !jobInProgress) {  // แสดงปุ่มเริ่มงานเมื่อมาถึงแล้ว แต่ยังไม่เริ่มงาน
+    if (showStartButton) {  // แสดงปุ่มเริ่มงานเมื่อถึงเวลาเริ่ม หรือ มาถึงแล้ว (ยังไม่เริ่มงาน)
       return (
         <button
           onClick={handleStartJobClick}
-          disabled={externalProcessing || !canStartWork}
+          disabled={externalProcessing || !canStartNow}
           className="flex items-center gap-1 text-bliss-700 hover:text-bliss-800 text-sm disabled:opacity-50"
         >
           {externalProcessing ? (
@@ -536,21 +550,30 @@ export default function JobGPSControls({
             )}
           </div>
         </div>
-      ) : (hasArrived || jobHasArrived) && !jobInProgress ? (
-        // Start Work Button (หลังจาก GPS เสร็จแล้ว แต่ยังไม่เริ่มงาน)
-        <button
-          onClick={handleStartJobClick}
-          disabled={externalProcessing || !canStartWork}
-          className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-          title={!canStartWork ? 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้' : undefined}
-        >
-          {externalProcessing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Play className="w-4 h-4" />
+      ) : showStartButton ? (
+        // Start Work Button — shown once the scheduled start window is open OR GPS arrival is reached
+        // (GPS is now best-effort; a stuck/lapsed GPS chain no longer hides this button). The time gate
+        // still applies via canStartNow — an early-arrived staff sees it disabled with the hint below.
+        <div>
+          <button
+            onClick={handleStartJobClick}
+            disabled={externalProcessing || !canStartNow}
+            className="w-full bg-gradient-to-r from-bliss-600 to-bliss-700 hover:from-bliss-700 hover:to-bliss-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+            title={!canStartNow ? (!startTimeReached ? 'ยังไม่ถึงเวลาเริ่มงาน' : 'คุณยังไม่สามารถเริ่มงานได้ในขณะนี้') : undefined}
+          >
+            {externalProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            เริ่มงาน
+          </button>
+          {!startTimeReached && (
+            <p className="mt-2 text-xs text-center text-bliss-500">
+              เริ่มงานได้ก่อนเวลานัด {job.scheduled_time?.slice(0, 5)} น. 15 นาที (อีก {startGate.minsUntilStart} นาที)
+            </p>
           )}
-          เริ่มงาน
-        </button>
+        </div>
       ) : canStartGPS ? (
         // Start GPS Button — P9-gated to within 90 min before the appointment
         <div>

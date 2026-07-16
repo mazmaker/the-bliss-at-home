@@ -6,6 +6,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@bliss/supabase/auth'
 import App from './App'
 import './index.css'
+import { startVersionGate } from './utils/versionGate'
+
+// Auto cache-bust: detect a newer deployed bundle (on cold-load + resume) and reload to it, so users
+// stop running a stale cached build after a deploy. Inert in dev. See utils/versionGate.ts.
+startVersionGate()
 
 const queryClient = new QueryClient({
   defaultOptions: {
