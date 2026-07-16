@@ -13,9 +13,12 @@ import { canStaffStartWork } from '../staff/staffService'
 // Schedule-overlap helpers (B7): a staff must NOT hold two jobs whose service
 // time windows overlap. A job's window = [scheduled_date+scheduled_time,
 // +COALESCE(total_duration_minutes, duration_minutes) minutes). total_duration_minutes
-// is used so a customer/hotel "extend" (which bumps the existing job's total via the
-// trigger_job_totals_on_extension trigger — NOT a new accept) is reflected in the
-// staff's busy window. Extend never re-accepts, so it never hits this guard.
+// is used so a customer/hotel "extend" (which bumps the existing job's total — NOT a new
+// accept) is reflected in the staff's busy window. Extend never re-accepts, so it never
+// hits this guard. The total is written per-recipient by the server's extend apply
+// (apps/server/src/services/extensionApplyService.ts); the old trigger_job_totals_on_extension
+// DB trigger was dropped in 20260716220000 for being recipient-blind. It stays NULL until an
+// extension is applied, hence the COALESCE.
 // Pure functions are exported so the staff UI can pre-disable overlapping accept buttons.
 // ============================================================================
 export interface JobWindowInput {
