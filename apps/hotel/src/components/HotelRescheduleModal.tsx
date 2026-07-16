@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Modal, isRescheduleDateSelectable, isRescheduleTimeAvailable, isSameBookingSlot } from '@bliss/ui'
+import { Modal, isRescheduleDateSelectable, isRescheduleTimeAvailable, isSameBookingSlot, isTimeWithinBookingHours } from '@bliss/ui'
 import { supabase } from '@bliss/supabase/auth'
 
 // Same-day reschedule lead time — kept in lock-step with the customer flow (3h ahead).
@@ -39,13 +39,15 @@ interface HotelRescheduleModalProps {
   currentTime: string
 }
 
-// Generate time slots from 9:00 to 20:00
+// Half-hour slots across the bookable window (09:00-21:00 start), filtered by the shared rule
+// so reschedule can never drift from the new-booking window again. 21:00 is the last start,
+// so the trailing 21:30 is dropped by isTimeWithinBookingHours.
 const generateTimeSlots = () => {
-  const slots = []
-  for (let hour = 9; hour <= 20; hour++) {
-    slots.push(`${hour.toString().padStart(2, '0')}:00`)
-    if (hour < 20) {
-      slots.push(`${hour.toString().padStart(2, '0')}:30`)
+  const slots: string[] = []
+  for (let hour = 0; hour <= 23; hour++) {
+    for (const minute of ['00', '30']) {
+      const label = `${hour.toString().padStart(2, '0')}:${minute}`
+      if (isTimeWithinBookingHours(label)) slots.push(label)
     }
   }
   return slots

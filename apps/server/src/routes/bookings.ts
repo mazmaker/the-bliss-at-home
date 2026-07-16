@@ -16,6 +16,7 @@ import { applyExtensionToBooking, type ExtensionTarget } from '../services/exten
 import { lineService } from '../services/lineService.js'
 import { sendExtensionNotifications, getServingStaffProfileIds, notifyHotelInApp } from '../services/notificationService.js'
 import { checkCancellationEligibility } from '../services/cancellationPolicyService.js'
+import { isTimeWithinBookingHours, bookingHoursErrorMessage } from '../utils/bookingHours.js'
 import type {
   BookingCancellationRequest,
   BookingCancellationResponse,
@@ -345,6 +346,19 @@ router.post('/:id/reschedule', paymentAuthGuard, async (req: Request, res: Respo
         success: false,
         error: 'ไม่สามารถเลื่อนไปยังวันเวลาที่ผ่านมาแล้วได้',
         code: 'RESCHEDULE_PAST_TIME',
+      })
+    }
+
+    // Bookable-hours window: the new appointment must START 09:00-21:00. This route is shared by
+    // the customer and hotel modals and has no admin caller on this branch, so it needs no role
+    // exemption. Compared as a wall-clock string — no Date parse, so no UTC hazard.
+    // ⚠️ feature/p6-reschedule-admin-only adds an ADMIN reschedule caller; when that branch
+    // merges, this check must grow an admin exemption or it will wrongly cap admin at 21:00.
+    if (!isTimeWithinBookingHours(String(body.new_time))) {
+      return res.status(400).json({
+        success: false,
+        error: bookingHoursErrorMessage(String(body.new_time)),
+        code: 'OUTSIDE_BOOKING_HOURS',
       })
     }
 

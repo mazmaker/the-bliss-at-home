@@ -184,8 +184,8 @@ function StaffJobDetail() {
   const originalPrice = job?.staff_earnings || 0
   const totalDuration = bookingServices?.reduce((sum, s) => sum + (s?.duration || 0), 0) || job?.duration_minutes || 0
 
-  // Gate the "เสร็จสิ้นงาน" button: only within the last 10 min of service (overtime allowed).
-  // totalDuration already includes extension services; started_at gates before service start.
+  // Gate the "เสร็จสิ้นงาน" button: only once the full service duration has elapsed (overtime
+  // allowed). totalDuration already includes extensions; started_at gates before service start.
   const completeGate = useCompleteGate(job, totalDuration)
 
   // The "เริ่มงาน" start-time gate now lives INSIDE JobGPSControls (moved 2026-07-15), so it applies to
@@ -704,7 +704,7 @@ function StaffJobDetail() {
               </button>
               {!completeGate.canComplete && (
                 <p className="text-xs text-center text-bliss-500 mt-2">
-                  กดเสร็จสิ้นได้เมื่อใกล้ครบเวลาบริการ (อีก {completeGate.minsUntilEligible} นาที)
+                  กดเสร็จสิ้นได้เมื่อครบเวลาบริการ (อีก {completeGate.minsUntilEligible} นาที)
                 </p>
               )}
             </div>

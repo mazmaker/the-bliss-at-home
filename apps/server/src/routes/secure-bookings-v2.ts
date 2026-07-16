@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { staffAssignmentService } from '../services/staffAssignmentService'
 import { sendBookingConfirmedNotifications } from '../services/notificationService'
 import { validateBookingDate } from './bookings'
+import { isTimeWithinBookingHours, bookingHoursErrorMessage } from '../utils/bookingHours'
 
 // Extend Request interface to include user property
 interface AuthenticatedRequest extends Request {
@@ -141,10 +142,23 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
     }
 
     // Validate booking date and time (14 days advance limit + 3 hours minimum advance)
+    // NOTE: this validator is currently an EMERGENCY BYPASS stub (see bookings.ts) and always
+    // passes. The booking-hours check below is deliberately SEPARATE so it holds regardless.
     const dateValidation = validateBookingDate(bookingData.booking_date, bookingData.booking_time)
     if (!dateValidation.isValid) {
       console.log('❌ [DATE VALIDATION] Booking date/time invalid:', dateValidation.error)
       return res.status(400).json({ error: dateValidation.error })
+    }
+
+    // Bookable-hours window: a hotel appointment may only START 09:00-21:00 (Asia/Bangkok
+    // wall-clock). Admin Quick Booking is exempt but never reaches this route (it inserts
+    // client-side), so no role check is needed here — every caller of this route is a hotel.
+    if (!isTimeWithinBookingHours(bookingData.booking_time)) {
+      console.log('❌ [HOURS VALIDATION] Outside booking window:', bookingData.booking_time)
+      return res.status(400).json({
+        error: bookingHoursErrorMessage(bookingData.booking_time),
+        code: 'OUTSIDE_BOOKING_HOURS',
+      })
     }
 
     // TODO: Temporarily disable duplicate check for testing
