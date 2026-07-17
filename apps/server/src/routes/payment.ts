@@ -73,9 +73,8 @@ export async function applyExtensionAfterPayment(transactionId: string): Promise
     const newTotalPrice    = (meta.current_total_price || 0) + (meta.extension_price || 0)
     const newExtensionCount = (meta.current_extension_count || 0) + 1
 
-    // Calculate extension staff earnings using same logic as regular bookings
-    let extensionStaffEarnings = 0
-    // Resolve service_id: use metadata first, fallback to booking_services table
+    // Resolve service_id: use metadata first, fallback to booking_services table.
+    // (Used below to look up the service's earnings config for the per-recipient job recalc.)
     let resolvedServiceId = meta.service_id || null
     if (!resolvedServiceId) {
       const { data: bs } = await supabase
@@ -98,34 +97,12 @@ export async function applyExtensionAfterPayment(transactionId: string): Promise
       }
     }
 
-    if (resolvedServiceId) {
-      const { data: svc } = await supabase
-        .from('services')
-        .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
-        .eq('id', resolvedServiceId)
-        .single()
-
-      if (svc) {
-        const dur = meta.extension_duration || 0
-        if (svc.use_fixed_rate) {
-          const fixed = dur === 60 ? svc.staff_earning_60
-            : dur === 120 ? svc.staff_earning_120
-            : svc.staff_earning_90
-          extensionStaffEarnings = Math.round(Number(fixed) || 0)
-        } else {
-          const rate = Number(svc.staff_commission_rate) || 0
-          extensionStaffEarnings = Math.round((meta.extension_price || 0) * rate)
-        }
-        console.log(`[applyExtension] Service ${resolvedServiceId}: useFixedRate=${svc.use_fixed_rate}, dur=${dur}min, earnings=฿${extensionStaffEarnings}`)
-      }
-    }
-
     // Recalculate total_staff_earnings from scratch using ALL extensions
     // (not additive — avoids compounding errors from stale DB values)
-    const [{ data: bookingJobs }, { data: allExtensions }] = await Promise.all([
+    const [{ data: bookingJobs, error: jobsReadErr }, { data: allExtensions, error: extReadErr }] = await Promise.all([
       supabase
         .from('jobs')
-        .select('id, staff_earnings, duration_minutes, job_index')
+        .select('id, staff_earnings, duration_minutes, job_index, total_jobs')
         .eq('booking_id', transaction.booking_id)
         .not('status', 'eq', 'cancelled'),
       supabase
@@ -134,50 +111,84 @@ export async function applyExtensionAfterPayment(transactionId: string): Promise
         .eq('booking_id', transaction.booking_id)
         .eq('is_extension', true)
     ])
+    // supabase-js RETURNS `{ error }` — it does NOT throw, so the outer try/catch never sees a failed
+    // read. Unchecked, a failure yields `data: null`, the recalc below is skipped, and the customer is
+    // still charged while jobs keep stale totals — with no log line at all. Throw so the catch logs it.
+    if (jobsReadErr) throw new Error(`jobs read failed: ${jobsReadErr.message}`)
+    if (extReadErr) throw new Error(`booking_services read failed: ${extReadErr.message}`)
 
     if (bookingJobs && bookingJobs.length > 0) {
-      // Resolve the service config once for the earnings formula
+      // Resolve the service config once for the earnings formula.
+      // maybeSingle (not single) so "no such row" comes back as data:null/error:null and a REAL read
+      // failure comes back as an error we can throw on. Unchecked, the two are indistinguishable and the
+      // old `if (!svcFull) return 0` fallback silently paid the staff ฿0 for a network blip.
+      // booking_services.service_id is `NOT NULL REFERENCES services(id) ON DELETE RESTRICT`, so the
+      // service always exists.
       let svcFull: any = null
       if (resolvedServiceId) {
-        const { data } = await supabase
+        const { data, error: svcReadErr } = await supabase
           .from('services')
           .select('use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate')
           .eq('id', resolvedServiceId)
-          .single()
+          .maybeSingle()
+        if (svcReadErr) throw new Error(`services read failed (${resolvedServiceId}): ${svcReadErr.message}`)
         svcFull = data
       }
-      const extEarningFor = (dur: number, price: number) => {
-        if (!svcFull) return 0
-        return svcFull.use_fixed_rate
+      // svcFull is guaranteed present by the `canComputeEarnings` guard below — NEVER add a
+      // `if (!svcFull)` fallback here. Both fallbacks that used to live in this spot (this file's
+      // `return 0` = staff paid nothing, and extensionApplyService's `Math.round(price)` = 100% of the
+      // customer's money) were invented numbers with no rule behind them, and total_staff_earnings is
+      // what payouts settle on.
+      const extEarningFor = (dur: number, price: number) =>
+        svcFull.use_fixed_rate
           ? Math.round(Number(dur === 60 ? svcFull.staff_earning_60 : dur === 120 ? svcFull.staff_earning_120 : svcFull.staff_earning_90) || 0)
           : Math.round((price || 0) * (Number(svcFull.staff_commission_rate) || 0))
-      }
 
       // COUPLE bookings have one job PER RECIPIENT; each extension row carries its recipient_index.
       // An extension must ONLY bump the job whose recipient it is (job.job_index-1 === recipient_index)
       // — applying the whole-booking extension total to EVERY job would inflate the un-extended
       // recipient's total_duration_minutes (blocking their complete-gate) and OVERPAY their earnings.
       // Single bookings (1 job) take all extensions.
-      const isCouple = bookingJobs.length > 1
+      //
+      // Couple-ness comes from the job's OWN total_jobs, never from bookingJobs.length: the query above
+      // filters out cancelled jobs, so a couple with one cancelled job would collapse to length===1 and
+      // the SURVIVING job would absorb BOTH recipients' extension rows. total_jobs is set at job creation
+      // and is unaffected by a later cancellation. Mirrors the DB backstop trigger
+      // set_job_total_duration_on_extension (migration 20260716230000), which scopes on
+      // `COALESCE(j.total_jobs,1) > 1` — the two MUST agree.
       for (const job of bookingJobs) {
         const recipientIndex = (job.job_index ?? 1) - 1
+        const isCoupleJob = (job.total_jobs ?? 1) > 1
         const jobExts = (allExtensions || []).filter((ext: any) =>
-          !isCouple || (ext.recipient_index ?? 0) === recipientIndex)
+          !isCoupleJob || (ext.recipient_index ?? 0) === recipientIndex)
         let jobExtDuration = 0
-        let jobExtEarnings = 0
-        for (const ext of jobExts) {
-          jobExtDuration += ext.duration || 0
-          jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
-        }
+        for (const ext of jobExts) jobExtDuration += ext.duration || 0
+
         const originalEarnings = Number(job.staff_earnings ?? 0)
         const originalDuration = Number(job.duration_minutes ?? 0)
-        await supabase
+
+        // Duration needs no service config, so it is always written. Earnings need the rate config: if
+        // the service could not be resolved we write the duration and leave total_staff_earnings ALONE
+        // rather than fabricate one — loudly, so it gets reconciled. Mirrors extensionApplyService.ts.
+        const canComputeEarnings = jobExts.length === 0 || !!svcFull
+        const jobUpdate: Record<string, any> = {
+          total_duration_minutes: originalDuration + jobExtDuration,
+        }
+        if (canComputeEarnings) {
+          let jobExtEarnings = 0
+          for (const ext of jobExts) jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
+          jobUpdate.total_staff_earnings = originalEarnings + jobExtEarnings
+        } else {
+          console.error(
+            `[applyExtension] 🔴 UNRESOLVED SERVICE for job ${job.id} (booking ${transaction.booking_id}, recipient ${recipientIndex}) — duration written, total_staff_earnings LEFT UNCHANGED rather than guessed. This recipient's extension earnings need manual reconciliation.`
+          )
+        }
+        // Same reason as the reads above: an unchecked `.update()` swallows its `{ error }`.
+        const { error: jobUpdErr } = await supabase
           .from('jobs')
-          .update({
-            total_staff_earnings: originalEarnings + jobExtEarnings,
-            total_duration_minutes: originalDuration + jobExtDuration,
-          })
+          .update(jobUpdate)
           .eq('id', job.id)
+        if (jobUpdErr) throw new Error(`jobs update failed (job ${job.id}): ${jobUpdErr.message}`)
       }
       console.log(`[applyExtension] Jobs recalculated per-recipient for booking ${transaction.booking_id} (${bookingJobs.length} job(s))`)
     }
@@ -269,7 +280,15 @@ export async function applyExtensionAfterPayment(transactionId: string): Promise
 
     console.log(`[applyExtension] Done: +${meta.extension_duration}min, booking_service ${extensionService?.id}`)
   } catch (err) {
-    console.error('[applyExtension] Failed:', err)
+    // LOUD: the customer's card is ALREADY charged by the time we get here (this runs from the Omise
+    // webhook / status poll), and every caller still reports success to the client. A failure here means
+    // paid-for work is not reflected in the DB — it needs manual reconciliation, so it must never be a
+    // quiet one-liner. total_duration_minutes is backstopped by the DB trigger
+    // set_job_total_duration_on_extension (migration 20260716230000); total_staff_earnings is NOT.
+    console.error(
+      `[applyExtension] 🔴 FAILED for transaction ${transactionId} (booking ${transaction.booking_id}) — payment IS captured; booking/job totals may be STALE and need manual reconciliation:`,
+      err
+    )
   }
 }
 
