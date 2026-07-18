@@ -399,6 +399,8 @@ export async function createBookingWithServices(
     final_price: number;
     promotion_id?: string | null;
     provider_preference?: 'female-only' | 'male-only' | 'prefer-female' | 'prefer-male' | 'no-preference';
+    points_redeemed?: number;
+    points_discount?: number;
   },
   services: Array<{
     service_id: string;
@@ -416,102 +418,44 @@ export async function createBookingWithServices(
     throw new Error(dateValidation.error);
   }
 
-  // Use the primary service (person 1 / recipient_index 0) for the booking row
-  const primaryService = services.find((s) => s.recipient_index === 0) || services[0];
+  // Atomic create: booking + booking_services + booking_addons + points redemption +
+  // promotion_usage in ONE transaction via the create_booking_with_addons RPC (SECURITY
+  // DEFINER, caller-ownership guarded, pinned search_path). Replaces the previous 5 separate
+  // client inserts + the separate error-swallowed redeemPoints call, which could orphan a
+  // booking / leak loyalty points if a mid-sequence write failed. The RPC also does the
+  // duplicate-slot guard and generates booking_number server-side.
+  const pointsToUse = bookingData.points_redeemed || 0;
+  const pointsDiscount = bookingData.points_discount || 0;
+  const p_points =
+    pointsToUse > 0 && pointsDiscount > 0
+      ? { points_redeemed: pointsToUse, points_discount: pointsDiscount }
+      : null;
 
-  const bookingInsert: BookingInsert = {
-    customer_id: bookingData.customer_id,
-    service_id: primaryService.service_id,
-    booking_date: bookingData.booking_date,
-    booking_time: bookingData.booking_time,
-    duration: primaryService.duration,
-    base_price: primaryService.price,
-    final_price: bookingData.final_price,
-    discount_amount: bookingData.discount_amount || 0,
-    address: bookingData.address || null,
-    latitude: bookingData.latitude || null,
-    longitude: bookingData.longitude || null,
-    customer_notes: bookingData.customer_notes || null,
-    admin_notes: bookingData.admin_notes || null, // [manual-QR] '[MANUAL_QR]' marker when payment_mode=manual_qr (single source of truth; NOT customer_notes — leaks to staff)
-    recipient_count: bookingData.recipient_count,
-    service_format: bookingData.service_format,
-    promotion_id: bookingData.promotion_id || null,
-    is_multi_service: services.length > 1,
-    provider_preference: bookingData.provider_preference || 'no-preference',
-    status: 'pending',
-    payment_status: 'pending',
-    payment_method: 'other', // Explicitly set to prevent race condition with 'cash' default
-  } as any;
+  // Atomic RPC (added in migration p5_stage1_create_booking_with_addons; now present in the
+  // generated Database types). jsonb params are typed as Json.
+  const { data, error } = await client.rpc('create_booking_with_addons', {
+    p_booking_data: bookingData,
+    p_services: services,
+    p_addons: addons ?? [],
+    p_points: p_points,
+  });
 
-  // Check for duplicate customer booking (same customer + date + time)
-  const { data: existing } = await client
-    .from('bookings')
-    .select('id, booking_number')
-    .eq('customer_id', bookingData.customer_id)
-    .eq('booking_date', bookingData.booking_date)
-    .eq('booking_time', bookingData.booking_time)
-    .neq('status', 'completed')
-    .neq('status', 'cancelled')
-    .limit(1);
-
-  if (existing && existing.length > 0) {
-    throw new Error(
-      `คุณมีการจองในวันและเวลานี้อยู่แล้ว (${existing[0].booking_number}) กรุณาตรวจสอบประวัติการจองของคุณ`
-    );
-  }
-
-  const { data, error } = await client
-    .from('bookings')
-    .insert(bookingInsert)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  const bookingId = data.id;
-
-  // Insert into booking_services for all services (person 1 + person 2)
-  const bookingServicesData = services.map((svc) => ({
-    booking_id: bookingId,
-    service_id: svc.service_id,
-    duration: svc.duration,
-    price: svc.price,
-    recipient_index: svc.recipient_index,
-    recipient_name: svc.recipient_name || null,
-    sort_order: svc.sort_order || 0,
-  }));
-
-  const { error: bsError } = await client
-    .from('booking_services')
-    .insert(bookingServicesData);
-
-  if (bsError) throw bsError;
-
-  // Insert add-ons if provided
-  if (addons && addons.length > 0) {
-    const bookingAddons = addons.map((addon) => ({
-      ...addon,
-      booking_id: bookingId,
-    }));
-
-    const { error: addonsError } = await client
-      .from('booking_addons')
-      .insert(bookingAddons);
-
-    if (addonsError) throw addonsError;
-  }
-
-  // Record promotion usage (enables limit enforcement)
-  if (bookingData.promotion_id && bookingData.discount_amount) {
-    const { data: { user } } = await client.auth.getUser();
-    if (user) {
-      await client.from('promotion_usage').insert({
-        promotion_id: bookingData.promotion_id,
-        user_id: user.id,
-        booking_id: bookingId,
-        discount_amount: bookingData.discount_amount,
-      });
+  if (error) {
+    // The RPC raises 'DUPLICATE_BOOKING:<number>' (SQLSTATE 23505) for a same-slot clash;
+    // surface the same friendly Thai message the old client-side check used.
+    const msg = typeof error.message === 'string' ? error.message : '';
+    if (msg.includes('DUPLICATE_BOOKING')) {
+      const num = msg.split('DUPLICATE_BOOKING:')[1]?.trim() || '';
+      throw new Error(
+        `คุณมีการจองในวันและเวลานี้อยู่แล้ว (${num}) กรุณาตรวจสอบประวัติการจองของคุณ`
+      );
     }
+    throw error;
+  }
+
+  const bookingId = (data as any)?.id as string | undefined;
+  if (!bookingId) {
+    throw new Error('Failed to create booking: no booking id returned from RPC');
   }
 
   return bookingId;

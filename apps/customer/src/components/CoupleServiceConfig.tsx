@@ -63,7 +63,12 @@ function AddOnList({
                   : 'border-bliss-200 hover:border-bliss-300 hover:bg-bliss-100'
               }`}
             >
-              <span className="text-bliss-700">{pickLang(addon, 'name', i18n.language)}</span>
+              <span className="flex items-center gap-2 text-bliss-700">
+                {addon.image_url && (
+                  <img src={addon.image_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                )}
+                {pickLang(addon, 'name', i18n.language)}
+              </span>
               <span className={`font-medium ${isSelected ? 'text-bliss-600' : 'text-bliss-500'}`}>
                 +฿{Number(addon.price).toLocaleString()}
               </span>

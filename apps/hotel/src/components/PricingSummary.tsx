@@ -10,6 +10,14 @@ interface PricingSummaryProps {
 function PricingSummary({ configuration, showDetails = true, compact = false }: PricingSummaryProps) {
   const { mode, coupleFormat, selections, totalDuration, totalPrice, recipientCount } = configuration
 
+  // P5 STEP C: add-on money is a full-retail pass-through added on top of the service
+  // subtotal (totalPrice, which is post hotel discount). It never affects staff earnings.
+  const addOnTotal = selections.reduce(
+    (sum, s) => sum + (s.addOns || []).reduce((a, ad) => a + Number(ad.price || 0), 0),
+    0
+  )
+  const finalPrice = totalPrice + addOnTotal
+
   const formatDuration = (minutes: number): string => {
     const hours = Math.floor(minutes / 60)
     const mins = minutes % 60
@@ -102,6 +110,16 @@ function PricingSummary({ configuration, showDetails = true, compact = false }: 
                       </div>
                     </div>
                   </div>
+                  {(selection.addOns || []).length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-[#ebe6d0]/50 space-y-1">
+                      {(selection.addOns || []).map((addon) => (
+                        <div key={addon.addon_id} className="flex items-center justify-between text-xs text-bliss-600">
+                          <span>+ {addon.name_th}</span>
+                          <span>฿{Number(addon.price).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -172,13 +190,25 @@ function PricingSummary({ configuration, showDetails = true, compact = false }: 
         </div>
 
         {/* Total price */}
-        <div className="border-t border-[#565b34]/20 pt-3">
+        <div className="border-t border-[#565b34]/20 pt-3 space-y-2">
+          {addOnTotal > 0 && (
+            <>
+              <div className="flex items-center justify-between text-sm text-bliss-700">
+                <span>ค่าบริการ</span>
+                <span>฿{totalPrice.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-bliss-700">
+                <span>บริการเสริม</span>
+                <span>+฿{addOnTotal.toLocaleString()}</span>
+              </div>
+            </>
+          )}
           <div className="flex items-center justify-between bg-gradient-to-r from-[#ebe6d0]/30 to-[#ebe6d0]/20 rounded-lg p-3">
             <span className={`font-bold text-bliss-900 ${compact ? 'text-base' : 'text-lg'}`}>
               ยอดรวม
             </span>
             <span className={`font-extrabold text-[#565b34] ${compact ? 'text-xl' : 'text-2xl'} drop-shadow-sm`}>
-              ฿{totalPrice.toLocaleString()}
+              ฿{finalPrice.toLocaleString()}
             </span>
           </div>
         </div>

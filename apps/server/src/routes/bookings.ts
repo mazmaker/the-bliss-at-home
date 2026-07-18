@@ -377,7 +377,7 @@ router.post('/:id/reschedule', requireAdmin, async (req: Request, res: Response)
     // jobs.staff_id FK → profiles.id (NOT staff.id), so we query staff separately
     const { data: assignedJobs } = await supabase
       .from('jobs')
-      .select('id, staff_id, status, service_name, duration_minutes, total_duration_minutes')
+      .select('id, staff_id, status, service_name, duration_minutes, total_duration_minutes, staff_earnings')
       .eq('booking_id', id)
       .not('status', 'in', '(cancelled,completed)')
 
@@ -427,6 +427,9 @@ router.post('/:id/reschedule', requireAdmin, async (req: Request, res: Response)
         return {
           job_id: j.id,
           profile_id: j.staff_id as string,
+          // P5 Fix 3: carry the stored per-job earning so the reschedule notification shows the
+          // correct (add-on-excluded, fixed-rate-honored, per-recipient) รายได้ without a recompute.
+          staff_earnings: j.staff_earnings,
           ...rest,
         }
       })
@@ -540,6 +543,15 @@ router.post('/:id/reschedule', requireAdmin, async (req: Request, res: Response)
           new_time: body.new_time,
           duration_minutes: booking.duration || 60,
           staff_earnings: (() => {
+            // P5 Fix 3: prefer the stored, trigger-computed per-JOB earning — it is already
+            // add-on-excluded (add-ons are never staff commission), fixed-rate-honored and
+            // per-recipient. Recomputing from final_price here would fold add-on money into the
+            // displayed รายได้ (display-only leak; the persisted earnings are already correct).
+            if (staffInfo.staff_earnings != null) {
+              return Math.round(Number(staffInfo.staff_earnings))
+            }
+            // Fallback ONLY for legacy jobs with no stored earning (which by construction carry no
+            // add-ons — any add-on booking gets a trigger-populated staff_earnings).
             const svc = booking.service as any
             const duration = booking.duration || 90
             if (svc?.use_fixed_rate) {

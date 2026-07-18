@@ -10,6 +10,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { staffAssignmentService } from '../services/staffAssignmentService'
 import { sendBookingConfirmedNotifications } from '../services/notificationService'
+import { computeStaffEarning } from '../lib/earnings'
 import { validateBookingDate } from './bookings'
 import { isTimeWithinBookingHours, bookingHoursErrorMessage } from '../utils/bookingHours'
 
@@ -113,8 +114,10 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
     console.log('   user role:', req.user?.role)
     console.log('   user email:', req.user?.email)
 
-    // Extract services data separately (it goes to booking_services table)
-    const { services, ...bookingFields } = req.body
+    // Extract services + add-ons separately (they go to booking_services / booking_addons).
+    // ⚠️ `addons` MUST be pulled out of ...bookingFields — otherwise it flows into the bookings
+    // insert (which has no addons column) and breaks it. (P5 STEP C)
+    const { services, addons, ...bookingFields } = req.body
 
     // Determine service_format from recipient_count
     // Valid values: 'single', 'simultaneous', 'sequential'
@@ -269,6 +272,38 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
       }
     }
 
+    // Insert booking_addons (per recipient) — P5 STEP C.
+    // Send ONLY {booking_id, addon_id, recipient_index, quantity}; the BEFORE-INSERT trigger
+    // trg_snap_booking_addon re-snaps price_per_unit/total_price/name_* from the service_addons
+    // catalog (anti-tamper, always RETAIL — no hotel discount). Add-on money is on
+    // bookings.final_price only; it is NEVER fed into jobs.staff_earnings (retail-derived below),
+    // so add-ons stay 0% commission pass-through.
+    if (addons && addons.length > 0) {
+      const bookingAddons = addons.map((addon: any) => ({
+        booking_id: booking.id,
+        addon_id: addon.addon_id,
+        recipient_index: addon.recipient_index || 0,
+        quantity: addon.quantity || 1,
+      }))
+
+      const { error: addonsError } = await serviceSupabase
+        .from('booking_addons')
+        .insert(bookingAddons)
+
+      if (addonsError) {
+        // Roll back the whole booking (child-first) so we never leave a paid booking missing add-ons
+        console.log('❌ [DATABASE] booking_addons insertion failed:', addonsError.message)
+        await serviceSupabase.from('booking_addons').delete().eq('booking_id', booking.id)
+        await serviceSupabase.from('booking_services').delete().eq('booking_id', booking.id)
+        await serviceSupabase.from('bookings').delete().eq('id', booking.id)
+        return res.status(500).json({
+          error: 'Failed to create booking add-ons',
+          details: addonsError.message
+        })
+      }
+      console.log(`✅ [DATABASE] Created ${bookingAddons.length} booking add-on(s)`)
+    }
+
     // Create job records — one per booking_service (therapist)
     console.log('📋 [JOBS] Creating job records for staff assignment...')
 
@@ -299,21 +334,15 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
         // Get service name and commission rate for each job
         const { data: svcDetail } = await serviceSupabase
           .from('services')
-          .select('name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120')
+          .select('name_th, name_en, staff_commission_rate, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, price_60, price_90, price_120, base_price, duration')
           .eq('id', svc.service_id)
           .single()
 
-        let earnings: number
-        if (svcDetail?.use_fixed_rate) {
-          const duration = svc.duration || 90
-          const fixed = duration === 60 ? svcDetail.staff_earning_60
-            : duration === 120 ? svcDetail.staff_earning_120
-            : svcDetail.staff_earning_90
-          earnings = Math.round(Number(fixed) || 0)
-        } else {
-          const commissionRate = Number(svcDetail?.staff_commission_rate) || 0.3
-          earnings = Math.round(Number(svc.price) * commissionRate)
-        }
+        // §1: staff commission on the FULL pre-discount RETAIL service price by duration
+        // (services.price_60/90/120), NOT the discounted booking_services.price the hotel client
+        // sends. Fixed-rate = flat per session. Add-ons excluded (retail price is service-only).
+        const duration = svc.duration || 90
+        const earnings = computeStaffEarning(svcDetail, duration)
 
         return {
           booking_id: booking.id,

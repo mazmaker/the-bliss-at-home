@@ -1034,6 +1034,21 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                       <span className="text-red-600">-฿{Number(booking.discount_amount).toLocaleString()}</span>
                     </div>
                   )}
+                  {/* P5 STEP C: add-on line items (0% commission pass-through). Rendering these makes
+                      the breakdown reconcile: services − discount + add-ons = final_price. */}
+                  {booking.booking_addons && booking.booking_addons.length > 0 &&
+                    booking.booking_addons.map((addon) => (
+                      <div key={addon.id} className="flex justify-between text-sm gap-3">
+                        <span className="text-bliss-600">
+                          บริการเสริม · {addon.name_th || 'บริการเสริม'}
+                          {(booking.recipient_count || 1) > 1 && (
+                            <span className="text-bliss-400"> (คนที่ {addon.recipient_index + 1})</span>
+                          )}
+                          {addon.quantity > 1 && <span className="text-bliss-400"> ×{addon.quantity}</span>}
+                        </span>
+                        <span className="text-bliss-900 whitespace-nowrap">฿{Number(addon.total_price).toLocaleString()}</span>
+                      </div>
+                    ))}
                   {booking.promotion && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-bliss-100 text-bliss-800 border border-bliss-200">

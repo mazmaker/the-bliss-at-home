@@ -8,7 +8,8 @@ import {
   ServiceFormat,
   BookingData,
   BookingValidation,
-  ProviderPreference
+  ProviderPreference,
+  SelectedAddon
 } from '../types/booking'
 import { PriceCalculator } from '../utils/priceCalculator'
 import { EnhancedPriceCalculator } from '../utils/enhancedPriceCalculator'
@@ -40,6 +41,7 @@ interface BookingStore {
   removeServiceSelection: (index: number) => void
   clearServiceSelections: () => void
   setRecipientName: (recipientIndex: number, name: string) => void
+  setSelectionAddOns: (recipientIndex: number, addOns: SelectedAddon[]) => void
 
   // Guest data actions
   setGuestName: (name: string) => void
@@ -75,6 +77,8 @@ interface BookingStore {
   getServiceFormat: () => ServiceFormat
   getTotalPrice: () => number
   getTotalDuration: () => number
+  getAddOnTotal: () => number
+  getFinalPrice: () => number
   getBookingData: () => BookingData
   isConfigurationComplete: () => boolean
 }
@@ -359,6 +363,25 @@ export const useBookingStore = create<BookingStore>()(
             const newSelections = state.serviceConfiguration.selections.map(selection =>
               selection.recipientIndex === recipientIndex
                 ? { ...selection, recipientName: name }
+                : selection
+            )
+
+            return {
+              serviceConfiguration: {
+                ...state.serviceConfiguration,
+                selections: newSelections
+              }
+            }
+          }),
+
+        // P5 STEP C: set the add-ons picked for one recipient. Add-ons do NOT change
+        // totalPrice (service-only, = base_price); the add-on total is added on top for
+        // final_price via getFinalPrice(). Add-ons are 0% commission pass-through.
+        setSelectionAddOns: (recipientIndex, addOns) =>
+          set((state) => {
+            const newSelections = state.serviceConfiguration.selections.map(selection =>
+              selection.recipientIndex === recipientIndex
+                ? { ...selection, addOns }
                 : selection
             )
 
@@ -706,6 +729,16 @@ export const useBookingStore = create<BookingStore>()(
         getTotalPrice: () => get().serviceConfiguration.totalPrice,
 
         getTotalDuration: () => get().serviceConfiguration.totalDuration,
+
+        // P5 STEP C: total add-on money across ALL recipients (full retail, no discount).
+        getAddOnTotal: () =>
+          get().serviceConfiguration.selections.reduce(
+            (sum, s) => sum + (s.addOns || []).reduce((a, ad) => a + Number(ad.price || 0), 0),
+            0
+          ),
+
+        // final_price = service subtotal (post hotel discount) + add-on pass-through.
+        getFinalPrice: () => get().serviceConfiguration.totalPrice + get().getAddOnTotal(),
 
         getBookingData: (): BookingData => {
           const state = get()

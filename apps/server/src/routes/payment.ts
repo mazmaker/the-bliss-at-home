@@ -1084,13 +1084,39 @@ router.post('/create-source', paymentAuthGuard, async (req: Request, res: Respon
       })
     }
 
+    // [F-4] Ownership: the booking must belong to the caller (hotel bookings have
+    // customer_id = NULL and must never be charged through this customer route).
+    if (!booking.customer_id || booking.customer_id !== customer_id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Booking does not belong to this customer',
+      })
+    }
+
+    // [F-4] Amount integrity: never trust the client amount — use the booking's
+    // server-side final_price (authoritative; already includes add-ons + VAT). Do NOT
+    // reconstruct Σservice+Σaddon−discount here (VAT-inconsistent). Reject a tampered amount.
+    const serverAmount = Number(booking.final_price)
+    if (!(serverAmount > 0)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking has no payable amount',
+      })
+    }
+    if (Math.round(Number(amount) * 100) !== Math.round(serverAmount * 100)) {
+      return res.status(400).json({
+        success: false,
+        error: `Amount mismatch: expected ${serverAmount}, got ${amount}`,
+      })
+    }
+
     console.log('✅ Booking found:', booking.booking_number)
-    console.log('💳 Creating payment source:', { source_type, amount: Math.round(amount * 100) })
+    console.log('💳 Creating payment source:', { source_type, amount: Math.round(serverAmount * 100) })
 
     // Create payment source
     const source = await omiseService.createSource(
       source_type,
-      Math.round(amount * 100), // Convert to satangs
+      Math.round(serverAmount * 100), // Convert to satangs
       'THB'
     )
 
@@ -1099,7 +1125,7 @@ router.post('/create-source', paymentAuthGuard, async (req: Request, res: Respon
 
     // Create charge with source
     const charge = await omiseService.createChargeWithSource({
-      amount: Math.round(amount * 100),
+      amount: Math.round(serverAmount * 100),
       currency: 'THB',
       source: source.id,
       description: `Payment for ${booking.service.name_en || booking.service.name_th} - Booking ${booking.booking_number}`,
@@ -1128,7 +1154,7 @@ router.post('/create-source', paymentAuthGuard, async (req: Request, res: Respon
       .insert({
         booking_id,
         customer_id,
-        amount,
+        amount: serverAmount,
         currency: 'THB',
         payment_method: payment_method || source_type,
         description: `Payment for booking ${booking.booking_number}`,

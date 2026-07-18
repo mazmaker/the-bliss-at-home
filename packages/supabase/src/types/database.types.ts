@@ -323,8 +323,12 @@ export type Database = {
           booking_id: string
           created_at: string | null
           id: string
+          name_cn: string | null
+          name_en: string | null
+          name_th: string | null
           price_per_unit: number
           quantity: number | null
+          recipient_index: number
           total_price: number
         }
         Insert: {
@@ -332,8 +336,12 @@ export type Database = {
           booking_id: string
           created_at?: string | null
           id?: string
+          name_cn?: string | null
+          name_en?: string | null
+          name_th?: string | null
           price_per_unit: number
           quantity?: number | null
+          recipient_index?: number
           total_price: number
         }
         Update: {
@@ -341,8 +349,12 @@ export type Database = {
           booking_id?: string
           created_at?: string | null
           id?: string
+          name_cn?: string | null
+          name_en?: string | null
+          name_th?: string | null
           price_per_unit?: number
           quantity?: number | null
+          recipient_index?: number
           total_price?: number
         }
         Relationships: [
@@ -2603,44 +2615,59 @@ export type Database = {
       }
       service_addons: {
         Row: {
+          applies_to_all: boolean
           created_at: string | null
+          description_cn: string | null
           description_en: string | null
           description_th: string | null
           icon: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
+          name_cn: string | null
           name_en: string
           name_th: string
           price: number
           service_id: string | null
+          service_ids: string[]
           sort_order: number | null
           updated_at: string | null
         }
         Insert: {
+          applies_to_all?: boolean
           created_at?: string | null
+          description_cn?: string | null
           description_en?: string | null
           description_th?: string | null
           icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          name_cn?: string | null
           name_en: string
           name_th: string
           price: number
           service_id?: string | null
+          service_ids?: string[]
           sort_order?: number | null
           updated_at?: string | null
         }
         Update: {
+          applies_to_all?: boolean
           created_at?: string | null
+          description_cn?: string | null
           description_en?: string | null
           description_th?: string | null
           icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          name_cn?: string | null
           name_en?: string
           name_th?: string
           price?: number
           service_id?: string | null
+          service_ids?: string[]
           sort_order?: number | null
           updated_at?: string | null
         }
@@ -4049,6 +4076,15 @@ export type Database = {
       confirm_staff_arrival: {
         Args: { p_booking_id: string; p_location: Json; p_photo_url?: string }
         Returns: boolean
+      }
+      create_booking_with_addons: {
+        Args: {
+          p_addons?: Json
+          p_booking_data: Json
+          p_points?: Json
+          p_services: Json
+        }
+        Returns: Json
       }
       create_coupon_codes_for_promotion: {
         Args: { count?: number; promotion_id_param: string }
