@@ -14,8 +14,10 @@ const bookingEditSchema = z.object({
   service_name: z.string().min(1, 'กรุณาระบุชื่อบริการ'),
   service_category: z.string().min(1, 'กรุณาระบุประเภทบริการ'),
   staff_name: z.string().optional(),
-  service_date: z.string().min(1, 'กรุณาเลือกวันที่'),
-  service_time: z.string().min(1, 'กรุณาระบุเวลา'),
+  // PART47-P6: date/time are NOT editable here — updateBooking() drops booking_date/booking_time
+  // (silent no-op) and a direct write would bypass the reschedule guard set (staff-lock,
+  // reschedule_count, eligibility/past-time, notifications). Reschedule via the admin
+  // "เลื่อนนัด" button (AdminRescheduleModal) instead.
   duration: z.coerce.number().min(1, 'ระยะเวลาต้องมากกว่า 0'),
   total_price: z.coerce.number().min(0, 'ราคาต้องไม่ติดลบ'),
   status: z.enum(['confirmed', 'pending', 'completed', 'cancelled', 'no_show']),
@@ -70,8 +72,6 @@ export function BookingEditModal({ isOpen, onClose, onSuccess, booking }: Bookin
         service_name: booking.service_name,
         service_category: booking.service_category,
         staff_name: booking.staff_name || '',
-        service_date: booking.service_date,
-        service_time: booking.service_time,
         duration: booking.duration,
         total_price: Number(booking.total_price),
         status: booking.status,
@@ -97,8 +97,8 @@ export function BookingEditModal({ isOpen, onClose, onSuccess, booking }: Bookin
         service_name: data.service_name,
         service_category: data.service_category,
         staff_name: data.staff_name || null,
-        service_date: data.service_date,
-        service_time: data.service_time,
+        // service_date/service_time intentionally NOT sent — reschedule goes through the
+        // reschedule route (PART47-P6). updateBooking drops them anyway.
         duration: data.duration,
         total_price: data.total_price,
         status: data.status,
@@ -275,34 +275,27 @@ export function BookingEditModal({ isOpen, onClose, onSuccess, booking }: Bookin
                 </div>
               </div>
 
-              {/* Date & Time */}
+              {/* Date & Time — READ-ONLY (PART47-P6).
+                  The old editable date/time inputs were removed: updateBooking() silently dropped
+                  them (no-op) and a direct write would bypass staff-lock / reschedule_count /
+                  eligibility+past-time / notifications. To change the appointment, use the
+                  "เลื่อนนัด" button on the booking (AdminRescheduleModal), which routes through the
+                  reschedule endpoint and keeps everything consistent. */}
               <div>
                 <h3 className="mb-3 text-lg font-semibold text-gray-900">วันที่และเวลา</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">วันที่ใช้บริการ *</label>
-                    <input
-                      {...register('service_date')}
-                      type="date"
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    {errors.service_date && (
-                      <p className="mt-1 text-sm text-red-600">{errors.service_date.message}</p>
-                    )}
+                    <label className="block text-sm font-medium text-gray-700">วันที่ใช้บริการ</label>
+                    <p className="mt-1 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-gray-900">{booking?.service_date || '-'}</p>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">เวลา *</label>
-                    <input
-                      {...register('service_time')}
-                      type="time"
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    {errors.service_time && (
-                      <p className="mt-1 text-sm text-red-600">{errors.service_time.message}</p>
-                    )}
+                    <label className="block text-sm font-medium text-gray-700">เวลา</label>
+                    <p className="mt-1 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-gray-900">{booking?.service_time || '-'}</p>
                   </div>
                 </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  หากต้องการเปลี่ยนวันหรือเวลา กรุณาใช้ปุ่ม "เลื่อนนัด" ในหน้าการจอง (เพื่อคงพนักงานเดิม/แจ้งเตือนผู้เกี่ยวข้องอย่างถูกต้อง)
+                </p>
               </div>
 
               {/* Status */}

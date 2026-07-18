@@ -804,16 +804,7 @@ function BookingDetails() {
                   </p>
                   <p className="text-bliss-700 flex items-center gap-1"><Clock className="w-4 h-4" /> {booking.time}</p>
                 </div>
-                {(booking.status === 'confirmed' || booking.status === 'pending') && (
-                  <div className="text-right">
-                    <button
-                      onClick={() => setShowRescheduleModal(true)}
-                      className="text-bliss-600 hover:text-bliss-800 font-medium text-sm"
-                    >
-                      {t('details.reschedule')}
-                    </button>
-                  </div>
-                )}
+                {/* P6: reschedule is admin-only — the customer self-reschedule button was removed here (see Actions block for the contact-admin hint). */}
               </div>
             </div>
 
@@ -1079,17 +1070,19 @@ function BookingDetails() {
             <div className="space-y-3">
               {(booking.status === 'confirmed' || booking.status === 'pending') && (
                 <>
-                  <button
-                    onClick={() => setShowRescheduleModal(true)}
-                    className="w-full bg-bliss-600 text-white py-3 rounded-xl font-medium hover:bg-bliss-700 transition"
-                  >
-                    {t('details.reschedule')}
-                  </button>
+                  {/* P6: reschedule is now admin-only. The self-reschedule button was removed;
+                      customers contact the admin (LINE) to reschedule. Cancel is unchanged. */}
                   <button
                     onClick={() => setShowCancelModal(true)}
                     className="w-full border-2 border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
                   >
                     {t('details.cancelBooking')}
+                  </button>
+                  <button
+                    onClick={() => window.open(LINE_CONTACT_URL, '_blank', 'noopener,noreferrer')}
+                    className="w-full text-bliss-600 py-2 text-sm font-medium hover:text-bliss-800"
+                  >
+                    {t('details.rescheduleViaAdmin')}
                   </button>
                 </>
               )}

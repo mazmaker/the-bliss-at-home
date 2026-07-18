@@ -210,6 +210,7 @@
     "reviews": "รีวิว",
     "chat": "แชท",
     "reschedule": "เลื่อนนัด",
+    "rescheduleViaAdmin": "ต้องการเลื่อนนัด? ติดต่อแอดมิน",
     "priceSummary": "สรุปราคา",
     "mainService": "บริการหลัก",
     "serviceFee": "ค่าบริการ",

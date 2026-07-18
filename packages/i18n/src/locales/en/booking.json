@@ -210,6 +210,7 @@
     "reviews": "reviews",
     "chat": "Chat",
     "reschedule": "Reschedule",
+    "rescheduleViaAdmin": "Need to reschedule? Contact admin",
     "priceSummary": "Price Summary",
     "mainService": "Main Service",
     "serviceFee": "Service Fee",
