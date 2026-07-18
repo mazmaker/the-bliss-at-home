@@ -450,7 +450,10 @@ function BookingDetails() {
   }
 
   const totalAddOnsPrice = booking.addOns.reduce((sum: number, a: any) => sum + a.price, 0)
-  const totalPrice = booking.price + totalAddOnsPrice
+  // booking.price is final_price (add-ons already folded in). Back out the add-ons for the base
+  // "main service" line so the summary reads base + add-ons = final_price (no double-count).
+  const mainServicePrice = Math.max(0, booking.price - totalAddOnsPrice)
+  const totalPrice = booking.price
 
   // Handle cancel booking
   const handleCancelBooking = async (reason: string) => {
@@ -700,7 +703,7 @@ function BookingDetails() {
                       </span>
                     )}
                   </div>
-                  <p className="text-lg font-bold text-bliss-600">฿{booking.price}</p>
+                  <p className="text-lg font-bold text-bliss-600">฿{mainServicePrice}</p>
                   {extendableBooking && extendableBooking.total_extensions_price > 0 && (
                     <p className="text-sm text-bliss-600 mt-1">
                       {t('booking:extension.totalExtensionPrice', { amount: extendableBooking.total_extensions_price.toLocaleString() })}
@@ -968,7 +971,7 @@ function BookingDetails() {
               <div className="space-y-3">
                 <div className="flex justify-between text-bliss-700">
                   <span>{t('details.mainService')}</span>
-                  <span>฿{booking.price}</span>
+                  <span>฿{mainServicePrice}</span>
                 </div>
                 {booking.addOns.map((addon: any, index: number) => (
                   <div key={index} className="flex justify-between text-bliss-700">
@@ -976,10 +979,6 @@ function BookingDetails() {
                     <span>฿{addon.price}</span>
                   </div>
                 ))}
-                <div className="flex justify-between text-bliss-700">
-                  <span>{t('details.serviceFee')}</span>
-                  <span>฿0</span>
-                </div>
                 <div className="pt-3 border-t border-bliss-200">
                   <div className="flex justify-between">
                     <span className="font-bold text-bliss-900">{t('details.total')}</span>
