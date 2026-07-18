@@ -2,19 +2,14 @@
  * Time Slot Utilities for Booking System
  * Simple two-step selection: Hour → Minute
  */
+import { getBookingHourOptions, isWithinBookingHours } from '@bliss/ui'
 
 /**
- * Get available hours (09-23)
+ * Get available hours (09-21) — the bookable window, from the shared rule.
+ * Hour 21 is offered on the strength of 21:00 alone; `isTimeSlotAvailable` drops 21:15+.
  */
 export function getAvailableHours(): string[] {
-  const hours: string[] = []
-
-  // 09:00 - 23:00 (no midnight)
-  for (let h = 9; h <= 23; h++) {
-    hours.push(h.toString().padStart(2, '0'))
-  }
-
-  return hours
+  return getBookingHourOptions()
 }
 
 /**
@@ -28,6 +23,11 @@ export function getMinuteIntervals(): string[] {
  * Check if specific time slot is available based on 3-hour advance rule
  */
 export function isTimeSlotAvailable(date: string, hour: string, minute: string): boolean {
+  // Bookable-hours window (09:00-21:00 start). This MUST be checked before the same-day
+  // early-return below: the window applies to EVERY date, whereas the 3-hour rule only
+  // applies to today. Putting it after would make it dead code for every future date.
+  if (!isWithinBookingHours(hour, minute)) return false
+
   const now = new Date()
   // Use the LOCAL date, not toISOString() (which is UTC). During Thai early-morning hours
   // the UTC date is still the previous day, so a UTC todayStr would wrongly treat "today"

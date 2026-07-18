@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
 
-// Staff "เสร็จสิ้นงาน" (complete job) is only allowed within the last COMPLETE_WINDOW_MIN
-// minutes of the service — and it STAYS allowed after the service end (overtime).
-export const COMPLETE_WINDOW_MIN = 10
+// Staff "เสร็จสิ้นงาน" (complete job) is allowed ONLY once the booked service duration has
+// FULLY elapsed — and it STAYS allowed after that (overtime).
+//
+// Was 10 until 2026-07-16: the button used to unlock in the last 10 minutes of the service, so
+// a 120-min service could be closed at minute 110. Requirement (user, 2026-07-16): "กดปุ่ม
+// เสร็จสิ้นงาน หลังจากครบเวลาการให้บริการแล้วเท่านั้น ต้องไม่สามารถกดปุ่มดังกล่าวก่อนครบเวลาให้บริการได้."
+// Keep the constant rather than deleting it: it names the rule and keeps the early-unlock
+// window a single, greppable knob if the business ever wants a grace period back.
+export const COMPLETE_WINDOW_MIN = 0
 
 export interface CompleteGate {
   canComplete: boolean
@@ -16,8 +22,8 @@ export interface CompleteGate {
  * - Only completable when the job is `in_progress` AND has a `started_at` (service actually
  *   began). The guard runs BEFORE any date math on purpose: a null started_at would parse to
  *   epoch 1970 → look like huge overtime → wrongly enable the button during traveling/arrived.
- * - Enabled once remaining <= 10 min, and stays enabled forever after the end (overtime),
- *   because `remaining <= COMPLETE_WINDOW_MIN` is still true when remaining is negative.
+ * - Enabled only once the full duration has elapsed (remaining <= 0), and stays enabled
+ *   forever after the end (overtime), because `remaining <= 0` stays true when negative.
  * - Extension-aware: pass `total_duration_minutes || duration_minutes` (Dashboard) or the
  *   bookingServices-sum incl. extensions (JobDetail) as `totalDurationMinutes`.
  * - Client-clock based (same basis as ServiceTimer); ticks every 20s so the button flips
