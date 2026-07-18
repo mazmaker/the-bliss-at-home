@@ -40,4 +40,5 @@ export {
   isTimeWithinBookingHours,
   isWithinBookingHours,
   getBookingHourOptions,
+  generateBookingTimeSlots,
 } from './utils/bookingHours'

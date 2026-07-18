@@ -74,3 +74,28 @@ export function getBookingHourOptions(): string[] {
   }
   return hours
 }
+
+/**
+ * Build the `HH:MM` START slots a picker offers, from startHour to endHourInclusive in
+ * stepMinutes steps. Centralizes slot generation so surfaces stop hand-rolling it — the exact
+ * drift this module exists to prevent (see header).
+ *
+ *  - Customer / hotel pickers keep to the 09:00–21:00 window (pass 9, 21 and drop 21:30/21:45
+ *    with `isWithinBookingHours`, or use the hour options + minute filter).
+ *  - Admin surfaces (Quick Booking, admin reschedule) pass (0, 23) for the full 24h: admin is
+ *    EXEMPT from the booking window (DECISION ⑧; enforce_booking_hours_window() lets ADMIN
+ *    through), so the picker must NOT cap admin at 21:00.
+ */
+export function generateBookingTimeSlots(
+  startHour: number,
+  endHourInclusive: number,
+  stepMinutes = 30,
+): string[] {
+  const slots: string[] = []
+  for (let h = startHour; h <= endHourInclusive; h++) {
+    for (let m = 0; m < 60; m += stepMinutes) {
+      slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+    }
+  }
+  return slots
+}

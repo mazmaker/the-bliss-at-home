@@ -79,8 +79,12 @@ function settle(state: any) {
 
 const { applyExtensionToBooking } = await import('../extensionApplyService.js')
 
-/** svc1: commission service, staff gets 30% of the extension price. */
-const SVC = { id: 'svc1', use_fixed_rate: false, staff_commission_rate: 0.3, staff_earning_60: 0, staff_earning_90: 0, staff_earning_120: 0 }
+/**
+ * svc1: commission service (30%). GAP2 (DECISION ③) commissions on the RETAIL price for the
+ * extension duration — price_60=1000 here — NEVER on the discounted booking_services.price (800
+ * below). So a 60-min extension earns 1000*0.3 = 300, not the old net 800*0.3 = 240.
+ */
+const SVC = { id: 'svc1', use_fixed_rate: false, staff_commission_rate: 0.3, staff_earning_60: 0, staff_earning_90: 0, staff_earning_120: 0, price_60: 1000, price_90: 1500, price_120: 2000, base_price: 2000, duration: 120 }
 
 const base = (recipient_index: number, price: number) => ({
   service_id: 'svc1', duration: 120, price, recipient_index, is_extension: false,
@@ -132,12 +136,14 @@ describe('applyExtensionToBooking — couple with ONE cancelled job', () => {
     expect(h.jobUpdates).toHaveLength(1)
     const { id, payload } = h.jobUpdates[0]
     expect(id).toBe('jobB')
-    // Own extension only: 120 base + 60 = 180, and 900 base + (800 * 0.3) = 1140.
+    // Own extension only: 120 base + 60 = 180, and 900 base + retail(price_60=1000)*0.3 = 300 → 1200.
     expect(payload.total_duration_minutes).toBe(180)
-    expect(payload.total_staff_earnings).toBe(1140)
-    // The pre-fix values, spelled out so a regression is unmistakable: jobB absorbed BOTH extensions.
+    expect(payload.total_staff_earnings).toBe(1200)
+    // GAP2: earned on RETAIL (300), never the discounted net price (800*0.3=240 → would be 1140).
+    expect(payload.total_staff_earnings).not.toBe(1140)
+    // The pre-fix couple values, spelled out so a regression is unmistakable: jobB absorbed BOTH extensions.
     expect(payload.total_duration_minutes).not.toBe(240)
-    expect(payload.total_staff_earnings).not.toBe(1380)
+    expect(payload.total_staff_earnings).not.toBe(1500)
   })
 })
 
@@ -157,7 +163,7 @@ describe('applyExtensionToBooking — no regression for the normal shapes', () =
 
     expect(h.jobUpdates).toHaveLength(1)
     expect(h.jobUpdates[0].payload.total_duration_minutes).toBe(120) // 60 + 60
-    expect(h.jobUpdates[0].payload.total_staff_earnings).toBe(640) // 400 + 240
+    expect(h.jobUpdates[0].payload.total_staff_earnings).toBe(700) // 400 + retail 300 (not net 240)
   })
 
   it('healthy couple (both jobs alive) keeps each recipient on its own extension', async () => {
@@ -175,7 +181,7 @@ describe('applyExtensionToBooking — no regression for the normal shapes', () =
     expect(h.jobUpdates).toHaveLength(2)
     for (const u of h.jobUpdates) {
       expect(u.payload.total_duration_minutes).toBe(180)
-      expect(u.payload.total_staff_earnings).toBe(1140)
+      expect(u.payload.total_staff_earnings).toBe(1200) // 900 + retail 300
     }
   })
 })

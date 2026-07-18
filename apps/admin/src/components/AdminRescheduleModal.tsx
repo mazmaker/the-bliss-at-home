@@ -30,7 +30,7 @@ import {
   Building2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { isRescheduleDateSelectable, isRescheduleTimeAvailable, isSameBookingSlot } from '@bliss/ui'
+import { isRescheduleDateSelectable, isRescheduleTimeAvailable, isSameBookingSlot, generateBookingTimeSlots } from '@bliss/ui'
 import { supabase } from '../lib/supabase'
 import type { Booking } from '../hooks/useBookings'
 
@@ -56,16 +56,11 @@ interface AdminRescheduleModalProps {
   onRescheduled: () => void
 }
 
-// 09:00–20:00 in 30-min steps (matches the customer/hotel reschedule pickers)
-const generateTimeSlots = () => {
-  const slots: string[] = []
-  for (let hour = 9; hour <= 20; hour++) {
-    slots.push(`${hour.toString().padStart(2, '0')}:00`)
-    if (hour < 20) slots.push(`${hour.toString().padStart(2, '0')}:30`)
-  }
-  return slots
-}
-const TIME_SLOTS = generateTimeSlots()
+// Admin reschedule is EXEMPT from the 09:00–21:00 booking window (admin manages it — same as
+// Quick Booking; enforce_booking_hours_window() lets ADMIN through). Offer the full 24h from the
+// shared @bliss/ui generator instead of hand-rolling a 7th copy of the window (was 09:00–20:00,
+// which wrongly stopped admin at 20:00 — GAP1). Past-time / no-op slots are still filtered below.
+const TIME_SLOTS = generateBookingTimeSlots(0, 23, 30)
 
 export default function AdminRescheduleModal({
   booking,

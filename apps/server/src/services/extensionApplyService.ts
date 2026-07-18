@@ -23,6 +23,7 @@
 
 import { getSupabaseClient } from '../lib/supabase.js'
 import { sendExtensionNotifications } from './notificationService.js'
+import { computeStaffEarning } from '../lib/earnings.js'
 
 /** One recipient being extended. "ต่อทั้งคู่" passes two of these; "ทีละคน"/single passes one. */
 export interface ExtensionTarget {
@@ -240,7 +241,7 @@ export async function applyExtensionToBooking(params: ApplyExtensionParams): Pro
       }
       const serviceIds = Array.from(new Set([...baseByRecipient.values(), ...targets.map((t) => t.serviceId)].filter(Boolean)))
       const { data: svcRows, error: svcReadErr } = serviceIds.length > 0
-        ? await supabase.from('services').select('id, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate').in('id', serviceIds)
+        ? await supabase.from('services').select('id, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate, price_60, price_90, price_120, base_price, duration').in('id', serviceIds)
         : { data: [] as any[], error: null }
       // Unchecked, a FAILED read here is indistinguishable from "this service has no row": both leave
       // svcById empty, and the earnings fallback below then invents a number out of a network blip.
@@ -263,10 +264,12 @@ export async function applyExtensionToBooking(params: ApplyExtensionParams): Pro
         // fallback here. Both fallbacks that used to live in this spot (`Math.round(price)` = 100% of
         // the customer's money, and payment.ts's `return 0` = staff paid nothing) were invented numbers
         // with no rule behind them, and total_staff_earnings is what payouts settle on.
-        const extEarningFor = (dur: number, price: number) =>
-          svc.use_fixed_rate
-            ? Math.round(Number(dur === 60 ? svc.staff_earning_60 : dur === 120 ? svc.staff_earning_120 : svc.staff_earning_90) || 0)
-            : Math.round((price || 0) * (Number(svc.staff_commission_rate) || 0))
+        // GAP2 (DECISION ③): extension earning uses the SAME §1 rule as the base job —
+        // computeStaffEarning: fixed-rate → flat staff_earning_<dur>; commission → RETAIL
+        // (pre-discount) service price for the duration × rate. It must NEVER commission on the
+        // discounted booking_services.price. Before this the commission branch used `ext.price * rate`
+        // (net/after-discount), so staff were UNDER-paid on a discounted extension while the base job
+        // paid retail — two rules on one booking. Old already-paid rows are NOT backfilled (มติ ก2).
 
         const jobExts = (allBookingServices || []).filter((ext: any) => ext.is_extension && (!isCoupleJob || (ext.recipient_index ?? 0) === recipientIndex))
         let jobExtDuration = 0
@@ -281,7 +284,7 @@ export async function applyExtensionToBooking(params: ApplyExtensionParams): Pro
         }
         if (canComputeEarnings) {
           let jobExtEarnings = 0
-          for (const ext of jobExts) jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
+          for (const ext of jobExts) jobExtEarnings += computeStaffEarning(svc, ext.duration || 0)
           jobUpdate.total_staff_earnings = Number(job.staff_earnings ?? 0) + jobExtEarnings
         } else {
           console.error(

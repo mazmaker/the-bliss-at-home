@@ -71,6 +71,16 @@ vi.mock('../receipts.js', () => ({
   sendCreditNoteEmailForRefund: vi.fn().mockResolvedValue(undefined),
 }))
 
+// Reschedule became admin-only in P6 (`requireAdmin`, an always-on JWT+role gate). These unit tests
+// exercise the route's VALIDATION (missing fields, past-time), not auth, so mock the auth middleware
+// to a pass-through — otherwise every reschedule request 401s at the gate before reaching the handler.
+// (Auth enforcement itself is covered separately by the merge plan's TC4.)
+vi.mock('../../middleware/auth.js', () => ({
+  requireAdmin: (_req: any, _res: any, next: any) => next(),
+  paymentAuthGuard: (_req: any, _res: any, next: any) => next(),
+  authenticateSupabaseUser: (_req: any, _res: any, next: any) => next(),
+}))
+
 import bookingsRouter from '../bookings'
 
 // Create test app
