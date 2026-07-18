@@ -82,6 +82,23 @@ class StaffDocumentService {
   }
 
   /**
+   * Get a short-lived signed URL for a document.
+   * The `staff-documents` bucket is PRIVATE — the stored `file_url` is a legacy public URL that
+   * still contains the object path; extract the path and mint a fresh signed URL the authenticated
+   * admin can open (RLS on storage.objects allows admins via is_admin()). Also accepts a bare path.
+   */
+  async getSignedUrl(fileUrl: string, expiresIn = 300): Promise<string> {
+    const marker = `/${this.BUCKET_NAME}/`
+    const idx = fileUrl.indexOf(marker)
+    const path = idx >= 0 ? fileUrl.slice(idx + marker.length) : fileUrl
+    const { data, error } = await supabase.storage
+      .from(this.BUCKET_NAME)
+      .createSignedUrl(path, expiresIn)
+    if (error || !data?.signedUrl) throw error || new Error('Failed to create signed URL')
+    return data.signedUrl
+  }
+
+  /**
    * Upload a new document
    */
   async uploadDocument(documentData: CreateDocumentData): Promise<StaffDocument> {
@@ -361,7 +378,8 @@ class StaffDocumentService {
       const document = await this.getDocumentById(documentId)
       if (!document) throw new Error('Document not found')
 
-      const response = await fetch(document.file_url)
+      const signedUrl = await this.getSignedUrl(document.file_url)
+      const response = await fetch(signedUrl)
       if (!response.ok) throw new Error('Failed to download document')
 
       return await response.blob()
