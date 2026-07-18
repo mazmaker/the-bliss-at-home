@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, ZoomIn, ZoomOut, RotateCw, Download, Check, XCircle as XIcon } from 'lucide-react'
 import { useUpdateDocumentStatus, useDownloadDocument } from '../hooks/useStaffDocuments'
 import { useAdminAuth } from '../hooks/useAdminAuth'
-import type { StaffDocument } from '../services/staffDocumentService'
+import { staffDocumentService, type StaffDocument } from '../services/staffDocumentService'
 
 interface DocumentViewerModalProps {
   document: StaffDocument | null
@@ -15,10 +15,26 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
   const [rotation, setRotation] = useState(0)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
+  // The staff-documents bucket is private → resolve a short-lived signed URL for preview (img/iframe).
+  const [viewUrl, setViewUrl] = useState<string | null>(null)
+  const [viewError, setViewError] = useState(false)
 
   const { user: adminUser } = useAdminAuth()
   const updateStatusMutation = useUpdateDocumentStatus()
   const downloadMutation = useDownloadDocument()
+
+  useEffect(() => {
+    let active = true
+    setViewUrl(null)
+    setViewError(false)
+    if (isOpen && document) {
+      staffDocumentService
+        .getSignedUrl(document.file_url)
+        .then((url) => { if (active) setViewUrl(url) })
+        .catch(() => { if (active) setViewError(true) })
+    }
+    return () => { active = false }
+  }, [isOpen, document])
 
   if (!isOpen || !document) return null
 
@@ -151,9 +167,21 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
           {/* Document Viewer */}
           <div className="flex-1 overflow-auto bg-bliss-100 p-6">
             <div className="flex items-center justify-center min-h-full">
-              {isImage ? (
+              {viewError ? (
+                <div className="text-center">
+                  <p className="text-bliss-500 mb-4">ไม่สามารถโหลดเอกสารได้ (ลิงก์หมดอายุหรือไม่มีสิทธิ์เข้าถึง)</p>
+                  <button
+                    onClick={handleDownload}
+                    className="px-4 py-2 bg-bliss-600 text-white rounded-lg hover:bg-bliss-700 transition"
+                  >
+                    ลองดาวน์โหลด
+                  </button>
+                </div>
+              ) : !viewUrl ? (
+                <div className="text-center text-bliss-500 py-12">กำลังโหลดเอกสาร...</div>
+              ) : isImage ? (
                 <img
-                  src={document.file_url}
+                  src={viewUrl}
                   alt={document.file_name}
                   style={{
                     transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
@@ -163,7 +191,7 @@ export function DocumentViewerModal({ document, isOpen, onClose }: DocumentViewe
                 />
               ) : isPDF ? (
                 <iframe
-                  src={document.file_url}
+                  src={viewUrl}
                   className="w-full h-full min-h-[600px] bg-white shadow-lg rounded-lg"
                   title={document.file_name}
                 />

@@ -40,6 +40,7 @@ import {
   useProfileUpdate,
   useStaffEligibility,
   useEmergencyContact,
+  getSignedDocumentUrl,
   DOCUMENT_TYPES,
   THAI_PROVINCES,
   EMERGENCY_CONTACT_RELATIONSHIPS,
@@ -988,23 +989,30 @@ function StaffProfile() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-1.5">
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      getSignedDocumentUrl(doc.file_url)
+                        .then((u) => window.open(u, '_blank', 'noopener,noreferrer'))
+                        .catch(() => alert('ไม่สามารถเปิดเอกสารได้ กรุณาลองใหม่'))
+                    }}
                     className="flex-1 px-2 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-xs flex items-center justify-center gap-1"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     ดู
-                  </a>
-                  <a
-                    href={doc.file_url}
-                    download
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      getSignedDocumentUrl(doc.file_url, { download: doc.file_name })
+                        .then((u) => window.open(u, '_blank', 'noopener,noreferrer'))
+                        .catch(() => alert('ไม่สามารถดาวน์โหลดเอกสารได้ กรุณาลองใหม่'))
+                    }}
                     className="flex-1 px-2 py-1.5 bg-bliss-100 text-bliss-700 rounded-lg hover:bg-bliss-200 transition text-xs flex items-center justify-center gap-1"
                   >
                     <Download className="w-3.5 h-3.5" />
                     ดาวน์โหลด
-                  </a>
+                  </button>
                   {doc.verification_status !== 'verified' && (
                     <button
                       onClick={() => setDeleteConfirm({ type: 'document', id: doc.id })}

@@ -98,9 +98,14 @@ export default function JobGPSControls({
   // chain. Called unconditionally (before the early returns) to satisfy rules-of-hooks.
   const startGate = useStartGate(job)
 
-  // Expose debug functions globally for debugging
+  // Expose debug functions globally for debugging.
+  // DEV-ONLY (gated 2026-07-16): this effect runs on every render of every job card, so before the
+  // guard these globals SHIPPED TO PRODUCTION. `__resetStuckJob` writes `started_at: null` straight
+  // to the jobs table from the device console — which both manufactures the permanent
+  // "started_at is NULL" complete-gate lockout and resets the elapsed-time window that
+  // useCompleteGate (and the block_early_job_completion DB trigger) are anchored on.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && import.meta.env.DEV) {
       window.__emergencyGPSReset = () => job.booking_id && emergencyReset(job.booking_id)
       window.__debugJobStatus = () => {
         console.log('🔍 DEBUG JOB STATUS:', {

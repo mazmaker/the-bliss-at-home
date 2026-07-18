@@ -929,10 +929,13 @@ export default function ServiceSelection({
     return `${minutes} นาที`
   }
 
-  // Time selection utilities (same as Customer app)
+  // Time selection utilities — ADMIN IS EXEMPT FROM THE BOOKING-HOURS WINDOW (24h).
+  // Customer/hotel may only start a service 09:00-21:00 (see packages/ui/src/utils/bookingHours.ts);
+  // admin Quick Booking deliberately does NOT import that rule so an admin can take a 02:00 phone
+  // order. Do not "fix" this to 09..21 for consistency — the divergence is the requirement.
   const getAvailableHours = () => {
     const hours = []
-    for (let h = 9; h <= 23; h++) {
+    for (let h = 0; h <= 23; h++) {
       hours.push(h.toString().padStart(2, '0'))
     }
     return hours

@@ -32,3 +32,12 @@ export {
   isRescheduleTimeAvailable,
   isSameBookingSlot,
 } from './utils/rescheduleDateTime'
+export {
+  BOOKING_OPEN_MINUTE,
+  BOOKING_LAST_START_MINUTE,
+  BOOKING_HOURS_LABEL,
+  timeToMinuteOfDay,
+  isTimeWithinBookingHours,
+  isWithinBookingHours,
+  getBookingHourOptions,
+} from './utils/bookingHours'

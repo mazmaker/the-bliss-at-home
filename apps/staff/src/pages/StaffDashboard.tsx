@@ -47,8 +47,8 @@ function StaffDashboard() {
     setCurrentJob(inProgressJob || null)
   }, [jobs])
 
-  // Gate the "เสร็จสิ้นงาน" button: only within the last 10 min of service (overtime allowed).
-  // Extension-aware via total_duration_minutes; disabled until the service actually starts.
+  // Gate the "เสร็จสิ้นงาน" button: only once the full service duration has elapsed (overtime
+  // allowed). Extension-aware via total_duration_minutes; disabled until the service starts.
   const completeGate = useCompleteGate(
     currentJob,
     currentJob?.total_duration_minutes || currentJob?.duration_minutes
@@ -388,7 +388,7 @@ function StaffDashboard() {
               <p className="text-xs text-center text-bliss-500">
                 {!completeGate.inProgress || !completeGate.hasStarted
                   ? 'เริ่มงานก่อนจึงจะกดเสร็จสิ้นได้'
-                  : `กดเสร็จสิ้นได้เมื่อใกล้ครบเวลาบริการ (อีก ${completeGate.minsUntilEligible} นาที)`}
+                  : `กดเสร็จสิ้นได้เมื่อครบเวลาบริการ (อีก ${completeGate.minsUntilEligible} นาที)`}
               </p>
             )}
           </div>
