@@ -217,11 +217,19 @@ export async function applyExtensionToBooking(params: ApplyExtensionParams): Pro
   }
 
   // ── 7. per-recipient job earnings/duration recalc (couple-safe) — non-blocking ──
+  // Deliberately non-blocking: the linchpin booking_services row is already committed above, so
+  // failing the route here would tell the caller the extension did NOT happen when it DID (they would
+  // retry and double-extend). What this block must NOT do is fail SILENTLY — see the error checks below.
   try {
-    const [{ data: bookingJobs }, { data: allBookingServices }] = await Promise.all([
-      supabase.from('jobs').select('id, staff_earnings, duration_minutes, job_index').eq('booking_id', bookingId).not('status', 'eq', 'cancelled'),
+    const [{ data: bookingJobs, error: jobsReadErr }, { data: allBookingServices, error: bsReadErr }] = await Promise.all([
+      supabase.from('jobs').select('id, staff_earnings, duration_minutes, job_index, total_jobs').eq('booking_id', bookingId).not('status', 'eq', 'cancelled'),
       supabase.from('booking_services').select('service_id, duration, price, recipient_index, is_extension').eq('booking_id', bookingId),
     ])
+    // supabase-js RETURNS `{ error }` — it does NOT throw. Without these checks a failed read simply
+    // yields `data: null`, the `if` below is skipped, and the recalc never happens with no log line at
+    // all: jobs keep stale totals forever while the route reports success. Throw so the catch reports it.
+    if (jobsReadErr) throw new Error(`jobs read failed: ${jobsReadErr.message}`)
+    if (bsReadErr) throw new Error(`booking_services read failed: ${bsReadErr.message}`)
     if (bookingJobs && bookingJobs.length > 0) {
       // Resolve each recipient's OWN service rate (couple recipients can have different services).
       const baseByRecipient = new Map<number, string>()
@@ -231,36 +239,69 @@ export async function applyExtensionToBooking(params: ApplyExtensionParams): Pro
         }
       }
       const serviceIds = Array.from(new Set([...baseByRecipient.values(), ...targets.map((t) => t.serviceId)].filter(Boolean)))
-      const { data: svcRows } = serviceIds.length > 0
+      const { data: svcRows, error: svcReadErr } = serviceIds.length > 0
         ? await supabase.from('services').select('id, use_fixed_rate, staff_earning_60, staff_earning_90, staff_earning_120, staff_commission_rate').in('id', serviceIds)
-        : { data: [] as any[] }
+        : { data: [] as any[], error: null }
+      // Unchecked, a FAILED read here is indistinguishable from "this service has no row": both leave
+      // svcById empty, and the earnings fallback below then invents a number out of a network blip.
+      // booking_services.service_id is `NOT NULL REFERENCES services(id) ON DELETE RESTRICT`, so the
+      // service ALWAYS exists — an empty result is a read failure, not missing data. Throw.
+      if (svcReadErr) throw new Error(`services read failed: ${svcReadErr.message}`)
       const svcById = new Map<string, any>((svcRows || []).map((s: any) => [s.id, s]))
-      const isCoupleJobs = bookingJobs.length > 1
 
       for (const job of bookingJobs) {
         const recipientIndex = (job.job_index ?? 1) - 1
+        // Couple-ness comes from the job's OWN total_jobs, never from bookingJobs.length: the query
+        // above filters out cancelled jobs, so a couple with one cancelled job would collapse to
+        // length===1 and the SURVIVING job would absorb BOTH recipients' extension rows (over-crediting
+        // its duration + overpaying its staff). total_jobs is set at job creation and is unaffected by a
+        // later cancellation. Mirrors the DB backstop trigger set_job_total_duration_on_extension
+        // (migration 20260716230000), which scopes on `COALESCE(j.total_jobs,1) > 1` — the two MUST agree.
+        const isCoupleJob = (job.total_jobs ?? 1) > 1
         const svc = svcById.get(baseByRecipient.get(recipientIndex) || '') || svcById.get(targets.find((t) => t.recipientIndex === recipientIndex)?.serviceId || '')
-        const extEarningFor = (dur: number, price: number) => {
-          if (!svc) return Math.round(price || 0)
-          return svc.use_fixed_rate
+        // svc is guaranteed present by the `canComputeEarnings` guard below — NEVER add a `if (!svc)`
+        // fallback here. Both fallbacks that used to live in this spot (`Math.round(price)` = 100% of
+        // the customer's money, and payment.ts's `return 0` = staff paid nothing) were invented numbers
+        // with no rule behind them, and total_staff_earnings is what payouts settle on.
+        const extEarningFor = (dur: number, price: number) =>
+          svc.use_fixed_rate
             ? Math.round(Number(dur === 60 ? svc.staff_earning_60 : dur === 120 ? svc.staff_earning_120 : svc.staff_earning_90) || 0)
             : Math.round((price || 0) * (Number(svc.staff_commission_rate) || 0))
-        }
-        const jobExts = (allBookingServices || []).filter((ext: any) => ext.is_extension && (!isCoupleJobs || (ext.recipient_index ?? 0) === recipientIndex))
+
+        const jobExts = (allBookingServices || []).filter((ext: any) => ext.is_extension && (!isCoupleJob || (ext.recipient_index ?? 0) === recipientIndex))
         let jobExtDuration = 0
-        let jobExtEarnings = 0
-        for (const ext of jobExts) {
-          jobExtDuration += ext.duration || 0
-          jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
-        }
-        await supabase.from('jobs').update({
-          total_staff_earnings: Number(job.staff_earnings ?? 0) + jobExtEarnings,
+        for (const ext of jobExts) jobExtDuration += ext.duration || 0
+
+        // Duration needs no service config, so it is always written. Earnings need the rate config: if
+        // this recipient's service could not be resolved we write the duration and leave
+        // total_staff_earnings ALONE rather than fabricate one — loudly, so it gets reconciled.
+        const canComputeEarnings = jobExts.length === 0 || !!svc
+        const jobUpdate: Record<string, any> = {
           total_duration_minutes: Number(job.duration_minutes ?? 0) + jobExtDuration,
-        }).eq('id', job.id)
+        }
+        if (canComputeEarnings) {
+          let jobExtEarnings = 0
+          for (const ext of jobExts) jobExtEarnings += extEarningFor(ext.duration || 0, ext.price || 0)
+          jobUpdate.total_staff_earnings = Number(job.staff_earnings ?? 0) + jobExtEarnings
+        } else {
+          console.error(
+            `[applyExtension] 🔴 UNRESOLVED SERVICE for job ${job.id} (booking ${bookingId}, recipient ${recipientIndex}) — duration written, total_staff_earnings LEFT UNCHANGED rather than guessed. This recipient's extension earnings need manual reconciliation.`
+          )
+        }
+        // Same reason as the reads above: an unchecked `.update()` swallows its `{ error }`.
+        const { error: jobUpdErr } = await supabase.from('jobs').update(jobUpdate).eq('id', job.id)
+        if (jobUpdErr) throw new Error(`jobs update failed (job ${job.id}): ${jobUpdErr.message}`)
       }
     }
   } catch (jobErr) {
-    console.error('[applyExtension] Job earnings recalc failed (non-blocking):', jobErr)
+    // LOUD: money + the staff complete-gate depend on these columns. The DB trigger
+    // set_job_total_duration_on_extension (migration 20260716230000) backstops total_duration_minutes,
+    // but total_staff_earnings is server-owned and has NO backstop — a failure here means the staff is
+    // under-credited for this extension until someone reconciles it by hand.
+    console.error(
+      `[applyExtension] 🔴 JOB RECALC FAILED for booking ${bookingId} — total_staff_earnings may be STALE (extension IS applied; earnings need manual reconciliation):`,
+      jobErr
+    )
   }
 
   return { extensionServiceIds, newTotalDuration, newTotalPrice, estimatedEndTime, newExtensionCount, staffNotified, customerNotified }
