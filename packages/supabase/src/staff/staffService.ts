@@ -279,6 +279,26 @@ export async function deleteDocument(documentId: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Get a short-lived signed URL for a staff document.
+ * The `staff-documents` bucket is PRIVATE — the stored `file_url` is a legacy public URL that still
+ * contains the object path; extract the path and mint a fresh signed URL (RLS on storage.objects
+ * allows the owning staff via their `<staff.id>/` folder, and admins). Also accepts a bare path.
+ */
+export async function getSignedDocumentUrl(
+  fileUrl: string,
+  opts?: { download?: boolean | string; expiresIn?: number }
+): Promise<string> {
+  const marker = '/staff-documents/'
+  const idx = fileUrl.indexOf(marker)
+  const path = idx >= 0 ? fileUrl.slice(idx + marker.length) : fileUrl
+  const { data, error } = await supabase.storage
+    .from('staff-documents')
+    .createSignedUrl(path, opts?.expiresIn ?? 300, opts?.download ? { download: opts.download } : undefined)
+  if (error || !data?.signedUrl) throw error || new Error('Failed to create signed URL')
+  return data.signedUrl
+}
+
 // ============================================
 // Service Area Operations
 // ============================================
