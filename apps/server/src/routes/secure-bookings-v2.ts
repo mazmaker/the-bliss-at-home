@@ -316,7 +316,7 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
     // Get hotel details
     const { data: hotel } = await serviceSupabase
       .from('hotels')
-      .select('name_th')
+      .select('name_th, latitude, longitude')
       .eq('id', booking.hotel_id)
       .single()
 
@@ -353,8 +353,10 @@ router.post('/', authenticateSupabaseUser, requireHotelRole, async (req: Authent
           hotel_name: hotelName,
           room_number: booking.hotel_room_number,
           address: `โรงแรม ${hotelName}`,
-          latitude: booking.latitude,
-          longitude: booking.longitude,
+          // P19 Stage 2: hotel bookings carry no booking coords → fall back to the hotel's own
+          // location so staff see a real distance / can navigate to the hotel.
+          latitude: booking.latitude ?? hotel?.latitude ?? null,
+          longitude: booking.longitude ?? hotel?.longitude ?? null,
           service_name: svcDetail?.name_th || 'บริการนวด',
           service_name_en: svcDetail?.name_en || 'Massage Service',
           duration_minutes: svc.duration,

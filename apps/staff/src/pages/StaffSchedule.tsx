@@ -23,6 +23,8 @@ import { useJobs, type Job, type JobStatus } from '@bliss/supabase'
 import { useAuth } from '@bliss/supabase/auth'
 import { NotificationSounds, isSoundEnabled } from '../utils/soundNotification'
 import { stopBackgroundMusic } from '../utils/backgroundMusic'
+import { useStaffPosition } from '../hooks/useStaffPosition'
+import { JobDistance, DistanceOptIn } from '../components/JobDistance'
 
 type ViewMode = 'day' | 'week' | 'month'
 type FilterMode = 'all' | 'upcoming' | 'completed'
@@ -46,6 +48,12 @@ function StaffSchedule() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { jobs, isLoading, refresh } = useJobs({ realtime: true })
+  // P19: opt-in straight-line distance (shared across pages via sessionStorage; never on mount).
+  const {
+    position: distancePosition,
+    status: distanceStatus,
+    requestPosition: requestDistancePosition,
+  } = useStaffPosition()
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -767,10 +775,15 @@ function StaffSchedule() {
                   >
                     <Navigation className="w-3.5 h-3.5" />
                     นำทาง
-                    {selectedJob.distance_km && (
-                      <span className="text-bliss-600">({selectedJob.distance_km} กม.)</span>
-                    )}
+                    <JobDistance job={selectedJob} position={distancePosition} variant="inline" />
                   </a>
+                )}
+                {distanceStatus !== 'granted' && selectedJob.latitude && selectedJob.longitude && (
+                  <DistanceOptIn
+                    status={distanceStatus}
+                    onEnable={requestDistancePosition}
+                    className="mt-2"
+                  />
                 )}
               </div>
 

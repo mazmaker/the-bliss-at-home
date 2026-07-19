@@ -21,6 +21,9 @@ import { playBackgroundMusic, stopBackgroundMusic, setMusicManuallyMuted } from 
 import { normalizeCommissionRate, calculateExtensionEarnings } from '../utils/commissionUtils'
 import { useGPSTracking } from '../hooks/useGPSTracking'
 import { withTimeout } from '../utils/withTimeout'
+import { useStaffPosition } from '../hooks/useStaffPosition'
+import { JobDistance, DistanceOptIn } from '../components/JobDistance'
+import type { LatLng } from '../utils/distance'
 
 function StaffJobDetail() {
   const { id } = useParams<{ id: string }>()
@@ -35,6 +38,17 @@ function StaffJobDetail() {
 
   // Keep global GPS hook for controls and map display
   const { currentPosition, checkExistingJourney } = useGPSTracking()
+
+  // P19: distance uses the live journey position when available (already prompted via the
+  // "เริ่มเดินทาง" flow), otherwise the OPT-IN position — never a second geolocation watcher.
+  const {
+    position: optInPosition,
+    status: distanceStatus,
+    requestPosition: requestDistancePosition,
+  } = useStaffPosition()
+  const distancePosition: LatLng | null = currentPosition
+    ? { latitude: currentPosition.latitude, longitude: currentPosition.longitude }
+    : optInPosition
 
   // Query service commission rate
   const { data: serviceData } = useQuery({
@@ -456,8 +470,13 @@ function StaffJobDetail() {
               ) : (
                 <p className="font-medium text-bliss-900">{job.address}</p>
               )}
-              {job.distance_km && (
-                <p className="text-sm text-bliss-500 mt-1">ระยะทาง {job.distance_km} กม.</p>
+              <JobDistance job={job} position={distancePosition} variant="detail" />
+              {!currentPosition && distanceStatus !== 'granted' && (
+                <DistanceOptIn
+                  status={distanceStatus}
+                  onEnable={requestDistancePosition}
+                  className="mt-1"
+                />
               )}
             </div>
             {job.latitude && job.longitude && (

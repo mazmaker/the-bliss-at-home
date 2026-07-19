@@ -13,6 +13,8 @@ import { useExtendSessionNotifications } from '../hooks/useExtendSessionNotifica
 import { NotificationSounds, initializeAudio, isSoundEnabled } from '../utils/soundNotification'
 import { playBackgroundMusic, stopBackgroundMusic, setMusicManuallyMuted } from '../utils/backgroundMusic'
 import { withTimeout } from '../utils/withTimeout'
+import { useStaffPosition } from '../hooks/useStaffPosition'
+import { JobDistance, DistanceOptIn } from '../components/JobDistance'
 
 function StaffDashboard() {
   const { user } = useAuth()
@@ -23,6 +25,14 @@ function StaffDashboard() {
     onNewJob: handleNewJob,
   })
   const { stats } = useStaffStats()
+
+  // P19: opt-in straight-line distance from the staff's current position to each job.
+  // Never prompts on mount (see useStaffPosition) — the DistanceOptIn button triggers it.
+  const {
+    position: distancePosition,
+    status: distanceStatus,
+    requestPosition: requestDistancePosition,
+  } = useStaffPosition()
 
   // Extend session notifications
   const { latestExtension, clearLatestExtension } = useExtendSessionNotifications(user?.id)
@@ -395,6 +405,14 @@ function StaffDashboard() {
         </div>
       )}
 
+      {/* P19: opt-in affordance to reveal straight-line distance on the job cards below. */}
+      {distanceStatus !== 'granted' &&
+        (pendingJobs.length > 0 || myJobs.length > 0 || upcomingJobs.length > 0) && (
+          <div className="flex justify-start">
+            <DistanceOptIn status={distanceStatus} onEnable={requestDistancePosition} />
+          </div>
+        )}
+
       {/* Available Jobs (pending) — NEW / not yet accepted, shown FIRST so งานใหม่ ไม่ปนกับงานที่รับแล้ว */}
       {pendingJobs.length > 0 && (
         <div>
@@ -435,12 +453,7 @@ function StaffDashboard() {
                         <span className="flex-1">{job.address}</span>
                       </div>
                     )}
-                    {job.distance_km && (
-                      <div className="flex items-center gap-2 text-bliss-600">
-                        <Navigation className="w-4 h-4" />
-                        <span>{job.distance_km} กม.</span>
-                      </div>
-                    )}
+                    <JobDistance job={job} position={distancePosition} variant="row" />
                   </div>
                 </Link>
 
@@ -522,12 +535,7 @@ function StaffDashboard() {
                         <span className="flex-1">{job.address}</span>
                       </div>
                     )}
-                    {job.distance_km && (
-                      <div className="flex items-center gap-2 text-bliss-600">
-                        <Navigation className="w-4 h-4" />
-                        <span>{job.distance_km} กม.</span>
-                      </div>
-                    )}
+                    <JobDistance job={job} position={distancePosition} variant="row" />
                   </div>
                 </Link>
 
@@ -594,12 +602,7 @@ function StaffDashboard() {
                           <span className="flex-1">{job.address}</span>
                         </div>
                       )}
-                      {job.distance_km && (
-                        <div className="flex items-center gap-2 text-bliss-600">
-                          <Navigation className="w-4 h-4" />
-                          <span>{job.distance_km} กม.</span>
-                        </div>
-                      )}
+                      <JobDistance job={job} position={distancePosition} variant="row" />
                     </div>
 
                     <div className="flex items-center justify-between">
