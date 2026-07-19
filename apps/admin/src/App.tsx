@@ -21,6 +21,7 @@ import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import Promotions from './pages/Promotions'
 import Reviews from './pages/Reviews'
+import StaffComments from './pages/StaffComments'
 import CreditCalendar from './pages/CreditCalendar'
 import PayoutDashboard from './pages/PayoutDashboard'
 import { AdminLoginPage } from './pages/auth'
@@ -144,6 +145,7 @@ function App() {
         <Route path="settings" element={<Settings />} />
         <Route path="promotions" element={<Promotions />} />
         <Route path="reviews" element={<Reviews />} />
+        <Route path="staff-comments" element={<StaffComments />} />
         <Route path="*" element={<Dashboard />} />
       </Route>
 

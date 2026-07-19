@@ -12,6 +12,7 @@ import {
   Building,
   Calendar,
   Star,
+  MessageCircle,
   BarChart3,
   Settings,
   Menu,
@@ -50,6 +51,7 @@ const navigation = [
   { name: 'จองแบบเร่งด่วน', nameEn: 'Quick Booking', href: '/admin/quick-booking', icon: Plus },
   { name: 'โปรโมชัน', nameEn: 'Promotions', href: '/admin/promotions', icon: TrendingUp },
   { name: 'รีวิว', nameEn: 'Reviews', href: '/admin/reviews', icon: Star },
+  { name: 'ความคิดเห็นพนักงาน', nameEn: 'Staff Comments', href: '/admin/staff-comments', icon: MessageCircle },
   { name: 'รายงาน', nameEn: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { name: 'ตั้งค่า', nameEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]

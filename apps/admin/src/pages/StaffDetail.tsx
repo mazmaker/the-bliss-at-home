@@ -13,6 +13,7 @@ import {
   Clock,
   Wallet,
   MessageSquare,
+  MessageCircle,
   AlertCircle,
   CheckCircle,
   XCircle,
@@ -84,11 +85,12 @@ import { JobDetailModal } from '../components/JobDetailModal'
 import EditStaffModal from '../components/EditStaffModal'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { ReviewsTabContent } from '../components/ReviewsTabContent'
+import { CommentsTabContent } from '../components/CommentsTabContent'
 import PayoutScheduleModal from '../components/PayoutScheduleModal'
 import { UpdatePayoutScheduleRequest } from '../types/staff'
 import { staffService } from '../services/staffService'
 
-type TabType = 'overview' | 'documents' | 'schedule' | 'performance' | 'reviews' | 'earnings'
+type TabType = 'overview' | 'documents' | 'schedule' | 'performance' | 'reviews' | 'comments' | 'earnings'
 
 function StaffDetail() {
   const { id } = useParams<{ id: string }>()
@@ -97,7 +99,7 @@ function StaffDetail() {
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab') as TabType | null
-  const validTabs: TabType[] = ['overview', 'documents', 'schedule', 'performance', 'reviews', 'earnings']
+  const validTabs: TabType[] = ['overview', 'documents', 'schedule', 'performance', 'reviews', 'comments', 'earnings']
   const [activeTab, setActiveTab] = useState<TabType>(
     tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
   )
@@ -161,6 +163,7 @@ function StaffDetail() {
     { id: 'schedule', label: 'ตารางงาน', icon: Calendar },
     { id: 'performance', label: 'ประสิทธิภาพ', icon: TrendingUp },
     { id: 'reviews', label: 'รีวิว', icon: MessageSquare },
+    { id: 'comments', label: 'ความคิดเห็น', icon: MessageCircle },
     { id: 'earnings', label: 'รายได้', icon: Wallet },
   ]
 
@@ -341,6 +344,7 @@ function StaffDetail() {
           {activeTab === 'schedule' && <ScheduleTab staff={staff} />}
           {activeTab === 'performance' && <PerformanceTab staff={staff} />}
           {activeTab === 'reviews' && <ReviewsTab staff={staff} />}
+          {activeTab === 'comments' && <CommentsTab staff={staff} />}
           {activeTab === 'earnings' && <EarningsTab staff={staff} />}
         </div>
       </div>
@@ -1420,6 +1424,11 @@ function PerformanceTab({ staff }: { staff: Staff }) {
 // Reviews Tab Component
 function ReviewsTab({ staff }: { staff: Staff }) {
   return <ReviewsTabContent staff={staff} />
+}
+
+// Comments Tab Component (P18 — staff job comments, admin view)
+function CommentsTab({ staff }: { staff: Staff }) {
+  return <CommentsTabContent staff={staff} />
 }
 
 // Earnings Tab Component

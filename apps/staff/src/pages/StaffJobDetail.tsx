@@ -11,6 +11,7 @@ import { useJob, useJobs, type JobStatus, isSpecificPreference, getProviderPrefe
 import { ServiceTimer, SOSButton, ExtensionInfo, ExtensionAlertBanner, JobLocationMap } from '../components'
 import JobGPSControls from '../components/JobGPSControls'
 import JobStatusBadge from '../components/JobStatusBadge'
+import StaffJobCommentCard from '../components/StaffJobCommentCard'
 import { useJobGPSStatus } from '../hooks/useJobGPSStatus'
 import { useCompleteGate } from '../hooks/useCompleteGate'
 import { canStaffSeeCustomerPhone, maskCustomerNotesPhone } from '../utils/customerContact'
@@ -652,6 +653,11 @@ function StaffJobDetail() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Staff comment on own completed job — visible to self + admin only (P18) */}
+      {isMyJob && job.status === 'completed' && user?.id && (
+        <StaffJobCommentCard jobId={job.id} staffId={user.id} />
       )}
 
       {/* Error */}

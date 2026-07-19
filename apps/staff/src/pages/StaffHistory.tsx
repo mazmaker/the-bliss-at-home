@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Calendar, Clock, MapPin, Filter, Loader2, RefreshCw } from 'lucide-react'
 import { useAuth } from '@bliss/supabase/auth'
 import { useJobs, type Job, type JobStatus } from '@bliss/supabase'
 
 function StaffHistory() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
   const [monthFilter, setMonthFilter] = useState(() => {
@@ -152,7 +154,13 @@ function StaffHistory() {
                 {dayJobs.map((job) => (
                   <div
                     key={job.id}
-                    className={`bg-white rounded-xl shadow p-4 border ${
+                    onClick={() => navigate(`/staff/jobs/${job.id}`)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') navigate(`/staff/jobs/${job.id}`)
+                    }}
+                    className={`bg-white rounded-xl shadow p-4 border cursor-pointer transition-shadow hover:shadow-md ${
                       job.status === 'completed' ? 'border-bliss-100' : 'border-red-100 bg-red-50'
                     }`}
                   >
