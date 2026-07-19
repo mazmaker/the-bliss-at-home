@@ -1126,7 +1126,7 @@ export const getHotelStats = async (hotelId: string) => {
     .eq('hotel_id', hotelId)
     .eq('month', currentMonth)
     .eq('year', currentYear)
-    .single()
+    .maybeSingle() // 0 แถว (ยังไม่มีบิลเดือนนี้) = คืน null เงียบๆ ไม่ throw 406; fallback คำนวณจาก bookings ด้านล่างจัดการต่อ
 
   // ถ้าไม่มีใน monthly_bills ให้คำนวณจาก bookings
   let monthlyRevenue = monthlyBill?.total_amount || 0
