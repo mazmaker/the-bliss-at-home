@@ -85,6 +85,28 @@ export function requireRole(...roles: string[]) {
  * (e.g. the reschedule route once reschedule becomes admin-only). Rejects missing/invalid
  * token (401) and any non-admin caller (403), so a stale customer/hotel JWT cannot reach it.
  */
+/**
+ * Reusable admin-token check (the core of requireAdmin, minus the middleware plumbing) for handlers that
+ * must gate only PART of their work on admin auth — e.g. POST /booking-confirmed honoring a privileged
+ * `preassignStaff` ONLY from an admin while staying tokenless for the normal dispatch. Returns ok=false +
+ * an HTTP status (401 missing/invalid token, 403 non-admin). Always-on (not flag-gated).
+ */
+export async function verifyAdminToken(
+  authHeader?: string
+): Promise<{ ok: boolean; status: number; error?: string; user?: AuthenticatedRequest['user'] }> {
+  const token = authHeader?.replace('Bearer ', '')
+  if (!token) return { ok: false, status: 401, error: 'No token provided' }
+  const { data: { user }, error } = await userClientFor(token).auth.getUser()
+  if (error || !user) return { ok: false, status: 401, error: 'Invalid token' }
+  const { data: profile } = await getSupabaseClient()
+    .from('profiles')
+    .select('id, role, email, hotel_id')
+    .eq('id', user.id)
+    .single()
+  if (!profile || profile.role !== 'ADMIN') return { ok: false, status: 403, error: 'Admin only' }
+  return { ok: true, status: 200, user: profile }
+}
+
 export async function requireAdmin(
   req: AuthenticatedRequest,
   res: Response,

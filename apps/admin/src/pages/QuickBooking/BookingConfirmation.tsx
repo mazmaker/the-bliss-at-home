@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, Check, User, Calendar, Users, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { createCustomerAddress } from '../../lib/customerQueries'
+import QuickBookingStaffPicker, { type StaffSelection } from './QuickBookingStaffPicker'
 
 interface BookingData {
   customer?: any
@@ -68,6 +69,18 @@ export default function BookingConfirmation({
   const [isCreating, setIsCreating] = useState(false)
   const [createdBooking, setCreatedBooking] = useState<any>(null)
   const [error, setError] = useState('')
+  // P16: QuickBooking staff pre-selection (recipientIndex → chosen staff + override flag). Empty = broadcast
+  // as usual. `override` is true when the admin type-confirmed a SOFT-blocked staff (KYC/not-available).
+  const [preassign, setPreassign] = useState<Record<number, StaffSelection>>({})
+
+  const pkIsCouple = (bookingData.recipientCount || 1) > 1 && (bookingData.recipients?.length || 0) > 1
+  const pickerRecipients = pkIsCouple
+    ? (bookingData.recipients || []).map((r) => ({
+        recipientIndex: r.recipient_index,
+        label: r.recipient_name || `คนที่ ${r.recipient_index + 1}`,
+        durationMinutes: r.duration || bookingData.selectedDuration || 60,
+      }))
+    : [{ recipientIndex: 0, label: 'พนักงาน', durationMinutes: bookingData.selectedDuration || bookingData.service?.duration || 60 }]
 
   // The admin picks a duration (60/90/120) in ServiceSelection, but bookingData.service is the raw
   // Service row whose .duration is only the DB default. The chosen duration lives in selectedDuration
@@ -156,6 +169,20 @@ export default function BookingConfirmation({
       const svc = bookingData.service as any
       const recips = bookingData.recipients || []
       const isCouple = (bookingData.recipientCount || 1) > 1 && recips.length > 1
+
+      // P16: QuickBooking staff pre-selection is ALL-OR-NONE. If some (but not all) recipients were
+      // pre-picked, block — else a not-picked recipient's job would be created with no staff AND no
+      // broadcast (stranded). Empty = normal broadcast; all filled = assign directly + suppress broadcast.
+      const totalRecipients = isCouple ? recips.length : 1
+      const preassignEntries = Object.entries(preassign).filter(([, v]) => v && v.profileId)
+      if (preassignEntries.length > 0 && preassignEntries.length < totalRecipients) {
+        setIsCreating(false)
+        setError('กรุณาเลือกพนักงานให้ครบทุกคน หรือเว้นว่างทั้งหมด (เพื่อให้ระบบประกาศหาคนรับตามปกติ)')
+        return
+      }
+      // Thread the per-recipient override flag through — the server applies it via assignStaffToJob
+      // (a SOFT-blocked KYC/not-available staff is assigned only when override===true).
+      const preassignStaff = preassignEntries.map(([k, v]) => ({ recipientIndex: Number(k), staffProfileId: v.profileId, override: v.override === true }))
 
       const earningFor = (s: any, dur: number, commissionBase: number): number => {
         if (s?.use_fixed_rate) {
@@ -285,10 +312,12 @@ export default function BookingConfirmation({
       // adminBookingService.updateBookingStatus's confirmed-branch dispatch. Non-blocking.
       try {
         const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://the-bliss-at-home-server.vercel.app' : 'http://localhost:3000')
+        // Send the admin JWT — the server requires it to honor preassignStaff (a privileged capability).
+        const dispatchToken = (await supabase.auth.getSession()).data.session?.access_token
         const dispatchRes = await fetch(`${serverUrl}/api/notifications/booking-confirmed`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ booking_id: booking.id }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dispatchToken}` },
+          body: JSON.stringify({ booking_id: booking.id, preassignStaff: preassignStaff.length ? preassignStaff : undefined }),
         })
         const dispatchResult = await dispatchRes.json()
         if (dispatchResult.success) {
@@ -601,6 +630,25 @@ export default function BookingConfirmation({
           </div>
         )}
       </div>
+
+      {/* P16: optional staff pre-selection (else the job is broadcast to the pool as usual) */}
+      {bookingData.bookingDate && bookingData.bookingTime && (
+        <QuickBookingStaffPicker
+          date={bookingData.bookingDate}
+          time={bookingData.bookingTime}
+          providerPreference={bookingData.providerPreference}
+          recipients={pickerRecipients}
+          value={preassign}
+          onChange={(ri, sel) =>
+            setPreassign((prev) => {
+              const next = { ...prev }
+              if (sel && sel.profileId) next[ri] = sel
+              else delete next[ri]
+              return next
+            })
+          }
+        />
+      )}
 
       {/* Warning */}
       <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">

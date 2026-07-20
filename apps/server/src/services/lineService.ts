@@ -801,10 +801,54 @@ async function sendBookingExtendedToStaff(lineUserIds: string[], data: BookingEx
   return multicast(lineUserIds, [message])
 }
 
+/**
+ * P16 — notify the staff an admin ASSIGNED (or reassigned) this job to them. Single push (one staff).
+ */
+async function sendJobAssignedToStaff(
+  lineUserId: string,
+  data: { serviceName: string; scheduledDate: string; scheduledTime: string; jobId?: string }
+): Promise<boolean> {
+  if (!lineUserId) return true
+  const staffLiffUrl = process.env.STAFF_LIFF_URL || 'https://staff.theblissathome.com'
+  const link = data.jobId ? `${staffLiffUrl}/staff/jobs/${data.jobId}` : `${staffLiffUrl}/staff/jobs`
+  const message: LineMessage = {
+    type: 'text',
+    text:
+      `🔔 คุณได้รับมอบหมายงานใหม่!\n\n` +
+      `💆 บริการ: ${data.serviceName}\n` +
+      `📅 วันที่: ${data.scheduledDate}\n` +
+      `⏰ เวลา: ${data.scheduledTime}\n\n` +
+      `👉 เปิดแอปเพื่อดูรายละเอียด:\n${link}`,
+  }
+  return pushMessage(lineUserId, [message])
+}
+
+/**
+ * P16 — notify the previously-assigned staff their job was TRANSFERRED away (reassign). Single push.
+ */
+async function sendJobTransferredAway(
+  lineUserId: string,
+  data: { serviceName: string; scheduledDate: string; scheduledTime: string }
+): Promise<boolean> {
+  if (!lineUserId) return true
+  const message: LineMessage = {
+    type: 'text',
+    text:
+      `ℹ️ งานของคุณถูกโอนให้พนักงานท่านอื่น\n\n` +
+      `💆 บริการ: ${data.serviceName}\n` +
+      `📅 วันที่: ${data.scheduledDate}\n` +
+      `⏰ เวลา: ${data.scheduledTime}\n\n` +
+      `งานนี้ถูกมอบหมายให้ผู้อื่นแล้ว ไม่ต้องดำเนินการ`,
+  }
+  return pushMessage(lineUserId, [message])
+}
+
 export const lineService = {
   pushMessage,
   multicast,
   sendNewJobToStaff,
+  sendJobAssignedToStaff,
+  sendJobTransferredAway,
   sendNewBookingToAdmin,
   sendJobReAvailableToStaff,
   sendJobCancelledToAdmin,

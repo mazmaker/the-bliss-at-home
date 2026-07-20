@@ -24,6 +24,7 @@ import hotelRoutes from './routes/hotel'
 import secureBookingsRoutes from './routes/secure-bookings-v2'
 import notificationRoutes from './routes/notification'
 import bookingsRoutes from './routes/bookings'
+import jobsRoutes from './routes/jobs'
 import cancellationPolicyRoutes from './routes/cancellationPolicy'
 import receiptsRoutes from './routes/receipts'
 import invoicesRoutes from './routes/invoices'
@@ -140,6 +141,7 @@ app.use('/api/notifications', notificationRoutes)
 
 // Booking routes
 app.use('/api/bookings', bookingsRoutes)
+app.use('/api/jobs', jobsRoutes)
 
 // Cancellation policy routes
 console.log('📋 Registering cancellation policy routes at /api/cancellation-policy')

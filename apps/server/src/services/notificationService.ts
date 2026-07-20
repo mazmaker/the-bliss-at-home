@@ -8,6 +8,7 @@ import { computeStaffEarning } from '../lib/earnings.js'
 import { lineService } from './lineService.js'
 import { emailService, creditDueReminderEmailTemplate } from './emailService.js'
 import { googleCalendarService } from './googleCalendarService.js'
+import { assignStaffToJob } from './jobAssignService.js'
 
 /**
  * Get Thai label for provider preference (server-side helper)
@@ -273,9 +274,18 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
     // final_price. The customer path never reaches here (its trigger already created the jobs →
     // idempotent early-return above), so re-deriving is safe and §1-correct for admin/non-trigger.
     const singleEarnings = computeStaffEarning(singleSvc, singleDuration)
+    // 🔴 FK landmine fix (P16): booking.staff_id is a STAFF.id, but jobs.staff_id needs the PROFILES.id.
+    // Writing the raw staff.id here FK-violated → the job insert failed SILENTLY (R4, no job). Resolve it
+    // to the profile_id. Normally null anyway (QuickBooking preassign goes through jobAssignService AFTER
+    // job creation, never via booking.staff_id) — this just makes any legacy pre-assign path safe.
+    let preAssignedProfileId: string | null = null
+    if (booking.staff_id) {
+      const { data: st } = await supabase.from('staff').select('profile_id').eq('id', booking.staff_id).single()
+      preAssignedProfileId = st?.profile_id || null
+    }
     const jobData = {
       ...baseJobData,
-      staff_id: booking.staff_id || null,
+      staff_id: preAssignedProfileId,
       service_name: booking.service?.name_th || 'บริการ',
       service_name_en: booking.service?.name_en || null,
       duration_minutes: booking.duration || 60,
@@ -283,7 +293,7 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
       staff_earnings: singleEarnings,
     }
 
-    if (booking.staff_id) {
+    if (preAssignedProfileId) {
       jobData.status = 'assigned' as const
     }
 
@@ -312,7 +322,8 @@ export async function createJobsFromBooking(bookingId: string): Promise<string[]
  */
 export async function sendBookingConfirmedNotifications(
   bookingId: string,
-  jobIds: string[]
+  jobIds: string[],
+  opts?: { suppressStaffBroadcast?: boolean }
 ): Promise<{ staffNotified: number; adminsNotified: number }> {
   const supabase = getSupabaseClient()
   const result = { staffNotified: 0, adminsNotified: 0 }
@@ -438,7 +449,13 @@ export async function sendBookingConfirmedNotifications(
   const availableStaff = preferenceFilteredStaff.filter(s => !servingStaffIds.has(s.profile_id))
   console.log(`👥 Staff filter: preference=${booking.provider_preference || 'no-preference'}, total=${allAvailableStaff?.length || 0}, afterPreference=${preferenceFilteredStaff.length}, serving=${servingStaffIds.size}, dispatched=${availableStaff.length}`)
 
-  if (availableStaff.length > 0) {
+  // P16: QuickBooking with a pre-selected staff suppresses the pool broadcast (D-P16 #5) — the chosen
+  // staff were assigned directly, so we must NOT also offer the job to everyone (would be a race + noise).
+  if (opts?.suppressStaffBroadcast) {
+    console.log('🔕 Staff broadcast suppressed (QuickBooking preassign)')
+  }
+
+  if (!opts?.suppressStaffBroadcast && availableStaff.length > 0) {
     // Get LINE user IDs from profiles
     const profileIds = availableStaff.map(s => s.profile_id).filter(Boolean)
     const { data: staffProfiles } = await supabase
@@ -778,7 +795,17 @@ export async function sendExtensionNotifications(
  * Combined: Create job(s) + send notifications
  * Used by payment webhook and manual admin dispatch
  */
-export async function processBookingConfirmed(bookingId: string): Promise<{
+/** P16: QuickBooking may pre-select a staff PER RECIPIENT (recipientIndex = job_index - 1). */
+export interface PreassignEntry {
+  recipientIndex: number
+  staffProfileId: string
+  override?: boolean
+}
+
+export async function processBookingConfirmed(
+  bookingId: string,
+  preassignStaff?: PreassignEntry[]
+): Promise<{
   success: boolean
   jobIds: string[]
   staffNotified: number
@@ -790,8 +817,34 @@ export async function processBookingConfirmed(bookingId: string): Promise<{
     return { success: false, jobIds: [], staffNotified: 0, adminsNotified: 0 }
   }
 
-  // Step 2: Send notifications
-  const { staffNotified, adminsNotified } = await sendBookingConfirmedNotifications(bookingId, jobIds)
+  // Step 1.5 (P16): if QuickBooking pre-selected staff, assign each recipient's job to the chosen staff
+  // BEFORE broadcasting, then suppress the pool broadcast — but ONLY when EVERY job got a staff, so a
+  // partial failure (e.g. a race) falls back to a normal broadcast instead of stranding a pending job.
+  let suppressStaffBroadcast = false
+  if (preassignStaff && preassignStaff.length > 0) {
+    const supabase = getSupabaseClient()
+    const { data: createdJobs } = await supabase.from('jobs').select('id, job_index').in('id', jobIds)
+    const jobByRecipient = new Map<number, string>()
+    for (const j of createdJobs || []) jobByRecipient.set((j.job_index ?? 1) - 1, j.id)
+
+    let assigned = 0
+    for (const pa of preassignStaff) {
+      const jid = jobByRecipient.get(pa.recipientIndex)
+      if (!jid) continue
+      const r = await assignStaffToJob(supabase, jid, pa.staffProfileId, { override: pa.override === true, notify: true })
+      if (r.ok) assigned++
+      else console.warn(`[P16 QB] preassign recipient ${pa.recipientIndex} → ${pa.staffProfileId} failed: ${r.code} (${r.error})`)
+    }
+    // Suppress ONLY when every preassign entry succeeded AND every created job got one — so a job that
+    // FAILED to insert mid-couple (jobIds shorter than expected) does NOT strand a recipient: keying on
+    // jobIds.length alone would read "1 assigned === 1 created" as complete and wrongly suppress. Guard
+    // against BOTH the created count and the requested count.
+    suppressStaffBroadcast = assigned > 0 && assigned === jobIds.length && assigned === preassignStaff.length
+    console.log(`[P16 QB] preassigned ${assigned}/${jobIds.length} jobs (requested ${preassignStaff.length}), suppressBroadcast=${suppressStaffBroadcast}`)
+  }
+
+  // Step 2: Send notifications (staff broadcast suppressed when all jobs were preassigned)
+  const { staffNotified, adminsNotified } = await sendBookingConfirmedNotifications(bookingId, jobIds, { suppressStaffBroadcast })
 
   console.log(`✅ Booking ${bookingId} processed: jobs=${jobIds.join(',')}, staff=${staffNotified}, admins=${adminsNotified}`)
   return { success: true, jobIds, staffNotified, adminsNotified }

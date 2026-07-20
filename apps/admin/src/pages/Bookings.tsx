@@ -11,6 +11,7 @@ import DeleteBookingConfirmModal from '../components/DeleteBookingConfirmModal'
 import { supabase } from '../lib/supabase'
 import { useBookingJourneys } from '../hooks/useBookingJourneys'
 import AdminStaffTrackingMap from '../components/AdminStaffTrackingMap'
+import AssignStaffModal from '../components/AssignStaffModal'
 import toast from 'react-hot-toast'
 
 // Server API base — strip a trailing /api (prod VITE_API_URL includes it) to avoid /api/api → 404.
@@ -625,6 +626,8 @@ interface BookingDetailModalProps {
 function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCancellation, onOpenReschedule, onDelete }: BookingDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState(booking.status)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
+  // P16: which job the admin is assigning/changing staff for (per-recipient for couple).
+  const [assignJob, setAssignJob] = useState<{ id: string; label?: string; currentName?: string | null } | null>(null)
 
   // P17: live staff-travel journeys for this booking, keyed by JOB id (only polls while open).
   const { journeysByJobId } = useBookingJourneys(booking.id, isOpen)
@@ -746,6 +749,24 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {assignJob && (
+        <AssignStaffModal
+          jobId={assignJob.id}
+          isOpen={true}
+          recipientLabel={assignJob.label}
+          currentStaffName={assignJob.currentName}
+          onClose={() => setAssignJob(null)}
+          onAssigned={() => {
+            // P16: keep the detail modal OPEN after an assign so a COUPLE booking's recipients can be
+            // assigned back-to-back. The list-sync effect (see the parent's `bookingsData` useEffect)
+            // refreshes this modal's `booking` prop to show the just-assigned recipient AND reveal the
+            // next recipient's "มอบหมายพนักงาน" button — no more bounce back to the list between picks.
+            // The admin closes the modal manually via the ✕ when done (both single and couple).
+            setAssignJob(null)
+            queryClient.invalidateQueries({ queryKey: ['bookings'] })
+          }}
+        />
+      )}
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-bliss-200 px-6 py-4 flex items-center justify-between">
@@ -996,6 +1017,14 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                                 </span>
                               </div>
                             </div>
+                            {(job.status === 'pending' || job.status === 'confirmed') && (
+                              <button
+                                onClick={() => setAssignJob({ id: job.id, label: `คนที่ ${job.job_index}`, currentName: job.staff_name })}
+                                className="mt-1 text-xs text-bliss-600 hover:text-bliss-800 underline"
+                              >
+                                {job.status === 'confirmed' ? 'เปลี่ยนพนักงาน' : 'มอบหมายพนักงาน'}
+                              </button>
+                            )}
                             {showTravel && (jrny ? (
                               <AdminStaffTrackingMap
                                 journeyId={jrny.journeyId}
@@ -1016,6 +1045,14 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                     <p className="font-medium text-bliss-900">{booking.staff?.name_th || 'รอมอบหมาย'}</p>
                     {booking.jobs?.[0]?.status && (
                       <div className="mt-1">{getJobProgressBadge(booking.jobs[0].status)}</div>
+                    )}
+                    {(booking.jobs?.[0]?.status === 'pending' || booking.jobs?.[0]?.status === 'confirmed') && (
+                      <button
+                        onClick={() => setAssignJob({ id: booking.jobs![0].id, currentName: booking.staff?.name_th })}
+                        className="mt-1 text-xs text-bliss-600 hover:text-bliss-800 underline"
+                      >
+                        {booking.jobs?.[0]?.status === 'confirmed' ? 'เปลี่ยนพนักงาน' : 'มอบหมายพนักงาน'}
+                      </button>
                     )}
                     {(() => {
                       // P17: single-recipient travel map (this branch is the majority of bookings).

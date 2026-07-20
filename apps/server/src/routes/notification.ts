@@ -5,6 +5,7 @@
 
 import { Router, Request, Response } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
+import { verifyAdminToken } from '../middleware/auth.js'
 import { processBookingConfirmed, processJobCancelled, processBookingCancelled, sendPayoutCompletedNotification } from '../services/notificationService.js'
 
 const router = Router()
@@ -15,7 +16,7 @@ const router = Router()
  */
 router.post('/booking-confirmed', async (req: Request, res: Response) => {
   try {
-    const { booking_id } = req.body
+    const { booking_id, preassignStaff } = req.body
 
     if (!booking_id) {
       return res.status(400).json({
@@ -45,8 +46,24 @@ router.post('/booking-confirmed', async (req: Request, res: Response) => {
       })
     }
 
-    // Process: create job + send notifications
-    const result = await processBookingConfirmed(booking_id)
+    // 🔴 SECURITY: this endpoint is intentionally TOKENLESS for the normal dispatch (customer/hotel/admin
+    // confirm all POST here without a JWT). But `preassignStaff` is a PRIVILEGED capability — it writes a
+    // chosen staff onto a job and can override a SOFT (KYC/not-available) block — so it MUST be admin-gated.
+    // Verify the admin JWT ONLY when preassignStaff is present, so the tokenless dispatch path is unchanged.
+    if (Array.isArray(preassignStaff) && preassignStaff.length > 0) {
+      const auth = await verifyAdminToken(req.headers.authorization)
+      if (!auth.ok) {
+        return res.status(auth.status).json({
+          success: false,
+          error: `การเลือกพนักงานล่วงหน้า (preassignStaff) ต้องเป็นแอดมินเท่านั้น: ${auth.error}`,
+          code: 'ADMIN_ONLY',
+        })
+      }
+    }
+
+    // Process: create job + send notifications (P16: preassignStaff = QuickBooking pre-selected staff
+    // per recipient → assign directly + suppress the pool broadcast).
+    const result = await processBookingConfirmed(booking_id, preassignStaff)
 
     return res.json({
       success: result.success,
