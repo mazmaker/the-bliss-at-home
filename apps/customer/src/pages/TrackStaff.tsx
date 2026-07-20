@@ -40,74 +40,23 @@ export default function TrackStaff() {
       setIsLoading(true)
       setError(null)
 
-      // Step 1: Get journey data
-      const { data: journeyData, error: journeyError } = await supabase
-        .from('staff_journeys')
-        .select('id, status, started_at, booking_id, staff_id')
-        .eq('id', journeyId)
-        .single()
+      // Public share link: read via the SECURITY DEFINER RPC (works when logged out;
+      // the owner-scoped RLS policies deny direct anon reads of staff_journeys).
+      const { data, error: rpcError } = await (supabase.rpc as any)('get_journey_tracking', { p_journey_id: journeyId }).maybeSingle()
 
-      if (journeyError) throw journeyError
-      if (!journeyData) throw new Error(t('common:errors.journeyNotFound'))
-
-      console.log('📊 Journey data:', journeyData)
-
-      // Step 2: Get booking data
-      const { data: bookingData, error: bookingError } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          customer_name,
-          customer_phone,
-          address,
-          hotel_name,
-          room_number,
-          service_name,
-          duration_minutes
-        `)
-        .eq('id', journeyData.booking_id)
-        .single()
-
-      if (bookingError) throw bookingError
-      if (!bookingData) throw new Error(t('common:errors.bookingNotFound'))
-
-      console.log('📊 Booking data:', bookingData)
-
-      // Step 3: Get staff profile data
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('id, profile_id')
-        .eq('id', journeyData.staff_id)
-        .single()
-
-      if (staffError) throw staffError
-      if (!staffData) throw new Error(t('common:errors.staffNotFound'))
-
-      console.log('📊 Staff data:', staffData)
-
-      // Step 4: Get profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', staffData.profile_id)
-        .single()
-
-      if (profileError) throw profileError
-
-      console.log('📊 Profile data:', profileData)
+      if (rpcError) throw rpcError
+      if (!data) throw new Error(t('common:errors.journeyNotFound'))
 
       setJourney({
-        id: journeyData.id,
-        status: journeyData.status,
-        started_at: journeyData.started_at,
-        staff_name: profileData?.full_name || t('common:fallback.nameNotSpecified'),
-        customer_name: bookingData.customer_name || t('common:fallback.customerNameNotSpecified'),
-        customer_phone: bookingData.customer_phone,
-        destination_name: bookingData.hotel_name
-          ? `${bookingData.hotel_name}${bookingData.room_number ? ` ${t('common:labels.room')} ${bookingData.room_number}` : ''}`
-          : bookingData.address || t('common:fallback.addressNotSpecified'),
-        service_name: bookingData.service_name || t('common:fallback.serviceNotSpecified'),
-        estimated_duration: bookingData.duration_minutes
+        id: data.id,
+        status: data.status,
+        started_at: data.started_at,
+        staff_name: data.staff_name || t('common:fallback.nameNotSpecified'),
+        customer_name: data.customer_name || t('common:fallback.customerNameNotSpecified'),
+        customer_phone: data.customer_phone,
+        destination_name: data.destination_name || t('common:fallback.addressNotSpecified'),
+        service_name: data.service_name || t('common:fallback.serviceNotSpecified'),
+        estimated_duration: data.duration_minutes
       })
 
     } catch (err: any) {

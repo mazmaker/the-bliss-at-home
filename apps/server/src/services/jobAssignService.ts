@@ -68,6 +68,10 @@ export async function assignStaffToJob(
   const { data: updated, error: updateError } = await update.select().single()
 
   if (updateError || !updated) {
+    // DB exclusion constraint jobs_no_staff_overlap (23P01): the staff already holds a time-overlapping job.
+    if (updateError?.code === '23P01') {
+      return { ok: false, status: 409, code: 'TIME_OVERLAP', error: 'ไม่สามารถมอบหมายได้ เนื่องจากพนักงานคนนี้มีงานในช่วงเวลาที่ทับซ้อนกันอยู่แล้ว' }
+    }
     if (updateError?.code === 'PGRST116') {
       return { ok: false, status: 409, code: 'CONCURRENT_CHANGE', error: 'งานนี้เพิ่งถูกเปลี่ยนสถานะ/รับไปแล้ว กรุณารีเฟรชแล้วลองใหม่' }
     }

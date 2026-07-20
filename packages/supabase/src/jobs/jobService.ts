@@ -352,6 +352,11 @@ export async function acceptJob(jobId: string, staffId: string): Promise<Job> {
     .single()
 
   if (error) {
+    // DB exclusion constraint jobs_no_staff_overlap (23P01): a concurrent write slipped a time-overlapping
+    // job onto this staff between our JS check and this write. Surface a friendly Thai message.
+    if ((error as any).code === '23P01') {
+      throw new Error('ไม่สามารถรับงานนี้ได้ เนื่องจากเวลาทับซ้อนกับงานอื่นของคุณ')
+    }
     // Handle race condition - job changed between our check and update
     if (error.code === 'PGRST116') {
       // Re-fetch to determine actual reason

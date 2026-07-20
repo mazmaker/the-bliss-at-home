@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@bliss/supabase'
 import { useTranslation } from '@bliss/i18n'
 import { RefreshCw, MapPin, Phone, Navigation } from 'lucide-react'
@@ -37,117 +37,54 @@ export default function StaffTrackingMap({
   const [mapKey, setMapKey] = useState(0) // Force iframe refresh
   const [useGoogleMaps, setUseGoogleMaps] = useState(true) // Try Google Maps first
 
-  // Fetch journey information
+  const lastCoordsRef = useRef<string>('')
+
+  // Fetch journey information via the public RPC (works for the anonymous /track share link;
+  // the owner-scoped RLS policies deny direct anon reads of staff_journeys).
   const fetchJourneyData = async () => {
     try {
       setIsLoading(true)
       setError(null)
 
-      // ดึงข้อมูล journey แบบง่าย ไม่ join ซับซ้อน
-      const { data: journeyData, error: journeyError } = await supabase
-        .from('staff_journeys')
-        .select('id, status, started_at, current_latitude, current_longitude, last_location_update, booking_id, staff_id')
-        .eq('id', journeyId)
-        .maybeSingle()
+      const { data, error: rpcError } = await (supabase.rpc as any)('get_journey_tracking', { p_journey_id: journeyId }).maybeSingle()
 
-      console.log('🗺️ Journey data query:', { journeyData, journeyError })
-
-      if (journeyError) {
-        console.error('Journey query error:', journeyError)
-        throw new Error(t('common:errors.failedToLoadJourneyDetail', { error: journeyError.message }))
+      if (rpcError) {
+        throw new Error(t('common:errors.failedToLoadJourneyDetail', { error: rpcError.message }))
       }
-
-      if (!journeyData) {
+      if (!data) {
         throw new Error(t('common:errors.journeyNotFound'))
       }
 
-      // ใช้ข้อมูล fallback แบบง่าย (จะปรับปรุงภายหลัง)
-      const staffName = t('common:fallback.staff')
-      const booking = {
-        customer_name: t('common:fallback.customer'),
-        latitude: 13.75471599,
-        longitude: 100.49688619,
-        customer_address: t('common:fallback.customerAddress')
-      }
-
-      console.log('📋 Journey data from DB:', {
-        journeyId: journeyData.id,
-        staffName,
-        customerName: booking?.customer_name,
-        address: booking?.customer_address,
-        coordinates: { lat: booking?.latitude, lng: booking?.longitude }
-      })
-
+      const toNum = (v: any) => (v === null || v === undefined ? undefined : Number(v))
       const journeyInfo: JourneyInfo = {
-        id: journeyData.id,
-        status: journeyData.status,
-        staff_name: staffName,
-        customer_name: booking?.customer_name || t('common:fallback.customer'),
-        destination_lat: booking?.latitude || 13.75471599, // fallback เก่า
-        destination_lng: booking?.longitude || 100.49688619, // fallback เก่า
-        destination_name: booking?.customer_address || t('common:fallback.customerAddress'),
-        started_at: journeyData.started_at,
-        current_latitude: journeyData.current_latitude,
-        current_longitude: journeyData.current_longitude,
-        last_location_update: journeyData.last_location_update
+        id: data.id,
+        status: data.status,
+        staff_name: data.staff_name || t('common:fallback.staff'),
+        customer_name: data.customer_name || t('common:fallback.customer'),
+        destination_lat: toNum(data.destination_lat),
+        destination_lng: toNum(data.destination_lng),
+        destination_name: data.destination_name || t('common:fallback.customerAddress'),
+        started_at: data.started_at,
+        current_latitude: toNum(data.current_latitude),
+        current_longitude: toNum(data.current_longitude),
+        last_location_update: data.last_location_update
       }
 
       setJourney(journeyInfo)
 
-      // Update last update time
       if (journeyInfo.last_location_update) {
         setLastUpdate(new Date(journeyInfo.last_location_update).toLocaleString('th-TH'))
       }
 
-      // Force map refresh by changing key
-      setMapKey(prev => prev + 1)
-
+      // Only reload the map iframe when the position actually changed (saves Maps credits + avoids flicker)
+      const coordsKey = `${journeyInfo.current_latitude ?? ''},${journeyInfo.current_longitude ?? ''}`
+      if (coordsKey !== lastCoordsRef.current) {
+        lastCoordsRef.current = coordsKey
+        setMapKey(prev => prev + 1)
+      }
     } catch (err: any) {
       console.error('Error fetching journey data:', err)
-
-      // Provide fallback test data if journey not found
-      if (journeyId === 'journey-test-001' || journeyId === 'journey-test-002' || journeyId === '85be919b-51af-44b8-9d4f-8e8287869860') {
-        console.log('⚠️ Using fallback test data - real data not available')
-
-        // พยายาม query ข้อมูล booking อย่างน้อย
-        try {
-          const { data: testBooking } = await supabase
-            .from('bookings')
-            .select(`
-              customer_name,
-              customer_address,
-              latitude,
-              longitude,
-              staff:staff!inner(profiles!inner(full_name))
-            `)
-            .in('booking_number', ['BK20260518-GPS1', 'BK20260518-GPS2', 'BK20260517-0305'])
-            .limit(1)
-            .maybeSingle()
-
-          const fallbackJourney: JourneyInfo = {
-            id: journeyId,
-            status: 'traveling',
-            staff_name: testBooking?.staff?.profile?.full_name || t('common:fallback.staffTest'),
-            customer_name: testBooking?.customer_name || t('common:fallback.customerTest'),
-            destination_lat: testBooking?.latitude || 13.75471599,
-            destination_lng: testBooking?.longitude || 100.49688619,
-            destination_name: testBooking?.customer_address || t('common:fallback.addressTest'),
-            started_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-            current_latitude: 13.7563,
-            current_longitude: 100.5018,
-            last_location_update: new Date(Date.now() - 1 * 60 * 1000).toISOString()
-          }
-
-          setJourney(fallbackJourney)
-          setLastUpdate(new Date(fallbackJourney.last_location_update!).toLocaleString('th-TH'))
-          setMapKey(prev => prev + 1)
-        } catch (fallbackError) {
-          console.error('Even fallback failed:', fallbackError)
-          setError(t('common:errors.failedToLoadTestMode'))
-        }
-      } else {
-        setError(err.message || t('common:errors.failedToLoadJourney'))
-      }
+      setError(err.message || t('common:errors.failedToLoadJourney'))
     } finally {
       setIsLoading(false)
     }
@@ -183,12 +120,12 @@ export default function StaffTrackingMap({
     }
   }, [journeyId])
 
-  // Auto-refresh every 5 minutes (ประหยัดเครดิต)
+  // Auto-refresh the staff position every 20s (an anonymous /track visitor can't receive Realtime,
+  // so poll the RPC). The map iframe only actually reloads when the coordinates change (see fetchJourneyData).
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('Auto-refreshing map... (5 min interval)')
       fetchJourneyData()
-    }, 5 * 60 * 1000) // 5 minutes = 300,000ms
+    }, 20 * 1000)
 
     return () => clearInterval(interval)
   }, [journeyId])
