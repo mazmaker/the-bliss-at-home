@@ -9,6 +9,8 @@ import BookingCancellationModal from '../components/BookingCancellationModal'
 import AdminRescheduleModal from '../components/AdminRescheduleModal'
 import DeleteBookingConfirmModal from '../components/DeleteBookingConfirmModal'
 import { supabase } from '../lib/supabase'
+import { useBookingJourneys } from '../hooks/useBookingJourneys'
+import AdminStaffTrackingMap from '../components/AdminStaffTrackingMap'
 import toast from 'react-hot-toast'
 
 // Server API base — strip a trailing /api (prod VITE_API_URL includes it) to avoid /api/api → 404.
@@ -624,6 +626,16 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
   const [selectedStatus, setSelectedStatus] = useState(booking.status)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
 
+  // P17: live staff-travel journeys for this booking, keyed by JOB id (only polls while open).
+  const { journeysByJobId } = useBookingJourneys(booking.id, isOpen)
+  // Destination for the travel map: the booking's own service-address coords, falling back to the
+  // hotel's coords for hotel bookings that carry no row-level lat/lng (Part 4 embed adds them).
+  const destLat = booking.latitude ?? booking.hotel?.latitude ?? null
+  const destLng = booking.longitude ?? booking.hotel?.longitude ?? null
+  // Destination label: prefer the hotel name for hotel bookings (the row `address` can be sparse
+  // when the coords resolved via the hotel fallback); the home address otherwise.
+  const destName = booking.is_hotel_booking ? (booking.hotel?.name_th || booking.address) : booking.address
+
   // PART47 P3: pending (manual_qr) extensions awaiting admin confirmation for THIS booking.
   const queryClient = useQueryClient()
   const [pendingExtensions, setPendingExtensions] = useState<any[]>([])
@@ -958,28 +970,46 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                   <div className="space-y-2 mt-1">
                     {booking.jobs
                       .sort((a, b) => a.job_index - b.job_index)
-                      .map((job) => (
-                        <div key={job.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-bliss-200">
-                          <div>
-                            <span className="text-xs text-bliss-600 font-medium">คนที่ {job.job_index}</span>
-                            <p className="font-medium text-bliss-900">{job.staff_name || 'รอมอบหมาย'}</p>
+                      .map((job) => {
+                        // P17: live travel map for this recipient's job when it is en route.
+                        const jrny = journeysByJobId[job.id]
+                        const showTravel = job.status === 'traveling' || job.status === 'arrived'
+                        return (
+                          <div key={job.id}>
+                            <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-bliss-200">
+                              <div>
+                                <span className="text-xs text-bliss-600 font-medium">คนที่ {job.job_index}</span>
+                                <p className="font-medium text-bliss-900">{job.staff_name || 'รอมอบหมาย'}</p>
+                              </div>
+                              <div className="text-right">
+                                {getJobProgressBadge(job.status)}
+                                <span className="block text-xs text-bliss-500 mt-1">
+                                  {/* Prefer the per-recipient service from booking_services (job.job_index-1 ===
+                                      recipient_index) — the stored jobs.service_name can be mis-mapped for
+                                      couple recipient 2 (a known job-creation bug); the booking_services join is
+                                      authoritative per recipient. */}
+                                  {(() => {
+                                    const idx = (job.job_index ?? 1) - 1
+                                    const baseRow = (booking.booking_services || []).find((s: any) => !s.is_extension && (s.recipient_index ?? 0) === idx)
+                                    return baseRow?.service?.name_th || job.service_name
+                                  })()}
+                                </span>
+                              </div>
+                            </div>
+                            {showTravel && (jrny ? (
+                              <AdminStaffTrackingMap
+                                journeyId={jrny.journeyId}
+                                destinationLat={destLat}
+                                destinationLng={destLng}
+                                destinationName={destName}
+                                staffName={job.staff_name}
+                              />
+                            ) : (
+                              <p className="text-xs text-bliss-400 mt-1 px-1">ยังไม่มีข้อมูลการเดินทาง</p>
+                            ))}
                           </div>
-                          <div className="text-right">
-                            {getJobProgressBadge(job.status)}
-                            <span className="block text-xs text-bliss-500 mt-1">
-                              {/* Prefer the per-recipient service from booking_services (job.job_index-1 ===
-                                  recipient_index) — the stored jobs.service_name can be mis-mapped for
-                                  couple recipient 2 (a known job-creation bug); the booking_services join is
-                                  authoritative per recipient. */}
-                              {(() => {
-                                const idx = (job.job_index ?? 1) - 1
-                                const baseRow = (booking.booking_services || []).find((s: any) => !s.is_extension && (s.recipient_index ?? 0) === idx)
-                                return baseRow?.service?.name_th || job.service_name
-                              })()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                   </div>
                 ) : (
                   <div>
@@ -987,6 +1017,25 @@ function BookingDetailModal({ booking, isOpen, onClose, onStatusChange, onOpenCa
                     {booking.jobs?.[0]?.status && (
                       <div className="mt-1">{getJobProgressBadge(booking.jobs[0].status)}</div>
                     )}
+                    {(() => {
+                      // P17: single-recipient travel map (this branch is the majority of bookings).
+                      const job0 = booking.jobs?.[0]
+                      if (!job0) return null
+                      const showTravel = job0.status === 'traveling' || job0.status === 'arrived'
+                      if (!showTravel) return null
+                      const jrny = journeysByJobId[job0.id]
+                      return jrny ? (
+                        <AdminStaffTrackingMap
+                          journeyId={jrny.journeyId}
+                          destinationLat={destLat}
+                          destinationLng={destLng}
+                          destinationName={destName}
+                          staffName={booking.staff?.name_th}
+                        />
+                      ) : (
+                        <p className="text-xs text-bliss-400 mt-1">ยังไม่มีข้อมูลการเดินทาง</p>
+                      )
+                    })()}
                   </div>
                 )}
               </div>

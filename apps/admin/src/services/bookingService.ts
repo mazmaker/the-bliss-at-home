@@ -112,6 +112,10 @@ export interface Booking {
     phone: string
     email: string
     rating: number
+    // P17: hotel coordinates for the staff-travel map destination (hotel bookings often carry no
+    // booking-row lat/lng; fall back to the hotel's own coords).
+    latitude?: number | null
+    longitude?: number | null
   } | null
   staff?: {
     id: string
@@ -287,7 +291,7 @@ class BookingService {
         .select(`
           *,
           customers(id, full_name, phone, created_at),
-          hotel:hotels(id, name_th, address, phone, email, rating),
+          hotel:hotels(id, name_th, address, phone, email, rating, latitude, longitude),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
         `)
@@ -409,7 +413,7 @@ class BookingService {
         .select(`
           *,
           customers(id, full_name, phone),
-          hotel:hotels(id, name_th, address, phone, email, rating),
+          hotel:hotels(id, name_th, address, phone, email, rating, latitude, longitude),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
         `)
@@ -495,7 +499,7 @@ class BookingService {
         .eq('id', id)
         .select(`
           *,
-          hotel:hotels(id, name_th, address, phone, email, rating),
+          hotel:hotels(id, name_th, address, phone, email, rating, latitude, longitude),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
         `)
@@ -573,7 +577,7 @@ class BookingService {
         .eq('id', id)
         .select(`
           *,
-          hotel:hotels(id, name_th, address, phone, email, rating),
+          hotel:hotels(id, name_th, address, phone, email, rating, latitude, longitude),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
         `)
@@ -605,7 +609,7 @@ class BookingService {
         .eq('id', bookingId)
         .select(`
           *,
-          hotel:hotels(id, name_th, address, phone, email, rating),
+          hotel:hotels(id, name_th, address, phone, email, rating, latitude, longitude),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
         `)
@@ -635,7 +639,7 @@ class BookingService {
         .from('bookings')
         .select(`
           *,
-          hotel:hotels(id, name_th, address, phone, email, rating),
+          hotel:hotels(id, name_th, address, phone, email, rating, latitude, longitude),
           staff(id, name_th, phone),
           service:services(id, name_th, name_en, category, duration, base_price)
         `)
