@@ -2661,6 +2661,8 @@ export type Database = {
           created_at: string | null
           description_cn: string | null
           description_en: string | null
+          description_jp: string | null
+          description_kr: string | null
           description_th: string | null
           icon: string | null
           id: string
@@ -2668,6 +2670,8 @@ export type Database = {
           is_active: boolean | null
           name_cn: string | null
           name_en: string
+          name_jp: string | null
+          name_kr: string | null
           name_th: string
           price: number
           service_id: string | null
@@ -2680,6 +2684,8 @@ export type Database = {
           created_at?: string | null
           description_cn?: string | null
           description_en?: string | null
+          description_jp?: string | null
+          description_kr?: string | null
           description_th?: string | null
           icon?: string | null
           id?: string
@@ -2687,6 +2693,8 @@ export type Database = {
           is_active?: boolean | null
           name_cn?: string | null
           name_en: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th: string
           price: number
           service_id?: string | null
@@ -2699,6 +2707,8 @@ export type Database = {
           created_at?: string | null
           description_cn?: string | null
           description_en?: string | null
+          description_jp?: string | null
+          description_kr?: string | null
           description_th?: string | null
           icon?: string | null
           id?: string
@@ -2706,6 +2716,8 @@ export type Database = {
           is_active?: boolean | null
           name_cn?: string | null
           name_en?: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th?: string
           price?: number
           service_id?: string | null
@@ -2871,6 +2883,8 @@ export type Database = {
           description_en: string | null
           description_th: string | null
           description_cn: string | null
+          description_kr: string | null
+          description_jp: string | null
           duration: number
           duration_options: Json | null
           hotel_price: number
@@ -2880,6 +2894,8 @@ export type Database = {
           name_en: string
           name_th: string
           name_cn: string | null
+          name_kr: string | null
+          name_jp: string | null
           price_120: number | null
           price_60: number | null
           price_90: number | null
@@ -2895,6 +2911,8 @@ export type Database = {
           description_en?: string | null
           description_th?: string | null
           description_cn?: string | null
+          description_kr?: string | null
+          description_jp?: string | null
           duration: number
           duration_options?: Json | null
           hotel_price: number
@@ -2904,6 +2922,8 @@ export type Database = {
           name_en: string
           name_th: string
           name_cn?: string | null
+          name_kr?: string | null
+          name_jp?: string | null
           price_120?: number | null
           price_60?: number | null
           price_90?: number | null
@@ -2919,6 +2939,8 @@ export type Database = {
           description_en?: string | null
           description_th?: string | null
           description_cn?: string | null
+          description_kr?: string | null
+          description_jp?: string | null
           duration?: number
           duration_options?: Json | null
           hotel_price?: number
@@ -2928,6 +2950,8 @@ export type Database = {
           name_en?: string
           name_th?: string
           name_cn?: string | null
+          name_kr?: string | null
+          name_jp?: string | null
           price_120?: number | null
           price_60?: number | null
           price_90?: number | null

@@ -60,7 +60,7 @@ async function generateDocNumber(prefix: string): Promise<string> {
 // (services) carries name_th/name_en/name_cn sibling columns. lang from ?lang= (default th).
 function pickServiceName(svc: any, lang?: string): string {
   if (!svc) return ''
-  const l = lang === 'cn' || lang === 'en' ? lang : 'th'
+  const l = lang === 'cn' || lang === 'en' || lang === 'kr' || lang === 'jp' ? lang : 'th'
   return svc[`name_${l}`] || svc.name_en || svc.name_th || ''
 }
 
@@ -137,6 +137,8 @@ router.get('/:transactionId', async (req, res) => {
             name_th,
             name_en,
             name_cn,
+            name_kr,
+            name_jp,
             base_price,
             duration
           ),
@@ -147,6 +149,8 @@ router.get('/:transactionId', async (req, res) => {
               name_th,
               name_en,
               name_cn,
+              name_kr,
+              name_jp,
               price
             )
           ),
@@ -264,7 +268,9 @@ router.get('/credit-note/:refundTransactionId', async (req, res) => {
           services (
             name_th,
             name_en,
-            name_cn
+            name_cn,
+            name_kr,
+            name_jp
           ),
           customers (
             id,
@@ -388,11 +394,11 @@ router.post('/:transactionId/send-email', async (req, res) => {
           booking_time,
           final_price,
           payment_method,
-          services!bookings_service_id_fkey (name_th, name_en, name_cn),
+          services!bookings_service_id_fkey (name_th, name_en, name_cn, name_kr, name_jp),
           booking_addons!booking_addons_booking_id_fkey (
             quantity,
             total_price,
-            service_addons!booking_addons_addon_id_fkey (name_th, name_en, name_cn)
+            service_addons!booking_addons_addon_id_fkey (name_th, name_en, name_cn, name_kr, name_jp)
           ),
           customers!bookings_customer_id_fkey (id, full_name, phone, profile_id)
         )
@@ -481,7 +487,7 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
           final_price,
           cancellation_reason,
           payment_method,
-          services (name_th, name_en, name_cn),
+          services (name_th, name_en, name_cn, name_kr, name_jp),
           customers (id, full_name, profile_id)
         )
       `)
@@ -574,11 +580,11 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
         booking_time,
         final_price,
         payment_method,
-        services!bookings_service_id_fkey (name_th, name_en, name_cn),
+        services!bookings_service_id_fkey (name_th, name_en, name_cn, name_kr, name_jp),
         booking_addons!booking_addons_booking_id_fkey (
           quantity,
           total_price,
-          service_addons!booking_addons_addon_id_fkey (name_th, name_en, name_cn)
+          service_addons!booking_addons_addon_id_fkey (name_th, name_en, name_cn, name_kr, name_jp)
         ),
         customers!bookings_customer_id_fkey (id, full_name, phone, profile_id)
       )
@@ -666,7 +672,7 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
         final_price,
         cancellation_reason,
         payment_method,
-        services!bookings_service_id_fkey (name_th, name_en, name_cn),
+        services!bookings_service_id_fkey (name_th, name_en, name_cn, name_kr, name_jp),
         customers!bookings_customer_id_fkey (id, full_name, profile_id)
       )
     `)
