@@ -22,9 +22,13 @@ const addOnFormSchema = z
     name_th: z.string().min(1, 'กรุณากรอกชื่อภาษาไทย'),
     name_en: z.string().min(1, 'English name is required'),
     name_cn: z.string().optional(),
+    name_kr: z.string().optional(),
+    name_jp: z.string().optional(),
     description_th: z.string().optional(),
     description_en: z.string().optional(),
     description_cn: z.string().optional(),
+    description_kr: z.string().optional(),
+    description_jp: z.string().optional(),
     price: z.coerce
       .number({ required_error: 'ระบุราคาเป็นตัวเลข', invalid_type_error: 'ระบุราคาเป็นตัวเลข' })
       .min(0, 'ราคาต้องไม่ติดลบ')
@@ -61,9 +65,13 @@ const emptyDefaults: AddOnFormData = {
   name_th: '',
   name_en: '',
   name_cn: '',
+  name_kr: '',
+  name_jp: '',
   description_th: '',
   description_en: '',
   description_cn: '',
+  description_kr: '',
+  description_jp: '',
   price: undefined as unknown as number,
   icon: '',
   image_url: '',
@@ -102,9 +110,13 @@ export function AddOnForm({ isOpen, onClose, onSuccess, editData, services }: Ad
         name_th: editData.name_th || '',
         name_en: editData.name_en || '',
         name_cn: editData.name_cn || '',
+        name_kr: editData.name_kr || '',
+        name_jp: editData.name_jp || '',
         description_th: editData.description_th || '',
         description_en: editData.description_en || '',
         description_cn: editData.description_cn || '',
+        description_kr: editData.description_kr || '',
+        description_jp: editData.description_jp || '',
         price: editData.price ?? (undefined as unknown as number),
         icon: editData.icon || '',
         image_url: editData.image_url || '',
@@ -139,9 +151,13 @@ export function AddOnForm({ isOpen, onClose, onSuccess, editData, services }: Ad
         name_th: data.name_th.trim(),
         name_en: data.name_en.trim(),
         name_cn: data.name_cn?.trim() || null,
+        name_kr: data.name_kr?.trim() || null,
+        name_jp: data.name_jp?.trim() || null,
         description_th: data.description_th?.trim() || null,
         description_en: data.description_en?.trim() || null,
         description_cn: data.description_cn?.trim() || null,
+        description_kr: data.description_kr?.trim() || null,
+        description_jp: data.description_jp?.trim() || null,
         price: data.price,
         icon: data.icon?.trim() || null,
         image_url: data.image_url?.trim() || null,
@@ -324,8 +340,8 @@ export function AddOnForm({ isOpen, onClose, onSuccess, editData, services }: Ad
                   )}
                 </div>
 
-                {/* Names (TH / EN / CN) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                {/* Names (TH / EN / CN / KR / JP) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-bliss-700 mb-1">
                       <Globe className="w-4 h-4 inline mr-1" />
@@ -370,10 +386,36 @@ export function AddOnForm({ isOpen, onClose, onSuccess, editData, services }: Ad
                       placeholder="例如：药膏"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
+                      <Globe className="w-4 h-4 inline mr-1" />
+                      부가 서비스 이름 (한국어)
+                    </label>
+                    <input
+                      {...register('name_kr')}
+                      type="text"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                      placeholder="예: 허브 밤"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
+                      <Globe className="w-4 h-4 inline mr-1" />
+                      追加サービス名 (日本語)
+                    </label>
+                    <input
+                      {...register('name_jp')}
+                      type="text"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                      placeholder="例：ハーブバーム"
+                    />
+                  </div>
                 </div>
 
-                {/* Descriptions (TH / EN / CN) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Descriptions (TH / EN / CN / KR / JP) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-bliss-700 mb-1">
                       รายละเอียด (ไทย)
@@ -407,6 +449,30 @@ export function AddOnForm({ isOpen, onClose, onSuccess, editData, services }: Ad
                       rows={2}
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                       placeholder="附加服务描述..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
+                      설명 (한국어)
+                    </label>
+                    <textarea
+                      {...register('description_kr')}
+                      rows={2}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                      placeholder="부가 서비스 설명..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-bliss-700 mb-1">
+                      説明 (日本語)
+                    </label>
+                    <textarea
+                      {...register('description_jp')}
+                      rows={2}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                      placeholder="追加サービスの説明..."
                     />
                   </div>
                 </div>

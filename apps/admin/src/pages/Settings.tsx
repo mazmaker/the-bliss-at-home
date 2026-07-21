@@ -98,6 +98,8 @@ function Settings() {
   const [refundPolicyContent, setRefundPolicyContent] = useState('')
   const [refundPolicyContentEn, setRefundPolicyContentEn] = useState('')
   const [refundPolicyContentCn, setRefundPolicyContentCn] = useState('')
+  const [refundPolicyContentKr, setRefundPolicyContentKr] = useState('')
+  const [refundPolicyContentJp, setRefundPolicyContentJp] = useState('')
   const [refundPolicyVersion, setRefundPolicyVersion] = useState('1.0')
   const [refundPolicySaving, setRefundPolicySaving] = useState(false)
 
@@ -349,10 +351,14 @@ function Settings() {
       const val = typeof data.value === 'object' && 'value' in data.value ? data.value.value : data.value
       const valEn = typeof data.value === 'object' && 'value_en' in data.value ? data.value.value_en : ''
       const valCn = typeof data.value === 'object' && 'value_cn' in data.value ? data.value.value_cn : ''
+      const valKr = typeof data.value === 'object' && 'value_kr' in data.value ? data.value.value_kr : ''
+      const valJp = typeof data.value === 'object' && 'value_jp' in data.value ? data.value.value_jp : ''
       const ver = typeof data.value === 'object' && 'version' in data.value ? data.value.version : '1.0'
       setRefundPolicyContent(typeof val === 'string' ? val : '')
       setRefundPolicyContentEn(typeof valEn === 'string' ? valEn : '')
       setRefundPolicyContentCn(typeof valCn === 'string' ? valCn : '')
+      setRefundPolicyContentKr(typeof valKr === 'string' ? valKr : '')
+      setRefundPolicyContentJp(typeof valJp === 'string' ? valJp : '')
       setRefundPolicyVersion(typeof ver === 'string' ? ver : '1.0')
     }
   }
@@ -362,7 +368,7 @@ function Settings() {
     try {
       const { error } = await supabase
         .from('settings')
-        .update({ value: { value: refundPolicyContent, value_en: refundPolicyContentEn, value_cn: refundPolicyContentCn, version: refundPolicyVersion }, updated_at: new Date().toISOString() })
+        .update({ value: { value: refundPolicyContent, value_en: refundPolicyContentEn, value_cn: refundPolicyContentCn, value_kr: refundPolicyContentKr, value_jp: refundPolicyContentJp, version: refundPolicyVersion }, updated_at: new Date().toISOString() })
         .eq('key', 'refund_policy_content')
       if (error) throw error
       setMessage('บันทึกเงื่อนไขการคืนเงินเรียบร้อย')
@@ -1299,6 +1305,30 @@ function Settings() {
                     placeholder="在此填写退款政策（中文）...（留空则显示泰语内容）"
                   />
                   <p className="text-xs text-bliss-400 mt-1">หากเว้นว่าง ลูกค้าที่ใช้ภาษาจีนจะเห็นเนื้อหาภาษาไทยแทน</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข (한국어)</label>
+                  <textarea
+                    value={refundPolicyContentKr}
+                    onChange={(e) => setRefundPolicyContentKr(e.target.value)}
+                    rows={14}
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 text-sm"
+                    placeholder="환불 정책을 여기에 한국어로 작성하세요...（비워두면 태국어 내용이 표시됩니다）"
+                  />
+                  <p className="text-xs text-bliss-400 mt-1">หากเว้นว่าง ลูกค้าที่ใช้ภาษาเกาหลีจะเห็นเนื้อหาภาษาไทยแทน</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-bliss-700 mb-2">เนื้อหาเงื่อนไข (日本語)</label>
+                  <textarea
+                    value={refundPolicyContentJp}
+                    onChange={(e) => setRefundPolicyContentJp(e.target.value)}
+                    rows={14}
+                    className="w-full px-3 py-2 border border-bliss-300 rounded-lg focus:ring-2 focus:ring-bliss-500 text-sm"
+                    placeholder="ここに返金ポリシーを日本語で記入してください...（空欄の場合はタイ語の内容が表示されます）"
+                  />
+                  <p className="text-xs text-bliss-400 mt-1">หากเว้นว่าง ลูกค้าที่ใช้ภาษาญี่ปุ่นจะเห็นเนื้อหาภาษาไทยแทน</p>
                 </div>
 
                 <div className="flex items-center gap-4">

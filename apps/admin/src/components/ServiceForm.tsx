@@ -34,10 +34,14 @@ const serviceFormSchema = z.object({
   name_th: z.string().min(3, 'ชื่อภาษาไทยต้องมีอย่างน้อย 3 ตัวอักษร'),
   name_en: z.string().min(3, 'English name must be at least 3 characters'),
   name_cn: z.string().optional(),
+  name_kr: z.string().optional(),
+  name_jp: z.string().optional(),
   slug: z.string().optional(),
   description_th: z.string().optional(),
   description_en: z.string().optional(),
   description_cn: z.string().optional(),
+  description_kr: z.string().optional(),
+  description_jp: z.string().optional(),
   category: z.enum(['massage', 'nail', 'spa'], {
     required_error: 'กรุณาเลือกประเภทบริการ',
   }),
@@ -160,10 +164,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
       name_th: '',
       name_en: '',
       name_cn: '',
+      name_kr: '',
+      name_jp: '',
       slug: '',
       description_th: '',
       description_en: '',
       description_cn: '',
+      description_kr: '',
+      description_jp: '',
       category: undefined,
       duration_options: [], // No default - user must choose
       base_price: undefined,
@@ -215,10 +223,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         name_th: editData.name_th || '',
         name_en: editData.name_en || '',
         name_cn: editData.name_cn || '',
+        name_kr: editData.name_kr || '',
+        name_jp: editData.name_jp || '',
         slug: editData.slug || '',
         description_th: editData.description_th || '',
         description_en: editData.description_en || '',
         description_cn: editData.description_cn || '',
+        description_kr: editData.description_kr || '',
+        description_jp: editData.description_jp || '',
         category: editData.category || undefined,
         duration_options: durationOptionsArray,
         base_price: editData.base_price || undefined,
@@ -240,10 +252,14 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
         name_th: '',
         name_en: '',
         name_cn: '',
+        name_kr: '',
+        name_jp: '',
         slug: '',
         description_th: '',
         description_en: '',
         description_cn: '',
+        description_kr: '',
+        description_jp: '',
         category: undefined,
         duration_options: [], // No default - user must choose
         base_price: undefined,
@@ -484,7 +500,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
             </div>
 
             {/* Service Names */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-bliss-700 mb-1">
                   <Globe className="w-4 h-4 inline mr-1" />
@@ -529,6 +545,32 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   placeholder="例如：泰式按摩 2 小时"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
+                  <Globe className="w-4 h-4 inline mr-1" />
+                  서비스 이름 (한국어)
+                </label>
+                <input
+                  {...register('name_kr')}
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                  placeholder="예: 타이 마사지 2시간"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
+                  <Globe className="w-4 h-4 inline mr-1" />
+                  サービス名 (日本語)
+                </label>
+                <input
+                  {...register('name_jp')}
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                  placeholder="例：タイマッサージ 2時間"
+                />
+              </div>
             </div>
 
             {/* URL Slug */}
@@ -552,7 +594,7 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
             </div>
 
             {/* Descriptions */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-bliss-700 mb-1">
                   รายละเอียด (ไทย)
@@ -586,6 +628,30 @@ export function ServiceForm({ isOpen, onClose, onSuccess, editData }: ServiceFor
                   rows={3}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
                   placeholder="服务描述..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
+                  설명 (한국어)
+                </label>
+                <textarea
+                  {...register('description_kr')}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                  placeholder="서비스 설명..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-bliss-700 mb-1">
+                  説明 (日本語)
+                </label>
+                <textarea
+                  {...register('description_jp')}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-bliss-500 focus:border-bliss-500"
+                  placeholder="サービスの説明..."
                 />
               </div>
             </div>

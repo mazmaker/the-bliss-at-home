@@ -130,6 +130,8 @@ export type Database = {
           created_at: string | null
           id: string
           name_cn: string | null
+          name_kr: string | null
+          name_jp: string | null
           name_en: string | null
           name_th: string | null
           price_per_unit: number
@@ -143,6 +145,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           name_cn?: string | null
+          name_kr?: string | null
+          name_jp?: string | null
           name_en?: string | null
           name_th?: string | null
           price_per_unit: number
@@ -156,6 +160,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           name_cn?: string | null
+          name_kr?: string | null
+          name_jp?: string | null
           name_en?: string | null
           name_th?: string | null
           price_per_unit?: number
@@ -1317,7 +1323,10 @@ export type Database = {
           code_length: number | null
           code_prefix: string | null
           created_at: string | null
+          description_cn: string | null
           description_en: string | null
+          description_jp: string | null
+          description_kr: string | null
           description_th: string | null
           discount_type: string
           discount_value: number
@@ -1326,7 +1335,10 @@ export type Database = {
           image_url: string | null
           max_discount: number | null
           min_order_amount: number | null
+          name_cn: string | null
           name_en: string
+          name_jp: string | null
+          name_kr: string | null
           name_th: string
           start_date: string
           status: string | null
@@ -1344,7 +1356,10 @@ export type Database = {
           code_length?: number | null
           code_prefix?: string | null
           created_at?: string | null
+          description_cn?: string | null
           description_en?: string | null
+          description_jp?: string | null
+          description_kr?: string | null
           description_th?: string | null
           discount_type: string
           discount_value: number
@@ -1353,7 +1368,10 @@ export type Database = {
           image_url?: string | null
           max_discount?: number | null
           min_order_amount?: number | null
+          name_cn?: string | null
           name_en: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th: string
           start_date: string
           status?: string | null
@@ -1371,7 +1389,10 @@ export type Database = {
           code_length?: number | null
           code_prefix?: string | null
           created_at?: string | null
+          description_cn?: string | null
           description_en?: string | null
+          description_jp?: string | null
+          description_kr?: string | null
           description_th?: string | null
           discount_type?: string
           discount_value?: number
@@ -1380,7 +1401,10 @@ export type Database = {
           image_url?: string | null
           max_discount?: number | null
           min_order_amount?: number | null
+          name_cn?: string | null
           name_en?: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th?: string
           start_date?: string
           status?: string | null
@@ -1468,6 +1492,8 @@ export type Database = {
           applies_to_all: boolean
           created_at: string | null
           description_cn: string | null
+          description_kr: string | null
+          description_jp: string | null
           description_en: string | null
           description_th: string | null
           icon: string | null
@@ -1475,6 +1501,8 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           name_cn: string | null
+          name_kr: string | null
+          name_jp: string | null
           name_en: string
           name_th: string
           price: number
@@ -1487,6 +1515,8 @@ export type Database = {
           applies_to_all?: boolean
           created_at?: string | null
           description_cn?: string | null
+          description_kr?: string | null
+          description_jp?: string | null
           description_en?: string | null
           description_th?: string | null
           icon?: string | null
@@ -1494,6 +1524,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name_cn?: string | null
+          name_kr?: string | null
+          name_jp?: string | null
           name_en: string
           name_th: string
           price: number
@@ -1506,6 +1538,8 @@ export type Database = {
           applies_to_all?: boolean
           created_at?: string | null
           description_cn?: string | null
+          description_kr?: string | null
+          description_jp?: string | null
           description_en?: string | null
           description_th?: string | null
           icon?: string | null
@@ -1513,6 +1547,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name_cn?: string | null
+          name_kr?: string | null
+          name_jp?: string | null
           name_en?: string
           name_th?: string
           price?: number
@@ -1676,7 +1712,10 @@ export type Database = {
           base_price: number
           category: Database["public"]["Enums"]["service_category"]
           created_at: string | null
+          description_cn: string | null
           description_en: string | null
+          description_jp: string | null
+          description_kr: string | null
           description_th: string | null
           duration: number
           duration_options: Json | null
@@ -1684,7 +1723,10 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          name_cn: string | null
           name_en: string
+          name_jp: string | null
+          name_kr: string | null
           name_th: string
           price_120: number | null
           price_60: number | null
@@ -1698,7 +1740,10 @@ export type Database = {
           base_price: number
           category: Database["public"]["Enums"]["service_category"]
           created_at?: string | null
+          description_cn?: string | null
           description_en?: string | null
+          description_jp?: string | null
+          description_kr?: string | null
           description_th?: string | null
           duration: number
           duration_options?: Json | null
@@ -1706,7 +1751,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          name_cn?: string | null
           name_en: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th: string
           price_120?: number | null
           price_60?: number | null
@@ -1720,7 +1768,10 @@ export type Database = {
           base_price?: number
           category?: Database["public"]["Enums"]["service_category"]
           created_at?: string | null
+          description_cn?: string | null
           description_en?: string | null
+          description_jp?: string | null
+          description_kr?: string | null
           description_th?: string | null
           duration?: number
           duration_options?: Json | null
@@ -1728,7 +1779,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          name_cn?: string | null
           name_en?: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th?: string
           price_120?: number | null
           price_60?: number | null
@@ -1770,7 +1824,10 @@ export type Database = {
           created_at: string | null
           icon: string | null
           id: string
+          name_cn: string | null
           name_en: string
+          name_jp: string | null
+          name_kr: string | null
           name_th: string
         }
         Insert: {
@@ -1778,7 +1835,10 @@ export type Database = {
           created_at?: string | null
           icon?: string | null
           id?: string
+          name_cn?: string | null
           name_en: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th: string
         }
         Update: {
@@ -1786,7 +1846,10 @@ export type Database = {
           created_at?: string | null
           icon?: string | null
           id?: string
+          name_cn?: string | null
           name_en?: string
+          name_jp?: string | null
+          name_kr?: string | null
           name_th?: string
         }
         Relationships: []

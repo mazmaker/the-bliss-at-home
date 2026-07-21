@@ -37,6 +37,8 @@ export function RefundPolicyConsent({
   const [policyContent, setPolicyContent] = useState('')
   const [policyContentEn, setPolicyContentEn] = useState('')
   const [policyContentCn, setPolicyContentCn] = useState('')
+  const [policyContentKr, setPolicyContentKr] = useState('')
+  const [policyContentJp, setPolicyContentJp] = useState('')
   const [policyVersion, setPolicyVersion] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
@@ -47,6 +49,8 @@ export function RefundPolicyConsent({
   // Pick the policy content for the current language; fall back to Thai when a translation is blank
   const displayContent =
     i18n.language === 'cn' ? (policyContentCn || policyContent)
+    : i18n.language === 'kr' ? (policyContentKr || policyContent)
+    : i18n.language === 'jp' ? (policyContentJp || policyContent)
     : i18n.language === 'en' ? (policyContentEn || policyContent)
     : policyContent
 
@@ -72,10 +76,14 @@ export function RefundPolicyConsent({
         const val = typeof data.value === 'object' && 'value' in data.value ? data.value.value : data.value
         const valEn = typeof data.value === 'object' && 'value_en' in data.value ? data.value.value_en : ''
         const valCn = typeof data.value === 'object' && 'value_cn' in data.value ? data.value.value_cn : ''
+        const valKr = typeof data.value === 'object' && 'value_kr' in data.value ? data.value.value_kr : ''
+        const valJp = typeof data.value === 'object' && 'value_jp' in data.value ? data.value.value_jp : ''
         const ver = typeof data.value === 'object' && 'version' in data.value ? data.value.version : '1.0'
         setPolicyContent(typeof val === 'string' ? val : '')
         setPolicyContentEn(typeof valEn === 'string' ? valEn : '')
         setPolicyContentCn(typeof valCn === 'string' ? valCn : '')
+        setPolicyContentKr(typeof valKr === 'string' ? valKr : '')
+        setPolicyContentJp(typeof valJp === 'string' ? valJp : '')
         setPolicyVersion(typeof ver === 'string' ? ver : '1.0')
       }
     } catch (err) {
