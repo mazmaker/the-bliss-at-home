@@ -101,7 +101,7 @@ describe('receiptPdfGenerator', () => {
   })
 
   describe('downloadReceipt', () => {
-    it('should generate and save a receipt PDF', () => {
+    it('should generate and save a receipt PDF', async () => {
       const data: ReceiptPdfData = {
         receiptNumber: 'RCP-001',
         transactionDate: '2026-03-01',
@@ -115,7 +115,7 @@ describe('receiptPdfGenerator', () => {
         company: baseCompany,
       }
 
-      downloadReceipt(data)
+      await downloadReceipt(data)
 
       expect(mockSave).toHaveBeenCalledWith('receipt-RCP-001.pdf')
       // Constructor calls registerFonts(), then reset() calls it again = 4 calls each
@@ -123,7 +123,7 @@ describe('receiptPdfGenerator', () => {
       expect(mockAddFont).toHaveBeenCalled()
     })
 
-    it('should handle addons in receipt', () => {
+    it('should handle addons in receipt', async () => {
       const data: ReceiptPdfData = {
         receiptNumber: 'RCP-002',
         transactionDate: '2026-03-01',
@@ -141,12 +141,12 @@ describe('receiptPdfGenerator', () => {
         company: baseCompany,
       }
 
-      downloadReceipt(data)
+      await downloadReceipt(data)
 
       expect(mockSave).toHaveBeenCalledWith('receipt-RCP-002.pdf')
     })
 
-    it('should use English language when specified', () => {
+    it('should use English language when specified', async () => {
       const data: ReceiptPdfData = {
         receiptNumber: 'RCP-003',
         transactionDate: '2026-03-01',
@@ -162,14 +162,14 @@ describe('receiptPdfGenerator', () => {
         language: 'en',
       }
 
-      downloadReceipt(data)
+      await downloadReceipt(data)
 
       expect(mockSave).toHaveBeenCalledWith('receipt-RCP-003.pdf')
     })
   })
 
   describe('downloadCreditNote', () => {
-    it('should generate and save a credit note PDF', () => {
+    it('should generate and save a credit note PDF', async () => {
       const data: CreditNotePdfData = {
         creditNoteNumber: 'CN-001',
         originalReceiptNumber: 'RCP-001',
@@ -185,12 +185,12 @@ describe('receiptPdfGenerator', () => {
         company: baseCompany,
       }
 
-      downloadCreditNote(data)
+      await downloadCreditNote(data)
 
       expect(mockSave).toHaveBeenCalledWith('credit-note-CN-001.pdf')
     })
 
-    it('should handle partial refund credit note', () => {
+    it('should handle partial refund credit note', async () => {
       const data: CreditNotePdfData = {
         creditNoteNumber: 'CN-002',
         originalReceiptNumber: 'RCP-002',
@@ -208,7 +208,7 @@ describe('receiptPdfGenerator', () => {
         language: 'en',
       }
 
-      downloadCreditNote(data)
+      await downloadCreditNote(data)
 
       expect(mockSave).toHaveBeenCalledWith('credit-note-CN-002.pdf')
     })

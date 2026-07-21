@@ -63,7 +63,8 @@ function PaymentConfirmation() {
 
   const fetchReceiptData = async (transactionId: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/receipts/${transactionId}`)
+      const lang = getStoredLanguage()
+      const response = await fetch(`${API_URL}/api/receipts/${transactionId}?lang=${lang}`)
       const result = await response.json()
 
       if (result.success && result.data) {
@@ -76,11 +77,11 @@ function PaymentConfirmation() {
     }
   }
 
-  const handleDownloadReceipt = () => {
+  const handleDownloadReceipt = async () => {
     if (!receiptData) return
 
     const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
-    downloadReceipt({
+    await downloadReceipt({
       receiptNumber: receiptData.receipt_number,
       transactionDate: formatDate(receiptData.transaction_date),
       bookingNumber: receiptData.booking_number,

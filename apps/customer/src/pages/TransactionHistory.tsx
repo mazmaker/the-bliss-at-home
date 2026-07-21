@@ -246,11 +246,11 @@ function TransactionHistory() {
                               try {
                                 const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
                                 const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
-                                const resp = await fetch(`${API_URL}/api/receipts/${transaction.id}`)
+                                const resp = await fetch(`${API_URL}/api/receipts/${transaction.id}?lang=${lang}`)
                                 const result = await resp.json()
                                 if (result.success) {
                                   const d = result.data
-                                  downloadReceipt({
+                                  await downloadReceipt({
                                     receiptNumber: d.receipt_number,
                                     transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
                                     bookingNumber: d.booking_number,

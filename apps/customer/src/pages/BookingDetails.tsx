@@ -540,13 +540,13 @@ function BookingDetails() {
         return
       }
 
-      const resp = await fetch(`${API_URL}/api/receipts/${txn.id}`)
+      const resp = await fetch(`${API_URL}/api/receipts/${txn.id}?lang=${getStoredLanguage()}`)
       const result = await resp.json()
       if (result.success) {
         const d = result.data
         const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
         const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
-        downloadReceipt({
+        await downloadReceipt({
           receiptNumber: d.receipt_number,
           transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
           bookingNumber: d.booking_number,
@@ -596,13 +596,13 @@ function BookingDetails() {
         return
       }
 
-      const resp = await fetch(`${API_URL}/api/receipts/credit-note/${refundTxn.id}`)
+      const resp = await fetch(`${API_URL}/api/receipts/credit-note/${refundTxn.id}?lang=${getStoredLanguage()}`)
       const result = await resp.json()
       if (result.success) {
         const d = result.data
         const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
         const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
-        downloadCreditNote({
+        await downloadCreditNote({
           creditNoteNumber: d.credit_note_number,
           originalReceiptNumber: d.original_receipt_number,
           refundDate: new Date(d.refund_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),

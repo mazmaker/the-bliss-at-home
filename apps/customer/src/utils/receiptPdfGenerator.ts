@@ -6,6 +6,7 @@
 import { jsPDF } from 'jspdf'
 import { SarabunRegular, SarabunBold } from './fonts/sarabun'
 import { getPdfLabels, type PdfLanguage } from './pdfLabels'
+import { loadCjkFontBase64 } from './cjkFont'
 
 export interface ReceiptPdfData {
   receiptNumber: string
@@ -67,26 +68,38 @@ class ReceiptPDFGenerator {
   private contentWidth = 170
   private labels: ReturnType<typeof getPdfLabels>
   private lang: PdfLanguage
+  private fontFamily: string
+  private cjkFontB64: string | null
 
-  constructor(language: PdfLanguage = 'th') {
+  constructor(language: PdfLanguage = 'th', cjkFontB64: string | null = null) {
     this.doc = new jsPDF('p', 'mm', 'a4')
     this.lang = language
     this.labels = getPdfLabels(language)
+    this.cjkFontB64 = cjkFontB64
+    this.fontFamily = cjkFontB64 ? 'NotoCJK' : 'Sarabun'
     this.registerFonts()
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily, 'normal')
   }
 
   private registerFonts() {
+    // Sarabun (Thai/Latin) is bundled and always registered — used for th/en.
     this.doc.addFileToVFS('Sarabun-Regular.ttf', SarabunRegular)
     this.doc.addFileToVFS('Sarabun-Bold.ttf', SarabunBold)
     this.doc.addFont('Sarabun-Regular.ttf', 'Sarabun', 'normal')
     this.doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold')
+    // For cn/kr/jp, a lazily-fetched Noto CJK font is registered as 'NotoCJK' for both
+    // styles (one variable file; jsPDF subsets it into the output so the PDF stays small).
+    if (this.cjkFontB64) {
+      this.doc.addFileToVFS('NotoCJK.ttf', this.cjkFontB64)
+      this.doc.addFont('NotoCJK.ttf', 'NotoCJK', 'normal')
+      this.doc.addFont('NotoCJK.ttf', 'NotoCJK', 'bold')
+    }
   }
 
   private reset() {
     this.doc = new jsPDF('p', 'mm', 'a4')
     this.registerFonts()
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily, 'normal')
     this.currentY = this.margin
   }
 
@@ -97,13 +110,13 @@ class ReceiptPDFGenerator {
 
     // Company name
     this.doc.setFontSize(18)
-    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setFont(this.fontFamily,'bold')
     this.doc.setTextColor(255, 255, 255)
     this.doc.text(companyName || 'The Bliss Massage at Home', this.margin + 10, this.margin + 12)
 
     // Document title
     this.doc.setFontSize(12)
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily,'normal')
     this.doc.text(title, this.margin + 10, this.margin + 20)
 
     this.currentY = this.margin + 35
@@ -144,12 +157,12 @@ class ReceiptPDFGenerator {
     this.doc.setFontSize(10)
 
     // Label
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily,'normal')
     this.doc.setTextColor(100, 100, 100)
     this.doc.text(label, this.margin, this.currentY)
 
     // Value
-    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setFont(this.fontFamily,'bold')
     this.doc.setTextColor(0, 0, 0)
     this.doc.text(value, this.margin + this.contentWidth, this.currentY, { align: 'right' })
 
@@ -164,7 +177,7 @@ class ReceiptPDFGenerator {
 
   private addSectionTitle(title: string) {
     this.doc.setFontSize(11)
-    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setFont(this.fontFamily,'bold')
     this.doc.setTextColor(50, 50, 50)
     this.doc.text(title, this.margin, this.currentY)
     this.currentY += 8
@@ -176,12 +189,12 @@ class ReceiptPDFGenerator {
     this.doc.roundedRect(this.margin, this.currentY - 2, this.contentWidth, 18, 3, 3, 'F')
 
     this.doc.setFontSize(10)
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily,'normal')
     this.doc.setTextColor(80, 50, 0)
     this.doc.text(label, this.margin + 8, this.currentY + 6)
 
     this.doc.setFontSize(16)
-    this.doc.setFont('Sarabun', 'bold')
+    this.doc.setFont(this.fontFamily,'bold')
     this.doc.text(
       `THB ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       this.margin + this.contentWidth - 8,
@@ -206,12 +219,14 @@ class ReceiptPDFGenerator {
   private addFooter(companyName?: string) {
     this.currentY += 5
     this.doc.setFontSize(9)
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily,'normal')
     this.doc.setTextColor(150, 150, 150)
     const name = companyName || 'The Bliss Massage at Home'
     const thankYou = this.lang === 'th'
       ? `ขอบคุณที่ใช้บริการ ${name}`
-      : `Thank you for choosing ${name}`
+      : this.lang === 'en'
+      ? `Thank you for choosing ${name}`
+      : this.labels.thankYou
     this.doc.text(thankYou, this.pageWidth / 2, this.currentY, { align: 'center' })
     this.currentY += 5
     this.doc.text('www.theblissmassageathome.com', this.pageWidth / 2, this.currentY, { align: 'center' })
@@ -331,7 +346,7 @@ class ReceiptPDFGenerator {
 
     // Timeline note
     this.doc.setFontSize(9)
-    this.doc.setFont('Sarabun', 'normal')
+    this.doc.setFont(this.fontFamily,'normal')
     this.doc.setTextColor(100, 100, 100)
     this.doc.text(
       this.labels.refundTimeline,
@@ -351,21 +366,24 @@ class ReceiptPDFGenerator {
 }
 
 /**
- * Download a receipt PDF
+ * Download a receipt PDF. Async because cn/kr/jp lazily fetch a CJK font first
+ * (th/en resolve immediately — loadCjkFontBase64 returns null and Sarabun is used).
  */
-export function downloadReceipt(data: ReceiptPdfData): void {
+export async function downloadReceipt(data: ReceiptPdfData): Promise<void> {
   const lang = data.language || 'th'
-  const generator = new ReceiptPDFGenerator(lang)
+  const cjkFontB64 = await loadCjkFontBase64(lang)
+  const generator = new ReceiptPDFGenerator(lang, cjkFontB64)
   generator.generateReceipt(data)
   generator.download(`receipt-${data.receiptNumber}.pdf`)
 }
 
 /**
- * Download a credit note PDF
+ * Download a credit note PDF. Async — see downloadReceipt for the CJK-font rationale.
  */
-export function downloadCreditNote(data: CreditNotePdfData): void {
+export async function downloadCreditNote(data: CreditNotePdfData): Promise<void> {
   const lang = data.language || 'th'
-  const generator = new ReceiptPDFGenerator(lang)
+  const cjkFontB64 = await loadCjkFontBase64(lang)
+  const generator = new ReceiptPDFGenerator(lang, cjkFontB64)
   generator.generateCreditNote(data)
   generator.download(`credit-note-${data.creditNoteNumber}.pdf`)
 }
