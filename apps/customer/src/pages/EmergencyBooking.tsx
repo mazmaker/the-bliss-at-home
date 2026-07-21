@@ -17,7 +17,8 @@ import { useTranslation } from '@bliss/i18n'
 import { LINE_CONTACT_URL, FACEBOOK_CONTACT_URL } from '../config/contact'
 
 export default function EmergencyBooking() {
-  const { t } = useTranslation('emergency')
+  const { t, i18n } = useTranslation('emergency')
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const [currentTime, setCurrentTime] = useState(new Date())
   const [requestSent, setRequestSent] = useState(false)
 
@@ -102,10 +103,10 @@ export default function EmergencyBooking() {
           <div className="text-center">
             <div className="text-bliss-500 text-sm mb-1">{t('emergency:currentTimeLabel')}</div>
             <div className="text-2xl font-mono font-bold text-bliss-900">
-              {currentTime.toLocaleTimeString('th-TH')}
+              {currentTime.toLocaleTimeString(dateLocale)}
             </div>
             <div className="text-red-500 text-sm font-semibold">
-              {t('emergency:desiredServiceTimeLabel')} {new Date(currentTime.getTime() + 30*60*1000).toLocaleTimeString('th-TH')}
+              {t('emergency:desiredServiceTimeLabel')} {new Date(currentTime.getTime() + 30*60*1000).toLocaleTimeString(dateLocale)}
             </div>
           </div>
         </div>

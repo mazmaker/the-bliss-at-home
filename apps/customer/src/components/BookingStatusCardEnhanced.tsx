@@ -36,7 +36,8 @@ interface BookingStatusCardEnhancedProps {
 }
 
 const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJourneyId, activeJourneyStatus }: BookingStatusCardEnhancedProps) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
@@ -294,7 +295,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
                     {formatDuration(travelDuration)}
                   </div>
                   <div className="text-sm text-gray-600">
-                    {t('booking:booking.travelStartedAt')}{new Date(booking.travel_started_at).toLocaleTimeString('th-TH')}
+                    {t('booking:booking.travelStartedAt')}{new Date(booking.travel_started_at).toLocaleTimeString(dateLocale)}
                   </div>
                 </div>
                 <div className="text-right">
@@ -320,7 +321,7 @@ const BookingStatusCardEnhanced = ({ booking, bookingData, onRefresh, activeJour
                 {formatDuration(serviceDuration)}
               </div>
               <div className="text-sm text-gray-600">
-                {t('booking:booking.serviceStartedAt')}{new Date(booking.service_started_at).toLocaleTimeString('th-TH')}
+                {t('booking:booking.serviceStartedAt')}{new Date(booking.service_started_at).toLocaleTimeString(dateLocale)}
               </div>
             </div>
             <div className="text-right">

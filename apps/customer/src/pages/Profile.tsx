@@ -521,6 +521,8 @@ function Profile() {
                             { code: 'th', label: t('settings.language.thai'), flag: '🇹🇭' },
                             { code: 'en', label: t('settings.language.english'), flag: '🇬🇧' },
                             { code: 'cn', label: t('settings.language.chinese'), flag: '🇨🇳' },
+                            { code: 'kr', label: t('settings.language.korean'), flag: '🇰🇷' },
+                            { code: 'jp', label: t('settings.language.japanese'), flag: '🇯🇵' },
                           ].map((lang) => (
                             <label
                               key={lang.code}

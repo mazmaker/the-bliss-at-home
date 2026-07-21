@@ -1,0 +1,76 @@
+{
+  "catalog": {
+    "title": "すべてのサービス",
+    "subtitle": "ご希望に合ったサービスをお選びください",
+    "searchPlaceholder": "サービスを検索...",
+    "all": "すべて",
+    "massage": "マッサージ",
+    "nail": "ネイルケア",
+    "spa": "スパ",
+    "popular": "人気サービス",
+    "priceLowToHigh": "価格の安い順",
+    "priceHighToLow": "価格の高い順",
+    "topRated": "高評価順",
+    "resultsCount": "{{count}}件のサービスが見つかりました",
+    "noResults": "該当するサービスが見つかりません",
+    "book": "予約する",
+    "reviews": "レビュー",
+    "min": "分",
+    "clearFilters": "絞り込みをクリア",
+    "startingFrom": "料金は以下から"
+  },
+  "details": {
+    "backToServices": "サービス一覧に戻る",
+    "minutes": "分",
+    "categoryMassage": "マッサージ",
+    "categoryNail": "ネイルサービス",
+    "categorySpa": "スパ",
+    "categoryFacial": "フェイシャルトリートメント",
+    "description": "サービス詳細",
+    "descriptionTh": "タイ語での説明",
+    "benefits": "トリートメントの効果",
+    "addons": "追加オプション",
+    "bookingSummary": "ご予約内容",
+    "quantity": "数量",
+    "service": "サービス",
+    "addonsLabel": "追加オプション",
+    "quantityLabel": "数量",
+    "total": "合計金額",
+    "bookService": "このサービスを予約する",
+    "hotelPrice": "ホテルご宿泊者様向け：",
+    "hotelPriceSpecial": "特別料金",
+    "save": "お得額",
+    "duration": "施術時間",
+    "durationAndPricing": "施術時間と料金",
+    "min": "分",
+    "startingFrom": "料金は以下から",
+    "noDescription": "現在、このサービスの詳細情報はございません",
+    "questions": "ご不明な点はございますか？",
+    "askMore": "お問い合わせ",
+    "hour": "時間",
+    "priceIncludesServiceAndTransport": "料金には施術料および交通費が含まれております。駐車料金は含まれておりません。",
+    "oilSurchargeNote": "タイバームマッサージを除き、バームをご希望の場合は100バーツの追加料金が発生いたします。"
+  },
+  "reviews": {
+    "title": "お客様のレビュー",
+    "averageRating": "平均評価",
+    "totalReviews": "{{count}}件のレビュー",
+    "noReviews": "まだレビューはございません",
+    "showMore": "すべてのレビューを見る",
+    "cleanliness": "清潔さ",
+    "professionalism": "専門性",
+    "skill": "施術スキル"
+  },
+  "service": {
+    "label": "サービス"
+  },
+  "emergencyService": {
+    "badge": "緊急サービス",
+    "heading": "90分以内にマッサージをご希望ですか？",
+    "subtitle": "3時間前までにご予約できなかった場合でも、会員様専用チームがサポートいたします。"
+  },
+  "durationLabel": "{{duration}}分から",
+  "discount": {
+    "badge": "{{percentage}}% お得"
+  }
+}

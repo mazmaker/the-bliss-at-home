@@ -3,7 +3,7 @@
  * Used by receiptPdfGenerator.ts (non-React context)
  */
 
-export type PdfLanguage = 'th' | 'en' | 'cn'
+export type PdfLanguage = 'th' | 'en' | 'cn' | 'kr' | 'jp'
 
 interface PdfLabels {
   // Receipt
@@ -47,7 +47,9 @@ interface PdfLabels {
   email: string
 }
 
-const labels: Record<PdfLanguage, PdfLabels> = {
+// kr/jp intentionally absent for now → getPdfLabels falls back to English (labels.en).
+// Phase 8 (real CJK receipts) adds kr/jp blocks + embeds a CJK font in receiptPdfGenerator.
+const labels: Partial<Record<PdfLanguage, PdfLabels>> = {
   th: {
     receipt: 'ใบเสร็จรับเงิน',
     paymentReceipt: 'ใบเสร็จรับเงิน',
@@ -159,5 +161,5 @@ const labels: Record<PdfLanguage, PdfLabels> = {
 }
 
 export function getPdfLabels(lang: PdfLanguage): PdfLabels {
-  return labels[lang] || labels.en
+  return labels[lang] || (labels.en as PdfLabels)
 }

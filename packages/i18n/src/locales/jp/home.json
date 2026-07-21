@@ -1,0 +1,119 @@
+{
+  "hero": {
+    "title1": "心からの癒し",
+    "title2": "ご自宅までお届け",
+    "subtitle1": "上質なマッサージ＆スパサービス",
+    "subtitle2": "厳選されたプロのセラピストが施術いたします",
+    "searchPlaceholder": "サービスを検索...",
+    "searchButton": "検索"
+  },
+  "promotions": {
+    "discount": "割引",
+    "code": "プロモーションコード",
+    "validUntil": "有効期限",
+    "minOrder": "最低ご利用金額",
+    "maxDiscount": "最大割引額",
+    "useCode": "ご予約時にこちらのコードをご利用ください",
+    "bookNow": "今すぐ予約",
+    "close": "閉じる",
+    "appliesTo": "対象サービス",
+    "allServices": "すべてのサービス",
+    "selectedCategories": "対象カテゴリー",
+    "selectedServices": "対象サービス",
+    "promoCode": "プロモーションコード",
+    "copyCode": "コードをコピー",
+    "copied": "コードをコピーしました",
+    "statusActive": "実施中",
+    "periodTitle": "キャンペーン期間",
+    "startDate": "開始日",
+    "endDate": "終了日",
+    "daysLeft": "残り {{count}} 日",
+    "usageTitle": "ご利用状況",
+    "used": "利用済み",
+    "limitPerUser": "お一人様 {{count}} 回までご利用いただけます",
+    "termsTitle": "ご利用条件",
+    "share": "キャンペーンを共有",
+    "loading": "キャンペーン情報を読み込み中...",
+    "pageTitle": "すべてのキャンペーン",
+    "pageSubtitle": "お客様のための特別なオファー",
+    "searchPlaceholder": "キャンペーンを検索...",
+    "filterAll": "すべて",
+    "filterPercentage": "割引率キャンペーン",
+    "filterFixedAmount": "定額割引",
+    "filterBuyXGetY": "購入特典",
+    "sortNewest": "新着順",
+    "sortHighestDiscount": "割引率の高い順",
+    "sortExpiring": "終了間近順",
+    "empty": {
+      "heading": "キャンペーンが見つかりません",
+      "message": "検索条件またはフィルターを変更してお試しください"
+    },
+    "daysLeftBadge": "残り {{daysLeft}} 日",
+    "discountLabel": "割引",
+    "discountOverlay": "割引",
+    "expiryLabel": "{{date}}まで有効",
+    "usageLabel": "利用済み {{used}}/{{limit}}",
+    "offText": "割引"
+  },
+  "categories": {
+    "title": "サービス",
+    "massage": "マッサージ",
+    "nail": "ネイルケア",
+    "spa": "スパ",
+    "servicesCount": "{{count}}件のサービス"
+  },
+  "popular": {
+    "title": "人気サービス",
+    "book": "今すぐ予約",
+    "loading": "サービスを読み込んでいます...",
+    "error": "サービスを読み込めませんでした。もう一度お試しください。",
+    "empty": "現在ご利用いただけるサービスはありません。"
+  },
+  "whyChooseUs": {
+    "title": "The Bliss が選ばれる理由",
+    "experts": "プロフェッショナルセラピスト",
+    "expertsDesc": "専門的な研修を受けた経験豊富なセラピストが施術いたします。",
+    "atYourDoor": "ご自宅まで",
+    "atYourDoorDesc": "便利な訪問サービス",
+    "premiumQuality": "プレミアム品質",
+    "premiumQualityDesc": "高級な製品とサービス"
+  },
+  "reviews": {
+    "title": "お客様の声",
+    "subtitle": "実際にご利用いただいたお客様からのリアルな声"
+  },
+  "cta": {
+    "title": "癒しのひとときを始めませんか？",
+    "subtitle1": "今日、マッサージ・スパ・ネイルサービスをご予約ください",
+    "subtitle2": "癒しとくつろぎをご自宅までお届けします。"
+  },
+  "pointsWidget": {
+    "title": "ポイント",
+    "viewHistory": "履歴を見る",
+    "pointsUnit": "ポイント",
+    "valueLabel": "ポイント価値",
+    "expiringLabel": "有効期限が近いポイント"
+  },
+  "backToHome": "ホームへ戻る",
+  "globalDiscount": {
+    "badge": "{{percentage}}% OFF",
+    "title": "すべてのサービスで特別割引をご利用いただけます",
+    "subtitle": "プロモーションコード「DISCOUNT15」を入力するだけでご利用いただけます"
+  },
+  "promotion": {
+    "label": "キャンペーン",
+    "promoCodeLabel": "プロモーションコード",
+    "codeCopied": "コードをコピーしました！",
+    "discountLabel": "割引内容",
+    "daysLeftLabel": "残り日数",
+    "usedLabel": "利用済み",
+    "usageProgressLabel": "ご利用状況",
+    "termsTitle": "ご利用条件",
+    "minimumOrderLabel": "最低ご利用金額：",
+    "maximumDiscountLabel": "最大割引額：",
+    "bookNowButton": "今すぐ予約",
+    "shareText": "プロモーションコード：",
+    "shareButton": "共有する",
+    "closeButton": "閉じる"
+  }
+}

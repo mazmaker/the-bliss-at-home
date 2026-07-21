@@ -422,7 +422,13 @@
     "inProgressLabel": "服务进行中",
     "note": "如果您需要更多时间，可以延期服务",
     "times": "+{{count}} 次",
-    "totalExtensionPrice": "延长费用：฿{{amount}}"
+    "totalExtensionPrice": "延长费用：฿{{amount}}",
+    "historyTitle": "服务延长记录",
+    "addedMinutes": "+{{minutes}} 分钟",
+    "totalTime": "总时长",
+    "totalFeeLabel": "延长费用合计",
+    "hoursShort": "小时",
+    "minutesShort": "分钟"
   },
   "status": {
     "pending": {

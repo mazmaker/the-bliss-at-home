@@ -21,7 +21,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https:/
 
 function BookingDetails() {
   const { t, i18n } = useTranslation(['booking', 'common'])
-  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -544,8 +544,8 @@ function BookingDetails() {
       const result = await resp.json()
       if (result.success) {
         const d = result.data
-        const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
-        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+        const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
+        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
         downloadReceipt({
           receiptNumber: d.receipt_number,
           transactionDate: new Date(d.transaction_date).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
@@ -600,8 +600,8 @@ function BookingDetails() {
       const result = await resp.json()
       if (result.success) {
         const d = result.data
-        const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
-        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+        const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
+        const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
         downloadCreditNote({
           creditNoteNumber: d.credit_note_number,
           originalReceiptNumber: d.original_receipt_number,
@@ -730,9 +730,9 @@ function BookingDetails() {
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-bliss-900 mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-bliss-600" />
-                  การเพิ่มเวลาบริการ
+                  {t('booking:extension.historyTitle')}
                   <span className="ml-auto text-sm font-normal text-bliss-600 bg-bliss-100 px-3 py-1 rounded-full">
-                    {extendableBooking.extension_count} ครั้ง
+                    {t('booking:extension.times', { count: extendableBooking.extension_count })}
                   </span>
                 </h2>
 
@@ -746,7 +746,7 @@ function BookingDetails() {
                             {index + 1}
                           </div>
                           <div>
-                            <p className="font-semibold text-bliss-900">+{ext.duration} นาที</p>
+                            <p className="font-semibold text-bliss-900">{t('booking:extension.addedMinutes', { minutes: ext.duration })}</p>
                             {ext.extended_at && (
                               <p className="text-xs text-bliss-500">
                                 {new Date(ext.extended_at).toLocaleDateString(dateLocale, {
@@ -764,7 +764,7 @@ function BookingDetails() {
 
                 <div className="mt-4 pt-4 border-t border-bliss-100 flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-bliss-500">เวลารวมทั้งหมด</p>
+                    <p className="text-sm text-bliss-500">{t('booking:extension.totalTime')}</p>
                     <p className="font-semibold text-bliss-900">
                       {(() => {
                         // Per-recipient timeline: base (per-recipient) + THIS recipient's extensions.
@@ -775,12 +775,12 @@ function BookingDetails() {
                           .reduce((sum, bs) => sum + bs.duration, 0)
                         const total = extendableBooking.duration + extMin
                         const mins = total % 60
-                        return `${Math.floor(total / 60)} ชม.${mins > 0 ? ` ${mins} นาที` : ''}`
+                        return `${Math.floor(total / 60)} ${t('booking:extension.hoursShort')}${mins > 0 ? ` ${mins} ${t('booking:extension.minutesShort')}` : ''}`
                       })()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-bliss-500">ค่าเพิ่มเวลารวม</p>
+                    <p className="text-sm text-bliss-500">{t('booking:extension.totalFeeLabel')}</p>
                     <p className="font-bold text-lg text-bliss-600">
                       +฿{extendableBooking.booking_services
                         .filter(bs => bs.is_extension)

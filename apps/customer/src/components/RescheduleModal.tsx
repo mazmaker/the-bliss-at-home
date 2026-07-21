@@ -69,7 +69,7 @@ export function RescheduleModal({
   duration,
 }: RescheduleModalProps) {
   const { t, i18n } = useTranslation()
-  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const [step, setStep] = useState<'check' | 'select' | 'confirm' | 'result'>('check')
   const [eligibility, setEligibility] = useState<CancellationEligibility | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')

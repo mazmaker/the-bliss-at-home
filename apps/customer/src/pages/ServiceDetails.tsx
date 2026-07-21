@@ -28,6 +28,7 @@ function ServiceDetails() {
   const { data: reviews } = useServiceReviews(serviceId, 5)
 
   const isThai = i18n.language === 'th'
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
 
   // Transform service data
   const service = useMemo(() => {
@@ -354,7 +355,7 @@ function ServiceDetails() {
                             </div>
                           </div>
                           <span className="text-xs text-bliss-400">
-                            {new Date(review.created_at).toLocaleDateString(isThai ? 'th-TH' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            {new Date(review.created_at).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: 'numeric' })}
                           </span>
                         </div>
                         {review.review && (

@@ -29,7 +29,8 @@ export default function StaffTrackingMap({
   journeyId,
   height = "400px"
 }: StaffTrackingMapProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const [journey, setJourney] = useState<JourneyInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +74,7 @@ export default function StaffTrackingMap({
       setJourney(journeyInfo)
 
       if (journeyInfo.last_location_update) {
-        setLastUpdate(new Date(journeyInfo.last_location_update).toLocaleString('th-TH'))
+        setLastUpdate(new Date(journeyInfo.last_location_update).toLocaleString(dateLocale))
       }
 
       // Only reload the map iframe when the position actually changed (saves Maps credits + avoids flicker)

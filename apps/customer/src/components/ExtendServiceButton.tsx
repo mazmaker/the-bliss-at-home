@@ -28,7 +28,7 @@ export function ExtendServiceButton({
   fullWidth = false
 }: ExtendServiceButtonProps) {
   const { t, i18n } = useTranslation('extension')
-  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const [showModal, setShowModal] = useState(false)
   const extensionStatus = useExtensionStatus(booking)
 

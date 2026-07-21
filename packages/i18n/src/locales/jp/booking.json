@@ -1,0 +1,673 @@
+{
+  "wizard": {
+    "title": "サービスを予約",
+    "backToDetails": "サービス詳細へ戻る",
+    "back": "戻る",
+    "next": "次へ",
+    "steps": {
+      "service": "サービス",
+      "dateTime": "日時",
+      "provider": "セラピスト",
+      "address": "住所",
+      "confirm": "確認",
+      "payment": "お支払い"
+    },
+    "step1": {
+      "title": "選択されたサービスをご確認ください",
+      "selectedAddons": "選択された追加オプション",
+      "quantity": "ご利用人数：{{count}}名",
+      "totalPrice": "合計金額",
+      "customerType": "ご利用人数",
+      "single": "お一人様",
+      "singleDesc": "お一人様向けサービス",
+      "couple": "お二人様",
+      "coupleDesc": "2名様向けサービス",
+      "coupleFormat": "サービス形式",
+      "simultaneous": "同時施術",
+      "simultaneousDesc": "お一人様ずつ専属のセラピストが担当し、同時に施術を受けていただけます。",
+      "sequential": "順番に施術",
+      "sequentialDesc": "1名のセラピストが、お二人に順番に施術を行います。",
+      "person1": "1人目のお客様",
+      "person2": "2人目のお客様",
+      "selectService": "サービスを選択",
+      "changeService": "サービスを変更",
+      "duration": "施術時間",
+      "minutes": "{{count}}分",
+      "addons": "オプションサービス"
+    },
+    "step2": {
+      "title": "ご希望の日時をお選びください",
+      "date": "日付",
+      "time": "時間",
+      "pleaseSelect": "ご希望の日時を選択してください",
+      "serviceOn": "ご予約日時：{{date}} {{time}}",
+      "selectedDateTime": "ご予約日時：{{date}} {{time}}",
+      "hours": "時間",
+      "advanceBookingLimit": "ご予約は14日前から可能です",
+      "selectHour": "時間を選択",
+      "selectMinute": "分を選択"
+    },
+    "step3": {
+      "title": "セラピストのご希望",
+      "subtitle": "ご希望のセラピストをお選びくださいませ",
+      "femaleOnly": "女性セラピストのみ",
+      "femaleOnlyDesc": "女性セラピストのみ",
+      "maleOnly": "男性セラピストのみとなります",
+      "maleOnlyDesc": "男性セラピストのみとなります",
+      "preferFemale": "女性セラピスト希望です",
+      "preferFemaleDesc": "女性セラピスト優先、空きがない場合は男性セラピスト",
+      "preferMale": "男性セラピスト希望",
+      "preferMaleDesc": "男性セラピスト優先、空きがない場合は女性セラピスト",
+      "noPreference": "指定なし",
+      "noPreferenceDesc": "空いているセラピストを手配"
+    },
+    "step4": {
+      "title": "住所・連絡先情報",
+      "selectSaved": "保存済み住所を選択するか、新しい住所を追加してください",
+      "addNew": "新しい住所を追加",
+      "backToSaved": "保存済み住所に戻る",
+      "contactName": "ご予約者名",
+      "phoneNumber": "電話番号",
+      "address": "住所",
+      "subdistrict": "町・村",
+      "district": "市区町村",
+      "province": "都道府県",
+      "postalCode": "郵便番号",
+      "fullName": "お名前",
+      "phonePlaceholder": "08x-xxx-xxxx",
+      "addressPlaceholder": "番地・村名・通り",
+      "mapLabel": "地図上で位置を選択",
+      "notes": "追加メモ",
+      "notesPlaceholder": "例：建物の入館コード、待ち合わせ場所、その他重要な情報",
+      "arrivalNote": "スタッフがご指定の場所へ時間通りに到着いたします。",
+      "default": "デフォルト",
+      "usingDefaultHint": "デフォルトの住所を使用中",
+      "loadingAddresses": "住所を読み込み中...",
+      "markerTitle": "住所の位置",
+      "searchPlaceholder": "場所を検索...",
+      "locatingButton": "検索中...",
+      "currentLocationButton": "現在地",
+      "howToUseTitle": "使用方法：",
+      "howToUseStep1": "&bull; 「現在地」ボタンを押して現在の位置を使用してください。",
+      "howToUseStep2": "&bull; 地図をクリックして位置を指定してください。",
+      "howToUseStep3": "&bull; 赤いピンをドラッグして位置を調整してください。",
+      "howToUseStep4": "&bull; 地図上部の検索欄から場所を検索してください。",
+      "latitudeLabel": "緯度:",
+      "longitudeLabel": "経度:"
+    },
+    "step5": {
+      "title": "予約を確定",
+      "addons": "追加サービス",
+      "dateTime": "予約日時",
+      "location": "サービス場所",
+      "notes": "備考",
+      "totalPrice": "合計金額",
+      "confirmBooking": "予約を確定",
+      "voucher": "割引コード",
+      "voucherPlaceholder": "プロモーションコードを入力",
+      "apply": "コードを適用",
+      "remove": "削除",
+      "discount": "割引",
+      "subtotal": "割引前金額",
+      "serviceSummary": "サービス概要",
+      "voucherApplied": "コードが適用されました",
+      "voucherInvalid": "無効または期限切れのコードです",
+      "voucherMinOrder": "最低利用金額 ฿{{amount}}",
+      "voucherUsed": "このコードは既に使用されています",
+      "voucherNotApplicable": "このコードはこのサービスには利用できません",
+      "providerPreference": "セラピストの希望",
+      "pointsDiscount": "ポイント割引（{{points}}ポイント）",
+      "discountAmount": "-฿{{amount}}"
+    },
+    "payment": {
+      "title": "支払い",
+      "selectChannel": "支払い方法を選択",
+      "creditCard": "クレジットカード/デビットカード",
+      "creditCardEn": "クレジットカード/デビットカード",
+      "promptpay": "PromptPay",
+      "promptpayEn": "PromptPay QRコード",
+      "internetBanking": "インターネットバンキング",
+      "internetBankingEn": "インターネットバンキング",
+      "mobileBanking": "モバイルバンキング",
+      "mobileBankingEn": "モバイルバンキング",
+      "changeChannel": "支払い方法を変更",
+      "selectSavedCard": "保存済みカードを選択するか、新しいカードを追加してください",
+      "addNewCard": "新しいカードを追加",
+      "backToSavedCards": "保存済みカードに戻る",
+      "processing": "処理中...",
+      "payAmount": "支払う",
+      "promptpayTitle": "PromptPayで支払う",
+      "amount": "金額",
+      "generateQR": "QRコードを生成",
+      "generatingQR": "QRコードを生成中...",
+      "scanQR": "QRコードをスキャンしてお支払いください",
+      "qrInstruction1": "下のボタンを押してQRコードを生成してください",
+      "qrInstruction2": "その後、銀行アプリでスキャンしてください",
+      "scanInstruction1": "銀行アプリでQRコードをスキャンしてください",
+      "scanInstruction2": "システムが自動的に支払いを確認します",
+      "waitingPayment": "支払い待ち...",
+      "selectBank": "銀行を選択",
+      "preparingPayment": "支払いを準備中...",
+      "channelDeveloping": "この支払い方法は現在開発中です",
+      "selectOther": "他の支払い方法を選択してください",
+      "expires": "有効期限",
+      "default": "デフォルト",
+      "scb": "SCB",
+      "kbank": "KBank",
+      "bbl": "Bangkok Bank",
+      "ktb": "Krungthai",
+      "bay": "Krungsri",
+      "ttb": "TTB",
+      "manualQr": {
+        "title": "お支払い後、明細を送信して確認してください",
+        "instruction": "下記のQRコードでお支払い後、LINE OAで管理者へ明細を送信してください。",
+        "qrImageLabel": "振込用QRコード",
+        "amountLabel": "お支払い金額",
+        "bookingNumberLabel": "予約番号",
+        "copyButton": "コピー",
+        "copied": "コピーしました",
+        "lineOALabel": "LINE OAで明細を送信",
+        "lineIdLabel": "LINE ID",
+        "lineOpenButton": "LINE OAを開く",
+        "sendSlipNote": "お支払い後、予約番号と明細をLINE OAで管理者へお送りください。",
+        "pendingVerification": "管理者が支払いを確認するまで予約は確認待ちとなります。",
+        "noQrConfigured": "QR決済はまだ設定されていません。LINE OAで管理者までお問い合わせください。"
+      }
+    },
+    "serviceNotFound": "サービスが見つかりません",
+    "backToServices": "&larr; サービス一覧に戻る",
+    "loadingService": "サービスを読み込み中..."
+  },
+  "history": {
+    "title": "予約履歴",
+    "all": "すべて",
+    "upcoming": "予定",
+    "completed": "完了",
+    "cancelled": "キャンセル済み",
+    "bookingNumber": "予約 #{{number}}",
+    "noBookings": "予約はありません",
+    "viewServices": "サービスを見る",
+    "filterAllStatuses": "すべてのステータス",
+    "filters": {
+      "fromDate": "開始日",
+      "toDate": "終了日",
+      "service": "サービス",
+      "allServices": "すべてのサービス"
+    },
+    "noResultsFiltered": "選択した条件に該当する予約がありません"
+  },
+  "details": {
+    "title": "予約詳細",
+    "backToHistory": "予約履歴に戻る",
+    "bookingNumber": "予約番号",
+    "bookedService": "予約したサービス",
+    "addons": "追加サービス",
+    "dateTime": "予約日時",
+    "location": "サービス場所",
+    "viewMap": "地図を見る",
+    "notes": "備考",
+    "provider": "セラピスト",
+    "reviews": "レビュー",
+    "chat": "チャット",
+    "reschedule": "日時変更",
+    "rescheduleViaAdmin": "予約を変更しますか？管理者にお問い合わせください",
+    "priceSummary": "料金概要",
+    "mainService": "メインサービス",
+    "serviceFee": "サービス料金",
+    "total": "合計",
+    "paymentTitle": "支払い",
+    "paymentMethod": "支払い方法",
+    "creditCard": "クレジットカード/デビットカード",
+    "bankTransfer": "銀行振込",
+    "cash": "現金",
+    "editBooking": "予約を変更",
+    "cancelBooking": "予約をキャンセル",
+    "bookAgain": "もう一度予約",
+    "rateReview": "評価・レビュー",
+    "viewService": "このサービスを見る",
+    "contactSupport": "サポートに連絡",
+    "bookedOn": "{{date}}に予約",
+    "errorLoading": "予約の読み込みに失敗しました",
+    "notFound": "予約が見つかりません",
+    "notFoundMessage": "お探しの予約が見つかりません",
+    "hours": "時間"
+  },
+  "healthDeclaration": {
+    "conditions": {
+      "heartDisease": "心臓病",
+      "bloodPressure": "高血圧・低血圧",
+      "diabetes": "糖尿病",
+      "pregnancy": "妊娠中",
+      "postSurgery": "手術後の回復中、または傷が完全に治癒していない状態",
+      "skinDisease": "皮膚疾患",
+      "other": "その他（ご記入ください）"
+    },
+    "intro": "安全にサービスをご利用いただくため、以下の健康状態がある場合は予約前にスタッフへお知らせください。",
+    "otherDetailPlaceholder": "症状または持病をご記入ください",
+    "noCondition": "上記に該当しません",
+    "confirmationSectionTitle": "情報確認",
+    "confirmAccuracy": "上記の情報が正確であることを確認します。",
+    "confirmAdjustment": "上記のいずれかの症状がある場合、安全上の理由により、必要に応じてセラピストが施術内容を調整することに同意します。",
+    "privacyNote": "すべての情報は機密として管理され、安全なサービス提供のためにのみ使用されます。",
+    "saveError": "情報の保存に失敗しました。もう一度お試しください。",
+    "title": "ご利用前の健康情報と注意事項",
+    "saving": "保存中...",
+    "confirmData": "情報を確認"
+  },
+  "cancelReason": {
+    "urgent": "急な予定",
+    "travelPlanChange": "予定変更",
+    "notConvenient": "選択した日に都合がつきません",
+    "health": "体調不良",
+    "other": "その他"
+  },
+  "cancelBooking": {
+    "checkError": "キャンセル状況を確認できません",
+    "invalidData": "確認情報が正しくありません",
+    "checkFailed": "確認中にエラーが発生しました",
+    "reasonRequired": "キャンセル理由を入力してください",
+    "cancelFailed": "キャンセルに失敗しました",
+    "title": "予約をキャンセル",
+    "checking": "キャンセル条件を確認中...",
+    "cannotCancel": "キャンセルできません",
+    "notEligible": "現在この予約はキャンセルできません。",
+    "hoursUntilBooking": "予約まであと {{hours}} 時間です",
+    "policyMessage": "ポリシーにより、予約の3時間前までにキャンセルしてください。",
+    "rescheduleOption": "時間変更をご希望の場合は、キャンセルではなく日時変更をご利用ください。",
+    "bookingSummary": "キャンセルする予約",
+    "refundAmount": "返金金額",
+    "refundPercentage": "支払額の {{percentage}}%",
+    "refundProcessing": "返金処理中",
+    "noRefund": "返金なし",
+    "noRefundReason": "この期間のキャンセルは返金対象外です。",
+    "reasonLabel": "キャンセル理由",
+    "reasonPlaceholder": "理由を入力してください...",
+    "confirmTitle": "予約キャンセルの確認",
+    "confirmMessage": "この予約をキャンセルしますか？この操作は取り消せません。",
+    "service": "サービス:",
+    "date": "日付:",
+    "time": "時間:",
+    "reason": "理由:",
+    "refund": "返金:",
+    "processing": "処理中...",
+    "confirmButton": "キャンセルを確定",
+    "successTitle": "予約がキャンセルされました",
+    "successMessage": "予約番号 {{bookingNumber}} はキャンセルされました。",
+    "refundInfo": "{{days}}営業日以内に ฿{{amount}} が返金されます。",
+    "refundWithinDays": "（{{days}}営業日以内）",
+    "manualQrRefundNotice": "プラットフォーム外返金 &mdash; LINE OAで管理者へご連絡ください",
+    "error": "予約をキャンセルできません"
+  },
+  "reschedule": {
+    "checkError": "日時変更の状態を確認できません",
+    "checkFailed": "確認中にエラーが発生しました",
+    "selectDateTimeRequired": "新しい日時を選択してください",
+    "error": "日時変更に失敗しました",
+    "modalTitle": "予約日時を変更",
+    "checking": "予約変更ポリシーを確認中です...",
+    "cannotReschedule": "予約の変更ができません",
+    "notEligibleDefault": "現在この予約は変更できません",
+    "hoursUntilBooking": "予約まであと{{hours}}時間",
+    "policyMessage": "規定により、予約時間の少なくとも3時間前までに変更する必要があります。",
+    "currentBooking": "現在の予約",
+    "selectNewDate": "新しい日付を選択",
+    "selectNewTime": "新しい時間を選択",
+    "timeHint": "これから先の時間のみ選択できます（少なくとも3時間前）",
+    "continue": "次へ",
+    "confirmTitle": "予約変更を確認",
+    "confirmMessage": "確認する前に、予約変更の詳細をご確認ください。",
+    "originalDateTime": "変更前の日時",
+    "newDateTime": "変更後の日時",
+    "confirmButton": "予約変更を確定",
+    "processing": "処理中...",
+    "successTitle": "予約変更完了",
+    "successMessage": "予約番号 {{number}} は新しい日時に変更されました。",
+    "newAppointment": "新しい予約",
+    "unableTitle": "変更不可",
+    "staffKept": "担当のセラピストがそのまま対応します — 再受付を待つ必要はありません。",
+    "staffReaccept": "新しい時間に合わせてセラピストを手配しています — セラピストが受け付けるまでお待ちください。"
+  },
+  "review": {
+    "ratingRequired": "総合評価をお願いします",
+    "alreadyReviewed": "この予約はすでにレビュー済みです。",
+    "modalTitle": "評価とレビュー",
+    "bookingNumber": "番号",
+    "overallRating": "総合評価",
+    "cleanliness": "清潔さ",
+    "professionalism": "プロ意識",
+    "skill": "技術",
+    "reviewMessage": "レビュー内容",
+    "forBooking": "予約レビュー",
+    "subRatingsOptional": "項目別評価（任意）",
+    "reviewMessageOptional": "レビュー内容（任意）",
+    "sharePlaceholder": "ご体験を共有してください&hellip;",
+    "submit": "レビュー送信",
+    "thankYou": "レビューありがとうございます！",
+    "helpText": "あなたのレビューはサービス改善に役立ちます"
+  },
+  "dateTime": "{{date}} {{time}}",
+  "bookingNumberLabel": "番号:",
+  "staffLabel": "スタッフ:",
+  "error": {
+    "missingRequired": "情報が不完全です。すべて入力してください",
+    "paymentFailedAlert": "支払い失敗：{{error}}",
+    "paymentFailed": "支払いに失敗しました。もう一度お試しください",
+    "paymentTimeout": "支払いがタイムアウトしました",
+    "loginRequired": "予約するにはログインしてください",
+    "bookingFailed": "予約を作成できません：{{error}}"
+  },
+  "provider": {
+    "unnamedProvider": "名前未設定",
+    "notAssigned": "スタッフ未割り当て",
+    "assignedStaffInfo": "割り当てスタッフ情報",
+    "avatarInitial": "ス",
+    "reviews": "レビュー",
+    "noReviews": "レビューなし"
+  },
+  "recipient": {
+    "default": "利用者"
+  },
+  "paymentMethod": {
+    "promptpay": "PromptPay",
+    "pendingPayment": "支払い待ち",
+    "creditCard": "クレジットカード",
+    "internetBanking": "銀行振込",
+    "manualQrExternal": "振込/QR（外部決済）"
+  },
+  "jobStatus": {
+    "pending": "スタッフ確認待ち",
+    "confirmed": "スタッフ確認済み",
+    "traveling": "移動中",
+    "arrived": "到着済み",
+    "inProgress": "施術中",
+    "completed": "完了",
+    "cancelled": "キャンセル済み",
+    "description": {
+      "pending": "🔄スタッフ承認待ち",
+      "confirmed": "スタッフが依頼を受け取り、出発の準備をしています。",
+      "traveling": "🚗スタッフが向かっています",
+      "arrived": "📍 スタッフがあなたの場所に到着しました",
+      "inProgress": "💆&zwj;♀️施術中",
+      "completed": "🎉施術完了"
+    }
+  },
+  "receipt": {
+    "noTransaction": "取引情報が見つかりません"
+  },
+  "creditNote": {
+    "noRefundData": "返金情報なし"
+  },
+  "tracking": {
+    "title": "スタッフ追跡",
+    "description": "スタッフがサービス提供のため移動中です。下の地図で現在位置を確認できます。",
+    "loading": "位置確認中..."
+  },
+  "paymentStatus": {
+    "paid": "支払い済み",
+    "refunded": "返金済み",
+    "failed": "支払い失敗",
+    "pending": "支払い待ち"
+  },
+  "paymentAction": {
+    "payNow": "今すぐ支払う",
+    "note": "支払い完了後に割り当て"
+  },
+  "downloadReceipt": {
+    "label": "領収書ダウンロード"
+  },
+  "downloadCreditNote": {
+    "label": "クレジットノートダウンロード"
+  },
+  "extension": {
+    "inProgressLabel": "サービス進行中",
+    "note": "時間延長可能",
+    "times": "+{{count}}回",
+    "totalExtensionPrice": "追加料金: ฿{{amount}}",
+    "historyTitle": "サービス延長履歴",
+    "addedMinutes": "+{{minutes}}分",
+    "totalTime": "合計時間",
+    "totalFeeLabel": "延長料金合計",
+    "hoursShort": "時間",
+    "minutesShort": "分"
+  },
+  "status": {
+    "pending": {
+      "title": "確認待ち",
+      "description": "ご予約を確認しております",
+      "billingStatus": "支払い保留中"
+    },
+    "confirmed": {
+      "title": "スタッフ割り当て待ち",
+      "description": "スタッフ選定中",
+      "billingStatus": "支払い完了"
+    },
+    "assigned": {
+      "title": "スタッフが受注済み",
+      "description": "スタッフ準備中",
+      "billingStatus": "支払い完了"
+    },
+    "ASSIGNED": {
+      "title": "スタッフが受注済み",
+      "description": "スタッフ準備中",
+      "billingStatus": "支払い完了"
+    },
+    "STAFF_EN_ROUTE": {
+      "title": "移動中",
+      "description": "地図で追跡できます",
+      "billingStatus": "支払い完了 - 開始待ち"
+    },
+    "STAFF_ARRIVED": {
+      "title": "スタッフ到着",
+      "description": "到着・準備中",
+      "billingStatus": "支払い完了 - 開始待ち"
+    },
+    "SERVICE_IN_PROGRESS": {
+      "title": "施術中",
+      "description": "施術中、ごゆっくり",
+      "billingStatus": "課金開始"
+    },
+    "COMPLETED": {
+      "title": "施術完了",
+      "description": "この度は当サービスをご利用いただき、誠にありがとうございました。今回のサービスにご満足いただけましたら幸いです。",
+      "billingStatus": "精算完了"
+    },
+    "cancelled": {
+      "title": "予約キャンセル",
+      "description": "予約がキャンセルされました",
+      "billingStatus": "料金なし"
+    },
+    "staffReady": "サービス準備完了",
+    "staffReadyMessage": "機材を準備し、サービスを開始しています。しばらくお待ちください。"
+  },
+  "payment": {
+    "warningIncomplete": "⚠️支払いを完了してください",
+    "incompleteHeading": "支払い未完了",
+    "incompleteMessage": "ご予約は確認されましたが、お支払いはまだ完了しておりません。ご不明な点がございましたら、サポートまでお問い合わせください。",
+    "failed": "支払い失敗、再試行",
+    "qrGenerationFailed": "PromptPay QRコードを生成できません。",
+    "errorGeneric": "お支払い中にエラーが発生しました。",
+    "pageTitle": "支払い",
+    "creditCard": "クレジットカード支払い",
+    "promptpay": "PromptPayで支払う",
+    "generateQRButton": "QR PromptPay 作成 (฿{{amount}})",
+    "qrCodeAlt": "PromptPay QRコード",
+    "waitingForPayment": "QR支払い・決済待ち...",
+    "noChannelsAvailable": "現在ご利用いただけるお支払い方法がありません。",
+    "validation": {
+      "fillAllFields": "カード情報を入力してください",
+      "invalidCardNumber": "カード番号エラー",
+      "invalidCvv": "CVVエラー"
+    },
+    "error": {
+      "paymentFailed": "支払いに失敗しました",
+      "paymentFailedRetry": "支払い失敗、再試行",
+      "cardValidationFailed": "カード認証に失敗しました。カード情報をご確認ください。"
+    },
+    "securePayment": {
+      "title": "安全な支払い",
+      "description": "カード情報はOmiseで安全に処理され保存されません"
+    },
+    "form": {
+      "cardholderName": "カード名義人",
+      "cardholderNamePlaceholder": "JOHN DOE",
+      "cardNumber": "カード番号",
+      "cardNumberPlaceholder": "1234 5678 9012 3456",
+      "expiryMonth": "月",
+      "expiryMonthPlaceholder": "MM",
+      "expiryYear": "年",
+      "expiryYearPlaceholder": "YYYY",
+      "cvv": "CVV",
+      "cvvPlaceholder": "123",
+      "saveCardForFuture": "次回以降の支払いのためにカードを保存",
+      "processing": "処理中...",
+      "payButton": "支払う"
+    },
+    "testMode": {
+      "title": "テストモード - テストカードを使用:",
+      "testCardNumber": "番号: 4242 4242 4242 4242",
+      "testCardDetails": "有効期限：未来の日付 | CVV：任意の3桁"
+    },
+    "secureCheckout": "安全な支払い",
+    "cardName": {
+      "required": "カード名義人を入力してください",
+      "label": "カード名義人",
+      "placeholder": "JOHN DOE"
+    },
+    "cardNumber": {
+      "invalid": "カード番号が正しくありません",
+      "label": "カード番号",
+      "placeholder": "1234 5678 9012 3456"
+    },
+    "expiration": {
+      "month": {
+        "invalid": "月が正しくありません",
+        "label": "月",
+        "placeholder": "MM"
+      },
+      "year": {
+        "invalid": "年が正しくありません",
+        "label": "年",
+        "placeholder": "YYYY"
+      }
+    },
+    "cvv": {
+      "invalid": "CVVが正しくありません",
+      "label": "CVV",
+      "placeholder": "123"
+    },
+    "security": {
+      "note": "カード情報は安全に保護されています。国際基準の決済システムであるOmiseを利用しています。"
+    },
+    "generatingQR": "QRコードを生成中..."
+  },
+  "progress": {
+    "step": {
+      "booking": "予約",
+      "findStaff": "スタッフ手配",
+      "travel": "移動",
+      "service": "サービス"
+    }
+  },
+  "action": {
+    "call": "電話"
+  },
+  "duration": {
+    "travelTime": "移動時間",
+    "notCountedAsServiceTime": "サービス時間には含まれません",
+    "serviceTime": "サービス時間"
+  },
+  "booking": {
+    "travelStartedAt": "出発時間:",
+    "serviceStartedAt": "サービス開始:"
+  },
+  "billing": {
+    "inProgress": "お支払い処理中"
+  },
+  "bookingNotFound": {
+    "title": "予約が見つかりません",
+    "message": "支払い対象の予約が見つかりません"
+  },
+  "bookingSummary": {
+    "title": "予約概要",
+    "bookingNumber": "予約番号",
+    "date": "日付",
+    "amount": "支払金額"
+  },
+  "goToBookings": "予約一覧へ",
+  "paymentConfirmation": {
+    "title": "支払い完了！",
+    "subtitle": "予約が確定しました",
+    "downloadReceipt": "領収書ダウンロード",
+    "emailSending": "送信中...",
+    "emailSent": "メール送信完了",
+    "sendReceipt": "メールで領収書送信",
+    "viewBookingDetails": "予約詳細を見る",
+    "nextSteps": "次のステップ",
+    "receiptEmailSent": "領収書をメールで送信しました",
+    "staffContactInfo": "予約の1日前にご連絡します",
+    "bookingManageInfo": "予約ページでご予約の確認またはキャンセルができます。",
+    "emailError": "メール送信不可",
+    "emailErrorGeneral": "メール送信エラー"
+  },
+  "paymentDetails": {
+    "title": "支払い詳細",
+    "service": "サービス",
+    "amount": "お支払い金額",
+    "method": "支払い方法",
+    "receiptNumber": "領収書番号",
+    "date": "日付"
+  },
+  "transactionHistory": {
+    "title": "取引履歴",
+    "subtitle": "すべての決済履歴と領収書を表示",
+    "filterSuccessful": "成功",
+    "filterRefunded": "返金",
+    "filterFailed": "失敗",
+    "statusSuccessful": "成功",
+    "statusRefunded": "返金",
+    "statusFailed": "失敗",
+    "statusPending": "保留中",
+    "cardFallback": "カード",
+    "paymentMethodPromptpay": "PromptPay",
+    "paymentMethodInternetBanking": "銀行振込",
+    "paymentMethodCash": "現金",
+    "noTransactions": "取引履歴がありません",
+    "noTransactionsMessage": "取引履歴がありません",
+    "receipt": "領収書",
+    "viewBooking": "予約を見る",
+    "refundedAlert": "この取引は元のお支払い方法に返金されました",
+    "summaryHeading": "サマリー",
+    "totalTransactions": "すべての取引",
+    "totalSpent": "総支出額",
+    "successfulLabel": "完了",
+    "refundedLabel": "返金済み"
+  },
+  "transactionTypes": {
+    "earn": "予約で獲得",
+    "bonus": "ボーナス",
+    "redeem": "割引交換",
+    "refund": "ポイント返還",
+    "expire": "有効期限切れ",
+    "adminAdjust": "管理者による調整"
+  },
+  "pointsFilter": {
+    "all": "すべて",
+    "earned": "獲得",
+    "redeemed": "ポイント利用",
+    "expired": "有効期限切れ"
+  },
+  "pointsRedeem": {
+    "errorInvalidAmount": "有効なポイント数を入力してください。",
+    "errorCannotRedeemPoints": "ポイントを利用できません",
+    "errorMinimumPointsRequired": "最低 {{count}}ポイント必要",
+    "sectionTitle": "ポイントを使用",
+    "yourPoints": "保有ポイント：",
+    "pointsUnit": "ポイント",
+    "appliedPoints": "{{points}}ポイントを使用",
+    "discountPrefix": "= 割引 ฿",
+    "placeholderMinimumPoints": "最低 {{count}}ポイント",
+    "applyButton": "ポイントを使用",
+    "useAllButton": "すべてのポイントを使用",
+    "maxDiscountHint": "（価格の最大{{percent}}%まで利用可能）"
+  }
+}

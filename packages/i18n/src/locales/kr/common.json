@@ -1,0 +1,270 @@
+{
+  "nav": {
+    "home": "홈",
+    "services": "서비스",
+    "bookings": "예약",
+    "profile": "내 정보",
+    "promotions": "프로모션",
+    "notifications": "알림"
+  },
+  "notifications": {
+    "unread": "읽지 않은 알림 {{count}}개",
+    "markAllRead": "모두 읽음으로 표시",
+    "marking": "처리 중...",
+    "backToProfile": "내 정보로 돌아가기",
+    "loading": "알림을 불러오는 중...",
+    "loginRequired": "알림을 확인하려면 로그인해 주세요.",
+    "goToLogin": "로그인하기",
+    "emptyTitle": "알림이 없습니다",
+    "emptySubtitle": "예약 업데이트 및 프로모션 소식을 여기에서 확인하실 수 있습니다.",
+    "autoRefresh": "알림은 30초마다 자동으로 새로고침됩니다."
+  },
+  "timeAgo": {
+    "justNow": "방금 전",
+    "minutesAgo_one": "{{count}}분 전",
+    "minutesAgo_other": "{{count}}분 전",
+    "hoursAgo_one": "{{count}}시간 전",
+    "hoursAgo_other": "{{count}}시간 전",
+    "daysAgo_one": "{{count}}일 전",
+    "daysAgo_other": "{{count}}일 전"
+  },
+  "footer": {
+    "copyright": "© 2026 The Bliss Massage at Home 판권 소유.",
+    "terms": "서비스 이용약관",
+    "privacy": "개인정보 처리방침",
+    "contact": "문의하기"
+  },
+  "buttons": {
+    "bookNow": "지금 예약하기",
+    "search": "검색",
+    "save": "설정 저장",
+    "cancel": "취소",
+    "back": "뒤로",
+    "next": "다음",
+    "confirm": "확인",
+    "delete": "삭제",
+    "edit": "수정",
+    "login": "로그인",
+    "logout": "로그아웃",
+    "register": "회원가입",
+    "viewAll": "전체 보기",
+    "clearFilters": "필터 초기화",
+    "goBack": "이전 페이지로",
+    "retry": "다시 시도",
+    "shareLink": "링크 공유",
+    "callStaff": "직원에게 전화하기"
+  },
+  "status": {
+    "confirmed": "예약 확정",
+    "completed": "서비스 완료",
+    "pending": "처리 대기",
+    "cancelled": "취소됨",
+    "paid": "결제 완료",
+    "label": "상태",
+    "traveling": "이동 중",
+    "arrived": "도착",
+    "inProgress": "서비스 진행 중"
+  },
+  "loading": {
+    "default": "불러오는 중...",
+    "bookings": "예약 정보를 불러오는 중",
+    "bookingDetails": "예약 상세 정보를 불러오는 중...",
+    "services": "서비스 정보를 불러오는 중...",
+    "profile": "프로필을 불러오는 중...",
+    "paymentData": "결제 정보를 불러오는 중...",
+    "transactions": "거래 내역을 불러오는 중...",
+    "journey": "이동 정보를 불러오는 중...",
+    "pleaseWait": "잠시만 기다려 주세요.",
+    "map": "지도를 불러오는 중..."
+  },
+  "errors": {
+    "failedToLoadServices": "서비스를 불러올 수 없습니다. 다시 시도해 주세요.",
+    "failedToLoadBookings": "예약 정보를 불러올 수 없습니다. 다시 시도해 주세요.",
+    "noServicesAvailable": "현재 이용 가능한 서비스가 없습니다.",
+    "serviceNotFound": "서비스를 찾을 수 없습니다.",
+    "cannotLoadService": "서비스 정보를 불러올 수 없습니다.",
+    "backToServices": "← 서비스 목록으로",
+    "failedToLoadTransactions": "거래 내역을 불러올 수 없습니다.",
+    "journeyNotFound": "이동 정보를 찾을 수 없습니다.",
+    "bookingNotFound": "예약 정보를 찾을 수 없습니다",
+    "staffNotFound": "직원 정보를 찾을 수 없습니다.",
+    "failedToLoadJourney": "이동 정보를 불러올 수 없습니다.",
+    "failedToCopyLink": "링크를 복사하지 못했습니다.",
+    "dataNotFound": "데이터를 찾을 수 없습니다.",
+    "failedToLoadJourneyDetail": "이동 정보를 불러올 수 없습니다: {{error}}",
+    "failedToLoadTestMode": "테스트 모드에서 데이터를 불러올 수 없습니다.",
+    "googleMapsApiKeyNotConfigured": "Google Maps API 키가 설정되어 있지 않습니다.",
+    "failedToLoadGoogleMapsApi": "Google Maps API를 불러올 수 없습니다.",
+    "failedToLoadMap": "지도를 불러올 수 없습니다.",
+    "checkGoogleMapsApiKeyInEnv": ".env 파일의 Google Maps API 키를 확인해 주세요."
+  },
+  "auth": {
+    "signedInAs": "로그인 계정",
+    "myProfile": "내 정보",
+    "myBookings": "내 예약",
+    "pleaseLogin": "프로필을 확인하려면 로그인해 주세요.",
+    "pleaseLoginBookings": "예약 내역을 확인하려면 로그인해 주세요.",
+    "goToLogin": "로그인하기"
+  },
+  "sos": {
+    "button": "SOS",
+    "title": "긴급 도움 요청",
+    "subtitle": "긴급 도움 요청",
+    "alertSentTo": "이 긴급 알림은 다음으로 전송됩니다",
+    "adminTeam": "The Bliss 지원팀",
+    "withLocation": "현재 위치 정보가 함께 전송됩니다",
+    "confirmMessage": "긴급한 도움이 필요하시면 확인을 눌러 주세요.",
+    "confirmSend": "SOS 전송 확인",
+    "sending": "전송 중...",
+    "success": "긴급 요청이 성공적으로 전송되었습니다.",
+    "successMessage": "지원팀에서 긴급 요청을 확인했으며, 가능한 한 빨리 연락드리겠습니다",
+    "failedAlert": "SOS 요청을 전송할 수 없습니다. 다시 시도하거나 지원팀에 문의해 주세요.",
+    "buttonTooltip": "긴급 요청"
+  },
+  "currency": "฿",
+  "button": {
+    "close": "닫기",
+    "cancel": "취소",
+    "continue": "계속하기",
+    "back": "뒤로",
+    "retry": "다시 시도"
+  },
+  "action": {
+    "close": "닫기",
+    "cancel": "취소",
+    "back": "뒤로",
+    "refresh": "새로고침"
+  },
+  "dayOfWeek": {
+    "sun": "일",
+    "mon": "월",
+    "tue": "화",
+    "wed": "수",
+    "thu": "목",
+    "fri": "금",
+    "sat": "토"
+  },
+  "error": {
+    "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
+    "tryAgain": "다시 시도해 주세요.",
+    "paymentDataNotFound": "결제 정보를 찾을 수 없습니다.",
+    "loadDataFailed": "데이터를 불러올 수 없습니다. 다시 시도해 주세요.",
+    "title": "오류"
+  },
+  "close": "닫기",
+  "cancel": "취소",
+  "submitting": "제출 중...",
+  "refundPolicy": {
+    "title": "환불 정책",
+    "scrollPrompt": "환불 정책을 끝까지 읽어 주세요.",
+    "acceptanceLabel": "위 환불 정책을 읽고 동의합니다.",
+    "acceptButton": "동의하고 계속하기"
+  },
+  "filters": {
+    "status": "상태"
+  },
+  "time": {
+    "hours": "시간",
+    "minutes": "분"
+  },
+  "unit": {
+    "baht": "THB",
+    "minutes": "분"
+  },
+  "backToBookings": "예약 목록으로 돌아가기",
+  "payment": {
+    "securityNotice": "🔒 SSL 및 Omise로 안전하게 결제됩니다."
+  },
+  "processing": "처리 중...",
+  "fallback": {
+    "nameNotSpecified": "이름이 입력되지 않았습니다",
+    "customerNameNotSpecified": "고객 이름이 입력되지 않았습니다",
+    "addressNotSpecified": "주소가 입력되지 않았습니다",
+    "serviceNotSpecified": "서비스가 지정되지 않았습니다",
+    "staff": "테라피스트",
+    "customer": "고객",
+    "customerAddress": "고객 주소",
+    "staffTest": "테스트 테라피스트",
+    "customerTest": "테스트 고객",
+    "addressTest": "테스트 주소"
+  },
+  "journeyStatus": {
+    "traveling": "이동 중",
+    "arrived": "도착"
+  },
+  "messages": {
+    "linkCopied": "링크가 복사되었습니다."
+  },
+  "share": {
+    "journeyTrackingTitle": "테라피스트 이동 현황 - The Bliss at Home",
+    "journeyTrackingText": "{{staffName}} 테라피스트가 {{serviceName}} 서비스를 위해 이동 중입니다.",
+    "journeyTrackingDefault": "테라피스트 위치 확인"
+  },
+  "tracking": {
+    "pageTitle": "테라피스트 이동 현황",
+    "statusTraveling": "테라피스트가 고객님께 이동 중입니다.",
+    "mapAutoUpdate": "지도는 테라피스트의 위치를 자동으로 업데이트합니다.",
+    "statusArrived": "테라피스트가 도착했습니다!",
+    "prepareForService": "마사지 서비스를 받을 준비를 해 주세요.",
+    "statusCompleted": "서비스가 완료되었습니다.",
+    "thankYouMessage": "The Bliss at Home을 이용해 주셔서 감사합니다.",
+    "statusCancelled": "이동이 취소되었습니다.",
+    "contactSupport": "문의 사항이 있으시면 지원팀으로 연락해 주세요."
+  },
+  "labels": {
+    "customer": "고객",
+    "serviceStaff": "테라피스트",
+    "destination": "목적지",
+    "startTime": "출발 시간",
+    "serviceDuration": "서비스 시간",
+    "room": "객실"
+  },
+  "emergencyService": {
+    "lineButton": "LINE",
+    "facebookButton": "Facebook"
+  },
+  "trackingMap": {
+    "loadingMap": "지도를 불러오는 중...",
+    "errorTitle": "오류",
+    "title": "테라피스트 이동 현황",
+    "refreshMap": "지도 새로고침",
+    "lastUpdated": "마지막 업데이트:",
+    "noLocationData": "위치 정보가 아직 없습니다.",
+    "updating": "업데이트 중...",
+    "currentLocation": "현재 위치",
+    "coordinates": "좌표:",
+    "navigateGoogleMaps": "Google 지도에서 열기",
+    "autoRefreshNotice": "지도는 20초마다 자동으로 업데이트되어 테라피스트의 최신 위치를 표시합니다.",
+    "testDataLabel": "테스트 데이터 (실제 GPS 아님)",
+    "debugUpdateLabel": "🕒 업데이트:",
+    "noTimeData": "시간 정보가 없습니다",
+    "debugStatusLabel": "📡 상태:",
+    "testData": "🔴 테스트 데이터",
+    "realGps": "🟢 실시간 GPS"
+  },
+  "appName": "The Bliss Massage at Home",
+  "or": "또는",
+  "legal": {
+    "acceptancePrefix": "로그인하면 다음 내용에 동의하는 것으로 간주됩니다"
+  },
+  "address": {
+    "province": "시/도",
+    "loading": "불러오는 중..",
+    "selectProvince": "-- 시/도를 선택하세요 --",
+    "district": "시/군/구",
+    "selectProvinceFirst": "-- 먼저 시/도를 선택해 주세요 --",
+    "selectDistrict": "-- 시/군/구를 선택하세요 --",
+    "subdistrict": "읍/면/동",
+    "selectDistrictFirst": "-- 먼저 시/군/구를 선택해 주세요 --",
+    "selectSubdistrict": "-- 읍/면/동을 선택하세요 --",
+    "zipcode": "우편번호",
+    "zipcodePlaceholder": "10110"
+  },
+  "brand": {
+    "name": "The Bliss Massage at Home",
+    "tagline": "마사지 & 스파"
+  },
+  "contactMethod": {
+    "phone": "전화"
+  }
+}

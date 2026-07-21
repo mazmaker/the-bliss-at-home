@@ -43,7 +43,10 @@
     "confirmPay": "确认 — 选择支付方式 ฿{{amount}}",
     "confirmFree": "确认延长",
     "alertSelectDuration": "请选择要增加的时间",
-    "alertAcceptTerms": "请同意额外付款条款"
+    "alertAcceptTerms": "请同意额外付款条款",
+    "extendFor": "为谁延长",
+    "personN": "第{{number}}人",
+    "both": "两人"
   },
   "payment": {
     "title": "延长时间支付",
@@ -94,5 +97,11 @@
     "awaitingTitle": "等待管理员确认延长",
     "awaitingBody": "请通过下方二维码付款（฿{{amount}}），然后通过 LINE OA 将付款凭证发送给管理员。管理员确认后将为您增加时间，让工作人员继续服务。",
     "awaitingBodyWithRef": "请通过下方二维码付款（฿{{amount}}），然后通过 LINE OA 将付款凭证发送给管理员 — 预订参考号 {{bookingNumber}}。管理员确认后将为您增加时间，让工作人员继续服务。"
+  },
+  "ineligible": {
+    "notFound": "未找到预订信息",
+    "invalidStatus": "当前状态无法延长时间",
+    "maxReached": "每次预订最多可延长 {{max}} 次",
+    "cannotNow": "目前无法延长时间"
   }
 }

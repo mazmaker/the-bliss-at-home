@@ -1,0 +1,182 @@
+{
+  "title": "プロフィール",
+  "tabs": {
+    "profile": "プロフィール",
+    "addresses": "住所",
+    "payment": "お支払い方法",
+    "tax": "請求書"
+  },
+  "personal": {
+    "title": "個人情報",
+    "fullName": "氏名",
+    "phone": "電話番号",
+    "dateOfBirth": "生年月日",
+    "save": "プロフィールを保存"
+  },
+  "settings": {
+    "title": "設定",
+    "notifications": {
+      "title": "通知",
+      "bookingUpdates": "予約とステータス更新",
+      "bookingUpdatesDesc": "予約状況が変更された際に通知を受け取ります。",
+      "promotions": "キャンペーン・特典",
+      "promotionsDesc": "プロモーションや特別割引に関するお知らせを受け取る",
+      "news": "お知らせ・イベント",
+      "newsDesc": "The Bliss Massage at Home のお知らせ・イベント情報"
+    },
+    "privacy": {
+      "title": "プライバシー",
+      "publicProfile": "公開プロフィールを表示",
+      "publicProfileDesc": "他のユーザーにプロフィール情報を公開する",
+      "marketingEmails": "マーケティングメールを許可",
+      "marketingEmailsDesc": "キャンペーンや特典メールを受け取る"
+    },
+    "language": {
+      "title": "言語",
+      "thai": "タイ語",
+      "english": "英語",
+      "chinese": "中国語",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "selected": "選択済み"
+    },
+    "save": "設定を保存"
+  },
+  "addresses": {
+    "title": "マイ住所",
+    "addNew": "新しい住所を追加",
+    "addFirst": "最初の住所を追加",
+    "noAddresses": "住所がありません",
+    "default": "デフォルト",
+    "setDefault": "デフォルトに設定",
+    "edit": "編集",
+    "delete": "削除",
+    "deleteTitle": "住所を削除",
+    "deleteMessage": "この住所を削除しますか？この操作は元に戻せません。",
+    "labelHome": "自宅",
+    "validation": {
+      "recipientNameRequired": "受取人名を入力してください",
+      "phoneRequired": "電話番号を入力してください",
+      "phoneInvalid": "電話番号が正しくありません。（携帯: 06/08/09、市外局番: 02/03/04/05/07、特別番号: 1xxx）",
+      "addressRequired": "住所を入力してください",
+      "provinceRequired": "都道府県を選択してください",
+      "zipcodeRequired": "郵便番号を入力してください",
+      "zipcodeFormat": "郵便番号は5桁の数字で入力してください",
+      "locationRequired": "地図上で位置を選択してください"
+    },
+    "errorSaving": "住所の保存に失敗しました：",
+    "editTitle": "住所を編集",
+    "addNewTitle": "新しい住所を追加",
+    "label": "ラベル",
+    "labelWork": "勤務先",
+    "labelOther": "その他",
+    "setAsDefault": "デフォルトに設定",
+    "recipientName": "受取人名",
+    "recipientNamePlaceholder": "氏名",
+    "phone": "電話番号",
+    "address": "住所",
+    "addressPlaceholder": "番地・通り名",
+    "mapLocation": "地図で位置を選択",
+    "buttonCancel": "キャンセル",
+    "buttonSaving": "保存中...",
+    "buttonUpdate": "住所を更新",
+    "buttonAdd": "住所を追加"
+  },
+  "payment": {
+    "title": "お支払い方法",
+    "addNew": "お支払い方法を追加",
+    "addFirst": "最初のお支払い方法を追加",
+    "noMethods": "お支払い方法がありません",
+    "default": "デフォルト",
+    "setDefault": "デフォルトに設定",
+    "delete": "削除",
+    "expires": "有効期限",
+    "deleteTitle": "支払い方法を削除",
+    "deleteMessage": "この支払い方法を削除してもよろしいですか？この操作は元に戻せません",
+    "setAsDefault": "デフォルトの支払い方法に設定",
+    "cardDisabledMessage": "現在はPromptPay（QR）のみ対応しており、カード決済は一時停止中です"
+  },
+  "tax": {
+    "title": "税務請求書情報",
+    "subtitle": "請求書/領収書発行のための情報を入力",
+    "type": "種類",
+    "individual": "個人",
+    "individualEn": "Individual",
+    "company": "法人",
+    "companyEn": "Company",
+    "nationalId": "個人番号",
+    "taxId": "税番号",
+    "companyName": "会社名",
+    "companyPlaceholder": "ABC株式会社",
+    "branch": "支店",
+    "branchPlaceholder": "本社または00001",
+    "taxAddress": "請求書住所",
+    "addressPlaceholder": "住所（番地、村、通りなど）",
+    "save": "情報を保存",
+    "note": "注意:",
+    "noteItems": {
+      "usage": "この情報は請求書・領収書に使用されます",
+      "accuracy": "正確にすべて入力してください",
+      "editable": "いつでも編集できます"
+    }
+  },
+  "toast": {
+    "profileUpdated": "プロフィール更新成功",
+    "profileUpdateFailed": "プロフィール更新不可",
+    "addressDeleted": "住所削除成功",
+    "addressDeleteFailed": "住所削除不可",
+    "defaultAddressFailed": "デフォルト住所設定不可",
+    "defaultPaymentSet": "デフォルト支払い方法設定成功",
+    "defaultPaymentFailed": "デフォルト支払い方法設定不可",
+    "paymentDeleted": "支払い方法削除成功",
+    "paymentDeleteFailed": "支払い方法削除不可",
+    "taxSaved": "税務情報保存成功",
+    "taxSaveFailed": "税務情報保存不可",
+    "notificationsSaved": "通知設定保存成功",
+    "privacySaved": "プライバシー設定保存成功",
+    "languageSaved": "言語設定保存成功",
+    "settingsSaveFailed": "設定保存不可",
+    "languageSaveFailed": "言語設定保存不可",
+    "paymentAdded": "支払い方法追加成功",
+    "paymentAddFailed": "支払い方法追加失敗",
+    "healthDeclarationSaved": "健康情報保存完了",
+    "addressUpdated": "住所更新成功",
+    "addressAdded": "住所追加成功",
+    "addressUpdateFailed": "住所更新失敗、再試行",
+    "addressAddFailed": "住所追加失敗、再試行"
+  },
+  "confirm": {
+    "delete": "削除",
+    "cancel": "キャンセル"
+  },
+  "health": {
+    "title": "施術前の健康情報",
+    "editButton": "編集",
+    "fillButton": "情報を入力",
+    "notFilledYet": "健康情報が未入力です。予約前に入力が必要です",
+    "noCondition": "症状や持病はありません"
+  },
+  "pointsHistory": {
+    "backToProfile": "プロフィールへ戻る",
+    "title": "ポイント",
+    "subtitle": "ポイント残高と履歴を確認",
+    "card": {
+      "remaining": "残高",
+      "value": "金額換算",
+      "totalEarned": "累計獲得",
+      "points": "ポイント",
+      "redeemed": "使用済み",
+      "pointsLabel": "ポイント",
+      "expired": "失効",
+      "pointsLabelExpired": "ポイント"
+    },
+    "section": {
+      "title": "ポイント履歴"
+    },
+    "loading": "読み込み中...",
+    "empty": {
+      "title": "ポイント履歴がありません",
+      "description": "サービス完了後、ここにポイントが付与されます"
+    }
+  }
+}

@@ -32,6 +32,26 @@ import cnEmergency from './locales/cn/emergency.json'
 import cnLegal from './locales/cn/legal.json'
 import cnExtension from './locales/cn/extension.json'
 
+import krCommon from './locales/kr/common.json'
+import krHome from './locales/kr/home.json'
+import krAuth from './locales/kr/auth.json'
+import krServices from './locales/kr/services.json'
+import krBooking from './locales/kr/booking.json'
+import krProfile from './locales/kr/profile.json'
+import krEmergency from './locales/kr/emergency.json'
+import krLegal from './locales/kr/legal.json'
+import krExtension from './locales/kr/extension.json'
+
+import jpCommon from './locales/jp/common.json'
+import jpHome from './locales/jp/home.json'
+import jpAuth from './locales/jp/auth.json'
+import jpServices from './locales/jp/services.json'
+import jpBooking from './locales/jp/booking.json'
+import jpProfile from './locales/jp/profile.json'
+import jpEmergency from './locales/jp/emergency.json'
+import jpLegal from './locales/jp/legal.json'
+import jpExtension from './locales/jp/extension.json'
+
 const STORAGE_KEY = 'bliss-language'
 
 export function getStoredLanguage(): string {
@@ -85,9 +105,31 @@ i18n.use(initReactI18next).init({
       legal: cnLegal,
       extension: cnExtension,
     },
+    kr: {
+      common: krCommon,
+      home: krHome,
+      auth: krAuth,
+      services: krServices,
+      booking: krBooking,
+      profile: krProfile,
+      emergency: krEmergency,
+      legal: krLegal,
+      extension: krExtension,
+    },
+    jp: {
+      common: jpCommon,
+      home: jpHome,
+      auth: jpAuth,
+      services: jpServices,
+      booking: jpBooking,
+      profile: jpProfile,
+      emergency: jpEmergency,
+      legal: jpLegal,
+      extension: jpExtension,
+    },
   },
   lng: getStoredLanguage(),
-  fallbackLng: 'th',
+  fallbackLng: { kr: ['en', 'th'], jp: ['en', 'th'], default: ['th'] },
   defaultNS: 'common',
   ns: ['common', 'home', 'auth', 'services', 'booking', 'profile', 'emergency', 'legal', 'extension'],
   interpolation: {

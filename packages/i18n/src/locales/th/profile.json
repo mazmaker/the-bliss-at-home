@@ -36,6 +36,8 @@
       "thai": "ภาษาไทย",
       "english": "English",
       "chinese": "中文",
+      "korean": "한국어",
+      "japanese": "日本語",
       "selected": "เลือกแล้ว"
     },
     "save": "บันทึกการตั้งค่า"

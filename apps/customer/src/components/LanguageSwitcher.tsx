@@ -6,6 +6,8 @@ const LANGUAGES = [
   { code: 'th', label: 'ไทย', short: 'TH' },
   { code: 'en', label: 'English', short: 'EN' },
   { code: 'cn', label: '中文', short: '中文' },
+  { code: 'kr', label: '한국어', short: 'KR' },
+  { code: 'jp', label: '日本語', short: 'JP' },
 ] as const
 
 interface LanguageSwitcherProps {

@@ -43,7 +43,10 @@
     "confirmPay": "Confirm — Select payment method ฿{{amount}}",
     "confirmFree": "Confirm extension",
     "alertSelectDuration": "Please select the additional time",
-    "alertAcceptTerms": "Please accept the additional payment terms"
+    "alertAcceptTerms": "Please accept the additional payment terms",
+    "extendFor": "Extend for",
+    "personN": "Person {{number}}",
+    "both": "Both"
   },
   "payment": {
     "title": "Time extension payment",
@@ -94,5 +97,11 @@
     "awaitingTitle": "Waiting for admin to confirm the extension",
     "awaitingBody": "Pay via the QR code below (฿{{amount}}), then send the payment slip to the admin via LINE OA. The admin will confirm to add the time so the staff can continue.",
     "awaitingBodyWithRef": "Pay via the QR code below (฿{{amount}}), then send the payment slip to the admin via LINE OA — booking reference {{bookingNumber}}. The admin will confirm to add the time so the staff can continue."
+  },
+  "ineligible": {
+    "notFound": "Booking not found",
+    "invalidStatus": "Cannot extend in the current status",
+    "maxReached": "You can extend up to {{max}} times per booking",
+    "cannotNow": "Cannot extend at this time"
   }
 }

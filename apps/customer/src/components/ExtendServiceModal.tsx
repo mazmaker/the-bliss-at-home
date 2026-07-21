@@ -291,20 +291,20 @@ export function ExtendServiceModal({
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 font-medium text-bliss-700">
                 <Users className="w-4 h-4" />
-                {i18n.language === 'en' ? 'Extend for' : i18n.language === 'zh' ? '为谁延长' : 'เพิ่มเวลาให้'}
+                {t('modal.extendFor')}
               </h4>
               <div className="grid gap-2">
                 {[
                   ...coupleInfo.recipients.map((r) => ({
                     key: `r${r.recipientIndex}`,
                     indices: [r.recipientIndex],
-                    label: (i18n.language === 'en' ? `Person ${r.recipientIndex + 1}` : i18n.language === 'zh' ? `第${r.recipientIndex + 1}人` : `คนที่ ${r.recipientIndex + 1}`),
+                    label: t('modal.personN', { number: r.recipientIndex + 1 }),
                     sub: (i18n.language === 'en' ? r.serviceNameEn : r.serviceNameTh) || '',
                   })),
                   {
                     key: 'both',
                     indices: coupleInfo.recipients.map((r) => r.recipientIndex),
-                    label: (i18n.language === 'en' ? 'Both' : i18n.language === 'zh' ? '两人' : 'ทั้งคู่'),
+                    label: t('modal.both'),
                     sub: '',
                   },
                 ].map((choice) => {

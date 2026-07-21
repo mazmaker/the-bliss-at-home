@@ -18,7 +18,8 @@ interface JourneyDetails {
 }
 
 export default function TrackStaff() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const { journeyId } = useParams<{ journeyId: string }>()
   const navigate = useNavigate()
   const [journey, setJourney] = useState<JourneyDetails | null>(null)
@@ -211,7 +212,7 @@ export default function TrackStaff() {
             </div>
             <div>
               <p className="text-gray-500">{t('common:labels.startTime')}</p>
-              <p className="font-medium">{new Date(journey.started_at).toLocaleString('th-TH')}</p>
+              <p className="font-medium">{new Date(journey.started_at).toLocaleString(dateLocale)}</p>
             </div>
             {journey.estimated_duration && (
               <div>

@@ -1,0 +1,182 @@
+{
+  "title": "프로필",
+  "tabs": {
+    "profile": "프로필",
+    "addresses": "주소",
+    "payment": "결제 수단",
+    "tax": "세금계산서"
+  },
+  "personal": {
+    "title": "개인정보",
+    "fullName": "이름",
+    "phone": "전화번호",
+    "dateOfBirth": "생년월일",
+    "save": "프로필 저장"
+  },
+  "settings": {
+    "title": "설정",
+    "notifications": {
+      "title": "알림",
+      "bookingUpdates": "예약 및 상태 업데이트",
+      "bookingUpdatesDesc": "예약 상태가 변경되면 알림을 받습니다.",
+      "promotions": "프로모션 및 특별 혜택",
+      "promotionsDesc": "프로모션 및 특별 할인 관련 소식을 받기",
+      "news": "뉴스 및 이벤트",
+      "newsDesc": "The Bliss Massage at Home의 소식 및 이벤트 정보"
+    },
+    "privacy": {
+      "title": "개인정보 보호",
+      "publicProfile": "공개 프로필 표시",
+      "publicProfileDesc": "다른 사용자가 내 프로필을 볼 수 있도록 허용",
+      "marketingEmails": "마케팅 이메일 수신 허용",
+      "marketingEmailsDesc": "프로모션 및 특별 혜택 이메일 받기"
+    },
+    "language": {
+      "title": "언어",
+      "thai": "태국어",
+      "english": "영어",
+      "chinese": "중국어",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "selected": "선택됨"
+    },
+    "save": "설정 저장"
+  },
+  "addresses": {
+    "title": "내 주소",
+    "addNew": "새 주소 추가",
+    "addFirst": "첫 주소 추가",
+    "noAddresses": "등록된 주소가 없습니다",
+    "default": "기본",
+    "setDefault": "기본으로 설정",
+    "edit": "수정",
+    "delete": "삭제",
+    "deleteTitle": "주소 삭제",
+    "deleteMessage": "이 주소를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "labelHome": "집",
+    "validation": {
+      "recipientNameRequired": "받는 사람 이름을 입력해 주세요",
+      "phoneRequired": "전화번호를 입력해 주세요",
+      "phoneInvalid": "올바르지 않은 전화번호입니다. (휴대전화: 06/08/09, 유선전화: 02/03/04/05/07, 특수번호: 1xxx)",
+      "addressRequired": "주소를 입력해 주세요",
+      "provinceRequired": "지역을 선택해 주세요",
+      "zipcodeRequired": "우편번호를 입력해 주세요",
+      "zipcodeFormat": "우편번호는 5자리 숫자여야 합니다",
+      "locationRequired": "지도에서 위치를 선택해 주세요"
+    },
+    "errorSaving": "주소 저장에 실패했습니다:",
+    "editTitle": "주소 수정",
+    "addNewTitle": "새 주소 추가",
+    "label": "라벨",
+    "labelWork": "직장",
+    "labelOther": "기타",
+    "setAsDefault": "기본으로 설정",
+    "recipientName": "받는 사람 이름",
+    "recipientNamePlaceholder": "이름",
+    "phone": "전화번호",
+    "address": "주소",
+    "addressPlaceholder": "번지, 도로명",
+    "mapLocation": "지도에서 위치 선택",
+    "buttonCancel": "취소",
+    "buttonSaving": "저장 중...",
+    "buttonUpdate": "주소 업데이트",
+    "buttonAdd": "주소 추가"
+  },
+  "payment": {
+    "title": "결제 수단",
+    "addNew": "결제 수단 추가",
+    "addFirst": "첫 결제 수단 추가",
+    "noMethods": "등록된 결제 수단이 없습니다",
+    "default": "기본",
+    "setDefault": "기본으로 설정",
+    "delete": "삭제",
+    "expires": "만료일",
+    "deleteTitle": "결제 수단 삭제",
+    "deleteMessage": "이 결제 수단을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다",
+    "setAsDefault": "기본 결제 수단으로 설정",
+    "cardDisabledMessage": "현재 PromptPay(QR)만 지원되며 카드 결제는 일시 중단되었습니다"
+  },
+  "tax": {
+    "title": "세금계산서 정보",
+    "subtitle": "세금계산서/영수증 발행을 위한 정보 입력",
+    "type": "유형",
+    "individual": "개인",
+    "individualEn": "Individual",
+    "company": "법인",
+    "companyEn": "Company",
+    "nationalId": "주민등록번호",
+    "taxId": "사업자등록번호",
+    "companyName": "회사명",
+    "companyPlaceholder": "ABC 주식회사",
+    "branch": "지점",
+    "branchPlaceholder": "본사 또는 00001",
+    "taxAddress": "세금계산서 주소",
+    "addressPlaceholder": "주소 (번지, 마을, 골목, 도로)",
+    "save": "정보 저장",
+    "note": "참고:",
+    "noteItems": {
+      "usage": "이 정보는 세금계산서/영수증 발행에 사용됩니다",
+      "accuracy": "정보를 정확히 입력해 주세요",
+      "editable": "언제든지 수정 가능합니다"
+    }
+  },
+  "toast": {
+    "profileUpdated": "프로필 업데이트 성공",
+    "profileUpdateFailed": "프로필 업데이트 실패",
+    "addressDeleted": "주소 삭제 성공",
+    "addressDeleteFailed": "주소 삭제 실패",
+    "defaultAddressFailed": "기본 주소 설정 실패",
+    "defaultPaymentSet": "기본 결제 수단 설정 완료",
+    "defaultPaymentFailed": "기본 결제 수단 설정 실패",
+    "paymentDeleted": "결제 수단 삭제 성공",
+    "paymentDeleteFailed": "결제 수단 삭제 실패",
+    "taxSaved": "세금 정보 저장 성공",
+    "taxSaveFailed": "세금 정보 저장 실패",
+    "notificationsSaved": "알림 설정 저장 성공",
+    "privacySaved": "개인정보 설정 저장 성공",
+    "languageSaved": "언어 설정 저장 성공",
+    "settingsSaveFailed": "설정 저장 실패",
+    "languageSaveFailed": "언어 설정 저장 실패",
+    "paymentAdded": "결제 수단 추가 성공",
+    "paymentAddFailed": "결제 수단 추가 실패",
+    "healthDeclarationSaved": "건강 정보 저장 완료",
+    "addressUpdated": "주소 업데이트 성공",
+    "addressAdded": "주소 추가 성공",
+    "addressUpdateFailed": "주소 업데이트 실패, 다시 시도",
+    "addressAddFailed": "주소 추가 실패, 다시 시도"
+  },
+  "confirm": {
+    "delete": "삭제",
+    "cancel": "취소"
+  },
+  "health": {
+    "title": "서비스 전 건강 정보",
+    "editButton": "수정",
+    "fillButton": "정보 입력",
+    "notFilledYet": "건강 정보가 입력되지 않았습니다. 예약 전에 반드시 입력해야 합니다",
+    "noCondition": "증상이나 기저질환이 없습니다"
+  },
+  "pointsHistory": {
+    "backToProfile": "프로필로 돌아가기",
+    "title": "적립 포인트",
+    "subtitle": "포인트 잔액 및 사용 내역 보기",
+    "card": {
+      "remaining": "잔여 포인트",
+      "value": "가치",
+      "totalEarned": "총 적립",
+      "points": "포인트",
+      "redeemed": "사용 완료",
+      "pointsLabel": "포인트",
+      "expired": "만료",
+      "pointsLabelExpired": "포인트"
+    },
+    "section": {
+      "title": "포인트 내역"
+    },
+    "loading": "불러오는 중...",
+    "empty": {
+      "title": "포인트 내역이 없습니다",
+      "description": "서비스 완료 후 이곳에서 포인트가 적립됩니다"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "catalog": {
+    "title": "모든 서비스",
+    "subtitle": "원하시는 서비스를 찾아 선택해 보세요",
+    "searchPlaceholder": "서비스 검색...",
+    "all": "전체",
+    "massage": "마사지",
+    "nail": "네일 케어",
+    "spa": "스파",
+    "popular": "인기 서비스",
+    "priceLowToHigh": "가격 낮은 순",
+    "priceHighToLow": "가격 높은 순",
+    "topRated": "최고 평점순",
+    "resultsCount": "총 {{count}}개의 서비스",
+    "noResults": "검색 결과가 없습니다",
+    "book": "예약하기",
+    "reviews": "이용 후기",
+    "min": "분",
+    "clearFilters": "필터 초기화",
+    "startingFrom": "시작가"
+  },
+  "details": {
+    "backToServices": "서비스 목록으로 돌아가기",
+    "minutes": "분",
+    "categoryMassage": "마사지",
+    "categoryNail": "네일 서비스",
+    "categorySpa": "스파",
+    "categoryFacial": "페이셜 트리트먼트",
+    "description": "서비스 소개",
+    "descriptionTh": "태국어 설명",
+    "benefits": "관리 효과",
+    "addons": "추가 옵션",
+    "bookingSummary": "예약 요약",
+    "quantity": "수량",
+    "service": "서비스",
+    "addonsLabel": "추가 옵션",
+    "quantityLabel": "수량",
+    "total": "총 금액",
+    "bookService": "서비스 예약하기",
+    "hotelPrice": "호텔 투숙객 전용:",
+    "hotelPriceSpecial": "특별 요금",
+    "save": "절약 금액",
+    "duration": "소요 시간",
+    "durationAndPricing": "소요 시간 및 요금",
+    "min": "분",
+    "startingFrom": "시작가",
+    "noDescription": "현재 서비스 상세 정보가 제공되지 않습니다",
+    "questions": "궁금한 점이 있으신가요?",
+    "askMore": "문의하기",
+    "hour": "시간",
+    "priceIncludesServiceAndTransport": "요금에는 서비스 비용과 이동 비용이 포함되어 있으며, 주차 요금은 포함되지 않습니다.",
+    "oilSurchargeNote": "타이 밤 마사지 서비스를 제외하고, 밤 사용을 원하실 경우 100바트의 추가 요금이 부과됩니다."
+  },
+  "reviews": {
+    "title": "고객 후기",
+    "averageRating": "평균 평점",
+    "totalReviews": "총 {{count}}개의 후기",
+    "noReviews": "아직 등록된 후기가 없습니다",
+    "showMore": "모든 후기 보기",
+    "cleanliness": "청결도",
+    "professionalism": "전문성",
+    "skill": "관리 기술"
+  },
+  "service": {
+    "label": "서비스"
+  },
+  "emergencyService": {
+    "badge": "긴급 서비스",
+    "heading": "90분 이내에 마사지를 받고 싶으신가요?",
+    "subtitle": "3시간 전에 예약하지 못하셨나요? 회원 전용 전담팀이 신속하게 도와드립니다."
+  },
+  "durationLabel": "{{duration}}분부터",
+  "discount": {
+    "badge": "{{percentage}}% 절약"
+  }
+}

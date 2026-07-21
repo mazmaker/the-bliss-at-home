@@ -92,7 +92,7 @@ export function PromotionDetailModal({ promotion, onClose }: PromotionDetailModa
     (new Date(promotion.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   )
 
-  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
 
   const appliesTo = promotion.applies_to === 'all_services'
     ? t('home:promotions.allServices')

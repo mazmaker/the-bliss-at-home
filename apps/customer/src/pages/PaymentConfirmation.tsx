@@ -79,7 +79,7 @@ function PaymentConfirmation() {
   const handleDownloadReceipt = () => {
     if (!receiptData) return
 
-    const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
+    const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
     downloadReceipt({
       receiptNumber: receiptData.receipt_number,
       transactionDate: formatDate(receiptData.transaction_date),
@@ -132,7 +132,7 @@ function PaymentConfirmation() {
   const formatDate = (dateStr: string): string => {
     try {
       const lang = getStoredLanguage()
-      const locale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+      const locale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
       return new Date(dateStr).toLocaleDateString(locale, {
         year: 'numeric',
         month: 'long',

@@ -422,7 +422,13 @@
     "inProgressLabel": "บริการกำลังดำเนินการ",
     "note": "คุณสามารถเพิ่มเวลาบริการได้หากต้องการเวลาเพิ่มเติม",
     "times": "+{{count}} ครั้ง",
-    "totalExtensionPrice": "รวมค่าเพิ่มเวลา: ฿{{amount}}"
+    "totalExtensionPrice": "รวมค่าเพิ่มเวลา: ฿{{amount}}",
+    "historyTitle": "การเพิ่มเวลาบริการ",
+    "addedMinutes": "+{{minutes}} นาที",
+    "totalTime": "เวลารวมทั้งหมด",
+    "totalFeeLabel": "ค่าเพิ่มเวลารวม",
+    "hoursShort": "ชม.",
+    "minutesShort": "นาที"
   },
   "status": {
     "pending": {

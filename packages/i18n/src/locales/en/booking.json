@@ -422,7 +422,13 @@
     "inProgressLabel": "Service In Progress",
     "note": "You can extend service time if you need more time",
     "times": "+{{count}} times",
-    "totalExtensionPrice": "Extra time total: ฿{{amount}}"
+    "totalExtensionPrice": "Extra time total: ฿{{amount}}",
+    "historyTitle": "Service Extensions",
+    "addedMinutes": "+{{minutes}} min",
+    "totalTime": "Total time",
+    "totalFeeLabel": "Total extension fee",
+    "hoursShort": "hr",
+    "minutesShort": "min"
   },
   "status": {
     "pending": {

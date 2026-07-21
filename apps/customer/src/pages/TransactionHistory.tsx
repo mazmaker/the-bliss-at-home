@@ -10,7 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https:/
 
 function TransactionHistory() {
   const { t, i18n } = useTranslation()
-  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : 'th-TH'
+  const dateLocale = i18n.language === 'cn' ? 'zh-CN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'kr' ? 'ko-KR' : i18n.language === 'jp' ? 'ja-JP' : 'th-TH'
   const [filter, setFilter] = useState<'all' | 'successful' | 'refunded' | 'failed' | 'pending'>('all')
 
   // Fetch customer and transactions from Supabase
@@ -244,8 +244,8 @@ function TransactionHistory() {
                           <button
                             onClick={async () => {
                               try {
-                                const lang = getStoredLanguage() as 'th' | 'en' | 'cn'
-                                const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : 'en-US'
+                                const lang = getStoredLanguage() as 'th' | 'en' | 'cn' | 'kr' | 'jp'
+                                const dateLocale = lang === 'th' ? 'th-TH' : lang === 'cn' ? 'zh-CN' : lang === 'kr' ? 'ko-KR' : lang === 'jp' ? 'ja-JP' : 'en-US'
                                 const resp = await fetch(`${API_URL}/api/receipts/${transaction.id}`)
                                 const result = await resp.json()
                                 if (result.success) {
