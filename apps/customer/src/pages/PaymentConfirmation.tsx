@@ -113,7 +113,7 @@ function PaymentConfirmation() {
 
     setEmailSending(true)
     try {
-      const response = await fetch(`${API_URL}/api/receipts/${receiptData.transaction_id}/send-email`, {
+      const response = await fetch(`${API_URL}/api/receipts/${receiptData.transaction_id}/send-email?lang=${getStoredLanguage()}`, {
         method: 'POST',
       })
       const result = await response.json()

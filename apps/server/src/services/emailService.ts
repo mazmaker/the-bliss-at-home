@@ -599,7 +599,7 @@ export function receiptEmailTemplate(data: {
   return baseTemplate(`
     <div class="card">
       <div class="header">
-        <h1>${companyNameTh || companyName}</h1>
+        <h1>${(lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh))}</h1>
         <p>${L.paymentReceipt}</p>
       </div>
 
@@ -656,19 +656,19 @@ export function receiptEmailTemplate(data: {
 
         <div class="info-box" style="background: #f8f8f8; border-color: #e5e5e5;">
           <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">${L.receiptIssuerInfo}</h3>
-          <p style="margin: 0; font-weight: 600;">${companyNameTh || companyName}</p>
+          <p style="margin: 0; font-weight: 600;">${(lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh))}</p>
           ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.taxId}: ${companyTaxId}</p>` : ''}
           ${companyAddress ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${companyAddress}</p>` : ''}
           ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.tel}: ${companyPhone}</p>` : ''}
           ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.email}: ${companyEmail}</p>` : ''}
         </div>
 
-        <p>${emailThankYou(lang, companyNameTh || companyName)}</p>
+        <p>${emailThankYou(lang, (lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh)))}</p>
       </div>
 
       <div class="footer">
         <p>
-          ${companyNameTh || companyName} - ${L.footerTagline}<br>
+          ${(lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh))} - ${L.footerTagline}<br>
           <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
         </p>
         <p style="font-size: 12px; color: #999;">
@@ -733,7 +733,7 @@ export function creditNoteEmailTemplate(data: {
   return baseTemplate(`
     <div class="card">
       <div class="header">
-        <h1>${companyNameTh || companyName}</h1>
+        <h1>${(lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh))}</h1>
         <p>${L.creditNoteTitle}</p>
       </div>
 
@@ -793,7 +793,7 @@ export function creditNoteEmailTemplate(data: {
 
         <div class="info-box" style="background: #f8f8f8; border-color: #e5e5e5;">
           <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">${L.creditNoteIssuerInfo}</h3>
-          <p style="margin: 0; font-weight: 600;">${companyNameTh || companyName}</p>
+          <p style="margin: 0; font-weight: 600;">${(lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh))}</p>
           ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.taxId}: ${companyTaxId}</p>` : ''}
           ${companyAddress ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${companyAddress}</p>` : ''}
           ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.tel}: ${companyPhone}</p>` : ''}
@@ -805,12 +805,12 @@ export function creditNoteEmailTemplate(data: {
           ${companyEmail || 'support@theblissathome.com'}
         </p>
 
-        <p>${emailThankYou(lang, companyNameTh || companyName)}</p>
+        <p>${emailThankYou(lang, (lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh)))}</p>
       </div>
 
       <div class="footer">
         <p>
-          ${companyNameTh || companyName} - ${L.footerTagline}<br>
+          ${(lang === 'th' ? (companyNameTh || companyName) : (companyName || companyNameTh))} - ${L.footerTagline}<br>
           <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
         </p>
         <p style="font-size: 12px; color: #999;">
