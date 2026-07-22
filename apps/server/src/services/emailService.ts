@@ -6,6 +6,8 @@
  * To enable actual email sending, set RESEND_API_KEY environment variable.
  */
 
+import { getEmailLabels, emailSalutation, emailThankYou, paymentMethodLabel } from './emailLabels.js'
+
 // ============================================
 // Types
 // ============================================
@@ -123,10 +125,10 @@ export interface HotelWelcomeData {
 /**
  * Base email template wrapper
  */
-function baseTemplate(content: string): string {
+function baseTemplate(content: string, lang: string = 'th'): string {
   return `
 <!DOCTYPE html>
-<html lang="th">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -565,6 +567,7 @@ export function receiptEmailTemplate(data: {
   companyEmail: string
   companyTaxId: string
   addons?: { name: string; price: number }[]
+  lang?: string
 }): string {
   const {
     customerName,
@@ -584,15 +587,11 @@ export function receiptEmailTemplate(data: {
     companyEmail,
     companyTaxId,
     addons = [],
+    lang = 'th',
   } = data
 
-  const paymentMethodDisplay = paymentMethod === 'credit_card'
-    ? `บัตรเครดิต${cardLastDigits ? ` •••• ${cardLastDigits}` : ''}`
-    : paymentMethod === 'promptpay'
-      ? 'พร้อมเพย์'
-      : paymentMethod === 'internet_banking'
-        ? 'โอนผ่านธนาคาร'
-        : paymentMethod
+  const L = getEmailLabels(lang)
+  const paymentMethodDisplay = paymentMethodLabel(lang, paymentMethod, cardLastDigits)
 
   const addonsTotal = addons.reduce((sum, a) => sum + a.price, 0)
   const servicePrice = amount - addonsTotal
@@ -601,42 +600,42 @@ export function receiptEmailTemplate(data: {
     <div class="card">
       <div class="header">
         <h1>${companyNameTh || companyName}</h1>
-        <p>ใบเสร็จรับเงิน / Payment Receipt</p>
+        <p>${L.paymentReceipt}</p>
       </div>
 
       <div class="content">
-        <p>เรียน คุณ${customerName},</p>
+        <p>${emailSalutation(lang, customerName)}</p>
 
-        <p>ขอบคุณสำหรับการชำระเงิน รายละเอียดใบเสร็จของคุณมีดังนี้</p>
+        <p>${L.receiptThankYouIntro}</p>
 
         <div class="info-box">
-          <h3 style="margin: 0 0 12px;">รายละเอียดใบเสร็จ</h3>
+          <h3 style="margin: 0 0 12px;">${L.receiptInformation}</h3>
           <div class="info-row">
-            <span class="info-label">เลขที่ใบเสร็จ</span>
+            <span class="info-label">${L.receiptNo}</span>
             <span class="info-value">${receiptNumber}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">หมายเลขการจอง</span>
+            <span class="info-label">${L.bookingNo}</span>
             <span class="info-value">${bookingNumber}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">วันที่ออกใบเสร็จ</span>
+            <span class="info-label">${L.receiptIssueDate}</span>
             <span class="info-value">${transactionDate}</span>
           </div>
         </div>
 
         <div class="info-box">
-          <h3 style="margin: 0 0 12px;">รายละเอียดบริการ</h3>
+          <h3 style="margin: 0 0 12px;">${L.serviceDetails}</h3>
           <div class="info-row">
-            <span class="info-label">บริการ</span>
+            <span class="info-label">${L.service}</span>
             <span class="info-value">${serviceName}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">วันที่นัดหมาย</span>
+            <span class="info-label">${L.appointmentDate}</span>
             <span class="info-value">${bookingDate}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">เวลา</span>
+            <span class="info-label">${L.time}</span>
             <span class="info-value">${bookingTime}</span>
           </div>
           ${addons.length > 0 ? addons.map(addon => `
@@ -648,36 +647,36 @@ export function receiptEmailTemplate(data: {
         </div>
 
         <div class="refund-box" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b;">
-          <p style="margin: 0 0 8px; color: #92400e;">ยอดชำระเงินทั้งหมด</p>
+          <p style="margin: 0 0 8px; color: #92400e;">${L.totalPaid}</p>
           <p style="font-size: 28px; font-weight: bold; color: #d97706; margin: 0;">฿${amount.toLocaleString()}</p>
           <p style="margin: 8px 0 0; font-size: 14px; color: #92400e;">
-            ชำระผ่าน: ${paymentMethodDisplay}
+            ${L.paidVia}: ${paymentMethodDisplay}
           </p>
         </div>
 
         <div class="info-box" style="background: #f8f8f8; border-color: #e5e5e5;">
-          <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">ข้อมูลผู้ออกใบเสร็จ</h3>
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">${L.receiptIssuerInfo}</h3>
           <p style="margin: 0; font-weight: 600;">${companyNameTh || companyName}</p>
-          ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">เลขประจำตัวผู้เสียภาษี: ${companyTaxId}</p>` : ''}
+          ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.taxId}: ${companyTaxId}</p>` : ''}
           ${companyAddress ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${companyAddress}</p>` : ''}
-          ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">โทร: ${companyPhone}</p>` : ''}
-          ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">อีเมล: ${companyEmail}</p>` : ''}
+          ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.tel}: ${companyPhone}</p>` : ''}
+          ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.email}: ${companyEmail}</p>` : ''}
         </div>
 
-        <p>ขอบคุณที่ใช้บริการ ${companyNameTh || companyName}</p>
+        <p>${emailThankYou(lang, companyNameTh || companyName)}</p>
       </div>
 
       <div class="footer">
         <p>
-          ${companyNameTh || companyName} - บริการนวดและสปาถึงที่<br>
+          ${companyNameTh || companyName} - ${L.footerTagline}<br>
           <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
         </p>
         <p style="font-size: 12px; color: #999;">
-          อีเมลนี้ถูกส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ${L.autoEmailDisclaimer}
         </p>
       </div>
     </div>
-  `)
+  `, lang)
 }
 
 /**
@@ -703,6 +702,7 @@ export function creditNoteEmailTemplate(data: {
   companyPhone: string
   companyEmail: string
   companyTaxId: string
+  lang?: string
 }): string {
   const {
     customerName,
@@ -724,105 +724,101 @@ export function creditNoteEmailTemplate(data: {
     companyPhone,
     companyEmail,
     companyTaxId,
+    lang = 'th',
   } = data
 
-  const paymentMethodDisplay = paymentMethod === 'credit_card'
-    ? `บัตรเครดิต${cardLastDigits ? ` •••• ${cardLastDigits}` : ''}`
-    : paymentMethod === 'promptpay'
-      ? 'พร้อมเพย์'
-      : paymentMethod === 'internet_banking'
-        ? 'โอนผ่านธนาคาร'
-        : paymentMethod
+  const L = getEmailLabels(lang)
+  const paymentMethodDisplay = paymentMethodLabel(lang, paymentMethod, cardLastDigits)
 
   return baseTemplate(`
     <div class="card">
       <div class="header">
         <h1>${companyNameTh || companyName}</h1>
-        <p>ใบลดหนี้ / Credit Note</p>
+        <p>${L.creditNoteTitle}</p>
       </div>
 
       <div class="content">
-        <p>เรียน คุณ${customerName},</p>
+        <p>${emailSalutation(lang, customerName)}</p>
 
-        <p>เราขอแจ้งรายละเอียดการคืนเงินสำหรับการจองของคุณ</p>
+        <p>${L.creditNoteIntro}</p>
 
         <div class="info-box">
-          <h3 style="margin: 0 0 12px;">รายละเอียดใบลดหนี้</h3>
+          <h3 style="margin: 0 0 12px;">${L.creditNoteInformation}</h3>
           <div class="info-row">
-            <span class="info-label">เลขที่ใบลดหนี้</span>
+            <span class="info-label">${L.creditNoteNo}</span>
             <span class="info-value">${creditNoteNumber}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">อ้างอิงใบเสร็จ</span>
+            <span class="info-label">${L.originalReceipt}</span>
             <span class="info-value">${originalReceiptNumber}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">หมายเลขการจอง</span>
+            <span class="info-label">${L.bookingNo}</span>
             <span class="info-value">${bookingNumber}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">วันที่ออกใบลดหนี้</span>
+            <span class="info-label">${L.creditNoteIssueDate}</span>
             <span class="info-value">${refundDate}</span>
           </div>
         </div>
 
         <div class="info-box">
-          <h3 style="margin: 0 0 12px;">รายละเอียดการจองเดิม</h3>
+          <h3 style="margin: 0 0 12px;">${L.originalBookingDetails}</h3>
           <div class="info-row">
-            <span class="info-label">บริการ</span>
+            <span class="info-label">${L.service}</span>
             <span class="info-value">${serviceName}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">วันที่นัดหมาย</span>
+            <span class="info-label">${L.appointmentDate}</span>
             <span class="info-value">${bookingDate}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">ยอดชำระเดิม</span>
+            <span class="info-label">${L.originalAmount}</span>
             <span class="info-value">฿${originalAmount.toLocaleString()}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">เหตุผลการยกเลิก</span>
+            <span class="info-label">${L.cancellationReason}</span>
             <span class="info-value">${refundReason}</span>
           </div>
         </div>
 
         <div class="refund-box">
-          <p style="margin: 0 0 8px; color: #16a34a;">ยอดเงินคืน (${refundPercentage}%)</p>
+          <p style="margin: 0 0 8px; color: #16a34a;">${L.refundAmountLabel} (${refundPercentage}%)</p>
           <p class="refund-amount">฿${refundAmount.toLocaleString()}</p>
           <p style="margin: 8px 0 0; font-size: 14px; color: #666;">
-            คืนเงินผ่าน: ${paymentMethodDisplay}<br>
-            เงินจะเข้าบัญชีภายใน 5-10 วันทำการ
+            ${L.refundedVia}: ${paymentMethodDisplay}<br>
+            ${L.refundTimeline}
           </p>
         </div>
 
         <div class="info-box" style="background: #f8f8f8; border-color: #e5e5e5;">
-          <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">ข้อมูลผู้ออกใบลดหนี้</h3>
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #666;">${L.creditNoteIssuerInfo}</h3>
           <p style="margin: 0; font-weight: 600;">${companyNameTh || companyName}</p>
-          ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">เลขประจำตัวผู้เสียภาษี: ${companyTaxId}</p>` : ''}
+          ${companyTaxId ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.taxId}: ${companyTaxId}</p>` : ''}
           ${companyAddress ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${companyAddress}</p>` : ''}
-          ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">โทร: ${companyPhone}</p>` : ''}
-          ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">อีเมล: ${companyEmail}</p>` : ''}
+          ${companyPhone ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.tel}: ${companyPhone}</p>` : ''}
+          ${companyEmail ? `<p style="margin: 4px 0 0; font-size: 14px; color: #666;">${L.email}: ${companyEmail}</p>` : ''}
         </div>
 
         <p>
-          หากคุณมีคำถามเกี่ยวกับการคืนเงิน กรุณาติดต่อเราได้ที่
+          ${L.refundQuestionContactPrefix}
           ${companyEmail || 'support@theblissathome.com'}
         </p>
 
-        <p>ขอบคุณที่ใช้บริการ ${companyNameTh || companyName}</p>
+        <p>${emailThankYou(lang, companyNameTh || companyName)}</p>
       </div>
 
       <div class="footer">
         <p>
-          ${companyNameTh || companyName} - บริการนวดและสปาถึงที่<br>
+          ${companyNameTh || companyName} - ${L.footerTagline}<br>
           <a href="https://www.theblissmassageathome.com">www.theblissmassageathome.com</a>
         </p>
         <p style="font-size: 12px; color: #999;">
-          อีเมลนี้ถูกส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ${L.autoEmailDisclaimer}
         </p>
       </div>
     </div>
-  `)
+  `, lang)
 }
 
 /**

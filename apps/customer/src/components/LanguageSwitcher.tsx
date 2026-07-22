@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Globe, ChevronDown, Check } from 'lucide-react'
 import { changeAppLanguage, getStoredLanguage } from '@bliss/i18n'
+import { supabase } from '@bliss/supabase/auth'
 
 const LANGUAGES = [
   { code: 'th', label: 'ไทย', short: 'TH' },
@@ -31,10 +32,22 @@ function LanguageSwitcher({ variant = 'dropdown' }: LanguageSwitcherProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
-  const selectLanguage = (code: string) => {
+  const selectLanguage = async (code: string) => {
+    // Apply locally first so the UI never blocks on the DB write.
     changeAppLanguage(code)
     setCurrent(code)
     setOpen(false)
+    // Best-effort: persist the choice to the customer's account so server-sent
+    // emails (receipts / credit notes) render in the chosen language. On the
+    // logged-out auth pages getUser() returns null -> localStorage only, as before.
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles').update({ language: code }).eq('id', user.id)
+      }
+    } catch {
+      /* ignore — language is still applied locally via changeAppLanguage */
+    }
   }
 
   const activeLang = LANGUAGES.find((l) => l.code === current) ?? LANGUAGES[0]
@@ -51,7 +64,7 @@ function LanguageSwitcher({ variant = 'dropdown' }: LanguageSwitcherProps) {
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => selectLanguage(lang.code)}
+              onClick={() => { void selectLanguage(lang.code) }}
               className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-medium text-sm transition ${
                 current === lang.code
                   ? 'bg-bliss-600 text-white shadow-md'
@@ -85,7 +98,7 @@ function LanguageSwitcher({ variant = 'dropdown' }: LanguageSwitcherProps) {
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => selectLanguage(lang.code)}
+              onClick={() => { void selectLanguage(lang.code) }}
               className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-sm transition ${
                 current === lang.code
                   ? 'text-bliss-600 font-medium bg-bliss-100'

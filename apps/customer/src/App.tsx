@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useTranslation } from '@bliss/i18n'
+import { useTranslation, getStoredLanguage } from '@bliss/i18n'
 import { ProtectedRoute } from '@bliss/ui'
-import { useAuth } from '@bliss/supabase/auth'
+import { useAuth, supabase } from '@bliss/supabase/auth'
 import Header from './components/Header'
 import { RefundPolicyConsent, useRefundPolicyConsent } from './components/RefundPolicyConsent'
 import FloatingCTA from './components/FloatingCTA'
@@ -37,6 +37,7 @@ function App() {
   return (
     <div className="min-h-screen bg-bliss-100">
       <Toaster position="top-right" />
+      <LanguageSyncGuard />
       <Routes>
         {/* Public routes - Login only */}
         <Route path="/login" element={<CustomerLoginPageWrapper />} />
@@ -285,6 +286,42 @@ function ConsentModalGuard() {
       onAccept={() => recheckConsent()}
     />
   )
+}
+
+/**
+ * On login, push the browser's chosen language (localStorage 'bliss-language') to the
+ * customer's profile so server-sent emails (receipts / credit notes) render in the
+ * language they picked — including one chosen on a logged-out auth page. One-way push
+ * only: localStorage is the app's source of truth; we never pull profile -> app.
+ */
+function LanguageSyncGuard() {
+  const { user } = useAuth()
+  const syncedRef = useRef(false)
+
+  useEffect(() => {
+    if (!user) {
+      syncedRef.current = false
+      return
+    }
+    if (syncedRef.current) return
+    syncedRef.current = true
+
+    const stored = getStoredLanguage()
+    if (!stored) return
+
+    void (async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (authUser) {
+          await supabase.from('profiles').update({ language: stored }).eq('id', authUser.id)
+        }
+      } catch {
+        /* best-effort — no user-facing impact */
+      }
+    })()
+  }, [user])
+
+  return null
 }
 
 function BookingHistoryWrapper() {

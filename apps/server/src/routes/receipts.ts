@@ -6,6 +6,7 @@
 import { Router } from 'express'
 import { getSupabaseClient } from '../lib/supabase.js'
 import { sendEmail, receiptEmailTemplate, creditNoteEmailTemplate } from '../services/emailService.js'
+import { getEmailLabels } from '../services/emailLabels.js'
 
 const router = Router()
 
@@ -98,6 +99,33 @@ async function getCustomerEmail(customerId: string): Promise<string | null> {
     .single()
 
   return profile?.email || null
+}
+
+// Helper: get customer email + chosen UI language from profiles (for auto-sent emails).
+// language falls back to 'th' (Thai-business default) when missing.
+async function getCustomerContact(
+  customerId: string
+): Promise<{ email: string | null; language: string }> {
+  const supabase = getSupabaseClient()
+
+  const { data: customer } = await supabase
+    .from('customers')
+    .select('profile_id')
+    .eq('id', customerId)
+    .single()
+
+  if (!customer?.profile_id) return { email: null, language: 'th' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, language')
+    .eq('id', customer.profile_id)
+    .single()
+
+  return {
+    email: profile?.email || null,
+    language: (profile?.language as string) || 'th',
+  }
 }
 
 /**
@@ -452,11 +480,12 @@ router.post('/:transactionId/send-email', async (req, res) => {
       companyEmail: company.companyEmail,
       companyTaxId: company.companyTaxId,
       addons,
+      lang,
     })
 
     const result = await sendEmail({
       to: customerEmail,
-      subject: `ใบเสร็จรับเงิน ${receiptNumber} - ${company.companyName}`,
+      subject: `${getEmailLabels(lang).receiptSubject} ${receiptNumber} - ${company.companyName}`,
       html,
     })
 
@@ -547,11 +576,12 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
       companyPhone: company.companyPhone,
       companyEmail: company.companyEmail,
       companyTaxId: company.companyTaxId,
+      lang,
     })
 
     const result = await sendEmail({
       to: customerEmail,
-      subject: `ใบลดหนี้ ${creditNoteNumber} - ${company.companyName}`,
+      subject: `${getEmailLabels(lang).creditNoteSubject} ${creditNoteNumber} - ${company.companyName}`,
       html,
     })
 
@@ -568,7 +598,6 @@ router.post('/credit-note/:refundTransactionId/send-email', async (req, res) => 
  */
 export async function sendReceiptEmailForTransaction(transactionId: string): Promise<void> {
   const supabase = getSupabaseClient()
-  const lang = 'th' // emailed receipts default to Thai (no per-recipient lang plumbing yet)
 
   const { data: transaction, error: txnError } = await supabase
     .from('transactions')
@@ -598,7 +627,7 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
   }
 
   const booking = transaction.bookings as any
-  const customerEmail = await getCustomerEmail(booking?.customers?.id)
+  const { email: customerEmail, language: lang } = await getCustomerContact(booking?.customers?.id)
 
   if (!customerEmail) {
     console.warn('[Receipt] Customer email not found for transaction:', transactionId)
@@ -639,11 +668,12 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
     companyEmail: company.companyEmail,
     companyTaxId: company.companyTaxId,
     addons,
+    lang,
   })
 
   const result = await sendEmail({
     to: customerEmail,
-    subject: `ใบเสร็จรับเงิน ${receiptNumber} - ${company.companyName}`,
+    subject: `${getEmailLabels(lang).receiptSubject} ${receiptNumber} - ${company.companyName}`,
     html,
   })
 
@@ -660,7 +690,6 @@ export async function sendReceiptEmailForTransaction(transactionId: string): Pro
  */
 export async function sendCreditNoteEmailForRefund(refundTransactionId: string): Promise<void> {
   const supabase = getSupabaseClient()
-  const lang = 'th' // emailed credit notes default to Thai (no per-recipient lang plumbing yet)
 
   const { data: refundTxn, error: refundError } = await supabase
     .from('refund_transactions')
@@ -685,7 +714,7 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
   }
 
   const booking = refundTxn.bookings as any
-  const customerEmail = await getCustomerEmail(booking?.customers?.id)
+  const { email: customerEmail, language: lang } = await getCustomerContact(booking?.customers?.id)
 
   if (!customerEmail) {
     console.warn('[CreditNote] Customer email not found for refund:', refundTransactionId)
@@ -734,11 +763,12 @@ export async function sendCreditNoteEmailForRefund(refundTransactionId: string):
     companyPhone: company.companyPhone,
     companyEmail: company.companyEmail,
     companyTaxId: company.companyTaxId,
+    lang,
   })
 
   const result = await sendEmail({
     to: customerEmail,
-    subject: `ใบลดหนี้ ${creditNoteNumber} - ${company.companyName}`,
+    subject: `${getEmailLabels(lang).creditNoteSubject} ${creditNoteNumber} - ${company.companyName}`,
     html,
   })
 
