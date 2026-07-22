@@ -89,7 +89,7 @@ function LanguageSwitcher({ variant = 'dropdown' }: LanguageSwitcherProps) {
         aria-label="Change language"
       >
         <Globe className="w-4 h-4" />
-        <span>{activeLang.short}</span>
+        <span>{activeLang.label}</span>
         <ChevronDown className="w-3 h-3" />
       </button>
 
