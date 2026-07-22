@@ -88,10 +88,10 @@
       "locatingButton": "検索中...",
       "currentLocationButton": "現在地",
       "howToUseTitle": "使用方法：",
-      "howToUseStep1": "&bull; 「現在地」ボタンを押して現在の位置を使用してください。",
-      "howToUseStep2": "&bull; 地図をクリックして位置を指定してください。",
-      "howToUseStep3": "&bull; 赤いピンをドラッグして位置を調整してください。",
-      "howToUseStep4": "&bull; 地図上部の検索欄から場所を検索してください。",
+      "howToUseStep1": "• 「現在地」ボタンを押して現在の位置を使用してください。",
+      "howToUseStep2": "• 地図をクリックして位置を指定してください。",
+      "howToUseStep3": "• 赤いピンをドラッグして位置を調整してください。",
+      "howToUseStep4": "• 地図上部の検索欄から場所を検索してください。",
       "latitudeLabel": "緯度:",
       "longitudeLabel": "経度:"
     },
@@ -175,7 +175,7 @@
       }
     },
     "serviceNotFound": "サービスが見つかりません",
-    "backToServices": "&larr; サービス一覧に戻る",
+    "backToServices": "← サービス一覧に戻る",
     "loadingService": "サービスを読み込み中..."
   },
   "history": {
@@ -295,7 +295,7 @@
     "successMessage": "予約番号 {{bookingNumber}} はキャンセルされました。",
     "refundInfo": "{{days}}営業日以内に ฿{{amount}} が返金されます。",
     "refundWithinDays": "（{{days}}営業日以内）",
-    "manualQrRefundNotice": "プラットフォーム外返金 &mdash; LINE OAで管理者へご連絡ください",
+    "manualQrRefundNotice": "プラットフォーム外返金 — LINE OAで管理者へご連絡ください",
     "error": "予約をキャンセルできません"
   },
   "reschedule": {
@@ -340,7 +340,7 @@
     "forBooking": "予約レビュー",
     "subRatingsOptional": "項目別評価（任意）",
     "reviewMessageOptional": "レビュー内容（任意）",
-    "sharePlaceholder": "ご体験を共有してください&hellip;",
+    "sharePlaceholder": "ご体験を共有してください…",
     "submit": "レビュー送信",
     "thankYou": "レビューありがとうございます！",
     "helpText": "あなたのレビューはサービス改善に役立ちます"
@@ -387,7 +387,7 @@
       "confirmed": "スタッフが依頼を受け取り、出発の準備をしています。",
       "traveling": "🚗スタッフが向かっています",
       "arrived": "📍 スタッフがあなたの場所に到着しました",
-      "inProgress": "💆&zwj;♀️施術中",
+      "inProgress": "💆‍♀️施術中",
       "completed": "🎉施術完了"
     }
   },

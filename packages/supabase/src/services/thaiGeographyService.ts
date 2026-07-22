@@ -5,6 +5,8 @@ export interface ThaiProvince {
   name_th: string;
   name_en: string;
   name_cn: string | null;
+  name_kr: string | null;
+  name_jp: string | null;
   province_code: number | null;
 }
 
@@ -15,6 +17,8 @@ export interface ThaiDistrict {
   name_th: string;
   name_en: string;
   name_cn: string | null;
+  name_kr: string | null;
+  name_jp: string | null;
 }
 
 export interface ThaiSubdistrict {
@@ -23,6 +27,8 @@ export interface ThaiSubdistrict {
   name_th: string;
   name_en: string;
   name_cn: string | null;
+  name_kr: string | null;
+  name_jp: string | null;
   zipcode: string;
 }
 
