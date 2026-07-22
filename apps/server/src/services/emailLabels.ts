@@ -1,7 +1,7 @@
 /**
- * Email label translations for the customer Receipt & Credit-Note emails.
- * Used by receiptEmailTemplate / creditNoteEmailTemplate (emailService.ts) and the
- * subject lines built in routes/receipts.ts.
+ * Email label translations for the customer Receipt, Credit-Note & Reminder emails.
+ * Used by receiptEmailTemplate / creditNoteEmailTemplate / sendCustomerReminder
+ * (emailService.ts) and the subject lines built in routes/receipts.ts.
  *
  * Mirrors the client PDF label set (apps/customer/src/utils/pdfLabels.ts) for the shared
  * keys and adds the email-only prose (salutation, intros, footer, disclaimer, subjects).
@@ -53,6 +53,14 @@ export interface EmailLabels {
   // Email subjects
   receiptSubject: string
   creditNoteSubject: string
+  // Reminder email
+  reminderSubtitle: string
+  reminderIntro: string
+  date: string
+  duration: string
+  minutesUnit: string
+  location: string
+  address: string
 }
 
 const LABELS: Record<EmailLanguage, EmailLabels> = {
@@ -92,6 +100,13 @@ const LABELS: Record<EmailLanguage, EmailLabels> = {
     paymentMethods: { creditCard: 'บัตรเครดิต', promptPay: 'พร้อมเพย์', bankTransfer: 'โอนผ่านธนาคาร' },
     receiptSubject: 'ใบเสร็จรับเงิน',
     creditNoteSubject: 'ใบลดหนี้',
+    reminderSubtitle: 'แจ้งเตือนการนัดหมาย',
+    reminderIntro: 'ขอแจ้งเตือนการนัดหมายของคุณที่กำลังจะถึง',
+    date: 'วันที่',
+    duration: 'ระยะเวลา',
+    minutesUnit: 'นาที',
+    location: 'สถานที่',
+    address: 'ที่อยู่',
   },
   en: {
     paymentReceipt: 'Payment Receipt',
@@ -129,6 +144,13 @@ const LABELS: Record<EmailLanguage, EmailLabels> = {
     paymentMethods: { creditCard: 'Credit Card', promptPay: 'PromptPay', bankTransfer: 'Bank Transfer' },
     receiptSubject: 'Payment Receipt',
     creditNoteSubject: 'Credit Note',
+    reminderSubtitle: 'Booking Reminder',
+    reminderIntro: 'This is a reminder of your upcoming appointment.',
+    date: 'Date',
+    duration: 'Duration',
+    minutesUnit: 'minutes',
+    location: 'Location',
+    address: 'Address',
   },
   cn: {
     paymentReceipt: '付款收据',
@@ -166,6 +188,13 @@ const LABELS: Record<EmailLanguage, EmailLabels> = {
     paymentMethods: { creditCard: '信用卡', promptPay: 'PromptPay', bankTransfer: '银行转账' },
     receiptSubject: '付款收据',
     creditNoteSubject: '退款单',
+    reminderSubtitle: '预约提醒',
+    reminderIntro: '提醒您即将到来的预约。',
+    date: '日期',
+    duration: '时长',
+    minutesUnit: '分钟',
+    location: '地点',
+    address: '地址',
   },
   kr: {
     paymentReceipt: '결제 영수증',
@@ -203,6 +232,13 @@ const LABELS: Record<EmailLanguage, EmailLabels> = {
     paymentMethods: { creditCard: '신용카드', promptPay: 'PromptPay', bankTransfer: '계좌 이체' },
     receiptSubject: '결제 영수증',
     creditNoteSubject: '환불 명세서',
+    reminderSubtitle: '예약 알림',
+    reminderIntro: '다가오는 예약을 알려 드립니다.',
+    date: '날짜',
+    duration: '소요 시간',
+    minutesUnit: '분',
+    location: '장소',
+    address: '주소',
   },
   jp: {
     paymentReceipt: 'お支払い領収書',
@@ -240,6 +276,13 @@ const LABELS: Record<EmailLanguage, EmailLabels> = {
     paymentMethods: { creditCard: 'クレジットカード', promptPay: 'PromptPay', bankTransfer: '銀行振込' },
     receiptSubject: 'お支払い領収書',
     creditNoteSubject: '返金明細書',
+    reminderSubtitle: 'ご予約のリマインダー',
+    reminderIntro: 'まもなくご予約のお時間です。',
+    date: '日付',
+    duration: '所要時間',
+    minutesUnit: '分',
+    location: '場所',
+    address: '住所',
   },
 }
 
@@ -287,4 +330,20 @@ export function paymentMethodLabel(lang: string | undefined, method: string, car
   if (method === 'promptpay') return m.promptPay
   if (method === 'internet_banking') return m.bankTransfer
   return method
+}
+
+/** Full localized reminder-email subject line (word order differs per language). */
+export function reminderSubject(lang: string | undefined, minutes: number): string {
+  switch (lang) {
+    case 'en':
+      return `Reminder: your appointment in ${minutes} minutes`
+    case 'cn':
+      return `提醒：您的预约还有 ${minutes} 分钟`
+    case 'kr':
+      return `알림: 예약까지 ${minutes}분 남았습니다`
+    case 'jp':
+      return `リマインダー: ご予約まであと ${minutes} 分`
+    default:
+      return `แจ้งเตือน: นัดหมายของคุณอีก ${minutes} นาที`
+  }
 }

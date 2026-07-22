@@ -6,7 +6,7 @@
  * To enable actual email sending, set RESEND_API_KEY environment variable.
  */
 
-import { getEmailLabels, emailSalutation, emailThankYou, paymentMethodLabel } from './emailLabels.js'
+import { getEmailLabels, emailSalutation, emailThankYou, paymentMethodLabel, reminderSubject } from './emailLabels.js'
 
 // ============================================
 // Types
@@ -949,47 +949,48 @@ async function sendCustomerReminder(
     roomNumber?: string
     minutesBefore: number
   },
-  _language?: string
+  language: string = 'th'
 ): Promise<{ success: boolean; error?: string }> {
+  const L = getEmailLabels(language)
   const html = baseTemplate(`
     <div class="card">
       <div class="header">
         <h1>The Bliss at Home</h1>
-        <p>Booking Reminder</p>
+        <p>${L.reminderSubtitle}</p>
       </div>
       <div class="content">
-        <p>เรียน คุณ${data.customerName},</p>
-        <p>ขอแจ้งเตือนการนัดหมายของคุณที่กำลังจะถึง</p>
+        <p>${emailSalutation(language, data.customerName)}</p>
+        <p>${L.reminderIntro}</p>
         <div class="info-box">
           <div class="info-row">
-            <span class="info-label">บริการ</span>
+            <span class="info-label">${L.service}</span>
             <span class="info-value">${data.serviceName}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">วันที่</span>
+            <span class="info-label">${L.date}</span>
             <span class="info-value">${data.scheduledDate}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">เวลา</span>
+            <span class="info-label">${L.time}</span>
             <span class="info-value">${data.scheduledTime}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">ระยะเวลา</span>
-            <span class="info-value">${data.durationMinutes} นาที</span>
+            <span class="info-label">${L.duration}</span>
+            <span class="info-value">${data.durationMinutes} ${L.minutesUnit}</span>
           </div>
-          ${data.hotelName ? `<div class="info-row"><span class="info-label">สถานที่</span><span class="info-value">${data.hotelName}</span></div>` : ''}
-          ${data.address ? `<div class="info-row"><span class="info-label">ที่อยู่</span><span class="info-value">${data.address}</span></div>` : ''}
+          ${data.hotelName ? `<div class="info-row"><span class="info-label">${L.location}</span><span class="info-value">${data.hotelName}</span></div>` : ''}
+          ${data.address ? `<div class="info-row"><span class="info-label">${L.address}</span><span class="info-value">${data.address}</span></div>` : ''}
         </div>
       </div>
       <div class="footer">
-        <p>The Bliss at Home - บริการนวดและสปาถึงที่</p>
+        <p>The Bliss at Home - ${L.footerTagline}</p>
       </div>
     </div>
-  `)
+  `, language)
 
   return sendEmail({
     to: email,
-    subject: `แจ้งเตือน: นัดหมายของคุณอีก ${data.minutesBefore} นาที - The Bliss at Home`,
+    subject: `${reminderSubject(language, data.minutesBefore)} - The Bliss at Home`,
     html,
   })
 }
