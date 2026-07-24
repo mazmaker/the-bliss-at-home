@@ -234,6 +234,12 @@ export default function ServiceSelection({
   const [bookingDate, setBookingDate] = useState('')
   const [selectedHour, setSelectedHour] = useState('')
   const [selectedMinute, setSelectedMinute] = useState('')
+  // P31 / D18 (2026-07-24) — ฟีเจอร์ "บริการในโรงแรม" ใน Quick Booking ยังสร้างไม่เสร็จ:
+  // ไม่มี UI เลือกโรงแรม (setHotelId ไม่ถูกเรียกที่ใดใน apps/admin) ⇒ hotel_id = NULL เสมอ,
+  // ที่อยู่ถูกล้างทิ้ง (พนักงานได้งานไม่มีที่อยู่), ราคาไม่ลดจริงทั้งที่ติดป้าย "ลดพิเศษ",
+  // และโรงแรมไม่ได้รับแจ้งเตือน ⇒ ปิดทางเข้าไว้ก่อนตามมติ D18 (ทาง A) จนกว่าจะทำทาง B ครบ
+  // ⚠️ อย่าลบ state/props ชุดนี้ทิ้ง — เก็บโครงไว้ให้ทาง B กลับมาต่อได้ (ดู §18.9C)
+  const HOTEL_BOOKING_ENABLED = false
   const [isHotelBooking, setIsHotelBooking] = useState(false)
   const [hotelId, setHotelId] = useState('')
 
@@ -881,8 +887,10 @@ export default function ServiceSelection({
       const details = {
         bookingDate,
         bookingTime,
-        isHotelBooking,
-        hotelId: isHotelBooking ? hotelId : undefined,
+        // D18: บังคับที่ทางเขียนด้วย ไม่ใช่ซ่อนแค่ UI — กัน state ค้างจาก path อื่น
+        // (บทเรียนจาก D16: ซ่อนกล่องโค้ดแล้วส่วนลดยังติดค้างเงียบๆ)
+        isHotelBooking: HOTEL_BOOKING_ENABLED && isHotelBooking,
+        hotelId: HOTEL_BOOKING_ENABLED && isHotelBooking ? hotelId : undefined,
         addressDetails: completeAddress,
         discountCode: appliedPromotion?.code,
         appliedDiscount: appliedPromotion,
@@ -1290,7 +1298,10 @@ export default function ServiceSelection({
               {/* Left: Main Form (2 columns) */}
               <div className="lg:col-span-2 space-y-6">
 
-                {/* 1. Booking Type Selection */}
+                {/* 1. Booking Type Selection — ซ่อนทั้งกล่องตามมติ D18 (P31 ทาง A)
+                    เหลือทางเดียวคือ "นัดหมายที่บ้าน/สำนักงาน" จึงไม่ต้องให้เลือก
+                    เปิดกลับได้ด้วยการตั้ง HOTEL_BOOKING_ENABLED = true เมื่อทาง B เสร็จ */}
+                {HOTEL_BOOKING_ENABLED && (
                 <div className="bg-white border border-bliss-200 rounded-lg p-5">
             <h3 className="font-medium text-bliss-900 mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-bliss-700" />
@@ -1335,6 +1346,7 @@ export default function ServiceSelection({
             </div>
 
           </div>
+                )}
 
                 {/* 1.5 Booking Format (single / couple) — P8 */}
                 <div className="bg-white border border-bliss-200 rounded-lg p-5">
